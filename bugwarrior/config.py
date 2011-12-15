@@ -79,8 +79,9 @@ def validate_config(config):
 
     targets = [t.strip() for t in targets.split(",")]
 
-    if set(targets + ["general"]) != set(config.sections()):
-        die("List of targets and list of sections don't match.")
+    for target in targets:
+        if target not in config.sections():
+            die("No [%s] found." % target)
 
     for option in ['bitly.api_user', 'bitly.api_key']:
         if not config.has_option('general', option):
