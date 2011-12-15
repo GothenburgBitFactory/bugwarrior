@@ -24,7 +24,7 @@ class GithubService(IssueService):
         user = self.config.get(self.target, 'username')
 
         has_issues = lambda repo: repo.has_issues
-        repos = filter(has_issues, self.ghc.repos.list(user))[50:]
+        repos = filter(has_issues, self.ghc.repos.list(user))
 
         issues = sum([self.pull(user + "/" + r.name) for r in repos], [])
 
