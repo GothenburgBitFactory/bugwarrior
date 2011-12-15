@@ -25,7 +25,7 @@ class TracService(IssueService):
 
     def get_owner(self, issue):
         tag, issue = issue
-        return issue.get('owner', None)
+        return issue.get('owner', None) or None
 
     def issues(self):
         base_url = "https://" + self.config.get(self.target, 'trac.base_uri')
