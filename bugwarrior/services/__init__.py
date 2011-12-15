@@ -12,6 +12,9 @@ class IssueService(object):
         self.target = target
         self.shorten = shorten
 
+        if not config.has_option('general', 'quiet'):
+            print "Working on [%s]" % self.target
+
     @classmethod
     def validate_config(cls, config, target):
         """ Validate generic options for a particular target """
@@ -83,7 +86,7 @@ def aggregate_issues(conf):
 
     # Create and call service objects for every target in the config
     targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
-    services = [
-        SERVICES[conf.get(t, 'service')](conf, t, shorten) for t in targets
-    ]
-    return sum([service.issues() for service in services], [])
+    return sum([
+        SERVICES[conf.get(t, 'service')](conf, t, shorten).issues()
+        for t in targets
+    ], [])
