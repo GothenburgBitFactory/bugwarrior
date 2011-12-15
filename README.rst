@@ -27,12 +27,50 @@ Configuring
 
 Create a ``~/.bugwarriorrc`` file with the following contents::
 
-  [github]
-  github_user = YOUR_USERNAME
+  # Example ~/.bugwarriorrc
+  #
 
-  [bitly]
-  api_user = YOUR_USERNAME
-  api_key = R_3c223c39de2d675
+  # General stuff.
+  [general]
+  # Here you define a comma separated list of targets.  Each of them must have a
+  # section below determining their properties, how to query them, etc.  The name
+  # is just a symbol, and doesn't have any functional importance.
+  targets = my_github, my_bitbucket, paj_bitbucket, moksha_trac
+
+  # The bitly username and api key are used to shorten URLs to the issues for your
+  # task list.
+  bitly.api_user = YOUR_USERNAME
+  bitly.api_key = YOUR_API_KEY
+
+  # This is a github example.  It says, "scrape every issue from every repository
+  # on http://github.com/ralphbean.  It doesn't matter if ralphbean owns the issue
+  # or not."
+  [my_github]
+  service = github
+  username = ralphbean
+
+  # This is the same thing, but for bitbucket.  Each target entry must have a
+  # 'service' attribute which must be one of 'github', 'bitbucket', or 'trac'.
+  [my_bitbucket]
+  service = bitbucket
+  username = ralphbean
+
+  # Here's another bitbucket one.  Here we want to scrape the issues from repos of
+  # another user, but only include them in the taskwarrior db if they're assigned
+  # to me.
+  [paj_bitbucket]
+  service = bitbucket
+  username = paj
+  only_if_assigned = ralphbean
+
+  # Here's an example of a trac target.  Scrape every ticket and only include them
+  # if 1) they're owned by me or 2) they're currently unassigned.
+  [moksha_trac]
+  service = trac
+  url = https://fedorahosted.org/moksha/
+  only_if_assigned = ralph
+  also_unassigned = True
+
 
 Using
 -----
