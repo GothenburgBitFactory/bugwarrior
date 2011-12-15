@@ -1,3 +1,6 @@
+import bitlyapi
+
+
 from bugwarrior.config import die
 
 
@@ -38,12 +41,18 @@ SERVICES = {
 }
 
 
-def aggregate_issues(conf, shorten):
+def aggregate_issues(conf):
     """ Return all issues from every target.
 
     Takes a config object and a callable which returns a shortened url.
     """
 
+    # Setup bitly shortening callback
+    get_opt = lambda option: conf.get('general', option)
+    bitly = bitlyapi.BitLy(get_opt('bitly.api_user'), get_opt('bitly.api_key'))
+    shorten = lambda url: bitly.shorten(longUrl=url)['url']
+
+    # Create and call service objects for every target in the config
     targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
     services = [
         SERVICES[conf.get(t, 'service')](conf, t, shorten) for t in targets
