@@ -15,13 +15,20 @@ class GithubService(IssueService):
     def pull(self, tag):
         return [(tag, i) for i in self.ghc.issues.list(tag)]
 
+    def get_owner(self, issue):
+        # Currently unimplemented for github-proper
+        # See validate_config(...) below.
+        return None
+
     def issues(self):
         user = self.config.get(self.target, 'username')
 
         has_issues = lambda repo: repo.has_issues
-        repos = filter(has_issues, self.ghc.repos.list(user))
+        repos = filter(has_issues, self.ghc.repos.list(user))[50:]
 
         issues = sum([self.pull(user + "/" + r.name) for r in repos], [])
+
+        issues = filter(self.include, issues)
 
         return [{
             "description": self.description(issue.title, issue.html_url),
@@ -34,6 +41,8 @@ class GithubService(IssueService):
         if not config.has_option(target, 'username'):
             die("[%s] has no 'username'" % target)
 
-        # TODO -- validate other options
+        if config.has_option(target, 'only_if_assigned'):
+            die("[%s] - github does not currently support issue owners." %
+                target)
 
         IssueService.validate_config(config, target)

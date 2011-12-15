@@ -29,6 +29,10 @@ class BitbucketService(IssueService):
         response = json.loads(f.read())
         return [(tag, issue) for issue in response['issues']]
 
+    def get_owner(self, issue):
+        tag, issue = issue
+        return issue.get('responsible', {}).get('username', None)
+
     def issues(self):
         user = self.config.get(self.target, 'username')
 
@@ -44,6 +48,8 @@ class BitbucketService(IssueService):
             issues[i][1]['url'] = self.base_url + "/".join(
                 issues[i][1]['resource_uri'].split('/')[3:]
             ).replace('issues', 'issue')
+
+        issues = filter(self.include, issues)
 
         return [{
             "description": self.description(issue['title'], issue['url']),
