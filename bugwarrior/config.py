@@ -17,8 +17,8 @@ targets = my_github, my_bitbucket, paj_bitbucket, moksha_trac
 
 # The bitly username and api key are used to shorten URLs to the issues for your
 # task list.
-bitly_api_user = YOUR_USERNAME
-bitly_api_key = YOUR_API_KEY
+bitly.api_user = YOUR_USERNAME
+bitly.api_key = YOUR_API_KEY
 
 # This is a github example.  It says, "scrape every issue from every repository
 # on http://github.com/ralphbean.  It doesn't matter if ralphbean owns the issue
@@ -50,8 +50,6 @@ only_if_assigned = ralph
 also_unassigned = True
 """
 
-# TODO -- get this from bugwarrior.services
-SERVICES = ['github', 'bitbucket', 'trac']
 
 def die(msg):
     print "* There was a problem with your ~/.bugwarriorrc"
@@ -59,6 +57,10 @@ def die(msg):
     print "* Here's an example template to help:"
     print example_bugwarriorrc
     sys.exit(1)
+
+
+# This needs to be imported here and not above to avoid a circular-import.
+from bugwarrior.services import SERVICES
 
 
 def parse_args():
@@ -84,29 +86,6 @@ def validate_config(config):
         if not config.has_option('general', option):
             die("[general] is missing '%s'" % option)
 
-    # Define some section-specific validators
-    # TODO -- maybe pull this from bugwarrior.services
-    def _validate_github(config, target):
-        if not config.has_option(target, 'username'):
-            die("[%s] has no 'username'" % target)
-        # TODO -- validate other options
-
-    def _validate_bitbucket(config, target):
-        if not config.has_option(target, 'username'):
-            die("[%s] has no 'username'" % target)
-        # TODO -- validate other options
-
-    def _validate_trac(config, target):
-        if not config.has_option(target, 'url'):
-            die("[%s] has no 'url'" % target)
-        # TODO -- validate other options
-
-    validate_section = {
-        'github': _validate_github,
-        'bitbucket': _validate_bitbucket,
-        'trac': _validate_trac,
-    }
-
     # Validate each target one by one.
     for target in targets:
         service = config.get(target, 'service')
@@ -117,7 +96,7 @@ def validate_config(config):
             die("'%s' in [%s] is not a valid service." % (service, target))
 
         # Call the service-specific validator
-        validate_section[service](config, target)
+        SERVICES[service].validate_config(config, target)
 
 
 def load_config():
