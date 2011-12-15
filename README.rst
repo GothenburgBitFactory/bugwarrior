@@ -4,7 +4,7 @@ bugwarrior - Pull tickets from github, bitbucket, and trac into taskwarrior
 .. split here
 
 This is a command line utility for updating your local `taskwarrior
-<http://taskwarrior.org>`_ database from you forge issue trackers.
+<http://taskwarrior.org>`_ database from your forge issue trackers.
 
 Getting bugwarrior
 -------------
