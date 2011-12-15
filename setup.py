@@ -32,6 +32,7 @@ setup(name='bugwarrior',
           "bitlyapi",
           "decorator",
           "github2",
+          "offtrac",
           "taskw",
       ],
       entry_points="""

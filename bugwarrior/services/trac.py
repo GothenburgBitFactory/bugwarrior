@@ -1,3 +1,4 @@
+import offtrac
 
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
@@ -6,12 +7,39 @@ from bugwarrior.config import die
 class TracService(IssueService):
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
+        uri = 'https://%s:%s@%s/login/xmlrpc' % (
+            self.config.get(self.target, 'trac.username'),
+            self.config.get(self.target, 'trac.password'),
+            self.config.get(self.target, 'trac.base_uri'),
+        )
+        self.trac = offtrac.TracServer(uri)
+
 
     @classmethod
     def validate_config(cls, config, target):
-        if not config.has_option(target, 'url'):
-            die("[%s] has no 'url'" % target)
-
-        # TODO -- validate other options
+        for option in ['trac.username', 'trac.password', 'trac.base_uri']:
+            if not config.has_option(target, option):
+                die("[%s] has no '%s'" % (target, option))
 
         IssueService.validate_config(config, target)
+
+    def get_owner(self, issue):
+        tag, issue = issue
+        return issue.get('owner', None)
+
+    def issues(self):
+        base_url = "https://" + self.config.get(self.target, 'trac.base_uri')
+        tickets = self.trac.query_tickets('status!=closed')
+        tickets = map(self.trac.get_ticket, tickets)
+        issues = [(self.target, ticket[3]) for ticket in tickets]
+
+        # Build a url for each issue
+        for i in range(len(issues)):
+            issues[i][1]['url'] = "%s/ticket/%i" % (base_url, tickets[i][0])
+
+        issues = filter(self.include, issues)
+
+        return [{
+            "description": self.description(issue['summary'], issue['url']),
+            "project": tag,
+        } for tag, issue in issues]

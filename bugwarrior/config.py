@@ -45,7 +45,11 @@ only_if_assigned = ralphbean
 # if 1) they're owned by me or 2) they're currently unassigned.
 [moksha_trac]
 service = trac
-url = https://fedorahosted.org/moksha/
+
+trac.base_uri = fedorahosted.org/moksha/
+trac.username = ralph
+trac.password = OMG_LULZ
+
 only_if_assigned = ralph
 also_unassigned = True
 """
