@@ -27,6 +27,10 @@ class IssueService(object):
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
+
+        # TODO -- evaluate cleaning this up.  It's the ugliest stretch of code
+        # in here.
+
         only_if_assigned, also_unassigned = None, None
         try:
             only_if_assigned = self.config.get(
