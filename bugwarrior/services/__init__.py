@@ -1,7 +1,7 @@
 import bitlyapi
 
-
 from bugwarrior.config import die
+from bugwarrior.db import MARKUP
 
 
 class IssueService(object):
@@ -23,7 +23,7 @@ class IssueService(object):
 
     def description(self, title, url):
         # TODO -- get the '35' here from the config.
-        return "(bw) %s .. %s" % (title[:35], self.shorten(url))
+        return "%s %s .. %s" % (MARKUP, title[:35], self.shorten(url))
 
     def include(self, issue):
         """ Return true if the issue in question should be included """

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.1b2'
+version = '0.1b3'
 
 f = open('README.rst')
 long_description = f.read().strip()
@@ -33,7 +33,7 @@ setup(name='bugwarrior',
           "decorator",
           "github2",
           "offtrac",
-          "taskw>=0.1.5",
+          "taskw>=0.1.6",
       ],
       entry_points="""
       [console_scripts]
