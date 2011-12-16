@@ -10,6 +10,15 @@ class BitbucketService(IssueService):
     base_api = 'https://api.bitbucket.org/1.0'
     base_url = 'http://bitbucket.org/'
 
+    # A map of bitbucket priorities to taskwarrior priorities
+    priorities = {
+        'trivial': 'L',
+        'minor': 'L',
+        'major': 'M',
+        'critical': 'H',
+        'blocker': 'H',
+    }
+
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
 
@@ -54,4 +63,5 @@ class BitbucketService(IssueService):
         return [{
             "description": self.description(issue['title'], issue['url']),
             "project": tag.split('/')[1],
+            "priority": self.priorities.get(issue['priority'], 'M'),
         } for tag, issue in issues]

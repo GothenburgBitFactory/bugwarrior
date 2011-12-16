@@ -5,6 +5,15 @@ from bugwarrior.config import die
 
 
 class TracService(IssueService):
+    # A map of bitbucket priorities to taskwarrior priorities
+    priorities = {
+        'trivial': 'L',
+        'minor': 'L',
+        'major': 'M',
+        'critical': 'H',
+        'blocker': 'H',
+    }
+
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
         uri = 'https://%s:%s@%s/login/xmlrpc' % (
@@ -42,4 +51,5 @@ class TracService(IssueService):
         return [{
             "description": self.description(issue['summary'], issue['url']),
             "project": tag,
+            "priority": self.priorities.get(issue['priority'], 'M'),
         } for tag, issue in issues]
