@@ -33,7 +33,7 @@ setup(name='bugwarrior',
           "decorator",
           "github2",
           "offtrac",
-          "taskw",
+          "taskw>=0.1.5",
       ],
       entry_points="""
       [console_scripts]
