@@ -21,9 +21,16 @@ class IssueService(object):
         # TODO -- general validation
         pass
 
-    def description(self, title, url):
+    def description(self, title, url, number, cls="issue"):
+        cls_markup = {
+            'issue': 'Is',
+            'pull_request': 'PR',
+        }
         # TODO -- get the '35' here from the config.
-        return "%s %s .. %s" % (MARKUP, title[:35], self.shorten(url))
+        return "%s%s#%i - %s .. %s" % (
+            MARKUP, cls_markup[cls], number,
+            title[:35], self.shorten(url)
+        )
 
     def include(self, issue):
         """ Return true if the issue in question should be included """

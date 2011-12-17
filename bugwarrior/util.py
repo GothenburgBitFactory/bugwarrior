@@ -1,5 +1,4 @@
 import time
-from decorator import decorator
 
 
 class rate_limit(object):
@@ -7,18 +6,19 @@ class rate_limit(object):
     def __init__(self, limit_amount, limit_period):
         self.limit_amount = limit_amount
         self.limit_period = limit_period
-        self.start = time.time()
-        self.counter = 0
+        rate_limit.start = time.time()
+        rate_limit.counter = 0
 
     def __call__(self, func):
         def _rate_limit(*args, **kw):
-            if time.time() - self.start > self.limit_period:
-                self.start, self.counter = time.time(), 0
+            if time.time() - rate_limit.start > self.limit_period:
+                rate_limit.start, rate_limit.counter = time.time(), 0
 
-            self.counter += 1
+            rate_limit.counter += 1
 
-            if self.counter == self.limit_amount - 1:
-                duration = self.limit_period - (time.time() - self.start) + 1
+            if rate_limit.counter == self.limit_amount - 1:
+                duration = self.limit_period - \
+                        (time.time() - rate_limit.start) + 1
                 print "Expected to exceed API rate limit."
                 print "Sleeping for", duration, "seconds."
                 time.sleep(duration)

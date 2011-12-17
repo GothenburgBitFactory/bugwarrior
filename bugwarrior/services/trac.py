@@ -45,11 +45,15 @@ class TracService(IssueService):
         # Build a url for each issue
         for i in range(len(issues)):
             issues[i][1]['url'] = "%s/ticket/%i" % (base_url, tickets[i][0])
+            issues[i][1]['number'] = tickets[i][0]
 
         issues = filter(self.include, issues)
 
         return [{
-            "description": self.description(issue['summary'], issue['url']),
+            "description": self.description(
+                issue['summary'], issue['url'],
+                issue['number'], cls="issue",
+            ),
             "project": tag,
             "priority": self.priorities.get(issue['priority'], 'M'),
         } for tag, issue in issues]

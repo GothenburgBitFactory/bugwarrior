@@ -30,7 +30,6 @@ setup(name='bugwarrior',
       zip_safe=False,
       install_requires=[
           "bitlyapi",
-          "decorator",
           "github2",
           "offtrac",
           "taskw>=0.1.6",

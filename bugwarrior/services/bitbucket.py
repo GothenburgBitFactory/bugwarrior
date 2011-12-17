@@ -61,7 +61,10 @@ class BitbucketService(IssueService):
         issues = filter(self.include, issues)
 
         return [{
-            "description": self.description(issue['title'], issue['url']),
+            "description": self.description(
+                issue['title'], issue['url'],
+                issue['local_id'], cls="issue",
+            ),
             "project": tag.split('/')[1],
             "priority": self.priorities.get(issue['priority'], 'M'),
         } for tag, issue in issues]
