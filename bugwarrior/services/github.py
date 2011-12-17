@@ -31,7 +31,7 @@ class GithubService(IssueService):
         all_repos = self.ghc.repos.list(user)
 
         # First get and prune all the real issues
-        has_issues = lambda repo: repo.has_issues and repo.open_issues > 0
+        has_issues = lambda repo: repo.has_issues  # and repo.open_issues > 0
         repos = filter(has_issues, all_repos)
         issues = sum([self._issues(user + "/" + r.name) for r in repos], [])
         issues = filter(self.include, issues)
