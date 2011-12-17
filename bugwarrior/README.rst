@@ -90,5 +90,5 @@ Just run ``bugwarrior-pull``.
 
 It's ideal to create a cron task like::
 
-    0 * * * *  /usr/bin/bugwarrior-pull 2>&1 | /usr/bin/logger
+    */15 * * * *  /usr/bin/bugwarrior-pull 2>&1 | /usr/bin/logger -t bugwarrior
 
