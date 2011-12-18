@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import sys, os
 
 version = '0.1b3'
 
@@ -10,7 +9,7 @@ f.close()
 
 setup(name='bugwarrior',
       version=version,
-      description="Synch github, bitbucket, and trac issues with taskwarrior",
+      description="Sync github, bitbucket, and trac issues with taskwarrior",
       long_description=long_description,
       classifiers=[
         "Development Status :: 3 - Alpha",
