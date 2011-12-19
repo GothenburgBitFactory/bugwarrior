@@ -31,7 +31,7 @@ setup(name='bugwarrior',
           "bitlyapi",
           "github2",
           "offtrac",
-          "taskw>=0.1.7",
+          "taskw>=0.1.8",
       ],
       entry_points="""
       [console_scripts]
