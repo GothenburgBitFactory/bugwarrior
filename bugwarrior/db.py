@@ -8,10 +8,18 @@ MARKUP = "(bw)"
 def clean_issues(issues):
     """ Change "s into &dqout;s. """
     # TODO -- is it better to use http://wiki.python.org/moin/EscapingXml ?
+    # TODO -- should this be moved into http://github.com/ralphbean/taskw ?
+
+    replacements = {
+        '"': '&dquot;',
+        '[': '&open;',
+        ']': '&close;',
+    }
 
     for i in range(len(issues)):
         for key in issues[i]:
-            issues[i][key] = issues[i][key].replace('"', '&dquot;')
+            for unsafe, safe in replacements.iteritems():
+                issues[i][key] = issues[i][key].replace(unsafe, safe)
 
     return issues
 
