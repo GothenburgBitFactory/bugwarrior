@@ -90,10 +90,15 @@ def aggregate_issues(conf):
     Takes a config object and a callable which returns a shortened url.
     """
 
-    # Setup bitly shortening callback
-    get_opt = lambda option: conf.get('general', option)
-    bitly = bitlyapi.BitLy(get_opt('bitly.api_user'), get_opt('bitly.api_key'))
-    shorten = lambda url: bitly.shorten(longUrl=url)['url']
+    # By default, we don't shorten URLs
+    shorten = lambda url: url
+
+    # Setup bitly shortening callback if creds are specified
+    bitly_opts = ['bitly.api_user', 'bitly.api_key']
+    if all([conf.has_option('general', opt) for opt in bitly_opts]):
+        get_opt = lambda option: conf.get('general', option)
+        bitly = bitlyapi.BitLy(get_opt('bitly.api_user'), get_opt('bitly.api_key'))
+        shorten = lambda url: bitly.shorten(longUrl=url)['url']
 
     # Create and call service objects for every target in the config
     targets = [t.strip() for t in conf.get('general', 'targets').split(',')]

@@ -50,7 +50,7 @@ def validate_config(config):
 
     for option in ['bitly.api_user', 'bitly.api_key']:
         if not config.has_option('general', option):
-            die("[general] is missing '%s'" % option)
+            print "* Warning.  URLs will not be shortened with bit.ly"
 
     # Validate each target one by one.
     for target in targets:
