@@ -52,9 +52,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   targets = my_github, my_bitbucket, paj_bitbucket, moksha_trac
 
   # The bitly username and api key are used to shorten URLs to the issues for your
-  # task list.
-  bitly.api_user = YOUR_USERNAME
-  bitly.api_key = YOUR_API_KEY
+  # task list.  If you leave these options commented out, then the full URLs
+  # will be used in your task list.
+  #bitly.api_user = YOUR_USERNAME
+  #bitly.api_key = YOUR_API_KEY
 
   # This is a github example.  It says, "scrape every issue from every repository
   # on http://github.com/ralphbean.  It doesn't matter if ralphbean owns the issue
