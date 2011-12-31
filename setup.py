@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.1b7'
+version = '0.1b8'
 
 f = open('README.rst')
 long_description = f.read().strip()
@@ -31,7 +31,7 @@ setup(name='bugwarrior',
           "bitlyapi",
           "github2",
           "offtrac",
-          "taskw>=0.1.8",
+          "taskw>=0.1.9",
       ],
       entry_points="""
       [console_scripts]
