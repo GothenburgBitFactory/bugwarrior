@@ -41,6 +41,7 @@ class TracService(IssueService):
         tickets = self.trac.query_tickets('status!=closed')
         tickets = map(self.trac.get_ticket, tickets)
         issues = [(self.target, ticket[3]) for ticket in tickets]
+        print " Found", len(issues), "total."
 
         # Build a url for each issue
         for i in range(len(issues)):
@@ -48,6 +49,7 @@ class TracService(IssueService):
             issues[i][1]['number'] = tickets[i][0]
 
         issues = filter(self.include, issues)
+        print " Pruned down to", len(issues)
 
         return [{
             "description": self.description(

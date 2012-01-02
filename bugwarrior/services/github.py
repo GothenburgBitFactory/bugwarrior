@@ -34,7 +34,9 @@ class GithubService(IssueService):
         has_issues = lambda repo: repo.has_issues  # and repo.open_issues > 0
         repos = filter(has_issues, all_repos)
         issues = sum([self._issues(user + "/" + r.name) for r in repos], [])
+        print " Found", len(issues), "total."
         issues = filter(self.include, issues)
+        print " Pruned down to", len(issues)
 
         # Next, get all the pull requests (and don't prune)
         has_requests = lambda repo: repo.forks > 1
