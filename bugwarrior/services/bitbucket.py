@@ -1,3 +1,4 @@
+from twiggy import log
 
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
@@ -51,7 +52,7 @@ class BitbucketService(IssueService):
         repos = [repo.get('slug') for repo in response.get('repositories')]
 
         issues = sum([self.pull(user + "/" + repo) for repo in repos], [])
-        print " Found", len(issues), "total."
+        log.debug(" Found {0} total.", len(issues))
 
         # Build a url for each issue
         for i in range(len(issues)):
@@ -60,7 +61,7 @@ class BitbucketService(IssueService):
             ).replace('issues', 'issue')
 
         issues = filter(self.include, issues)
-        print " Pruned down to", len(issues)
+        log.debug(" Pruned down to {0}", len(issues))
 
         return [{
             "description": self.description(

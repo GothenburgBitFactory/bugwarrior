@@ -1,9 +1,10 @@
+from twiggy import log
+
 import github2.client
 
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
 from bugwarrior.util import rate_limit
-
 
 
 class GithubService(IssueService):
@@ -34,9 +35,9 @@ class GithubService(IssueService):
         has_issues = lambda repo: repo.has_issues  # and repo.open_issues > 0
         repos = filter(has_issues, all_repos)
         issues = sum([self._issues(user + "/" + r.name) for r in repos], [])
-        print " Found", len(issues), "total."
+        log.debug(" Found {0} total.", len(issues))
         issues = filter(self.include, issues)
-        print " Pruned down to", len(issues)
+        log.debug(" Pruned down to {0}", len(issues))
 
         # Next, get all the pull requests (and don't prune)
         has_requests = lambda repo: repo.forks > 1
@@ -50,13 +51,12 @@ class GithubService(IssueService):
             ),
             "project": tag.split('/')[1],
         } for tag, issue in issues] + [{
-            "description" : self.description(
+            "description": self.description(
                 request.title, request.html_url,
                 request.number, cls="pull_request"
             ),
             "project": tag.split('/')[1],
         } for tag, request in requests]
-
 
     @classmethod
     def validate_config(cls, config, target):

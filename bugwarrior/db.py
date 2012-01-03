@@ -1,5 +1,7 @@
+from twiggy import log
+from pprint import pformat
+
 import taskw
-import pprint
 
 
 MARKUP = "(bw)"
@@ -24,7 +26,6 @@ def clean_issues(issues):
     return issues
 
 
-
 def synchronize(issues):
     # Load info about the task database
     tasks = taskw.load_tasks()
@@ -36,7 +37,6 @@ def synchronize(issues):
 
     # Build a list of only the descriptions of those local bugwarrior tasks
     local_descs = [t['description'] for t in sum(tasks.values(), [])]
-
 
     # Now the remote data.
     # Escape any dangerous characters.
@@ -53,10 +53,12 @@ def synchronize(issues):
     is_done = lambda task: task['description'] not in remote_descs
     done_tasks = filter(is_done, tasks['pending'])
 
+    log.struct(new=len(new_issues), completed=len(done_tasks))
+
     for issue in new_issues:
-        print "Adding task:", pprint.pformat(issue)
+        log.info("Adding task {0}", pformat(issue))
         taskw.task_add(**issue)
 
     for task in done_tasks:
-        print "Completed task:", pprint.pformat(task)
+        log.info("Completing task {0}", pformat(task))
         taskw.task_done(id=None, uuid=task['uuid'])

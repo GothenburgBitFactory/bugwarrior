@@ -38,9 +38,7 @@ Configuring
 Create a ``~/.bugwarriorrc`` file with the following contents.
 
 .. example
-
 ::
-
   # Example ~/.bugwarriorrc
   #
 
@@ -50,6 +48,14 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # section below determining their properties, how to query them, etc.  The name
   # is just a symbol, and doesn't have any functional importance.
   targets = my_github, my_bitbucket, paj_bitbucket, moksha_trac
+
+  # log.level specifices the verbosity.  The default is DEBUG.
+  # log.level can be one of DEBUG, INFO, WARNING, ERROR, CRITICAL, DISABLED
+  #log.level = DEBUG
+
+  # If log.file is specified, output will be redirected there.  If it remains
+  # unspecified, output is sent to sys.stderr
+  #log.file = /var/log/bugwarrior.log
 
   # The bitly username and api key are used to shorten URLs to the issues for your
   # task list.  If you leave these options commented out, then the full URLs
@@ -91,8 +97,6 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   only_if_assigned = ralph
   also_unassigned = True
-
-
 .. example
 
 Using

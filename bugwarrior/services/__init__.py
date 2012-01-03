@@ -1,3 +1,5 @@
+from twiggy import log
+
 import bitlyapi
 
 from bugwarrior.config import die
@@ -12,8 +14,7 @@ class IssueService(object):
         self.target = target
         self.shorten = shorten
 
-        if not config.has_option('general', 'quiet'):
-            print "Working on [%s]" % self.target
+        log.info("Working on [{0}]", self.target)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -97,7 +98,10 @@ def aggregate_issues(conf):
     bitly_opts = ['bitly.api_user', 'bitly.api_key']
     if all([conf.has_option('general', opt) for opt in bitly_opts]):
         get_opt = lambda option: conf.get('general', option)
-        bitly = bitlyapi.BitLy(get_opt('bitly.api_user'), get_opt('bitly.api_key'))
+        bitly = bitlyapi.BitLy(
+            get_opt('bitly.api_user'),
+            get_opt('bitly.api_key')
+        )
         shorten = lambda url: bitly.shorten(longUrl=url)['url']
 
     # Create and call service objects for every target in the config

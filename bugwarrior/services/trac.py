@@ -1,3 +1,5 @@
+from twiggy import log
+
 import offtrac
 
 from bugwarrior.services import IssueService
@@ -23,7 +25,6 @@ class TracService(IssueService):
         )
         self.trac = offtrac.TracServer(uri)
 
-
     @classmethod
     def validate_config(cls, config, target):
         for option in ['trac.username', 'trac.password', 'trac.base_uri']:
@@ -41,7 +42,7 @@ class TracService(IssueService):
         tickets = self.trac.query_tickets('status!=closed')
         tickets = map(self.trac.get_ticket, tickets)
         issues = [(self.target, ticket[3]) for ticket in tickets]
-        print " Found", len(issues), "total."
+        log.debug(" Found {0} total.", len(issues))
 
         # Build a url for each issue
         for i in range(len(issues)):
@@ -49,7 +50,7 @@ class TracService(IssueService):
             issues[i][1]['number'] = tickets[i][0]
 
         issues = filter(self.include, issues)
-        print " Pruned down to", len(issues)
+        log.debug(" Pruned down to {0}", len(issues))
 
         return [{
             "description": self.description(

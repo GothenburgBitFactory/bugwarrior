@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.1b9'
+version = '0.1b10'
 
 f = open('README.rst')
 long_description = f.read().strip()
@@ -28,6 +28,7 @@ setup(name='bugwarrior',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
+          "twiggy",
           "bitlyapi",
           "github2",
           "offtrac",

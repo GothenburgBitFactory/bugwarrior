@@ -1,3 +1,5 @@
+from twiggy import log
+
 import time
 
 
@@ -19,8 +21,8 @@ class rate_limit(object):
             if rate_limit.counter == self.limit_amount - 1:
                 duration = self.limit_period - \
                         (time.time() - rate_limit.start) + 1
-                print "Expected to exceed API rate limit."
-                print "Sleeping for", duration, "seconds."
+                log.warning("Expected to exceed API rate limit. Sleeping {0}s",
+                        duration)
                 time.sleep(duration)
 
             return func(*args, **kw)
