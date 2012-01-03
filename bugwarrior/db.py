@@ -1,5 +1,4 @@
 from twiggy import log
-from pprint import pformat
 
 import taskw
 
@@ -56,9 +55,9 @@ def synchronize(issues):
     log.struct(new=len(new_issues), completed=len(done_tasks))
 
     for issue in new_issues:
-        log.info("Adding task {0}", pformat(issue))
+        log.info("Adding task {0}", issue['description'])
         taskw.task_add(**issue)
 
     for task in done_tasks:
-        log.info("Completing task {0}", pformat(task))
+        log.info("Completing task {0}", task['description'])
         taskw.task_done(id=None, uuid=task['uuid'])
