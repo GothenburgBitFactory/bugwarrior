@@ -15,6 +15,7 @@ def clean_issues(issues):
         '"': '&dquot;',
         '[': '&open;',
         ']': '&close;',
+        '/': '\\/',
     }
 
     for i in range(len(issues)):
