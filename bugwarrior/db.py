@@ -6,26 +6,6 @@ import taskw
 MARKUP = "(bw)"
 
 
-def clean_issues(issues):
-    """ Change "s into &dqout;s. """
-    # TODO -- is it better to use http://wiki.python.org/moin/EscapingXml ?
-    # TODO -- should this be moved into http://github.com/ralphbean/taskw ?
-
-    replacements = {
-        '"': '&dquot;',
-        '[': '&open;',
-        ']': '&close;',
-        '/': '\\/',
-    }
-
-    for i in range(len(issues)):
-        for key in issues[i]:
-            for unsafe, safe in replacements.iteritems():
-                issues[i][key] = issues[i][key].replace(unsafe, safe)
-
-    return issues
-
-
 def synchronize(issues):
     # Load info about the task database
     tasks = taskw.load_tasks()
@@ -38,9 +18,9 @@ def synchronize(issues):
     # Build a list of only the descriptions of those local bugwarrior tasks
     local_descs = [t['description'] for t in sum(tasks.values(), [])]
 
-    # Now the remote data.
+    # Now for the remote data.
     # Escape any dangerous characters.
-    issues = clean_issues(issues)
+    issues = map(taskw.clean_task, issues)
 
     # Build a list of only the descriptions of those remote issues
     remote_descs = [i['description'] for i in issues]
