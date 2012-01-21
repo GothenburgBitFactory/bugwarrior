@@ -38,7 +38,9 @@ Configuring
 Create a ``~/.bugwarriorrc`` file with the following contents.
 
 .. example
+
 ::
+
   # Example ~/.bugwarriorrc
   #
 
@@ -97,6 +99,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   only_if_assigned = ralph
   also_unassigned = True
+
 .. example
 
 Using
