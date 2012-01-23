@@ -1,14 +1,16 @@
 from twiggy import log
 
-import taskw
+from taskw import TaskWarrior
 
 
 MARKUP = "(bw)"
 
 
 def synchronize(issues):
+    tw = TaskWarrior()
+
     # Load info about the task database
-    tasks = taskw.load_tasks()
+    tasks = tw.load_tasks()
     is_bugwarrior_task = lambda task: task['description'].startswith(MARKUP)
 
     # Prune down to only tasks managed by bugwarrior
@@ -19,9 +21,6 @@ def synchronize(issues):
     local_descs = [t['description'] for t in sum(tasks.values(), [])]
 
     # Now for the remote data.
-    # Escape any dangerous characters.
-    issues = map(taskw.clean_task, issues)
-
     # Build a list of only the descriptions of those remote issues
     remote_descs = [i['description'] for i in issues]
 
@@ -37,8 +36,8 @@ def synchronize(issues):
 
     for issue in new_issues:
         log.info("Adding task {0}", issue['description'])
-        taskw.task_add(**issue)
+        tw.task_add(**issue)
 
     for task in done_tasks:
         log.info("Completing task {0}", task['description'])
-        taskw.task_done(id=None, uuid=task['uuid'])
+        tw.task_done(id=None, uuid=task['uuid'])
