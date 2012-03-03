@@ -12,12 +12,12 @@ class GithubService(IssueService):
         super(GithubService, self).__init__(*args, **kw)
         self.ghc = github2.client.Github()
 
-    @rate_limit(limit_amount=60, limit_period=60)
+    @rate_limit(limit_amount=50, limit_period=60)
     def _issues(self, tag):
         """ Grab all the issues """
         return [(tag, i) for i in self.ghc.issues.list(tag)]
 
-    @rate_limit(limit_amount=60, limit_period=60)
+    @rate_limit(limit_amount=50, limit_period=60)
     def _reqs(self, tag):
         """ Grab all the pull requests """
         return [(tag, i) for i in self.ghc.pull_requests.list(tag)]
@@ -29,7 +29,16 @@ class GithubService(IssueService):
 
     def issues(self):
         user = self.config.get(self.target, 'username')
-        all_repos = self.ghc.repos.list(user)
+
+        all_repos, page = [], 0
+        log.debug(" Getting ready to get list of all repos.", page)
+        while True:
+            log.debug(" Getting {0}th page of repos.", page)
+            new_repos = self.ghc.repos.list(user, page)
+            if not new_repos:
+                break
+            all_repos += new_repos
+            page += 1
 
         # First get and prune all the real issues
         has_issues = lambda repo: repo.has_issues  # and repo.open_issues > 0
