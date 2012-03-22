@@ -49,7 +49,10 @@ class BitbucketService(IssueService):
         url = self.base_api + '/users/' + user + '/'
         f = urllib2.urlopen(url)
         response = json.loads(f.read())
-        repos = [repo.get('slug') for repo in response.get('repositories')]
+        repos = [
+            repo.get('slug') for repo in response.get('repositories')
+            if repo.get('has_issues')
+        ]
 
         issues = sum([self.pull(user + "/" + repo) for repo in repos], [])
         log.debug(" Found {0} total.", len(issues))
