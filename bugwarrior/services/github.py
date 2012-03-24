@@ -1,6 +1,8 @@
 from twiggy import log
 
+import datetime
 import github2.client
+import time
 
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
@@ -16,6 +18,24 @@ class GithubService(IssueService):
     def _issues(self, tag):
         """ Grab all the issues """
         return [(tag, i) for i in self.ghc.issues.list(tag)]
+
+    @rate_limit(limit_amount=50, limit_period=60)
+    def _add_comments(self, tag, issue):
+        """ Return an issue with comments added """
+
+        if issue.comments == 0:
+            return tag, issue, {}
+
+        comments = self.ghc.issues.comments(tag, issue.number)
+
+        result = {}
+        for c in comments:
+            d = time.mktime(c.updated_at.timetuple())
+            result['annotation_%i' % int(d)] = "%s: %s" % (
+                c.user[:6], c.body[:29]
+            )
+
+        return tag, issue, result
 
     @rate_limit(limit_amount=50, limit_period=60)
     def _reqs(self, tag):
@@ -44,6 +64,9 @@ class GithubService(IssueService):
         has_issues = lambda repo: repo.has_issues  # and repo.open_issues > 0
         repos = filter(has_issues, all_repos)
         issues = sum([self._issues(user + "/" + r.name) for r in repos], [])
+
+        issues = [self._add_comments(*issue) for issue in issues]
+
         log.debug(" Found {0} total.", len(issues))
         issues = filter(self.include, issues)
         log.debug(" Pruned down to {0}", len(issues))
@@ -53,19 +76,21 @@ class GithubService(IssueService):
         repos = filter(has_requests, all_repos)
         requests = sum([self._reqs(user + "/" + r.name) for r in repos], [])
 
-        return [{
-            "description": self.description(
+        return [dict(
+            description=self.description(
                 issue.title, issue.html_url,
                 issue.number, cls="issue"
             ),
-            "project": tag.split('/')[1],
-        } for tag, issue in issues] + [{
-            "description": self.description(
+            project=tag.split('/')[1],
+            **comments
+        ) for tag, issue, comments in issues] + [dict(
+            description=self.description(
                 request.title, request.html_url,
                 request.number, cls="pull_request"
             ),
-            "project": tag.split('/')[1],
-        } for tag, request in requests]
+            project=tag.split('/')[1],
+            **comments
+        ) for tag, request, comments in requests]
 
     @classmethod
     def validate_config(cls, config, target):
