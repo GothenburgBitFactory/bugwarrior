@@ -44,12 +44,14 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   [my_github]
   service = github
   username = ralphbean
+  default_priority = H
 
   # This is the same thing, but for bitbucket.  Each target entry must have a
   # 'service' attribute which must be one of 'github', 'bitbucket', or 'trac'.
   [my_bitbucket]
   service = bitbucket
   username = ralphbean
+  default_priority = M
 
   # Here's another bitbucket one.  Here we want to scrape the issues from repos of
   # another user, but only include them in the taskwarrior db if they're assigned
@@ -58,6 +60,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   service = bitbucket
   username = paj
   only_if_assigned = ralphbean
+  default_priority = L
 
   # Here's an example of a trac target.  Scrape every ticket and only include them
   # if 1) they're owned by me or 2) they're currently unassigned.
@@ -72,6 +75,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   only_if_assigned = ralph
   also_unassigned = True
+  default_priority = H
 
 .. example
 

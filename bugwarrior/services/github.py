@@ -59,12 +59,14 @@ class GithubService(IssueService):
                 issue.number, cls="issue"
             ),
             "project": tag.split('/')[1],
+            "priority": self.config.get(self.target, 'default_priority', 'M'),
         } for tag, issue in issues] + [{
             "description": self.description(
                 request.title, request.html_url,
                 request.number, cls="pull_request"
             ),
             "project": tag.split('/')[1],
+            "priority": self.config.get(self.target, 'default_priority', 'M'),
         } for tag, request in requests]
 
     @classmethod
