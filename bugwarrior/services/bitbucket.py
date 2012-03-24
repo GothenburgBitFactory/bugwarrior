@@ -74,6 +74,6 @@ class BitbucketService(IssueService):
             "project": tag.split('/')[1],
             "priority": self.priorities.get(
                 issue['priority'],
-                self.config.get(self.target, 'default_priority', 'M'),
+                self.default_priority,
             ),
         } for tag, issue in issues]
