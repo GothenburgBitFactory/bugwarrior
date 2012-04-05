@@ -30,7 +30,7 @@ class GithubService(IssueService):
     def issues(self):
         user = self.config.get(self.target, 'username')
 
-        all_repos, page = [], 0
+        all_repos, page = [], 1
         log.debug(" Getting ready to get list of all repos.", page)
         while True:
             log.debug(" Getting {0}th page of repos.", page)
