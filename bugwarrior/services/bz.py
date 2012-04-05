@@ -1,6 +1,7 @@
 from twiggy import log
 
 import bugzilla
+import xmlrpclib
 
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
