@@ -60,17 +60,32 @@ class BugzillaService(IssueService):
     def issues(self):
         email = self.config.get(self.target, 'bugzilla.username')
         # TODO -- doing something with blockedby would be nice.
-        query = dict(
-            column_list=self.column_list,
-            bug_status=self.not_closed_statuses,
-            email1=email,
-            emailreporter1=email,
-            emailcc1=email,
-            emailassigned_to1=email,
-            emailqa_contact1=email,
-            emailtype1="substring",
-        )
-        bugs = self.bz.query(query)
+
+        try:
+            query = dict(
+                column_list=self.column_list,
+                bug_status=self.not_closed_statuses,
+                email1=email,
+                emailreporter1=email,
+                emailcc1=email,
+                emailassigned_to1=email,
+                emailqa_contact1=email,
+                emailtype1="substring",
+            )
+            bugs = self.bz.query(query)
+        except xmlrpclib.Fault as e:
+            # We might be working with an odd version of bugzilla.  Try again
+            # but with a different query format.  If this fails, I'm not sure
+            # what else to try...
+            query = dict(
+                column_list=self.column_list,
+                bug_status=self.not_closed_statuses,
+                reporter=email,
+                cc=email,
+                assigned_to=email,
+            )
+            bugs = self.bz.query(query)
+
 
         # Convert to dicts
         bugs = [
