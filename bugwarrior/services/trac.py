@@ -58,5 +58,8 @@ class TracService(IssueService):
                 issue['number'], cls="issue",
             ),
             "project": tag,
-            "priority": self.priorities.get(issue['priority'], 'M'),
+            "priority": self.priorities.get(
+                issue['priority'],
+                self.default_priority,
+            ),
         } for tag, issue in issues]

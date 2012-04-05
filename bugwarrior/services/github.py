@@ -30,7 +30,7 @@ class GithubService(IssueService):
     def issues(self):
         user = self.config.get(self.target, 'username')
 
-        all_repos, page = [], 0
+        all_repos, page = [], 1
         log.debug(" Getting ready to get list of all repos.", page)
         while True:
             log.debug(" Getting {0}th page of repos.", page)
@@ -59,12 +59,14 @@ class GithubService(IssueService):
                 issue.number, cls="issue"
             ),
             "project": tag.split('/')[1],
+            "priority": self.default_priority,
         } for tag, issue in issues] + [{
             "description": self.description(
                 request.title, request.html_url,
                 request.number, cls="pull_request"
             ),
             "project": tag.split('/')[1],
+            "priority": self.default_priority,
         } for tag, request in requests]
 
     @classmethod

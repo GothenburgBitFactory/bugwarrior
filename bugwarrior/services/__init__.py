@@ -19,8 +19,10 @@ class IssueService(object):
     @classmethod
     def validate_config(cls, config, target):
         """ Validate generic options for a particular target """
-        # TODO -- general validation
-        pass
+
+        cls.default_priority = 'M'
+        if config.has_option(target, 'default_priority'):
+            cls.default_priority = config.get(target, 'default_priority')
 
     def description(self, title, url, number, cls="issue"):
         cls_markup = {
