@@ -32,6 +32,7 @@ setup(name='bugwarrior',
           "bitlyapi",
           "github2",
           "offtrac",
+          "python-bugzilla",
           "taskw >= 0.3.0",
       ],
       entry_points="""
