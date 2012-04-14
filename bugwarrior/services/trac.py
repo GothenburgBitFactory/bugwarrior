@@ -7,7 +7,7 @@ from bugwarrior.config import die
 
 
 class TracService(IssueService):
-    # A map of bitbucket priorities to taskwarrior priorities
+    # A map of trac priorities to taskwarrior priorities
     priorities = {
         'trivial': 'L',
         'minor': 'L',

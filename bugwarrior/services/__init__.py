@@ -77,6 +77,7 @@ class IssueService(object):
 from github import GithubService
 from bitbucket import BitbucketService
 from trac import TracService
+from bz import BugzillaService
 
 
 # Constant dict to be used all around town.
@@ -84,6 +85,7 @@ SERVICES = {
     'github': GithubService,
     'bitbucket': BitbucketService,
     'trac': TracService,
+    'bugzilla': BugzillaService,
 }
 
 

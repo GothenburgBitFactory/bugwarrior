@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.3.3'
+version = '0.4.0'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -32,6 +32,7 @@ setup(name='bugwarrior',
           "bitlyapi",
           "github2",
           "offtrac",
+          "python-bugzilla",
           "taskw >= 0.3.0",
       ],
       entry_points="""

@@ -3,7 +3,7 @@ bugwarrior - Pull tickets from github, bitbucket, and trac into taskwarrior
 
 .. split here
 
-``bugwarrior`` is a command line utility for updating your local `taskwarrior <http://taskwarrior.org>`_ database from your forge issue trackers.  It currently supports `github <http://github.com>`_, `bitbucket <http://bitbucket.org>`_, and `trac <http://trac.edgewall.org/>`_ as remote sources.
+``bugwarrior`` is a command line utility for updating your local `taskwarrior <http://taskwarrior.org>`_ database from your forge issue trackers.  It currently supports `github <http://github.com>`_, `bitbucket <http://bitbucket.org>`_, `trac <http://trac.edgewall.org/>`_, and `bugzilla <http://www.bugzilla.org/>`_ as remote sources.
 
 Configuring
 -----------
@@ -22,7 +22,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # Here you define a comma separated list of targets.  Each of them must have a
   # section below determining their properties, how to query them, etc.  The name
   # is just a symbol, and doesn't have any functional importance.
-  targets = my_github, my_bitbucket, paj_bitbucket, moksha_trac
+  targets = my_github, my_bitbucket, paj_bitbucket, moksha_trac, bz.redhat
 
   # log.level specifices the verbosity.  The default is DEBUG.
   # log.level can be one of DEBUG, INFO, WARNING, ERROR, CRITICAL, DISABLED
@@ -76,6 +76,19 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   only_if_assigned = ralph
   also_unassigned = True
   default_priority = H
+
+  # Here's an example of a bugzilla target.  This will scrape every ticket
+  # 1) that is not closed and 2) for which rbean@redhat.com is either the
+  # owner or reporter or is cc'd on.  Bugzilla instances can be quite different
+  # from one another so use this with caution and please report bugs so we can
+  # make bugwarrior support more robust!
+  [bz.redhat]
+  service = bugzilla
+
+  bugzilla.base_uri = bugzilla.redhat.com
+  bugzilla.username = rbean@redhat.com
+  bugzilla.password = OMG_LULZ
+
 
 .. example
 
