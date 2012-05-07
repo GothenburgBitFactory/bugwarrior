@@ -39,7 +39,7 @@ class TracService(IssueService):
 
     def issues(self):
         base_url = "https://" + self.config.get(self.target, 'trac.base_uri')
-        tickets = self.trac.query_tickets('status!=closed')
+        tickets = self.trac.query_tickets('status!=closed&max=0')
         tickets = map(self.trac.get_ticket, tickets)
         issues = [(self.target, ticket[3]) for ticket in tickets]
         log.debug(" Found {0} total.", len(issues))
