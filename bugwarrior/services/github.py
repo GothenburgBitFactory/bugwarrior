@@ -26,9 +26,11 @@ class GithubService(IssueService):
         comments = self._comments(tag, issue.number)
         return dict([(
             "annotation_%i" % time.mktime(c.created_at.timetuple()),
-            "@%s - %s" % (c.user, c.body.replace('\n', '').replace('\r', '')[:45]),
+            "@%s - %s..." % (
+                c.user,
+                c.body.replace('\n', '').replace('\r', '')[:45]
+            ),
         ) for c in comments])
-
 
     @rate_limit(limit_amount=50, limit_period=60)
     def _reqs(self, tag):
