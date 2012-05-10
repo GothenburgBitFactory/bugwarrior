@@ -57,4 +57,4 @@ def synchronize(issues):
     # Delete old issues
     for task in done_tasks:
         log.info("Completing task {0}", task['description'])
-        tw.task_done(id=None, uuid=task['uuid'])
+        tw.task_done(uuid=task['uuid'])
