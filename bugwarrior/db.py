@@ -27,6 +27,7 @@ def synchronize(issues):
     # Build the list of tasks that need to be added
     is_new = lambda issue: issue['description'] not in local_descs
     new_issues = filter(is_new, issues)
+    old_issues = filter(lambda i: not is_new(i), issues)
 
     # Build the list of local tasks that need to be completed
     is_done = lambda task: task['description'] not in remote_descs
@@ -34,10 +35,26 @@ def synchronize(issues):
 
     log.struct(new=len(new_issues), completed=len(done_tasks))
 
+    # Add new issues
     for issue in new_issues:
         log.info("Adding task {0}", issue['description'])
         tw.task_add(**issue)
 
+    # Update any issues that may have had new properties added.  These are
+    # usually annotations that come from comments in the issue thread.
+    pending_descriptions = [t['description'] for t in tasks['pending']]
+    for upstream_issue in old_issues:
+        if upstream_issue['description'] not in pending_descriptions:
+            continue
+
+        id, task = tw.get_task(description=upstream_issue['description'])
+        for key in upstream_issue:
+            if key not in task:
+                log.info("Updating {0} on {1}", key, issue['description'])
+                task[key] = upstream_issue[key]
+                id, task = tw.task_update(task)
+
+    # Delete old issues
     for task in done_tasks:
         log.info("Completing task {0}", task['description'])
         tw.task_done(id=None, uuid=task['uuid'])
