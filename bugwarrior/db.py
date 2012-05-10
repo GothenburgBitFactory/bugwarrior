@@ -50,7 +50,8 @@ def synchronize(issues):
         id, task = tw.get_task(description=upstream_issue['description'])
         for key in upstream_issue:
             if key not in task:
-                log.info("Updating {0} on {1}", key, issue['description'])
+                log.info("Updating {0} on {1}",
+                         key, upstream_issue['description'])
                 task[key] = upstream_issue[key]
                 id, task = tw.task_update(task)
 
