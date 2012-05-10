@@ -1,6 +1,7 @@
 from twiggy import log
 
 import github2.client
+import time
 
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
@@ -16,6 +17,18 @@ class GithubService(IssueService):
     def _issues(self, tag):
         """ Grab all the issues """
         return [(tag, i) for i in self.ghc.issues.list(tag)]
+
+    @rate_limit(limit_amount=50, limit_period=60)
+    def _comments(self, tag, number):
+        return self.ghc.issues.comments(tag, number)
+
+    def annotations(self, tag, issue):
+        comments = self._comments(tag, issue.number)
+        return dict([(
+            "annotation_%i" % time.mktime(c.created_at.timetuple()),
+            "@%s - %s" % (c.user, c.body.replace('\n', '').replace('\r', '')[:45]),
+        ) for c in comments])
+
 
     @rate_limit(limit_amount=50, limit_period=60)
     def _reqs(self, tag):
@@ -53,14 +66,15 @@ class GithubService(IssueService):
         repos = filter(has_requests, all_repos)
         requests = sum([self._reqs(user + "/" + r.name) for r in repos], [])
 
-        return [{
-            "description": self.description(
+        return [dict(
+            description=self.description(
                 issue.title, issue.html_url,
                 issue.number, cls="issue"
             ),
-            "project": tag.split('/')[1],
-            "priority": self.default_priority,
-        } for tag, issue in issues] + [{
+            project=tag.split('/')[1],
+            priority=self.default_priority,
+            **self.annotations(tag, issue)
+        ) for tag, issue in issues] + [{
             "description": self.description(
                 request.title, request.html_url,
                 request.number, cls="pull_request"
