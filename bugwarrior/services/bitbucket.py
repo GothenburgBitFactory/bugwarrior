@@ -78,6 +78,9 @@ class BitbucketService(IssueService):
                 issues[i][1]['resource_uri'].split('/')[3:]
             ).replace('issues', 'issue')
 
+        closed = ['resolved', 'duplicate', 'wontfix', 'invalid']
+        not_resolved = lambda tup: tup[1]['status'] not in closed
+        issues = filter(not_resolved, issues)
         issues = filter(self.include, issues)
         log.debug(" Pruned down to {0}", len(issues))
 
