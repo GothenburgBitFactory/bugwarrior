@@ -3,6 +3,7 @@ from twiggy import log
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
 
+import datetime
 import urllib2
 import json
 
@@ -39,6 +40,20 @@ class BitbucketService(IssueService):
         response = json.loads(f.read())
         return [(tag, issue) for issue in response['issues']]
 
+    def annotations(self, tag, issue):
+        url = self.base_api + '/repositories/%s/issues/%i/comments' % (
+            tag, issue['local_id'])
+        f = urllib2.urlopen(url)
+        response = json.loads(f.read())
+        _parse = lambda s: datetime.datetime.strptime(s[:10], "%Y-%m-%d")
+        return dict([
+            self.format_annotation(
+                _parse(comment['utc_created_on']),
+                comment['author_info']['username'],
+                comment['content'],
+            ) for comment in response
+        ])
+
     def get_owner(self, issue):
         tag, issue = issue
         return issue.get('responsible', {}).get('username', None)
@@ -66,14 +81,15 @@ class BitbucketService(IssueService):
         issues = filter(self.include, issues)
         log.debug(" Pruned down to {0}", len(issues))
 
-        return [{
-            "description": self.description(
+        return [dict(
+            description=self.description(
                 issue['title'], issue['url'],
                 issue['local_id'], cls="issue",
             ),
-            "project": tag.split('/')[1],
-            "priority": self.priorities.get(
+            project=tag.split('/')[1],
+            priority=self.priorities.get(
                 issue['priority'],
                 self.default_priority,
             ),
-        } for tag, issue in issues]
+            **self.annotations(tag, issue)
+        ) for tag, issue in issues]

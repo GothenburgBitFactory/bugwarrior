@@ -1,7 +1,6 @@
 from twiggy import log
 
 import github2.client
-import time
 
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
@@ -24,13 +23,12 @@ class GithubService(IssueService):
 
     def annotations(self, tag, issue):
         comments = self._comments(tag, issue.number)
-        return dict([(
-            "annotation_%i" % time.mktime(c.created_at.timetuple()),
-            "@%s - %s..." % (
+        return dict([
+            self.format_annotation(
+                c.created_at,
                 c.user,
-                c.body.replace('\n', '').replace('\r', '')[:45]
-            ),
-        ) for c in comments])
+                c.body,
+            ) for c in comments])
 
     @rate_limit(limit_amount=50, limit_period=60)
     def _reqs(self, tag):
