@@ -1,6 +1,7 @@
 from twiggy import log
 
 import bitlyapi
+import time
 
 from bugwarrior.config import die
 from bugwarrior.db import MARKUP
@@ -23,6 +24,15 @@ class IssueService(object):
         cls.default_priority = 'M'
         if config.has_option(target, 'default_priority'):
             cls.default_priority = config.get(target, 'default_priority')
+
+    def format_annotation(self, created, user, body):
+        if not body:
+            body = ''
+        body = body.replace('\n', '').replace('\r', '')[:45]
+        return (
+            "annotation_%i" % time.mktime(created.timetuple()),
+            "@%s - %s..." % (user, body),
+        )
 
     def description(self, title, url, number, cls="issue"):
         cls_markup = {
