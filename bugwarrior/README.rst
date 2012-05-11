@@ -3,7 +3,14 @@ bugwarrior - Pull tickets from github, bitbucket, and trac into taskwarrior
 
 .. split here
 
-``bugwarrior`` is a command line utility for updating your local `taskwarrior <http://taskwarrior.org>`_ database from your forge issue trackers.  It currently supports `github <http://github.com>`_, `bitbucket <http://bitbucket.org>`_, `trac <http://trac.edgewall.org/>`_, and `bugzilla <http://www.bugzilla.org/>`_ as remote sources.
+``bugwarrior`` is a command line utility for updating your local `taskwarrior <http://taskwarrior.org>`_ database from your forge issue trackers.
+
+It currently supports the following remote resources:
+
+ - `github <http://github.com>`_
+ - `bitbucket <http://bitbucket.org>`_
+ - `trac <http://trac.edgewall.org/>`_
+ - `bugzilla <http://www.bugzilla.org/>`_
 
 Configuring
 -----------

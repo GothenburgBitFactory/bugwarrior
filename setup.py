@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.4.0'
+version = '0.4.1'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -12,7 +12,7 @@ setup(name='bugwarrior',
       description="Sync github, bitbucket, and trac issues with taskwarrior",
       long_description=long_description,
       classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License (GPL)",
         "Programming Language :: Python :: 2",
@@ -33,7 +33,7 @@ setup(name='bugwarrior',
           "github2",
           "offtrac",
           "python-bugzilla",
-          "taskw >= 0.3.0",
+          "taskw >= 0.4.1",
       ],
       entry_points="""
       [console_scripts]
