@@ -30,7 +30,7 @@ setup(name='bugwarrior',
       install_requires=[
           "twiggy",
           "bitlyapi",
-          "github2",
+          "pygithub3",
           "offtrac",
           "python-bugzilla",
           "taskw >= 0.4.1",

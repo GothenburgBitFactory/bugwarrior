@@ -1,39 +1,44 @@
 from twiggy import log
 
-import github2.client
+import pygithub3
 
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
-from bugwarrior.util import rate_limit
 
 
 class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
-        self.ghc = github2.client.Github()
+        self.gh = pygithub3.Github()
 
-    @rate_limit(limit_amount=50, limit_period=60)
     def _issues(self, tag):
         """ Grab all the issues """
-        return [(tag, i) for i in self.ghc.issues.list(tag)]
+        return [
+            (tag, i) for i in
+            self.gh.issues.list_by_repo(
+                *tag.split('/'), data=dict(filter='subscribed')
+            ).all()
+        ]
 
-    @rate_limit(limit_amount=50, limit_period=60)
     def _comments(self, tag, number):
-        return self.ghc.issues.comments(tag, number)
+        user, repo = tag.split('/')
+        return self.gh.issues.comments.list(user, repo, number).all()
 
     def annotations(self, tag, issue):
         comments = self._comments(tag, issue.number)
         return dict([
             self.format_annotation(
                 c.created_at,
-                c.user,
+                c.user.login,
                 c.body,
             ) for c in comments])
 
-    @rate_limit(limit_amount=50, limit_period=60)
     def _reqs(self, tag):
         """ Grab all the pull requests """
-        return [(tag, i) for i in self.ghc.pull_requests.list(tag)]
+        return [
+            (tag, i) for i in
+            self.gh.pull_requests.list(*tag.split('/')).all()
+        ]
 
     def get_owner(self, issue):
         # Currently unimplemented for github-proper
@@ -43,18 +48,10 @@ class GithubService(IssueService):
     def issues(self):
         user = self.config.get(self.target, 'username')
 
-        all_repos, page = [], 1
-        log.debug(" Getting ready to get list of all repos.", page)
-        while True:
-            log.debug(" Getting {0}th page of repos.", page)
-            new_repos = self.ghc.repos.list(user, page)
-            if not new_repos:
-                break
-            all_repos += new_repos
-            page += 1
+        all_repos = self.gh.repos.list(user=user).all()
 
         # First get and prune all the real issues
-        has_issues = lambda repo: repo.has_issues  # and repo.open_issues > 0
+        has_issues = lambda repo: repo.has_issues and repo.open_issues > 0
         repos = filter(has_issues, all_repos)
         issues = sum([self._issues(user + "/" + r.name) for r in repos], [])
         log.debug(" Found {0} total.", len(issues))
@@ -66,7 +63,7 @@ class GithubService(IssueService):
         repos = filter(has_requests, all_repos)
         requests = sum([self._reqs(user + "/" + r.name) for r in repos], [])
 
-        return [dict(
+        formatted_issues = [dict(
             description=self.description(
                 issue.title, issue.html_url,
                 issue.number, cls="issue"
@@ -74,7 +71,9 @@ class GithubService(IssueService):
             project=tag.split('/')[1],
             priority=self.default_priority,
             **self.annotations(tag, issue)
-        ) for tag, issue in issues] + [{
+        ) for tag, issue in issues]
+
+        formatted_requests = [{
             "description": self.description(
                 request.title, request.html_url,
                 request.number, cls="pull_request"
@@ -82,6 +81,8 @@ class GithubService(IssueService):
             "project": tag.split('/')[1],
             "priority": self.default_priority,
         } for tag, request in requests]
+
+        return formatted_issues + formatted_requests
 
     @classmethod
     def validate_config(cls, config, target):
