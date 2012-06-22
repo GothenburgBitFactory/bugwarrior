@@ -7,7 +7,7 @@ bugwarrior - Pull tickets from github, bitbucket, and trac into taskwarrior
 
 It currently supports the following remote resources:
 
- - `github <http://github.com>`_
+ - `github <http://github.com>`_ (api v3)
  - `bitbucket <http://bitbucket.org>`_
  - `trac <http://trac.edgewall.org/>`_
  - `bugzilla <http://www.bugzilla.org/>`_
