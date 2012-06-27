@@ -16,7 +16,7 @@ class GithubService(IssueService):
         return [
             (tag, i) for i in
             self.gh.issues.list_by_repo(
-                *tag.split('/'), data=dict(filter='subscribed')
+                *tag.split('/')
             ).all()
         ]
 
