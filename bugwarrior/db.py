@@ -11,7 +11,7 @@ def synchronize(issues):
 
     # Load info about the task database
     tasks = tw.load_tasks()
-    is_bugwarrior_task = lambda task: task['description'].startswith(MARKUP)
+    is_bugwarrior_task = lambda task: task.get('description', '').startswith(MARKUP)
 
     # Prune down to only tasks managed by bugwarrior
     for key in tasks.keys():
