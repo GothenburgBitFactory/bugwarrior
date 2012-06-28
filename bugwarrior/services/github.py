@@ -6,10 +6,25 @@ from bugwarrior.services import IssueService
 from bugwarrior.config import die
 
 
+def list_by_repo(self, user=None, repo=None):
+    """ List issues for a repo; runtime patch against pygithub3. """
+
+    params = dict()
+    request = self.make_request(
+        'issues.list_by_repo', user=user, repo=repo)
+    return self._get_result(request, **params)
+
+
 class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
         self.gh = pygithub3.Github()
+
+        # Patch pygithub3 on the fly like an asshole.
+        import types
+        self.gh.issues.list_by_repo = types.MethodType(
+            list_by_repo, self.gh.issues, type(self.gh.issues)
+        )
 
     def _issues(self, tag):
         """ Grab all the issues """
@@ -22,7 +37,9 @@ class GithubService(IssueService):
 
     def _comments(self, tag, number):
         user, repo = tag.split('/')
-        return self.gh.issues.comments.list(user, repo, number).all()
+        return self.gh.issues.comments.list(
+            number=number, user=user, repo=repo
+        ).all()
 
     def annotations(self, tag, issue):
         comments = self._comments(tag, issue.number)
