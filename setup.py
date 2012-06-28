@@ -33,7 +33,7 @@ setup(name='bugwarrior',
           "pygithub3",
           "offtrac",
           "python-bugzilla",
-          "taskw >= 0.4.1",
+          "taskw >= 0.4.2",
       ],
       entry_points="""
       [console_scripts]
