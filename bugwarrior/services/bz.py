@@ -27,8 +27,8 @@ class BugzillaService(IssueService):
         'PASSES_QA',
     ]
     column_list = [
-        'bug_id',
-        'short_desc',
+        'id',
+        'summary',
         'priority',
         'component'
     ]
@@ -70,6 +70,9 @@ class BugzillaService(IssueService):
             emailassigned_to1=1,
             emailqa_contact1=1,
             emailtype1="substring",
+            # Required for new bugzilla
+            # https://bugzilla.redhat.com/show_bug.cgi?id=825370
+            query_format='advanced',
         )
         bugs = self.bz.query(query)
 
@@ -88,7 +91,7 @@ class BugzillaService(IssueService):
         base_url = "https://%s/show_bug.cgi?id=" % \
                 self.config.get(self.target, 'bugzilla.base_uri')
         for i in range(len(issues)):
-            issues[i][1]['url'] = base_url + str(issues[i][1]['bug_id'])
+            issues[i][1]['url'] = base_url + str(issues[i][1]['id'])
             issues[i][1]['component'] = \
                     issues[i][1]['component'].lower().replace(' ', '-')
 
@@ -101,8 +104,8 @@ class BugzillaService(IssueService):
 
         return [{
             "description": self.description(
-                issue['short_desc'], issue['url'],
-                issue['bug_id'], cls="issue",
+                issue['summary'], issue['url'],
+                issue['id'], cls="issue",
             ),
             "project": issue['component'],
             "priority": self.priorities.get(
