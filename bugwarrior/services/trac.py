@@ -33,6 +33,17 @@ class TracService(IssueService):
 
         IssueService.validate_config(config, target)
 
+    def annotations(self, tag, issue):
+        annotations = []
+        changelog = self.trac.server.ticket.changeLog(issue['number'])
+        for time, author, field, oldvalue, newvalue, permament in changelog:
+            if field == 'comment':
+                annotations.append(self.format_annotation(
+                    time, author, newvalue
+                ))
+
+        return dict(annotations)
+
     def get_owner(self, issue):
         tag, issue = issue
         return issue.get('owner', None) or None
@@ -52,14 +63,15 @@ class TracService(IssueService):
         issues = filter(self.include, issues)
         log.debug(" Pruned down to {0}", len(issues))
 
-        return [{
-            "description": self.description(
+        return [dict(
+            description=self.description(
                 issue['summary'], issue['url'],
                 issue['number'], cls="issue",
             ),
-            "project": tag,
-            "priority": self.priorities.get(
+            project=tag,
+            priority=self.priorities.get(
                 issue['priority'],
                 self.default_priority,
             ),
-        } for tag, issue in issues]
+            **self.annotations(tag, issue)
+        ) for tag, issue in issues]

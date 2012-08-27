@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.5.1'
+version = '0.5.2'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -31,9 +31,10 @@ setup(name='bugwarrior',
           "twiggy",
           "bitlyapi",
           "pygithub3",
+          "requests==0.13.1",  # Temporary until pygithub3 can catch up.
           "offtrac",
           "python-bugzilla",
-          "taskw >= 0.4.1",
+          "taskw >= 0.4.2",
       ],
       entry_points="""
       [console_scripts]
