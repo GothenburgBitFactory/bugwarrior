@@ -31,6 +31,7 @@ setup(name='bugwarrior',
           "twiggy",
           "bitlyapi",
           "pygithub3",
+          "requests==0.13.1",  # Temporary until pygithub3 can catch up.
           "offtrac",
           "python-bugzilla",
           "taskw >= 0.4.2",
