@@ -53,6 +53,9 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   username = ralphbean
   default_priority = H
 
+  login = ralphbean
+  passw = OMG_LULZ
+
   # This is the same thing, but for bitbucket.  Each target entry must have a
   # 'service' attribute which must be one of 'github', 'bitbucket', or 'trac'.
   [my_bitbucket]
