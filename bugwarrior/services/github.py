@@ -18,7 +18,11 @@ def list_by_repo(self, user=None, repo=None):
 class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
-        self.gh = pygithub3.Github()
+
+        login = self.config.get(self.target, 'login')
+        passw = self.config.get(self.target, 'passw')
+        auth = dict(login=login, password=passw)
+        self.gh = pygithub3.Github(**auth)
 
         # Patch pygithub3 on the fly like an asshole.
         import types
@@ -103,6 +107,12 @@ class GithubService(IssueService):
 
     @classmethod
     def validate_config(cls, config, target):
+        if not config.has_option(target, 'login'):
+            die("[%s] has no 'login'" % target)
+
+        if not config.has_option(target, 'passw'):
+            die("[%s] has no 'passw'" % target)
+
         if not config.has_option(target, 'username'):
             die("[%s] has no 'username'" % target)
 
