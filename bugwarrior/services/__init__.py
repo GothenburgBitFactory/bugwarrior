@@ -99,6 +99,13 @@ SERVICES = {
 }
 
 
+try:
+    from mplan import MegaplanService
+    SERVICES['megaplan'] = MegaplanService
+except ImportError:
+    pass
+
+
 def aggregate_issues(conf):
     """ Return all issues from every target.
 
