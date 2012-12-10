@@ -37,7 +37,7 @@ def synchronize(issues):
 
     # Add new issues
     for issue in new_issues:
-        log.info("Adding task {0}", issue['description'])
+        log.info("Adding task {0}", issue['description'].encode("utf-8"))
         tw.task_add(**issue)
 
     # Update any issues that may have had new properties added.  These are
@@ -51,11 +51,11 @@ def synchronize(issues):
         for key in upstream_issue:
             if key not in task:
                 log.info("Updating {0} on {1}",
-                         key, upstream_issue['description'])
+                         key, upstream_issue['description'].encode("utf-8"))
                 task[key] = upstream_issue[key]
                 id, task = tw.task_update(task)
 
     # Delete old issues
     for task in done_tasks:
-        log.info("Completing task {0}", task['description'])
+        log.info("Completing task {0}", task['description'].encode("utf-8"))
         tw.task_done(uuid=task['uuid'])
