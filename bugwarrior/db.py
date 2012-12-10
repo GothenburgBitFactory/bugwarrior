@@ -18,7 +18,8 @@ def synchronize(issues):
         tasks[key] = filter(is_bugwarrior_task, tasks[key])
 
     # Build a list of only the descriptions of those local bugwarrior tasks
-    local_descs = [t['description'] for t in sum(tasks.values(), [])]
+    local_descs = [t['description'] for t in sum(tasks.values(), []) \
+        if t['status'] not in ('deleted')]
 
     # Now for the remote data.
     # Build a list of only the descriptions of those remote issues
