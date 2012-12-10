@@ -43,7 +43,7 @@ class MegaplanService(IssueService):
         return parts[-1].strip()
 
     def get_issue_url(self, issue):
-        return "https://%s/%s/card/" % (self.hostname, issue["Id"])
+        return "https://%s/task/%d/card/" % (self.hostname, issue["Id"])
 
     def issues(self):
         issues = self.client.get_actual_tasks()
