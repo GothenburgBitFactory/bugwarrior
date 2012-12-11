@@ -18,7 +18,8 @@ def synchronize(issues):
         tasks[key] = filter(is_bugwarrior_task, tasks[key])
 
     # Build a list of only the descriptions of those local bugwarrior tasks
-    local_descs = [t['description'] for t in sum(tasks.values(), [])]
+    local_descs = [t['description'] for t in sum(tasks.values(), []) \
+        if t['status'] not in ('deleted')]
 
     # Now for the remote data.
     # Build a list of only the descriptions of those remote issues
@@ -37,7 +38,7 @@ def synchronize(issues):
 
     # Add new issues
     for issue in new_issues:
-        log.info("Adding task {0}", issue['description'])
+        log.info("Adding task {0}", issue['description'].encode("utf-8"))
         tw.task_add(**issue)
 
     # Update any issues that may have had new properties added.  These are
@@ -51,11 +52,11 @@ def synchronize(issues):
         for key in upstream_issue:
             if key not in task:
                 log.info("Updating {0} on {1}",
-                         key, upstream_issue['description'])
+                         key, upstream_issue['description'].encode("utf-8"))
                 task[key] = upstream_issue[key]
                 id, task = tw.task_update(task)
 
     # Delete old issues
     for task in done_tasks:
-        log.info("Completing task {0}", task['description'])
+        log.info("Completing task {0}", task['description'].encode("utf-8"))
         tw.task_done(uuid=task['uuid'])
