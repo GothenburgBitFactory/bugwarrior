@@ -88,6 +88,8 @@ from github import GithubService
 from bitbucket import BitbucketService
 from trac import TracService
 from bz import BugzillaService
+from teamlab import TeamLabService
+from redmine import RedMineService
 
 
 # Constant dict to be used all around town.
@@ -96,6 +98,8 @@ SERVICES = {
     'bitbucket': BitbucketService,
     'trac': TracService,
     'bugzilla': BugzillaService,
+    'teamlab': TeamLabService,
+    'redmine': RedMineService,
 }
 
 
