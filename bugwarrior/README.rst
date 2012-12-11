@@ -13,6 +13,7 @@ It currently supports the following remote resources:
  - `bugzilla <http://www.bugzilla.org/>`_
  - `megaplan <http://www.megaplan.ru/>`_
  - `teamlab <http://www.teamlab.com/>`_
+ - `redmine <http://www.redmine.org/>`_
 
 Configuring
 -----------
@@ -123,6 +124,14 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   password = secret
 
   project_name = example_teamlab
+
+  # Here's an example of a redmine target.
+  [my_redmine]
+  service = redmine
+  url = http://redmine.example.org/
+  key = c0c4c014cafebabe
+  user_id = 7
+  project_name = redmine
 
 
 .. example
