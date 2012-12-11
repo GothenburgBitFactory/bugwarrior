@@ -11,6 +11,7 @@ It currently supports the following remote resources:
  - `bitbucket <http://bitbucket.org>`_
  - `trac <http://trac.edgewall.org/>`_
  - `bugzilla <http://www.bugzilla.org/>`_
+ - `megaplan <http://www.megaplan.ru/>`_
 
 Configuring
 -----------
@@ -100,6 +101,17 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   bugzilla.base_uri = bugzilla.redhat.com
   bugzilla.username = rbean@redhat.com
   bugzilla.password = OMG_LULZ
+
+  # Here/s an example of a megaplan target.
+  [my_megaplan]
+  service = megaplan
+
+  hostname = example.megaplan.ru
+  login = alice
+  password = secret
+
+  default_priority = H
+  project_name = example
 
 
 .. example
