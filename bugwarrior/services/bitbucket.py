@@ -36,7 +36,13 @@ class BitbucketService(IssueService):
     # Note -- not actually rate limited, I think.
     def pull(self, tag):
         url = self.base_api + '/repositories/%s/issues/' % tag
-        f = urllib2.urlopen(url)
+        try:
+            f = urllib2.urlopen(url)
+        except urllib2.HTTPError as e:
+            if '403' in str(e):
+                return []
+            else:
+                raise e
         response = json.loads(f.read())
         return [(tag, issue) for issue in response['issues']]
 
