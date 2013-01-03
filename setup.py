@@ -30,8 +30,7 @@ setup(name='bugwarrior',
       install_requires=[
           "twiggy",
           "bitlyapi",
-          "pygithub3<0.5",  # pygithub3==0.5 broke us.  :/
-          #"requests",  # Let pygithub3 dictate our python-requests version.
+          "requests",
           "offtrac",
           "python-bugzilla",
           "taskw >= 0.4.2",

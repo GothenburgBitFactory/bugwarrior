@@ -1,18 +1,11 @@
 from twiggy import log
 
-import pygithub3
-
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
 
-
-def list_by_repo(self, user=None, repo=None):
-    """ List issues for a repo; runtime patch against pygithub3. """
-
-    params = dict()
-    request = self.make_request(
-        'issues.list_by_repo', user=user, repo=repo)
-    return self._get_result(request, **params)
+import githubutils
+import datetime
+import time
 
 
 class GithubService(IssueService):
@@ -21,44 +14,34 @@ class GithubService(IssueService):
 
         login = self.config.get(self.target, 'login')
         passw = self.config.get(self.target, 'passw')
-        auth = dict(login=login, password=passw)
-        self.gh = pygithub3.Github(**auth)
-
-        # Patch pygithub3 on the fly like an asshole.
-        import types
-        self.gh.issues.list_by_repo = types.MethodType(
-            list_by_repo, self.gh.issues, type(self.gh.issues)
-        )
+        self.auth = (login, passw)
 
     def _issues(self, tag):
         """ Grab all the issues """
         return [
             (tag, i) for i in
-            self.gh.issues.list_by_repo(
-                *tag.split('/')
-            ).all()
+            githubutils.get_issues(*tag.split('/'), auth=self.auth)
         ]
 
     def _comments(self, tag, number):
         user, repo = tag.split('/')
-        return self.gh.issues.comments.list(
-            number=number, user=user, repo=repo
-        ).all()
+        return githubutils.get_comments(user, repo, number, auth=self.auth)
 
     def annotations(self, tag, issue):
-        comments = self._comments(tag, issue.number)
+        comments = self._comments(tag, issue['number'])
         return dict([
             self.format_annotation(
-                c.created_at,
-                c.user.login,
-                c.body,
+                datetime.datetime.fromtimestamp(time.mktime(time.strptime(
+                    c['created_at'], "%Y-%m-%dT%H:%M:%SZ"))),
+                c['user']['login'],
+                c['body'],
             ) for c in comments])
 
     def _reqs(self, tag):
         """ Grab all the pull requests """
         return [
             (tag, i) for i in
-            self.gh.pull_requests.list(*tag.split('/')).all()
+            githubutils.get_pulls(*tag.split('/'), auth=self.auth)
         ]
 
     def get_owner(self, issue):
@@ -69,25 +52,26 @@ class GithubService(IssueService):
     def issues(self):
         user = self.config.get(self.target, 'username')
 
-        all_repos = self.gh.repos.list(user=user).all()
+        all_repos = githubutils.get_repos(username=user, auth=self.auth)
 
         # First get and prune all the real issues
-        has_issues = lambda repo: repo.has_issues and repo.open_issues > 0
+        has_issues = lambda repo: repo['has_issues'] and \
+                repo['open_issues_count'] > 0
         repos = filter(has_issues, all_repos)
-        issues = sum([self._issues(user + "/" + r.name) for r in repos], [])
+        issues = sum([self._issues(user + "/" + r['name']) for r in repos], [])
         log.debug(" Found {0} total.", len(issues))
         issues = filter(self.include, issues)
         log.debug(" Pruned down to {0}", len(issues))
 
         # Next, get all the pull requests (and don't prune)
-        has_requests = lambda repo: repo.forks > 1
+        has_requests = lambda repo: repo['forks'] > 1
         repos = filter(has_requests, all_repos)
-        requests = sum([self._reqs(user + "/" + r.name) for r in repos], [])
+        requests = sum([self._reqs(user + "/" + r['name']) for r in repos], [])
 
         formatted_issues = [dict(
             description=self.description(
-                issue.title, issue.html_url,
-                issue.number, cls="issue"
+                issue['title'], issue['html_url'],
+                issue['number'], cls="issue"
             ),
             project=tag.split('/')[1],
             priority=self.default_priority,
@@ -96,8 +80,8 @@ class GithubService(IssueService):
 
         formatted_requests = [{
             "description": self.description(
-                request.title, request.html_url,
-                request.number, cls="pull_request"
+                request['title'], request['html_url'],
+                request['number'], cls="pull_request"
             ),
             "project": tag.split('/')[1],
             "priority": self.default_priority,
