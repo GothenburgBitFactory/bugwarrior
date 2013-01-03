@@ -12,6 +12,8 @@ It currently supports the following remote resources:
  - `trac <http://trac.edgewall.org/>`_
  - `bugzilla <http://www.bugzilla.org/>`_
  - `megaplan <http://www.megaplan.ru/>`_
+ - `teamlab <http://www.teamlab.com/>`_
+ - `redmine <http://www.redmine.org/>`_
 
 Configuring
 -----------
@@ -102,7 +104,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   bugzilla.username = rbean@redhat.com
   bugzilla.password = OMG_LULZ
 
-  # Here/s an example of a megaplan target.
+  # Here's an example of a megaplan target.
   [my_megaplan]
   service = megaplan
 
@@ -112,6 +114,24 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   default_priority = H
   project_name = example
+
+  # Here's an example of a teamlab target.
+  [my_teamlab]
+  service = teamlab
+
+  hostname = teamlab.example.com
+  login = alice
+  password = secret
+
+  project_name = example_teamlab
+
+  # Here's an example of a redmine target.
+  [my_redmine]
+  service = redmine
+  url = http://redmine.example.org/
+  key = c0c4c014cafebabe
+  user_id = 7
+  project_name = redmine
 
 
 .. example

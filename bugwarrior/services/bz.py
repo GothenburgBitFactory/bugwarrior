@@ -5,6 +5,9 @@ import bugzilla
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
 
+import datetime
+import time
+
 
 class BugzillaService(IssueService):
     priorities = {
@@ -30,13 +33,14 @@ class BugzillaService(IssueService):
         'id',
         'summary',
         'priority',
-        'component'
+        'component',
+        'longdescs',
     ]
 
     def __init__(self, *args, **kw):
         super(BugzillaService, self).__init__(*args, **kw)
         url = 'https://%s/xmlrpc.cgi' % \
-                self.config.get(self.target, 'bugzilla.base_uri')
+            self.config.get(self.target, 'bugzilla.base_uri')
         self.bz = bugzilla.Bugzilla(url=url)
         self.bz.login(
             self.config.get(self.target, 'bugzilla.username'),
@@ -57,6 +61,15 @@ class BugzillaService(IssueService):
         # used by this IssueService.
         raise NotImplementedError
 
+    def annotations(self, tag, issue):
+        return dict([
+            self.format_annotation(
+                datetime.datetime.fromtimestamp(time.mktime(time.strptime(
+                    c['time'], "%Y-%m-%d %H:%M:%S"))),
+                c['author']['login_name'].split('@')[0],
+                c['body'],
+            ) for c in issue['longdescs']])
+
     def issues(self):
         email = self.config.get(self.target, 'bugzilla.username')
         # TODO -- doing something with blockedby would be nice.
@@ -76,7 +89,6 @@ class BugzillaService(IssueService):
         )
         bugs = self.bz.query(query)
 
-
         # Convert to dicts
         bugs = [
             dict(
@@ -89,11 +101,11 @@ class BugzillaService(IssueService):
 
         # Build a url for each issue
         base_url = "https://%s/show_bug.cgi?id=" % \
-                self.config.get(self.target, 'bugzilla.base_uri')
+            self.config.get(self.target, 'bugzilla.base_uri')
         for i in range(len(issues)):
             issues[i][1]['url'] = base_url + str(issues[i][1]['id'])
             issues[i][1]['component'] = \
-                    issues[i][1]['component'].lower().replace(' ', '-')
+                issues[i][1]['component'].lower().replace(' ', '-')
 
         # XXX - Note that we don't use the .include() method like all the other
         # IssueService child classes.  That's because the bugzilla xmlrpc API
@@ -102,14 +114,15 @@ class BugzillaService(IssueService):
         #issues = filter(self.include, issues)
         #log.debug(" Pruned down to {0}", len(issues))
 
-        return [{
-            "description": self.description(
+        return [dict(
+            description=self.description(
                 issue['summary'], issue['url'],
                 issue['id'], cls="issue",
             ),
-            "project": issue['component'],
-            "priority": self.priorities.get(
+            project=issue['component'],
+            priority=self.priorities.get(
                 issue['priority'],
                 self.default_priority,
             ),
-        } for tag, issue in issues]
+            **self.annotations(tag, issue)
+        ) for tag, issue in issues]
