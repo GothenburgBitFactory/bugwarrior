@@ -185,3 +185,12 @@ download the latest tarball::
     $ cd ralphbean-bugwarrior-*
     $ python setup.py install
 
+
+Contributors
+------------
+
+- Ralph Bean
+- Luke Macken
+- James Rowe
+- Justin Forest
+- Tycho Garen
