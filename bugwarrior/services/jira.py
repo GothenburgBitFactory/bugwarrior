@@ -30,6 +30,7 @@ class JiraService(IssueService):
         super(JiraService, self).__init__(*args, **kw)
         self.username = self.config.get(self.target, 'jira.username')
         self.url = self.config.get(self.target, 'jira.base_uri')
+        self.query = 'assignee=' + self.username + ' AND status != closed and status != resolved'
         self.jira = JIRA(options={'server': self.config.get(self.target, 'jira.base_uri')},
                          basic_auth=(self.username,
                                      self.config.get(self.target, 'jira.password')))
@@ -62,10 +63,9 @@ class JiraService(IssueService):
         return dict(annotations)
 
     def issues(self):
-        cases = self.jira.search_issues('assignee=' + self.username + ' AND status != closed', maxResults=-1)
+        cases = self.jira.search_issues(self.query, maxResults=-1)
 
         log.debug(" Found {0} total.", len(cases))
-
 
         return [dict(
             description=self.description(
