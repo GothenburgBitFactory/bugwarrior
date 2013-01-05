@@ -1,5 +1,5 @@
-bugwarrior - Pull tickets from github, bitbucket, bugzilla, jira, and trac into taskwarrior
-===========================================================================================
+bugwarrior - Pull tickets from github, bitbucket, bugzilla, jira, trac, and others into taskwarrior
+===================================================================================================
 
 .. split here
 
@@ -63,7 +63,8 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   passw = OMG_LULZ
 
   # This is the same thing, but for bitbucket.  Each target entry must have a
-  # 'service' attribute which must be one of 'github', 'bitbucket', or 'trac'.
+  # 'service' attribute which must be one of the supported services (like
+  # 'github', 'bitbucket', 'trac', etc...).
   [my_bitbucket]
   service = bitbucket
   username = ralphbean
