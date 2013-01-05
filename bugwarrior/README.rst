@@ -1,5 +1,5 @@
-bugwarrior - Pull tickets from github, bitbucket, and trac into taskwarrior
-===========================================================================
+bugwarrior - Pull tickets from github, bitbucket, bugzilla, jira, and trac into taskwarrior
+===========================================================================================
 
 .. split here
 
@@ -14,6 +14,7 @@ It currently supports the following remote resources:
  - `megaplan <http://www.megaplan.ru/>`_
  - `teamlab <http://www.teamlab.com/>`_
  - `redmine <http://www.redmine.org/>`_
+ - `jira <http://www.atlassian.com/software/jira/overview>`_
 
 Configuring
 -----------
@@ -93,7 +94,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   default_priority = H
 
   # Here's an example of a bugzilla target.  This will scrape every ticket
-  # 1) that is not closed and 2) for which rbean@redhat.com is either the
+  # 1) that is not closed and 2) that rbean@redhat.com is either the
   # owner or reporter or is cc'd on.  Bugzilla instances can be quite different
   # from one another so use this with caution and please report bugs so we can
   # make bugwarrior support more robust!
@@ -114,6 +115,18 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   default_priority = H
   project_name = example
+
+  # Here's an example of a jira project. The ``jira-python`` module is
+  # a bit particular, and jira deployments, like Bugzilla, tend to be
+  # reasonably customized. So YMMV. The ``base_uri`` must not have a 
+  # have a trailing slash. This will fetch comments and cases from
+  # jira assigned to ``username`` where the status is not closed or
+  # resolved.
+  [jira.project]
+  service = jira
+  jira.base_uri = https://jira.example.org
+  jira.username = ralph
+  jira.password = OMG_LULZ
 
   # Here's an example of a teamlab target.
   [my_teamlab]

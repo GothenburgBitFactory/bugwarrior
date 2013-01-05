@@ -40,8 +40,8 @@ class IssueService(object):
             'pull_request': 'PR',
         }
         # TODO -- get the '35' here from the config.
-        return "%s%s#%i - %s .. %s" % (
-            MARKUP, cls_markup[cls], number,
+        return "%s%s#%s - %s .. %s" % (
+            MARKUP, cls_markup[cls], str(number),
             title[:35], self.shorten(url)
         )
 
@@ -90,6 +90,7 @@ from trac import TracService
 from bz import BugzillaService
 from teamlab import TeamLabService
 from redmine import RedMineService
+from jira import JiraService
 
 
 # Constant dict to be used all around town.
@@ -100,6 +101,7 @@ SERVICES = {
     'bugzilla': BugzillaService,
     'teamlab': TeamLabService,
     'redmine': RedMineService,
+    'jira': JiraService,
 }
 
 
