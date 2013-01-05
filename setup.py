@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.5.5'
+version = '0.5.6'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
