@@ -33,6 +33,7 @@ setup(name='bugwarrior',
           "requests",
           "offtrac",
           "python-bugzilla",
+          "jira-python",
           "taskw >= 0.4.2",
       ],
       entry_points="""
