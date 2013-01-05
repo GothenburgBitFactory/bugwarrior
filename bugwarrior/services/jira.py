@@ -70,8 +70,8 @@ class JiraService(IssueService):
         return [dict(
             description=self.description(
                 title=case.fields.summary,
-                url=self.url + '/' + case.key,
-                number=case.key, cls="issue",
+                url=self.url + '/browse/' + case.key,
+                number=case.key.rsplit('-', 1)[1], cls="issue",
             ),
             project=case.key.rsplit('-', 1)[0],
             priority=self.priorities.get(
