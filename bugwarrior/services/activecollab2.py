@@ -3,11 +3,24 @@ from twiggy import log
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
 from bugwarrior.db import MARKUP
+from HTMLParser import HTMLParser
 
 import urllib2
 import time
 import json
 import datetime
+
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        self.reset()
+        self.fed = []
+
+    def handle_data(self, d):
+        self.fed.append(d)
+
+    def get_data(self):
+        return ''.join(self.fed)
 
 
 class Client(object):
@@ -107,19 +120,23 @@ class ActiveCollab2Service(IssueService):
     def get_project_name(self, issue):
         return issue['project']
 
-    def description(self, title, project_id, ticket_id="", cls="ticket"):
+    def description(self, title, project_id, url, ticket_id="", cls="ticket"):
 
-        identifier = ""
-        if ticket_id == "":
-            identifier = str(project_id)
-        else:
-            identifier = str(project_id) + "-" + str(ticket_id)
+        cls_markup = {
+            'ticket': '#',
+            'task': 'Task',
+        }
 
         # TODO -- get the '35' here from the config.
-        return "%s#%s - %s .." % (
-            MARKUP, identifier,
-            title[:35]
+        return "%s%s%s - %s .. %s" % (
+            MARKUP, cls_markup[cls], str(ticket_id),
+            title[:35], self.shorten(url),
         )
+
+    def strip_tags(html):
+        s = MLStripper()
+        s.feed(html)
+        return s.get_data()
 
     def annotations(self, issue):
         if issue['type'] == 'ticket':
@@ -129,7 +146,7 @@ class ActiveCollab2Service(IssueService):
                     datetime.datetime.fromtimestamp(time.mktime(time.strptime(
                         c['created_on'], "%Y-%m-%d %H:%M:%S"))),
                     c['created_by_id'],
-                    c['body'],
+                    self.strip_tags(c['body']),
                 ) for c in comments])
         else:
             return dict()
@@ -137,11 +154,12 @@ class ActiveCollab2Service(IssueService):
     def issues(self):
         # Loop through each project
         start = time.time()
+        issues = []
         projects = self.projects
         for project in projects:
             for project_id, project_name in project.iteritems():
                 log.debug("Getting tasks for #" + project_id + " " + project_name + '"')
-                issues = self.client.find_issues(self.user_id, project_id, project_name)
+                issues += self.client.find_issues(self.user_id, project_id, project_name)
 
         log.debug(" Found {0} total.", len(issues))
 
@@ -150,9 +168,8 @@ class ActiveCollab2Service(IssueService):
         return [dict(
             description=self.description(
                 issue["description"],
-                issue["project_id"], issue["ticket_id"], issue["type"],
+                issue["project_id"], issue['permalink'], issue["ticket_id"], issue["type"],
             ),
             project=self.get_project_name(issue),
-            priority=self.default_priority,
-            **self.annotations(issue)
+            priority=self.default_priority
         ) for issue in issues]
