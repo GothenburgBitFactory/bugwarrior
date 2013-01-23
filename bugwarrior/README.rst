@@ -15,6 +15,7 @@ It currently supports the following remote resources:
  - `teamlab <http://www.teamlab.com/>`_
  - `redmine <http://www.redmine.org/>`_
  - `jira <http://www.atlassian.com/software/jira/overview>`_
+ - `activecollab 2.x <http://www.activecollab.com>`
 
 Configuring
 -----------
@@ -119,7 +120,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   # Here's an example of a jira project. The ``jira-python`` module is
   # a bit particular, and jira deployments, like Bugzilla, tend to be
-  # reasonably customized. So YMMV. The ``base_uri`` must not have a 
+  # reasonably customized. So YMMV. The ``base_uri`` must not have a
   # have a trailing slash. This will fetch comments and cases from
   # jira assigned to ``username`` where the status is not closed or
   # resolved.
@@ -146,6 +147,18 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   key = c0c4c014cafebabe
   user_id = 7
   project_name = redmine
+
+  # Here's an example of an activecollab2 target
+  # Projects should be entered in a comma-separated list, with the project
+  # id as the key and the name you'd like to use for the project in Taskwarrior
+  # entered as the value. For example, if the project ID is 8 and the project's
+  # name in ActiveCollab is "Amazing Website" then you might enter 8:amazing_website
+  [activecollab2]
+  service = activecollab2
+  url = http://ac.example.org/api.php
+  key = your-api-key
+  user_id = 15
+  projects = 1:first_project, 5:another_project
 
 
 .. example
