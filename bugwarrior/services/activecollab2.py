@@ -10,6 +10,7 @@ import json
 import datetime
 
 api_count = 0
+task_count = 0
 
 
 class Client(object):
@@ -30,11 +31,12 @@ class Client(object):
         """
 
         user_tasks_data = self.call_api("/projects/" + str(project_id) + "/user-tasks")
-
+        global task_count
         assigned_tasks = []
 
         try:
             for key, task in enumerate(user_tasks_data):
+                task_count += 1
                 assigned_task = dict()
                 if task[u'type'] == 'Ticket':
                     # Load Ticket data
@@ -68,7 +70,7 @@ class Client(object):
                     log.debug("Adding '" + assigned_task['description'] + "' to issue list")
                     assigned_tasks.append(assigned_task)
         except:
-            log.debug('Could not parse user tasks data')
+            log.debug('No user tasks loaded for "%s"' % project_name)
 
         return assigned_tasks
 
@@ -157,7 +159,8 @@ class ActiveCollab2Service(IssueService):
 
         log.debug(" Found {0} total.", len(issues))
         global api_count
-        log.debug(" {0} api calls", api_count)
+        log.debug(" {0} API calls", api_count)
+        log.debug(" {0} tasks and tickets analyzed", task_count)
         log.debug("Elapsed Time: %s" % (time.time() - start))
 
         return [dict(
