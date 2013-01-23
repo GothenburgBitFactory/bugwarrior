@@ -123,17 +123,17 @@ class ActiveCollab2Service(IssueService):
     def get_project_name(self, issue):
         return issue['project']
 
-    def description(self, title, project_id, url, ticket_id="", cls="ticket"):
+    def description(self, title, project_id, ticket_id="", cls="ticket"):
 
         cls_markup = {
             'ticket': '#',
             'task': 'Task',
         }
 
-        # TODO -- get the '35' here from the config.
-        return "%s%s%s - %s .. %s" % (
+        # TODO -- get the '45' here from the config.
+        return "%s%s%s - %s" % (
             MARKUP, cls_markup[cls], str(ticket_id),
-            title[:35], self.shorten(url),
+            title[:45],
         )
 
     def format_annotation(self, created, permalink):
@@ -167,7 +167,7 @@ class ActiveCollab2Service(IssueService):
         return [dict(
             description=self.description(
                 issue["description"],
-                issue["project_id"], issue['permalink'], issue["ticket_id"], issue["type"],
+                issue["project_id"], issue["ticket_id"], issue["type"],
             ),
             project=self.get_project_name(issue),
             priority=self.default_priority,
