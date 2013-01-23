@@ -59,7 +59,8 @@ class Client(object):
                         assigned_task['project'] = project_name
                         assigned_task['description'] = ticket_data[u'name']
                         assigned_task['type'] = "ticket"
-                        assigned_task['comments'] = ticket_data[u'comments']
+                        assigned_task['created_on'] = ticket_data[u'created_on']
+                        assigned_task['created_by_id'] = ticket_data[u'created_by_id']
 
             elif task[u'type'] == 'Task':
                 # Load Task data
@@ -69,6 +70,8 @@ class Client(object):
                 assigned_task['project_id'] = task[u'project_id']
                 assigned_task['ticket_id'] = ""
                 assigned_task['type'] = "task"
+                assigned_task['created_on'] = task[u'created_on']
+                assigned_task['created_by_id'] = task[u'created_by_id']
 
             if assigned_task:
                 log.debug("Adding '" + assigned_task['description'] + "' to issue list")
@@ -133,23 +136,19 @@ class ActiveCollab2Service(IssueService):
             title[:35], self.shorten(url),
         )
 
-    def strip_tags(html):
-        s = MLStripper()
-        s.feed(html)
-        return s.get_data()
+    def format_annotation(self, created, permalink):
+        return (
+            "annotation_%i" % time.mktime(created.timetuple()),
+            "%s" % (permalink),
+        )
 
     def annotations(self, issue):
-        if issue['type'] == 'ticket':
-            comments = issue[u'comments']
-            return dict([
-                self.format_annotation(
-                    datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-                        c['created_on'], "%Y-%m-%d %H:%M:%S"))),
-                    c['created_by_id'],
-                    self.strip_tags(c['body']),
-                ) for c in comments])
-        else:
-            return dict()
+        return dict([
+            self.format_annotation(
+                datetime.datetime.fromtimestamp(time.mktime(time.strptime(
+                    issue['created_on'], "%Y-%m-%d %H:%M:%S"))),
+                issue['permalink'],
+            )])
 
     def issues(self):
         # Loop through each project
@@ -171,5 +170,6 @@ class ActiveCollab2Service(IssueService):
                 issue["project_id"], issue['permalink'], issue["ticket_id"], issue["type"],
             ),
             project=self.get_project_name(issue),
-            priority=self.default_priority
+            priority=self.default_priority,
+            **self.annotations(issue)
         ) for issue in issues]
