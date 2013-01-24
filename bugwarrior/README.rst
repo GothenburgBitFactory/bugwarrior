@@ -15,6 +15,7 @@ It currently supports the following remote resources:
  - `teamlab <http://www.teamlab.com/>`_
  - `redmine <http://www.redmine.org/>`_
  - `jira <http://www.atlassian.com/software/jira/overview>`_
+ - `activecollab 2.x <http://www.activecollab.com>`
 
 Configuring
 -----------
@@ -119,7 +120,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   # Here's an example of a jira project. The ``jira-python`` module is
   # a bit particular, and jira deployments, like Bugzilla, tend to be
-  # reasonably customized. So YMMV. The ``base_uri`` must not have a 
+  # reasonably customized. So YMMV. The ``base_uri`` must not have a
   # have a trailing slash. This will fetch comments and cases from
   # jira assigned to ``username`` where the status is not closed or
   # resolved.
@@ -146,6 +147,32 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   key = c0c4c014cafebabe
   user_id = 7
   project_name = redmine
+
+  # Here's an example of an activecollab2 target. Note that this will only work
+  # with ActiveCollab 2.x and *not* with ActiveCollab 3.x.
+  #
+  # You can obtain your user ID and API url by logging into ActiveCollab and
+  # clicking on "Profile" and then "API Settings". When on that page, look
+  # at the URL. The integer that appears after "/user/" is your user ID.
+  #
+  # Projects should be entered in a comma-separated list, with the project
+  # id as the key and the name you'd like to use for the project in Taskwarrior
+  # entered as the value. For example, if the project ID is 8 and the project's
+  # name in ActiveCollab is "Amazing Website" then you might enter 8:amazing_website
+  #
+  # Note that due to limitations in the ActiveCollab API, there is no simple way
+  # to get a list of all tasks you are responsible for in AC. Instead you need to
+  # look at each ticket that you are subscribed to and check to see if your
+  # user ID is responsible for the ticket/task. What this means is that if you
+  # have 5 projects you want to query and each project has 20 tickets, you'll
+  # make 100 API requests each time you run `bugwarrior-pull`
+
+  [activecollab2]
+  service = activecollab2
+  url = http://ac.example.org/api.php
+  key = your-api-key
+  user_id = 15
+  projects = 1:first_project, 5:another_project
 
 
 .. example
@@ -185,3 +212,14 @@ download the latest tarball::
     $ cd ralphbean-bugwarrior-*
     $ python setup.py install
 
+
+Contributors
+------------
+
+- Ralph Bean (primary author)
+- Justin Forest (contributed support for RedMine, TeamLab, and MegaPlan, as
+  well as some unicode help)
+- Tycho Garen (contributed support for Jira)
+- Kosta Harlan (contributed support for ActiveCollab2)
+- Luke Macken (contributed some code cleaning)
+- James Rowe (contributed to the docs)

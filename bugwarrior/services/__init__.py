@@ -76,7 +76,40 @@ class IssueService(object):
             pass  # Impossible to get here.
 
     def issues(self):
-        """ Override this to gather issues for each service. """
+        """ Returns a list of dicts representing issues from a remote service.
+
+        This is the main place to begin if you are implementing a new service
+        for bugwarrior.  Override this to gather issues for each service.
+
+        Each item in the list should be a dict that looks something like this:
+
+            {
+                "description": "Some description of the issue",
+                "project": "some_project",
+                "priority": "H",
+                "annotation_1357787477": "This is an annotation",
+                "annotation_1357787500": "This is another annotation",
+            }
+
+
+        The description can be 'anything' but must be consistent and unique for
+        issues you're pulling from a remote service.  You can and should use
+        the ``.description(...)`` method to help format your descriptions.
+
+        The project should be a string and may be anything you like.
+
+        The priority should be one of "H", "M", or "L".
+
+        Annotations are a little more tricky; the *key* for an annotation is
+        composed of the string "annotation_" followed by a UNIX timestamp like
+        "annotation_1357787477".  The associated value is the value of the
+        annotation dated at that time.  This is intended to be used with
+        "comments" on remote ticketing systems so that an initial bug report
+        can be followed up with by multiple, dated annotations.
+
+        You can and should use the ``.format_annotation(...)`` method to help
+        format your annotations.
+        """
         raise NotImplementedError
 
     def get_owner(self, issue):
@@ -91,6 +124,7 @@ from bz import BugzillaService
 from teamlab import TeamLabService
 from redmine import RedMineService
 from jira import JiraService
+from activecollab2 import ActiveCollab2Service
 
 
 # Constant dict to be used all around town.
@@ -102,6 +136,7 @@ SERVICES = {
     'teamlab': TeamLabService,
     'redmine': RedMineService,
     'jira': JiraService,
+    'activecollab2': ActiveCollab2Service,
 }
 
 

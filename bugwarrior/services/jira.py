@@ -58,7 +58,7 @@ class JiraService(IssueService):
             for comment in comments:
                 created = date.fromtimestamp(time.mktime(time.strptime(comment.created[0:10], '%Y-%m-%d')))
 
-                annotations.append(self.format_annotation(created, comment.author, comment.body))
+                annotations.append(self.format_annotation(created, comment.author.name, comment.body))
 
         return dict(annotations)
 
