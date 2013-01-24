@@ -149,10 +149,16 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   project_name = redmine
 
   # Here's an example of an activecollab2 target
+  #
+  # You can obtain your user ID and API url by logging into ActiveCollab and
+  # clicking on "Profile" and then "API Settings". When on that page, look
+  # at the URL. The integer that appears after "/user/" is your user ID.
+  #
   # Projects should be entered in a comma-separated list, with the project
   # id as the key and the name you'd like to use for the project in Taskwarrior
   # entered as the value. For example, if the project ID is 8 and the project's
   # name in ActiveCollab is "Amazing Website" then you might enter 8:amazing_website
+
   [activecollab2]
   service = activecollab2
   url = http://ac.example.org/api.php
