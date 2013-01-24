@@ -15,7 +15,7 @@ It currently supports the following remote resources:
  - `teamlab <http://www.teamlab.com/>`_
  - `redmine <http://www.redmine.org/>`_
  - `jira <http://www.atlassian.com/software/jira/overview>`_
- - `activecollab 2.x <http://www.activecollab.com>`
+ - `activecollab 2.x <http://www.activecollab.com>`_
 
 Configuring
 -----------
