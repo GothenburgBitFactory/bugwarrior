@@ -158,6 +158,13 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # id as the key and the name you'd like to use for the project in Taskwarrior
   # entered as the value. For example, if the project ID is 8 and the project's
   # name in ActiveCollab is "Amazing Website" then you might enter 8:amazing_website
+  #
+  # Note that due to limitations in the ActiveCollab API, there is no simple way
+  # to get a list of all tasks you are responsible for in AC. Instead you need to
+  # look at each ticket that you are subscribed to and check to see if your
+  # user ID is responsible for the ticket/task. What this means is that if you
+  # have 5 projects you want to query and each project has 20 tickets, you'll
+  # make 100 API requests each time you run `bugwarrior-pull`
 
   [activecollab2]
   service = activecollab2

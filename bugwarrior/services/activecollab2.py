@@ -67,10 +67,10 @@ class Client(object):
                     assigned_task['created_by_id'] = task[u'created_by_id']
 
                 if assigned_task:
-                    log.debug(" Adding '" + assigned_task['description'] + "' to issue list.")
+                    log.debug(" Adding '" + assigned_task['description'] + "' to task list.")
                     assigned_tasks.append(assigned_task)
         except:
-            log.debug('No user tasks loaded for "%s"' % project_name)
+            log.debug('No user tasks loaded for "%s".' % project_name)
 
         return assigned_tasks
 
@@ -92,7 +92,7 @@ class ActiveCollab2Service(IssueService):
         self.key = self.config.get(self.target, 'key')
         self.user_id = self.config.get(self.target, 'user_id')
 
-        # Make a dictionary of projects
+        # Make a list of projects from the config
         projects_raw = str(self.config.get(self.target, 'projects'))
         projects_list = projects_raw.split(', ')
         projects = []
@@ -126,7 +126,6 @@ class ActiveCollab2Service(IssueService):
             'task': 'Task',
         }
 
-        # TODO -- get the '45' here from the config.
         return "%s%s%s - %s" % (
             MARKUP, cls_markup[cls], str(ticket_id),
             title[:45],
