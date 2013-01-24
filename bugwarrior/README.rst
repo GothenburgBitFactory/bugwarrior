@@ -148,7 +148,8 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   user_id = 7
   project_name = redmine
 
-  # Here's an example of an activecollab2 target
+  # Here's an example of an activecollab2 target. Note that this will only work
+  # with ActiveCollab 2.x and *not* with ActiveCollab 3.x.
   #
   # You can obtain your user ID and API url by logging into ActiveCollab and
   # clicking on "Profile" and then "API Settings". When on that page, look
