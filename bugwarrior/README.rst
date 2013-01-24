@@ -216,8 +216,10 @@ download the latest tarball::
 Contributors
 ------------
 
-- Ralph Bean
-- Luke Macken
-- James Rowe
-- Justin Forest
-- Tycho Garen
+- Ralph Bean (primary author)
+- Justin Forest (contributed support for RedMine, TeamLab, and MegaPlan, as
+  well as some unicode help)
+- Tycho Garen (contributed support for Jira)
+- Kosta Harlan (contributed support for ActiveCollab2)
+- Luke Macken (contributed some code cleaning)
+- James Rowe (contributed to the docs)
