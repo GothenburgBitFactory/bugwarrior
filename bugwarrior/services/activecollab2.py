@@ -24,7 +24,7 @@ class Client(object):
     def format_date(self, date):
         d = datetime.datetime.fromtimestamp(time.mktime(time.strptime(
                     date, "%Y-%m-%d")))
-        timestamp = time.mktime(d.timetuple())
+        timestamp = int(time.mktime(d.timetuple()))
         return timestamp
 
     # Return a priority of L, M, or H based on AC's priority index of -2 to 2
@@ -68,8 +68,7 @@ class Client(object):
                             assigned_task['created_on'] = ticket_data[u'created_on']
                             assigned_task['created_by_id'] = ticket_data[u'created_by_id']
                             assigned_task['priority'] = self.format_priority(ticket_data[u'priority'])
-                            if ticket_data[u'due_on'] is not None:
-                                assigned_task['due'] = self.format_date(ticket_data[u'due_on'])
+                            assigned_task['due'] = self.format_date(ticket_data[u'due_on'])
 
                 elif task[u'type'] == 'Task':
                     # Load Task data
@@ -82,8 +81,7 @@ class Client(object):
                     assigned_task['created_on'] = task[u'created_on']
                     assigned_task['created_by_id'] = task[u'created_by_id']
                     assigned_task['priority'] = self.format_priority(task[u'priority'])
-                    if task[u'due_on'] is not None:
-                        assigned_task['due'] = self.format_date(task[u'due_on'])
+                    assigned_task['due'] = self.format_date(task[u'due_on'])
 
                 if assigned_task:
                     log.debug(" Adding '" + assigned_task['description'] + "' to task list.")
@@ -187,6 +185,7 @@ class ActiveCollab2Service(IssueService):
                 issue["project_id"], issue["ticket_id"], issue["type"],
             ),
             project=self.get_project_name(issue),
-            priority=self.default_priority,
+            due=issue["due"],
+            priority=issue["priority"],
             **self.annotations(issue)
         ) for issue in issues]
