@@ -20,6 +20,19 @@ class Client(object):
         self.user_id = user_id
         self.projects = projects
 
+    # Return a UNIX timestamp from an ActiveCollab date
+    def format_date(self, date):
+        d = datetime.datetime.fromtimestamp(time.mktime(time.strptime(
+                    date, "%Y-%m-%d")))
+        timestamp = time.mktime(d.timetuple())
+        return timestamp
+
+    # Return a priority of L, M, or H based on AC's priority index of -2 to 2
+    def format_priority(self, priority):
+        priority = str(priority)
+        priority_map = {'-2': 'L', '-1': 'L', '0': 'M', '1': 'H', '2': 'H'}
+        return priority_map[priority]
+
     def find_issues(self, user_id=None, project_id=None, project_name=None):
         """
         Approach:
@@ -54,6 +67,9 @@ class Client(object):
                             assigned_task['type'] = "ticket"
                             assigned_task['created_on'] = ticket_data[u'created_on']
                             assigned_task['created_by_id'] = ticket_data[u'created_by_id']
+                            assigned_task['priority'] = self.format_priority(ticket_data[u'priority'])
+                            if ticket_data[u'due_on'] is not None:
+                                assigned_task['due'] = self.format_date(ticket_data[u'due_on'])
 
                 elif task[u'type'] == 'Task':
                     # Load Task data
@@ -65,6 +81,9 @@ class Client(object):
                     assigned_task['type'] = "task"
                     assigned_task['created_on'] = task[u'created_on']
                     assigned_task['created_by_id'] = task[u'created_by_id']
+                    assigned_task['priority'] = self.format_priority(task[u'priority'])
+                    if task[u'due_on'] is not None:
+                        assigned_task['due'] = self.format_date(task[u'due_on'])
 
                 if assigned_task:
                     log.debug(" Adding '" + assigned_task['description'] + "' to task list.")
