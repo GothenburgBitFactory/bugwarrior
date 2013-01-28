@@ -58,6 +58,7 @@ class Client(object):
                     # @todo Implement threading here.
                     ticket_data = self.call_api("/projects/" + str(task[u'project_id']) + "/tickets/" + str(task[u'ticket_id']))
                     assignees = ticket_data[u'assignees']
+                    log.debug(" Analyzing ticket/task %s" % ticket_data['description'])
 
                     for k, v in enumerate(assignees):
                         if (v[u'is_owner'] is True) and (v[u'user_id'] == int(self.user_id)):
@@ -71,7 +72,7 @@ class Client(object):
                             assigned_task['created_on'] = ticket_data[u'created_on']
                             assigned_task['created_by_id'] = ticket_data[u'created_by_id']
                             assigned_task['priority'] = self.format_priority(ticket_data[u'priority'])
-                            if assigned_task['due'] is not None:
+                            if 'due_on' in ticket_data:
                                 assigned_task['due'] = self.format_date(ticket_data[u'due_on'])
                             else:
                                 assigned_task['due'] = None
@@ -88,7 +89,7 @@ class Client(object):
                     assigned_task['created_on'] = task[u'created_on']
                     assigned_task['created_by_id'] = task[u'created_by_id']
                     assigned_task['priority'] = self.format_priority(task[u'priority'])
-                    if assigned_task['due'] is not None:
+                    if 'due_on' in task:
                         assigned_task['due'] = self.format_date(task[u'due_on'])
                     else:
                         assigned_task['due'] = None
@@ -105,6 +106,7 @@ class Client(object):
         global api_count
         api_count += 1
         url = self.url.rstrip("/") + "?token=" + self.key + "&path_info=" + uri + "&format=json"
+        log.debug("API request: %s" % url)
         req = urllib2.Request(url)
         res = urllib2.urlopen(req)
 
