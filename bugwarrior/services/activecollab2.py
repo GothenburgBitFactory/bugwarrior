@@ -51,7 +51,6 @@ class Client(object):
 
         try:
             for key, task in enumerate(user_tasks_data):
-                log.debug('analyzing task data')
                 task_count += 1
                 assigned_task = dict()
                 if task[u'type'] == 'Ticket':
@@ -59,11 +58,9 @@ class Client(object):
                     # @todo Implement threading here.
                     ticket_data = self.call_api("/projects/" + str(task[u'project_id']) + "/tickets/" + str(task[u'ticket_id']))
                     assignees = ticket_data[u'assignees']
-                    log.debug(" Analyzing ticket/task %s" % ticket_data['description'])
 
                     for k, v in enumerate(assignees):
-                        if (v[u'is_owner'] is True) and (v[u'user_id'] == int(self.user_id)):
-                            log.debug(" Adding '" + assigned_task['description'] + "' to ticket list.")
+                        if ((v[u'is_owner'] is True) and (v[u'user_id'] == int(self.user_id))):
                             assigned_task['permalink'] = ticket_data[u'permalink']
                             assigned_task['ticket_id'] = ticket_data[u'ticket_id']
                             assigned_task['project_id'] = ticket_data[u'project_id']
@@ -76,14 +73,11 @@ class Client(object):
                                 assigned_task['priority'] = self.format_priority(ticket_data[u'priority'])
                             else:
                                 assigned_task['priority'] = self.default_priority
-                            if 'due_on' in ticket_data:
+                            if ticket_data[u'due_on'] is not None:
                                 assigned_task['due'] = self.format_date(ticket_data[u'due_on'])
-                            else:
-                                assigned_task['due'] = None
 
                 elif task[u'type'] == 'Task':
                     # Load Task data
-                    log.debug(" Adding '" + assigned_task['description'] + "' to assigned task list.")
                     assigned_task['permalink'] = task[u'permalink']
                     assigned_task['project'] = project_name
                     assigned_task['description'] = task[u'body']
@@ -92,14 +86,12 @@ class Client(object):
                     assigned_task['type'] = "task"
                     assigned_task['created_on'] = task[u'created_on']
                     assigned_task['created_by_id'] = task[u'created_by_id']
-                    if 'priority' in ticket_data:
+                    if 'priority' in task:
                         assigned_task['priority'] = self.format_priority(task[u'priority'])
                     else:
                         assigned_task['priority'] = self.default_priority
-                    if 'due_on' in task:
+                    if task[u'due_on'] is not None:
                         assigned_task['due'] = self.format_date(task[u'due_on'])
-                    else:
-                        assigned_task['due'] = None
 
                 if assigned_task:
                     log.debug(" Adding '" + assigned_task['description'] + "' to task list.")
@@ -197,13 +189,20 @@ class ActiveCollab2Service(IssueService):
         log.debug(" {0} tasks and tickets analyzed", task_count)
         log.debug(" Elapsed Time: %s" % (time.time() - start))
 
-        return [dict(
-            description=self.description(
+        formatted_issues = []
+
+        for issue in issues:
+            formatted_issue = dict(
+                description=self.description(
                 issue["description"],
                 issue["project_id"], issue["ticket_id"], issue["type"],
-            ),
-            project=self.get_project_name(issue),
-            due=issue["due"],
-            priority=issue["priority"],
-            **self.annotations(issue)
-        ) for issue in issues]
+                ),
+                project=self.get_project_name(issue),
+                priority=issue["priority"],
+                **self.annotations(issue)
+            )
+            if "due" in issue:
+                formatted_issue["due"] = issue["due"]
+            formatted_issues.append(formatted_issue)
+
+        return formatted_issues
