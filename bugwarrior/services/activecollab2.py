@@ -51,6 +51,7 @@ class Client(object):
 
         try:
             for key, task in enumerate(user_tasks_data):
+                log.debug('analyzing task data')
                 task_count += 1
                 assigned_task = dict()
                 if task[u'type'] == 'Ticket':
@@ -71,7 +72,10 @@ class Client(object):
                             assigned_task['type'] = "ticket"
                             assigned_task['created_on'] = ticket_data[u'created_on']
                             assigned_task['created_by_id'] = ticket_data[u'created_by_id']
-                            assigned_task['priority'] = self.format_priority(ticket_data[u'priority'])
+                            if 'priority' in ticket_data:
+                                assigned_task['priority'] = self.format_priority(ticket_data[u'priority'])
+                            else:
+                                assigned_task['priority'] = self.default_priority
                             if 'due_on' in ticket_data:
                                 assigned_task['due'] = self.format_date(ticket_data[u'due_on'])
                             else:
@@ -88,7 +92,10 @@ class Client(object):
                     assigned_task['type'] = "task"
                     assigned_task['created_on'] = task[u'created_on']
                     assigned_task['created_by_id'] = task[u'created_by_id']
-                    assigned_task['priority'] = self.format_priority(task[u'priority'])
+                    if 'priority' in ticket_data:
+                        assigned_task['priority'] = self.format_priority(task[u'priority'])
+                    else:
+                        assigned_task['priority'] = self.default_priority
                     if 'due_on' in task:
                         assigned_task['due'] = self.format_date(task[u'due_on'])
                     else:
@@ -106,7 +113,6 @@ class Client(object):
         global api_count
         api_count += 1
         url = self.url.rstrip("/") + "?token=" + self.key + "&path_info=" + uri + "&format=json"
-        log.debug("API request: %s" % url)
         req = urllib2.Request(url)
         res = urllib2.urlopen(req)
 
