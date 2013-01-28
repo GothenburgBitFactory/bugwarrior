@@ -22,6 +22,8 @@ class Client(object):
 
     # Return a UNIX timestamp from an ActiveCollab date
     def format_date(self, date):
+        if date is None:
+            return
         d = datetime.datetime.fromtimestamp(time.mktime(time.strptime(
                     date, "%Y-%m-%d")))
         timestamp = int(time.mktime(d.timetuple()))
@@ -59,6 +61,7 @@ class Client(object):
 
                     for k, v in enumerate(assignees):
                         if (v[u'is_owner'] is True) and (v[u'user_id'] == int(self.user_id)):
+                            log.debug(" Adding '" + assigned_task['description'] + "' to ticket list.")
                             assigned_task['permalink'] = ticket_data[u'permalink']
                             assigned_task['ticket_id'] = ticket_data[u'ticket_id']
                             assigned_task['project_id'] = ticket_data[u'project_id']
@@ -68,10 +71,14 @@ class Client(object):
                             assigned_task['created_on'] = ticket_data[u'created_on']
                             assigned_task['created_by_id'] = ticket_data[u'created_by_id']
                             assigned_task['priority'] = self.format_priority(ticket_data[u'priority'])
-                            assigned_task['due'] = self.format_date(ticket_data[u'due_on'])
+                            if assigned_task['due'] is not None:
+                                assigned_task['due'] = self.format_date(ticket_data[u'due_on'])
+                            else:
+                                assigned_task['due'] = None
 
                 elif task[u'type'] == 'Task':
                     # Load Task data
+                    log.debug(" Adding '" + assigned_task['description'] + "' to assigned task list.")
                     assigned_task['permalink'] = task[u'permalink']
                     assigned_task['project'] = project_name
                     assigned_task['description'] = task[u'body']
@@ -81,13 +88,16 @@ class Client(object):
                     assigned_task['created_on'] = task[u'created_on']
                     assigned_task['created_by_id'] = task[u'created_by_id']
                     assigned_task['priority'] = self.format_priority(task[u'priority'])
-                    assigned_task['due'] = self.format_date(task[u'due_on'])
+                    if assigned_task['due'] is not None:
+                        assigned_task['due'] = self.format_date(task[u'due_on'])
+                    else:
+                        assigned_task['due'] = None
 
                 if assigned_task:
                     log.debug(" Adding '" + assigned_task['description'] + "' to task list.")
                     assigned_tasks.append(assigned_task)
         except:
-            log.debug('No user tasks loaded for "%s".' % project_name)
+            log.debug(' No user tasks loaded for "%s".' % project_name)
 
         return assigned_tasks
 
