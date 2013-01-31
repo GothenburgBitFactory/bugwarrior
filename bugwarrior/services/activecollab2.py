@@ -20,6 +20,21 @@ class Client(object):
         self.user_id = user_id
         self.projects = projects
 
+    # Return a UNIX timestamp from an ActiveCollab date
+    def format_date(self, date):
+        if date is None:
+            return
+        d = datetime.datetime.fromtimestamp(time.mktime(time.strptime(
+                    date, "%Y-%m-%d")))
+        timestamp = int(time.mktime(d.timetuple()))
+        return timestamp
+
+    # Return a priority of L, M, or H based on AC's priority index of -2 to 2
+    def format_priority(self, priority):
+        priority = str(priority)
+        priority_map = {'-2': 'L', '-1': 'L', '0': 'M', '1': 'H', '2': 'H'}
+        return priority_map[priority]
+
     def find_issues(self, user_id=None, project_id=None, project_name=None):
         """
         Approach:
@@ -45,7 +60,7 @@ class Client(object):
                     assignees = ticket_data[u'assignees']
 
                     for k, v in enumerate(assignees):
-                        if (v[u'is_owner'] is True) and (v[u'user_id'] == int(self.user_id)):
+                        if ((v[u'is_owner'] is True) and (v[u'user_id'] == int(self.user_id))):
                             assigned_task['permalink'] = ticket_data[u'permalink']
                             assigned_task['ticket_id'] = ticket_data[u'ticket_id']
                             assigned_task['project_id'] = ticket_data[u'project_id']
@@ -54,6 +69,12 @@ class Client(object):
                             assigned_task['type'] = "ticket"
                             assigned_task['created_on'] = ticket_data[u'created_on']
                             assigned_task['created_by_id'] = ticket_data[u'created_by_id']
+                            if 'priority' in ticket_data:
+                                assigned_task['priority'] = self.format_priority(ticket_data[u'priority'])
+                            else:
+                                assigned_task['priority'] = self.default_priority
+                            if ticket_data[u'due_on'] is not None:
+                                assigned_task['due'] = self.format_date(ticket_data[u'due_on'])
 
                 elif task[u'type'] == 'Task':
                     # Load Task data
@@ -65,12 +86,18 @@ class Client(object):
                     assigned_task['type'] = "task"
                     assigned_task['created_on'] = task[u'created_on']
                     assigned_task['created_by_id'] = task[u'created_by_id']
+                    if 'priority' in task:
+                        assigned_task['priority'] = self.format_priority(task[u'priority'])
+                    else:
+                        assigned_task['priority'] = self.default_priority
+                    if task[u'due_on'] is not None:
+                        assigned_task['due'] = self.format_date(task[u'due_on'])
 
                 if assigned_task:
                     log.debug(" Adding '" + assigned_task['description'] + "' to task list.")
                     assigned_tasks.append(assigned_task)
         except:
-            log.debug('No user tasks loaded for "%s".' % project_name)
+            log.debug(' No user tasks loaded for "%s".' % project_name)
 
         return assigned_tasks
 
@@ -162,12 +189,20 @@ class ActiveCollab2Service(IssueService):
         log.debug(" {0} tasks and tickets analyzed", task_count)
         log.debug(" Elapsed Time: %s" % (time.time() - start))
 
-        return [dict(
-            description=self.description(
+        formatted_issues = []
+
+        for issue in issues:
+            formatted_issue = dict(
+                description=self.description(
                 issue["description"],
                 issue["project_id"], issue["ticket_id"], issue["type"],
-            ),
-            project=self.get_project_name(issue),
-            priority=self.default_priority,
-            **self.annotations(issue)
-        ) for issue in issues]
+                ),
+                project=self.get_project_name(issue),
+                priority=issue["priority"],
+                **self.annotations(issue)
+            )
+            if "due" in issue:
+                formatted_issue["due"] = issue["due"]
+            formatted_issues.append(formatted_issue)
+
+        return formatted_issues
