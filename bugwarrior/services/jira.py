@@ -30,10 +30,8 @@ class JiraService(IssueService):
         super(JiraService, self).__init__(*args, **kw)
         self.username = self.config.get(self.target, 'jira.username')
         self.url = self.config.get(self.target, 'jira.base_uri')
-        if self.config.has_option(self.target, 'jira.query'):
-        	self.query = self.config.get(self.target, 'jira.query')
-        else:
-			self.query = 'assignee=' + self.username + ' AND status != closed and status != resolved'
+        default_query = 'assignee=' + self.username + ' AND status != closed and status != resolved'
+        self.query = self.config.get(self.target, 'jira.query', default_query)
         self.jira = JIRA(options={'server': self.config.get(self.target, 'jira.base_uri')},
                          basic_auth=(self.username,
                                      self.config.get(self.target, 'jira.password')))
