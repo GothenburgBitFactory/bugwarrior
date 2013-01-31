@@ -74,7 +74,13 @@ def _getter(url, auth):
             raise IOError(
                 "Non-200 status code %r; %r" % (response.status_code, url))
 
-        results += response.json()
+        if callable(response.json):
+            # Newer python-requests
+            results += response.json()
+        else:
+            # Older python-requests
+            results += response.json
+
         link = _link_field_to_dict(response.headers['link'])
 
     return results

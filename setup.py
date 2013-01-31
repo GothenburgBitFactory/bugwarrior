@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.5.7'
+version = '0.5.8'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -30,7 +30,9 @@ setup(name='bugwarrior',
       install_requires=[
           "twiggy",
           "bitlyapi",
-          "requests",
+          # We use requests ourselves, but we limit the version just so
+          # jira-python can use it correctly.
+          "requests<=0.14.2",
           "offtrac",
           "python-bugzilla",
           "jira-python",

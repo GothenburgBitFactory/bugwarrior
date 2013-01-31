@@ -15,7 +15,7 @@ It currently supports the following remote resources:
  - `teamlab <http://www.teamlab.com/>`_
  - `redmine <http://www.redmine.org/>`_
  - `jira <http://www.atlassian.com/software/jira/overview>`_
- - `activecollab 2.x <http://www.activecollab.com>`
+ - `activecollab 2.x <http://www.activecollab.com>`_
 
 Configuring
 -----------
@@ -121,14 +121,15 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # Here's an example of a jira project. The ``jira-python`` module is
   # a bit particular, and jira deployments, like Bugzilla, tend to be
   # reasonably customized. So YMMV. The ``base_uri`` must not have a
-  # have a trailing slash. This will fetch comments and cases from
-  # jira assigned to ``username`` where the status is not closed or
+  # have a trailing slash. In this case we fetch comments and 
+  # cases from jira assigned to 'ralph' where the status is not closed or
   # resolved.
   [jira.project]
   service = jira
   jira.base_uri = https://jira.example.org
   jira.username = ralph
   jira.password = OMG_LULZ
+  jira.query = assignee = ralph and status != closed and status != resolved
 
   # Here's an example of a teamlab target.
   [my_teamlab]
