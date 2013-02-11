@@ -93,13 +93,13 @@ class TeamLabService(IssueService):
 
     def issues(self):
         issues = self.client.get_task_list()
-        log.debug(" Remote has {0} total issues.", len(issues))
+        log.name(self.target).debug(" Remote has {0} total issues.", len(issues))
         if not issues:
             return []
 
         # Filter out closed tasks.
         issues = filter(lambda i: i["status"] == 1, issues)
-        log.debug(" Remote has {0} active issues.", len(issues))
+        log.name(self.target).debug(" Remote has {0} active issues.", len(issues))
 
         return [dict(
             description=self.description(

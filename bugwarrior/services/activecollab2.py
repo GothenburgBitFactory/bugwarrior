@@ -94,10 +94,10 @@ class Client(object):
                         assigned_task['due'] = self.format_date(task[u'due_on'])
 
                 if assigned_task:
-                    log.debug(" Adding '" + assigned_task['description'] + "' to task list.")
+                    log.name(self.target).debug(" Adding '" + assigned_task['description'] + "' to task list.")
                     assigned_tasks.append(assigned_task)
         except:
-            log.debug(' No user tasks loaded for "%s".' % project_name)
+            log.name(self.target).debug(' No user tasks loaded for "%s".' % project_name)
 
         return assigned_tasks
 
@@ -180,14 +180,14 @@ class ActiveCollab2Service(IssueService):
         # @todo Implement threading here.
         for project in projects:
             for project_id, project_name in project.iteritems():
-                log.debug(" Getting tasks for #" + project_id + " " + project_name + '"')
+                log.name(self.target).debug(" Getting tasks for #" + project_id + " " + project_name + '"')
                 issues += self.client.find_issues(self.user_id, project_id, project_name)
 
-        log.debug(" Found {0} total.", len(issues))
+        log.name(self.target).debug(" Found {0} total.", len(issues))
         global api_count
-        log.debug(" {0} API calls", api_count)
-        log.debug(" {0} tasks and tickets analyzed", task_count)
-        log.debug(" Elapsed Time: %s" % (time.time() - start))
+        log.name(self.target).debug(" {0} API calls", api_count)
+        log.name(self.target).debug(" {0} tasks and tickets analyzed", task_count)
+        log.name(self.target).debug(" Elapsed Time: %s" % (time.time() - start))
 
         formatted_issues = []
 

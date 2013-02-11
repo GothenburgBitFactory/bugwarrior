@@ -47,7 +47,7 @@ class MegaplanService(IssueService):
 
     def issues(self):
         issues = self.client.get_actual_tasks()
-        log.debug(" Found {0} total.", len(issues))
+        log.name(self.target).debug(" Found {0} total.", len(issues))
 
         return [dict(
             description=self.description(

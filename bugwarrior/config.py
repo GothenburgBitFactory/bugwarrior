@@ -9,6 +9,11 @@ import sys
 from ConfigParser import ConfigParser
 
 
+def asbool(some_value):
+    """ Cast config values to boolean. """
+    return str(some_value).lower() in ['y', 'yes', 't', 'true', '1', 'on']
+
+
 def load_example_rc():
     root = '/'.join(__file__.split('/')[:-1])
     fname = root + '/README.rst'
@@ -66,7 +71,9 @@ def validate_config(config):
 
     for option in ['bitly.api_user', 'bitly.api_key']:
         if not config.has_option('general', option):
-            log.warning("URLs will not be shortened with bit.ly")
+            log.name('config').warning(
+                "URLs will not be shortened with bit.ly"
+            )
 
     # Validate each target one by one.
     for target in targets:

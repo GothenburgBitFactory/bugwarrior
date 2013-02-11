@@ -3,7 +3,7 @@ from twiggy import log
 import bitlyapi
 import time
 
-from bugwarrior.config import die
+from bugwarrior.config import die, asbool
 from bugwarrior.db import MARKUP
 
 
@@ -15,7 +15,7 @@ class IssueService(object):
         self.target = target
         self.shorten = shorten
 
-        log.info("Working on [{0}]", self.target)
+        log.name(target).info("Working on [{0}]", self.target)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -146,29 +146,67 @@ try:
 except ImportError:
     pass
 
+WORKER_FAILURE = "__this signifies a worker failure__"
+
+
+def _aggregate_issues(args):
+    """ This worker function is separated out from the main
+    :func:`aggregate_issues` func only so that we can use multiprocessing
+    on it for speed reasons.
+    """
+
+    # Unpack arguments
+    conf, target = args
+
+    try:
+        # By default, we don't shorten URLs
+        shorten = lambda url: url
+
+        # Setup bitly shortening callback if creds are specified
+        bitly_opts = ['bitly.api_user', 'bitly.api_key']
+        if all([conf.has_option('general', opt) for opt in bitly_opts]):
+            get_opt = lambda option: conf.get('general', option)
+            bitly = bitlyapi.BitLy(
+                get_opt('bitly.api_user'),
+                get_opt('bitly.api_key')
+            )
+            shorten = lambda url: bitly.shorten(longUrl=url)['url']
+
+        service = SERVICES[conf.get(target, 'service')](conf, target, shorten)
+        return service.issues()
+    except Exception as e:
+        log.name(target).trace('error').critical("worker failure")
+        return WORKER_FAILURE
+    finally:
+        log.name(target).info("Done with [%s]" % target)
+
+# Import here so that mproc knows about _aggregate_issues
+import multiprocessing
+
 
 def aggregate_issues(conf):
     """ Return all issues from every target.
 
     Takes a config object and a callable which returns a shortened url.
     """
-
-    # By default, we don't shorten URLs
-    shorten = lambda url: url
-
-    # Setup bitly shortening callback if creds are specified
-    bitly_opts = ['bitly.api_user', 'bitly.api_key']
-    if all([conf.has_option('general', opt) for opt in bitly_opts]):
-        get_opt = lambda option: conf.get('general', option)
-        bitly = bitlyapi.BitLy(
-            get_opt('bitly.api_user'),
-            get_opt('bitly.api_key')
-        )
-        shorten = lambda url: bitly.shorten(longUrl=url)['url']
+    log.name('bugwarrior').info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
     targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
-    return sum([
-        SERVICES[conf.get(t, 'service')](conf, t, shorten).issues()
-        for t in targets
-    ], [])
+
+    # This multiprocessing stuff is kind of experimental.
+    map_function = map
+    if asbool(conf.get('general', 'multiprocessing', 'True')):
+        log.name('bugwarrior').info("Spawning %i workers." % len(targets))
+        pool = multiprocessing.Pool(processes=len(targets))
+        map_function = pool.map
+
+    issues_by_target = map_function(
+        _aggregate_issues,
+        zip([conf] * len(targets), targets)
+    )
+    log.name('bugwarrior').info("Done aggregating remove issues.")
+    if WORKER_FAILURE in issues_by_target:
+        log.name('bugwarrior').critical("A worker failed.  Aborting.")
+        raise RuntimeError('Worker failure')
+    return sum(issues_by_target, [])
