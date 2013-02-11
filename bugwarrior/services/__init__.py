@@ -146,6 +146,8 @@ try:
 except ImportError:
     pass
 
+WORKER_FAILURE = "__this signifies a worker failure__"
+
 
 def _aggregate_issues(args):
     """ This worker function is separated out from the main
@@ -172,9 +174,9 @@ def _aggregate_issues(args):
 
         service = SERVICES[conf.get(target, 'service')](conf, target, shorten)
         return service.issues()
-    except Exception, e:
-        log.name(target).trace(e)
-        raise
+    except Exception as e:
+        log.name(target).trace('error').critical("worker failure")
+        return WORKER_FAILURE
     finally:
         log.name(target).info("Done with [%s]" % target)
 
@@ -199,8 +201,12 @@ def aggregate_issues(conf):
         pool = multiprocessing.Pool(processes=len(targets))
         map_function = pool.map
 
-    return sum(
-        map_function(
-            _aggregate_issues,
-            zip([conf] * len(targets), targets)
-        ), [])
+    issues_by_target = map_function(
+        _aggregate_issues,
+        zip([conf] * len(targets), targets)
+    )
+    log.name('bugwarrior').info("Done aggregating remove issues.")
+    if WORKER_FAILURE in issues_by_target:
+        log.name('bugwarrior').critical("A worker failed.  Aborting.")
+        raise RuntimeError('Worker failure')
+    return sum(issues_by_target, [])
