@@ -16,4 +16,4 @@ def pull():
         # Stuff them in the taskwarrior db as necessary
         synchronize(issues)
     except:
-        log.trace('error').critical('oh noes')
+        log.name('command').trace('error').critical('oh noes')

@@ -97,7 +97,7 @@ class BugzillaService(IssueService):
         ]
 
         issues = [(self.target, bug) for bug in bugs]
-        log.debug(" Found {0} total.", len(issues))
+        log.name(self.target).debug(" Found {0} total.", len(issues))
 
         # Build a url for each issue
         base_url = "https://%s/show_bug.cgi?id=" % \
@@ -112,7 +112,7 @@ class BugzillaService(IssueService):
         # can already do a lot of the filtering we want for us.
 
         #issues = filter(self.include, issues)
-        #log.debug(" Pruned down to {0}", len(issues))
+        #log.name(self.target).debug(" Pruned down to {0}", len(issues))
 
         return [dict(
             description=self.description(

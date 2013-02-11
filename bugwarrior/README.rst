@@ -50,6 +50,13 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   #bitly.api_user = YOUR_USERNAME
   #bitly.api_key = YOUR_API_KEY
 
+  # This is an experimental mode where bugwarrior will query all of your
+  # online sources simultaneously.  It works as far as I've tested it, so
+  # give it a try.  Please backup your ~/.task/ directory first and report
+  # any problems if you encounter them at
+  # https://github.com/ralphbean/bugwarrior/issues
+  #multiprocessing = False
+
   # This is a github example.  It says, "scrape every issue from every repository
   # on http://github.com/ralphbean.  It doesn't matter if ralphbean owns the issue
   # or not."
