@@ -11,15 +11,16 @@ def synchronize(issues):
 
     # Load info about the task database
     tasks = tw.load_tasks()
-    is_bugwarrior_task = lambda task: task.get('description', '').startswith(MARKUP)
+    is_bugwarrior_task = lambda task: \
+        task.get('description', '').startswith(MARKUP)
 
     # Prune down to only tasks managed by bugwarrior
     for key in tasks.keys():
         tasks[key] = filter(is_bugwarrior_task, tasks[key])
 
     # Build a list of only the descriptions of those local bugwarrior tasks
-    local_descs = [t['description'] for t in sum(tasks.values(), []) \
-        if t['status'] not in ('deleted')]
+    local_descs = [t['description'] for t in sum(tasks.values(), [])
+                   if t['status'] not in ('deleted')]
 
     # Now for the remote data.
     # Build a list of only the descriptions of those remote issues
@@ -34,11 +35,14 @@ def synchronize(issues):
     is_done = lambda task: task['description'] not in remote_descs
     done_tasks = filter(is_done, tasks['pending'])
 
-    log.struct(new=len(new_issues), completed=len(done_tasks))
+    log.name('db').struct(new=len(new_issues), completed=len(done_tasks))
 
     # Add new issues
     for issue in new_issues:
-        log.info("Adding task {0}", issue['description'].encode("utf-8"))
+        log.name('db').info(
+            "Adding task {0}",
+            issue['description'].encode("utf-8")
+        )
         tw.task_add(**issue)
 
     # Update any issues that may have had new properties added.  These are
@@ -51,12 +55,18 @@ def synchronize(issues):
         id, task = tw.get_task(description=upstream_issue['description'])
         for key in upstream_issue:
             if key not in task:
-                log.info("Updating {0} on {1}",
-                         key, upstream_issue['description'].encode("utf-8"))
+                log.name('db').info(
+                    "Updating {0} on {1}",
+                    key,
+                    upstream_issue['description'].encode("utf-8"),
+                )
                 task[key] = upstream_issue[key]
                 id, task = tw.task_update(task)
 
     # Delete old issues
     for task in done_tasks:
-        log.info("Completing task {0}", task['description'].encode("utf-8"))
+        log.name('db').info(
+            "Completing task {0}",
+            task['description'].encode("utf-8"),
+        )
         tw.task_done(uuid=task['uuid'])

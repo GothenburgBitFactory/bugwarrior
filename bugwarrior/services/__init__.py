@@ -187,6 +187,7 @@ def aggregate_issues(conf):
 
     Takes a config object and a callable which returns a shortened url.
     """
+    log.name('bugwarrior').info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
     targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
