@@ -147,28 +147,52 @@ except ImportError:
     pass
 
 
+def _aggregate_issues(args):
+    """ This worker function is separated out from the main
+    :func:`aggregate_issues` func only so that we can use multiprocessing
+    on it for speed reasons.
+    """
+
+    # Unpack arguments
+    conf, target = args
+
+    try:
+        # By default, we don't shorten URLs
+        shorten = lambda url: url
+
+        # Setup bitly shortening callback if creds are specified
+        bitly_opts = ['bitly.api_user', 'bitly.api_key']
+        if all([conf.has_option('general', opt) for opt in bitly_opts]):
+            get_opt = lambda option: conf.get('general', option)
+            bitly = bitlyapi.BitLy(
+                get_opt('bitly.api_user'),
+                get_opt('bitly.api_key')
+            )
+            shorten = lambda url: bitly.shorten(longUrl=url)['url']
+
+        service = SERVICES[conf.get(target, 'service')](conf, target, shorten)
+        issues = service.issues()
+    except Exception, e:
+        log.trace(e)
+        raise
+    log.info("Done with [%s]" % target)
+    return issues
+
+# Import here so that mproc knows about _aggregate_issues
+import multiprocessing
+
+
 def aggregate_issues(conf):
     """ Return all issues from every target.
 
     Takes a config object and a callable which returns a shortened url.
     """
 
-    # By default, we don't shorten URLs
-    shorten = lambda url: url
-
-    # Setup bitly shortening callback if creds are specified
-    bitly_opts = ['bitly.api_user', 'bitly.api_key']
-    if all([conf.has_option('general', opt) for opt in bitly_opts]):
-        get_opt = lambda option: conf.get('general', option)
-        bitly = bitlyapi.BitLy(
-            get_opt('bitly.api_user'),
-            get_opt('bitly.api_key')
-        )
-        shorten = lambda url: bitly.shorten(longUrl=url)['url']
-
     # Create and call service objects for every target in the config
     targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
-    return sum([
-        SERVICES[conf.get(t, 'service')](conf, t, shorten).issues()
-        for t in targets
-    ], [])
+    pool = multiprocessing.Pool(processes=len(targets))
+    return sum(
+        pool.map(
+            _aggregate_issues,
+            zip([conf] * len(targets), targets)
+        ), [])
