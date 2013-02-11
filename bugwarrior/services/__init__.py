@@ -3,7 +3,7 @@ from twiggy import log
 import bitlyapi
 import time
 
-from bugwarrior.config import die
+from bugwarrior.config import die, asbool
 from bugwarrior.db import MARKUP
 
 
@@ -15,7 +15,7 @@ class IssueService(object):
         self.target = target
         self.shorten = shorten
 
-        log.info("Working on [{0}]", self.target)
+        log.name(target).info("Working on [{0}]", self.target)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -171,12 +171,12 @@ def _aggregate_issues(args):
             shorten = lambda url: bitly.shorten(longUrl=url)['url']
 
         service = SERVICES[conf.get(target, 'service')](conf, target, shorten)
-        issues = service.issues()
+        return service.issues()
     except Exception, e:
-        log.trace(e)
+        log.name(target).trace(e)
         raise
-    log.info("Done with [%s]" % target)
-    return issues
+    finally:
+        log.name(target).info("Done with [%s]" % target)
 
 # Import here so that mproc knows about _aggregate_issues
 import multiprocessing
@@ -190,9 +190,16 @@ def aggregate_issues(conf):
 
     # Create and call service objects for every target in the config
     targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
-    pool = multiprocessing.Pool(processes=len(targets))
+
+    # This multiprocessing stuff is kind of experimental.
+    map_function = map
+    if asbool(conf.get('general', 'multiprocessing', 'True')):
+        log.name('bugwarrior').info("Spawning %i workers." % len(targets))
+        pool = multiprocessing.Pool(processes=len(targets))
+        map_function = pool.map
+
     return sum(
-        pool.map(
+        map_function(
             _aggregate_issues,
             zip([conf] * len(targets), targets)
         ), [])

@@ -76,7 +76,7 @@ class BitbucketService(IssueService):
         ]
 
         issues = sum([self.pull(user + "/" + repo) for repo in repos], [])
-        log.debug(" Found {0} total.", len(issues))
+        log.name(self.target).debug(" Found {0} total.", len(issues))
 
         # Build a url for each issue
         for i in range(len(issues)):
@@ -88,7 +88,7 @@ class BitbucketService(IssueService):
         not_resolved = lambda tup: tup[1]['status'] not in closed
         issues = filter(not_resolved, issues)
         issues = filter(self.include, issues)
-        log.debug(" Pruned down to {0}", len(issues))
+        log.name(self.target).debug(" Pruned down to {0}", len(issues))
 
         return [dict(
             description=self.description(

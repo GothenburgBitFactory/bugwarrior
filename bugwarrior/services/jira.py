@@ -66,7 +66,7 @@ class JiraService(IssueService):
     def issues(self):
         cases = self.jira.search_issues(self.query, maxResults=-1)
 
-        log.debug(" Found {0} total.", len(cases))
+        log.name(self.target).debug(" Found {0} total.", len(cases))
 
         return [dict(
             description=self.description(

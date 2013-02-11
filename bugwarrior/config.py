@@ -9,6 +9,11 @@ import sys
 from ConfigParser import ConfigParser
 
 
+def asbool(some_value):
+    """ Cast config values to boolean. """
+    return str(some_value).lower() in ['y', 'yes', 't', 'true', '1', 'on']
+
+
 def load_example_rc():
     root = '/'.join(__file__.split('/')[:-1])
     fname = root + '/README.rst'
