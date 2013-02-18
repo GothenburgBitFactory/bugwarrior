@@ -32,6 +32,7 @@ class JiraService(IssueService):
         self.url = self.config.get(self.target, 'jira.base_uri')
         default_query = 'assignee=' + self.username + ' AND status != closed and status != resolved'
         self.query = self.config.get(self.target, 'jira.query', default_query)
+        self.project_prefix = self.config.get(self.target, 'jira.project_prefix', '')
         self.jira = JIRA(options={'server': self.config.get(self.target, 'jira.base_uri')},
                          basic_auth=(self.username,
                                      self.config.get(self.target, 'jira.password')))
@@ -74,7 +75,7 @@ class JiraService(IssueService):
                 url=self.url + '/browse/' + case.key,
                 number=case.key.rsplit('-', 1)[1], cls="issue",
             ),
-            project=case.key.rsplit('-', 1)[0],
+            project=self.project_prefix + case.key.rsplit('-', 1)[0],
             priority=self.priorities.get(
                 get_priority(case.fields.priority),
                 self.default_priority,

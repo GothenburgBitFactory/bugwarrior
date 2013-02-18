@@ -130,6 +130,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   jira.username = ralph
   jira.password = OMG_LULZ
   jira.query = assignee = ralph and status != closed and status != resolved
+  jira.project_prefix = Programming.
 
   # Here's an example of a teamlab target.
   [my_teamlab]
