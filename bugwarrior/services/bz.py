@@ -65,10 +65,10 @@ class BugzillaService(IssueService):
         return dict([
             self.format_annotation(
                 datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-                    c['time'], "%Y-%m-%d %H:%M:%S"))),
-                c['author']['login_name'].split('@')[0],
-                c['body'],
-            ) for c in issue['longdescs']])
+                    c['time'].value, "%Y%m%dT%H:%M:%S"))),
+                c['author'].split('@')[0],
+                c['text'],
+            ) for c in issue['comments']])
 
     def issues(self):
         email = self.config.get(self.target, 'bugzilla.username')
