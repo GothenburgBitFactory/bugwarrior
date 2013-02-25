@@ -8,7 +8,6 @@ import urllib2
 import time
 import json
 import datetime
-import pprint
 
 api_count = 0
 task_count = 0
@@ -45,21 +44,15 @@ class Client(object):
         return priority_map[priority]
 
     def find_issues(self, user_id=None, project_id=None, project_name=None):
-        """
-        Approach:
-
-        1. Get user ID from .bugwarriorrc file
-        2. Get list of tickets from /user-tasks for a given project
-        3. For each ticket/task returned from #2, get ticket/task info and check
-           if logged-in user is primary (look at `is_owner` and `user_id`)
-        """
         ac = ActiveCollabApi()
+        user_tasks_data = []
+        user_subtasks_data = []
         user_tasks_data = ac.call_api("/projects/" + str(project_id) + "/tasks", self.key, self.url)
         user_subtasks_data = ac.call_api("/projects/" + str(project_id) + "/subtasks", self.key, self.url)
         global task_count
         assigned_tasks = []
 
-        try:
+        if user_tasks_data:
             for key, task in enumerate(user_tasks_data):
                 task_count += 1
                 assigned_task = dict()
@@ -82,12 +75,7 @@ class Client(object):
                     if task[u'due_on'] is not None:
                         assigned_task['due'] = self.format_date(task[u'due_on'][u'mysql'])
                 if assigned_task:
-                    # log.name(self.target).debug(" Adding '" + assigned_task['description'] + "' to task list.")
-                    print ' Adding %s to task list' % assigned_task['description']
                     assigned_tasks.append(assigned_task)
-        except:
-            print ' No user tasks loaded for "%s"' % project_name
-            # log.name(self.target).debug(' No user tasks loaded for "%s".' % project_id)
 
         # Subtasks
         if user_subtasks_data:
@@ -97,10 +85,11 @@ class Client(object):
                 if ((subtask[u'assignee_id'] == int(self.user_id)) and (subtask[u'completed_on'] is None)):
                     # Get permalink
                     assigned_task['permalink'] = (self.url).rstrip('api.php') + 'projects/' + str(project_id) + '/tasks'
-                    for k, t in enumerate(assigned_tasks):
-                        if 'id' in t:
-                            if subtask[u'parent_id'] == t[u'id']:
-                                assigned_task['permalink'] = t[u'permalink']
+                    if assigned_tasks:
+                        for k, t in enumerate(assigned_tasks):
+                            if 'id' in t:
+                                if subtask[u'parent_id'] == t[u'id']:
+                                    assigned_task['permalink'] = t[u'permalink']
                     assigned_task['task_id'] = subtask[u'id']
                     assigned_task['project'] = project_name
                     assigned_task['project_id'] = project_id
@@ -115,8 +104,6 @@ class Client(object):
                     if subtask[u'due_on'] is not None:
                         assigned_task['due'] = self.format_date(subtask[u'due_on'])
                 if assigned_task:
-                    # log.name(self.target).debug(" Adding '" + assigned_task['description'] + "' to task list.")
-                    print ' Adding subtask %s to task list' % assigned_task['description']
                     assigned_tasks.append(assigned_task)
 
         return assigned_tasks
