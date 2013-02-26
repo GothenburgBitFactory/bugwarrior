@@ -37,6 +37,7 @@ setup(name='bugwarrior',
           "python-bugzilla",
           "jira-python",
           "taskw >= 0.4.2",
+          "dogpile.cache",
       ],
       entry_points="""
       [console_scripts]
