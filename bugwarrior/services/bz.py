@@ -117,8 +117,7 @@ class BugzillaService(IssueService):
         return [dict(
             description=self.description(
                 issue['summary'], issue['url'],
-                issue['id'], cls="issue",
-            ),
+                issue['id'], cls="issue"),
             project=issue['component'],
             priority=self.priorities.get(
                 issue['priority'],
