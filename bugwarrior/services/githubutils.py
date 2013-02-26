@@ -72,7 +72,8 @@ def _getter(url, auth):
         # And.. if we didn't get good results, just bail.
         if response.status_code != 200:
             raise IOError(
-                "Non-200 status code %r; %r" % (response.status_code, url))
+                "Non-200 status code %r; %r; %r" % (
+                    response.status_code, url, response.json))
 
         if callable(response.json):
             # Newer python-requests
