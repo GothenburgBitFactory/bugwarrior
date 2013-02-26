@@ -2,6 +2,8 @@ from twiggy import log
 
 import bitlyapi
 import time
+import os
+import dogpile.cache
 
 from bugwarrior.config import die, asbool
 from bugwarrior.db import MARKUP
@@ -171,6 +173,19 @@ def _aggregate_issues(args):
                 get_opt('bitly.api_key')
             )
             shorten = lambda url: bitly.shorten(longUrl=url)['url']
+
+            cachefile = os.path.expanduser("~/.cache/bitly.dbm")
+            if not os.path.isdir(os.path.expanduser("~/.cache/")):
+                os.makedirs(os.path.expanduser("~/.cache/"))
+
+            # Cache in order to avoid hitting the bitly api over and over.
+            # bitly links never expire or change, so why not cache on disk?
+            region = dogpile.cache.make_region().configure(
+                "dogpile.cache.dbm",
+                arguments=dict(filename=cachefile),
+            )
+            shorten = region.cache_on_arguments()(shorten)
+
 
         service = SERVICES[conf.get(target, 'service')](conf, target, shorten)
         return service.issues()
