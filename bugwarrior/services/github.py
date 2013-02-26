@@ -56,7 +56,7 @@ class GithubService(IssueService):
 
         # First get and prune all the real issues
         has_issues = lambda repo: repo['has_issues'] and \
-                repo['open_issues_count'] > 0
+            repo['open_issues_count'] > 0
         repos = filter(has_issues, all_repos)
         issues = sum([self._issues(user + "/" + r['name']) for r in repos], [])
         log.name(self.target).debug(" Found {0} total.", len(issues))

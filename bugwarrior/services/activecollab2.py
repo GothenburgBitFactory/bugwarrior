@@ -25,7 +25,7 @@ class Client(object):
         if date is None:
             return
         d = datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-                    date, "%Y-%m-%d")))
+            date, "%Y-%m-%d")))
         timestamp = int(time.mktime(d.timetuple()))
         return timestamp
 
@@ -41,11 +41,13 @@ class Client(object):
 
         1. Get user ID from .bugwarriorrc file
         2. Get list of tickets from /user-tasks for a given project
-        3. For each ticket/task returned from #2, get ticket/task info and check
-           if logged-in user is primary (look at `is_owner` and `user_id`)
+        3. For each ticket/task returned from #2, get ticket/task info and
+           check if logged-in user is primary (look at `is_owner` and
+           `user_id`)
         """
 
-        user_tasks_data = self.call_api("/projects/" + str(project_id) + "/user-tasks")
+        user_tasks_data = self.call_api(
+            "/projects/" + str(project_id) + "/user-tasks")
         global task_count
         assigned_tasks = []
 
@@ -56,25 +58,37 @@ class Client(object):
                 if task[u'type'] == 'Ticket':
                     # Load Ticket data
                     # @todo Implement threading here.
-                    ticket_data = self.call_api("/projects/" + str(task[u'project_id']) + "/tickets/" + str(task[u'ticket_id']))
+                    ticket_data = self.call_api(
+                        "/projects/" + str(task[u'project_id']) +
+                        "/tickets/" + str(task[u'ticket_id']))
                     assignees = ticket_data[u'assignees']
 
                     for k, v in enumerate(assignees):
-                        if ((v[u'is_owner'] is True) and (v[u'user_id'] == int(self.user_id))):
-                            assigned_task['permalink'] = ticket_data[u'permalink']
-                            assigned_task['ticket_id'] = ticket_data[u'ticket_id']
-                            assigned_task['project_id'] = ticket_data[u'project_id']
+                        if ((v[u'is_owner'] is True)
+                                and (v[u'user_id'] == int(self.user_id))):
+                            assigned_task['permalink'] = \
+                                ticket_data[u'permalink']
+                            assigned_task['ticket_id'] = \
+                                ticket_data[u'ticket_id']
+                            assigned_task['project_id'] = \
+                                ticket_data[u'project_id']
                             assigned_task['project'] = project_name
                             assigned_task['description'] = ticket_data[u'name']
                             assigned_task['type'] = "ticket"
-                            assigned_task['created_on'] = ticket_data[u'created_on']
-                            assigned_task['created_by_id'] = ticket_data[u'created_by_id']
+                            assigned_task['created_on'] = \
+                                ticket_data[u'created_on']
+                            assigned_task['created_by_id'] = \
+                                ticket_data[u'created_by_id']
                             if 'priority' in ticket_data:
-                                assigned_task['priority'] = self.format_priority(ticket_data[u'priority'])
+                                assigned_task['priority'] = \
+                                    self.format_priority(
+                                        ticket_data[u'priority'])
                             else:
-                                assigned_task['priority'] = self.default_priority
+                                assigned_task['priority'] = \
+                                    self.default_priority
                             if ticket_data[u'due_on'] is not None:
-                                assigned_task['due'] = self.format_date(ticket_data[u'due_on'])
+                                assigned_task['due'] = self.format_date(
+                                    ticket_data[u'due_on'])
 
                 elif task[u'type'] == 'Task':
                     # Load Task data
@@ -87,24 +101,30 @@ class Client(object):
                     assigned_task['created_on'] = task[u'created_on']
                     assigned_task['created_by_id'] = task[u'created_by_id']
                     if 'priority' in task:
-                        assigned_task['priority'] = self.format_priority(task[u'priority'])
+                        assigned_task['priority'] = self.format_priority(
+                            task[u'priority'])
                     else:
                         assigned_task['priority'] = self.default_priority
                     if task[u'due_on'] is not None:
-                        assigned_task['due'] = self.format_date(task[u'due_on'])
+                        assigned_task['due'] = self.format_date(
+                            task[u'due_on'])
 
                 if assigned_task:
-                    log.name(self.target).debug(" Adding '" + assigned_task['description'] + "' to task list.")
+                    log.name(self.target).debug(
+                        " Adding '" + assigned_task['description'] +
+                        "' to task list.")
                     assigned_tasks.append(assigned_task)
         except:
-            log.name(self.target).debug(' No user tasks loaded for "%s".' % project_name)
+            log.name(self.target).debug(
+                ' No user tasks loaded for "%s".' % project_name)
 
         return assigned_tasks
 
     def call_api(self, uri, get=None):
         global api_count
         api_count += 1
-        url = self.url.rstrip("/") + "?token=" + self.key + "&path_info=" + uri + "&format=json"
+        url = self.url.rstrip("/") + "?token=" + self.key + \
+            "&path_info=" + uri + "&format=json"
         req = urllib2.Request(url)
         res = urllib2.urlopen(req)
 
@@ -180,23 +200,29 @@ class ActiveCollab2Service(IssueService):
         # @todo Implement threading here.
         for project in projects:
             for project_id, project_name in project.iteritems():
-                log.name(self.target).debug(" Getting tasks for #" + project_id + " " + project_name + '"')
-                issues += self.client.find_issues(self.user_id, project_id, project_name)
+                log.name(self.target).debug(
+                    " Getting tasks for #" + project_id +
+                    " " + project_name + '"')
+                issues += self.client.find_issues(
+                    self.user_id, project_id, project_name)
 
         log.name(self.target).debug(" Found {0} total.", len(issues))
         global api_count
         log.name(self.target).debug(" {0} API calls", api_count)
-        log.name(self.target).debug(" {0} tasks and tickets analyzed", task_count)
-        log.name(self.target).debug(" Elapsed Time: %s" % (time.time() - start))
+        log.name(self.target).debug(
+            " {0} tasks and tickets analyzed", task_count)
+        log.name(self.target).debug(
+            " Elapsed Time: %s" % (time.time() - start))
 
         formatted_issues = []
 
         for issue in issues:
             formatted_issue = dict(
                 description=self.description(
-                issue["description"],
-                issue["project_id"], issue["ticket_id"], issue["type"],
-                ),
+                    issue["description"],
+                    issue["project_id"],
+                    issue["ticket_id"],
+                    issue["type"]),
                 project=self.get_project_name(issue),
                 priority=issue["priority"],
                 **self.annotations(issue)

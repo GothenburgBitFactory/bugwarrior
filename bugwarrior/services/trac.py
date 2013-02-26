@@ -66,8 +66,7 @@ class TracService(IssueService):
         return [dict(
             description=self.description(
                 issue['summary'], issue['url'],
-                issue['number'], cls="issue",
-            ),
+                issue['number'], cls="issue"),
             project=tag,
             priority=self.priorities.get(
                 issue['priority'],

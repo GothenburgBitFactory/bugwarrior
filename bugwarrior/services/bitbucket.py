@@ -93,8 +93,7 @@ class BitbucketService(IssueService):
         return [dict(
             description=self.description(
                 issue['title'], issue['url'],
-                issue['local_id'], cls="issue",
-            ),
+                issue['local_id'], cls="issue"),
             project=tag.split('/')[1],
             priority=self.priorities.get(
                 issue['priority'],
