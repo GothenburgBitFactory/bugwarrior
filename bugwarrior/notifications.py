@@ -2,16 +2,16 @@ from twiggy import log
 import subprocess
 import datetime
 
-def send_notification(issue, crud, conf):
+def send_notification(issue, op, conf):
     notify_binary = conf.get('general', 'notifications')
     if notify_binary == 'pync':
         from pync import Notifier
-        if crud == 'bw_finished':
+        if op == 'bw_finished':
             Notifier.notify('Bugwarrior finished querying for new issues.', title="Bugwarrior", subtitle=issue)
             return
         command = []
         message = issue['description'].encode("utf-8")
-        title_text = "%s task: %s" % (crud, issue['description'].encode("utf-8")[:20])
+        title_text = "%s task: %s" % (op, issue['description'].encode("utf-8")[:20])
         subtitle_text = ''
         due = ''
         tags = ''
@@ -36,4 +36,4 @@ def send_notification(issue, crud, conf):
             execute_cmd = 'task %s' % issue['uuid']
         else:
             execute_cmd = 'task list'
-        Notifier.notify(message, title=title_text, subtitle=subtitle_text, execute=execute_cmd)
+        Notifier.notify(message.translate(None, '(bw)#'), title=title_text, subtitle=subtitle_text, execute=execute_cmd)
