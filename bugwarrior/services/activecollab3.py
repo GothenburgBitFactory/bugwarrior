@@ -12,14 +12,17 @@ import datetime
 api_count = 0
 task_count = 0
 
+
 class ActiveCollabApi():
     def call_api(self, uri, key, url):
         global api_count
         api_count += 1
-        url = url.rstrip("/") + "?auth_api_token=" + key + "&path_info=" + uri + "&format=json"
+        url = url.rstrip("/") + "?auth_api_token=" + key + \
+            "&path_info=" + uri + "&format=json"
         req = urllib2.Request(url)
         res = urllib2.urlopen(req)
         return json.loads(res.read())
+
 
 class Client(object):
     def __init__(self, url, key, user_id, projects):
@@ -33,7 +36,7 @@ class Client(object):
         if date is None:
             return
         d = datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-                    date, "%Y-%m-%d")))
+            date, "%Y-%m-%d")))
         timestamp = int(time.mktime(d.timetuple()))
         return timestamp
 
@@ -47,8 +50,10 @@ class Client(object):
         ac = ActiveCollabApi()
         user_tasks_data = []
         user_subtasks_data = []
-        user_tasks_data = ac.call_api("/projects/" + str(project_id) + "/tasks", self.key, self.url)
-        user_subtasks_data = ac.call_api("/projects/" + str(project_id) + "/subtasks", self.key, self.url)
+        user_tasks_data = ac.call_api(
+            "/projects/" + str(project_id) + "/tasks", self.key, self.url)
+        user_subtasks_data = ac.call_api(
+            "/projects/" + str(project_id) + "/subtasks", self.key, self.url)
         global task_count
         assigned_tasks = []
 
@@ -58,7 +63,9 @@ class Client(object):
                 assigned_task = dict()
                 # Load Task data
                 # @todo Implement threading here.
-                if ((task[u'assignee_id'] == int(self.user_id)) and (task[u'completed_on'] is None)):
+                if ((task[u'assignee_id'] == int(self.user_id))
+                        and (task[u'completed_on'] is None)):
+
                     assigned_task['permalink'] = task[u'permalink']
                     assigned_task['task_id'] = task[u'task_id']
                     assigned_task['id'] = task[u'id']
@@ -69,11 +76,13 @@ class Client(object):
                     assigned_task['created_on'] = task[u'created_on'][u'mysql']
                     assigned_task['created_by_id'] = task[u'created_by_id']
                     if 'priority' in task:
-                        assigned_task['priority'] = self.format_priority(task[u'priority'])
+                        assigned_task['priority'] = \
+                            self.format_priority(task[u'priority'])
                     else:
                         assigned_task['priority'] = self.default_priority
                     if task[u'due_on'] is not None:
-                        assigned_task['due'] = self.format_date(task[u'due_on'][u'mysql'])
+                        assigned_task['due'] = \
+                            self.format_date(task[u'due_on'][u'mysql'])
                 if assigned_task:
                     assigned_tasks.append(assigned_task)
 
@@ -82,14 +91,17 @@ class Client(object):
             for key, subtask in enumerate(user_subtasks_data):
                 task_count += 1
                 assigned_task = dict()
-                if ((subtask[u'assignee_id'] == int(self.user_id)) and (subtask[u'completed_on'] is None)):
+                if ((subtask[u'assignee_id'] == int(self.user_id))
+                        and (subtask[u'completed_on'] is None)):
                     # Get permalink
-                    assigned_task['permalink'] = (self.url).rstrip('api.php') + 'projects/' + str(project_id) + '/tasks'
+                    assigned_task['permalink'] = self.url.rstrip('api.php') + \
+                        'projects/' + str(project_id) + '/tasks'
                     if assigned_tasks:
                         for k, t in enumerate(assigned_tasks):
                             if 'id' in t:
                                 if subtask[u'parent_id'] == t[u'id']:
-                                    assigned_task['permalink'] = t[u'permalink']
+                                    assigned_task['permalink'] = \
+                                        t[u'permalink']
                     assigned_task['task_id'] = subtask[u'id']
                     assigned_task['project'] = project_name
                     assigned_task['project_id'] = project_id
@@ -98,15 +110,18 @@ class Client(object):
                     assigned_task['created_on'] = subtask[u'created_on']
                     assigned_task['created_by_id'] = subtask[u'created_by_id']
                     if 'priority' in subtask:
-                        assigned_task['priority'] = self.format_priority(subtask[u'priority'])
+                        assigned_task['priority'] = \
+                            self.format_priority(subtask[u'priority'])
                     else:
                         assigned_task['priority'] = self.default_priority
                     if subtask[u'due_on'] is not None:
-                        assigned_task['due'] = self.format_date(subtask[u'due_on'])
+                        assigned_task['due'] = \
+                            self.format_date(subtask[u'due_on'])
                 if assigned_task:
                     assigned_tasks.append(assigned_task)
 
         return assigned_tasks
+
 
 class ActiveCollab3Service(IssueService):
     def __init__(self, *args, **kw):
@@ -174,26 +189,33 @@ class ActiveCollab3Service(IssueService):
         issues = []
         projects = self.projects
         # @todo Implement threading here.
-        log.name(self.target).debug(" {0} projects in favorites list.", len(projects))
+        log.name(self.target).debug(
+            " {0} projects in favorites list.", len(projects))
         for project in projects:
             for project_id, project_name in project.iteritems():
-                log.name(self.target).debug(" Getting tasks for #" + str(project_id) + " " + str(project_name) + '"')
-                issues += self.client.find_issues(self.user_id, project_id, project_name)
+                log.name(self.target).debug(
+                    " Getting tasks for #" + str(project_id) +
+                    " " + str(project_name) + '"')
+                issues += self.client.find_issues(
+                    self.user_id, project_id, project_name)
 
         log.name(self.target).debug(" Found {0} total.", len(issues))
         global api_count
         log.name(self.target).debug(" {0} API calls", api_count)
-        log.name(self.target).debug(" {0} tasks and subtasks analyzed", task_count)
-        log.name(self.target).debug(" Elapsed Time: %s" % (time.time() - start))
+        log.name(self.target).debug(" {0} tasks and subtasks analyzed",
+                                    task_count)
+        log.name(self.target).debug(" Elapsed Time: %s" % (
+            time.time() - start))
 
         formatted_issues = []
 
         for issue in issues:
             formatted_issue = dict(
                 description=self.description(
-                issue["description"],
-                issue["project_id"], issue["task_id"], issue["type"],
-                ),
+                    issue["description"],
+                    issue["project_id"],
+                    issue["task_id"],
+                    issue["type"]),
                 project=self.get_project_name(issue),
                 priority=issue["priority"],
                 **self.annotations(issue)
@@ -201,5 +223,6 @@ class ActiveCollab3Service(IssueService):
             if "due" in issue:
                 formatted_issue["due"] = issue["due"]
             formatted_issues.append(formatted_issue)
-        log.name(self.target).debug(" {0} tasks assigned to you", len(formatted_issues))
+        log.name(self.target).debug(
+            " {0} tasks assigned to you", len(formatted_issues))
         return formatted_issues

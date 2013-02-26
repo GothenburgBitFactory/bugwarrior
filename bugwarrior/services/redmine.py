@@ -72,8 +72,7 @@ class RedMineService(IssueService):
             description=self.description(
                 issue["subject"],
                 self.get_issue_url(issue),
-                issue["id"], cls="issue",
-            ),
+                issue["id"], cls="issue"),
             project=self.get_project_name(issue),
             priority=self.default_priority,
         ) for issue in issues]

@@ -9,6 +9,7 @@ from jira.client import JIRA
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
 
+
 def get_priority(priority):
     if priority is None:
         return 'Major'
@@ -30,12 +31,20 @@ class JiraService(IssueService):
         super(JiraService, self).__init__(*args, **kw)
         self.username = self.config.get(self.target, 'jira.username')
         self.url = self.config.get(self.target, 'jira.base_uri')
-        default_query = 'assignee=' + self.username + ' AND status != closed and status != resolved'
+        default_query = 'assignee=' + self.username + \
+            ' AND status != closed and status != resolved'
         self.query = self.config.get(self.target, 'jira.query', default_query)
-        self.project_prefix = self.config.get(self.target, 'jira.project_prefix', '')
-        self.jira = JIRA(options={'server': self.config.get(self.target, 'jira.base_uri')},
-                         basic_auth=(self.username,
-                                     self.config.get(self.target, 'jira.password')))
+        self.project_prefix = self.config.get(
+            self.target, 'jira.project_prefix', '')
+        self.jira = JIRA(
+            options={
+                'server': self.config.get(self.target, 'jira.base_uri')
+            },
+            basic_auth=(
+                self.username,
+                self.config.get(self.target, 'jira.password')
+            )
+        )
 
     @classmethod
     def validate_config(cls, config, target):
@@ -58,9 +67,11 @@ class JiraService(IssueService):
             pass
         else:
             for comment in comments:
-                created = date.fromtimestamp(time.mktime(time.strptime(comment.created[0:10], '%Y-%m-%d')))
+                created = date.fromtimestamp(time.mktime(time.strptime(
+                    comment.created[0:10], '%Y-%m-%d')))
 
-                annotations.append(self.format_annotation(created, comment.author.name, comment.body))
+                annotations.append(self.format_annotation(
+                    created, comment.author.name, comment.body))
 
         return dict(annotations)
 
@@ -73,8 +84,8 @@ class JiraService(IssueService):
             description=self.description(
                 title=case.fields.summary,
                 url=self.url + '/browse/' + case.key,
-                number=case.key.rsplit('-', 1)[1], cls="issue",
-            ),
+                number=case.key.rsplit('-', 1)[1],
+                cls="issue"),
             project=self.project_prefix + case.key.rsplit('-', 1)[0],
             priority=self.priorities.get(
                 get_priority(case.fields.priority),

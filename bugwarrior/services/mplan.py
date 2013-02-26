@@ -53,8 +53,8 @@ class MegaplanService(IssueService):
             description=self.description(
                 self.get_issue_title(issue),
                 self.get_issue_url(issue),
-                self.get_issue_id(issue), cls="issue",
-            ),
+                self.get_issue_id(issue),
+                cls="issue"),
             project=self.project_name,
             priority=self.default_priority,
         ) for issue in issues]
