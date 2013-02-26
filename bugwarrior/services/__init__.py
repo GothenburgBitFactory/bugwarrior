@@ -127,6 +127,7 @@ from teamlab import TeamLabService
 from redmine import RedMineService
 from jira import JiraService
 from activecollab2 import ActiveCollab2Service
+from activecollab3 import ActiveCollab3Service
 
 
 # Constant dict to be used all around town.
@@ -139,6 +140,7 @@ SERVICES = {
     'redmine': RedMineService,
     'jira': JiraService,
     'activecollab2': ActiveCollab2Service,
+    'activecollab3': ActiveCollab3Service,
 }
 
 

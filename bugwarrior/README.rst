@@ -15,7 +15,7 @@ It currently supports the following remote resources:
  - `teamlab <http://www.teamlab.com/>`_
  - `redmine <http://www.redmine.org/>`_
  - `jira <http://www.atlassian.com/software/jira/overview>`_
- - `activecollab 2.x <http://www.activecollab.com>`_
+ - `activecollab <http://www.activecollab.com>`_ (2.x and 3.x)
 
 Configuring
 -----------
@@ -128,7 +128,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # Here's an example of a jira project. The ``jira-python`` module is
   # a bit particular, and jira deployments, like Bugzilla, tend to be
   # reasonably customized. So YMMV. The ``base_uri`` must not have a
-  # have a trailing slash. In this case we fetch comments and 
+  # have a trailing slash. In this case we fetch comments and
   # cases from jira assigned to 'ralph' where the status is not closed or
   # resolved.
   [jira.project]
@@ -137,6 +137,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   jira.username = ralph
   jira.password = OMG_LULZ
   jira.query = assignee = ralph and status != closed and status != resolved
+  jira.project_prefix = Programming.
 
   # Here's an example of a teamlab target.
   [my_teamlab]
@@ -156,8 +157,29 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   user_id = 7
   project_name = redmine
 
+  # Here's an example of an activecollab3 target. This is only valid for
+  # activeCollab 3.x, see below for activeCollab 2.x.
+  #
+  # Obtain your user ID and API url by logging in, clicking on your avatar on
+  # the lower left-hand of the page. When on that page, look at the URL. The
+  # number that appears after "/user/" is your user ID.
+  #
+  # On the same page, go to Options and API Subscriptions. Generate a read-only
+  # API key and add that to your bugwarriorrc file.
+  #
+  # Bugwarrior will only gather tasks and subtasks for projects in your "Favorites"
+  # list. Note that if you have 10 projects in your favorites list, bugwarrior
+  # will make 21 API calls on each run: 1 call to get a list of favorites, then
+  # 2 API calls per projects, one for tasks and one for subtasks.
+
+  [activecollab3]
+  service = activecollab3
+  url = https://ac.example.org/api.php
+  key = your-api-key
+  user_id = 15
+
   # Here's an example of an activecollab2 target. Note that this will only work
-  # with ActiveCollab 2.x and *not* with ActiveCollab 3.x.
+  # with ActiveCollab 2.x - see above for 3.x.
   #
   # You can obtain your user ID and API url by logging into ActiveCollab and
   # clicking on "Profile" and then "API Settings". When on that page, look
