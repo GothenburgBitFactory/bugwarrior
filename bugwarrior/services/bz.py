@@ -68,7 +68,7 @@ class BugzillaService(IssueService):
                     c['time'].value, "%Y%m%dT%H:%M:%S"))),
                 c['author'].split('@')[0],
                 c['text'],
-            ) for c in issue['comments']])
+            ) for c in issue.get('comments', [])])
 
     def issues(self):
         email = self.config.get(self.target, 'bugzilla.username')
