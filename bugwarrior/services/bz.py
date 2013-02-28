@@ -62,13 +62,25 @@ class BugzillaService(IssueService):
         raise NotImplementedError
 
     def annotations(self, tag, issue):
-        return dict([
-            self.format_annotation(
-                datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-                    c['time'].value, "%Y%m%dT%H:%M:%S"))),
-                c['author'].split('@')[0],
-                c['text'],
-            ) for c in issue.get('comments', [])])
+        if 'comments' in issue:
+            comments = issue.get('comments', [])
+            return dict([
+                self.format_annotation(
+                    datetime.datetime.fromtimestamp(time.mktime(time.strptime(
+                        c['time'].value, "%Y%m%dT%H:%M:%S"))),
+                    c['author'].split('@')[0],
+                    c['text'],
+                ) for c in comments])
+        else:
+            # Backwards compatibility (old python-bugzilla/bugzilla instances)
+            comments = issue.get('longdescs', [])
+            return dict([
+                self.format_annotation(
+                    datetime.datetime.fromtimestamp(time.mktime(time.strptime(
+                        c['time'], "%Y-%m-%d %H:%M:%S"))),
+                    c['author']['login_name'].split('@')[0],
+                    c['body'],
+                ) for c in issue['longdescs']])
 
     def issues(self):
         email = self.config.get(self.target, 'bugzilla.username')
