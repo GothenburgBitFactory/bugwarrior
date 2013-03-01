@@ -1,6 +1,7 @@
 from twiggy import log
 import subprocess
 import datetime
+from bugwarrior.config import die, asbool
 
 def _get_metadata(issue):
     due = ''
@@ -10,23 +11,23 @@ def _get_metadata(issue):
     if 'project' in issue:
         project = "Project: " + issue['project']
     if 'due' in issue:
-        due = "Due: " + str(datetime.datetime.strptime(issue['due'], "%Y%m%dT%H%M%SZ"))
+        due = "Due: " + datetime.datetime.fromtimestamp(int(issue['due'])).strftime('%Y-%m-%d')
     if 'tags' in issue:
         tags = "Tags: " + ', '.join(issue['tags'])
     if 'priority' in issue:
         priority = "Priority: " + issue['priority']
     if project != '':
-        metadata += project + "\n"
+        metadata += "\n" + project
     if priority != '':
-        metadata += priority + "\n"
+        metadata += "\n" + priority
     if due != '':
-        metadata += due + "\n"
+        metadata += "\n" + due
     if tags != '':
-        metadata += tags + " "
+        metadata += "\n" + tags
     return metadata
 
 def send_notification(issue, op, conf):
-    notify_binary = conf.get('general', 'notifications')
+    notify_binary = conf.get('notifications', 'binary')
 
     # Notifications for growlnotify on Mac OS X
     if notify_binary == 'growlnotify':
@@ -42,7 +43,7 @@ def send_notification(issue, op, conf):
                 noteType = "New Messages",
                 title = "Bugwarrior",
                 description = "Finished querying for new issues.\n%s" % issue,
-                sticky = True,
+                sticky = asbool(conf.get('notifications', 'finished_querying_sticky', 'True')),
                 icon = "https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png",
                 priority = 1,
             )
@@ -50,12 +51,12 @@ def send_notification(issue, op, conf):
         message = "%s task: %s" % (op, issue['description'].encode("utf-8"))
         metadata = _get_metadata(issue)
         if metadata is not None:
-            message += "\n%s" % metadata
+            message += metadata
         growl.notify(
             noteType = "New Messages",
             title = "Bugwarrior",
             description = message,
-            sticky = True,
+            sticky = asbool(conf.get('notifications', 'task_crud_sticky', 'True')),
             icon = "https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png",
             priority = 1,
         )

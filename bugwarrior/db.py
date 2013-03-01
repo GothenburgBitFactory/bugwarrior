@@ -1,14 +1,14 @@
 from twiggy import log
 from taskw import TaskWarrior
 from bugwarrior.notifications import send_notification
+from bugwarrior.config import die, asbool
 
 
 MARKUP = "(bw)"
 
 def synchronize(issues, conf):
     tw = TaskWarrior()
-
-    if conf.get('general', 'notifications'):
+    if asbool(conf.get('notifications', 'notifications', 'True')):
         notify = True
     else:
         notify = False
