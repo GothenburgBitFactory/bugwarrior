@@ -1,13 +1,17 @@
 from twiggy import log
-
 from taskw import TaskWarrior
+from bugwarrior.notifications import send_notification
+from bugwarrior.config import asbool
 
 
 MARKUP = "(bw)"
 
-
-def synchronize(issues):
+def synchronize(issues, conf):
     tw = TaskWarrior()
+    if asbool(conf.get('notifications', 'notifications', 'True')):
+        notify = True
+    else:
+        notify = False
 
     # Load info about the task database
     tasks = tw.load_tasks()
@@ -43,6 +47,8 @@ def synchronize(issues):
             "Adding task {0}",
             issue['description'].encode("utf-8")
         )
+        if notify:
+            send_notification(issue, 'Created', conf)
         tw.task_add(**issue)
 
     # Update any issues that may have had new properties added.  These are
@@ -60,6 +66,8 @@ def synchronize(issues):
                     key,
                     upstream_issue['description'].encode("utf-8"),
                 )
+                if notify:
+                    send_notification(upstream_issue, 'Updated', conf)
                 task[key] = upstream_issue[key]
                 id, task = tw.task_update(task)
 
@@ -69,4 +77,8 @@ def synchronize(issues):
             "Completing task {0}",
             task['description'].encode("utf-8"),
         )
+        if notify:
+            send_notification(task, 'Completed', conf)
+
         tw.task_done(uuid=task['uuid'])
+    send_notification("New: %d, Completed: %d" % (len(new_issues), len(done_tasks)), 'bw_finished', conf)
