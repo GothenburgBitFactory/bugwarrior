@@ -25,10 +25,10 @@ def _get_metadata(issue):
     return metadata
 
 def send_notification(issue, op, conf):
-    notify_binary = conf.get('notifications', 'binary')
+    notify_backend = conf.get('notifications', 'backend')
 
     # Notifications for growlnotify on Mac OS X
-    if notify_binary == 'growlnotify':
+    if notify_backend == 'growlnotify':
         import gntp.notifier
         growl = gntp.notifier.GrowlNotifier(
             applicationName = "Bugwarrior",

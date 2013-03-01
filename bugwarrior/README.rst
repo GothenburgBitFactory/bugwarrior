@@ -64,7 +64,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # below.
   [notifications]
   # notifications = True
-  # binary = growlnotify
+  # backend = growlnotify
   # finished_querying_sticky = False
   # task_crud_sticky = True
 
