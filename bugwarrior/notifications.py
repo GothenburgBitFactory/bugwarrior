@@ -84,7 +84,7 @@ def send_notification(issue, op, conf):
         _cache_logo()
 
         import pynotify
-        pynotify.init(__name__)
+        pynotify.init("bugwarrior")
 
         if op == 'bw finished':
             message = "Finished querying for new issues.\n%s" % issue
@@ -95,5 +95,20 @@ def send_notification(issue, op, conf):
             if metadata is not None:
                 message += metadata
 
-        n = pynotify.Notification("Bugwarrior", message, logo_path)
-        n.show()
+        pynotify.Notification("Bugwarrior", message, logo_path).show()
+    elif notify_backend == 'gobject':
+        _cache_logo()
+
+        from gi.repository import Notify
+        Notify.init("bugwarrior")
+
+        if op == 'bw finished':
+            message = "Finished querying for new issues.\n%s" % issue
+        else:
+            message = "%s task: %s" % (
+                op, issue['description'].encode("utf-8"))
+            metadata = _get_metadata(issue)
+            if metadata is not None:
+                message += metadata
+
+        Notify.Notification.new("Bugwarrior", message, logo_path).show()

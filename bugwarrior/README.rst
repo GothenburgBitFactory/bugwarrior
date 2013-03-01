@@ -59,9 +59,12 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   # This section is for configuring notifications when bugwarrior-pull runs,
   # and when issues are created, updated, or deleted by bugwarrior-pull.
-  # Two backend are currently suported:
-  #  - growlnotify (v2) on Mac OS X      "gntp" must be installed
-  #  - pynotify on Linux                 "pynotify" must be installed
+  # Three backend are currently suported:
+  #
+  #  - growlnotify (v2)   Mac OS X   "gntp" must be installed
+  #  - gobject            Linux      python gobject must be installed
+  #  - pynotify           Linux      "pynotify" must be installed
+  #
   # To configure, adjust the settings below.  Note that neither of the
   # "sticky" options have any effect on Linux with pynotify.  They only work
   # for growlnotify.
