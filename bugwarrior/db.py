@@ -8,10 +8,10 @@ MARKUP = "(bw)"
 
 def synchronize(issues, conf):
     tw = TaskWarrior()
-    if asbool(conf.get('notifications', 'notifications', 'True')):
-        notify = True
-    else:
-        notify = False
+    notify = (
+        'notifications' in conf.sections() and
+        asbool(conf.get('notifications', 'notifications', 'True'))
+    )
 
     # Load info about the task database
     tasks = tw.load_tasks()
@@ -81,4 +81,10 @@ def synchronize(issues, conf):
             send_notification(task, 'Completed', conf)
 
         tw.task_done(uuid=task['uuid'])
-    send_notification("New: %d, Completed: %d" % (len(new_issues), len(done_tasks)), 'bw_finished', conf)
+
+    if notify:
+        send_notification(
+            "New: %d, Completed: %d" % (len(new_issues), len(done_tasks)),
+            'bw_finished',
+            conf,
+        )
