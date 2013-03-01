@@ -2,38 +2,61 @@ from twiggy import log
 import subprocess
 import datetime
 
+def _get_metadata(issue):
+    due = ''
+    tags = ''
+    priority = ''
+    metadata = ''
+    if 'project' in issue:
+        project = "Project: " + issue['project']
+    if 'due' in issue:
+        due = "Due: " + str(datetime.datetime.strptime(issue['due'], "%Y%m%dT%H%M%SZ"))
+    if 'tags' in issue:
+        tags = "Tags: " + ', '.join(issue['tags'])
+    if 'priority' in issue:
+        priority = "Priority: " + issue['priority']
+    if project != '':
+        metadata += project + "\n"
+    if priority != '':
+        metadata += priority + "\n"
+    if due != '':
+        metadata += due + "\n"
+    if tags != '':
+        metadata += tags + " "
+    return metadata
+
 def send_notification(issue, op, conf):
     notify_binary = conf.get('general', 'notifications')
-    if notify_binary == 'pync':
-        from pync import Notifier
+
+    # Notifications for growlnotify on Mac OS X
+    if notify_binary == 'growlnotify':
+        import gntp.notifier
+        growl = gntp.notifier.GrowlNotifier(
+            applicationName = "Bugwarrior",
+            notifications = ["New Updates", "New Messages"],
+            defaultNotifications = ["New Messages"],
+        )
+        growl.register()
         if op == 'bw_finished':
-            Notifier.notify('Bugwarrior finished querying for new issues.', title="Bugwarrior", subtitle=issue)
+            growl.notify(
+                noteType = "New Messages",
+                title = "Bugwarrior",
+                description = "Finished querying for new issues.\n%s" % issue,
+                sticky = True,
+                icon = "https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png",
+                priority = 1,
+            )
             return
-        command = []
-        message = issue['description'].encode("utf-8")
-        title_text = "%s task: %s" % (op, issue['description'].encode("utf-8")[:20])
-        subtitle_text = ''
-        due = ''
-        tags = ''
-        priority = ''
-        if 'project' in issue:
-            project = "Proj: " + issue['project']
-        if 'due' in issue:
-            due = "Due: " + str(issue['due'])
-        if 'tags' in issue:
-            tags = "Tags: " + ', '.join(issue['tags'])
-        if 'priority' in issue:
-            priority = "Pri: " + issue['priority']
-        if project != '':
-            subtitle_text += project + " "
-        if priority != '':
-            subtitle_text += priority + " "
-        if due != '':
-            subtitle_text += due + " "
-        if tags != '':
-            subtitle_text += tags + " "
-        if 'uuid' in issue:
-            execute_cmd = 'task %s' % issue['uuid']
-        else:
-            execute_cmd = 'task list'
-        Notifier.notify(message.translate(None, '(bw)#'), title=title_text, subtitle=subtitle_text, execute=execute_cmd)
+        message = "%s task: %s" % (op, issue['description'].encode("utf-8"))
+        metadata = _get_metadata(issue)
+        if metadata is not None:
+            message += "\n%s" % metadata
+        growl.notify(
+            noteType = "New Messages",
+            title = "Bugwarrior",
+            description = message,
+            sticky = True,
+            icon = "https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png",
+            priority = 1,
+        )
+        return
