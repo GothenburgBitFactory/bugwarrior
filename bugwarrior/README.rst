@@ -57,6 +57,17 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # https://github.com/ralphbean/bugwarrior/issues
   #multiprocessing = False
 
+  # This section is for configuring notifications when bugwarrior-pull runs,
+  # and when issues are created, updated, or deleted by bugwarrior-pull.
+  # Currently only growlnotify (v2) on Mac OS X is supported. To configure,
+  # first install the gntp library ("pip install gntp"). Then adjust the settings
+  # below.
+  [notifications]
+  # notifications = True
+  # binary = growlnotify
+  # finished_querying_sticky = False
+  # task_crud_sticky = True
+
   # This is a github example.  It says, "scrape every issue from every repository
   # on http://github.com/ralphbean.  It doesn't matter if ralphbean owns the issue
   # or not."
@@ -249,6 +260,6 @@ Contributors
 - Justin Forest (contributed support for RedMine, TeamLab, and MegaPlan, as
   well as some unicode help)
 - Tycho Garen (contributed support for Jira)
-- Kosta Harlan (contributed support for ActiveCollab2)
+- Kosta Harlan (contributed support for ActiveCollab 2.x/3.x, and notifications)
 - Luke Macken (contributed some code cleaning)
 - James Rowe (contributed to the docs)
