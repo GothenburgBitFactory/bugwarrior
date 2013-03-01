@@ -1,5 +1,25 @@
 import datetime
+import os
+import urllib
+
 from bugwarrior.config import asbool
+
+
+cache_dir = os.path.expanduser("~/.cache/bugwarrior")
+logo_path = cache_dir + "/logo.png"
+logo_url = "https://upload.wikimedia.org/wikipedia/" + \
+    "en/5/59/Taskwarrior_logo.png"
+
+
+def _cache_logo():
+    if os.path.exists(logo_path):
+        return
+
+    if not os.path.isdir(cache_dir):
+        os.makedirs(cache_dir)
+
+    urllib.urlretrieve(logo_url, logo_path)
+
 
 def _get_metadata(issue):
     due = ''
@@ -23,6 +43,7 @@ def _get_metadata(issue):
     if tags != '':
         metadata += "\n" + tags
     return metadata
+
 
 def send_notification(issue, op, conf):
     notify_backend = conf.get('notifications', 'backend')
@@ -59,3 +80,20 @@ def send_notification(issue, op, conf):
             priority = 1,
         )
         return
+    elif notify_backend == 'pynotify':
+        _cache_logo()
+
+        import pynotify
+        pynotify.init(__name__)
+
+        if op == 'bw finished':
+            message = "Finished querying for new issues.\n%s" % issue
+        else:
+            message = "%s task: %s" % (
+                op, issue['description'].encode("utf-8"))
+            metadata = _get_metadata(issue)
+            if metadata is not None:
+                message += metadata
+
+        n = pynotify.Notification("Bugwarrior", message, logo_path)
+        n.show()

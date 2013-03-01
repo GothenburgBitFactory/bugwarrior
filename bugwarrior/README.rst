@@ -59,14 +59,18 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   # This section is for configuring notifications when bugwarrior-pull runs,
   # and when issues are created, updated, or deleted by bugwarrior-pull.
-  # Currently only growlnotify (v2) on Mac OS X is supported. To configure,
-  # first install the gntp library ("pip install gntp"). Then adjust the settings
-  # below.
+  # Two backend are currently suported:
+  #  - growlnotify (v2) on Mac OS X      "gntp" must be installed
+  #  - pynotify on Linux                 "pynotify" must be installed
+  # To configure, adjust the settings below.  Note that neither of the
+  # "sticky" options have any effect on Linux with pynotify.  They only work
+  # for growlnotify.
   [notifications]
   # notifications = True
   # backend = growlnotify
   # finished_querying_sticky = False
   # task_crud_sticky = True
+
 
   # This is a github example.  It says, "scrape every issue from every repository
   # on http://github.com/ralphbean.  It doesn't matter if ralphbean owns the issue
