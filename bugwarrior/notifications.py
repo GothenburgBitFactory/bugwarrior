@@ -26,6 +26,7 @@ def _get_metadata(issue):
     tags = ''
     priority = ''
     metadata = ''
+    project = ''
     if 'project' in issue:
         project = "Project: " + issue['project']
     if 'due' in issue:
@@ -61,7 +62,7 @@ def send_notification(issue, op, conf):
             growl.notify(
                 noteType = "New Messages",
                 title = "Bugwarrior",
-                description = "Finished querying for new issues.\n%s" % issue,
+                description = "Finished querying for new issues.\n%s" % issue['description'],
                 sticky = asbool(conf.get('notifications', 'finished_querying_sticky', 'True')),
                 icon = "https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png",
                 priority = 1,
@@ -87,7 +88,7 @@ def send_notification(issue, op, conf):
         pynotify.init("bugwarrior")
 
         if op == 'bw finished':
-            message = "Finished querying for new issues.\n%s" % issue
+            message = "Finished querying for new issues.\n%s" % issue['description']
         else:
             message = "%s task: %s" % (
                 op, issue['description'].encode("utf-8"))
@@ -103,7 +104,7 @@ def send_notification(issue, op, conf):
         Notify.init("bugwarrior")
 
         if op == 'bw finished':
-            message = "Finished querying for new issues.\n%s" % issue
+            message = "Finished querying for new issues.\n%s" % issue['description']
         else:
             message = "%s task: %s" % (
                 op, issue['description'].encode("utf-8"))

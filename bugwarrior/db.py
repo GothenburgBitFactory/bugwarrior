@@ -84,7 +84,9 @@ def synchronize(issues, conf):
 
     if notify:
         send_notification(
-            "New: %d, Completed: %d" % (len(new_issues), len(done_tasks)),
+            dict(description="New: %d, Completed: %d" % (
+                len(new_issues), len(done_tasks)
+            )),
             'bw_finished',
             conf,
         )
