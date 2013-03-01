@@ -1,7 +1,7 @@
 from twiggy import log
 from taskw import TaskWarrior
 from bugwarrior.notifications import send_notification
-from bugwarrior.config import die, asbool
+from bugwarrior.config import asbool
 
 
 MARKUP = "(bw)"

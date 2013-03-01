@@ -1,7 +1,5 @@
-from twiggy import log
-import subprocess
 import datetime
-from bugwarrior.config import die, asbool
+from bugwarrior.config import asbool
 
 def _get_metadata(issue):
     due = ''
