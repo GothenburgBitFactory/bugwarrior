@@ -222,7 +222,7 @@ def aggregate_issues(conf):
         _aggregate_issues,
         zip([conf] * len(targets), targets)
     )
-    log.name('bugwarrior').info("Done aggregating remove issues.")
+    log.name('bugwarrior').info("Done aggregating remote issues.")
     if WORKER_FAILURE in issues_by_target:
         log.name('bugwarrior').critical("A worker failed.  Aborting.")
         raise RuntimeError('Worker failure')
