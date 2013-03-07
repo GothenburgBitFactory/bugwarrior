@@ -69,7 +69,7 @@ class Client(object):
                     assigned_task['permalink'] = task[u'permalink']
                     assigned_task['task_id'] = task[u'task_id']
                     assigned_task['id'] = task[u'id']
-                    assigned_task['project_id'] = task[u'project_id']
+                    assigned_task['project_id'] = task[u'permalink'].split('/')[4]
                     assigned_task['project'] = project_name
                     assigned_task['description'] = task[u'name']
                     assigned_task['type'] = "task"
@@ -103,7 +103,7 @@ class Client(object):
                                     assigned_task['permalink'] = \
                                         t[u'permalink']
                     assigned_task['task_id'] = subtask[u'id']
-                    assigned_task['project'] = project_name
+                    assigned_task['project'] = t[u'permalink'].split('/')[4]
                     assigned_task['project_id'] = project_id
                     assigned_task['description'] = subtask['body']
                     assigned_task['type'] = 'subtask'
