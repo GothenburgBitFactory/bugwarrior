@@ -30,7 +30,8 @@ def _get_metadata(issue):
     if 'project' in issue:
         project = "Project: " + issue['project']
     if 'due' in issue:
-        due = "Due: " + datetime.datetime.fromtimestamp(int(issue['due'])).strftime('%Y-%m-%d')
+        due = "Due: " + datetime.datetime.fromtimestamp(
+            int(issue['due'])).strftime('%Y-%m-%d')
     if 'tags' in issue:
         tags = "Tags: " + ', '.join(issue['tags'])
     if 'priority' in issue:
@@ -53,19 +54,22 @@ def send_notification(issue, op, conf):
     if notify_backend == 'growlnotify':
         import gntp.notifier
         growl = gntp.notifier.GrowlNotifier(
-            applicationName = "Bugwarrior",
-            notifications = ["New Updates", "New Messages"],
-            defaultNotifications = ["New Messages"],
+            applicationName="Bugwarrior",
+            notifications=["New Updates", "New Messages"],
+            defaultNotifications=["New Messages"],
         )
         growl.register()
         if op == 'bw_finished':
             growl.notify(
-                noteType = "New Messages",
-                title = "Bugwarrior",
-                description = "Finished querying for new issues.\n%s" % issue['description'],
-                sticky = asbool(conf.get('notifications', 'finished_querying_sticky', 'True')),
-                icon = "https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png",
-                priority = 1,
+                noteType="New Messages",
+                title="Bugwarrior",
+                description="Finished querying for new issues.\n%s" %
+                issue['description'],
+                sticky=asbool(conf.get(
+                    'notifications', 'finished_querying_sticky', 'True')),
+                icon="https://upload.wikimedia.org/wikipedia/"
+                "en/5/59/Taskwarrior_logo.png",
+                priority=1,
             )
             return
         message = "%s task: %s" % (op, issue['description'].encode("utf-8"))
@@ -73,12 +77,14 @@ def send_notification(issue, op, conf):
         if metadata is not None:
             message += metadata
         growl.notify(
-            noteType = "New Messages",
-            title = "Bugwarrior",
-            description = message,
-            sticky = asbool(conf.get('notifications', 'task_crud_sticky', 'True')),
-            icon = "https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png",
-            priority = 1,
+            noteType="New Messages",
+            title="Bugwarrior",
+            description=message,
+            sticky=asbool(conf.get(
+                'notifications', 'task_crud_sticky', 'True')),
+            icon="https://upload.wikimedia.org/wikipedia/"
+            "en/5/59/Taskwarrior_logo.png",
+            priority=1,
         )
         return
     elif notify_backend == 'pynotify':
@@ -88,7 +94,8 @@ def send_notification(issue, op, conf):
         pynotify.init("bugwarrior")
 
         if op == 'bw finished':
-            message = "Finished querying for new issues.\n%s" % issue['description']
+            message = "Finished querying for new issues.\n%s" %\
+                issue['description']
         else:
             message = "%s task: %s" % (
                 op, issue['description'].encode("utf-8"))
@@ -104,7 +111,8 @@ def send_notification(issue, op, conf):
         Notify.init("bugwarrior")
 
         if op == 'bw finished':
-            message = "Finished querying for new issues.\n%s" % issue['description']
+            message = "Finished querying for new issues.\n%s" %\
+                issue['description']
         else:
             message = "%s task: %s" % (
                 op, issue['description'].encode("utf-8"))

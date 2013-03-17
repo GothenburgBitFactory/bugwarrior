@@ -188,7 +188,6 @@ def _aggregate_issues(args):
             )
             shorten = region.cache_on_arguments()(shorten)
 
-
         service = SERVICES[conf.get(target, 'service')](conf, target, shorten)
         return service.issues()
     except Exception as e:
