@@ -69,7 +69,7 @@ class Client(object):
                     assigned_task['permalink'] = task[u'permalink']
                     assigned_task['task_id'] = task[u'task_id']
                     assigned_task['id'] = task[u'id']
-                    assigned_task['project_id'] = task[u'permalink'].split('/')[4]
+                    assigned_task['project_id'] = project_id
                     assigned_task['project'] = project_name
                     assigned_task['description'] = task[u'name']
                     assigned_task['type'] = "task"
@@ -93,17 +93,20 @@ class Client(object):
                 assigned_task = dict()
                 if ((subtask[u'assignee_id'] == int(self.user_id))
                         and (subtask[u'completed_on'] is None)):
-                    # Get permalink
-                    assigned_task['permalink'] = self.url.rstrip('api.php') + \
-                        'projects/' + str(project_id) + '/tasks'
-                    if assigned_tasks:
-                        for k, t in enumerate(assigned_tasks):
-                            if 'id' in t:
-                                if subtask[u'parent_id'] == t[u'id']:
-                                    assigned_task['permalink'] = \
-                                        t[u'permalink']
+                    # Get permalink by looping through all tasks we have for
+                    # the project so far. Subtask permalink = task permalink.
+                    # Note that if you have only subtasks assigned to you,
+                    # but not a task, you won't find the permalink.
+                    # Request for extending the API here:
+                    #  https://www.activecollab.com/forums/topic/10838/
+                    assigned_task['permalink'] = self.url.rstrip('api.php') \
+                        + 'projects/' + str(project_id) + '/tasks'
+                    for k, t in enumerate(assigned_tasks):
+                        if t[u'type'] == 'task':
+                            if subtask[u'parent_id'] == t[u'id']:
+                                assigned_task['permalink'] = t[u'permalink']
                     assigned_task['task_id'] = subtask[u'id']
-                    assigned_task['project'] = t[u'permalink'].split('/')[4]
+                    assigned_task['project'] = project_name
                     assigned_task['project_id'] = project_id
                     assigned_task['description'] = subtask['body']
                     assigned_task['type'] = 'subtask'
@@ -155,7 +158,11 @@ class ActiveCollab3Service(IssueService):
         return issue['permalink']
 
     def get_project_name(self, issue):
-        return issue['project']
+        project_id = issue['permalink'].split('/')[4]
+        if (project_id.isdigit()):
+            return issue['project']
+        else:
+            return project_id
 
     def description(self, title, project_id, task_id="", cls="task"):
 
@@ -225,4 +232,5 @@ class ActiveCollab3Service(IssueService):
             formatted_issues.append(formatted_issue)
         log.name(self.target).debug(
             " {0} tasks assigned to you", len(formatted_issues))
+
         return formatted_issues
