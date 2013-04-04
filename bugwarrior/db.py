@@ -6,6 +6,7 @@ from bugwarrior.config import asbool
 
 MARKUP = "(bw)"
 
+
 def synchronize(issues, conf):
     tw = TaskWarrior()
     notify = (
