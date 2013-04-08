@@ -98,7 +98,7 @@ def synchronize(issues, conf):
     # Merge tasks with users local DB
     if experimental is True:
         # Call task merge from users local database
-        config = tw.load_config()
+        config = tw.load_config(config_filename='~/.bugwarrior_taskrc')
         bwtask_data = "%s/" % config['data']['location']
         subprocess.call(['task', 'rc.verbose=nothing', 'rc.merge.autopush=no', 'merge', bwtask_data])
 
