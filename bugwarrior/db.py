@@ -1,21 +1,33 @@
 from twiggy import log
-from taskw import TaskWarrior
+from taskw import TaskWarrior, TaskWarriorExperimental
 from bugwarrior.notifications import send_notification
 from bugwarrior.config import asbool
-
+import subprocess
+import pprint
 
 MARKUP = "(bw)"
 
 
 def synchronize(issues, conf):
-    tw = TaskWarrior()
     notify = (
         'notifications' in conf.sections() and
         asbool(conf.get('notifications', 'notifications', 'True'))
     )
 
+    experimental = (
+        'general' in conf.sections() and
+        asbool(conf.get('general', 'experimental', 'True'))
+    )
+
+    if experimental is True:
+        # @TODO don't hardcode path to config filename.
+        tw = TaskWarriorExperimental(config_filename='~/.bugwarrior_taskrc')
+    else:
+        tw = TaskWarriorExperimental()
+
     # Load info about the task database
     tasks = tw.load_tasks()
+
     is_bugwarrior_task = lambda task: \
         task.get('description', '').startswith(MARKUP)
 
@@ -83,6 +95,14 @@ def synchronize(issues, conf):
 
         tw.task_done(uuid=task['uuid'])
 
+    # Merge tasks with users local DB
+    if experimental is True:
+        # Call task merge from users local database
+        config = tw.load_config()
+        bwtask_data = "%s/" % config['data']['location']
+        subprocess.call(['task', 'rc.verbose=nothing', 'rc.merge.autopush=no', 'merge', bwtask_data])
+
+    # Send notifications
     if notify:
         send_notification(
             dict(description="New: %d, Completed: %d" % (
