@@ -3,7 +3,6 @@ from taskw import TaskWarrior, TaskWarriorExperimental
 from bugwarrior.notifications import send_notification
 from bugwarrior.config import asbool
 import subprocess
-import pprint
 
 MARKUP = "(bw)"
 
