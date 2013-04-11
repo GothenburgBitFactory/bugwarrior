@@ -8,6 +8,7 @@ import urllib2
 import time
 import json
 import datetime
+import re
 
 api_count = 0
 task_count = 0
@@ -40,6 +41,14 @@ class Client(object):
         timestamp = int(time.mktime(d.timetuple()))
         return timestamp
 
+    def get_project_slug(self, project_name):
+        # Take a project name like "Client: Example Project" and return a
+        # string in project slug format: "client-example-project"
+        project_name = project_name.lower()
+        project_name = re.sub('[\s+]', '-', project_name)
+        project_name = re.sub('[:,"/"]', '', project_name)
+        return project_name
+
     # Return a priority of L, M, or H based on AC's priority index of -2 to 2
     def format_priority(self, priority):
         priority = str(priority)
@@ -70,7 +79,7 @@ class Client(object):
                     assigned_task['task_id'] = task[u'task_id']
                     assigned_task['id'] = task[u'id']
                     assigned_task['project_id'] = project_id
-                    assigned_task['project'] = project_name
+                    assigned_task['project'] = self.get_project_slug(project_name)
                     assigned_task['description'] = task[u'name']
                     assigned_task['type'] = "task"
                     assigned_task['created_on'] = task[u'created_on'][u'mysql']
@@ -106,7 +115,7 @@ class Client(object):
                             if subtask[u'parent_id'] == t[u'id']:
                                 assigned_task['permalink'] = t[u'permalink']
                     assigned_task['task_id'] = subtask[u'id']
-                    assigned_task['project'] = project_name
+                    assigned_task['project'] = self.get_project_slug(project_name)
                     assigned_task['project_id'] = project_id
                     assigned_task['description'] = subtask['body']
                     assigned_task['type'] = 'subtask'
