@@ -46,7 +46,7 @@ class Client(object):
         # string in project slug format: "client-example-project"
         project_name = project_name.lower()
         project_name = re.sub('[\s+]', '-', project_name)
-        project_name = re.sub('[:]', '', project_name)
+        project_name = re.sub('[:,"/"]', '', project_name)
         return project_name
 
     # Return a priority of L, M, or H based on AC's priority index of -2 to 2
