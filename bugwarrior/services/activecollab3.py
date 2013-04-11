@@ -78,7 +78,7 @@ class Client(object):
                     assigned_task['permalink'] = task[u'permalink']
                     assigned_task['task_id'] = task[u'task_id']
                     assigned_task['id'] = task[u'id']
-                    assigned_task['project_id'] = task[u'project_id']
+                    assigned_task['project_id'] = project_id
                     assigned_task['project'] = self.get_project_slug(project_name)
                     assigned_task['description'] = task[u'name']
                     assigned_task['type'] = "task"
@@ -115,7 +115,6 @@ class Client(object):
                             if subtask[u'parent_id'] == t[u'id']:
                                 assigned_task['permalink'] = t[u'permalink']
                     assigned_task['task_id'] = subtask[u'id']
-                    # Get the project slug
                     assigned_task['project'] = self.get_project_slug(project_name)
                     assigned_task['project_id'] = project_id
                     assigned_task['description'] = subtask['body']
