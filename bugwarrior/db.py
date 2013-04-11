@@ -33,10 +33,7 @@ def synchronize(issues, conf):
 
     # Prune down to only tasks managed by bugwarrior
     for key in tasks.keys():
-        if experimental is True:
-            tasks['pending'] = filter(is_bugwarrior_task, tasks['pending'])
-        else:
-            tasks[key] = filter(is_bugwarrior_task, tasks[key])
+        tasks[key] = filter(is_bugwarrior_task, tasks[key])
 
     # Build a list of only the descriptions of those local bugwarrior tasks
     local_descs = [t['description'] for t in sum(tasks.values(), [])
