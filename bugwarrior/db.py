@@ -33,7 +33,10 @@ def synchronize(issues, conf):
 
     # Prune down to only tasks managed by bugwarrior
     for key in tasks.keys():
-        tasks[key] = filter(is_bugwarrior_task, tasks[key])
+        if experimental is True:
+            tasks['pending'] = filter(is_bugwarrior_task, tasks['pending'])
+        else:
+            tasks[key] = filter(is_bugwarrior_task, tasks[key])
 
     # Build a list of only the descriptions of those local bugwarrior tasks
     local_descs = [t['description'] for t in sum(tasks.values(), [])
@@ -114,6 +117,10 @@ def synchronize(issues, conf):
         config = tw.load_config(config_filename='~/.bugwarrior_taskrc')
         bwtask_data = "%s/" % config['data']['location']
         subprocess.call(['task', 'rc.verbose=nothing', 'rc.merge.autopush=no', 'merge', bwtask_data])
+        # Delete completed tasks from Bugwarrior tasks DB. This allows for
+        # assigning/unassigning tasks in a remote service, and tracking status
+        # changes in Bugwarrior.
+        subprocess.call(['task', 'rc:~/.bugwarrior_taskrc', 'rc.verbose=nothing', 'rc.confirmation=no', 'rc.bulk=100', 'status:completed', 'delete'])
 
     # Send notifications
     if notify:
