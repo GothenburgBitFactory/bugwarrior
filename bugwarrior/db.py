@@ -74,6 +74,14 @@ def synchronize(issues, conf):
         id, task = tw.get_task(description=upstream_issue['description'])
         for key in upstream_issue:
             if key not in task:
+                if experimental is True and "annotation_" in key:
+                    # TaskWarrior doesn't currently (2.2.0) allow for setting
+                    # the annotation entry key. This means that each annotation
+                    # key will always be updated to the current date and time,
+                    # which in turn means BW will always think a task has been
+                    # updated. Until this is resolved in 2.3.0, ignore
+                    # annotation updates in experimental mode.
+                    continue
                 log.name('db').info(
                     "Updating {0} on {1}",
                     key,
@@ -94,6 +102,11 @@ def synchronize(issues, conf):
             send_notification(task, 'Completed', conf)
 
         tw.task_done(uuid=task['uuid'])
+        if experimental is True:
+            # `task merge` only updates/adds tasks, it won't delete them, so
+            # call task_done() on the primary TW task database.
+            tw_done = TaskWarriorExperimental()
+            tw_done.task_done(uuid=task['uuid'])
 
     # Merge tasks with users local DB
     if experimental is True:
