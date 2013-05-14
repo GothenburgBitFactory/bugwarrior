@@ -1,21 +1,32 @@
 from twiggy import log
-from taskw import TaskWarrior
+from taskw import TaskWarrior, TaskWarriorExperimental
 from bugwarrior.notifications import send_notification
 from bugwarrior.config import asbool
-
+import subprocess
 
 MARKUP = "(bw)"
 
 
 def synchronize(issues, conf):
-    tw = TaskWarrior()
     notify = (
         'notifications' in conf.sections() and
         asbool(conf.get('notifications', 'notifications', 'True'))
     )
 
+    experimental = (
+        'general' in conf.sections() and
+        asbool(conf.get('general', 'experimental', 'True'))
+    )
+
+    if experimental is True:
+        # @TODO don't hardcode path to config filename.
+        tw = TaskWarriorExperimental(config_filename='~/.bugwarrior_taskrc')
+    else:
+        tw = TaskWarriorExperimental()
+
     # Load info about the task database
     tasks = tw.load_tasks()
+
     is_bugwarrior_task = lambda task: \
         task.get('description', '').startswith(MARKUP)
 
@@ -62,6 +73,14 @@ def synchronize(issues, conf):
         id, task = tw.get_task(description=upstream_issue['description'])
         for key in upstream_issue:
             if key not in task:
+                if experimental is True and "annotation_" in key:
+                    # TaskWarrior doesn't currently (2.2.0) allow for setting
+                    # the annotation entry key. This means that each annotation
+                    # key will always be updated to the current date and time,
+                    # which in turn means BW will always think a task has been
+                    # updated. Until this is resolved in 2.3.0, ignore
+                    # annotation updates in experimental mode.
+                    continue
                 log.name('db').info(
                     "Updating {0} on {1}",
                     key,
@@ -82,7 +101,24 @@ def synchronize(issues, conf):
             send_notification(task, 'Completed', conf)
 
         tw.task_done(uuid=task['uuid'])
+        if experimental is True:
+            # `task merge` only updates/adds tasks, it won't delete them, so
+            # call task_done() on the primary TW task database.
+            tw_done = TaskWarriorExperimental()
+            tw_done.task_done(uuid=task['uuid'])
 
+    # Merge tasks with users local DB
+    if experimental is True:
+        # Call task merge from users local database
+        config = tw.load_config(config_filename='~/.bugwarrior_taskrc')
+        bwtask_data = "%s/" % config['data']['location']
+        subprocess.call(['task', 'rc.verbose=nothing', 'rc.merge.autopush=no', 'merge', bwtask_data])
+        # Delete completed tasks from Bugwarrior tasks DB. This allows for
+        # assigning/unassigning tasks in a remote service, and tracking status
+        # changes in Bugwarrior.
+        subprocess.call(['task', 'rc:~/.bugwarrior_taskrc', 'rc.verbose=nothing', 'rc.confirmation=no', 'rc.bulk=100', 'status:completed', 'delete'])
+
+    # Send notifications
     if notify:
         send_notification(
             dict(description="New: %d, Completed: %d" % (
