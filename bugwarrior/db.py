@@ -22,7 +22,7 @@ def synchronize(issues, conf):
         # @TODO don't hardcode path to config filename.
         tw = TaskWarriorExperimental(config_filename='~/.bugwarrior_taskrc')
     else:
-        tw = TaskWarriorExperimental()
+        tw = TaskWarrior()
 
     # Load info about the task database
     tasks = tw.load_tasks()
