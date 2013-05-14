@@ -1,22 +1,23 @@
 from twiggy import log
 from taskw import TaskWarrior, TaskWarriorExperimental
 from bugwarrior.notifications import send_notification
-from bugwarrior.config import asbool
+from bugwarrior.config import asbool, NoOptionError
 import subprocess
 
 MARKUP = "(bw)"
 
 
 def synchronize(issues, conf):
-    notify = (
-        'notifications' in conf.sections() and
-        asbool(conf.get('notifications', 'notifications', 'True'))
-    )
 
-    experimental = (
-        'general' in conf.sections() and
-        asbool(conf.get('general', 'experimental', 'True'))
-    )
+    def _bool_option(section, option, default):
+        try:
+            return section in conf.sections() and \
+                    asbool(conf.get(section, option, default))
+        except NoOptionError:
+            return default
+
+    notify = _bool_option('notifications', 'notifications', 'False')
+    experimental = _bool_option('general', 'experimental', 'False')
 
     if experimental is True:
         # @TODO don't hardcode path to config filename.

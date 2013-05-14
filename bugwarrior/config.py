@@ -6,7 +6,7 @@ import os
 import optparse
 import sys
 
-from ConfigParser import ConfigParser
+from ConfigParser import ConfigParser, NoOptionError
 
 
 def asbool(some_value):
