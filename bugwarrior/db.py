@@ -12,7 +12,7 @@ def synchronize(issues, conf):
     def _bool_option(section, option, default):
         try:
             return section in conf.sections() and \
-                    asbool(conf.get(section, option, default))
+                asbool(conf.get(section, option, default))
         except NoOptionError:
             return default
 
@@ -113,11 +113,16 @@ def synchronize(issues, conf):
         # Call task merge from users local database
         config = tw.load_config(config_filename='~/.bugwarrior_taskrc')
         bwtask_data = "%s/" % config['data']['location']
-        subprocess.call(['task', 'rc.verbose=nothing', 'rc.merge.autopush=no', 'merge', bwtask_data])
+        subprocess.call([
+            'task', 'rc.verbose=nothing', 'rc.merge.autopush=no',
+            'merge', bwtask_data])
         # Delete completed tasks from Bugwarrior tasks DB. This allows for
         # assigning/unassigning tasks in a remote service, and tracking status
         # changes in Bugwarrior.
-        subprocess.call(['task', 'rc:~/.bugwarrior_taskrc', 'rc.verbose=nothing', 'rc.confirmation=no', 'rc.bulk=100', 'status:completed', 'delete'])
+        subprocess.call([
+            'task', 'rc:~/.bugwarrior_taskrc', 'rc.verbose=nothing',
+            'rc.confirmation=no', 'rc.bulk=100', 'status:completed',
+            'delete'])
 
     # Send notifications
     if notify:
