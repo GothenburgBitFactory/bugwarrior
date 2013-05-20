@@ -45,9 +45,7 @@ class GithubService(IssueService):
         ]
 
     def get_owner(self, issue):
-        # Currently unimplemented for github-proper
-        # See validate_config(...) below.
-        return None
+        return issue[1]['assignee']
 
     def issues(self):
         user = self.config.get(self.target, 'username')
@@ -99,9 +97,5 @@ class GithubService(IssueService):
 
         if not config.has_option(target, 'username'):
             die("[%s] has no 'username'" % target)
-
-        if config.has_option(target, 'only_if_assigned'):
-            die("[%s] - github does not currently support issue owners." %
-                target)
 
         IssueService.validate_config(config, target)
