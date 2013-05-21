@@ -2,7 +2,7 @@ bugwarrior experimental
 =======================
 
 Bugwarrior has an experimental mode that utilizes the TaskWarriorExperimental
-class from `taskw <https://github.com/threebean/taskw>`_.
+class from `taskw <https://github.com/ralphbean/taskw>`_.
 
 Usage
 -----
