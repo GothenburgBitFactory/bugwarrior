@@ -62,13 +62,25 @@ class BugzillaService(IssueService):
         raise NotImplementedError
 
     def annotations(self, tag, issue):
-        return dict([
-            self.format_annotation(
-                datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-                    c['time'], "%Y-%m-%d %H:%M:%S"))),
-                c['author']['login_name'].split('@')[0],
-                c['body'],
-            ) for c in issue['longdescs']])
+        if 'comments' in issue:
+            comments = issue.get('comments', [])
+            return dict([
+                self.format_annotation(
+                    datetime.datetime.fromtimestamp(time.mktime(time.strptime(
+                        c['time'].value, "%Y%m%dT%H:%M:%S"))),
+                    c['author'].split('@')[0],
+                    c['text'],
+                ) for c in comments])
+        else:
+            # Backwards compatibility (old python-bugzilla/bugzilla instances)
+            comments = issue.get('longdescs', [])
+            return dict([
+                self.format_annotation(
+                    datetime.datetime.fromtimestamp(time.mktime(time.strptime(
+                        c['time'], "%Y-%m-%d %H:%M:%S"))),
+                    c['author']['login_name'].split('@')[0],
+                    c['body'],
+                ) for c in issue['longdescs']])
 
     def issues(self):
         email = self.config.get(self.target, 'bugzilla.username')
@@ -97,7 +109,7 @@ class BugzillaService(IssueService):
         ]
 
         issues = [(self.target, bug) for bug in bugs]
-        log.debug(" Found {0} total.", len(issues))
+        log.name(self.target).debug(" Found {0} total.", len(issues))
 
         # Build a url for each issue
         base_url = "https://%s/show_bug.cgi?id=" % \
@@ -112,13 +124,12 @@ class BugzillaService(IssueService):
         # can already do a lot of the filtering we want for us.
 
         #issues = filter(self.include, issues)
-        #log.debug(" Pruned down to {0}", len(issues))
+        #log.name(self.target).debug(" Pruned down to {0}", len(issues))
 
         return [dict(
             description=self.description(
                 issue['summary'], issue['url'],
-                issue['id'], cls="issue",
-            ),
+                issue['id'], cls="issue"),
             project=issue['component'],
             priority=self.priorities.get(
                 issue['priority'],

@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.5.8'
+version = '0.6.0'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -12,12 +12,12 @@ setup(name='bugwarrior',
       description="Sync github, bitbucket, and trac issues with taskwarrior",
       long_description=long_description,
       classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: GNU General Public License (GPL)",
-        "Programming Language :: Python :: 2",
-        "Topic :: Software Development :: Bug Tracking",
-        "Topic :: Utilities",
+          "Development Status :: 4 - Beta",
+          "Intended Audience :: Developers",
+          "License :: OSI Approved :: GNU General Public License (GPL)",
+          "Programming Language :: Python :: 2",
+          "Topic :: Software Development :: Bug Tracking",
+          "Topic :: Utilities",
       ],
       keywords='task taskwarrior todo github ',
       author='Ralph Bean',
@@ -30,13 +30,12 @@ setup(name='bugwarrior',
       install_requires=[
           "twiggy",
           "bitlyapi",
-          # We use requests ourselves, but we limit the version just so
-          # jira-python can use it correctly.
-          "requests<=0.14.2",
+          "requests",
           "offtrac",
           "python-bugzilla",
           "jira-python",
           "taskw >= 0.4.2",
+          "dogpile.cache",
       ],
       entry_points="""
       [console_scripts]

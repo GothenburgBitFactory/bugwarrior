@@ -53,7 +53,7 @@ class TracService(IssueService):
         tickets = self.trac.query_tickets('status!=closed&max=0')
         tickets = map(self.trac.get_ticket, tickets)
         issues = [(self.target, ticket[3]) for ticket in tickets]
-        log.debug(" Found {0} total.", len(issues))
+        log.name(self.target).debug(" Found {0} total.", len(issues))
 
         # Build a url for each issue
         for i in range(len(issues)):
@@ -61,13 +61,12 @@ class TracService(IssueService):
             issues[i][1]['number'] = tickets[i][0]
 
         issues = filter(self.include, issues)
-        log.debug(" Pruned down to {0}", len(issues))
+        log.name(self.target).debug(" Pruned down to {0}", len(issues))
 
         return [dict(
             description=self.description(
                 issue['summary'], issue['url'],
-                issue['number'], cls="issue",
-            ),
+                issue['number'], cls="issue"),
             project=tag,
             priority=self.priorities.get(
                 issue['priority'],

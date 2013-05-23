@@ -46,7 +46,7 @@ def get_issues(username, repo, auth):
 
 def get_comments(username, repo, number, auth):
     tmpl = "https://api.github.com/repos/{username}/{repo}/issues/" + \
-            "{number}/comments?per_page=100"
+        "{number}/comments?per_page=100"
     url = tmpl.format(username=username, repo=repo, number=number)
     return _getter(url, auth)
 
@@ -72,7 +72,8 @@ def _getter(url, auth):
         # And.. if we didn't get good results, just bail.
         if response.status_code != 200:
             raise IOError(
-                "Non-200 status code %r; %r" % (response.status_code, url))
+                "Non-200 status code %r; %r; %r" % (
+                    response.status_code, url, response.json))
 
         if callable(response.json):
             # Newer python-requests
@@ -81,7 +82,7 @@ def _getter(url, auth):
             # Older python-requests
             results += response.json
 
-        link = _link_field_to_dict(response.headers['link'])
+        link = _link_field_to_dict(response.headers.get('link', None))
 
     return results
 

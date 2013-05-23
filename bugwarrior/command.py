@@ -14,6 +14,6 @@ def pull():
         issues = aggregate_issues(config)
 
         # Stuff them in the taskwarrior db as necessary
-        synchronize(issues)
+        synchronize(issues, config)
     except:
-        log.trace('error').critical('oh noes')
+        log.name('command').trace('error').critical('oh noes')

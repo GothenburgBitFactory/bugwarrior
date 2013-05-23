@@ -47,14 +47,14 @@ class MegaplanService(IssueService):
 
     def issues(self):
         issues = self.client.get_actual_tasks()
-        log.debug(" Found {0} total.", len(issues))
+        log.name(self.target).debug(" Found {0} total.", len(issues))
 
         return [dict(
             description=self.description(
                 self.get_issue_title(issue),
                 self.get_issue_url(issue),
-                self.get_issue_id(issue), cls="issue",
-            ),
+                self.get_issue_id(issue),
+                cls="issue"),
             project=self.project_name,
             priority=self.default_priority,
         ) for issue in issues]
