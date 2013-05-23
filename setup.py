@@ -30,9 +30,7 @@ setup(name='bugwarrior',
       install_requires=[
           "twiggy",
           "bitlyapi",
-          # We use requests ourselves, but we limit the version just so
-          # jira-python can use it correctly.
-          "requests<=0.14.2",
+          "requests",
           "offtrac",
           "python-bugzilla",
           "jira-python",
