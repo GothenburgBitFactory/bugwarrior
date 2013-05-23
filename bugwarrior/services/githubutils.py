@@ -82,7 +82,7 @@ def _getter(url, auth):
             # Older python-requests
             results += response.json
 
-        link = _link_field_to_dict(response.headers['link'])
+        link = _link_field_to_dict(response.headers.get('link', None))
 
     return results
 
