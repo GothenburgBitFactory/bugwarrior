@@ -156,8 +156,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   jira.password = OMG_LULZ
   jira.query = assignee = ralph and status != closed and status != resolved
   jira.project_prefix = Programming.
-  # Set this to True if you are connecting to jira version 4(look at the footer to be sure)
-  jira.version4 = False
+  # Set this to your jira major version. We currently support only jira version
+  # 4 and 5(the default). You can find your particular version in the footer at
+  # the dashboard.
+  jira.version = 5
 
   # Here's an example of a teamlab target.
   [my_teamlab]
