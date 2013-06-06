@@ -211,11 +211,16 @@ def aggregate_issues(conf):
     targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
 
     # This multiprocessing stuff is kind of experimental.
-    map_function = map
-    if asbool(conf.get('general', 'multiprocessing', 'True')):
+    use_multiprocessing = conf.has_option('general', 'multiprocessing') and \
+        asbool(conf.get('general', 'multiprocessing'))
+
+    if use_multiprocessing:
         log.name('bugwarrior').info("Spawning %i workers." % len(targets))
         pool = multiprocessing.Pool(processes=len(targets))
         map_function = pool.map
+    else:
+        log.name('bugwarrior').info("Processing targets in serial.")
+        map_function = map
 
     issues_by_target = map_function(
         _aggregate_issues,
