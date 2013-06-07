@@ -38,7 +38,8 @@ class JiraService(IssueService):
             self.target, 'jira.project_prefix', '')
         self.jira = JIRA(
             options={
-                'server': self.config.get(self.target, 'jira.base_uri')
+                'server': self.config.get(self.target, 'jira.base_uri'),
+                'rest_api_version': 'latest',
             },
             basic_auth=(
                 self.username,
@@ -75,12 +76,27 @@ class JiraService(IssueService):
 
         return dict(annotations)
 
-    def issues(self):
-        cases = self.jira.search_issues(self.query, maxResults=-1)
+    def __convert_for_jira4(self,issue):
+        print(issue.key)
+        class IssueWrapper:
+            pass
+        #print(self.jira.issue(issue.key).fields.summary.value)
+        #print(self.jira.issue(issue.key).fields.summary)
+        new_issue = self.jira.issue(issue.key)
+        result = IssueWrapper()
+        fields = IssueWrapper()
+        fields.__dict__ = {
+            'summary': new_issue.fields.summary.value,
+            'priority': new_issue.fields.priority.name,
+        }
+        result.__dict__ = {
+            'key': issue.key,
+            'fields': fields,
+        }
+        return result
 
-        log.name(self.target).debug(" Found {0} total.", len(cases))
-
-        return [dict(
+    def __issue(self, case, jira_version):
+        result = dict(
             description=self.description(
                 title=case.fields.summary,
                 url=self.url + '/browse/' + case.key,
@@ -90,6 +106,24 @@ class JiraService(IssueService):
             priority=self.priorities.get(
                 get_priority(case.fields.priority),
                 self.default_priority,
-            ),
-            **self.annotations(case.key)
-        ) for case in cases]
+            )
+        )
+        if jira_version != 4:
+            result.update(self.annotations(case.key))
+        return result
+
+    def issues(self):
+        cases = self.jira.search_issues(self.query, maxResults=-1)
+
+        jira_version = 5 # Default version number
+        if self.config.has_option(self.target, 'jira.version'):
+            jira_version = self.config.getint(self.target, 'jira.version')
+        if jira_version == 4:
+            # Convert for older jira versions that don't support the new API
+            cases = [self.__convert_for_jira4(case) for case in cases]
+
+
+        log.name(self.target).debug(" Found {0} total.", len(cases))
+
+
+        return [self.__issue(case, jira_version) for case in cases]
