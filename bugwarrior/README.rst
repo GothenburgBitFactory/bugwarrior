@@ -83,6 +83,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   username = ralphbean
   default_priority = H
 
+  # I want taskwarrior to include issues from all my repos, except these
+  # two because they're spammy or something.
+  exclude_repos = project_bar,project_baz
+
   # Note that login and username can be different.  I can login as me, but
   # scrape issues from an organization's repos.
   login = ralphbean
