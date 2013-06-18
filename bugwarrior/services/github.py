@@ -14,7 +14,17 @@ class GithubService(IssueService):
 
         login = self.config.get(self.target, 'login')
         passw = self.config.get(self.target, 'passw')
+
         self.auth = (login, passw)
+
+        self.exclude_repos = []
+
+        if self.config.has_option(self.target, 'exclude_repos'):
+            self.exclude_repos = [
+                item.strip() for item in
+                self.config.get(self.target, 'exclude_repos')
+                    .strip().split(',')
+            ]
 
     def _issues(self, tag):
         """ Grab all the issues """
@@ -47,15 +57,23 @@ class GithubService(IssueService):
     def get_owner(self, issue):
         return issue[1]['assignee']
 
+    def filter_repos(self, repo):
+        if not (repo['has_issues'] and repo['open_issues_count'] > 0):
+            return False
+
+        if self.exclude_repos:
+            if repo['name'] in self.exclude_repos:
+                return False
+
+        return True
+
     def issues(self):
         user = self.config.get(self.target, 'username')
 
         all_repos = githubutils.get_repos(username=user, auth=self.auth)
+        assert(type(all_repos) == list)
 
-        # First get and prune all the real issues
-        has_issues = lambda repo: repo['has_issues'] and \
-            repo['open_issues_count'] > 0
-        repos = filter(has_issues, all_repos)
+        repos = filter(self.filter_repos, all_repos)
         issues = sum([self._issues(user + "/" + r['name']) for r in repos], [])
         log.name(self.target).debug(" Found {0} total.", len(issues))
         issues = filter(self.include, issues)
