@@ -108,12 +108,17 @@ class Client(object):
                     # but not a task, you won't find the permalink.
                     # Request for extending the API here:
                     #  https://www.activecollab.com/forums/topic/10838/
-                    assigned_task['permalink'] = self.url.rstrip('api.php') \
-                        + 'projects/' + str(project_id) + '/tasks'
-                    for k, t in enumerate(assigned_tasks):
-                        if t[u'type'] == 'task':
-                            if subtask[u'parent_id'] == t[u'id']:
-                                assigned_task['permalink'] = t[u'permalink']
+                    # Update: newer versions of AC (3.3.4+) have permalink
+                    # provided in the API request.
+                    if 'permalink' in subtask:
+                        assigned_task['permalink'] = subtask[u'permalink']
+                    else:
+                        assigned_task['permalink'] = self.url.rstrip('api.php') \
+                            + 'projects/' + str(project_id) + '/tasks'
+                        for k, t in enumerate(assigned_tasks):
+                            if t[u'type'] == 'task':
+                                if subtask[u'parent_id'] == t[u'id']:
+                                    assigned_task['permalink'] = t[u'permalink']
                     assigned_task['task_id'] = subtask[u'id']
                     assigned_task['project'] = self.get_project_slug(project_name)
                     assigned_task['project_id'] = project_id
