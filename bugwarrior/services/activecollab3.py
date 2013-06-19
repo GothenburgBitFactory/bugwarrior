@@ -237,6 +237,7 @@ class ActiveCollab3Service(IssueService):
                     issue["project_id"],
                     issue["task_id"],
                     issue["type"]),
+                bwissueurl=issue["permalink"],
                 project=self.get_project_name(issue),
                 priority=issue["priority"],
                 **self.annotations(issue)
