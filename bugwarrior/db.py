@@ -71,7 +71,12 @@ def synchronize(issues, conf):
         if upstream_issue['description'] not in pending_descriptions:
             continue
 
-        id, task = tw.get_task(description=upstream_issue['description'])
+        # There is a bug in Taskwarrior's (2.2.0) filtering, see issue
+        # http://taskwarrior.org/issues/854. If you pass a description with
+        # parentheses you'll get a "Mismatched parentheses in expression"
+        # error. So we remove the MARKUP "(bw)" before searching for the
+        # description.
+        id, task = tw.get_task(description=upstream_issue['description'][4:])
         for key in upstream_issue:
             if key not in task:
                 if experimental is True and "annotation_" in key:
