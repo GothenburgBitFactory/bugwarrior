@@ -2,9 +2,9 @@ from twiggy import log
 from taskw import TaskWarrior, TaskWarriorExperimental
 from bugwarrior.notifications import send_notification
 from bugwarrior.config import asbool, NoOptionError
-import hashlib
 import pprint
 import subprocess
+from time import sleep
 
 MARKUP = "(bw)"
 
@@ -135,16 +135,12 @@ def synchronize_experimental(issues, conf, notify):
     for t in sum(tasks.values(), []):
         if t['status'] not in ('deleted'):
             if 'bwissueurl' in t:
-                hashed_url = hashlib.sha224(t['bwissueurl'].encode('utf-8')).hexdigest()
                 local_task_urls.append(t['bwissueurl'])
 
     # Build a list of remote tasks with bwissueurl set.
     remote_task_urls = list()
     for i in issues:
-        # TW doesn't handle slashes very well. So we'll hash the URL and use
-        # that for comparison.
-        hashed_url = hashlib.sha224(i['bwissueurl'].encode('utf-8')).hexdigest()
-        remote_task_urls.append(hashed_url)
+        remote_task_urls.append(i['bwissueurl'])
 
     print('local task urls')
     pprint.pprint(local_task_urls)
@@ -170,9 +166,8 @@ def synchronize_experimental(issues, conf, notify):
         )
         if notify:
             send_notification(issue, 'Created', conf)
-        print('adding new issue')
-        pprint.pprint(issue)
         tw.task_add(**issue)
+        sleep(0.2)
 
     # Update any issues that may have had new properties added.  These are
     # usually annotations that come from comments in the issue thread.
@@ -201,6 +196,7 @@ def synchronize_experimental(issues, conf, notify):
                     send_notification(upstream_issue, 'Updated', conf)
                 task[key] = upstream_issue[key]
                 id, task = tw.task_update(task)
+                sleep(0.2)
 
     # Delete old issues
     for task in done_tasks:
@@ -212,10 +208,12 @@ def synchronize_experimental(issues, conf, notify):
             send_notification(task, 'Completed', conf)
 
         tw.task_done(uuid=task['uuid'])
+        sleep(0.2)
         # `task merge` only updates/adds tasks, it won't delete them, so
         # call task_done() on the primary TW task database.
         tw_done = TaskWarriorExperimental()
         tw_done.task_done(uuid=task['uuid'])
+        sleep(0.2)
 
     # Call task merge from users local database
     config = tw.load_config(config_filename='~/.bugwarrior_taskrc')
