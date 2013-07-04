@@ -16,6 +16,8 @@ class IssueService(object):
         self.config = config
         self.target = target
         self.shorten = shorten
+        self.desc_len = self.config.getint('general', 'description_length')
+        self.anno_len = self.config.getint('general', 'annotation_length')
 
         log.name(target).info("Working on [{0}]", self.target)
 
@@ -30,7 +32,7 @@ class IssueService(object):
     def format_annotation(self, created, user, body):
         if not body:
             body = ''
-        body = body.replace('\n', '').replace('\r', '')[:45]
+        body = body.replace('\n', '').replace('\r', '')[:self.anno_len]
         return (
             "annotation_%i" % time.mktime(created.timetuple()),
             "@%s - %s..." % (user, body),
@@ -41,10 +43,9 @@ class IssueService(object):
             'issue': 'Is',
             'pull_request': 'PR',
         }
-        # TODO -- get the '35' here from the config.
         return "%s%s#%s - %s .. %s" % (
             MARKUP, cls_markup[cls], str(number),
-            title[:35], self.shorten(url)
+            title[:self.desc_len], self.shorten(url)
         )
 
     def include(self, issue):
