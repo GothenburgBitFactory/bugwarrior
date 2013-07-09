@@ -57,6 +57,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # https://github.com/ralphbean/bugwarrior/issues
   #multiprocessing = False
 
+  # Configure the default description or annotation length.
+  #annotation_length = 45
+  #description_length = 35
+
   # This section is for configuring notifications when bugwarrior-pull runs,
   # and when issues are created, updated, or deleted by bugwarrior-pull.
   # Three backend are currently suported:
