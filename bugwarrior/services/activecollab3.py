@@ -26,11 +26,12 @@ class ActiveCollabApi():
 
 
 class Client(object):
-    def __init__(self, url, key, user_id, projects):
+    def __init__(self, url, key, user_id, projects, labels):
         self.url = url
         self.key = key
         self.user_id = user_id
         self.projects = projects
+        self.labels = labels
 
     # Return a UNIX timestamp from an ActiveCollab date
     def format_date(self, date):
@@ -81,6 +82,9 @@ class Client(object):
                     assigned_task['project_id'] = project_id
                     assigned_task['project'] = self.get_project_slug(project_name)
                     assigned_task['description'] = task[u'name']
+                    if task[u'label_id'] in self.labels:
+                        assigned_task['label'] = self.labels[task[u'label_id']]
+                    assigned_task['label_id'] = task[u'label_id']
                     assigned_task['type'] = "task"
                     assigned_task['created_on'] = task[u'created_on'][u'mysql']
                     assigned_task['created_by_id'] = task[u'created_by_id']
@@ -123,6 +127,8 @@ class Client(object):
                     assigned_task['project'] = self.get_project_slug(project_name)
                     assigned_task['project_id'] = project_id
                     assigned_task['description'] = subtask['body']
+                    if task[u'label_id'] in self.labels:
+                        assigned_task['label'] = self.labels[task[u'label_id']]
                     assigned_task['type'] = 'subtask'
                     assigned_task['created_on'] = subtask[u'created_on']
                     assigned_task['created_by_id'] = subtask[u'created_by_id']
@@ -156,9 +162,14 @@ class ActiveCollab3Service(IssueService):
             if item[u'is_favorite'] == 1:
                 projects.append(dict([(item[u'id'], item[u'name'])]))
 
+        # Get labels
+        label_data = ac.call_api("info/labels/assignment", self.key, self.url)
+        self.labels = dict()
+        for item in label_data:
+            self.labels[item[u'id']] = item[u'name']
         self.projects = projects
 
-        self.client = Client(self.url, self.key, self.user_id, self.projects)
+        self.client = Client(self.url, self.key, self.user_id, self.projects, self.labels)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -231,6 +242,9 @@ class ActiveCollab3Service(IssueService):
         formatted_issues = []
 
         for issue in issues:
+            task_tags = list()
+            if "label" in issue:
+                task_tags.append(issue["label"])
             formatted_issue = dict(
                 description=self.description(
                     issue["description"],
@@ -238,6 +252,7 @@ class ActiveCollab3Service(IssueService):
                     issue["task_id"],
                     issue["type"]),
                 bwissueurl=issue["permalink"],
+                tags=task_tags,
                 project=self.get_project_name(issue),
                 priority=issue["priority"],
                 **self.annotations(issue)
@@ -247,5 +262,4 @@ class ActiveCollab3Service(IssueService):
             formatted_issues.append(formatted_issue)
         log.name(self.target).debug(
             " {0} tasks assigned to you", len(formatted_issues))
-
         return formatted_issues

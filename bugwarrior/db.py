@@ -2,7 +2,6 @@ from twiggy import log
 from taskw import TaskWarrior, TaskWarriorExperimental
 from bugwarrior.notifications import send_notification
 from bugwarrior.config import asbool, NoOptionError
-import pprint
 import subprocess
 from time import sleep
 
@@ -142,11 +141,6 @@ def synchronize_experimental(issues, conf, notify):
     for i in issues:
         remote_task_urls.append(i['bwissueurl'])
 
-    print('local task urls')
-    pprint.pprint(local_task_urls)
-    print('remote task urls')
-    pprint.pprint(remote_task_urls)
-
     # Build the list of tasks that need to be added
     is_new = lambda issue: issue['bwissueurl'] not in local_task_urls
     new_issues = filter(is_new, issues)
@@ -166,7 +160,11 @@ def synchronize_experimental(issues, conf, notify):
         )
         if notify:
             send_notification(issue, 'Created', conf)
-        tw.task_add(**issue)
+        try:
+           tw.task_add(**issue) 
+        except KeyError as err:
+            log.name('db').info("Error occurred: %s" % err)
+            continue
         sleep(0.2)
 
     # Update any issues that may have had new properties added.  These are
@@ -177,7 +175,14 @@ def synchronize_experimental(issues, conf, notify):
             continue
 
         id, task = tw.get_task(bwissueurl=upstream_issue['bwissueurl'])
+        # If there is no UUID in the task, then there is a problem.
+        if 'uuid' not in task:
+            log.name('db').info(
+                    "Could not load task with UUID for issue with upstream issue URL %s" % upstream_issue['bwissueurl']
+            )
+            continue
         for key in upstream_issue:
+            update = False
             if key not in task:
                 if "annotation_" in key:
                     # TaskWarrior doesn't currently (2.2.0) allow for setting
@@ -187,16 +192,43 @@ def synchronize_experimental(issues, conf, notify):
                     # updated. Until this is resolved in 2.3.0, ignore
                     # annotation updates in experimental mode.
                     continue
-                log.name('db').info(
+                update = True
+
+            # Handle tags changing
+            if 'tags' in task and key is 'tags':
+                upstream_issue_tags = list()
+                local_task_tags = list()
+                if (type(upstream_issue['tags']) is dict):
+                    for k, v in upstream_issue['tags'].iteritems():
+                        upstream_issue_tags.append(k)
+                else:
+                    upstream_issue_tags = upstream_issue['tags']
+                if (type(task['tags']) is dict):
+                    for k, v in task['tags'].iteritems():
+                        local_task_tags.append(k)
+                else:
+                    local_task_tags.append(task['tags'][0])
+                print 'upstream tags'
+                print(sorted(upstream_issue_tags))
+                print 'local tags'
+                print(sorted(local_task_tags))
+
+                if sorted(upstream_issue_tags) != sorted(local_task_tags):
+                    task['tags'] = upstream_issue_tags
+                update = True
+            # Update the task
+            if update is False:
+                continue
+            log.name('db').info(
                     "Updating {0} on {1}",
                     key,
                     upstream_issue['description'].encode("utf-8"),
                 )
-                if notify:
-                    send_notification(upstream_issue, 'Updated', conf)
-                task[key] = upstream_issue[key]
-                id, task = tw.task_update(task)
-                sleep(0.2)
+            if notify:
+                send_notification(upstream_issue, 'Updated', conf)
+            task[key] = upstream_issue[key]
+            tw.task_update(task)
+            sleep(0.2)
 
     # Delete old issues
     for task in done_tasks:
