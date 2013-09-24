@@ -77,9 +77,9 @@ class IssueService(object):
         elif only_if_assigned and not also_unassigned:
             return self.get_owner(issue) in [only_if_assigned]
         elif not only_if_assigned and also_unassigned:
-            return self.get_owner(issue) in [None]
+            return True
         elif not only_if_assigned and not also_unassigned:
-            return self.get_owner(issue) in [None]
+            return True
         else:
             pass  # Impossible to get here.
 
