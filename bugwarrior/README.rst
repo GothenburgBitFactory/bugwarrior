@@ -57,6 +57,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # https://github.com/ralphbean/bugwarrior/issues
   #multiprocessing = False
 
+  # Configure the default description or annotation length.
+  #annotation_length = 45
+  #description_length = 35
+
   # This section is for configuring notifications when bugwarrior-pull runs,
   # and when issues are created, updated, or deleted by bugwarrior-pull.
   # Three backend are currently suported:
@@ -82,6 +86,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   service = github
   username = ralphbean
   default_priority = H
+
+  # I want taskwarrior to include issues from all my repos, except these
+  # two because they're spammy or something.
+  exclude_repos = project_bar,project_baz
 
   # Note that login and username can be different.  I can login as me, but
   # scrape issues from an organization's repos.
@@ -156,6 +164,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   jira.password = OMG_LULZ
   jira.query = assignee = ralph and status != closed and status != resolved
   jira.project_prefix = Programming.
+  # Set this to your jira major version. We currently support only jira version
+  # 4 and 5(the default). You can find your particular version in the footer at
+  # the dashboard.
+  jira.version = 5
 
   # Here's an example of a teamlab target.
   [my_teamlab]
