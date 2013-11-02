@@ -132,8 +132,6 @@ def load_config():
     config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
     config.read(os.path.expanduser(opts.config))
     config.interactive = opts.interactive
-    print("XXX config.interactice=%s (opts.interactive=%s)" % (config.interactive, opts.interactive))
-    # XXX sys.exit(1)
     validate_config(config)
 
     return config
