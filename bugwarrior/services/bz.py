@@ -3,7 +3,7 @@ from twiggy import log
 import bugzilla
 
 from bugwarrior.services import IssueService
-from bugwarrior.config import die
+from bugwarrior.config import die, get_service_password
 
 import datetime
 import time
@@ -39,13 +39,17 @@ class BugzillaService(IssueService):
 
     def __init__(self, *args, **kw):
         super(BugzillaService, self).__init__(*args, **kw)
-        url = 'https://%s/xmlrpc.cgi' % \
-            self.config.get(self.target, 'bugzilla.base_uri')
+        base_uri = self.config.get(self.target, 'bugzilla.base_uri')
+        username = self.config.get(self.target, 'bugzilla.username')
+        password = self.config.get(self.target, 'bugzilla.password')
+        if not password or password.startswith("@oracle:"):
+            service = "bugzilla://%s@%s" % (username, base_uri)
+            password = get_service_password(service, username, oracle=password,
+                                            interactive=self.config.interactive)
+
+        url = 'https://%s/xmlrpc.cgi' % base_uri
         self.bz = bugzilla.Bugzilla(url=url)
-        self.bz.login(
-            self.config.get(self.target, 'bugzilla.username'),
-            self.config.get(self.target, 'bugzilla.password'),
-        )
+        self.bz.login(username, password)
 
     @classmethod
     def validate_config(cls, config, target):

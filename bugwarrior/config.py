@@ -1,7 +1,6 @@
 import twiggy
 from twiggy import log
 from twiggy.levels import name2level
-
 import os
 import optparse
 import sys
@@ -13,6 +12,45 @@ def asbool(some_value):
     """ Cast config values to boolean. """
     return str(some_value).lower() in ['y', 'yes', 't', 'true', '1', 'on']
 
+def get_service_password(service, username, oracle=None, interactive=False):
+    """
+    Retrieve the sensitive password for a service by:
+
+      * retrieving password from a secure store (@oracle:use_keyring, default)
+      * asking the password from the user (@oracle:ask_password, interactive)
+
+    Note that the keyring may or may not be locked
+    which requires that the user provides a password (interactive mode).
+
+    :param service:     Service name, may be key into secure store (as string).
+    :param username:    Username for the service (as string).
+    :param oracle:      Hint which password oracle strategy to use.
+    :return: Retrieved password (as string)
+
+    .. seealso::
+        https://bitbucket.org/kang/python-keyring-lib
+    """
+    import getpass
+    import keyring
+
+    password = None
+    if not oracle or oracle == "@oracle:use_keyring":
+        password = keyring.get_password(service, username)
+        if interactive and password is None:
+            # -- LEARNING MODE: Password is not stored in keyring yet.
+            oracle = "@oracle:ask_password"
+            password = get_service_password(service, username,
+                                            oracle, interactive=True)
+            if password:
+                keyring.set_password(service, username, password)
+    elif interactive and oracle == "@oracle:ask_password":
+        prompt = "%s password: " % service
+        password = getpass.getpass(prompt)
+
+    if password is None:
+        die("MISSING PASSWORD: oracle='%s', interactive=%s for service=%s" % \
+            (oracle, interactive, service))
+    return password
 
 def load_example_rc():
     root = '/'.join(__file__.split('/')[:-1])
@@ -47,6 +85,7 @@ from bugwarrior.services import SERVICES
 def parse_args():
     p = optparse.OptionParser()
     p.add_option('-f', '--config', default='~/.bugwarriorrc')
+    p.add_option('-i', '--interactive', action='store_true', default=False)
     return p.parse_args()
 
 
@@ -87,13 +126,14 @@ def validate_config(config):
         # Call the service-specific validator
         SERVICES[service].validate_config(config, target)
 
-
 def load_config():
     opts, args = parse_args()
 
     config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
     config.read(os.path.expanduser(opts.config))
-
+    config.interactive = opts.interactive
+    print("XXX config.interactice=%s (opts.interactive=%s)" % (config.interactive, opts.interactive))
+    # XXX sys.exit(1)
     validate_config(config)
 
     return config

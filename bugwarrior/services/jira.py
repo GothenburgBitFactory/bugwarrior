@@ -7,7 +7,7 @@ from twiggy import log
 from jira.client import JIRA
 
 from bugwarrior.services import IssueService
-from bugwarrior.config import die
+from bugwarrior.config import die, get_service_password
 
 
 def get_priority(priority):
@@ -31,6 +31,12 @@ class JiraService(IssueService):
         super(JiraService, self).__init__(*args, **kw)
         self.username = self.config.get(self.target, 'jira.username')
         self.url = self.config.get(self.target, 'jira.base_uri')
+        password = self.config.get(self.target, 'jira.password')
+        if not password or password.startswith("@oracle:"):
+            service = "jira://%s@%s" % (self.username, self.url)
+            password = get_service_password(service, self.username,
+                          oracle=password, interactive=self.config.interactive)
+
         default_query = 'assignee=' + self.username + \
             ' AND status != closed and status != resolved'
         self.query = self.config.get(self.target, 'jira.query', default_query)
@@ -41,10 +47,7 @@ class JiraService(IssueService):
                 'server': self.config.get(self.target, 'jira.base_uri'),
                 'rest_api_version': 'latest',
             },
-            basic_auth=(
-                self.username,
-                self.config.get(self.target, 'jira.password')
-            )
+            basic_auth=(self.username, password)
         )
 
     @classmethod

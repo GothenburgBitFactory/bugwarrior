@@ -1,7 +1,7 @@
 from twiggy import log
 
 from bugwarrior.services import IssueService
-from bugwarrior.config import die
+from bugwarrior.config import die, get_service_password
 
 import datetime
 import urllib2
@@ -17,6 +17,10 @@ class MegaplanService(IssueService):
         self.hostname = self.config.get(self.target, 'hostname')
         _login = self.config.get(self.target, 'login')
         _password = self.config.get(self.target, 'password')
+        if not _password or _password.startswith("@oracle:"):
+            service = "megaplan://%s@%s" % (_login, self.hostname)
+            _password = get_service_password(service, _login, oracle=_password,
+                                            interactive=self.config.interactive)
 
         self.client = megaplan.Client(self.hostname)
         self.client.authenticate(_login, _password)
