@@ -18,7 +18,7 @@ class GithubService(IssueService):
             username = self.config.get(self.target, 'username')
             service = "github://%s@github.com/%s" % (login, username)
             password = get_service_password(service, login, oracle=password,
-                                            interactive=self.config.interactive)
+                                           interactive=self.config.interactive)
         self.auth = (login, password)
 
         self.exclude_repos = []

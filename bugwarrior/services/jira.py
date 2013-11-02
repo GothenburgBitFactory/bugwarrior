@@ -35,7 +35,8 @@ class JiraService(IssueService):
         if not password or password.startswith("@oracle:"):
             service = "jira://%s@%s" % (self.username, self.url)
             password = get_service_password(service, self.username,
-                          oracle=password, interactive=self.config.interactive)
+                                            oracle=password,
+                                            interactive=self.config.interactive)
 
         default_query = 'assignee=' + self.username + \
             ' AND status != closed and status != resolved'
@@ -79,8 +80,9 @@ class JiraService(IssueService):
 
         return dict(annotations)
 
-    def __convert_for_jira4(self,issue):
+    def __convert_for_jira4(self, issue):
         print(issue.key)
+
         class IssueWrapper:
             pass
         #print(self.jira.issue(issue.key).fields.summary.value)
@@ -118,15 +120,12 @@ class JiraService(IssueService):
     def issues(self):
         cases = self.jira.search_issues(self.query, maxResults=-1)
 
-        jira_version = 5 # Default version number
+        jira_version = 5  # Default version number
         if self.config.has_option(self.target, 'jira.version'):
             jira_version = self.config.getint(self.target, 'jira.version')
         if jira_version == 4:
             # Convert for older jira versions that don't support the new API
             cases = [self.__convert_for_jira4(case) for case in cases]
 
-
         log.name(self.target).debug(" Found {0} total.", len(cases))
-
-
         return [self.__issue(case, jira_version) for case in cases]

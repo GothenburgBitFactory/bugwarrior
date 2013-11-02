@@ -12,6 +12,7 @@ def asbool(some_value):
     """ Cast config values to boolean. """
     return str(some_value).lower() in ['y', 'yes', 't', 'true', '1', 'on']
 
+
 def get_service_password(service, username, oracle=None, interactive=False):
     """
     Retrieve the sensitive password for a service by:
@@ -48,9 +49,10 @@ def get_service_password(service, username, oracle=None, interactive=False):
         password = getpass.getpass(prompt)
 
     if password is None:
-        die("MISSING PASSWORD: oracle='%s', interactive=%s for service=%s" % \
+        die("MISSING PASSWORD: oracle='%s', interactive=%s for service=%s" %
             (oracle, interactive, service))
     return password
+
 
 def load_example_rc():
     root = '/'.join(__file__.split('/')[:-1])
@@ -125,6 +127,7 @@ def validate_config(config):
 
         # Call the service-specific validator
         SERVICES[service].validate_config(config, target)
+
 
 def load_config():
     opts, args = parse_args()
