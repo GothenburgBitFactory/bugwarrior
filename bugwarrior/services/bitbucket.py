@@ -4,9 +4,7 @@ from bugwarrior.services import IssueService
 from bugwarrior.config import die
 
 import datetime
-import urllib2
-import json
-
+import requests
 
 class BitbucketService(IssueService):
     base_api = 'https://api.bitbucket.org/1.0'
@@ -24,6 +22,11 @@ class BitbucketService(IssueService):
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
 
+        login = self.config.get(self.target, 'login')
+        password = self.config.get(self.target, 'passw')
+
+        self.auth = (login, password)
+
     @classmethod
     def validate_config(cls, config, target):
         if not config.has_option(target, 'username'):
@@ -36,21 +39,13 @@ class BitbucketService(IssueService):
     # Note -- not actually rate limited, I think.
     def pull(self, tag):
         url = self.base_api + '/repositories/%s/issues/' % tag
-        try:
-            f = urllib2.urlopen(url)
-        except urllib2.HTTPError as e:
-            if '403' in str(e):
-                return []
-            else:
-                raise e
-        response = json.loads(f.read())
+        response = _getter(url, auth=self.auth)
         return [(tag, issue) for issue in response['issues']]
 
     def annotations(self, tag, issue):
         url = self.base_api + '/repositories/%s/issues/%i/comments' % (
             tag, issue['local_id'])
-        f = urllib2.urlopen(url)
-        response = json.loads(f.read())
+        response = _getter(url, auth = self.auth)
         _parse = lambda s: datetime.datetime.strptime(s[:10], "%Y-%m-%d")
         return dict([
             self.format_annotation(
@@ -68,8 +63,7 @@ class BitbucketService(IssueService):
         user = self.config.get(self.target, 'username')
 
         url = self.base_api + '/users/' + user + '/'
-        f = urllib2.urlopen(url)
-        response = json.loads(f.read())
+        response = _getter(url, auth=self.auth)
         repos = [
             repo.get('slug') for repo in response.get('repositories')
             if repo.get('has_issues')
@@ -101,3 +95,19 @@ class BitbucketService(IssueService):
             ),
             **self.annotations(tag, issue)
         ) for tag, issue in issues]
+
+def _getter(url, auth):
+    response = requests.get(url, auth=auth)
+
+    # And.. if we didn't get good results, just bail.
+    if response.status_code != 200:
+        raise IOError(
+            "Non-200 status code %r; %r; %r" % (
+                response.status_code, url, response.json))
+
+    if callable(response.json):
+        # Newer python-requests
+        return response.json()
+    else:
+        # Older python-requests
+        return response.json
