@@ -36,6 +36,7 @@ setup(name='bugwarrior',
           "jira-python",
           "taskw >= 0.4.2",
           "dogpile.cache",
+          "keyring",
       ],
       entry_points="""
       [console_scripts]

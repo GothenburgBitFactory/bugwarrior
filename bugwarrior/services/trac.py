@@ -3,7 +3,7 @@ from twiggy import log
 import offtrac
 
 from bugwarrior.services import IssueService
-from bugwarrior.config import die
+from bugwarrior.config import die, get_service_password
 
 
 class TracService(IssueService):
@@ -18,11 +18,15 @@ class TracService(IssueService):
 
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
-        uri = 'https://%s:%s@%s/login/xmlrpc' % (
-            self.config.get(self.target, 'trac.username'),
-            self.config.get(self.target, 'trac.password'),
-            self.config.get(self.target, 'trac.base_uri'),
-        )
+        base_uri = self.config.get(self.target, 'trac.base_uri')
+        username = self.config.get(self.target, 'trac.username')
+        password = self.config.get(self.target, 'trac.password')
+        if not password or password.startswith('@oracle:'):
+            service = "https://%s@%s/" % (username, base_uri)
+            password = get_service_password(service, username, oracle=password,
+                                            interactive=self.config.interactive)
+
+        uri = 'https://%s:%s@%s/login/xmlrpc' % (username, password, base_uri)
         self.trac = offtrac.TracServer(uri)
 
     @classmethod
