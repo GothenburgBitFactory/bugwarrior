@@ -6,6 +6,7 @@ from bugwarrior.config import die, get_service_password
 import datetime
 import requests
 
+
 class BitbucketService(IssueService):
     base_api = 'https://api.bitbucket.org/1.0'
     base_url = 'http://bitbucket.org/'
@@ -28,7 +29,7 @@ class BitbucketService(IssueService):
             username = self.config.get(self.target, 'username')
             service = "bitbucket://%s@bitbucket.org/%s" % (login, username)
             password = get_service_password(service, login, oracle=password,
-                                           interactive=self.config.interactive)
+                                            interactive=self.config.interactive)
 
         self.auth = (login, password)
 
@@ -50,7 +51,7 @@ class BitbucketService(IssueService):
     def annotations(self, tag, issue):
         url = self.base_api + '/repositories/%s/issues/%i/comments' % (
             tag, issue['local_id'])
-        response = _getter(url, auth = self.auth)
+        response = _getter(url, auth=self.auth)
         _parse = lambda s: datetime.datetime.strptime(s[:10], "%Y-%m-%d")
         return dict([
             self.format_annotation(
@@ -100,6 +101,7 @@ class BitbucketService(IssueService):
             ),
             **self.annotations(tag, issue)
         ) for tag, issue in issues]
+
 
 def _getter(url, auth):
     response = requests.get(url, auth=auth)
