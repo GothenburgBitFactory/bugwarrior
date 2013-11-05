@@ -1,7 +1,7 @@
 from twiggy import log
 
 from bugwarrior.services import IssueService
-from bugwarrior.config import die
+from bugwarrior.config import die, get_service_password
 
 import datetime
 import requests
@@ -24,6 +24,11 @@ class BitbucketService(IssueService):
 
         login = self.config.get(self.target, 'login')
         password = self.config.get(self.target, 'passw')
+        if not password or password.startswith('@oracle:'):
+            username = self.config.get(self.target, 'username')
+            service = "bitbucket://%s@bitbucket.org/%s" % (login, username)
+            password = get_service_password(service, login, oracle=password,
+                                           interactive=self.config.interactive)
 
         self.auth = (login, password)
 
