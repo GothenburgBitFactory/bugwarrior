@@ -23,15 +23,18 @@ class BitbucketService(IssueService):
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
 
-        login = self.config.get(self.target, 'login')
-        password = self.config.get(self.target, 'passw')
-        if not password or password.startswith('@oracle:'):
-            username = self.config.get(self.target, 'username')
-            service = "bitbucket://%s@bitbucket.org/%s" % (login, username)
-            password = get_service_password(service, login, oracle=password,
-                                            interactive=self.config.interactive)
+        self.auth = None
+        if self.config.has_option(self.target, 'login'):
+            login = self.config.get(self.target, 'login')
+            password = self.config.get(self.target, 'passw')
+            if not password or password.startswith('@oracle:'):
+                username = self.config.get(self.target, 'username')
+                service = "bitbucket://%s@bitbucket.org/%s" % (login, username)
+                password = get_service_password(
+                    service, login, oracle=password,
+                    interactive=self.config.interactive)
 
-        self.auth = (login, password)
+            self.auth = (login, password)
 
     @classmethod
     def validate_config(cls, config, target):
