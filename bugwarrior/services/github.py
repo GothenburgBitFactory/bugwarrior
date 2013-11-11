@@ -59,7 +59,7 @@ class GithubService(IssueService):
         ]
 
     def get_owner(self, issue):
-        return issue[1]['assignee']
+        return issue[1]['assignee']['login']
 
     def filter_repos(self, repo):
         if not (repo['has_issues'] and repo['open_issues_count'] > 0):
