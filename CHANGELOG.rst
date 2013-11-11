@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.6.3
+-----
+
+- Another tweak for #85. `b732b4f47 <https://github.com/ralphbean/bugwarrior/commit/b732b4f47616bd9f281a72c91bf8f17b2aaf04b1>`_
+
 0.6.2
 -----
 
