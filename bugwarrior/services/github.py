@@ -1,7 +1,7 @@
 from twiggy import log
 
 from bugwarrior.services import IssueService
-from bugwarrior.config import die
+from bugwarrior.config import die, get_service_password
 
 import githubutils
 import datetime
@@ -13,9 +13,13 @@ class GithubService(IssueService):
         super(GithubService, self).__init__(*args, **kw)
 
         login = self.config.get(self.target, 'login')
-        passw = self.config.get(self.target, 'passw')
-
-        self.auth = (login, passw)
+        password = self.config.get(self.target, 'passw')
+        if not password or password.startswith('@oracle:'):
+            username = self.config.get(self.target, 'username')
+            service = "github://%s@github.com/%s" % (login, username)
+            password = get_service_password(service, login, oracle=password,
+                                           interactive=self.config.interactive)
+        self.auth = (login, password)
 
         self.exclude_repos = []
 
@@ -55,7 +59,7 @@ class GithubService(IssueService):
         ]
 
     def get_owner(self, issue):
-        return issue[1]['assignee']
+        return issue[1]['assignee']['login']
 
     def filter_repos(self, repo):
         if not (repo['has_issues'] and repo['open_issues_count'] > 0):

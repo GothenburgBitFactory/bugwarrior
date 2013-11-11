@@ -3,7 +3,7 @@ from twiggy import log
 import bugzilla
 
 from bugwarrior.services import IssueService
-from bugwarrior.config import die
+from bugwarrior.config import die, asbool, get_service_password
 
 import datetime
 import time
@@ -39,13 +39,29 @@ class BugzillaService(IssueService):
 
     def __init__(self, *args, **kw):
         super(BugzillaService, self).__init__(*args, **kw)
-        url = 'https://%s/xmlrpc.cgi' % \
-            self.config.get(self.target, 'bugzilla.base_uri')
+        base_uri = self.config.get(self.target, 'bugzilla.base_uri')
+        username = self.config.get(self.target, 'bugzilla.username')
+        password = self.config.get(self.target, 'bugzilla.password')
+
+        # So more modern bugzilla's require that we specify
+        # query_format=advanced along with the xmlrpc request.
+        # https://bugzilla.redhat.com/show_bug.cgi?id=825370
+        # ...but older bugzilla's don't know anything about that argument.
+        # Here we make it possible for the user to specify whether they want
+        # to pass that argument or not.
+        self.advanced = True  # Default to True.
+        if self.config.has_option(self.target, 'bugzilla.advanced'):
+            self.advanced = asbool(self.config.get(
+                self.target, 'bugzilla.advanced'))
+
+        if not password or password.startswith("@oracle:"):
+            service = "bugzilla://%s@%s" % (username, base_uri)
+            password = get_service_password(service, username, oracle=password,
+                                            interactive=self.config.interactive)
+
+        url = 'https://%s/xmlrpc.cgi' % base_uri
         self.bz = bugzilla.Bugzilla(url=url)
-        self.bz.login(
-            self.config.get(self.target, 'bugzilla.username'),
-            self.config.get(self.target, 'bugzilla.password'),
-        )
+        self.bz.login(username, password)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -95,10 +111,13 @@ class BugzillaService(IssueService):
             emailassigned_to1=1,
             emailqa_contact1=1,
             emailtype1="substring",
+        )
+
+        if self.advanced:
             # Required for new bugzilla
             # https://bugzilla.redhat.com/show_bug.cgi?id=825370
-            query_format='advanced',
-        )
+            query['query_format'] = 'advanced'
+
         bugs = self.bz.query(query)
 
         # Convert to dicts

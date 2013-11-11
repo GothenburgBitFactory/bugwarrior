@@ -7,7 +7,7 @@ from twiggy import log
 from jira.client import JIRA
 
 from bugwarrior.services import IssueService
-from bugwarrior.config import die
+from bugwarrior.config import die, get_service_password
 
 
 def get_priority(priority):
@@ -31,6 +31,13 @@ class JiraService(IssueService):
         super(JiraService, self).__init__(*args, **kw)
         self.username = self.config.get(self.target, 'jira.username')
         self.url = self.config.get(self.target, 'jira.base_uri')
+        password = self.config.get(self.target, 'jira.password')
+        if not password or password.startswith("@oracle:"):
+            service = "jira://%s@%s" % (self.username, self.url)
+            password = get_service_password(service, self.username,
+                                            oracle=password,
+                                            interactive=self.config.interactive)
+
         default_query = 'assignee=' + self.username + \
             ' AND status != closed and status != resolved'
         self.query = self.config.get(self.target, 'jira.query', default_query)
@@ -41,10 +48,7 @@ class JiraService(IssueService):
                 'server': self.config.get(self.target, 'jira.base_uri'),
                 'rest_api_version': 'latest',
             },
-            basic_auth=(
-                self.username,
-                self.config.get(self.target, 'jira.password')
-            )
+            basic_auth=(self.username, password)
         )
 
     @classmethod
@@ -76,8 +80,9 @@ class JiraService(IssueService):
 
         return dict(annotations)
 
-    def __convert_for_jira4(self,issue):
+    def __convert_for_jira4(self, issue):
         print(issue.key)
+
         class IssueWrapper:
             pass
         #print(self.jira.issue(issue.key).fields.summary.value)
@@ -115,15 +120,12 @@ class JiraService(IssueService):
     def issues(self):
         cases = self.jira.search_issues(self.query, maxResults=-1)
 
-        jira_version = 5 # Default version number
+        jira_version = 5  # Default version number
         if self.config.has_option(self.target, 'jira.version'):
             jira_version = self.config.getint(self.target, 'jira.version')
         if jira_version == 4:
             # Convert for older jira versions that don't support the new API
             cases = [self.__convert_for_jira4(case) for case in cases]
 
-
         log.name(self.target).debug(" Found {0} total.", len(cases))
-
-
         return [self.__issue(case, jira_version) for case in cases]
