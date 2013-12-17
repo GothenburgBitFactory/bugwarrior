@@ -96,6 +96,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # two because they're spammy or something.
   exclude_repos = project_bar,project_baz
 
+  # Working with a large number of projects, instead of excluding most of them I
+  # can also simply include just a limited set.
+  include_repos = project_foo,project_foz
+
   # Note that login and username can be different.  I can login as me, but
   # scrape issues from an organization's repos.
   login = ralphbean
