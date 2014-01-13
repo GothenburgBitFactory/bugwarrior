@@ -22,11 +22,19 @@ class GithubService(IssueService):
         self.auth = (login, password)
 
         self.exclude_repos = []
+        self.include_repos = []
 
         if self.config.has_option(self.target, 'exclude_repos'):
             self.exclude_repos = [
                 item.strip() for item in
                 self.config.get(self.target, 'exclude_repos')
+                    .strip().split(',')
+            ]
+
+        if self.config.has_option(self.target, 'include_repos'):
+            self.include_repos = [
+                item.strip() for item in
+                self.config.get(self.target, 'include_repos')
                     .strip().split(',')
             ]
 
@@ -68,6 +76,12 @@ class GithubService(IssueService):
 
         if self.exclude_repos:
             if repo['name'] in self.exclude_repos:
+                return False
+
+        if self.include_repos:
+            if repo['name'] in self.include_repos:
+                return True
+            else:
                 return False
 
         return True
