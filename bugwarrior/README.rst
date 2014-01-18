@@ -31,6 +31,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # PASSWORD LOOKUP STRATEGIES:
   # Use "password = @oracle:use_keyring" to retrieve a password from a keyring.
   # Use "password = @oracle:ask_password" to ask the user for the password.
+  # Use "password = @oracle:eval:<command>" to use the output of <command> as the password.
   # Note that using one of these strategies is in general more secure
   # than storing a password in plain text.
 
