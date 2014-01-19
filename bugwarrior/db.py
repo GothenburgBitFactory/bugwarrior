@@ -3,6 +3,7 @@ from taskw import TaskWarrior, TaskWarriorExperimental
 from bugwarrior.notifications import send_notification
 from bugwarrior.config import asbool, NoOptionError
 import subprocess
+from time import sleep
 
 MARKUP = "(bw)"
 
@@ -20,8 +21,7 @@ def synchronize(issues, conf):
     experimental = _bool_option('general', 'experimental', 'False')
 
     if experimental is True:
-        # @TODO don't hardcode path to config filename.
-        tw = TaskWarriorExperimental(config_filename='~/.bugwarrior_taskrc')
+        return synchronize_experimental(issues, conf, notify)
     else:
         tw = TaskWarrior()
 
@@ -102,27 +102,164 @@ def synchronize(issues, conf):
             send_notification(task, 'Completed', conf)
 
         tw.task_done(uuid=task['uuid'])
-        if experimental is True:
-            # `task merge` only updates/adds tasks, it won't delete them, so
-            # call task_done() on the primary TW task database.
-            tw_done = TaskWarriorExperimental()
-            tw_done.task_done(uuid=task['uuid'])
 
-    # Merge tasks with users local DB
-    if experimental is True:
-        # Call task merge from users local database
-        config = tw.load_config(config_filename='~/.bugwarrior_taskrc')
-        bwtask_data = "%s/" % config['data']['location']
-        subprocess.call([
-            'task', 'rc.verbose=nothing', 'rc.merge.autopush=no',
-            'merge', bwtask_data])
-        # Delete completed tasks from Bugwarrior tasks DB. This allows for
-        # assigning/unassigning tasks in a remote service, and tracking status
-        # changes in Bugwarrior.
-        subprocess.call([
-            'task', 'rc:~/.bugwarrior_taskrc', 'rc.verbose=nothing',
-            'rc.confirmation=no', 'rc.bulk=100', 'status:completed',
-            'delete'])
+    # Send notifications
+    if notify:
+        send_notification(
+            dict(description="New: %d, Completed: %d" % (
+                len(new_issues), len(done_tasks)
+            )),
+            'bw_finished',
+            conf,
+        )
+
+def synchronize_experimental(issues, conf, notify):
+
+    tw = TaskWarriorExperimental(config_filename="~/.bugwarrior_taskrc")
+    # Load the BW task database
+    tasks = tw.load_tasks()
+
+    # Make sure "bwissueurl" exists for each entry.
+    for task in tasks['pending']:
+        if 'bwissueurl' not in task:
+            # This is a temporary fix. TW does not allow setting "bwissueurl:''"
+            # so we need to assign a temporary value. This will get overwritten
+            # from the upstream issue.
+            task['bwissueurl'] = "bugwarrior_url"
+            tw.task_update(task)
+    tasks = tw.load_tasks()
+    # Everything in the BW task database should be managed by BW. But just to
+    # be sure, check if "bwissueurl" is set.
+    local_task_urls = list()
+    for t in sum(tasks.values(), []):
+        if t['status'] not in ('deleted'):
+            if 'bwissueurl' in t:
+                local_task_urls.append(t['bwissueurl'])
+
+    # Build a list of remote tasks with bwissueurl set.
+    remote_task_urls = list()
+    for i in issues:
+        remote_task_urls.append(i['bwissueurl'])
+
+    # Build the list of tasks that need to be added
+    is_new = lambda issue: issue['bwissueurl'] not in local_task_urls
+    new_issues = filter(is_new, issues)
+    old_issues = filter(lambda i: not is_new(i), issues)
+
+    # Build the list of local tasks that need to be completed
+    is_done = lambda task: task['bwissueurl'] not in remote_task_urls
+    done_tasks = filter(is_done, tasks['pending'])
+
+    log.name('db').struct(new=len(new_issues), completed=len(done_tasks))
+
+    # Add new issues
+    for issue in new_issues:
+        log.name('db').info(
+            "Adding task {0}",
+            issue['description'].encode("utf-8")
+        )
+        if notify:
+            send_notification(issue, 'Created', conf)
+        try:
+           tw.task_add(**issue) 
+        except KeyError as err:
+            log.name('db').info("Error occurred: %s" % err)
+            continue
+        sleep(0.2)
+
+    # Update any issues that may have had new properties added.  These are
+    # usually annotations that come from comments in the issue thread.
+    pending_bwissueurl = [t['bwissueurl'] for t in tasks['pending']]
+    for upstream_issue in old_issues:
+        if upstream_issue['bwissueurl'] not in pending_bwissueurl:
+            continue
+
+        id, task = tw.get_task(bwissueurl=upstream_issue['bwissueurl'])
+        # If there is no UUID in the task, then there is a problem.
+        if 'uuid' not in task:
+            log.name('db').info(
+                    "Could not load task with UUID for issue with upstream issue URL %s" % upstream_issue['bwissueurl']
+            )
+            continue
+        for key in upstream_issue:
+            update = False
+            if key not in task:
+                if "annotation_" in key:
+                    # TaskWarrior doesn't currently (2.2.0) allow for setting
+                    # the annotation entry key. This means that each annotation
+                    # key will always be updated to the current date and time,
+                    # which in turn means BW will always think a task has been
+                    # updated. Until this is resolved in 2.3.0, ignore
+                    # annotation updates in experimental mode.
+                    continue
+                update = True
+
+            # Handle tags changing
+            if 'tags' in task and key is 'tags':
+                upstream_issue_tags = list()
+                local_task_tags = list()
+                if (type(upstream_issue['tags']) is dict):
+                    for k, v in upstream_issue['tags'].iteritems():
+                        upstream_issue_tags.append(k)
+                else:
+                    upstream_issue_tags = upstream_issue['tags']
+                if (type(task['tags']) is dict):
+                    for k, v in task['tags'].iteritems():
+                        local_task_tags.append(k)
+                else:
+                    local_task_tags.append(task['tags'][0])
+                print 'upstream tags'
+                print(sorted(upstream_issue_tags))
+                print 'local tags'
+                print(sorted(local_task_tags))
+
+                if sorted(upstream_issue_tags) != sorted(local_task_tags):
+                    task['tags'] = upstream_issue_tags
+                update = True
+            # Update the task
+            if update is False:
+                continue
+            log.name('db').info(
+                    "Updating {0} on {1}",
+                    key,
+                    upstream_issue['description'].encode("utf-8"),
+                )
+            if notify:
+                send_notification(upstream_issue, 'Updated', conf)
+            task[key] = upstream_issue[key]
+            tw.task_update(task)
+            sleep(0.2)
+
+    # Delete old issues
+    for task in done_tasks:
+        log.name('db').info(
+            "Completing task {0}",
+            task['description'].encode("utf-8"),
+        )
+        if notify:
+            send_notification(task, 'Completed', conf)
+
+        tw.task_done(uuid=task['uuid'])
+        sleep(0.2)
+        # `task merge` only updates/adds tasks, it won't delete them, so
+        # call task_done() on the primary TW task database.
+        tw_done = TaskWarriorExperimental()
+        tw_done.task_done(uuid=task['uuid'])
+        sleep(0.2)
+
+    # Call task merge from users local database
+    config = tw.load_config(config_filename='~/.bugwarrior_taskrc')
+    bwtask_data = "%s/" % config['data']['location']
+    subprocess.call([
+        'task', 'rc.verbose=nothing', 'rc.merge.autopush=no',
+        'merge', bwtask_data])
+    # Delete completed tasks from Bugwarrior tasks DB. This allows for
+    # assigning/unassigning tasks in a remote service, and tracking status
+    # changes in Bugwarrior.
+    subprocess.call([
+        'task', 'rc:~/.bugwarrior_taskrc', 'rc.verbose=nothing',
+        'rc.confirmation=no', 'rc.bulk=100', 'status:completed',
+        'delete'])
 
     # Send notifications
     if notify:
