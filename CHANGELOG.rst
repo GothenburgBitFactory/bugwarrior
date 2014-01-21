@@ -1,6 +1,20 @@
 Changelog
 =========
 
+0.7.0
+-----
+
+- Add some hacking instructions for @teranex. `340a5e2ea <https://github.com/ralphbean/bugwarrior/commit/340a5e2ea3bc87ef99f0afa006b5ea898205c1ad>`_
+- Add support for include_repos `265683b78 <https://github.com/ralphbean/bugwarrior/commit/265683b780f2831b4181f8b2bf3788fd3cc3d61c>`_
+- Merge pull request #88 from pypingou/develop `c7703c4f6 <https://github.com/ralphbean/bugwarrior/commit/c7703c4f6244b7c153b68ef204eb6f1fdce914a6>`_
+- Add @oracle:eval:<command> option to get the password from an external command `47d3cf189 <https://github.com/ralphbean/bugwarrior/commit/47d3cf189c339a86f210057fb815d512506a3475>`_
+- Merge pull request #89 from puiterwijk/add-oracle-eval `d47f90d78 <https://github.com/ralphbean/bugwarrior/commit/d47f90d78253b8009f76dd9fe65509c88dc248b7>`_
+- Use new taskw lingo. `bf1ea4ff1 <https://github.com/ralphbean/bugwarrior/commit/bf1ea4ff1ca557f56e0796cc4dee247caada87fa>`_
+- Handle a bunch of contingencies for python-bugzilla>=0.9.0 `ee4df9935 <https://github.com/ralphbean/bugwarrior/commit/ee4df99353e79f2224bab266f8cbd676445f186d>`_
+- Conditionalize jira inclusion. `423040cea <https://github.com/ralphbean/bugwarrior/commit/423040ceac540d476eaebf83d308f4cf0376fccd>`_
+- Merge pull request #90 from ralphbean/feature/new-taskw `ce574868d <https://github.com/ralphbean/bugwarrior/commit/ce574868df09c16b70da4bc93079bcf9ed4bed84>`_
+- Knock out jira-python by default for now. `b4f8112a2 <https://github.com/ralphbean/bugwarrior/commit/b4f8112a282aece5f9a4042cb6dd9fb3107def18>`_
+
 0.6.3
 -----
 

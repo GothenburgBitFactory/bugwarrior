@@ -3,6 +3,7 @@ from twiggy import log
 from twiggy.levels import name2level
 import os
 import optparse
+import subprocess
 import sys
 
 from ConfigParser import ConfigParser, NoOptionError
@@ -19,6 +20,7 @@ def get_service_password(service, username, oracle=None, interactive=False):
 
       * retrieving password from a secure store (@oracle:use_keyring, default)
       * asking the password from the user (@oracle:ask_password, interactive)
+      * executing a command and use the output as password (@oracle:eval:<command>)
 
     Note that the keyring may or may not be locked
     which requires that the user provides a password (interactive mode).
@@ -47,6 +49,10 @@ def get_service_password(service, username, oracle=None, interactive=False):
     elif interactive and oracle == "@oracle:ask_password":
         prompt = "%s password: " % service
         password = getpass.getpass(prompt)
+    elif oracle.startswith('@oracle:eval:'):
+        command = oracle[13:]
+        p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        password = p.stdout.read()[:-1]
 
     if password is None:
         die("MISSING PASSWORD: oracle='%s', interactive=%s for service=%s" %

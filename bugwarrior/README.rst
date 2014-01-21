@@ -31,6 +31,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # PASSWORD LOOKUP STRATEGIES:
   # Use "password = @oracle:use_keyring" to retrieve a password from a keyring.
   # Use "password = @oracle:ask_password" to ask the user for the password.
+  # Use "password = @oracle:eval:<command>" to use the output of <command> as the password.
   # Note that using one of these strategies is in general more secure
   # than storing a password in plain text.
 
@@ -95,6 +96,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # I want taskwarrior to include issues from all my repos, except these
   # two because they're spammy or something.
   exclude_repos = project_bar,project_baz
+
+  # Working with a large number of projects, instead of excluding most of them I
+  # can also simply include just a limited set.
+  include_repos = project_foo,project_foz
 
   # Note that login and username can be different.  I can login as me, but
   # scrape issues from an organization's repos.
@@ -284,6 +289,45 @@ download the latest tarball::
     $ tar -xzvf bugwarrior-latest.tar.gz
     $ cd ralphbean-bugwarrior-*
     $ python setup.py install
+
+Hacking on It
++++++++++++++
+
+You should install the `virtualenv <https://pypi.python.org/pypi/virtualenv>`_
+tool for python.  (I use a wrapper for it called `virtualenvwrapper
+<https://pypi.python.org/pypi/virtualenvwrapper>`_ which is awesome but not
+required.)  Virtualenv will help isolate your dependencies from the rest of
+your system.
+
+::
+
+    $ sudo yum install python-virtualenv git
+    $ mkdir -p ~/virtualenvs/
+    $ virtualenv ~/virtualenvs/bugwarrior
+
+You should now have a virtualenv in a ``~/virtualenvs/`` directory.
+To use it, you need to "activate" it like this::
+
+    $ source ~/virtualenv/bugwarrior/bin/activate
+    (bugwarrior)$ which python
+
+At any time, you can deactivate it by typing ``deactivate`` at the command
+prompt.
+
+Next step -- get the code!
+
+::
+
+    (bugwarrior)$ git clone git@github.com:ralphbean/bugwarrior.git
+    (bugwarrior)$ cd bugwarrior
+    (bugwarrior)$ python setup.py develop
+    (bugwarrior)$ which bugwarrior-pull
+
+This will actually run it.. be careful and back up your task directory!
+
+::
+
+    (bugwarrior)$ bugwarrior-pull
 
 
 Contributors

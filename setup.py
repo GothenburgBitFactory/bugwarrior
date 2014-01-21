@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.6.3'
+version = '0.7.0'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -33,7 +33,7 @@ setup(name='bugwarrior',
           "requests",
           "offtrac",
           "python-bugzilla",
-          "jira-python",
+          #"jira-python",
           "taskw >= 0.4.2",
           "dogpile.cache",
           "keyring",
