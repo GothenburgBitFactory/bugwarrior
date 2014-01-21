@@ -1,5 +1,5 @@
 from twiggy import log
-from taskw import TaskWarrior, TaskWarriorExperimental
+from taskw import TaskWarriorShellout, TaskWarriorDirect
 from bugwarrior.notifications import send_notification
 from bugwarrior.config import asbool, NoOptionError
 import subprocess
@@ -20,10 +20,9 @@ def synchronize(issues, conf):
     experimental = _bool_option('general', 'experimental', 'False')
 
     if experimental is True:
-        # @TODO don't hardcode path to config filename.
-        tw = TaskWarriorExperimental(config_filename='~/.bugwarrior_taskrc')
+        tw = TaskWarriorShellout()
     else:
-        tw = TaskWarrior()
+        tw = TaskWarriorDirect()
 
     # Load info about the task database
     tasks = tw.load_tasks()
