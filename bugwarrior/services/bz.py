@@ -89,13 +89,36 @@ class BugzillaService(IssueService):
                 ) for c in comments])
         else:
             # Backwards compatibility (old python-bugzilla/bugzilla instances)
+            # This block handles a million different contingencies that have to
+            # do with different version of python-bugzilla and different
+            # version of bugzilla itself.  :(
             comments = issue.get('longdescs', [])
+            def _parse_time(obj):
+                if isinstance(obj, datetime.datetime):
+                    return obj
+                elif isinstance(obj, basestring):
+                    return datetime.datetime.fromtimestamp(time.mktime(
+                        time.strptime(obj, "%Y-%m-%d %H:%M:%S")))
+                elif hasattr(obj, 'value'):
+                    return datetime.datetime.fromtimestamp(time.mktime(
+                        time.strptime(obj.value, "%Y%m%dT%H:%M:%S")))
+                else:
+                    raise TypeError("Unhandled time type %r" % obj)
+
+            def _parse_author(obj):
+                if isinstance(obj, dict):
+                    return obj['login_name'].split('@')[0]
+                else:
+                    return obj
+
+            def _parse_body(obj):
+                return obj.get('text', obj.get('body'))
+
             return dict([
                 self.format_annotation(
-                    datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-                        c['time'], "%Y-%m-%d %H:%M:%S"))),
-                    c['author']['login_name'].split('@')[0],
-                    c['body'],
+                    _parse_time(c['time']),
+                    _parse_author(c['author']),
+                    _parse_body(c)
                 ) for c in issue['longdescs']])
 
     def issues(self):
