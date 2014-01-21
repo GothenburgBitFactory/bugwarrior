@@ -131,7 +131,6 @@ from trac import TracService
 from bz import BugzillaService
 from teamlab import TeamLabService
 from redmine import RedMineService
-from jira import JiraService
 from activecollab2 import ActiveCollab2Service
 from activecollab3 import ActiveCollab3Service
 
@@ -144,11 +143,15 @@ SERVICES = {
     'bugzilla': BugzillaService,
     'teamlab': TeamLabService,
     'redmine': RedMineService,
-    'jira': JiraService,
     'activecollab2': ActiveCollab2Service,
     'activecollab3': ActiveCollab3Service,
 }
 
+try:
+    from jira import JiraService
+    SERVICES['jira'] = JiraService
+except ImportError:
+    pass
 
 try:
     from mplan import MegaplanService
