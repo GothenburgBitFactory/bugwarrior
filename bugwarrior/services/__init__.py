@@ -171,6 +171,8 @@ def _aggregate_issues(args):
     # Unpack arguments
     conf, target = args
 
+    start = time.time()
+
     try:
         # By default, we don't shorten URLs
         shorten = lambda url: url
@@ -203,7 +205,8 @@ def _aggregate_issues(args):
         log.name(target).trace('error').critical("worker failure")
         return WORKER_FAILURE
     finally:
-        log.name(target).info("Done with [%s]" % target)
+        duration = time.time() - start
+        log.name(target).info("Done with [%s] in %fs" % (target, duration))
 
 # Import here so that mproc knows about _aggregate_issues
 import multiprocessing
