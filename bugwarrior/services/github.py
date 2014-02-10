@@ -84,7 +84,7 @@ class GithubService(IssueService):
         return True
 
     def filter_repos_for_prs(self, repo):
-        if repo['forks'] <= 1:
+        if repo['forks'] < 1:
             return False
         else:
             return self._filter_repos_base(repo)
