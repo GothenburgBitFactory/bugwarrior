@@ -70,10 +70,7 @@ class GithubService(IssueService):
         if issue[1]['assignee']:
             return issue[1]['assignee']['login']
 
-    def filter_repos(self, repo):
-        if not (repo['has_issues'] and repo['open_issues_count'] > 0):
-            return False
-
+    def _filter_repos_base(self, repo):
         if self.exclude_repos:
             if repo['name'] in self.exclude_repos:
                 return False
@@ -86,13 +83,25 @@ class GithubService(IssueService):
 
         return True
 
+    def filter_repos_for_prs(self, repo):
+        if repo['forks'] <= 1:
+            return False
+        else:
+            return self._filter_repos_base(repo)
+
+    def filter_repos_for_issues(self, repo):
+        if not (repo['has_issues'] and repo['open_issues_count'] > 0):
+            return False
+        else:
+            return self._filter_repos_base(repo)
+
     def issues(self):
         user = self.config.get(self.target, 'username')
 
         all_repos = githubutils.get_repos(username=user, auth=self.auth)
         assert(type(all_repos) == list)
 
-        repos = filter(self.filter_repos, all_repos)
+        repos = filter(self.filter_repos_for_issues, all_repos)
         issues = sum([self._issues(user + "/" + r['name']) for r in repos], [])
         log.name(self.target).debug(" Found {0} total.", len(issues))
         issues = filter(self.include, issues)
@@ -100,7 +109,7 @@ class GithubService(IssueService):
 
         # Next, get all the pull requests (and don't prune)
         has_requests = lambda repo: repo['forks'] > 1
-        repos = filter(has_requests, all_repos)
+        repos = filter(self.filter_repos_for_prs, all_repos)
         requests = sum([self._reqs(user + "/" + r['name']) for r in repos], [])
 
         formatted_issues = [dict(
