@@ -18,7 +18,7 @@ class GithubService(IssueService):
             username = self.config.get(self.target, 'username')
             service = "github://%s@github.com/%s" % (login, username)
             password = get_service_password(service, login, oracle=password,
-                                           interactive=self.config.interactive)
+                interactive=self.config.interactive)
         self.auth = (login, password)
 
         self.exclude_repos = []
@@ -108,7 +108,6 @@ class GithubService(IssueService):
         log.name(self.target).debug(" Pruned down to {0}", len(issues))
 
         # Next, get all the pull requests (and don't prune)
-        has_requests = lambda repo: repo['forks'] > 1
         repos = filter(self.filter_repos_for_prs, all_repos)
         requests = sum([self._reqs(user + "/" + r['name']) for r in repos], [])
 
