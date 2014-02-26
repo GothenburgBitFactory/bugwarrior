@@ -116,12 +116,6 @@ def validate_config(config):
         if target not in config.sections():
             die("No [%s] section found." % target)
 
-    for option in ['bitly.api_user', 'bitly.api_key']:
-        if not config.has_option('general', option):
-            log.name('config').warning(
-                "URLs will not be shortened with bit.ly"
-            )
-
     # Validate each target one by one.
     for target in targets:
         service = config.get(target, 'service')

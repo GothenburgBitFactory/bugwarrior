@@ -1,15 +1,14 @@
-from twiggy import log
-
-from bugwarrior.services import IssueService
-from bugwarrior.config import die
-
-import datetime
 import urllib
 import urllib2
 import json
 
+from twiggy import log
 
-class Client(object):
+from bugwarrior.config import die
+from bugwarrior.services import Issue, IssueService
+
+
+class RedMineClient(object):
     def __init__(self, url, key):
         self.url = url
         self.key = key
@@ -34,7 +33,57 @@ class Client(object):
         return json.loads(res.read())
 
 
+class RedMineIssue(Issue):
+    URL = 'redmine_url'
+    SUBJECT = 'redmine_subject'
+    ID = 'redmine_id'
+
+    UDAS = {
+        URL: {
+            'type': 'string',
+            'label': 'Redmine URL',
+        },
+        SUBJECT: {
+            'type': 'string',
+            'label': 'Redmine Subject',
+        },
+        ID: {
+            'type': 'string',
+            'label': 'Redmine ID',
+        },
+    }
+    UNIQUE_KEY = (URL, )
+
+    def to_taskwarrior(self):
+        return {
+            'project': self.get_project_name(),
+            'priority': self.get_priority(),
+
+            self.URL: self.get_issue_url(),
+            self.SUBJECT: self.record['subject'],
+            self.ID: self.record['id']
+        }
+
+    def get_issue_url(self):
+        return self.origin['url'] + "/issues/" + str(self.record["id"])
+
+    def get_project_name(self):
+        if self.origin['project_name']:
+            return self.origin['project_name']
+        return self.record["project"]["name"]
+
+    def get_default_description(self):
+        return self.build_default_description(
+            title=self.record['subject'],
+            url=self.record['url'],
+            number=self.record['id'],
+            cls='issue',
+        )
+
+
 class RedMineService(IssueService):
+    ISSUE_CLASS = RedMineIssue
+
     def __init__(self, *args, **kw):
         super(RedMineService, self).__init__(*args, **kw)
 
@@ -42,11 +91,17 @@ class RedMineService(IssueService):
         self.key = self.config.get(self.target, 'key')
         self.user_id = self.config.get(self.target, 'user_id')
 
-        self.client = Client(self.url, self.key)
+        self.client = RedMineClient(self.url, self.key)
 
         self.project_name = None
         if self.config.has_option(self.target, "project_name"):
             self.project_name = self.config.get(self.target, "project_name")
+
+    def get_service_metadata(self):
+        return {
+            'project_name': self.project_name,
+            'url': self.url,
+        }
 
     @classmethod
     def validate_config(cls, config, target):
@@ -56,23 +111,9 @@ class RedMineService(IssueService):
 
         IssueService.validate_config(config, target)
 
-    def get_issue_url(self, issue):
-        return self.url + "/issues/" + str(issue["id"])
-
-    def get_project_name(self, issue):
-        if self.project_name:
-            return self.project_name
-        return issue["project"]["name"]
-
     def issues(self):
         issues = self.client.find_issues(self.user_id)
         log.name(self.target).debug(" Found {0} total.", len(issues))
 
-        return [dict(
-            description=self.description(
-                issue["subject"],
-                self.get_issue_url(issue),
-                issue["id"], cls="issue"),
-            project=self.get_project_name(issue),
-            priority=self.default_priority,
-        ) for issue in issues]
+        for issue in issues:
+            yield self.get_issue_for_record(issue)

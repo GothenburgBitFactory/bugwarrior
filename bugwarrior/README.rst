@@ -42,6 +42,9 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # is just a symbol, and doesn't have any functional importance.
   targets = my_github, my_bitbucket, paj_bitbucket, moksha_trac, bz.redhat
 
+  # If unspecified, the default taskwarrior config will be used.
+  #taskrc = /path/to/.taskrc
+
   # log.level specifices the verbosity.  The default is DEBUG.
   # log.level can be one of DEBUG, INFO, WARNING, ERROR, CRITICAL, DISABLED
   #log.level = DEBUG
@@ -49,12 +52,6 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # If log.file is specified, output will be redirected there.  If it remains
   # unspecified, output is sent to sys.stderr
   #log.file = /var/log/bugwarrior.log
-
-  # The bitly username and api key are used to shorten URLs to the issues for your
-  # task list.  If you leave these options commented out, then the full URLs
-  # will be used in your task list.
-  #bitly.api_user = YOUR_USERNAME
-  #bitly.api_key = YOUR_API_KEY
 
   # This is an experimental mode where bugwarrior will query all of your
   # online sources simultaneously.  It works as far as I've tested it, so
@@ -167,17 +164,16 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # have a trailing slash. In this case we fetch comments and
   # cases from jira assigned to 'ralph' where the status is not closed or
   # resolved.
-  [jira.project]
+  [jira_project]
   service = jira
-  jira.base_uri = https://jira.example.org
-  jira.username = ralph
-  jira.password = OMG_LULZ
-  jira.query = assignee = ralph and status != closed and status != resolved
-  jira.project_prefix = Programming.
+  base_uri = https://jira.example.org
+  username = ralph
+  password = OMG_LULZ
+  query = assignee = ralph and status != closed and status != resolved
   # Set this to your jira major version. We currently support only jira version
   # 4 and 5(the default). You can find your particular version in the footer at
   # the dashboard.
-  jira.version = 5
+  version = 5
 
   # Here's an example of a teamlab target.
   [my_teamlab]

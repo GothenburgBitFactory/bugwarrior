@@ -1,14 +1,70 @@
 from twiggy import log
 
-from bugwarrior.services import IssueService
 from bugwarrior.config import die, get_service_password
+from bugwarrior.services import IssueService, Issue
 
-import githubutils
-import datetime
-import time
+from . import githubutils
+
+
+class GithubIssue(Issue):
+    TITLE = 'github_title'
+    URL = 'github_url'
+    PR = 'github_pr'
+    ISSUE = 'github_issue'
+    TYPE = 'github_type'
+
+    UDAS = {
+        TITLE: {
+            'type': 'string',
+            'label': 'Github Title',
+        },
+        URL: {
+            'type': 'string',
+            'label': 'Github URL',
+        },
+        TYPE: {
+            'type': 'string',
+            'label': 'Github Type',
+        },
+        PR: {
+            'type': 'number',
+            'label': 'Github Pull Request #',
+        },
+        ISSUE: {
+            'type': 'number',
+            'label': 'Github Issue #',
+        },
+    }
+    UNIQUE_KEY = (URL, )
+
+    def to_taskwarrior(self):
+        record = {
+            'project': self.extra['project'],
+            'priority': self.origin['default_priority'],
+            'annotations': self.extra.get('annotations', []),
+
+            self.URL: self.record['html_url'],
+            self.TYPE: self.extra['type'],
+            self.TITLE: self.record['title'],
+        }
+        if self.extra['type'] == 'issue':
+            record[self.ISSUE] = self.record['number']
+        elif self.extra['type'] == 'pull_request':
+            record[self.PR] = self.record['number']
+        return record
+
+    def get_default_description(self):
+        return self.build_default_description(
+            title=self.record['title'],
+            url=self.record['html_url'],
+            number=self.record['number'],
+            cls=self.extra['type'],
+        )
 
 
 class GithubService(IssueService):
+    ISSUE_CLASS = GithubIssue
+
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
@@ -17,8 +73,10 @@ class GithubService(IssueService):
         if not password or password.startswith('@oracle:'):
             username = self.config.get(self.target, 'username')
             service = "github://%s@github.com/%s" % (login, username)
-            password = get_service_password(service, login, oracle=password,
-                interactive=self.config.interactive)
+            password = get_service_password(
+                service, login, oracle=password,
+                interactive=self.config.interactive
+            )
         self.auth = (login, password)
 
         self.exclude_repos = []
@@ -51,13 +109,12 @@ class GithubService(IssueService):
 
     def annotations(self, tag, issue):
         comments = self._comments(tag, issue['number'])
-        return dict([
-            self.format_annotation(
-                datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-                    c['created_at'], "%Y-%m-%dT%H:%M:%SZ"))),
+        return [
+            '%s: %s' % (
                 c['user']['login'],
                 c['body'],
-            ) for c in comments])
+            ) for c in comments
+        ]
 
     def _reqs(self, tag):
         """ Grab all the pull requests """
@@ -111,26 +168,20 @@ class GithubService(IssueService):
         repos = filter(self.filter_repos_for_prs, all_repos)
         requests = sum([self._reqs(user + "/" + r['name']) for r in repos], [])
 
-        formatted_issues = [dict(
-            description=self.description(
-                issue['title'], issue['html_url'],
-                issue['number'], cls="issue"
-            ),
-            project=tag.split('/')[1],
-            priority=self.default_priority,
-            **self.annotations(tag, issue)
-        ) for tag, issue in issues]
+        for tag, issue in issues:
+            extra = {
+                'project': tag.split('/')[1],
+                'type': 'issue',
+                'annotations': self.annotations(tag, issue)
+            }
+            yield self.get_issue_for_record(issue, extra)
 
-        formatted_requests = [{
-            "description": self.description(
-                request['title'], request['html_url'],
-                request['number'], cls="pull_request"
-            ),
-            "project": tag.split('/')[1],
-            "priority": self.default_priority,
-        } for tag, request in requests]
-
-        return formatted_issues + formatted_requests
+        for tag, request in requests:
+            extra = {
+                'project': tag.split('/')[1],
+                'type': 'pull_request',
+            }
+            yield self.get_issue_for_record(request, extra)
 
     @classmethod
     def validate_config(cls, config, target):

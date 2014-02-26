@@ -1,8 +1,12 @@
-from twiggy import log
-from taskw import TaskWarriorShellout, TaskWarriorDirect
-from bugwarrior.notifications import send_notification
-from bugwarrior.config import asbool, NoOptionError
 import subprocess
+
+import six
+from twiggy import log
+from taskw import TaskWarriorShellout
+
+from bugwarrior.config import asbool, NoOptionError
+from bugwarrior.notifications import send_notification
+
 
 MARKUP = "(bw)"
 
@@ -16,13 +20,33 @@ def synchronize(issues, conf):
         except NoOptionError:
             return default
 
-    notify = _bool_option('notifications', 'notifications', 'False')
-    experimental = _bool_option('general', 'experimental', 'False')
+    targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
+    services = set([conf.get(target, 'service') for target in targets])
+    key_list = build_key_list(services)
+    uda_list = build_uda_list(services)
+    if uda_list:
+        log.name('bugwarrior').info(
+            'Service-defined UDAs (add these to your ~/.taskrc):'
+        )
+        for uda in uda_list:
+            log.name('bugwarrior').info('%s=%s' % uda)
 
-    if experimental is True:
-        tw = TaskWarriorShellout()
-    else:
-        tw = TaskWarriorDirect()
+    notify = _bool_option('notifications', 'notifications', 'False')
+
+    path = '~/.taskrc'
+    if conf.has_option('general', 'taskrc'):
+        path = conf.get('general', 'taskrc')
+
+    for issue in issues:
+        print issue
+    return
+
+    tw = TaskWarriorShellout(
+        config_filename=path,
+        config_overrides=dict([
+            ('rc.%s' % k, v) for k, v in uda_list
+        ])
+    )
 
     # Load info about the task database
     tasks = tw.load_tasks()
@@ -73,14 +97,6 @@ def synchronize(issues, conf):
         id, task = tw.get_task(description=upstream_issue['description'])
         for key in upstream_issue:
             if key not in task:
-                if experimental is True and "annotation_" in key:
-                    # TaskWarrior doesn't currently (2.2.0) allow for setting
-                    # the annotation entry key. This means that each annotation
-                    # key will always be updated to the current date and time,
-                    # which in turn means BW will always think a task has been
-                    # updated. Until this is resolved in 2.3.0, ignore
-                    # annotation updates in experimental mode.
-                    continue
                 log.name('db').info(
                     "Updating {0} on {1}",
                     key,
@@ -101,27 +117,22 @@ def synchronize(issues, conf):
             send_notification(task, 'Completed', conf)
 
         tw.task_done(uuid=task['uuid'])
-        if experimental is True:
-            # `task merge` only updates/adds tasks, it won't delete them, so
-            # call task_done() on the primary TW task database.
-            tw_done = TaskWarriorExperimental()
-            tw_done.task_done(uuid=task['uuid'])
 
-    # Merge tasks with users local DB
-    if experimental is True:
-        # Call task merge from users local database
-        config = tw.load_config(config_filename='~/.bugwarrior_taskrc')
-        bwtask_data = "%s/" % config['data']['location']
-        subprocess.call([
-            'task', 'rc.verbose=nothing', 'rc.merge.autopush=no',
-            'merge', bwtask_data])
-        # Delete completed tasks from Bugwarrior tasks DB. This allows for
-        # assigning/unassigning tasks in a remote service, and tracking status
-        # changes in Bugwarrior.
-        subprocess.call([
-            'task', 'rc:~/.bugwarrior_taskrc', 'rc.verbose=nothing',
-            'rc.confirmation=no', 'rc.bulk=100', 'status:completed',
-            'delete'])
+    ## Merge tasks with users local DB
+    #if experimental is True:
+    #    # Call task merge from users local database
+    #    config = tw.load_config(config_filename='~/.bugwarrior_taskrc')
+    #    bwtask_data = "%s/" % config['data']['location']
+    #    subprocess.call([
+    #        'task', 'rc.verbose=nothing', 'rc.merge.autopush=no',
+    #        'merge', bwtask_data])
+    #    # Delete completed tasks from Bugwarrior tasks DB. This allows for
+    #    # assigning/unassigning tasks in a remote service, and tracking status
+    #    # changes in Bugwarrior.
+    #    subprocess.call([
+    #        'task', 'rc:~/.bugwarrior_taskrc', 'rc.verbose=nothing',
+    #        'rc.confirmation=no', 'rc.bulk=100', 'status:completed',
+    #        'delete'])
 
     # Send notifications
     if notify:
@@ -132,3 +143,30 @@ def synchronize(issues, conf):
             'bw_finished',
             conf,
         )
+
+
+def build_key_list(targets):
+    from bugwarrior.services import SERVICES
+
+    keys = {}
+    for target in targets:
+        keys[target] = SERVICES[target].ISSUE_CLASS.UNIQUE_KEY
+    return keys
+
+
+def build_uda_list(targets):
+    from bugwarrior.services import SERVICES
+
+    uda_output = []
+    targets_udas = {}
+    for target in targets:
+        targets_udas.update(SERVICES[target].ISSUE_CLASS.UDAS)
+    for name, uda_attributes in six.iteritems(targets_udas):
+        for attrib, value in six.iteritems(uda_attributes):
+            uda_output.append(
+                (
+                    'uda.%s.%s' % (name, attrib, ),
+                    '%s' % (value, ),
+                )
+            )
+    return sorted(uda_output)

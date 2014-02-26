@@ -1,15 +1,14 @@
-from twiggy import log
-
-from bugwarrior.services import IssueService
-from bugwarrior.config import die, get_service_password
-
-import datetime
 import json
 import urllib
 import urllib2
 
+from twiggy import log
 
-class Client(object):
+from bugwarrior.config import die, get_service_password
+from bugwarrior.services import Issue, IssueService
+
+
+class TeamLabClient(object):
     def __init__(self, hostname, verbose=False):
         self.hostname = hostname
         self.verbose = verbose
@@ -38,8 +37,6 @@ class Client(object):
         if get is not None:
             uri += "?" + urllib.urlencode(get)
 
-        self.log("Fetching %s" % uri)
-
         req = urllib2.Request(uri, data)
         if self.token is not None:
             req.add_header("Authorization", self.token)
@@ -53,12 +50,71 @@ class Client(object):
 
         return json.loads(response)["response"]
 
-    def log(self, message):
-        if self.verbose:
-            print message
+
+class TeamLabIssue(Issue):
+    URL = 'teamlab_url'
+    ID = 'teamlab_id'
+    TITLE = 'teamlab_title'
+    PROJECTOWNER_ID = 'teamlab_projectowner_id'
+
+    UDAS = {
+        URL: {
+            'type': 'string',
+            'label': 'Teamlab URL',
+        },
+        ID: {
+            'type': 'string',
+            'label': 'Teamlab ID',
+        },
+        TITLE: {
+            'type': 'string',
+            'label': 'Teamlab Title',
+        },
+        PROJECTOWNER_ID: {
+            'type': 'string',
+            'label': 'Teamlab ProjectOwner ID',
+        }
+    }
+    UNIQUE_KEY = (URL, )
+
+    def to_taskwarrior(self):
+        return {
+            'project': self.get_project(),
+            'priority': self.get_priority(),
+
+            self.TITLE: self.record['title'],
+            self.ID: self.record['id'],
+            self.URL: self.get_issue_url(),
+            self.PROJECTOWNER_ID: self.record['projectOwner']['id'],
+        }
+
+    def get_default_description(self):
+        return self.build_default_description(
+            title=self.record['title'],
+            url=self.get_issue_url(),
+            number=self.record['id'],
+            cls='issue',
+        )
+
+    def get_project(self):
+        return self.origin['project_name']
+
+    def get_issue_url(self):
+        return "http://%s/products/projects/tasks.aspx?prjID=%d&id=%d" % (
+            self.origin['hostname'],
+            self.record["projectOwner"]["id"],
+            self.record["id"]
+        )
+
+    def get_priority(self):
+        if self.record["priority"] == 1:
+            return "H"
+        return "M"
 
 
 class TeamLabService(IssueService):
+    ISSUE_CLASS = TeamLabIssue
+
     def __init__(self, *args, **kw):
         super(TeamLabService, self).__init__(*args, **kw)
 
@@ -67,15 +123,23 @@ class TeamLabService(IssueService):
         _password = self.config.get(self.target, 'password')
         if not _password or _password.startswith("@oracle:"):
             service = "teamlab://%s@%s" % (_login, self.hostname)
-            _password = get_service_password(service, _login, oracle=_password,
-                                            interactive=self.config.interactive)
+            _password = get_service_password(
+                service, _login, oracle=_password,
+                interactive=self.config.interactive
+            )
 
-        self.client = Client(self.hostname)
+        self.client = TeamLabClient(self.hostname)
         self.client.authenticate(_login, _password)
 
         self.project_name = self.hostname
         if self.config.has_option(self.target, "project_name"):
             self.project_name = self.config.get(self.target, "project_name")
+
+    def get_service_metadata(self):
+        return {
+            'hostname': self.hostname,
+            'project_name': self.project_name,
+        }
 
     @classmethod
     def validate_config(cls, config, target):
@@ -85,33 +149,15 @@ class TeamLabService(IssueService):
 
         IssueService.validate_config(config, target)
 
-    def get_issue_url(self, issue):
-        return "http://%s/products/projects/tasks.aspx?prjID=%d&id=%d" \
-            % (self.hostname, issue["projectOwner"]["id"], issue["id"])
-
-    def get_priority(self, issue):
-        if issue["priority"] == 1:
-            return "H"
-        else:
-            return "M"
-
     def issues(self):
         issues = self.client.get_task_list()
         log.name(self.target).debug(
             " Remote has {0} total issues.", len(issues))
-        if not issues:
-            return []
 
         # Filter out closed tasks.
         issues = filter(lambda i: i["status"] == 1, issues)
         log.name(self.target).debug(
             " Remote has {0} active issues.", len(issues))
 
-        return [dict(
-            description=self.description(
-                issue["title"],
-                self.get_issue_url(issue),
-                issue["id"], cls="issue"),
-            project=self.project_name,
-            priority=self.get_priority(issue),
-        ) for issue in issues]
+        for issue in issues:
+            yield self.get_issue_for_record(issue)

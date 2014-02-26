@@ -1,20 +1,67 @@
+import offtrac
 from twiggy import log
 
-import offtrac
-
-from bugwarrior.services import IssueService
 from bugwarrior.config import die, get_service_password
+from bugwarrior.services import Issue, IssueService
 
 
-class TracService(IssueService):
-    # A map of trac priorities to taskwarrior priorities
-    priorities = {
+class TracIssue(Issue):
+    SUMMARY = 'trac_summary'
+    URL = 'trac_url'
+    NUMBER = 'trac_number'
+
+    UDAS = {
+        SUMMARY: {
+            'type': 'string',
+            'label': 'Trac Summary',
+        },
+        URL: {
+            'type': 'string',
+            'label': 'Trac URL',
+        },
+        NUMBER: {
+            'type': 'string',
+            'label': 'Trac Number',
+        },
+    }
+    UNIQUE_KEY = (URL, )
+
+    PRIORITY_MAP = {
         'trivial': 'L',
         'minor': 'L',
         'major': 'M',
         'critical': 'H',
         'blocker': 'H',
     }
+
+    def to_taskwarrior(self):
+        return {
+            'project': self.extra['project'],
+            'priority': self.get_priority(),
+            'annotations': self.extra['annotations'],
+
+            self.URL: self.record['url'],
+            self.SUMMARY: self.record['summary'],
+            self.NUMBER: self.record['number'],
+        }
+
+    def get_default_description(self):
+        return self.build_default_description(
+            title=self.record['summary'],
+            url=self.record['url'],
+            number=self.record['number'],
+            cls='issue'
+        )
+
+    def get_priority(self):
+        return self.PRIORITY_MAP.get(
+            self.record.get('priority'),
+            self.origin['default_priority']
+        )
+
+
+class TracService(IssueService):
+    ISSUE_CLASS = TracIssue
 
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
@@ -23,8 +70,10 @@ class TracService(IssueService):
         password = self.config.get(self.target, 'trac.password')
         if not password or password.startswith('@oracle:'):
             service = "https://%s@%s/" % (username, base_uri)
-            password = get_service_password(service, username, oracle=password,
-                                            interactive=self.config.interactive)
+            password = get_service_password(
+                service, username, oracle=password,
+                interactive=self.config.interactive
+            )
 
         uri = 'https://%s:%s@%s/login/xmlrpc' % (username, password, base_uri)
         self.trac = offtrac.TracServer(uri)
@@ -42,11 +91,11 @@ class TracService(IssueService):
         changelog = self.trac.server.ticket.changeLog(issue['number'])
         for time, author, field, oldvalue, newvalue, permament in changelog:
             if field == 'comment':
-                annotations.append(self.format_annotation(
-                    time, author, newvalue
-                ))
+                annotations.append(
+                    "%s: %s" % (author, newvalue)
+                )
 
-        return dict(annotations)
+        return annotations
 
     def get_owner(self, issue):
         tag, issue = issue
@@ -67,14 +116,9 @@ class TracService(IssueService):
         issues = filter(self.include, issues)
         log.name(self.target).debug(" Pruned down to {0}", len(issues))
 
-        return [dict(
-            description=self.description(
-                issue['summary'], issue['url'],
-                issue['number'], cls="issue"),
-            project=tag,
-            priority=self.priorities.get(
-                issue['priority'],
-                self.default_priority,
-            ),
-            **self.annotations(tag, issue)
-        ) for tag, issue in issues]
+        for project, issue in issues:
+            extra = {
+                'annotations': self.annotations(project, issue),
+                'project': project,
+            }
+            yield self.get_issue_for_record(issue, extra)
