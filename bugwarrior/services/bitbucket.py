@@ -64,11 +64,11 @@ class BitbucketService(IssueService):
         super(BitbucketService, self).__init__(*args, **kw)
 
         self.auth = None
-        if self.config.has_option(self.target, 'login'):
-            login = self.config.get(self.target, 'login')
-            password = self.config.get(self.target, 'passw')
+        if self.config.has_option(self.target, 'bitbucket.login'):
+            login = self.config.get(self.target, 'bitbucket.login')
+            password = self.config.get(self.target, 'bitbucket.password')
             if not password or password.startswith('@oracle:'):
-                username = self.config.get(self.target, 'username')
+                username = self.config.get(self.target, 'bitbucket.username')
                 service = "bitbucket://%s@bitbucket.org/%s" % (login, username)
                 password = get_service_password(
                     service, login, oracle=password,
@@ -95,7 +95,7 @@ class BitbucketService(IssueService):
 
     @classmethod
     def validate_config(cls, config, target):
-        if not config.has_option(target, 'username'):
+        if not config.has_option(target, 'bitbucket.username'):
             die("[%s] has no 'username'" % target)
 
         IssueService.validate_config(config, target)
@@ -108,19 +108,19 @@ class BitbucketService(IssueService):
         response = self.get_data(
             '/repositories/%s/issues/%i/comments' % (tag, issue['local_id'])
         )
-        return [
-            '%s: %s' % (
+        return self.build_annotations(
+            (
                 comment['author_info']['username'],
                 comment['content'],
             ) for comment in response
-        ]
+        )
 
     def get_owner(self, issue):
         tag, issue = issue
         return issue.get('responsible', {}).get('username', None)
 
     def issues(self):
-        user = self.config.get(self.target, 'username')
+        user = self.config.get(self.target, 'bitbucket.username')
         response = self.get_data('/users/' + user + '/')
         repos = [
             repo.get('slug') for repo in response.get('repositories')

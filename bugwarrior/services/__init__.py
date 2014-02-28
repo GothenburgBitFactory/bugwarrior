@@ -51,6 +51,21 @@ class IssueService(object):
         origin.update(self.get_service_metadata())
         return self.ISSUE_CLASS(record, origin=origin, extra=extra)
 
+    def build_annotations(self, annotations):
+        final = []
+        for author, message in annotations:
+            if not message or not author:
+                continue
+            message = message.replace('\n', '').replace('\r', '')
+            final.append(
+                '@%s - %s%s' % (
+                    author,
+                    message[0:self.anno_len],
+                    '...' if len(message) > self.anno_len else ''
+                )
+            )
+        return final
+
     @classmethod
     def validate_config(cls, config, target):
         """ Validate generic options for a particular target """
@@ -347,6 +362,7 @@ def aggregate_issues(conf):
                 message = "Worker for [%s] failed." % (target, e)
                 log.name('bugwarrior').critical(message)
             currently_running -= 1
+            continue
         yield issue
 
     log.name('bugwarrior').info("Done aggregating remote issues.")

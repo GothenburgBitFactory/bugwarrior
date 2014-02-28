@@ -163,12 +163,20 @@ class ActiveCollab2Service(IssueService):
     def __init__(self, *args, **kw):
         super(ActiveCollab2Service, self).__init__(*args, **kw)
 
-        self.url = self.config.get(self.target, 'url').rstrip("/")
-        self.key = self.config.get(self.target, 'key')
-        self.user_id = self.config.get(self.target, 'user_id')
+        self.url = self.config.get(
+            self.target, 'activecollab2.url'
+        ).rstrip("/")
+        self.key = self.config.get(
+            self.target, 'activecollab2.key'
+        )
+        self.user_id = self.config.get(
+            self.target, 'activecollab2.user_id'
+        )
 
         # Make a list of projects from the config
-        projects_raw = str(self.config.get(self.target, 'projects'))
+        projects_raw = str(
+            self.config.get(self.target, 'activecollab2.projects')
+        )
         projects_list = projects_raw.split(', ')
         projects = []
         for k, v in enumerate(projects_list):
@@ -184,7 +192,12 @@ class ActiveCollab2Service(IssueService):
 
     @classmethod
     def validate_config(cls, config, target):
-        for k in ('url', 'key', 'projects', 'user_id'):
+        for k in (
+            'activecollab2.url',
+            'activecollab2.key',
+            'activecollab2.projects',
+            'activecollab2.user_id'
+        ):
             if not config.has_option(target, k):
                 die("[%s] has no '%s'" % (target, k))
 

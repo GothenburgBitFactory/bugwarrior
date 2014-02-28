@@ -68,9 +68,9 @@ class MegaplanService(IssueService):
     def __init__(self, *args, **kw):
         super(MegaplanService, self).__init__(*args, **kw)
 
-        self.hostname = self.config.get(self.target, 'hostname')
-        _login = self.config.get(self.target, 'login')
-        _password = self.config.get(self.target, 'password')
+        self.hostname = self.config.get(self.target, 'megaplan.hostname')
+        _login = self.config.get(self.target, 'megaplan.login')
+        _password = self.config.get(self.target, 'megaplan.password')
         if not _password or _password.startswith("@oracle:"):
             service = "megaplan://%s@%s" % (_login, self.hostname)
             _password = get_service_password(
@@ -82,8 +82,10 @@ class MegaplanService(IssueService):
         self.client.authenticate(_login, _password)
 
         self.project_name = self.hostname
-        if self.config.has_option(self.target, "project_name"):
-            self.project_name = self.config.get(self.target, "project_name")
+        if self.config.has_option(self.target, "megaplan.project_name"):
+            self.project_name = self.config.get(
+                self.target, "megaplan.project_name"
+            )
 
     def get_service_metadata(self):
         return {
@@ -93,7 +95,7 @@ class MegaplanService(IssueService):
 
     @classmethod
     def validate_config(cls, config, target):
-        for k in ('login', 'password', 'hostname'):
+        for k in ('megaplan.login', 'megaplan.password', 'megaplan.hostname'):
             if not config.has_option(target, k):
                 die("[%s] has no '%s'" % (target, k))
 

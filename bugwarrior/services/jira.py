@@ -65,9 +65,9 @@ class JiraIssue(Issue):
 
     def get_priority(self):
         if self.extra.get('jira_version') == 4:
-            value = self.record['fields']['priority']['name']
+            value = self.record['fields'].get('priority', {}).get('name')
         else:
-            value = self.record['fields']['priority']
+            value = self.record['fields'].get('priority')
 
         return self.PRIORITY_MAP.get(value, self.origin['default_priority'])
 
@@ -85,9 +85,9 @@ class JiraService(IssueService):
 
     def __init__(self, *args, **kw):
         super(JiraService, self).__init__(*args, **kw)
-        self.username = self.config.get(self.target, 'username')
-        self.url = self.config.get(self.target, 'base_uri')
-        password = self.config.get(self.target, 'password')
+        self.username = self.config.get(self.target, 'jira.username')
+        self.url = self.config.get(self.target, 'jira.base_uri')
+        password = self.config.get(self.target, 'jira.password')
         if not password or password.startswith("@oracle:"):
             service = "jira://%s@%s" % (self.username, self.url)
             password = get_service_password(
@@ -98,10 +98,10 @@ class JiraService(IssueService):
 
         default_query = 'assignee=' + self.username + \
             ' AND status != closed and status != resolved'
-        self.query = self.config.get(self.target, 'query', default_query)
+        self.query = self.config.get(self.target, 'jira.query', default_query)
         self.jira = JIRA(
             options={
-                'server': self.config.get(self.target, 'base_uri'),
+                'server': self.config.get(self.target, 'jira.base_uri'),
                 'rest_api_version': 'latest',
             },
             basic_auth=(self.username, password)
@@ -114,7 +114,7 @@ class JiraService(IssueService):
 
     @classmethod
     def validate_config(cls, config, target):
-        for option in ['username', 'password', 'base_uri']:
+        for option in ('jira.username', 'jira.password', 'jira.base_uri'):
             if not config.has_option(target, option):
                 die("[%s] has no '%s'" % (target, option))
 
@@ -126,19 +126,19 @@ class JiraService(IssueService):
         if not comments:
             return []
         else:
-            return [
-                '%s: %s' % (
+            return self.build_annotations(
+                (
                     comment.author.name,
                     comment.body
                 ) for comment in comments
-            ]
+            )
 
     def issues(self):
         cases = self.jira.search_issues(self.query, maxResults=-1)
 
         jira_version = 5
-        if self.config.has_option(self.target, 'version'):
-            jira_version = self.config.getint(self.target, 'version')
+        if self.config.has_option(self.target, 'jira.version'):
+            jira_version = self.config.getint(self.target, 'jira.version')
 
         for case in cases:
             extra = {

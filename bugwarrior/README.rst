@@ -45,6 +45,13 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # If unspecified, the default taskwarrior config will be used.
   #taskrc = /path/to/.taskrc
 
+  # Defines whether or not issues should be matched based upon their description.
+  # For historical reasons, and by default, we will attempt to match issues
+  # based upon the presence of the '(bw)' marker in the task description.
+  # If this is false, we will only select issues having the appropriate UDA
+  # fields defined
+  #legacy_matching=False
+
   # log.level specifices the verbosity.  The default is DEBUG.
   # log.level can be one of DEBUG, INFO, WARNING, ERROR, CRITICAL, DISABLED
   #log.level = DEBUG
@@ -87,37 +94,58 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # or not."
   [my_github]
   service = github
-  username = ralphbean
+  github.username = ralphbean
   default_priority = H
+
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for Github issues:
+  # - github_title: The title of the issue in Github
+  # - github_url: This issue or pull request's URL.
+  # - github_pr: The pull request # of the pull request in Github.
+  # - github_issue: The issue # of this issue in Github.
+  # - github_type: The type of github entry this is ('pull_request' or 'issue')
+  #description_template = {% if type == 'pull_request' %}PR #{{ github_pr }}{% else %}Issue #{{ github_issue }}{% endif %}: {{ github_title }}
 
   # I want taskwarrior to include issues from all my repos, except these
   # two because they're spammy or something.
-  exclude_repos = project_bar,project_baz
+  github.exclude_repos = project_bar,project_baz
 
   # Working with a large number of projects, instead of excluding most of them I
   # can also simply include just a limited set.
-  include_repos = project_foo,project_foz
+  github.include_repos = project_foo,project_foz
 
   # Note that login and username can be different.  I can login as me, but
   # scrape issues from an organization's repos.
-  login = ralphbean
-  passw = OMG_LULZ
+  github.login = ralphbean
+  github.password = OMG_LULZ
 
   # This is the same thing, but for bitbucket.  Each target entry must have a
   # 'service' attribute which must be one of the supported services (like
   # 'github', 'bitbucket', 'trac', etc...).
   [my_bitbucket]
   service = bitbucket
-  username = ralphbean
+  bitbucket.username = ralphbean
+  bitbucket.password = mypassword
   default_priority = M
+
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for Bitbucket issues:
+  # - bitbucket_title
+  # - bitbucket_url
+  # - bitbucket_id
+  #description_template = #{{ bitbucket_id }}: {{ bitbucket_title }}
 
   # Here's another bitbucket one.  Here we want to scrape the issues from repos of
   # another user, but only include them in the taskwarrior db if they're assigned
   # to me.
   [paj_bitbucket]
   service = bitbucket
-  username = paj
-  only_if_assigned = ralphbean
+  bitbucket.username = paj
+  bitbucket.only_if_assigned = ralphbean
   default_priority = L
 
   # Here's an example of a trac target.  Scrape every ticket and only include them
@@ -135,6 +163,15 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   also_unassigned = True
   default_priority = H
 
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for Trac issues:
+  # - trac_summary
+  # - trac_url
+  # - trac_number
+  #description_template = #{{ trac_number }}: {{ trac_summary }}
+
   # Here's an example of a bugzilla target.  This will scrape every ticket
   # 1) that is not closed and 2) that rbean@redhat.com is either the
   # owner or reporter or is cc'd on.  Bugzilla instances can be quite different
@@ -147,16 +184,33 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   bugzilla.username = rbean@redhat.com
   bugzilla.password = OMG_LULZ
 
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for Bugzilla issues:
+  # - bugzilla_url
+  # - bugzilla_summary
+  #description_template = {{ bugzilla_summary }}
+
   # Here's an example of a megaplan target.
   [my_megaplan]
   service = megaplan
 
-  hostname = example.megaplan.ru
-  login = alice
-  password = secret
+  megaplan.hostname = example.megaplan.ru
+  megaplan.login = alice
+  megaplan.password = secret
+  megaplan.project_name = example
 
   default_priority = H
-  project_name = example
+
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for Megaplan issues:
+  # - megaplan_url
+  # - megaplan_id
+  # - megaplan_title
+  #description_template = #{{ megaplan_id }}: {{ megaplan_title }}
 
   # Here's an example of a jira project. The ``jira-python`` module is
   # a bit particular, and jira deployments, like Bugzilla, tend to be
@@ -166,32 +220,59 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # resolved.
   [jira_project]
   service = jira
-  base_uri = https://jira.example.org
-  username = ralph
-  password = OMG_LULZ
-  query = assignee = ralph and status != closed and status != resolved
+  jira.base_uri = https://jira.example.org
+  jira.username = ralph
+  jira.password = OMG_LULZ
+  jira.query = assignee = ralph and status != closed and status != resolved
   # Set this to your jira major version. We currently support only jira version
   # 4 and 5(the default). You can find your particular version in the footer at
   # the dashboard.
-  version = 5
+  jira.version = 5
+
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for JIRA issues:
+  # - jira_summary
+  # - jira_url
+  # - jira_id
+  #description_template = {{ jira_id }}: {{ jira_summary }}
 
   # Here's an example of a teamlab target.
   [my_teamlab]
   service = teamlab
 
-  hostname = teamlab.example.com
-  login = alice
-  password = secret
+  teamlab.hostname = teamlab.example.com
+  teamlab.login = alice
+  teamlab.password = secret
+  teamlab.project_name = example_teamlab
 
-  project_name = example_teamlab
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for Teamlab issues:
+  # - teamlab_url
+  # - teamlab_id
+  # - teamlab_title
+  # - teamlab_projectowner_id
+  #description_template = #{{ teamlab_id }}: {{ teamlab_title }}
 
   # Here's an example of a redmine target.
   [my_redmine]
   service = redmine
-  url = http://redmine.example.org/
-  key = c0c4c014cafebabe
-  user_id = 7
-  project_name = redmine
+  redmine.url = http://redmine.example.org/
+  redmine.key = c0c4c014cafebabe
+  redmine.user_id = 7
+  redmine.project_name = redmine
+
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for Redmine issues:
+  # - redmine_url
+  # - redmine_subject
+  # - redmine_id
+  #description_template = #{{ redmine_id }}: {{ redmine_subject }}
 
   # Here's an example of an activecollab3 target. This is only valid for
   # activeCollab 3.x, see below for activeCollab 2.x.
@@ -210,9 +291,24 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   [activecollab3]
   service = activecollab3
-  url = https://ac.example.org/api.php
-  key = your-api-key
-  user_id = 15
+  activecollab3.url = https://ac.example.org/api.php
+  activecollab3.key = your-api-key
+  activecollab3.user_id = 15
+
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for ActiveCollab3 issues:
+  # - ac3_body
+  # - ac3_name
+  # - ac3_permalink
+  # - ac3_task_id
+  # - ac3_id
+  # - ac3_project_id
+  # - ac3_type
+  # - ac3_created_on
+  # - ac3_created_by_id
+  #description_template = #{{ac3_id}} - {% if ac3_name %}{{ ac3_name }}{% else %}{{ ac3_body }}{% endif %}
 
   # Here's an example of an activecollab2 target. Note that this will only work
   # with ActiveCollab 2.x - see above for 3.x.
@@ -235,11 +331,24 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
 
   [activecollab2]
   service = activecollab2
-  url = http://ac.example.org/api.php
-  key = your-api-key
-  user_id = 15
-  projects = 1:first_project, 5:another_project
+  activecollab2.url = http://ac.example.org/api.php
+  activecollab2.key = your-api-key
+  activecollab2.user_id = 15
+  activecollab2.projects = 1:first_project, 5:another_project
 
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for ActiveCollab2 issues:
+  # - ac2_body
+  # - ac2_name
+  # - ac2_permalink
+  # - ac2_ticket_id
+  # - ac2_project_id
+  # - ac2_type
+  # - ac2_created_on
+  # - ac2_created_by_id
+  #description_template = #{{ac2_ticket_id}} - {% if ac2_name %}{{ ac2_name }}{% else %}{{ ac2_body }}{% endif %}
 
 .. example
 

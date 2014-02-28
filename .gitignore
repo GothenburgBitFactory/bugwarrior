@@ -12,4 +12,5 @@ etc/*
 lib/*
 include/*
 share/*
+man/*
 .Python

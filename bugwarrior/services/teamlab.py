@@ -118,9 +118,9 @@ class TeamLabService(IssueService):
     def __init__(self, *args, **kw):
         super(TeamLabService, self).__init__(*args, **kw)
 
-        self.hostname = self.config.get(self.target, 'hostname')
-        _login = self.config.get(self.target, 'login')
-        _password = self.config.get(self.target, 'password')
+        self.hostname = self.config.get(self.target, 'teamlab.hostname')
+        _login = self.config.get(self.target, 'teamlab.login')
+        _password = self.config.get(self.target, 'teamlab.password')
         if not _password or _password.startswith("@oracle:"):
             service = "teamlab://%s@%s" % (_login, self.hostname)
             _password = get_service_password(
@@ -132,8 +132,10 @@ class TeamLabService(IssueService):
         self.client.authenticate(_login, _password)
 
         self.project_name = self.hostname
-        if self.config.has_option(self.target, "project_name"):
-            self.project_name = self.config.get(self.target, "project_name")
+        if self.config.has_option(self.target, "teamlab.project_name"):
+            self.project_name = self.config.get(
+                self.target, "teamlab.project_name"
+            )
 
     def get_service_metadata(self):
         return {
@@ -143,7 +145,7 @@ class TeamLabService(IssueService):
 
     @classmethod
     def validate_config(cls, config, target):
-        for k in ('login', 'password', 'hostname'):
+        for k in ('teamlab.login', 'teamlab.password', 'teamlab.hostname'):
             if not config.has_option(target, k):
                 die("[%s] has no '%s'" % (target, k))
 

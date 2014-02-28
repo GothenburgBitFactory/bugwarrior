@@ -91,9 +91,7 @@ class TracService(IssueService):
         changelog = self.trac.server.ticket.changeLog(issue['number'])
         for time, author, field, oldvalue, newvalue, permament in changelog:
             if field == 'comment':
-                annotations.append(
-                    "%s: %s" % (author, newvalue)
-                )
+                annotations.append((author, newvalue, ))
 
         return annotations
 

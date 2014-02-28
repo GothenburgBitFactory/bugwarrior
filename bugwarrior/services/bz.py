@@ -116,12 +116,12 @@ class BugzillaService(IssueService):
     def annotations(self, tag, issue):
         if 'comments' in issue:
             comments = issue.get('comments', [])
-            return [
-                '%s: %s' % (
+            return self.build_annotations(
+                (
                     c['author'].split('@')[0],
                     c['text'],
                 ) for c in comments
-            ]
+            )
         else:
             # Backwards compatibility (old python-bugzilla/bugzilla instances)
             # This block handles a million different contingencies that have to
@@ -138,12 +138,12 @@ class BugzillaService(IssueService):
             def _parse_body(obj):
                 return obj.get('text', obj.get('body'))
 
-            return [
-                '%s: %s' % (
+            return self.build_annotations(
+                (
                     _parse_author(c['author']),
                     _parse_body(c)
                 ) for c in issue['longdescs']
-            ]
+            )
 
     def issues(self):
         email = self.config.get(self.target, 'bugzilla.username')

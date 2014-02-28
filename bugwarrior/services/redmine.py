@@ -87,15 +87,17 @@ class RedMineService(IssueService):
     def __init__(self, *args, **kw):
         super(RedMineService, self).__init__(*args, **kw)
 
-        self.url = self.config.get(self.target, 'url').rstrip("/")
-        self.key = self.config.get(self.target, 'key')
-        self.user_id = self.config.get(self.target, 'user_id')
+        self.url = self.config.get(self.target, 'redmine.url').rstrip("/")
+        self.key = self.config.get(self.target, 'redmine.key')
+        self.user_id = self.config.get(self.target, 'redmine.user_id')
 
         self.client = RedMineClient(self.url, self.key)
 
         self.project_name = None
-        if self.config.has_option(self.target, "project_name"):
-            self.project_name = self.config.get(self.target, "project_name")
+        if self.config.has_option(self.target, "redmine.project_name"):
+            self.project_name = self.config.get(
+                self.target, "redmine.project_name"
+            )
 
     def get_service_metadata(self):
         return {
@@ -105,7 +107,7 @@ class RedMineService(IssueService):
 
     @classmethod
     def validate_config(cls, config, target):
-        for k in ('url', 'key', 'user_id'):
+        for k in ('redmine.url', 'redmine.key', 'redmine.user_id'):
             if not config.has_option(target, k):
                 die("[%s] has no '%s'" % (target, k))
 

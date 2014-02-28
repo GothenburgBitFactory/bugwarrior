@@ -172,7 +172,9 @@ class ActiveCollab3Service(ActiveCollab2Service):
 
     @classmethod
     def validate_config(cls, config, target):
-        for k in ('url', 'key', 'user_id'):
+        for k in (
+            'activecollab3.url', 'activecollab3.key', 'activecollab3.user_id'
+        ):
             if not config.has_option(target, k):
                 die("[%s] has no '%s'" % (target, k))
 

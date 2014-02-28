@@ -27,11 +27,11 @@ class GithubIssue(Issue):
             'label': 'Github Type',
         },
         PR: {
-            'type': 'number',
+            'type': 'numeric',
             'label': 'Github Pull Request #',
         },
         ISSUE: {
-            'type': 'number',
+            'type': 'numeric',
             'label': 'Github Issue #',
         },
     }
@@ -68,10 +68,10 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
-        login = self.config.get(self.target, 'login')
-        password = self.config.get(self.target, 'passw')
+        login = self.config.get(self.target, 'github.login')
+        password = self.config.get(self.target, 'github.password')
         if not password or password.startswith('@oracle:'):
-            username = self.config.get(self.target, 'username')
+            username = self.config.get(self.target, 'github.username')
             service = "github://%s@github.com/%s" % (login, username)
             password = get_service_password(
                 service, login, oracle=password,
@@ -82,17 +82,17 @@ class GithubService(IssueService):
         self.exclude_repos = []
         self.include_repos = []
 
-        if self.config.has_option(self.target, 'exclude_repos'):
+        if self.config.has_option(self.target, 'github.exclude_repos'):
             self.exclude_repos = [
                 item.strip() for item in
-                self.config.get(self.target, 'exclude_repos')
+                self.config.get(self.target, 'github.exclude_repos')
                     .strip().split(',')
             ]
 
-        if self.config.has_option(self.target, 'include_repos'):
+        if self.config.has_option(self.target, 'github.include_repos'):
             self.include_repos = [
                 item.strip() for item in
-                self.config.get(self.target, 'include_repos')
+                self.config.get(self.target, 'github.include_repos')
                     .strip().split(',')
             ]
 
@@ -109,12 +109,12 @@ class GithubService(IssueService):
 
     def annotations(self, tag, issue):
         comments = self._comments(tag, issue['number'])
-        return [
-            '%s: %s' % (
+        return self.build_annotations(
+            (
                 c['user']['login'],
                 c['body'],
             ) for c in comments
-        ]
+        )
 
     def _reqs(self, tag):
         """ Grab all the pull requests """
@@ -153,7 +153,7 @@ class GithubService(IssueService):
             return self._filter_repos_base(repo)
 
     def issues(self):
-        user = self.config.get(self.target, 'username')
+        user = self.config.get(self.target, 'github.username')
 
         all_repos = githubutils.get_repos(username=user, auth=self.auth)
         assert(type(all_repos) == list)
@@ -185,13 +185,13 @@ class GithubService(IssueService):
 
     @classmethod
     def validate_config(cls, config, target):
-        if not config.has_option(target, 'login'):
-            die("[%s] has no 'login'" % target)
+        if not config.has_option(target, 'github.login'):
+            die("[%s] has no 'github.login'" % target)
 
-        if not config.has_option(target, 'passw'):
-            die("[%s] has no 'passw'" % target)
+        if not config.has_option(target, 'github.password'):
+            die("[%s] has no 'github.password'" % target)
 
-        if not config.has_option(target, 'username'):
-            die("[%s] has no 'username'" % target)
+        if not config.has_option(target, 'github.username'):
+            die("[%s] has no 'github.username'" % target)
 
         IssueService.validate_config(config, target)
