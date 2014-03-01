@@ -7,9 +7,9 @@ from bugwarrior.services import IssueService, Issue
 
 
 class JiraIssue(Issue):
-    SUMMARY = 'jira_summary'
-    URL = 'jira_url'
-    FOREIGN_ID = 'jira_id'
+    SUMMARY = 'jirasummary'
+    URL = 'jiraurl'
+    FOREIGN_ID = 'jiraid'
 
     UDAS = {
         SUMMARY: {
@@ -82,12 +82,13 @@ class JiraIssue(Issue):
 
 class JiraService(IssueService):
     ISSUE_CLASS = JiraIssue
+    CONFIG_PREFIX = 'jira'
 
     def __init__(self, *args, **kw):
         super(JiraService, self).__init__(*args, **kw)
-        self.username = self.config.get(self.target, 'jira.username')
-        self.url = self.config.get(self.target, 'jira.base_uri')
-        password = self.config.get(self.target, 'jira.password')
+        self.username = self.config_get('username')
+        self.url = self.config_get('base_uri')
+        password = self.config_get('password')
         if not password or password.startswith("@oracle:"):
             service = "jira://%s@%s" % (self.username, self.url)
             password = get_service_password(
@@ -98,10 +99,10 @@ class JiraService(IssueService):
 
         default_query = 'assignee=' + self.username + \
             ' AND status != closed and status != resolved'
-        self.query = self.config.get(self.target, 'jira.query', default_query)
+        self.query = self.config_get_default('query', default_query)
         self.jira = JIRA(
             options={
-                'server': self.config.get(self.target, 'jira.base_uri'),
+                'server': self.config_get('base_uri'),
                 'rest_api_version': 'latest',
             },
             basic_auth=(self.username, password)

@@ -6,9 +6,9 @@ from bugwarrior.config import die, get_service_password
 
 
 class BitbucketIssue(Issue):
-    TITLE = 'bitbucket_title'
-    URL = 'bitbucket_url'
-    FOREIGN_ID = 'bitbucket_id'
+    TITLE = 'bitbuckettitle'
+    URL = 'bitbucketurl'
+    FOREIGN_ID = 'bitbucketid'
 
     UDAS = {
         TITLE: {
@@ -56,6 +56,7 @@ class BitbucketIssue(Issue):
 
 class BitbucketService(IssueService):
     ISSUE_CLASS = BitbucketIssue
+    CONFIG_PREFIX = 'bitbucket'
 
     BASE_API = 'https://api.bitbucket.org/1.0'
     BASE_URL = 'http://bitbucket.org/'
@@ -64,11 +65,11 @@ class BitbucketService(IssueService):
         super(BitbucketService, self).__init__(*args, **kw)
 
         self.auth = None
-        if self.config.has_option(self.target, 'bitbucket.login'):
-            login = self.config.get(self.target, 'bitbucket.login')
-            password = self.config.get(self.target, 'bitbucket.password')
+        if self.config_get_default('login'):
+            login = self.config_get('login')
+            password = self.config_get_default('password')
             if not password or password.startswith('@oracle:'):
-                username = self.config.get(self.target, 'bitbucket.username')
+                username = self.config_get('username')
                 service = "bitbucket://%s@bitbucket.org/%s" % (login, username)
                 password = get_service_password(
                     service, login, oracle=password,

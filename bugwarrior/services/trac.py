@@ -6,9 +6,9 @@ from bugwarrior.services import Issue, IssueService
 
 
 class TracIssue(Issue):
-    SUMMARY = 'trac_summary'
-    URL = 'trac_url'
-    NUMBER = 'trac_number'
+    SUMMARY = 'tracsummary'
+    URL = 'tracurl'
+    NUMBER = 'tracnumber'
 
     UDAS = {
         SUMMARY: {
@@ -62,12 +62,13 @@ class TracIssue(Issue):
 
 class TracService(IssueService):
     ISSUE_CLASS = TracIssue
+    CONFIG_PREFIX = 'trac'
 
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
-        base_uri = self.config.get(self.target, 'trac.base_uri')
-        username = self.config.get(self.target, 'trac.username')
-        password = self.config.get(self.target, 'trac.password')
+        base_uri = self.config_get('base_uri')
+        username = self.config_get('username')
+        password = self.config_get('password')
         if not password or password.startswith('@oracle:'):
             service = "https://%s@%s/" % (username, base_uri)
             password = get_service_password(

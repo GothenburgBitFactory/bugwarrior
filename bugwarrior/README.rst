@@ -101,12 +101,11 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for Github issues:
-  # - github_title: The title of the issue in Github
-  # - github_url: This issue or pull request's URL.
-  # - github_pr: The pull request # of the pull request in Github.
-  # - github_issue: The issue # of this issue in Github.
-  # - github_type: The type of github entry this is ('pull_request' or 'issue')
-  #description_template = {% if type == 'pull_request' %}PR #{{ github_pr }}{% else %}Issue #{{ github_issue }}{% endif %}: {{ github_title }}
+  # - githubtitle: The title of the issue in Github
+  # - githuburl: This issue or pull request's URL.
+  # - githubnumber: The pull request # or issue # in Github.
+  # - githubtype: The type of github entry this is ('pullrequest' or 'issue')
+  #description_template = {% if type == 'pull_request' %}PR #{{ githubpr }}{% else %}Issue #{{ githubissue }}{% endif %}: {{ githubtitle }}
 
   # I want taskwarrior to include issues from all my repos, except these
   # two because they're spammy or something.
@@ -134,10 +133,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for Bitbucket issues:
-  # - bitbucket_title
-  # - bitbucket_url
-  # - bitbucket_id
-  #description_template = #{{ bitbucket_id }}: {{ bitbucket_title }}
+  # - bitbuckettitle
+  # - bitbucketurl
+  # - bitbucketid
+  #description_template = #{{ bitbucketid }}: {{ bitbuckettitle }}
 
   # Here's another bitbucket one.  Here we want to scrape the issues from repos of
   # another user, but only include them in the taskwarrior db if they're assigned
@@ -167,10 +166,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for Trac issues:
-  # - trac_summary
-  # - trac_url
-  # - trac_number
-  #description_template = #{{ trac_number }}: {{ trac_summary }}
+  # - tracsummary
+  # - tracurl
+  # - tracnumber
+  #description_template = #{{ tracnumber }}: {{ tracsummary }}
 
   # Here's an example of a bugzilla target.  This will scrape every ticket
   # 1) that is not closed and 2) that rbean@redhat.com is either the
@@ -188,9 +187,9 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for Bugzilla issues:
-  # - bugzilla_url
-  # - bugzilla_summary
-  #description_template = {{ bugzilla_summary }}
+  # - bugzillaurl
+  # - bugzillasummary
+  #description_template = {{ bugzillasummary }}
 
   # Here's an example of a megaplan target.
   [my_megaplan]
@@ -207,10 +206,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for Megaplan issues:
-  # - megaplan_url
-  # - megaplan_id
-  # - megaplan_title
-  #description_template = #{{ megaplan_id }}: {{ megaplan_title }}
+  # - megaplanurl
+  # - megaplanid
+  # - megaplantitle
+  #description_template = #{{ megaplanid }}: {{ megaplantitle }}
 
   # Here's an example of a jira project. The ``jira-python`` module is
   # a bit particular, and jira deployments, like Bugzilla, tend to be
@@ -233,10 +232,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for JIRA issues:
-  # - jira_summary
-  # - jira_url
-  # - jira_id
-  #description_template = {{ jira_id }}: {{ jira_summary }}
+  # - jirasummary
+  # - jiraurl
+  # - jiraid
+  #description_template = {{ jiraid }}: {{ jirasummary }}
 
   # Here's an example of a teamlab target.
   [my_teamlab]
@@ -251,11 +250,11 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for Teamlab issues:
-  # - teamlab_url
-  # - teamlab_id
-  # - teamlab_title
-  # - teamlab_projectowner_id
-  #description_template = #{{ teamlab_id }}: {{ teamlab_title }}
+  # - teamlaburl
+  # - teamlabid
+  # - teamlabtitle
+  # - teamlabprojectowner_id
+  #description_template = #{{ teamlabid }}: {{ teamlabtitle }}
 
   # Here's an example of a redmine target.
   [my_redmine]
@@ -269,10 +268,10 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for Redmine issues:
-  # - redmine_url
-  # - redmine_subject
-  # - redmine_id
-  #description_template = #{{ redmine_id }}: {{ redmine_subject }}
+  # - redmineurl
+  # - redminesubject
+  # - redmineid
+  #description_template = #{{ redmineid }}: {{ redminesubject }}
 
   # Here's an example of an activecollab3 target. This is only valid for
   # activeCollab 3.x, see below for activeCollab 2.x.
@@ -299,16 +298,16 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for ActiveCollab3 issues:
-  # - ac3_body
-  # - ac3_name
-  # - ac3_permalink
-  # - ac3_task_id
-  # - ac3_id
-  # - ac3_project_id
-  # - ac3_type
-  # - ac3_created_on
-  # - ac3_created_by_id
-  #description_template = #{{ac3_id}} - {% if ac3_name %}{{ ac3_name }}{% else %}{{ ac3_body }}{% endif %}
+  # - ac3body
+  # - ac3name
+  # - ac3permalink
+  # - ac3taskid
+  # - ac3id
+  # - ac3projectid
+  # - ac3type
+  # - ac3createdon
+  # - ac3createdbyid
+  #description_template = #{{ac3id}} - {% if ac3name %}{{ ac3name }}{% else %}{{ ac3body }}{% endif %}
 
   # Here's an example of an activecollab2 target. Note that this will only work
   # with ActiveCollab 2.x - see above for 3.x.
@@ -340,15 +339,15 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for ActiveCollab2 issues:
-  # - ac2_body
-  # - ac2_name
-  # - ac2_permalink
-  # - ac2_ticket_id
-  # - ac2_project_id
-  # - ac2_type
-  # - ac2_created_on
-  # - ac2_created_by_id
-  #description_template = #{{ac2_ticket_id}} - {% if ac2_name %}{{ ac2_name }}{% else %}{{ ac2_body }}{% endif %}
+  # - ac2body
+  # - ac2name
+  # - ac2permalink
+  # - ac2ticketid
+  # - ac2projectid
+  # - ac2type
+  # - ac2createdon
+  # - ac2createdbyid
+  #description_template = #{{ac2ticketid}} - {% if ac2name %}{{ ac2name }}{% else %}{{ ac2body }}{% endif %}
 
 .. example
 

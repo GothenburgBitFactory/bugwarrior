@@ -6,8 +6,8 @@ from bugwarrior.services import IssueService, Issue
 
 
 class BugzillaIssue(Issue):
-    URL = 'bugzilla_url'
-    SUMMARY = 'bugzilla_summary'
+    URL = 'bugzillaurl'
+    SUMMARY = 'bugzillasummary'
 
     UDAS = {
         URL: {
@@ -50,6 +50,7 @@ class BugzillaIssue(Issue):
 
 class BugzillaService(IssueService):
     ISSUE_CLASS = BugzillaIssue
+    CONFIG_PREFIX = 'bugzilla'
 
     OPEN_STATUSES = [
         'NEW',
@@ -73,9 +74,9 @@ class BugzillaService(IssueService):
 
     def __init__(self, *args, **kw):
         super(BugzillaService, self).__init__(*args, **kw)
-        base_uri = self.config.get(self.target, 'bugzilla.base_uri')
-        username = self.config.get(self.target, 'bugzilla.username')
-        password = self.config.get(self.target, 'bugzilla.password')
+        self.base_uri = self.config_get('base_uri')
+        self.username = self.config_get('username')
+        self.password = self.config_get('password')
 
         # So more modern bugzilla's require that we specify
         # query_format=advanced along with the xmlrpc request.
@@ -83,21 +84,18 @@ class BugzillaService(IssueService):
         # ...but older bugzilla's don't know anything about that argument.
         # Here we make it possible for the user to specify whether they want
         # to pass that argument or not.
-        self.advanced = True  # Default to True.
-        if self.config.has_option(self.target, 'bugzilla.advanced'):
-            self.advanced = asbool(self.config.get(
-                self.target, 'bugzilla.advanced'))
+        self.advanced = asbool(self.config_get_default('advanced', 'no'))
 
-        if not password or password.startswith("@oracle:"):
-            service = "bugzilla://%s@%s" % (username, base_uri)
-            password = get_service_password(
-                service, username, oracle=password,
+        if not self.password or self.password.startswith("@oracle:"):
+            service = "bugzilla://%s@%s" % (self.username, self.base_uri)
+            self.password = get_service_password(
+                service, self.username, oracle=self.password,
                 interactive=self.config.interactive
             )
 
-        url = 'https://%s/xmlrpc.cgi' % base_uri
+        url = 'https://%s/xmlrpc.cgi' % self.base_uri
         self.bz = bugzilla.Bugzilla(url=url)
-        self.bz.login(username, password)
+        self.bz.login(self.username, self.password)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -106,7 +104,7 @@ class BugzillaService(IssueService):
             if not config.has_option(target, option):
                 die("[%s] has no '%s'" % (target, option))
 
-        IssueService.validate_config(config, target)
+        super(BugzillaService, cls).validate_config(config, target)
 
     def get_owner(self, issue):
         # NotImplemented, but we should never get called since .include() isn't
@@ -146,7 +144,7 @@ class BugzillaService(IssueService):
             )
 
     def issues(self):
-        email = self.config.get(self.target, 'bugzilla.username')
+        email = self.username
         # TODO -- doing something with blockedby would be nice.
 
         query = dict(
@@ -178,9 +176,7 @@ class BugzillaService(IssueService):
         log.name(self.target).debug(" Found {0} total.", len(issues))
 
         # Build a url for each issue
-        base_url = "https://%s/show_bug.cgi?id=" % (
-            self.config.get(self.target, 'bugzilla.base_uri')
-        )
+        base_url = "https://%s/show_bug.cgi?id=" % (self.base_uri)
         for issue in issues:
             extra = {
                 'url': base_url + str(issue['id'])

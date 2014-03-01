@@ -9,7 +9,7 @@ from twiggy import log
 from bugwarrior.db import MARKUP
 
 
-# Semaphores for process completion status
+# Sentinels for process completion status
 SERVICE_FINISHED_OK = object()
 SERVICE_FINISHED_ERROR = object()
 
@@ -17,6 +17,7 @@ SERVICE_FINISHED_ERROR = object()
 class IssueService(object):
     """ Abstract base class for each service """
     ISSUE_CLASS = None
+    CONFIG_PREFIX = ''
 
     def __init__(self, config, target):
         self.config = config
@@ -35,7 +36,26 @@ class IssueService(object):
             )
         else:
             self.description_template = None
+        if config.has_option(self.target, 'default_priority'):
+            self.default_priority = config.get(self.target, 'default_priority')
+        else:
+            self.default_priority = 'M'
         log.name(target).info("Working on [{0}]", self.target)
+
+    def config_get_default(self, key, default=None):
+        try:
+            return self.config_get(key)
+        except:
+            return default
+
+    def config_get(self, key=None):
+        return self.config.get(self.target, self._get_key(key))
+
+    def _get_key(self, key):
+        return '%s.%s' % (
+            self.CONFIG_PREFIX,
+            key
+        )
 
     def get_service_metadata(self):
         return {}
@@ -69,10 +89,7 @@ class IssueService(object):
     @classmethod
     def validate_config(cls, config, target):
         """ Validate generic options for a particular target """
-
-        cls.default_priority = 'M'
-        if config.has_option(target, 'default_priority'):
-            cls.default_priority = config.get(target, 'default_priority')
+        pass
 
     def include(self, issue):
         """ Return true if the issue in question should be included """

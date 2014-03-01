@@ -34,9 +34,9 @@ class RedMineClient(object):
 
 
 class RedMineIssue(Issue):
-    URL = 'redmine_url'
-    SUBJECT = 'redmine_subject'
-    ID = 'redmine_id'
+    URL = 'redmineurl'
+    SUBJECT = 'redminesubject'
+    ID = 'redmineid'
 
     UDAS = {
         URL: {
@@ -83,21 +83,18 @@ class RedMineIssue(Issue):
 
 class RedMineService(IssueService):
     ISSUE_CLASS = RedMineIssue
+    CONFIG_PREFIX = 'redmine'
 
     def __init__(self, *args, **kw):
         super(RedMineService, self).__init__(*args, **kw)
 
-        self.url = self.config.get(self.target, 'redmine.url').rstrip("/")
-        self.key = self.config.get(self.target, 'redmine.key')
-        self.user_id = self.config.get(self.target, 'redmine.user_id')
+        self.url = self.config_get('url').rstrip("/")
+        self.key = self.config_get('key')
+        self.user_id = self.config_get('user_id')
 
         self.client = RedMineClient(self.url, self.key)
 
-        self.project_name = None
-        if self.config.has_option(self.target, "redmine.project_name"):
-            self.project_name = self.config.get(
-                self.target, "redmine.project_name"
-            )
+        self.project_name = self.config_get_default('project_name')
 
     def get_service_metadata(self):
         return {

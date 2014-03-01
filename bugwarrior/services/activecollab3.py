@@ -58,15 +58,15 @@ class ActiveCollab3Client(ActiveCollab2Client):
 
 
 class ActiveCollab3Issue(ActiveCollab2Issue):
-    BODY = 'ac3_body'
-    NAME = 'ac3_name'
-    PERMALINK = 'ac3_permalink'
-    TASK_ID = 'ac3_task_id'
-    FOREIGN_ID = 'ac3_id'
-    PROJECT_ID = 'ac3_project_id'
-    TYPE = 'ac3_type'
-    CREATED_ON = 'ac3_created_on'
-    CREATED_BY_ID = 'ac3_created_by_id'
+    BODY = 'ac3body'
+    NAME = 'ac3name'
+    PERMALINK = 'ac3permalink'
+    TASK_ID = 'ac3taskid'
+    FOREIGN_ID = 'ac3id'
+    PROJECT_ID = 'ac3projectid'
+    TYPE = 'ac3type'
+    CREATED_ON = 'ac3createdon'
+    CREATED_BY_ID = 'ac3createdbyid'
 
     UDAS = {
         BODY: {
@@ -123,12 +123,12 @@ class ActiveCollab3Issue(ActiveCollab2Issue):
             self.TYPE: self.record['type'],
             self.CREATED_BY_ID: self.record['created_by_id'],
         }
-        if isinstance(self.record.get(self.CREATED_ON), basestring):
+        if isinstance(self.record.get('created_on'), basestring):
             record[self.CREATED_ON] = self.parse_date(
                 self.record['created_on']
             )
         elif isinstance(
-            self.record.get(self.CREATED_ON, {}).get('mysql'), basestring
+            self.record.get('created_on', {}).get('mysql'), basestring
         ):
             record[self.CREATED_ON] = self.parse_date(
                 self.record['created_on']['mysql']
@@ -157,6 +157,7 @@ class ActiveCollab3Issue(ActiveCollab2Issue):
 
 class ActiveCollab3Service(ActiveCollab2Service):
     ISSUE_CLASS = ActiveCollab3Issue
+    CONFIG_PREFIX = 'activecollab3'
 
     def __init__(self, *args, **kw):
         super(ActiveCollab3Service, self).__init__(*args, **kw)

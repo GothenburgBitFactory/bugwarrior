@@ -52,17 +52,17 @@ class TeamLabClient(object):
 
 
 class TeamLabIssue(Issue):
-    URL = 'teamlab_url'
-    ID = 'teamlab_id'
-    TITLE = 'teamlab_title'
-    PROJECTOWNER_ID = 'teamlab_projectowner_id'
+    URL = 'teamlaburl'
+    FOREIGN_ID = 'teamlabid'
+    TITLE = 'teamlabtitle'
+    PROJECTOWNER_ID = 'teamlabprojectownerid'
 
     UDAS = {
         URL: {
             'type': 'string',
             'label': 'Teamlab URL',
         },
-        ID: {
+        FOREIGN_ID: {
             'type': 'string',
             'label': 'Teamlab ID',
         },
@@ -83,7 +83,7 @@ class TeamLabIssue(Issue):
             'priority': self.get_priority(),
 
             self.TITLE: self.record['title'],
-            self.ID: self.record['id'],
+            self.FOREIGN_ID: self.record['id'],
             self.URL: self.get_issue_url(),
             self.PROJECTOWNER_ID: self.record['projectOwner']['id'],
         }
@@ -107,20 +107,21 @@ class TeamLabIssue(Issue):
         )
 
     def get_priority(self):
-        if self.record["priority"] == 1:
+        if self.record.get("priority") == 1:
             return "H"
-        return "M"
+        return self.origin['default_priority']
 
 
 class TeamLabService(IssueService):
     ISSUE_CLASS = TeamLabIssue
+    CONFIG_PREFIX = 'teamlab'
 
     def __init__(self, *args, **kw):
         super(TeamLabService, self).__init__(*args, **kw)
 
-        self.hostname = self.config.get(self.target, 'teamlab.hostname')
-        _login = self.config.get(self.target, 'teamlab.login')
-        _password = self.config.get(self.target, 'teamlab.password')
+        self.hostname = self.config_get('hostname')
+        _login = self.config_get('login')
+        _password = self.config_get('password')
         if not _password or _password.startswith("@oracle:"):
             service = "teamlab://%s@%s" % (_login, self.hostname)
             _password = get_service_password(
@@ -131,11 +132,9 @@ class TeamLabService(IssueService):
         self.client = TeamLabClient(self.hostname)
         self.client.authenticate(_login, _password)
 
-        self.project_name = self.hostname
-        if self.config.has_option(self.target, "teamlab.project_name"):
-            self.project_name = self.config.get(
-                self.target, "teamlab.project_name"
-            )
+        self.project_name = self.config_get_default(
+            'project_name', self.hostname
+        )
 
     def get_service_metadata(self):
         return {

@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import megaplan
 from twiggy import log
 
@@ -6,9 +8,9 @@ from bugwarrior.services import IssueService, Issue
 
 
 class MegaplanIssue(Issue):
-    URL = 'megaplan_url'
-    FOREIGN_ID = 'megaplan_id'
-    TITLE = 'megaplan_title'
+    URL = 'megaplanurl'
+    FOREIGN_ID = 'megaplanid'
+    TITLE = 'megaplantitle'
 
     UDAS = {
         TITLE: {
@@ -43,7 +45,7 @@ class MegaplanIssue(Issue):
         return self.build_default_description(
             title=self.get_issue_title(),
             url=self.get_issue_url(),
-            number=self.get_number(),
+            number=self.record['Id'],
             cls='issue',
         )
 
@@ -64,13 +66,14 @@ class MegaplanIssue(Issue):
 
 class MegaplanService(IssueService):
     ISSUE_CLASS = MegaplanIssue
+    CONFIG_PREFIX = 'megaplan'
 
     def __init__(self, *args, **kw):
         super(MegaplanService, self).__init__(*args, **kw)
 
-        self.hostname = self.config.get(self.target, 'megaplan.hostname')
-        _login = self.config.get(self.target, 'megaplan.login')
-        _password = self.config.get(self.target, 'megaplan.password')
+        self.hostname = self.config_get('hostname')
+        _login = self.config_get('login')
+        _password = self.config_get('password')
         if not _password or _password.startswith("@oracle:"):
             service = "megaplan://%s@%s" % (_login, self.hostname)
             _password = get_service_password(
@@ -81,11 +84,9 @@ class MegaplanService(IssueService):
         self.client = megaplan.Client(self.hostname)
         self.client.authenticate(_login, _password)
 
-        self.project_name = self.hostname
-        if self.config.has_option(self.target, "megaplan.project_name"):
-            self.project_name = self.config.get(
-                self.target, "megaplan.project_name"
-            )
+        self.project_name = self.config_get_default(
+            'project_name', self.hostname
+        )
 
     def get_service_metadata(self):
         return {

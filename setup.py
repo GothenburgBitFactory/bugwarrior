@@ -40,6 +40,13 @@ setup(name='bugwarrior',
           "jinja2>=2.7.2",
           "pycurl",
       ],
+      tests_require=[
+          "Mock",
+          "unittest2",
+          "nose",
+          "jira>=0.22",
+          "megaplan>=1.4",
+      ],
       entry_points="""
       [console_scripts]
       bugwarrior-pull = bugwarrior:pull

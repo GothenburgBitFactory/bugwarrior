@@ -74,14 +74,14 @@ class ActiveCollab2Client(object):
 
 
 class ActiveCollab2Issue(Issue):
-    BODY = 'ac2_body'
-    NAME = 'ac2_name'
-    PERMALINK = 'ac2_permalink'
-    TICKET_ID = 'ac2_ticket_id'
-    PROJECT_ID = 'ac2_project_id'
-    TYPE = 'ac2_type'
-    CREATED_ON = 'ac2_created_on'
-    CREATED_BY_ID = 'ac2_created_by_id'
+    BODY = 'ac2body'
+    NAME = 'ac2name'
+    PERMALINK = 'ac2permalink'
+    TICKET_ID = 'ac2ticketid'
+    PROJECT_ID = 'ac2projectid'
+    TYPE = 'ac2type'
+    CREATED_ON = 'ac2createdon'
+    CREATED_BY_ID = 'ac2createdbyid'
 
     UDAS = {
         BODY: {
@@ -159,28 +159,20 @@ class ActiveCollab2Issue(Issue):
 
 class ActiveCollab2Service(IssueService):
     ISSUE_CLASS = ActiveCollab2Issue
+    CONFIG_PREFIX = 'activecollab2'
 
     def __init__(self, *args, **kw):
         super(ActiveCollab2Service, self).__init__(*args, **kw)
 
-        self.url = self.config.get(
-            self.target, 'activecollab2.url'
-        ).rstrip("/")
-        self.key = self.config.get(
-            self.target, 'activecollab2.key'
-        )
-        self.user_id = self.config.get(
-            self.target, 'activecollab2.user_id'
-        )
+        self.url = self.config_get('url').rstrip('/')
+        self.key = self.config_get('key')
+        self.user_id = self.config_get('user_id')
+        projects_raw = self.config_get('projects')
 
-        # Make a list of projects from the config
-        projects_raw = str(
-            self.config.get(self.target, 'activecollab2.projects')
-        )
-        projects_list = projects_raw.split(', ')
+        projects_list = projects_raw.split(',')
         projects = []
         for k, v in enumerate(projects_list):
-            project_data = v.split(":")
+            project_data = v.strip().split(":")
             project = dict([(project_data[0], project_data[1])])
             projects.append(project)
 
@@ -201,7 +193,7 @@ class ActiveCollab2Service(IssueService):
             if not config.has_option(target, k):
                 die("[%s] has no '%s'" % (target, k))
 
-        IssueService.validate_config(config, target)
+        super(ActiveCollab2Service, cls).validate_config(config, target)
 
     def issues(self):
         # Loop through each project

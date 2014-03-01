@@ -7,11 +7,10 @@ from . import githubutils
 
 
 class GithubIssue(Issue):
-    TITLE = 'github_title'
-    URL = 'github_url'
-    PR = 'github_pr'
-    ISSUE = 'github_issue'
-    TYPE = 'github_type'
+    TITLE = 'githubtitle'
+    URL = 'githuburl'
+    TYPE = 'githubtype'
+    NUMBER = 'githubnumber'
 
     UDAS = {
         TITLE: {
@@ -26,19 +25,15 @@ class GithubIssue(Issue):
             'type': 'string',
             'label': 'Github Type',
         },
-        PR: {
+        NUMBER: {
             'type': 'numeric',
-            'label': 'Github Pull Request #',
-        },
-        ISSUE: {
-            'type': 'numeric',
-            'label': 'Github Issue #',
+            'label': 'Github Issue/PR #',
         },
     }
     UNIQUE_KEY = (URL, )
 
     def to_taskwarrior(self):
-        record = {
+        return {
             'project': self.extra['project'],
             'priority': self.origin['default_priority'],
             'annotations': self.extra.get('annotations', []),
@@ -46,12 +41,8 @@ class GithubIssue(Issue):
             self.URL: self.record['html_url'],
             self.TYPE: self.extra['type'],
             self.TITLE: self.record['title'],
+            self.NUMBER: self.record['number'],
         }
-        if self.extra['type'] == 'issue':
-            record[self.ISSUE] = self.record['number']
-        elif self.extra['type'] == 'pull_request':
-            record[self.PR] = self.record['number']
-        return record
 
     def get_default_description(self):
         return self.build_default_description(
@@ -64,14 +55,15 @@ class GithubIssue(Issue):
 
 class GithubService(IssueService):
     ISSUE_CLASS = GithubIssue
+    CONFIG_PREFIX = 'github'
 
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
-        login = self.config.get(self.target, 'github.login')
-        password = self.config.get(self.target, 'github.password')
+        login = self.config_get('login')
+        password = self.config_get_default('password')
         if not password or password.startswith('@oracle:'):
-            username = self.config.get(self.target, 'github.username')
+            username = self.config_get('username')
             service = "github://%s@github.com/%s" % (login, username)
             password = get_service_password(
                 service, login, oracle=password,
@@ -82,18 +74,16 @@ class GithubService(IssueService):
         self.exclude_repos = []
         self.include_repos = []
 
-        if self.config.has_option(self.target, 'github.exclude_repos'):
+        if self.config_get_default('exclude_repos', None):
             self.exclude_repos = [
                 item.strip() for item in
-                self.config.get(self.target, 'github.exclude_repos')
-                    .strip().split(',')
+                self.config_get('exclude_repos').strip().split(',')
             ]
 
-        if self.config.has_option(self.target, 'github.include_repos'):
+        if self.config_get_default('include_repos', None):
             self.include_repos = [
                 item.strip() for item in
-                self.config.get(self.target, 'github.include_repos')
-                    .strip().split(',')
+                self.config_get('include_repos').strip().split(',')
             ]
 
     def _issues(self, tag):
@@ -194,4 +184,4 @@ class GithubService(IssueService):
         if not config.has_option(target, 'github.username'):
             die("[%s] has no 'github.username'" % target)
 
-        IssueService.validate_config(config, target)
+        super(GithubService, cls).validate_config(config, target)

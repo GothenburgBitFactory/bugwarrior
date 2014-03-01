@@ -1,9 +1,11 @@
 import copy
 import re
+import warnings
 
 import six
 from twiggy import log
 from taskw import TaskWarriorShellout
+from taskw.utils import get_annotation_value
 
 from bugwarrior.config import asbool, NoOptionError
 from bugwarrior.notifications import send_notification
@@ -36,16 +38,15 @@ def tasks_differ(left, right):
     if set(left) - set(right):
         return True
     for k in left:
-        if k == 'annotations':
-            left[k] = [v['description'] for v in left[k]]
-            right[k] = [v['description'] for v in right[k]]
+        if k in ('annotations', 'urgency', ):
+            continue
         if (
             isinstance(left[k], (list, tuple))
             and isinstance(right[k], (list, tuple))
         ):
             left[k] = set(left[k])
             right[k] = set(right[k])
-        if left[k] != right[k]:
+        if str(left[k]) != str(right[k]):
             return True
     return False
 
@@ -80,14 +81,15 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
         possibilities = possibilities | set([
             task['uuid'] for task in results
         ])
-    for key in keys:
-        if key in issue:
-            results = tw.filter_tasks({
-                key: issue[key]
-            })
-            possibilities = possibilities | set([
-                task['uuid'] for task in results
-            ])
+    for service, key_list in six.iteritems(keys):
+        for key in key_list:
+            if key in issue:
+                results = tw.filter_tasks({
+                    key: issue[key]
+                })
+                possibilities = possibilities | set([
+                    task['uuid'] for task in results
+                ])
     if len(possibilities) == 1:
         return possibilities.pop()
     if len(possibilities) > 1:
@@ -164,6 +166,7 @@ def synchronize(issue_generator, conf):
             task_copy = copy.deepcopy(task)
 
             # Handle merging annotations
+            annotations_changed = False
             for annotation in [
                 a['description'] for a in task.get('annotations', [])
             ]:
@@ -176,6 +179,7 @@ def synchronize(issue_generator, conf):
                     ) == 0:
                         found = True
                 if not found:
+                    annotations_changed = True
                     issue_dict['annotations'].append(annotation)
 
             # Merging tags, too
@@ -186,7 +190,7 @@ def synchronize(issue_generator, conf):
                     issue_dict['tags'].append(tag)
 
             task.update(issue_dict)
-            if tasks_differ(task_copy, task):
+            if tasks_differ(task_copy, task) or annotations_changed:
                 issue_updates['changed'].append(task)
             else:
                 issue_updates['existing'].append(task)
@@ -216,7 +220,7 @@ def synchronize(issue_generator, conf):
         tw.task_update(issue)
 
     for issue in issue_updates['closed']:
-        task_info = tw.get(uuid=issue)
+        task_info = tw.get_task(uuid=issue)
         log.name('db').info(
             "Completing task {0}",
             task_info
@@ -258,6 +262,17 @@ def build_uda_list(targets):
         targets_udas.update(SERVICES[target].ISSUE_CLASS.UDAS)
     for name, uda_attributes in six.iteritems(targets_udas):
         for attrib, value in six.iteritems(uda_attributes):
+            if '_' in name:
+                warnings.warn(
+                    "Service '%s' has defined a potentially invalid UDA "
+                    "named '%s'.  As of the time of this writing, UDAs "
+                    "must be alphanumeric, and may not contain "
+                    "underscores." % (
+                        target,
+                        name,
+                    ),
+                    RuntimeWarning
+                )
             uda_output.append(
                 (
                     'uda.%s.%s' % (name, attrib, ),
