@@ -78,7 +78,7 @@ def tasks_differ(left, right):
         ):
             left[k] = set(left[k])
             right[k] = set(right[k])
-        if str(left[k]) != str(right[k]):
+        if unicode(left[k]) != unicode(right[k]):
             return True
     return False
 
