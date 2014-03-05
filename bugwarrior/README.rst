@@ -105,7 +105,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # - githuburl: This issue or pull request's URL.
   # - githubnumber: The pull request # or issue # in Github.
   # - githubtype: The type of github entry this is ('pullrequest' or 'issue')
-  #description_template = {% if type == 'pull_request' %}PR #{{ githubpr }}{% else %}Issue #{{ githubissue }}{% endif %}: {{ githubtitle }}
+  #description_template = {% if type == 'pull_request' %}PR #{% else %}Issue #{% endif %}{{ githubnumber }}: {{ githubtitle }}
 
   # I want taskwarrior to include issues from all my repos, except these
   # two because they're spammy or something.
