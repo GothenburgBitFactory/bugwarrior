@@ -33,7 +33,7 @@ class BugzillaIssue(Issue):
         return {
             'project': self.record['component'],
             'priority': self.get_priority(),
-            'annotations': self.record['annotations'],
+            'annotations': self.extra.get('annotations', []),
 
             self.URL: self.extra['url'],
             self.SUMMARY: self.record['summary'],
@@ -177,8 +177,9 @@ class BugzillaService(IssueService):
 
         # Build a url for each issue
         base_url = "https://%s/show_bug.cgi?id=" % (self.base_uri)
-        for issue in issues:
+        for tag, issue in issues:
             extra = {
-                'url': base_url + str(issue['id'])
+                'url': base_url + str(issue['id']),
+                'annotations': self.annotations(tag, issue),
             }
             yield self.get_issue_for_record(issue, extra)
