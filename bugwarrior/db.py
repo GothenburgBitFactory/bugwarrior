@@ -70,7 +70,7 @@ def tasks_differ(left, right):
     if set(left) - set(right):
         return True
     for k in left:
-        if k in ('annotations', 'urgency', ):
+        if k in ('annotations', 'urgency', 'priority', ):
             continue
         if (
             isinstance(left[k], (list, tuple))
