@@ -234,10 +234,8 @@ def synchronize(issue_generator, conf):
             else:
                 issue_updates['existing'].append(task)
             issue_updates['closed'].remove(existing_uuid)
-        except MultipleMatches:
-            log.name('bugwarrior').error(
-                "Multiple matches found for issue: %s" % issue
-            )
+        except MultipleMatches as e:
+            log.name('bugwarrior').trace(e)
         except NotFound:
             issue_updates['new'].append(dict(issue))
 
