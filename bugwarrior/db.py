@@ -8,6 +8,7 @@ import dogpile.cache
 import six
 from twiggy import log
 from taskw import TaskWarriorShellout
+from taskw.exceptions import TaskwarriorError
 
 from bugwarrior.config import asbool, NoOptionError
 from bugwarrior.notifications import send_notification
@@ -250,7 +251,7 @@ def synchronize(issue_generator, conf):
 
         try:
             tw.task_add(**issue)
-        except taskw.TaskwarriorError as e:
+        except TaskwarriorError as e:
             log.name('db').trace(e)
 
     for issue in issue_updates['changed']:
@@ -260,7 +261,7 @@ def synchronize(issue_generator, conf):
         )
         try:
             tw.task_update(issue)
-        except taskw.TaskwarriorError as e:
+        except TaskwarriorError as e:
             log.name('db').trace(e)
 
     for issue in issue_updates['closed']:
@@ -274,7 +275,7 @@ def synchronize(issue_generator, conf):
 
         try:
             tw.task_done(uuid=issue)
-        except taskw.TaskwarriorError as e:
+        except TaskwarriorError as e:
             log.name('db').trace(e)
 
     # Send notifications
