@@ -247,14 +247,21 @@ def synchronize(issue_generator, conf):
         )
         if notify:
             send_notification(issue, 'Created', conf)
-        tw.task_add(**issue)
+
+        try:
+            tw.task_add(**issue)
+        except taskw.TaskwarriorError as e:
+            log.name('db').trace(e)
 
     for issue in issue_updates['changed']:
         log.name('db').info(
             "Updating task {0}",
             issue['description'].encode("utf-8")
         )
-        tw.task_update(issue)
+        try:
+            tw.task_update(issue)
+        except taskw.TaskwarriorError as e:
+            log.name('db').trace(e)
 
     for issue in issue_updates['closed']:
         task_info = tw.get_task(uuid=issue)
@@ -264,7 +271,11 @@ def synchronize(issue_generator, conf):
         )
         if notify:
             send_notification(task_info, 'Completed', conf)
-        tw.task_done(uuid=issue)
+
+        try:
+            tw.task_done(uuid=issue)
+        except taskw.TaskwarriorError as e:
+            log.name('db').trace(e)
 
     # Send notifications
     if notify:
