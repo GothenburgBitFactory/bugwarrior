@@ -94,7 +94,7 @@ class TracService(IssueService):
             if field == 'comment':
                 annotations.append((author, newvalue, ))
 
-        return annotations
+        return self.build_annotations(annotations)
 
     def get_owner(self, issue):
         tag, issue = issue
