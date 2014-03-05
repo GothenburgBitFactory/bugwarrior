@@ -105,14 +105,18 @@ def hamdist(str1, str2):
 def find_local_uuid(tw, keys, issue, legacy_matching=True):
     if not issue['description']:
         raise ValueError('Issue %s has no description.' % issue)
+
     possibilities = set([])
+
     if legacy_matching:
+        legacy_description = issue.get_default_description().rsplit('..', 1)[0]
         results = tw.filter_tasks({
-            'description.startswith': issue.get_default_description()
+            'description.startswith': legacy_description,
         })
         possibilities = possibilities | set([
             task['uuid'] for task in results
         ])
+
     for service, key_list in six.iteritems(keys):
         for key in key_list:
             if key in issue:
@@ -122,8 +126,10 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
                 possibilities = possibilities | set([
                     task['uuid'] for task in results
                 ])
+
     if len(possibilities) == 1:
         return possibilities.pop()
+
     if len(possibilities) > 1:
         raise MultipleMatches(
             "Issue %s matched multiple IDs: %s" % (
@@ -131,6 +137,7 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
                 possibilities
             )
         )
+
     raise NotFound(
         "No issue was found matching %s" % issue
     )
