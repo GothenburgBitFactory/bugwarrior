@@ -149,7 +149,7 @@ class ActiveCollab3Issue(ActiveCollab2Issue):
                 if self.record['name']
                 else self.record['body']
             ),
-            url=self.record['permalink'],
+            url=self.get_processed_url(self.record['permalink']),
             number=self.record['id'],
             cls=self.record['type'],
         )

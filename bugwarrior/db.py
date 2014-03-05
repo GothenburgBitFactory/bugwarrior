@@ -1,17 +1,49 @@
 import copy
+import os
 import re
 import warnings
 
+import bitlyapi
+import dogpile.cache
 import six
 from twiggy import log
 from taskw import TaskWarriorShellout
-from taskw.utils import get_annotation_value
 
 from bugwarrior.config import asbool, NoOptionError
 from bugwarrior.notifications import send_notification
 
 
 MARKUP = "(bw)"
+
+
+DOGPILE_CACHE_PATH = os.path.expanduser('~/.cache/bitly.dbm')
+if not os.path.isdir(os.path.dirname(DOGPILE_CACHE_PATH)):
+    os.mkdirs(os.path.dirname(DOGPILE_CACHE_PATH))
+CACHE_REGION = dogpile.cache.make_region().configure(
+    "dogpile.cache.dbm",
+    arguments=dict(filename=DOGPILE_CACHE_PATH),
+)
+
+
+class URLShortener(object):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(URLShortener, cls).__new__(
+                cls, *args, **kwargs
+            )
+        return cls._instance
+
+    def __init__(self, bitly_user, bitly_key):
+        self.bitly_user = bitly_user
+        self.bitly_key = bitly_key
+
+        self.bitly = bitlyapi.BitLy(bitly_user, bitly_key)
+
+    @CACHE_REGION.cache_on_arguments()
+    def shorten(self, url):
+        return self.bitly.shorten(longUrl=url)['url']
 
 
 class NotFound(Exception):

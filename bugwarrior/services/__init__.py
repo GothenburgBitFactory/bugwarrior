@@ -6,7 +6,7 @@ from jinja2 import Template
 import six
 from twiggy import log
 
-from bugwarrior.db import MARKUP
+from bugwarrior.db import MARKUP, URLShortener
 
 
 # Sentinels for process completion status
@@ -16,30 +16,41 @@ SERVICE_FINISHED_ERROR = object()
 
 class IssueService(object):
     """ Abstract base class for each service """
+    # Which class should this service instantiate for holding these issues?
     ISSUE_CLASS = None
+    # What prefix should we use for this service's configuration values
     CONFIG_PREFIX = ''
 
     def __init__(self, config, target):
         self.config = config
         self.target = target
+
+        self.desc_len = 35
         if config.has_option('general', 'description_length'):
             self.desc_len = self.config.getint('general', 'description_length')
-        else:
-            self.desc_len = 35
+
+        self.anno_len = 45
         if config.has_option('general', 'annotation_length'):
             self.anno_len = self.config.getint('general', 'annotation_length')
-        else:
-            self.anno_len = 45
+
+        self.bitly_api_user = None
+        if config.has_option('general', 'bitly.api_user'):
+            self.bitly_api_user = config.get('general', 'bitly.api_user')
+
+        self.bitly_api_key = None
+        if config.has_option('general', 'bitly.api_key'):
+            self.bitly_api_key = config.get('general', 'bitly.api_key')
+
+        self.description_template = None
         if config.has_option(self.target, 'description_template'):
             self.description_template = self.config.get(
                 self.target, 'description_template'
             )
-        else:
-            self.description_template = None
+
+        self.default_priority = 'M'
         if config.has_option(self.target, 'default_priority'):
             self.default_priority = config.get(self.target, 'default_priority')
-        else:
-            self.default_priority = 'M'
+
         log.name(target).info("Working on [{0}]", self.target)
 
     def config_get_default(self, key, default=None):
@@ -67,6 +78,8 @@ class IssueService(object):
             'description_length': self.desc_len,
             'description_template': self.description_template,
             'target': self.target,
+            'bitly_api_key': self.bitly_api_key,
+            'bitly_api_user': self.bitly_api_user,
         }
         origin.update(self.get_service_metadata())
         return self.ISSUE_CLASS(record, origin=origin, extra=extra)
@@ -204,6 +217,25 @@ class Issue(object):
             self.record.get('priority'),
             self.origin['default_priority']
         )
+
+    def get_processed_url(self, url):
+        """ Returns a URL with conditional processing.
+
+        If the following config keys are set:
+
+        - [general]bitly.api_user
+        - [general]bitly.api_key
+
+        returns a shortened URL; otherwise returns the URL unaltered.
+
+        """
+        if (self.origin['bitly_api_user'] and self.origin['bitly_api_key']):
+            shortener = URLShortener(
+                self.origin['bitly_api_user'],
+                self.origin['bitly_api_key'],
+            )
+            return shortener.shorten(url)
+        return url
 
     def parse_date(self, date):
         if date:

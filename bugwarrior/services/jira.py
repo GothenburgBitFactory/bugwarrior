@@ -74,7 +74,7 @@ class JiraIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.get_summary(),
-            url=self.get_url(),
+            url=self.get_processed_url(self.get_url()),
             number=self.get_number(),
             cls='issue',
         )

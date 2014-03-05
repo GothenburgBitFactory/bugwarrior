@@ -47,7 +47,7 @@ class GithubIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.record['title'],
-            url=self.record['html_url'],
+            url=self.get_processed_url(self.record['html_url']),
             number=self.record['number'],
             cls=self.extra['type'],
         )

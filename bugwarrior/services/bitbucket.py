@@ -48,7 +48,7 @@ class BitbucketIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.record['title'],
-            url=self.extra['url'],
+            url=self.get_processed_url(self.extra['url']),
             number=self.record['local_id'],
             cls='issue'
         )

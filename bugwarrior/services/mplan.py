@@ -44,7 +44,7 @@ class MegaplanIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.get_issue_title(),
-            url=self.get_issue_url(),
+            url=self.get_processed_url(self.get_issue_url()),
             number=self.record['Id'],
             cls='issue',
         )

@@ -48,7 +48,7 @@ class TracIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.record['summary'],
-            url=self.record['url'],
+            url=self.get_processed_url(self.record['url']),
             number=self.record['number'],
             cls='issue'
         )
