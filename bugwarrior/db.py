@@ -106,11 +106,16 @@ def hamdist(str1, str2):
 def find_local_uuid(tw, keys, issue, legacy_matching=True):
     """ For a given issue issue, find its local UUID.
 
+    Assembles a list of task IDs existing in taskwarrior
+    matching the supplied issue (`issue`) on the combination of any
+    set of supplied unique identifiers (`keys`) or, optionally,
+    the task's description field (should `legacy_matching` be `True`).
+
     :params:
     * `tw`: An instance of `taskw.TaskWarriorShellout`
     * `keys`: A list of lists of keys to use for uniquely identifying
       an issue.  To clarify the "list of lists" behavior, assume that
-      there are two services, one having a single primary key field 
+      there are two services, one having a single primary key field
       -- 'serviceAid' -- and another having a pair of fields composing
       its primary key -- 'serviceBproject' and 'serviceBnumber' --, the
       incoming data for this field would be::
