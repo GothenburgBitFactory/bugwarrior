@@ -84,7 +84,7 @@ class BitbucketService(IssueService):
         if response.status_code != 200:
             raise IOError(
                 "Non-200 status code %r; %r; %r" % (
-                    response.status_code, url, response.json
+                    response.status_code, url, response.text,
                 )
             )
         if callable(response.json):
