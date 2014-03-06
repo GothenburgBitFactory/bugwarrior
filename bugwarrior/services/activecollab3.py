@@ -2,6 +2,8 @@ import json
 import re
 import urllib2
 
+import six
+
 from bugwarrior.services import IssueService
 from bugwarrior.config import die
 
@@ -30,7 +32,9 @@ class ActiveCollab3Client(ActiveCollab2Client):
 
     def get_issue_generator(self, user_id, project_id, project_name):
         user_tasks_data = self.call_api(
-            "/projects/" + str(project_id) + "/tasks", self.key, self.url
+            "/projects/" + six.text_type(project_id) + "/tasks",
+            self.key,
+            self.url
         )
         if user_tasks_data:
             for key, task in enumerate(user_tasks_data):
@@ -44,7 +48,9 @@ class ActiveCollab3Client(ActiveCollab2Client):
 
         # Subtasks
         user_subtasks_data = self.call_api(
-            "/projects/" + str(project_id) + "/subtasks", self.key, self.url
+            "/projects/" + six.text_type(project_id) + "/subtasks",
+            self.key,
+            self.url
         )
         if user_subtasks_data:
             for key, subtask in enumerate(user_subtasks_data):

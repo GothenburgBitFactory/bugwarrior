@@ -2,6 +2,7 @@ import json
 import urllib
 import urllib2
 
+import six
 from twiggy import log
 
 from bugwarrior.config import die, get_service_password
@@ -16,11 +17,11 @@ class TeamLabClient(object):
 
     def authenticate(self, login, password):
         resp = self.call_api("/api/1.0/authentication.json", post={
-            "userName": str(login),
-            "password": str(password),
+            "userName": six.text_type(login),
+            "password": six.text_type(password),
         })
 
-        self.token = str(resp["token"])
+        self.token = six.text_type(resp["token"])
 
     def get_task_list(self):
         resp = self.call_api("/api/1.0/project/task/@self.json")

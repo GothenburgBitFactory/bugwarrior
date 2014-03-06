@@ -1,17 +1,20 @@
-import twiggy
-from twiggy import log
-from twiggy.levels import name2level
-import os
+from ConfigParser import ConfigParser
 import optparse
+import os
 import subprocess
 import sys
 
-from ConfigParser import ConfigParser, NoOptionError
+import six
+import twiggy
+from twiggy import log
+from twiggy.levels import name2level
 
 
 def asbool(some_value):
     """ Cast config values to boolean. """
-    return str(some_value).lower() in ['y', 'yes', 't', 'true', '1', 'on']
+    return six.text_type(some_value).lower() in [
+        'y', 'yes', 't', 'true', '1', 'on'
+    ]
 
 
 def get_service_password(service, username, oracle=None, interactive=False):

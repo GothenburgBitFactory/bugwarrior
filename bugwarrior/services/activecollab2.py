@@ -3,6 +3,7 @@ import json
 import time
 import urllib2
 
+import six
 from twiggy import log
 
 from bugwarrior.services import IssueService, Issue
@@ -24,8 +25,8 @@ class ActiveCollab2Client(object):
             # Load Ticket data
             # @todo Implement threading here.
             ticket_data = self.call_api(
-                "/projects/" + str(task[u'project_id']) +
-                "/tickets/" + str(task[u'ticket_id']))
+                "/projects/" + six.text_type(task[u'project_id']) +
+                "/tickets/" + six.text_type(task[u'ticket_id']))
             assignees = ticket_data[u'assignees']
 
             for k, v in enumerate(assignees):
@@ -52,7 +53,7 @@ class ActiveCollab2Client(object):
         """
 
         user_tasks_data = self.call_api(
-            "/projects/" + str(project_id) + "/user-tasks")
+            "/projects/" + six.text_type(project_id) + "/user-tasks")
 
         for key, task in enumerate(user_tasks_data):
 

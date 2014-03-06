@@ -2,6 +2,7 @@ import urllib
 import urllib2
 import json
 
+import six
 from twiggy import log
 
 from bugwarrior.config import die
@@ -65,7 +66,9 @@ class RedMineIssue(Issue):
         }
 
     def get_issue_url(self):
-        return self.origin['url'] + "/issues/" + str(self.record["id"])
+        return (
+            self.origin['url'] + "/issues/" + six.text_type(self.record["id"])
+        )
 
     def get_project_name(self):
         if self.origin['project_name']:

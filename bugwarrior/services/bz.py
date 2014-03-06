@@ -1,6 +1,8 @@
 import bugzilla
 from twiggy import log
 
+import six
+
 from bugwarrior.config import die, asbool, get_service_password
 from bugwarrior.services import IssueService, Issue
 
@@ -179,7 +181,7 @@ class BugzillaService(IssueService):
         base_url = "https://%s/show_bug.cgi?id=" % (self.base_uri)
         for tag, issue in issues:
             extra = {
-                'url': base_url + str(issue['id']),
+                'url': base_url + six.text_type(issue['id']),
                 'annotations': self.annotations(tag, issue),
             }
             yield self.get_issue_for_record(issue, extra)
