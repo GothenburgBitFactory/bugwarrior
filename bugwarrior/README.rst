@@ -445,3 +445,4 @@ Contributors
   and experimental taskw support)
 - Luke Macken (contributed some code cleaning)
 - James Rowe (contributed to the docs)
+- Adam Coddington (anti-entropy crusader)
