@@ -171,11 +171,18 @@ class IssueService(object):
 class Issue(object):
     # Set to a dictionary mapping UDA short names with type and long name.
     #
-    # Example:
-    #    {
-    #        'project_id': ('string', 'Project ID', ),
-    #        'ticket_number': ('number', 'Ticket Number', ),
-    #    }
+    # Example::
+    #
+    #     {
+    #         'project_id': {
+    #             'type': 'string',
+    #             'label': 'Project ID',
+    #         },
+    #         'ticket_number': {
+    #             'type': 'number',
+    #             'label': 'Ticket Number',
+    #         },
+    #     }
     #
     # Note: For best results, dictionary keys should be unique!
     UDAS = {}
