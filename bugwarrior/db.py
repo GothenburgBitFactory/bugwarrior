@@ -104,6 +104,35 @@ def hamdist(str1, str2):
 
 
 def find_local_uuid(tw, keys, issue, legacy_matching=True):
+    """ For a given issue issue, find its local UUID.
+
+    :params:
+    * `tw`: An instance of `taskw.TaskWarriorShellout`
+    * `keys`: A list of lists of keys to use for uniquely identifying
+      an issue.  To clarify the "list of lists" behavior, assume that
+      there are two services, one having a single primary key field 
+      -- 'serviceAid' -- and another having a pair of fields composing
+      its primary key -- 'serviceBproject' and 'serviceBnumber' --, the
+      incoming data for this field would be::
+
+        [
+            ['serviceAid'],
+            ['serviceBproject', 'serviceBnumber'],
+        ]
+
+    * `issue`: A instance of a subclass of `bugwarrior.services.Issue`.
+    * `legacy_matching`: By default, this is enabled, and it allows
+      the matching algorithm to -- in addition to searching by stored
+      issue keys -- search using the task's description for a match.
+
+    :returns:
+    * A single string UUID.
+
+    :raises:
+    * `bugwarrior.db.MultipleMatches`: if multiple matches were found.
+    * `bugwarrior.db.NotFound`: if an issue was not found.
+
+    """
     if not issue['description']:
         raise ValueError('Issue %s has no description.' % issue)
 
@@ -303,6 +332,29 @@ def build_key_list(targets):
 
 
 def build_uda_list(targets):
+    """ Returns a list of UDAs defined by given targets
+
+    For all targets in `targets`, build a list of 2-tuples representing
+    the UDAs defined by the passed-in services (`targets`).
+
+    Given a hypothetical situation in which you have two services, the first
+    of which defining a UDA named 'serviceAid' ("Service A ID", string) and
+    a second service defining two UDAs named 'serviceBproject'
+    ("Service B Project", string) and 'serviceBnumber'
+    ("Service B Number", numeric), this would return the following structure::
+
+        [
+            ('uda.serviceAid.label', 'Service A ID'),
+            ('uda.serviceAid.type', 'string'),
+            ('uda.serviceBid.label', 'Service B Project'),
+            ('uda.serviceBid.type', 'string'),
+            ('uda.serviceBnumber.label', 'Service B Number'),
+            ('uda.serviceBnumber.type', 'numeric'),
+        ]
+
+
+    """
+
     from bugwarrior.services import SERVICES
 
     uda_output = []
