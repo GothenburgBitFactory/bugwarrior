@@ -6,12 +6,12 @@ from jinja2 import Template
 import six
 from twiggy import log
 
-from bugwarrior.db import MARKUP, URLShortener
+from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
 
 
 # Sentinels for process completion status
-SERVICE_FINISHED_OK = object()
-SERVICE_FINISHED_ERROR = object()
+SERVICE_FINISHED_OK = 0
+SERVICE_FINISHED_ERROR = 1
 
 
 class IssueService(object):
@@ -406,10 +406,11 @@ def aggregate_issues(conf):
         issue = queue.get(True)
         if isinstance(issue, tuple):
             completion_type, args = issue
-            if completion_type is SERVICE_FINISHED_ERROR:
+            if completion_type == SERVICE_FINISHED_ERROR:
                 target, e = args
-                message = "Worker for [%s] failed." % (target, e)
-                log.name('bugwarrior').critical(message)
+                for process in processes:
+                    process.terminate()
+                yield ABORT_PROCESSING, e
             currently_running -= 1
             continue
         yield issue

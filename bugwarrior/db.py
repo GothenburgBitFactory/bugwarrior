@@ -1,3 +1,4 @@
+from ConfigParser import NoOptionError
 import copy
 import os
 import re
@@ -10,7 +11,7 @@ from twiggy import log
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
-from bugwarrior.config import asbool, NoOptionError
+from bugwarrior.config import asbool
 from bugwarrior.notifications import send_notification
 
 
@@ -24,6 +25,10 @@ CACHE_REGION = dogpile.cache.make_region().configure(
     "dogpile.cache.dbm",
     arguments=dict(filename=DOGPILE_CACHE_PATH),
 )
+
+
+# Sentinel value used for aborting processing of tasks
+ABORT_PROCESSING = 2
 
 
 class URLShortener(object):
@@ -231,6 +236,8 @@ def synchronize(issue_generator, conf):
         'closed': expected_task_ids,
     }
     for issue in issue_generator:
+        if isinstance(issue, tuple) and issue[0] == ABORT_PROCESSING:
+            raise RuntimeError(issue[1])
         try:
             existing_uuid = find_local_uuid(
                 tw, key_list, issue, legacy_matching=legacy_matching
