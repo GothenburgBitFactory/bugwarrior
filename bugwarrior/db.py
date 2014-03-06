@@ -293,7 +293,8 @@ def synchronize(issue_generator, conf):
                 issue_updates['closed'].remove(existing_uuid)
 
         except MultipleMatches as e:
-            log.name('bugwarrior').trace(e)
+            log.name('db').error("Multiple matches: {0}", six.text_type(e))
+            log.name('db').trace(e)
         except NotFound:
             issue_updates['new'].append(dict(issue))
 
