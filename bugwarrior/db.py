@@ -288,7 +288,10 @@ def synchronize(issue_generator, conf):
                 issue_updates['changed'].append(task)
             else:
                 issue_updates['existing'].append(task)
-            issue_updates['closed'].remove(existing_uuid)
+
+            if existing_uuid in issue_updates['closed']:
+                issue_updates['closed'].remove(existing_uuid)
+
         except MultipleMatches as e:
             log.name('bugwarrior').trace(e)
         except NotFound:
