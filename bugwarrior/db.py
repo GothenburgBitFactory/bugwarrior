@@ -152,6 +152,10 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
         legacy_description = issue.get_default_description().rsplit('..', 1)[0]
         results = tw.filter_tasks({
             'description.startswith': legacy_description,
+            'or': [
+                ('status', 'pending'),
+                ('status', 'waiting'),
+            ],
         })
         possibilities = possibilities | set([
             task['uuid'] for task in results
@@ -161,7 +165,11 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
         for key in key_list:
             if key in issue:
                 results = tw.filter_tasks({
-                    key: issue[key]
+                    key: issue[key],
+                    'or': [
+                        ('status', 'pending'),
+                        ('status', 'waiting'),
+                    ],
                 })
                 possibilities = possibilities | set([
                     task['uuid'] for task in results
@@ -220,10 +228,15 @@ def synchronize(issue_generator, conf):
         expected_task_ids = expected_task_ids | set([
             task['uuid'] for task in tasks
         ])
+
     legacy_matching = _bool_option('general', 'legacy_matching', 'True')
     if legacy_matching:
         starts_with_markup = tw.filter_tasks({
             'description.startswith': MARKUP,
+            'or': [
+                ('status', 'pending'),
+                ('status', 'waiting'),
+            ],
         })
         expected_task_ids = expected_task_ids | set([
             task['uuid'] for task in starts_with_markup
