@@ -206,7 +206,7 @@ def synchronize(issue_generator, conf):
     uda_list = build_uda_list(services)
     if uda_list:
         log.name('bugwarrior').info(
-            'Service-defined UDAs (add these to your ~/.taskrc):'
+            'Service-defined UDAs (you can optionally add these to your ~/.taskrc for use in reports):'
         )
         for uda in uda_list:
             log.name('bugwarrior').info('%s=%s' % uda)
