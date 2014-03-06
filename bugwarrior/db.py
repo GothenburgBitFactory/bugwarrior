@@ -108,6 +108,35 @@ def hamdist(str1, str2):
     return diffs
 
 
+def get_managed_task_uuids(tw, key_list, legacy_matching):
+    expected_task_ids = set([])
+    for key in key_list.values():
+        tasks = tw.filter_tasks({
+            '%s.not' % key: '',
+            'or': [
+                ('status', 'pending'),
+                ('status', 'waiting'),
+            ],
+        })
+        expected_task_ids = expected_task_ids | set([
+            task['uuid'] for task in tasks
+        ])
+
+    if legacy_matching:
+        starts_with_markup = tw.filter_tasks({
+            'description.startswith': MARKUP,
+            'or': [
+                ('status', 'pending'),
+                ('status', 'waiting'),
+            ],
+        })
+        expected_task_ids = expected_task_ids | set([
+            task['uuid'] for task in starts_with_markup
+        ])
+
+    return expected_task_ids
+
+
 def find_local_uuid(tw, keys, issue, legacy_matching=True):
     """ For a given issue issue, find its local UUID.
 
@@ -223,31 +252,13 @@ def synchronize(issue_generator, conf):
         config_overrides=dict(uda_list)
     )
 
-    expected_task_ids = set([])
-    for key in key_list.values():
-        tasks = tw.filter_tasks({'%s.not' % key: ''})
-        expected_task_ids = expected_task_ids | set([
-            task['uuid'] for task in tasks
-        ])
-
     legacy_matching = _bool_option('general', 'legacy_matching', 'True')
-    if legacy_matching:
-        starts_with_markup = tw.filter_tasks({
-            'description.startswith': MARKUP,
-            'or': [
-                ('status', 'pending'),
-                ('status', 'waiting'),
-            ],
-        })
-        expected_task_ids = expected_task_ids | set([
-            task['uuid'] for task in starts_with_markup
-        ])
 
     issue_updates = {
         'new': [],
         'existing': [],
         'changed': [],
-        'closed': expected_task_ids,
+        'closed': get_managed_task_uuids(tw, key_list, legacy_matching),
     }
     for issue in issue_generator:
         if isinstance(issue, tuple) and issue[0] == ABORT_PROCESSING:
