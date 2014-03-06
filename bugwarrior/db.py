@@ -282,6 +282,7 @@ def synchronize(issue_generator, conf):
             issue_updates['new'].append(dict(issue))
 
     # Add new issues
+    log.name('db').info("Adding {0} tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
         log.name('db').info(
             "Adding task {0}",
@@ -295,6 +296,7 @@ def synchronize(issue_generator, conf):
         except TaskwarriorError as e:
             log.name('db').trace(e)
 
+    log.name('db').info("Updating {0} tasks", len(issue_updates['changed']))
     for issue in issue_updates['changed']:
         log.name('db').info(
             "Updating task {0}",
@@ -305,11 +307,13 @@ def synchronize(issue_generator, conf):
         except TaskwarriorError as e:
             log.name('db').trace(e)
 
+    log.name('db').info("Closing {0} tasks", len(issue_updates['closed']))
     for issue in issue_updates['closed']:
         task_info = tw.get_task(uuid=issue)
         log.name('db').info(
-            "Completing task {0}",
-            task_info
+            "Completing task {0} {1}",
+            task_info['uuid'],
+            task_info['description'],
         )
         if notify:
             send_notification(task_info, 'Completed', conf)
