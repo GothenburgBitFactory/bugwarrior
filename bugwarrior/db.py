@@ -75,17 +75,27 @@ def get_normalized_annotation(annotation):
 def tasks_differ(left, right):
     if set(left) - set(right):
         return True
-    for k in left:
+    all_keys = set(left.keys()) | set(right.keys())
+    for k in all_keys:
         if k in ('annotations', 'urgency', 'priority', ):
             continue
         if (
-            isinstance(left[k], (list, tuple))
-            and isinstance(right[k], (list, tuple))
+            isinstance(left.get(k), (list, tuple))
+            and isinstance(right.get(k), (list, tuple))
         ):
-            left[k] = set(left[k])
-            right[k] = set(right[k])
-        if unicode(left[k]) != unicode(right[k]):
-            return True
+            if set(left.get(k, [])) != set(right.get(k, [])):
+                return True
+        else:
+            if unicode(left.get(k)) != unicode(right.get(k)):
+                log.name('db').debug(
+                    "%s:%s has changed from '%s' to '%s'." % (
+                        left['uuid'],
+                        k,
+                        left.get(k),
+                        right.get(k)
+                    )
+                )
+                return True
     return False
 
 

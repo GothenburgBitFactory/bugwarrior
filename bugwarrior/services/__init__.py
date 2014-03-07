@@ -1,3 +1,4 @@
+import copy
 import multiprocessing
 import time
 
@@ -47,6 +48,13 @@ class IssueService(object):
                 self.target, 'description_template'
             )
 
+        self.add_tags = []
+        if config.has_option(self.target, 'add_tags'):
+            for raw_option in self.config.get(self.target, 'add_tags').split():
+                option = raw_option.strip(' +,;')
+                if option:
+                    self.add_tags.append(option)
+
         self.default_priority = 'M'
         if config.has_option(self.target, 'default_priority'):
             self.default_priority = config.get(self.target, 'default_priority')
@@ -80,6 +88,7 @@ class IssueService(object):
             'target': self.target,
             'bitly_api_key': self.bitly_api_key,
             'bitly_api_user': self.bitly_api_user,
+            'add_tags': self.add_tags,
         }
         origin.update(self.get_service_metadata())
         return self.ISSUE_CLASS(record, origin=origin, extra=extra)
@@ -214,10 +223,16 @@ class Issue(object):
         """
         raise NotImplementedError()
 
-    def _get_taskwarrior_record(self):
+    def get_taskwarrior_record(self, with_description=True):
         if not getattr(self, '_taskwarrior_record', None):
             self._taskwarrior_record = self.to_taskwarrior()
-        return self._taskwarrior_record
+        record = copy.deepcopy(self._taskwarrior_record)
+        if with_description:
+            record['description'] = self.get_rendered_description()
+        if not 'tags' in record:
+            record['tags'] = []
+        record['tags'].extend(self.origin['add_tags'])
+        return record
 
     def get_priority(self):
         return self.PRIORITY_MAP.get(
@@ -269,7 +284,7 @@ class Issue(object):
         )
 
     def _get_unique_identifier(self):
-        record = self._get_taskwarrior_record()
+        record = self.get_taskwarrior_record()
         return dict([
             (key, record[key],) for key in self.UNIQUE_KEY
         ])
@@ -277,7 +292,7 @@ class Issue(object):
     def get_rendered_description(self):
         if not hasattr(self, '_description'):
             if self.origin['description_template']:
-                record = self._get_taskwarrior_record()
+                record = self.get_taskwarrior_record(with_description=False)
                 context = record.copy()
                 context.update(self.extra)
                 template = Template(self.origin['description_template'])
@@ -286,8 +301,7 @@ class Issue(object):
         return self._description
 
     def __iter__(self):
-        record = self._get_taskwarrior_record()
-        record['description'] = self['description']
+        record = self.get_taskwarrior_record()
         for key in six.iterkeys(record):
             yield key
 
@@ -298,12 +312,11 @@ class Issue(object):
         return self.__iter__()
 
     def items(self):
-        record = self._get_taskwarrior_record()
-        record['description'] = self['description']
+        record = self.get_taskwarrior_record()
         return list(six.iteritems(record))
 
     def iteritems(self):
-        record = self._get_taskwarrior_record()
+        record = self.get_taskwarrior_record()
         for item in six.iteritems(record):
             yield item
 
@@ -319,9 +332,7 @@ class Issue(object):
             return default
 
     def __getitem__(self, attribute):
-        record = self._get_taskwarrior_record()
-        if attribute == 'description':
-            return self.get_rendered_description()
+        record = self.get_taskwarrior_record()
         return record[attribute]
 
     def __setitem__(self, attribute, value):

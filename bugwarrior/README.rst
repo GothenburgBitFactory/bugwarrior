@@ -96,6 +96,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   service = github
   github.username = ralphbean
   default_priority = H
+  add_tags = open_source
 
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
@@ -128,6 +129,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   bitbucket.username = ralphbean
   bitbucket.password = mypassword
   default_priority = M
+  add_tags = open_source
 
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
@@ -161,6 +163,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   only_if_assigned = ralph
   also_unassigned = True
   default_priority = H
+  add_tags = work
 
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
@@ -182,6 +185,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   bugzilla.base_uri = bugzilla.redhat.com
   bugzilla.username = rbean@redhat.com
   bugzilla.password = OMG_LULZ
+  add_tags = mozilla
 
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
@@ -201,6 +205,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   megaplan.project_name = example
 
   default_priority = H
+  add_tags = megaplan important
 
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
@@ -227,6 +232,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # 4 and 5(the default). You can find your particular version in the footer at
   # the dashboard.
   jira.version = 5
+  add_tags = enterprisey work
 
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
@@ -245,6 +251,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   teamlab.login = alice
   teamlab.password = secret
   teamlab.project_name = example_teamlab
+  add_tags = whatever
 
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
@@ -263,6 +270,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   redmine.key = c0c4c014cafebabe
   redmine.user_id = 7
   redmine.project_name = redmine
+  add_tags = chiliproject
 
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
@@ -293,6 +301,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   activecollab3.url = https://ac.example.org/api.php
   activecollab3.key = your-api-key
   activecollab3.user_id = 15
+  add_tags = php
 
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
