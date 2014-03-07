@@ -11,7 +11,7 @@ from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import die
 
 
-class ActiveCollab3Client(object):
+class ActiveCollabClient(object):
     def __init__(self, url, key, user_id, projects):
         self.url = url
         self.key = key
@@ -90,7 +90,7 @@ class ActiveCollab3Client(object):
                     yield subtask
 
 
-class ActiveCollab3Issue(Issue):
+class ActiveCollabIssue(Issue):
     BODY = 'ac3body'
     NAME = 'ac3name'
     PERMALINK = 'ac3permalink'
@@ -104,39 +104,39 @@ class ActiveCollab3Issue(Issue):
     UDAS = {
         BODY: {
             'type': 'string',
-            'label': 'ActiveCollab3 Body'
+            'label': 'ActiveCollab Body'
         },
         NAME: {
             'type': 'string',
-            'label': 'ActiveCollab3 Name'
+            'label': 'ActiveCollab Name'
         },
         PERMALINK: {
             'type': 'string',
-            'label': 'ActiveCollab3 Permalink'
+            'label': 'ActiveCollab Permalink'
         },
         TASK_ID: {
             'type': 'string',
-            'label': 'ActiveCollab3 Task ID'
+            'label': 'ActiveCollab Task ID'
         },
         FOREIGN_ID: {
             'type': 'string',
-            'label': 'ActiveCollab3 ID',
+            'label': 'ActiveCollab ID',
         },
         PROJECT_ID: {
             'type': 'string',
-            'label': 'ActiveCollab3 Project ID'
+            'label': 'ActiveCollab Project ID'
         },
         TYPE: {
             'type': 'string',
-            'label': 'ActiveCollab3 Task Type'
+            'label': 'ActiveCollab Task Type'
         },
         CREATED_ON: {
             'type': 'date',
-            'label': 'ActiveCollab3 Created On'
+            'label': 'ActiveCollab Created On'
         },
         CREATED_BY_ID: {
             'type': 'string',
-            'label': 'ActiveCollab3 Created By'
+            'label': 'ActiveCollab Created By'
         },
     }
     UNIQUE_KEY = (PERMALINK, )
@@ -189,18 +189,18 @@ class ActiveCollab3Issue(Issue):
         )
 
 
-class ActiveCollab3Service(IssueService):
-    ISSUE_CLASS = ActiveCollab3Issue
-    CONFIG_PREFIX = 'activecollab3'
+class ActiveCollabService(IssueService):
+    ISSUE_CLASS = ActiveCollabIssue
+    CONFIG_PREFIX = 'activecollab'
 
     def __init__(self, *args, **kw):
-        super(ActiveCollab3Service, self).__init__(*args, **kw)
+        super(ActiveCollabService, self).__init__(*args, **kw)
 
         self.url = self.config_get('url').rstrip('/')
         self.key = self.config_get('key')
         self.user_id = self.config_get('user_id')
         self.projects = []
-        self.client = ActiveCollab3Client(
+        self.client = ActiveCollabClient(
             self.url, self.key, self.user_id, self.projects
         )
 
@@ -212,7 +212,7 @@ class ActiveCollab3Service(IssueService):
     @classmethod
     def validate_config(cls, config, target):
         for k in (
-            'activecollab3.url', 'activecollab3.key', 'activecollab3.user_id'
+            'activecollab.url', 'activecollab3.key', 'activecollab3.user_id'
         ):
             if not config.has_option(target, k):
                 die("[%s] has no '%s'" % (target, k))
