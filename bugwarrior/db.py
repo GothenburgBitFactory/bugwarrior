@@ -132,9 +132,9 @@ def hamdist(str1, str2):
 
 def get_managed_task_uuids(tw, key_list, legacy_matching):
     expected_task_ids = set([])
-    for key in key_list.values():
+    for keys in key_list.values():
         tasks = tw.filter_tasks({
-            '%s.not' % key: '',
+            'and': [('%s.not' % key, '') for key in keys],
             'or': [
                 ('status', 'pending'),
                 ('status', 'waiting'),
@@ -213,10 +213,10 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
         ])
 
     for service, key_list in six.iteritems(keys):
-        for key in key_list:
-            if key in issue:
+        for keys in key_list:
+            if any([key in issue for key in keys]):
                 results = tw.filter_tasks({
-                    key: issue[key],
+                    'and': [(key, issue[key]) for key in keys],
                     'or': [
                         ('status', 'pending'),
                         ('status', 'waiting'),
