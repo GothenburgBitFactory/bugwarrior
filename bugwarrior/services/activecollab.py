@@ -42,12 +42,8 @@ class ActiveCollabClient(object):
             return assigned_task
 
 
-    def get_project_slug(self, project_name):
-        # Take a project name like "Client: Example Project" and return a
-        # string in project slug format: "client-example-project"
-        project_name = project_name.lower()
-        project_name = re.sub('[\s+]', '-', project_name)
-        project_name = re.sub('[:,"/"]', '', project_name)
+    def get_project_slug(self, permalink):
+        project_name = permalink.split('/')[4]
         return project_name
 
     def call_api(self, uri, key, url):
@@ -69,7 +65,7 @@ class ActiveCollabClient(object):
                     (task[u'assignee_id'] == int(self.user_id))
                     and (task[u'completed_on'] is None)
                 ):
-                    task['project'] = self.get_project_slug(project_name)
+                    task['project'] = self.get_project_slug(task['permalink'])
                     task['type'] = 'task'
                     yield task
 
@@ -85,21 +81,21 @@ class ActiveCollabClient(object):
                     (subtask[u'assignee_id'] == int(self.user_id))
                     and (subtask[u'completed_on'] is None)
                 ):
-                    subtask['project'] = self.get_project_slug(project_name)
+                    subtask['project'] = self.get_project_slug(subtask['permalink'])
                     subtask['type'] = 'subtask'
                     yield subtask
 
 
 class ActiveCollabIssue(Issue):
-    BODY = 'ac3body'
-    NAME = 'ac3name'
-    PERMALINK = 'ac3permalink'
-    TASK_ID = 'ac3taskid'
-    FOREIGN_ID = 'ac3id'
-    PROJECT_ID = 'ac3projectid'
-    TYPE = 'ac3type'
-    CREATED_ON = 'ac3createdon'
-    CREATED_BY_ID = 'ac3createdbyid'
+    BODY = 'acbody'
+    NAME = 'acname'
+    PERMALINK = 'acpermalink'
+    TASK_ID = 'actaskid'
+    FOREIGN_ID = 'acid'
+    PROJECT_ID = 'acprojectid'
+    TYPE = 'actype'
+    CREATED_ON = 'accreatedon'
+    CREATED_BY_ID = 'accreatedbyid'
 
     UDAS = {
         BODY: {
@@ -146,8 +142,6 @@ class ActiveCollabIssue(Issue):
         record = {
             'project': self.record['project'],
             'priority': self.get_priority(),
-            #'due': self.parse_date(self.record.get('due_on')),
-
             self.NAME: self.record.get('name'),
             self.BODY: self.record.get('body'),
             self.PERMALINK: self.record['permalink'],
@@ -157,6 +151,12 @@ class ActiveCollabIssue(Issue):
             self.TYPE: self.record['type'],
             self.CREATED_BY_ID: self.record['created_by_id'],
         }
+        due_on = self.record.get('due_on')
+        if isinstance(due_on, dict):
+            record['due'] = self.parse_date(due_on['mysql'])
+        elif due_on is not None:
+            record['due'] = due_on
+
         if isinstance(self.record.get('created_on'), basestring):
             record[self.CREATED_ON] = self.parse_date(
                 self.record['created_on']
