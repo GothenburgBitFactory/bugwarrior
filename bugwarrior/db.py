@@ -232,7 +232,7 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
     if len(possibilities) > 1:
         raise MultipleMatches(
             "Issue %s matched multiple IDs: %s" % (
-                issue,
+                issue['description'],
                 possibilities
             )
         )
