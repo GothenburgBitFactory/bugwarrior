@@ -1,20 +1,47 @@
+import itertools
 import json
 import re
 import urllib2
+import time
 
 import six
+from twiggy import log
 
-from bugwarrior.services import IssueService
+from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import die
 
-from .activecollab2 import (
-    ActiveCollab2Client,
-    ActiveCollab2Issue,
-    ActiveCollab2Service,
-)
+
+class ActiveCollab3Client(object):
+    def __init__(self, url, key, user_id, projects):
+        self.url = url
+        self.key = key
+        self.user_id = user_id
+        self.projects = projects
+
+    def get_task_dict(self, project, key, task):
+        assigned_task = {
+            'project': project
+        }
+        if task[u'type'] == 'Task':
+            # Load Task data
+            ticket_data = self.call_api(
+                "/projects/" + six.text_type(task[u'project_id']) +
+                "/tickets/" + six.text_type(task[u'ticket_id']))
+            assignees = ticket_data[u'assignees']
+
+            for k, v in enumerate(assignees):
+                if (
+                    (v[u'is_owner'] is True)
+                    and (v[u'user_id'] == int(self.user_id))
+                ):
+                    assigned_task.update(ticket_data)
+                    return assigned_task
+        elif task[u'type'] == 'Subtask':
+            # Load SubTask data
+            assigned_task.update(task)
+            return assigned_task
 
 
-class ActiveCollab3Client(ActiveCollab2Client):
     def get_project_slug(self, project_name):
         # Take a project name like "Client: Example Project" and return a
         # string in project slug format: "client-example-project"
@@ -63,7 +90,7 @@ class ActiveCollab3Client(ActiveCollab2Client):
                     yield subtask
 
 
-class ActiveCollab3Issue(ActiveCollab2Issue):
+class ActiveCollab3Issue(Issue):
     BODY = 'ac3body'
     NAME = 'ac3name'
     PERMALINK = 'ac3permalink'
@@ -115,16 +142,17 @@ class ActiveCollab3Issue(ActiveCollab2Issue):
     UNIQUE_KEY = (PERMALINK, )
 
     def to_taskwarrior(self):
+
         record = {
             'project': self.record['project'],
             'priority': self.get_priority(),
-            'due': self.parse_date(self.record.get('due_on')),
+            #'due': self.parse_date(self.record.get('due_on')),
 
             self.NAME: self.record.get('name'),
             self.BODY: self.record.get('body'),
             self.PERMALINK: self.record['permalink'],
             self.TASK_ID: self.record.get('task_id'),
-            self.PROJECT_ID: self.record['project_id'],
+            self.PROJECT_ID: self.record['project'],
             self.FOREIGN_ID: self.record['id'],
             self.TYPE: self.record['type'],
             self.CREATED_BY_ID: self.record['created_by_id'],
@@ -151,9 +179,9 @@ class ActiveCollab3Issue(ActiveCollab2Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=(
-                self.record['name']
-                if self.record['name']
-                else self.record['body']
+                self.record.get('name')
+                if self.record.get('name')
+                else self.record.get('body')
             ),
             url=self.get_processed_url(self.record['permalink']),
             number=self.record['id'],
@@ -161,17 +189,21 @@ class ActiveCollab3Issue(ActiveCollab2Issue):
         )
 
 
-class ActiveCollab3Service(ActiveCollab2Service):
+class ActiveCollab3Service(IssueService):
     ISSUE_CLASS = ActiveCollab3Issue
     CONFIG_PREFIX = 'activecollab3'
 
     def __init__(self, *args, **kw):
         super(ActiveCollab3Service, self).__init__(*args, **kw)
+
+        self.url = self.config_get('url').rstrip('/')
+        self.key = self.config_get('key')
+        self.user_id = self.config_get('user_id')
+        self.projects = []
         self.client = ActiveCollab3Client(
             self.url, self.key, self.user_id, self.projects
         )
 
-        self.projects = []
         data = self.client.call_api("/projects", self.key, self.url)
         for item in data:
             if item[u'is_favorite'] == 1:
@@ -186,3 +218,24 @@ class ActiveCollab3Service(ActiveCollab2Service):
                 die("[%s] has no '%s'" % (target, k))
 
         IssueService.validate_config(config, target)
+
+
+    def issues(self):
+        # Loop through each project
+        start = time.time()
+        issue_generators = []
+        projects = self.projects
+        for project in projects:
+            for project_id, project_name in project.iteritems():
+                log.name(self.target).debug(" Getting tasks for #%d %s" % (project_id, project_name))
+                issue_generators.append(
+                    self.client.get_issue_generator(
+                        self.user_id, project_id, project_name
+                    )
+                )
+
+        log.name(self.target).debug(
+            " Elapsed Time: %s" % (time.time() - start))
+
+        for record in itertools.chain(*issue_generators):
+            yield self.get_issue_for_record(record)
