@@ -75,10 +75,22 @@ def get_normalized_annotation(annotation):
 def tasks_differ(left, right):
     if set(left) - set(right):
         return True
+
     all_keys = set(left.keys()) | set(right.keys())
     for k in all_keys:
+        # We want to allow the user to locally modify their priority,
+        # annotations, etc, without us setting those values back everytime we
+        # run... so, ignore these.
         if k in ('annotations', 'urgency', 'priority', ):
             continue
+
+        # If a taskwarrior task has 0 tags, the 'left' value is None.
+        # If a bugwarrior remote issue has 0 tags, the 'right' is []
+        # Here, we avoid declaring things are different by checking falsiness
+        if k in ('tags',):
+            if not left.get(k) and not right.get(k):
+                continue
+
         if (
             isinstance(left.get(k), (list, tuple))
             and isinstance(right.get(k), (list, tuple))
