@@ -1,3 +1,4 @@
+import codecs
 from ConfigParser import ConfigParser
 import optparse
 import os
@@ -142,7 +143,13 @@ def load_config():
     opts, args = parse_args()
 
     config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
-    config.read(os.path.expanduser(opts.config))
+    config.readfp(
+        codecs.open(
+            os.path.expanduser(opts.config),
+            "r",
+            "utf-8",
+        )
+    )
     config.interactive = opts.interactive
     validate_config(config)
 
