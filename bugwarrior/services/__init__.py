@@ -99,6 +99,7 @@ class IssueService(object):
     def build_annotations(self, annotations):
         final = []
         for author, message in annotations:
+            message = message.strip()
             if not message or not author:
                 continue
             message = message.replace('\n', '').replace('\r', '')

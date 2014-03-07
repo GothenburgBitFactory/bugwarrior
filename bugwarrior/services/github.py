@@ -192,6 +192,13 @@ class GithubService(IssueService):
         repos = filter(self.filter_repos_for_prs, all_repos)
         requests = sum([self._reqs(user + "/" + r['name']) for r in repos], [])
 
+        # For pull requests, github lists an 'issue' and a 'pull request' with
+        # the same id and the same URL.  So, if we find any pull requests,
+        # let's strip those out of the "issues" list so that we don't have
+        # unnecessary duplicates.
+        request_urls = [r[1]['html_url'] for r in requests]
+        issues = [i for i in issues if not i[1]['html_url'] in request_urls]
+
         for tag, issue in issues:
             extra = {
                 'project': tag.split('/')[1],
@@ -204,6 +211,7 @@ class GithubService(IssueService):
             extra = {
                 'project': tag.split('/')[1],
                 'type': 'pull_request',
+                'annotations': self.annotations(tag, request)
             }
             yield self.get_issue_for_record(request, extra)
 
