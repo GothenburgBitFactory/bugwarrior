@@ -32,7 +32,7 @@ class GithubIssue(Issue):
             'label': 'Github Issue/PR #',
         },
     }
-    UNIQUE_KEY = (URL, )
+    UNIQUE_KEY = (URL, TYPE,)
 
     def to_taskwarrior(self):
         return {
