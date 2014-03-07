@@ -136,6 +136,16 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   github.login = ralphbean
   github.password = OMG_LULZ
 
+  # Pull-in github labels as tags?
+  github.import_labels_as_tags = True
+
+  # Template to use for generating the tag name from the github label
+  # will receive, as context, all task fields by name, as well as a
+  # context variable named `label` containing the github label name.
+  # This can be used (as is below) to prefix a label with 'github_'.
+  # By default, the label is converted into a tag name without changes.
+  #github.label_template = github_{{label}}
+
   # This is the same thing, but for bitbucket.  Each target entry must have a
   # 'service' attribute which must be one of the supported services (like
   # 'github', 'bitbucket', 'trac', etc...).

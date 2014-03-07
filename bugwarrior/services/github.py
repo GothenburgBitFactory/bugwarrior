@@ -1,6 +1,8 @@
+from jinja2 import Template
+import six
 from twiggy import log
 
-from bugwarrior.config import die, get_service_password
+from bugwarrior.config import asbool, die, get_service_password
 from bugwarrior.services import IssueService, Issue
 
 from . import githubutils
@@ -37,12 +39,32 @@ class GithubIssue(Issue):
             'project': self.extra['project'],
             'priority': self.origin['default_priority'],
             'annotations': self.extra.get('annotations', []),
+            'tags': self.get_tags(),
 
             self.URL: self.record['html_url'],
             self.TYPE: self.extra['type'],
             self.TITLE: self.record['title'],
             self.NUMBER: self.record['number'],
         }
+
+    def get_tags(self):
+        tags = []
+
+        if not self.origin['import_labels_as_tags']:
+            return tags
+
+        context = self.record.copy()
+        label_template = Template(self.origin['label_template'])
+
+        for label_dict in self.record.get('labels', []):
+            context.update({
+                'label': label_dict['name']
+            })
+            tags.append(
+                label_template.render(context)
+            )
+
+        return tags
 
     def get_default_description(self):
         return self.build_default_description(
@@ -72,19 +94,31 @@ class GithubService(IssueService):
         self.auth = (login, password)
 
         self.exclude_repos = []
-        self.include_repos = []
-
         if self.config_get_default('exclude_repos', None):
             self.exclude_repos = [
                 item.strip() for item in
                 self.config_get('exclude_repos').strip().split(',')
             ]
 
+        self.include_repos = []
         if self.config_get_default('include_repos', None):
             self.include_repos = [
                 item.strip() for item in
                 self.config_get('include_repos').strip().split(',')
             ]
+
+        self.import_labels_as_tags = self.config_get_default(
+            'import_labels_as_tags', default=False, to_type=asbool
+        )
+        self.label_template = self.config_get_default(
+            'label_template', default='{{label}}', to_type=six.text_type
+        )
+
+    def get_service_metadata(self):
+        return {
+            'import_labels_as_tags': self.import_labels_as_tags,
+            'label_template': self.label_template,
+        }
 
     def _issues(self, tag):
         """ Grab all the issues """

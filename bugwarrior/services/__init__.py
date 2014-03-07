@@ -61,14 +61,17 @@ class IssueService(object):
 
         log.name(target).info("Working on [{0}]", self.target)
 
-    def config_get_default(self, key, default=None):
+    def config_get_default(self, key, default=None, to_type=None):
         try:
-            return self.config_get(key)
+            return self.config_get(key, to_type=to_type)
         except:
             return default
 
-    def config_get(self, key=None):
-        return self.config.get(self.target, self._get_key(key))
+    def config_get(self, key=None, to_type=None):
+        value = self.config.get(self.target, self._get_key(key))
+        if to_type:
+            return to_type(value)
+        return value
 
     def _get_key(self, key):
         return '%s.%s' % (
