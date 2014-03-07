@@ -306,7 +306,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # - redmineid
   #description_template = #{{ redmineid }}: {{ redminesubject }}
 
-  # Here's an example of an activecollab3 target. This is only valid for
+  # Here's an example of an activecollab target. This is only valid for
   # activeCollab 3.x and greater, see below for activeCollab 2.x.
   #
   # Obtain your user ID and API url by logging in, clicking on your avatar on
@@ -330,7 +330,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
-  # following properties are available for ActiveCollab3 issues:
+  # following properties are available for ActiveCollab issues:
   # - acbody
   # - acname
   # - acpermalink

@@ -2,27 +2,27 @@ import datetime
 
 import mock
 
-from bugwarrior.services.activecollab3 import (
-    ActiveCollab3Client,
-    ActiveCollab3Service
+from bugwarrior.services.activecollab import (
+    ActiveCollabClient,
+    ActiveCollabService
 )
 
 from .base import ServiceTest
 
 
-class TestActiveCollab3Issue(ServiceTest):
+class TestActiveCollabIssue(ServiceTest):
     SERVICE_CONFIG = {
-        'activecollab3.url': 'hello',
-        'activecollab3.key': 'howdy',
-        'activecollab3.user_id': 'hola',
-        'activecollab3.projects': '1:one, 2:two'
+        'activecollab.url': 'hello',
+        'activecollab.key': 'howdy',
+        'activecollab.user_id': 'hola',
+        'activecollab.projects': '1:one, 2:two'
     }
 
     def setUp(self):
         with mock.patch(
-            'bugwarrior.services.activecollab3.ActiveCollab3Client.call_api'
+            'bugwarrior.services.activecollab.ActiveCollabClient.call_api'
         ):
-            self.service = self.get_mock_service(ActiveCollab3Service)
+            self.service = self.get_mock_service(ActiveCollabService)
 
     def test_to_taskwarrior(self):
         arbitrary_due_on = (
