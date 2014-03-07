@@ -242,6 +242,52 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
     )
 
 
+def merge_annotations(remote_issue, local_task):
+    """ Merge annotations from the local task into the remote issue dict
+
+    If there are new annotations in the remote issue that do not appears in the
+    local task, additionally return True signalling that the new remote
+    annotations should be synched to the db.
+    """
+
+    # Ensure that empty defaults are present
+    remote_issue['annotations'] = remote_issue.get('annotations', [])
+    local_task['annotations'] = local_task.get('annotations', [])
+
+    # Setup some shorthands
+    remote_annotations = [a for a in remote_issue['annotations']]
+    local_annotations = [a['description'] for a in local_task['annotations']]
+
+    # Do two things.
+    # * If a local does not appears in remote, then add it there so users can
+    #   maintain their own list of locals.
+    # * If a remote does not appear in local, then return True
+
+    # Part 1
+    for local in local_annotations:
+        for remote in remote_annotations:
+            if get_annotation_hamming_distance(remote, local) == 0:
+                remote_issue['annotations'].append(local)
+                break
+
+    # Part 2
+    for remote in remote_annotations:
+        found = False
+        for local in local_annotations:
+            if get_annotation_hamming_distance(remote, local) == 0:
+                found = True
+                break
+
+        # Then we have a new remote annotation that should be synced locally.
+        if not found:
+            log.name('db').debug(
+                "%s not found in %r" % (remote, local_annotations))
+            return True
+
+    # Otherwise, we found all of our remotes in our local annotations.
+    return False
+
+
 def synchronize(issue_generator, conf):
 
     def _bool_option(section, option, default):
@@ -293,22 +339,11 @@ def synchronize(issue_generator, conf):
             _, task = tw.get_task(uuid=existing_uuid)
             task_copy = copy.deepcopy(task)
 
-            # Handle merging annotations
-            annotations_changed = False
-            for annotation in [
-                a['description'] for a in task.get('annotations', [])
-            ]:
-                if not 'annotations' in issue_dict:
-                    issue_dict['annotations'] = []
-                found = False
-                for new_annot in issue_dict['annotations']:
-                    if get_annotation_hamming_distance(
-                        new_annot, annotation
-                    ) == 0:
-                        found = True
-                if not found:
-                    annotations_changed = True
-                    issue_dict['annotations'].append(annotation)
+
+            annotations_changed = merge_annotations(issue_dict, task)
+
+            if annotations_changed:
+                log.name('db').debug("%s annotations changed." % existing_uuid)
 
             # Merging tags, too
             for tag in task.get('tags', []):
