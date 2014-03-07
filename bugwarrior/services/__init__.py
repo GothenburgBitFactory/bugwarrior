@@ -1,57 +1,108 @@
+import multiprocessing
+import time
+
+from dateutil.parser import parse as parse_date
+from jinja2 import Template
+import six
 from twiggy import log
 
-import bitlyapi
-import time
-import os
-import dogpile.cache
+from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
 
-from bugwarrior.config import die, asbool
-from bugwarrior.db import MARKUP
+
+# Sentinels for process completion status
+SERVICE_FINISHED_OK = 0
+SERVICE_FINISHED_ERROR = 1
 
 
 class IssueService(object):
     """ Abstract base class for each service """
+    # Which class should this service instantiate for holding these issues?
+    ISSUE_CLASS = None
+    # What prefix should we use for this service's configuration values
+    CONFIG_PREFIX = ''
 
-    def __init__(self, config, target, shorten):
+    def __init__(self, config, target):
         self.config = config
         self.target = target
-        self.shorten = shorten
+
+        self.desc_len = 35
         if config.has_option('general', 'description_length'):
             self.desc_len = self.config.getint('general', 'description_length')
-        else:
-            self.desc_len = 35
+
+        self.anno_len = 45
         if config.has_option('general', 'annotation_length'):
             self.anno_len = self.config.getint('general', 'annotation_length')
-        else:
-            self.anno_len = 45
+
+        self.bitly_api_user = None
+        if config.has_option('general', 'bitly.api_user'):
+            self.bitly_api_user = config.get('general', 'bitly.api_user')
+
+        self.bitly_api_key = None
+        if config.has_option('general', 'bitly.api_key'):
+            self.bitly_api_key = config.get('general', 'bitly.api_key')
+
+        self.description_template = None
+        if config.has_option(self.target, 'description_template'):
+            self.description_template = self.config.get(
+                self.target, 'description_template'
+            )
+
+        self.default_priority = 'M'
+        if config.has_option(self.target, 'default_priority'):
+            self.default_priority = config.get(self.target, 'default_priority')
+
         log.name(target).info("Working on [{0}]", self.target)
+
+    def config_get_default(self, key, default=None):
+        try:
+            return self.config_get(key)
+        except:
+            return default
+
+    def config_get(self, key=None):
+        return self.config.get(self.target, self._get_key(key))
+
+    def _get_key(self, key):
+        return '%s.%s' % (
+            self.CONFIG_PREFIX,
+            key
+        )
+
+    def get_service_metadata(self):
+        return {}
+
+    def get_issue_for_record(self, record, extra=None):
+        origin = {
+            'annotation_length': self.anno_len,
+            'default_priority': self.default_priority,
+            'description_length': self.desc_len,
+            'description_template': self.description_template,
+            'target': self.target,
+            'bitly_api_key': self.bitly_api_key,
+            'bitly_api_user': self.bitly_api_user,
+        }
+        origin.update(self.get_service_metadata())
+        return self.ISSUE_CLASS(record, origin=origin, extra=extra)
+
+    def build_annotations(self, annotations):
+        final = []
+        for author, message in annotations:
+            if not message or not author:
+                continue
+            message = message.replace('\n', '').replace('\r', '')
+            final.append(
+                '@%s - %s%s' % (
+                    author,
+                    message[0:self.anno_len],
+                    '...' if len(message) > self.anno_len else ''
+                )
+            )
+        return final
 
     @classmethod
     def validate_config(cls, config, target):
         """ Validate generic options for a particular target """
-
-        cls.default_priority = 'M'
-        if config.has_option(target, 'default_priority'):
-            cls.default_priority = config.get(target, 'default_priority')
-
-    def format_annotation(self, created, user, body):
-        if not body:
-            body = ''
-        body = body.replace('\n', '').replace('\r', '')[:self.anno_len]
-        return (
-            "annotation_%i" % time.mktime(created.timetuple()),
-            "@%s - %s..." % (user, body),
-        )
-
-    def description(self, title, url, number, cls="issue"):
-        cls_markup = {
-            'issue': 'Is',
-            'pull_request': 'PR',
-        }
-        return "%s%s#%s - %s .. %s" % (
-            MARKUP, cls_markup[cls], str(number),
-            title[:self.desc_len], self.shorten(url)
-        )
+        pass
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
@@ -83,6 +134,10 @@ class IssueService(object):
         else:
             pass  # Impossible to get here.
 
+    def get_owner(self, issue):
+        """ Override this for filtering on tickets """
+        raise NotImplementedError()
+
     def issues(self):
         """ Returns a list of dicts representing issues from a remote service.
 
@@ -95,8 +150,10 @@ class IssueService(object):
                 "description": "Some description of the issue",
                 "project": "some_project",
                 "priority": "H",
-                "annotation_1357787477": "This is an annotation",
-                "annotation_1357787500": "This is another annotation",
+                "annotations": [
+                    "This is an annotation",
+                    "This is another annotation",
+                ]
             }
 
 
@@ -107,32 +164,275 @@ class IssueService(object):
         The project should be a string and may be anything you like.
 
         The priority should be one of "H", "M", or "L".
-
-        Annotations are a little more tricky; the *key* for an annotation is
-        composed of the string "annotation_" followed by a UNIX timestamp like
-        "annotation_1357787477".  The associated value is the value of the
-        annotation dated at that time.  This is intended to be used with
-        "comments" on remote ticketing systems so that an initial bug report
-        can be followed up with by multiple, dated annotations.
-
-        You can and should use the ``.format_annotation(...)`` method to help
-        format your annotations.
         """
-        raise NotImplementedError
-
-    def get_owner(self, issue):
-        """ Override this for filtering on tickets """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
-from github import GithubService
-from bitbucket import BitbucketService
-from trac import TracService
-from bz import BugzillaService
-from teamlab import TeamLabService
-from redmine import RedMineService
-from activecollab2 import ActiveCollab2Service
-from activecollab3 import ActiveCollab3Service
+class Issue(object):
+    # Set to a dictionary mapping UDA short names with type and long name.
+    #
+    # Example::
+    #
+    #     {
+    #         'project_id': {
+    #             'type': 'string',
+    #             'label': 'Project ID',
+    #         },
+    #         'ticket_number': {
+    #             'type': 'number',
+    #             'label': 'Ticket Number',
+    #         },
+    #     }
+    #
+    # Note: For best results, dictionary keys should be unique!
+    UDAS = {}
+    # Should be a tuple of field names (can be UDA names) that are usable for
+    # uniquely identifying an issue in the foreign system.
+    UNIQUE_KEY = []
+    # Should be a dictionary of value-to-level mappings between the foreign
+    # system and the string values 'H', 'M' or 'L'.
+    PRIORITY_MAP = {}
+
+    def __init__(self, foreign_record, origin=None, extra=None):
+        self._foreign_record = foreign_record
+        self._origin = origin if origin else {}
+        self._extra = extra if extra else {}
+
+    def to_taskwarrior(self):
+        """ Transform a foreign record into a taskwarrior dictionary."""
+        raise NotImplementedError()
+
+    def get_default_description(self):
+        """ Return the old-style verbose description from bugwarrior.
+
+        This is useful for two purposes:
+
+        * Finding and linking historically-created records.
+        * Allowing people to keep using the historical description
+          for taskwarrior.
+
+        """
+        raise NotImplementedError()
+
+    def _get_taskwarrior_record(self):
+        if not getattr(self, '_taskwarrior_record', None):
+            self._taskwarrior_record = self.to_taskwarrior()
+        return self._taskwarrior_record
+
+    def get_priority(self):
+        return self.PRIORITY_MAP.get(
+            self.record.get('priority'),
+            self.origin['default_priority']
+        )
+
+    def get_processed_url(self, url):
+        """ Returns a URL with conditional processing.
+
+        If the following config keys are set:
+
+        - [general]bitly.api_user
+        - [general]bitly.api_key
+
+        returns a shortened URL; otherwise returns the URL unaltered.
+
+        """
+        if (self.origin['bitly_api_user'] and self.origin['bitly_api_key']):
+            shortener = URLShortener(
+                self.origin['bitly_api_user'],
+                self.origin['bitly_api_key'],
+            )
+            return shortener.shorten(url)
+        return url
+
+    def parse_date(self, date):
+        if date:
+            return parse_date(date)
+        return None
+
+    def build_default_description(
+        self, title='', url='', number='', cls="issue"
+    ):
+        cls_markup = {
+            'issue': 'Is',
+            'pull_request': 'PR',
+            'task': '',
+            'subtask': 'Subtask #',
+        }
+        url_separator = ' .. '
+        return "%s%s#%s - %s%s%s" % (
+            MARKUP,
+            cls_markup[cls],
+            number,
+            title[:self.origin['description_length']],
+            url_separator if url else '',
+            url,
+        )
+
+    def _get_unique_identifier(self):
+        record = self._get_taskwarrior_record()
+        return dict([
+            (key, record[key],) for key in self.UNIQUE_KEY
+        ])
+
+    def get_rendered_description(self):
+        if not hasattr(self, '_description'):
+            if self.origin['description_template']:
+                record = self._get_taskwarrior_record()
+                context = record.copy()
+                context.update(self.extra)
+                template = Template(self.origin['description_template'])
+                return template.render(context)
+            self._description = self.get_default_description()
+        return self._description
+
+    def __iter__(self):
+        record = self._get_taskwarrior_record()
+        record['description'] = self['description']
+        for key in six.iterkeys(record):
+            yield key
+
+    def keys(self):
+        return list(self.__iter__())
+
+    def iterkeys(self):
+        return self.__iter__()
+
+    def items(self):
+        record = self._get_taskwarrior_record()
+        record['description'] = self['description']
+        return list(six.iteritems(record))
+
+    def iteritems(self):
+        record = self._get_taskwarrior_record()
+        for item in six.iteritems(record):
+            yield item
+
+    def update(self, *args):
+        raise AttributeError(
+            "You cannot set attributes on issues."
+        )
+
+    def get(self, attribute, default=None):
+        try:
+            return self[attribute]
+        except KeyError:
+            return default
+
+    def __getitem__(self, attribute):
+        record = self._get_taskwarrior_record()
+        if attribute == 'description':
+            return self.get_rendered_description()
+        return record[attribute]
+
+    def __setitem__(self, attribute, value):
+        raise AttributeError(
+            "You cannot set attributes on issues."
+        )
+
+    def __delitem__(self, attribute):
+        raise AttributeError(
+            "You cannot delete attributes from issues."
+        )
+
+    @property
+    def record(self):
+        return self._foreign_record
+
+    @property
+    def extra(self):
+        return self._extra
+
+    @property
+    def origin(self):
+        return self._origin
+
+    def __unicode__(self):
+        return '%s: %s' % (
+            self.origin['target'],
+            self.get_rendered_description()
+        )
+
+    def __str__(self):
+        return self.__unicode__().encode('ascii', 'replace')
+
+    def __repr__(self):
+        return '<%s>' % self.__unicode__()
+
+
+def _aggregate_issues(conf, target, queue, service_name):
+    """ This worker function is separated out from the main
+    :func:`aggregate_issues` func only so that we can use multiprocessing
+    on it for speed reasons.
+    """
+
+    start = time.time()
+
+    try:
+        service = SERVICES[service_name](conf, target)
+        issue_count = 0
+        for issue in service.issues():
+            queue.put(issue)
+            issue_count += 1
+    except Exception as e:
+        log.name(target).trace('error').critical(
+            "Worker for [%s] failed: %s" % (target, e)
+        )
+        queue.put(
+            (SERVICE_FINISHED_ERROR, (target, e))
+        )
+    else:
+        queue.put(
+            (SERVICE_FINISHED_OK, (target, issue_count, ))
+        )
+    finally:
+        duration = time.time() - start
+        log.name(target).info("Done with [%s] in %fs" % (target, duration))
+
+
+def aggregate_issues(conf):
+    """ Return all issues from every target. """
+    log.name('bugwarrior').info("Starting to aggregate remote issues.")
+
+    # Create and call service objects for every target in the config
+    targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
+
+    queue = multiprocessing.Queue()
+
+    log.name('bugwarrior').info("Spawning %i workers." % len(targets))
+    processes = []
+    for target in targets:
+        proc = multiprocessing.Process(
+            target=_aggregate_issues,
+            args=(conf, target, queue, conf.get(target, 'service'))
+        )
+        proc.start()
+        processes.append(proc)
+
+    currently_running = len(targets)
+    while currently_running > 0:
+        issue = queue.get(True)
+        if isinstance(issue, tuple):
+            completion_type, args = issue
+            if completion_type == SERVICE_FINISHED_ERROR:
+                target, e = args
+                for process in processes:
+                    process.terminate()
+                yield ABORT_PROCESSING, e
+            currently_running -= 1
+            continue
+        yield issue
+
+    log.name('bugwarrior').info("Done aggregating remote issues.")
+
+
+from .activecollab2 import ActiveCollab2Service
+from .activecollab3 import ActiveCollab3Service
+from .bitbucket import BitbucketService
+from .bz import BugzillaService
+from .github import GithubService
+from .teamlab import TeamLabService
+from .redmine import RedMineService
+from .trac import TracService
 
 
 # Constant dict to be used all around town.
@@ -148,100 +448,13 @@ SERVICES = {
 }
 
 try:
-    from jira import JiraService
+    from .jira import JiraService
     SERVICES['jira'] = JiraService
 except ImportError:
     pass
 
 try:
-    from mplan import MegaplanService
+    from .mplan import MegaplanService
     SERVICES['megaplan'] = MegaplanService
 except ImportError:
     pass
-
-WORKER_FAILURE = "__this signifies a worker failure__"
-
-
-def _aggregate_issues(args):
-    """ This worker function is separated out from the main
-    :func:`aggregate_issues` func only so that we can use multiprocessing
-    on it for speed reasons.
-    """
-
-    # Unpack arguments
-    conf, target = args
-
-    start = time.time()
-
-    try:
-        # By default, we don't shorten URLs
-        shorten = lambda url: url
-
-        # Setup bitly shortening callback if creds are specified
-        bitly_opts = ['bitly.api_user', 'bitly.api_key']
-        if all([conf.has_option('general', opt) for opt in bitly_opts]):
-            get_opt = lambda option: conf.get('general', option)
-            bitly = bitlyapi.BitLy(
-                get_opt('bitly.api_user'),
-                get_opt('bitly.api_key')
-            )
-            shorten = lambda url: bitly.shorten(longUrl=url)['url']
-
-            cachefile = os.path.expanduser("~/.cache/bitly.dbm")
-            if not os.path.isdir(os.path.expanduser("~/.cache/")):
-                os.makedirs(os.path.expanduser("~/.cache/"))
-
-            # Cache in order to avoid hitting the bitly api over and over.
-            # bitly links never expire or change, so why not cache on disk?
-            region = dogpile.cache.make_region().configure(
-                "dogpile.cache.dbm",
-                arguments=dict(filename=cachefile),
-            )
-            shorten = region.cache_on_arguments()(shorten)
-
-        service = SERVICES[conf.get(target, 'service')](conf, target, shorten)
-        return service.issues()
-    except Exception as e:
-        log.name(target).trace('error').critical("worker failure")
-        return WORKER_FAILURE
-    finally:
-        duration = time.time() - start
-        log.name(target).info("Done with [%s] in %fs" % (target, duration))
-
-# Import here so that mproc knows about _aggregate_issues
-import multiprocessing
-
-
-def aggregate_issues(conf):
-    """ Return all issues from every target.
-
-    Takes a config object and a callable which returns a shortened url.
-    """
-    log.name('bugwarrior').info("Starting to aggregate remote issues.")
-
-    # Create and call service objects for every target in the config
-    targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
-
-    # This multiprocessing stuff is kind of experimental.
-    use_multiprocessing = conf.has_option('general', 'multiprocessing') and \
-        asbool(conf.get('general', 'multiprocessing'))
-
-    if use_multiprocessing:
-        log.name('bugwarrior').info("Spawning %i workers." % len(targets))
-        pool = multiprocessing.Pool(processes=len(targets))
-        map_function = pool.map
-    else:
-        log.name('bugwarrior').info("Processing targets in serial.")
-        map_function = map
-
-    issues_by_target = map_function(
-        _aggregate_issues,
-        zip([conf] * len(targets), targets)
-    )
-    log.name('bugwarrior').info("Done aggregating remote issues.")
-
-    if WORKER_FAILURE in issues_by_target:
-        log.name('bugwarrior').critical("A worker failed.  Aborting.")
-        raise RuntimeError('Worker failure')
-
-    return sum(issues_by_target, [])

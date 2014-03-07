@@ -1,17 +1,20 @@
-import twiggy
-from twiggy import log
-from twiggy.levels import name2level
-import os
+from ConfigParser import ConfigParser
 import optparse
+import os
 import subprocess
 import sys
 
-from ConfigParser import ConfigParser, NoOptionError
+import six
+import twiggy
+from twiggy import log
+from twiggy.levels import name2level
 
 
 def asbool(some_value):
     """ Cast config values to boolean. """
-    return str(some_value).lower() in ['y', 'yes', 't', 'true', '1', 'on']
+    return six.text_type(some_value).lower() in [
+        'y', 'yes', 't', 'true', '1', 'on'
+    ]
 
 
 def get_service_password(service, username, oracle=None, interactive=False):
@@ -20,7 +23,8 @@ def get_service_password(service, username, oracle=None, interactive=False):
 
       * retrieving password from a secure store (@oracle:use_keyring, default)
       * asking the password from the user (@oracle:ask_password, interactive)
-      * executing a command and use the output as password (@oracle:eval:<command>)
+      * executing a command and use the output as password
+        (@oracle:eval:<command>)
 
     Note that the keyring may or may not be locked
     which requires that the user provides a password (interactive mode).
@@ -51,7 +55,12 @@ def get_service_password(service, username, oracle=None, interactive=False):
         password = getpass.getpass(prompt)
     elif oracle.startswith('@oracle:eval:'):
         command = oracle[13:]
-        p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT
+        )
         password = p.stdout.read()[:-1]
 
     if password is None:
@@ -115,12 +124,6 @@ def validate_config(config):
     for target in targets:
         if target not in config.sections():
             die("No [%s] section found." % target)
-
-    for option in ['bitly.api_user', 'bitly.api_key']:
-        if not config.has_option('general', option):
-            log.name('config').warning(
-                "URLs will not be shortened with bit.ly"
-            )
 
     # Validate each target one by one.
     for target in targets:

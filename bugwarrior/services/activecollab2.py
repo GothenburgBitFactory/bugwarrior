@@ -1,41 +1,47 @@
+import itertools
+import json
+import time
+import urllib2
+
+import six
 from twiggy import log
 
-from bugwarrior.services import IssueService
+from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import die
-from bugwarrior.db import MARKUP
-
-import urllib2
-import time
-import json
-import datetime
-
-api_count = 0
-task_count = 0
 
 
-class Client(object):
+class ActiveCollab2Client(object):
     def __init__(self, url, key, user_id, projects):
         self.url = url
         self.key = key
         self.user_id = user_id
         self.projects = projects
 
-    # Return a UNIX timestamp from an ActiveCollab date
-    def format_date(self, date):
-        if date is None:
-            return
-        d = datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-            date, "%Y-%m-%d")))
-        timestamp = int(time.mktime(d.timetuple()))
-        return timestamp
+    def get_task_dict(self, project, key, task):
+        assigned_task = {
+            'project': project
+        }
+        if task[u'type'] == 'Ticket':
+            # Load Ticket data
+            # @todo Implement threading here.
+            ticket_data = self.call_api(
+                "/projects/" + six.text_type(task[u'project_id']) +
+                "/tickets/" + six.text_type(task[u'ticket_id']))
+            assignees = ticket_data[u'assignees']
 
-    # Return a priority of L, M, or H based on AC's priority index of -2 to 2
-    def format_priority(self, priority):
-        priority = str(priority)
-        priority_map = {'-2': 'L', '-1': 'L', '0': 'M', '1': 'H', '2': 'H'}
-        return priority_map[priority]
+            for k, v in enumerate(assignees):
+                if (
+                    (v[u'is_owner'] is True)
+                    and (v[u'user_id'] == int(self.user_id))
+                ):
+                    assigned_task.update(ticket_data)
+                    return assigned_task
+        elif task[u'type'] == 'Task':
+            # Load Task data
+            assigned_task.update(task)
+            return assigned_task
 
-    def find_issues(self, user_id=None, project_id=None, project_name=None):
+    def get_issue_generator(self, user_id, project_id, project_name):
         """
         Approach:
 
@@ -47,82 +53,19 @@ class Client(object):
         """
 
         user_tasks_data = self.call_api(
-            "/projects/" + str(project_id) + "/user-tasks")
-        global task_count
-        assigned_tasks = []
+            "/projects/" + six.text_type(project_id) + "/user-tasks")
 
-        try:
-            for key, task in enumerate(user_tasks_data):
-                task_count += 1
-                assigned_task = dict()
-                if task[u'type'] == 'Ticket':
-                    # Load Ticket data
-                    # @todo Implement threading here.
-                    ticket_data = self.call_api(
-                        "/projects/" + str(task[u'project_id']) +
-                        "/tickets/" + str(task[u'ticket_id']))
-                    assignees = ticket_data[u'assignees']
+        for key, task in enumerate(user_tasks_data):
 
-                    for k, v in enumerate(assignees):
-                        if ((v[u'is_owner'] is True)
-                                and (v[u'user_id'] == int(self.user_id))):
-                            assigned_task['permalink'] = \
-                                ticket_data[u'permalink']
-                            assigned_task['ticket_id'] = \
-                                ticket_data[u'ticket_id']
-                            assigned_task['project_id'] = \
-                                ticket_data[u'project_id']
-                            assigned_task['project'] = project_name
-                            assigned_task['description'] = ticket_data[u'name']
-                            assigned_task['type'] = "ticket"
-                            assigned_task['created_on'] = \
-                                ticket_data[u'created_on']
-                            assigned_task['created_by_id'] = \
-                                ticket_data[u'created_by_id']
-                            if 'priority' in ticket_data:
-                                assigned_task['priority'] = \
-                                    self.format_priority(
-                                        ticket_data[u'priority'])
-                            else:
-                                assigned_task['priority'] = \
-                                    self.default_priority
-                            if ticket_data[u'due_on'] is not None:
-                                assigned_task['due'] = self.format_date(
-                                    ticket_data[u'due_on'])
+            assigned_task = self.get_task_dict(project_id, key, task)
 
-                elif task[u'type'] == 'Task':
-                    # Load Task data
-                    assigned_task['permalink'] = task[u'permalink']
-                    assigned_task['project'] = project_name
-                    assigned_task['description'] = task[u'body']
-                    assigned_task['project_id'] = task[u'project_id']
-                    assigned_task['ticket_id'] = ""
-                    assigned_task['type'] = "task"
-                    assigned_task['created_on'] = task[u'created_on']
-                    assigned_task['created_by_id'] = task[u'created_by_id']
-                    if 'priority' in task:
-                        assigned_task['priority'] = self.format_priority(
-                            task[u'priority'])
-                    else:
-                        assigned_task['priority'] = self.default_priority
-                    if task[u'due_on'] is not None:
-                        assigned_task['due'] = self.format_date(
-                            task[u'due_on'])
-
-                if assigned_task:
-                    log.name(self.target).debug(
-                        " Adding '" + assigned_task['description'] +
-                        "' to task list.")
-                    assigned_tasks.append(assigned_task)
-        except:
-            log.name(self.target).debug(
-                ' No user tasks loaded for "%s".' % project_name)
-
-        return assigned_tasks
+            if assigned_task:
+                log.name(self.target).debug(
+                    " Adding '" + assigned_task['description'] +
+                    "' to task list.")
+                yield assigned_task
 
     def call_api(self, uri, get=None):
-        global api_count
-        api_count += 1
         url = self.url.rstrip("/") + "?token=" + self.key + \
             "&path_info=" + uri + "&format=json"
         req = urllib2.Request(url)
@@ -131,104 +74,146 @@ class Client(object):
         return json.loads(res.read())
 
 
+class ActiveCollab2Issue(Issue):
+    BODY = 'ac2body'
+    NAME = 'ac2name'
+    PERMALINK = 'ac2permalink'
+    TICKET_ID = 'ac2ticketid'
+    PROJECT_ID = 'ac2projectid'
+    TYPE = 'ac2type'
+    CREATED_ON = 'ac2createdon'
+    CREATED_BY_ID = 'ac2createdbyid'
+
+    UDAS = {
+        BODY: {
+            'type': 'string',
+            'label': 'ActiveCollab2 Body'
+        },
+        NAME: {
+            'type': 'string',
+            'label': 'ActiveCollab2 Name'
+        },
+        PERMALINK: {
+            'type': 'string',
+            'label': 'ActiveCollab2 Permalink'
+        },
+        TICKET_ID: {
+            'type': 'string',
+            'label': 'ActiveCollab2 Ticket ID'
+        },
+        PROJECT_ID: {
+            'type': 'string',
+            'label': 'ActiveCollab2 Project ID'
+        },
+        TYPE: {
+            'type': 'string',
+            'label': 'ActiveCollab2 Task Type'
+        },
+        CREATED_ON: {
+            'type': 'date',
+            'label': 'ActiveCollab2 Created On'
+        },
+        CREATED_BY_ID: {
+            'type': 'string',
+            'label': 'ActiveCollab2 Created By'
+        },
+    }
+    UNIQUE_KEY = (PERMALINK, )
+
+    PRIORITY_MAP = {
+        -2: 'L',
+        -1: 'L',
+        0: 'M',
+        1: 'H',
+        2: 'H',
+    }
+
+    def to_taskwarrior(self):
+        record = {
+            'project': self.record['project'],
+            'priority': self.get_priority(),
+            'due': self.parse_date(self.record.get('due_on')),
+
+            self.PERMALINK: self.record['permalink'],
+            self.TICKET_ID: self.record['ticket_id'],
+            self.PROJECT_ID: self.record['project_id'],
+            self.TYPE: self.record['type'],
+            self.CREATED_ON: self.parse_date(self.record.get('created_on')),
+            self.CREATED_BY_ID: self.record['created_by_id'],
+            self.BODY: self.record.get('body'),
+            self.NAME: self.record.get('name'),
+        }
+        return record
+
+    def get_default_description(self):
+        return self.build_default_description(
+            title=(
+                self.record['name']
+                if self.record['name']
+                else self.record['body']
+            ),
+            url=self.get_processed_url(self.record['permalink']),
+            number=self.record['ticket_id'],
+            cls=self.record['type'].lower(),
+        )
+
+
 class ActiveCollab2Service(IssueService):
+    ISSUE_CLASS = ActiveCollab2Issue
+    CONFIG_PREFIX = 'activecollab2'
+
     def __init__(self, *args, **kw):
         super(ActiveCollab2Service, self).__init__(*args, **kw)
 
-        self.url = self.config.get(self.target, 'url').rstrip("/")
-        self.key = self.config.get(self.target, 'key')
-        self.user_id = self.config.get(self.target, 'user_id')
+        self.url = self.config_get('url').rstrip('/')
+        self.key = self.config_get('key')
+        self.user_id = self.config_get('user_id')
+        projects_raw = self.config_get('projects')
 
-        # Make a list of projects from the config
-        projects_raw = str(self.config.get(self.target, 'projects'))
-        projects_list = projects_raw.split(', ')
+        projects_list = projects_raw.split(',')
         projects = []
         for k, v in enumerate(projects_list):
-            project_data = v.split(":")
+            project_data = v.strip().split(":")
             project = dict([(project_data[0], project_data[1])])
             projects.append(project)
 
         self.projects = projects
 
-        self.client = Client(self.url, self.key, self.user_id, self.projects)
+        self.client = ActiveCollab2Client(
+            self.url, self.key, self.user_id, self.projects
+        )
 
     @classmethod
     def validate_config(cls, config, target):
-        for k in ('url', 'key', 'projects', 'user_id'):
+        for k in (
+            'activecollab2.url',
+            'activecollab2.key',
+            'activecollab2.projects',
+            'activecollab2.user_id'
+        ):
             if not config.has_option(target, k):
                 die("[%s] has no '%s'" % (target, k))
 
-        IssueService.validate_config(config, target)
-
-    def get_issue_url(self, issue):
-        return issue['permalink']
-
-    def get_project_name(self, issue):
-        return issue['project']
-
-    def description(self, title, project_id, ticket_id="", cls="ticket"):
-
-        cls_markup = {
-            'ticket': '#',
-            'task': 'Task',
-        }
-
-        return "%s%s%s - %s" % (
-            MARKUP, cls_markup[cls], str(ticket_id),
-            title[:45],
-        )
-
-    def format_annotation(self, created, permalink):
-        return (
-            "annotation_%i" % time.mktime(created.timetuple()),
-            "%s" % (permalink),
-        )
-
-    def annotations(self, issue):
-        return dict([
-            self.format_annotation(
-                datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-                    issue['created_on'], "%Y-%m-%d %H:%M:%S"))),
-                issue['permalink'],
-            )])
+        super(ActiveCollab2Service, cls).validate_config(config, target)
 
     def issues(self):
         # Loop through each project
         start = time.time()
-        issues = []
+        issue_generators = []
         projects = self.projects
-        # @todo Implement threading here.
         for project in projects:
             for project_id, project_name in project.iteritems():
                 log.name(self.target).debug(
                     " Getting tasks for #" + project_id +
                     " " + project_name + '"')
-                issues += self.client.find_issues(
-                    self.user_id, project_id, project_name)
+                issue_generators.append(
+                    self.client.get_issue_generator(
+                        self.user_id, project_id, project_name
+                    )
+                )
 
-        log.name(self.target).debug(" Found {0} total.", len(issues))
-        global api_count
-        log.name(self.target).debug(" {0} API calls", api_count)
-        log.name(self.target).debug(
-            " {0} tasks and tickets analyzed", task_count)
         log.name(self.target).debug(
             " Elapsed Time: %s" % (time.time() - start))
 
-        formatted_issues = []
-
-        for issue in issues:
-            formatted_issue = dict(
-                description=self.description(
-                    issue["description"],
-                    issue["project_id"],
-                    issue["ticket_id"],
-                    issue["type"]),
-                project=self.get_project_name(issue),
-                priority=issue["priority"],
-                **self.annotations(issue)
-            )
-            if "due" in issue:
-                formatted_issue["due"] = issue["due"]
-            formatted_issues.append(formatted_issue)
-
-        return formatted_issues
+        for record in itertools.chain(*issue_generators):
+            yield self.get_issue_for_record(record)

@@ -7,3 +7,10 @@ build
 dist
 test.html
 *.pdf
+bin/*
+etc/*
+lib/*
+include/*
+share/*
+man/*
+.Python

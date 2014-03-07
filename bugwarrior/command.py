@@ -11,9 +11,9 @@ def pull():
         config = load_config()
 
         # Get all the issues.  This can take a while.
-        issues = aggregate_issues(config)
+        issue_generator = aggregate_issues(config)
 
         # Stuff them in the taskwarrior db as necessary
-        synchronize(issues, config)
+        synchronize(issue_generator, config)
     except:
         log.name('command').trace('error').critical('oh noes')

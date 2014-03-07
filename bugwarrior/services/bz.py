@@ -1,23 +1,60 @@
+import bugzilla
 from twiggy import log
 
-import bugzilla
+import six
 
-from bugwarrior.services import IssueService
 from bugwarrior.config import die, asbool, get_service_password
-
-import datetime
-import time
+from bugwarrior.services import IssueService, Issue
 
 
-class BugzillaService(IssueService):
-    priorities = {
+class BugzillaIssue(Issue):
+    URL = 'bugzillaurl'
+    SUMMARY = 'bugzillasummary'
+
+    UDAS = {
+        URL: {
+            'type': 'string',
+            'label': 'Bugzilla URL',
+        },
+        SUMMARY: {
+            'type': 'string',
+            'label': 'Bugzilla Summary',
+        }
+    }
+    UNIQUE_KEY = (URL, )
+
+    PRIORITY_MAP = {
         'unspecified': 'M',
         'low': 'L',
         'medium': 'M',
         'high': 'H',
         'urgent': 'H',
     }
-    not_closed_statuses = [
+
+    def to_taskwarrior(self):
+        return {
+            'project': self.record['component'],
+            'priority': self.get_priority(),
+            'annotations': self.extra.get('annotations', []),
+
+            self.URL: self.extra['url'],
+            self.SUMMARY: self.record['summary'],
+        }
+
+    def get_default_description(self):
+        return self.build_default_description(
+            title=self.record['summary'],
+            url=self.get_processed_url(self.extra['url']),
+            number=self.record['id'],
+            cls='issue',
+        )
+
+
+class BugzillaService(IssueService):
+    ISSUE_CLASS = BugzillaIssue
+    CONFIG_PREFIX = 'bugzilla'
+
+    OPEN_STATUSES = [
         'NEW',
         'ASSIGNED',
         'NEEDINFO',
@@ -29,7 +66,7 @@ class BugzillaService(IssueService):
         'FAILS_QA',
         'PASSES_QA',
     ]
-    column_list = [
+    COLUMN_LIST = [
         'id',
         'summary',
         'priority',
@@ -39,9 +76,9 @@ class BugzillaService(IssueService):
 
     def __init__(self, *args, **kw):
         super(BugzillaService, self).__init__(*args, **kw)
-        base_uri = self.config.get(self.target, 'bugzilla.base_uri')
-        username = self.config.get(self.target, 'bugzilla.username')
-        password = self.config.get(self.target, 'bugzilla.password')
+        self.base_uri = self.config_get('base_uri')
+        self.username = self.config_get('username')
+        self.password = self.config_get('password')
 
         # So more modern bugzilla's require that we specify
         # query_format=advanced along with the xmlrpc request.
@@ -49,19 +86,18 @@ class BugzillaService(IssueService):
         # ...but older bugzilla's don't know anything about that argument.
         # Here we make it possible for the user to specify whether they want
         # to pass that argument or not.
-        self.advanced = True  # Default to True.
-        if self.config.has_option(self.target, 'bugzilla.advanced'):
-            self.advanced = asbool(self.config.get(
-                self.target, 'bugzilla.advanced'))
+        self.advanced = asbool(self.config_get_default('advanced', 'no'))
 
-        if not password or password.startswith("@oracle:"):
-            service = "bugzilla://%s@%s" % (username, base_uri)
-            password = get_service_password(service, username, oracle=password,
-                                            interactive=self.config.interactive)
+        if not self.password or self.password.startswith("@oracle:"):
+            service = "bugzilla://%s@%s" % (self.username, self.base_uri)
+            self.password = get_service_password(
+                service, self.username, oracle=self.password,
+                interactive=self.config.interactive
+            )
 
-        url = 'https://%s/xmlrpc.cgi' % base_uri
+        url = 'https://%s/xmlrpc.cgi' % self.base_uri
         self.bz = bugzilla.Bugzilla(url=url)
-        self.bz.login(username, password)
+        self.bz.login(self.username, self.password)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -70,7 +106,7 @@ class BugzillaService(IssueService):
             if not config.has_option(target, option):
                 die("[%s] has no '%s'" % (target, option))
 
-        IssueService.validate_config(config, target)
+        super(BugzillaService, cls).validate_config(config, target)
 
     def get_owner(self, issue):
         # NotImplemented, but we should never get called since .include() isn't
@@ -80,30 +116,18 @@ class BugzillaService(IssueService):
     def annotations(self, tag, issue):
         if 'comments' in issue:
             comments = issue.get('comments', [])
-            return dict([
-                self.format_annotation(
-                    datetime.datetime.fromtimestamp(time.mktime(time.strptime(
-                        c['time'].value, "%Y%m%dT%H:%M:%S"))),
+            return self.build_annotations(
+                (
                     c['author'].split('@')[0],
                     c['text'],
-                ) for c in comments])
+                ) for c in comments
+            )
         else:
             # Backwards compatibility (old python-bugzilla/bugzilla instances)
             # This block handles a million different contingencies that have to
             # do with different version of python-bugzilla and different
             # version of bugzilla itself.  :(
             comments = issue.get('longdescs', [])
-            def _parse_time(obj):
-                if isinstance(obj, datetime.datetime):
-                    return obj
-                elif isinstance(obj, basestring):
-                    return datetime.datetime.fromtimestamp(time.mktime(
-                        time.strptime(obj, "%Y-%m-%d %H:%M:%S")))
-                elif hasattr(obj, 'value'):
-                    return datetime.datetime.fromtimestamp(time.mktime(
-                        time.strptime(obj.value, "%Y%m%dT%H:%M:%S")))
-                else:
-                    raise TypeError("Unhandled time type %r" % obj)
 
             def _parse_author(obj):
                 if isinstance(obj, dict):
@@ -114,20 +138,20 @@ class BugzillaService(IssueService):
             def _parse_body(obj):
                 return obj.get('text', obj.get('body'))
 
-            return dict([
-                self.format_annotation(
-                    _parse_time(c['time']),
+            return self.build_annotations(
+                (
                     _parse_author(c['author']),
                     _parse_body(c)
-                ) for c in issue['longdescs']])
+                ) for c in issue['longdescs']
+            )
 
     def issues(self):
-        email = self.config.get(self.target, 'bugzilla.username')
+        email = self.username
         # TODO -- doing something with blockedby would be nice.
 
         query = dict(
-            column_list=self.column_list,
-            bug_status=self.not_closed_statuses,
+            column_list=self.COLUMN_LIST,
+            bug_status=self.OPEN_STATUSES,
             email1=email,
             emailreporter1=1,
             emailcc1=1,
@@ -146,7 +170,7 @@ class BugzillaService(IssueService):
         # Convert to dicts
         bugs = [
             dict(
-                ((col, getattr(bug, col)) for col in self.column_list)
+                ((col, getattr(bug, col)) for col in self.COLUMN_LIST)
             ) for bug in bugs
         ]
 
@@ -154,28 +178,10 @@ class BugzillaService(IssueService):
         log.name(self.target).debug(" Found {0} total.", len(issues))
 
         # Build a url for each issue
-        base_url = "https://%s/show_bug.cgi?id=" % \
-            self.config.get(self.target, 'bugzilla.base_uri')
-        for i in range(len(issues)):
-            issues[i][1]['url'] = base_url + str(issues[i][1]['id'])
-            issues[i][1]['component'] = \
-                issues[i][1]['component'].lower().replace(' ', '-')
-
-        # XXX - Note that we don't use the .include() method like all the other
-        # IssueService child classes.  That's because the bugzilla xmlrpc API
-        # can already do a lot of the filtering we want for us.
-
-        #issues = filter(self.include, issues)
-        #log.name(self.target).debug(" Pruned down to {0}", len(issues))
-
-        return [dict(
-            description=self.description(
-                issue['summary'], issue['url'],
-                issue['id'], cls="issue"),
-            project=issue['component'],
-            priority=self.priorities.get(
-                issue['priority'],
-                self.default_priority,
-            ),
-            **self.annotations(tag, issue)
-        ) for tag, issue in issues]
+        base_url = "https://%s/show_bug.cgi?id=" % (self.base_uri)
+        for tag, issue in issues:
+            extra = {
+                'url': base_url + six.text_type(issue['id']),
+                'annotations': self.annotations(tag, issue),
+            }
+            yield self.get_issue_for_record(issue, extra)
