@@ -34,6 +34,21 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # Use "password = @oracle:eval:<command>" to use the output of <command> as the password.
   # Note that using one of these strategies is in general more secure
   # than storing a password in plain text.
+  #
+  # COMMON SERVICE PROPERTIES:
+  # Services all implement the following options:
+  #
+  # Space-separated list of tags to add to all created issues:
+  # > add_tags = tag1 tag2
+  # A priority to set incoming tasks to by default ('H', 'M', or 'L')
+  # > default_priority = M
+  # A template to use for generating the task description (see service details
+  # for more information about what fields are available)
+  # > description_template = {{githubtitle}}
+  # Only create tasks for issues found assigned to the specified username
+  # > only_if_assigned = myusername
+  # Above, but also create tasks for issues that are unassigned
+  # > also_unassigned = True
 
   # General stuff.
   [general]
@@ -146,7 +161,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   [paj_bitbucket]
   service = bitbucket
   bitbucket.username = paj
-  bitbucket.only_if_assigned = ralphbean
+  only_if_assigned = ralphbean
   default_priority = L
 
   # Here's an example of a trac target.  Scrape every ticket and only include them
