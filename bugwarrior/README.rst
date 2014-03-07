@@ -307,7 +307,7 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   #description_template = #{{ redmineid }}: {{ redminesubject }}
 
   # Here's an example of an activecollab3 target. This is only valid for
-  # activeCollab 3.x, see below for activeCollab 2.x.
+  # activeCollab 3.x and greater, see below for activeCollab 2.x.
   #
   # Obtain your user ID and API url by logging in, clicking on your avatar on
   # the lower left-hand of the page. When on that page, look at the URL. The
@@ -320,31 +320,30 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # list. Note that if you have 10 projects in your favorites list, bugwarrior
   # will make 21 API calls on each run: 1 call to get a list of favorites, then
   # 2 API calls per projects, one for tasks and one for subtasks.
-
-  [activecollab3]
-  service = activecollab3
-  activecollab3.url = https://ac.example.org/api.php
-  activecollab3.key = your-api-key
-  activecollab3.user_id = 15
+  [activecollab]
+  service = activecollab
+  activecollab.url = https://ac.example.org/api.php
+  activecollab.key = your-api-key
+  activecollab.user_id = 15
   add_tags = php
 
   # You can override how an issue's description is created by entering
   # a one-line Jinja template like the below; in addition to the default
   # taskwarrior issue properties (project, priority, due, etc), the
   # following properties are available for ActiveCollab3 issues:
-  # - ac3body
-  # - ac3name
-  # - ac3permalink
-  # - ac3taskid
-  # - ac3id
-  # - ac3projectid
-  # - ac3type
-  # - ac3createdon
-  # - ac3createdbyid
-  #description_template = #{{ac3id}} - {% if ac3name %}{{ ac3name }}{% else %}{{ ac3body }}{% endif %}
+  # - acbody
+  # - acname
+  # - acpermalink
+  # - actaskid
+  # - acid
+  # - acprojectid
+  # - actype
+  # - accreatedon
+  # - accreatedbyid
+  #description_template = #{{acid}} - {% if acname %}{{ acname }}{% else %}{{ acbody }}{% endif %}
 
   # Here's an example of an activecollab2 target. Note that this will only work
-  # with ActiveCollab 2.x - see above for 3.x.
+  # with ActiveCollab 2.x - see above for 3.x and greater.
   #
   # You can obtain your user ID and API url by logging into ActiveCollab and
   # clicking on "Profile" and then "API Settings". When on that page, look
