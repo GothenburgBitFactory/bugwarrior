@@ -151,6 +151,11 @@ class ActiveCollabIssue(Issue):
             self.TYPE: self.record['type'],
             self.CREATED_BY_ID: self.record['created_by_id'],
         }
+
+        if self.record['type'] == 'subtask':
+            " Store the parent task ID for subtasks "
+            record['actaskid'] = self.record['permalink'].split('/')[6]
+
         due_on = self.record.get('due_on')
         if isinstance(due_on, dict):
             record['due'] = self.parse_date(due_on['mysql'])
