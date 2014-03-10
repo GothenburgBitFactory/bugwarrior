@@ -16,6 +16,7 @@ It currently supports the following remote resources:
  - `redmine <http://www.redmine.org/>`_
  - `jira <http://www.atlassian.com/software/jira/overview>`_
  - `activecollab <http://www.activecollab.com>`_ (2.x and 3.x)
+ - `phabricator <http://phabricator.org/>`_
 
 Configuring
 -----------
@@ -268,6 +269,23 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # - jiraid
   #description_template = {{ jiraid }}: {{ jirasummary }}
 
+  # Here's an example of a phabricator target
+  [my_phabricator]
+  service = phabricator
+
+  # No need to specify credentials.  They are gathered from ~/.arcrc
+
+  add_tags = whatever
+
+  # You can override how an issue's description is created by entering
+  # a one-line Jinja template like the below; in addition to the default
+  # taskwarrior issue properties (project, priority, due, etc), the
+  # following properties are available for Teamlab issues:
+  # - phabricatorurl
+  # - phabricatorid
+  # - phabricatortitle
+  #description_template = #{{ phabricatorid }}: {{ phabricatortitle }}
+
   # Here's an example of a teamlab target.
   [my_teamlab]
   service = teamlab
@@ -432,8 +450,6 @@ Hacking on It
 
 See the `HACKING.rst
 <https://github.com/ralphbean/bugwarrior/blob/develop/HACKING.rst>`_ file.
-
-
 
 Contributors
 ------------

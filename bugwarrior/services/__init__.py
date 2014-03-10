@@ -473,3 +473,9 @@ try:
     SERVICES['megaplan'] = MegaplanService
 except ImportError:
     pass
+
+try:
+    from .phab import PhabricatorService
+    SERVICES['phabricator'] = PhabricatorService
+except ImportError as e:
+    pass
