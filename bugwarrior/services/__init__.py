@@ -441,7 +441,7 @@ def aggregate_issues(conf):
 
 
 from .activecollab2 import ActiveCollab2Service
-from .activecollab3 import ActiveCollab3Service
+from .activecollab import ActiveCollabService
 from .bitbucket import BitbucketService
 from .bz import BugzillaService
 from .github import GithubService
@@ -459,7 +459,7 @@ SERVICES = {
     'teamlab': TeamLabService,
     'redmine': RedMineService,
     'activecollab2': ActiveCollab2Service,
-    'activecollab3': ActiveCollab3Service,
+    'activecollab': ActiveCollabService,
 }
 
 try:
