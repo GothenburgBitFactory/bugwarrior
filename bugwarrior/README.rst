@@ -87,6 +87,17 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   #annotation_length = 45
   #description_length = 35
 
+  # Use hooks to run commands prior to importing from bugwarrior-pull.
+  # bugwarrior-pull will run the commands in the order that they are specified
+  # below.
+  #
+  # pre_import: The pre_import hook is invoked after all issues have been pulled
+  # from remote sources, but before they are synced to the TW db. If your
+  # pre_import script has a non-zero exit code, the `bugwarrior-pull` command will
+  # exit early.
+  [hooks]
+  pre_import = /home/someuser/backup.sh, /home/someuser/sometask.sh
+
   # This section is for configuring notifications when bugwarrior-pull runs,
   # and when issues are created, updated, or deleted by bugwarrior-pull.
   # Three backend are currently suported:
