@@ -2,8 +2,6 @@ language: python
 python:
  - "2.6"
  - "2.7"
- - "3.2"
- - "3.3"
 before_install:
   - sudo add-apt-repository ppa:ultrafredde/ppa -y
   - sudo apt-get update -qq
@@ -13,7 +11,7 @@ before_install:
   - pip install mock
   - pip install unittest2
   - pip install megaplan
-  - pip install jira.client
+  - pip install jira-python
 install: python setup.py install
 script: nosetests -w tests
 notifications:
