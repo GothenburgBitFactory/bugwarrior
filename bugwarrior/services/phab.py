@@ -31,7 +31,7 @@ class PhabricatorIssue(Issue):
             'label': 'Phabricator Object',
         },
     }
-    UNIQUE_KEY = (URL, TYPE,)
+    UNIQUE_KEY = (URL, )
 
     def to_taskwarrior(self):
         return {

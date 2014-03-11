@@ -1,0 +1,22 @@
+language: python
+python:
+ - "2.6"
+ - "2.7"
+before_install:
+  - sudo add-apt-repository ppa:ultrafredde/ppa -y
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq task
+  - task --version
+  - pip install taskw
+  - pip install mock
+  - pip install unittest2
+  - pip install megaplan
+  - pip install jira-python
+install: python setup.py install
+script: nosetests -w tests
+notifications:
+    email: true
+    irc:
+        - "irc.freenode.net#threebean"
+    on_success: change
+    on_failure: always
