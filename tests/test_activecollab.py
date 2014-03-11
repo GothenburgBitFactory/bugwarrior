@@ -33,12 +33,11 @@ class TestActiveCollabIssue(ServiceTest):
         )
         arbitrary_issue = {
             'project': 'something',
-            'priority': 2,
             'due_on': arbitrary_due_on.isoformat(),
 
             'permalink': 'http://wherever/',
             'task_id': 10,
-            'project_id': 20,
+            'project_id': 'something',
             'id': '30',
             'type': 'issue',
             'created_on': {
@@ -53,9 +52,8 @@ class TestActiveCollabIssue(ServiceTest):
 
         expected_output = {
             'project': arbitrary_issue['project'],
-            'priority': issue.PRIORITY_MAP[arbitrary_issue['priority']],
-            'due': arbitrary_due_on,
-
+            'due': arbitrary_due_on.isoformat(),
+            'priority': 'M',
             issue.PERMALINK: arbitrary_issue['permalink'],
             issue.PROJECT_ID: arbitrary_issue['project_id'],
             issue.TYPE: arbitrary_issue['type'],
