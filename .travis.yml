@@ -10,6 +10,10 @@ before_install:
   - sudo apt-get install -qq task
   - task --version
   - pip install taskw
+  - pip install mock
+  - pip install unittest2
+  - pip install megaplan
+  - pip install jira.client
 install: python setup.py install
 script: nosetests -w tests
 notifications:
