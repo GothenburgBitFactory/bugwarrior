@@ -135,7 +135,8 @@ class ActiveCollabIssue(Issue):
             'label': 'ActiveCollab Created By'
         },
     }
-    UNIQUE_KEY = (PERMALINK, )
+    UNIQUE_KEY = (FOREIGN_ID, )
+
 
     def to_taskwarrior(self):
 
