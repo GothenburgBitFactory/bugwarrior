@@ -1,6 +1,5 @@
 import itertools
 import json
-import re
 import urllib2
 import time
 
@@ -41,7 +40,6 @@ class ActiveCollabClient(object):
             assigned_task.update(task)
             return assigned_task
 
-
     def get_project_slug(self, permalink):
         project_name = permalink.split('/')[4]
         return project_name
@@ -81,7 +79,9 @@ class ActiveCollabClient(object):
                     (subtask[u'assignee_id'] == int(self.user_id))
                     and (subtask[u'completed_on'] is None)
                 ):
-                    subtask['project'] = self.get_project_slug(subtask['permalink'])
+                    subtask['project'] = self.get_project_slug(
+                        subtask['permalink']
+                    )
                     subtask['type'] = 'subtask'
                     yield subtask
 
@@ -137,9 +137,7 @@ class ActiveCollabIssue(Issue):
     }
     UNIQUE_KEY = (FOREIGN_ID, )
 
-
     def to_taskwarrior(self):
-
         record = {
             'project': self.record['project'],
             'priority': self.get_priority(),
@@ -154,7 +152,7 @@ class ActiveCollabIssue(Issue):
         }
 
         if self.record['type'] == 'subtask':
-            " Store the parent task ID for subtasks "
+            # Store the parent task ID for subtasks
             record['actaskid'] = self.record['permalink'].split('/')[6]
 
         due_on = self.record.get('due_on')
@@ -179,8 +177,7 @@ class ActiveCollabIssue(Issue):
         project_id = self.record['permalink'].split('/')[4]
         if (project_id.isdigit()):
             return self.record['project']
-        else:
-            return project_id
+        return project_id
 
     def get_default_description(self):
         return self.build_default_description(
@@ -225,7 +222,6 @@ class ActiveCollabService(IssueService):
 
         IssueService.validate_config(config, target)
 
-
     def issues(self):
         # Loop through each project
         start = time.time()
@@ -233,7 +229,9 @@ class ActiveCollabService(IssueService):
         projects = self.projects
         for project in projects:
             for project_id, project_name in project.iteritems():
-                log.name(self.target).debug(" Getting tasks for #%d %s" % (project_id, project_name))
+                log.name(self.target).debug(
+                    " Getting tasks for #%d %s" % (project_id, project_name)
+                )
                 issue_generators.append(
                     self.client.get_issue_generator(
                         self.user_id, project_id, project_name
