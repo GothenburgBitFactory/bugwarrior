@@ -331,14 +331,18 @@ def synchronize(issue_generator, conf):
 
     # Before running CRUD operations, call the pre_import hook(s).
     if conf.has_option('hooks', 'pre_import'):
-        pre_import = [t.strip() for t in conf.get('hooks', 'pre_import').split(',')]
+        pre_import = [
+            t.strip() for t in conf.get('hooks', 'pre_import').split(',')
+        ]
         if pre_import is not None:
             for hook in pre_import:
                 exit_code = subprocess.call(hook, shell=True)
                 if exit_code is not 0:
-                    log.name('hooks:pre_import').error(
-                            'Non-zero exit code %d on hook %s' % (exit_code, hook))
-                    sys.exit(1)
+                    msg = 'Non-zero exit code %d on hook %s' % (
+                        exit_code, hook
+                    )
+                    log.name('hooks:pre_import').error(msg)
+                    raise RuntimeError(msg)
 
     for issue in issue_generator:
         if isinstance(issue, tuple) and issue[0] == ABORT_PROCESSING:
@@ -350,7 +354,6 @@ def synchronize(issue_generator, conf):
             issue_dict = dict(issue)
             _, task = tw.get_task(uuid=existing_uuid)
             task_copy = copy.deepcopy(task)
-
 
             annotations_changed = merge_annotations(issue_dict, task)
 
