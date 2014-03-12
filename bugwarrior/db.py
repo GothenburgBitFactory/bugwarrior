@@ -214,18 +214,17 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
         ])
 
     for service, key_list in six.iteritems(keys):
-        for keys in key_list:
-            if any([key in issue for key in keys]):
-                results = tw.filter_tasks({
-                    'and': [(key, issue[key]) for key in keys],
-                    'or': [
-                        ('status', 'pending'),
-                        ('status', 'waiting'),
-                    ],
-                })
-                possibilities = possibilities | set([
-                    task['uuid'] for task in results
-                ])
+        if any([key in issue for key in key_list]):
+            results = tw.filter_tasks({
+                'and': [(key, issue[key]) for key in key_list],
+                'or': [
+                    ('status', 'pending'),
+                    ('status', 'waiting'),
+                ],
+            })
+            possibilities = possibilities | set([
+                task['uuid'] for task in results
+            ])
 
     if len(possibilities) == 1:
         return possibilities.pop()
