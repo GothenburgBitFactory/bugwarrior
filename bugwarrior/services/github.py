@@ -10,6 +10,10 @@ from . import githubutils
 
 class GithubIssue(Issue):
     TITLE = 'githubtitle'
+    BODY = 'githubbody'
+    CREATED_AT = 'githubcreatedon'
+    UPDATED_AT = 'githubupdatedat'
+    MILESTONE = 'githubmilestone'
     URL = 'githuburl'
     TYPE = 'githubtype'
     NUMBER = 'githubnumber'
@@ -18,6 +22,22 @@ class GithubIssue(Issue):
         TITLE: {
             'type': 'string',
             'label': 'Github Title',
+        },
+        BODY: {
+            'type': 'string',
+            'label': 'Github Body',
+        },
+        CREATED_AT: {
+            'type': 'date',
+            'label': 'Github Created',
+        },
+        UPDATED_AT: {
+            'type': 'date',
+            'label': 'Github Updated',
+        },
+        MILESTONE: {
+            'type': 'string',
+            'label': 'Github Milestone',
         },
         URL: {
             'type': 'string',
@@ -44,7 +64,11 @@ class GithubIssue(Issue):
             self.URL: self.record['html_url'],
             self.TYPE: self.extra['type'],
             self.TITLE: self.record['title'],
+            self.BODY: self.record['body'].replace('\r\n', '\n'),
+            self.MILESTONE: self.record['milestone'],
             self.NUMBER: self.record['number'],
+            self.CREATED_AT: self.parse_date(self.record['created_at']),
+            self.UPDATED_AT: self.parse_date(self.record['updated_at'])
         }
 
     def get_tags(self):
