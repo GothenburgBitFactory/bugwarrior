@@ -64,10 +64,11 @@ class JiraIssue(Issue):
         return self.record['fields']['summary']
 
     def get_priority(self):
-        if self.extra.get('jira_version') == 4:
-            value = self.record['fields'].get('priority', {}).get('name')
-        else:
-            value = self.record['fields'].get('priority')
+        value = self.record['fields'].get('priority')
+        if isinstance(value, dict):
+            value = value.get('name')
+        elif value:
+            value = str(value)
 
         return self.PRIORITY_MAP.get(value, self.origin['default_priority'])
 
