@@ -1,8 +1,10 @@
 from __future__ import absolute_import
 
+from jinja2 import Template
 from jira.client import JIRA
+import six
 
-from bugwarrior.config import die, get_service_password
+from bugwarrior.config import asbool, die, get_service_password
 from bugwarrior.services import IssueService, Issue
 
 
@@ -45,12 +47,32 @@ class JiraIssue(Issue):
             'project': self.get_project(),
             'priority': self.get_priority(),
             'annotations': self.get_annotations(),
+            'tags': self.get_tags(),
 
             self.URL: self.get_url(),
             self.FOREIGN_ID: self.record['key'],
             self.DESCRIPTION: self.record.get('fields', {}).get('description'),
             self.SUMMARY: self.get_summary(),
         }
+
+    def get_tags(self):
+        tags = []
+
+        if not self.origin['import_labels_as_tags']:
+            return tags
+
+        context = self.record.copy()
+        label_template = Template(self.origin['label_template'])
+
+        for label in self.record.get('fields', {}).get('labels', []):
+            context.update({
+                'label': label
+            })
+            tags.append(
+                label_template.render(context)
+            )
+
+        return tags
 
     def get_annotations(self):
         return self.extra.get('annotations', [])
@@ -114,10 +136,18 @@ class JiraService(IssueService):
             },
             basic_auth=(self.username, password)
         )
+        self.import_labels_as_tags = self.config_get_default(
+            'import_labels_as_tags', default=False, to_type=asbool
+        )
+        self.label_template = self.config_get_default(
+            'label_template', default='{{label}}', to_type=six.text_type
+        )
 
     def get_service_metadata(self):
         return {
             'url': self.url,
+            'import_labels_as_tags': self.import_labels_as_tags,
+            'label_template': self.label_template,
         }
 
     @classmethod
@@ -156,4 +186,4 @@ class JiraService(IssueService):
                 extra.update({
                     'annotations': self.annotations(case.key)
                 })
-            yield self.get_issue_for_record(case.raw)
+            yield self.get_issue_for_record(case.raw, extra)

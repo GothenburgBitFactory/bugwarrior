@@ -278,7 +278,18 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # - jirasummary
   # - jiraurl
   # - jiraid
+  # - jiradescription
   #description_template = {{ jiraid }}: {{ jirasummary }}
+
+  # Pull-in jira labels as tags?
+  jira.import_labels_as_tags = True
+
+  # Template to use for generating the tag name from the jira labels
+  # will receive, as context, all task fields by name, as well as a
+  # context variable named `label` containing the jira label name.
+  # This can be used (as is below) to prefix a label with 'jira_'.
+  # By default, the label is converted into a tag name without changes.
+  #jira.label_template = jira_{{label}}
 
   # Here's an example of a phabricator target
   [my_phabricator]
