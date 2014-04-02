@@ -10,6 +10,7 @@ class JiraIssue(Issue):
     SUMMARY = 'jirasummary'
     URL = 'jiraurl'
     FOREIGN_ID = 'jiraid'
+    DESCRIPTION = 'jiradescription'
 
     UDAS = {
         SUMMARY: {
@@ -19,6 +20,10 @@ class JiraIssue(Issue):
         URL: {
             'type': 'string',
             'label': 'Jira URL',
+        },
+        DESCRIPTION: {
+            'type': 'string',
+            'label': 'Jira Description',
         },
         FOREIGN_ID: {
             'type': 'string',
@@ -43,6 +48,7 @@ class JiraIssue(Issue):
 
             self.URL: self.get_url(),
             self.FOREIGN_ID: self.record['key'],
+            self.DESCRIPTION: self.record.get('fields', {}).get('description'),
             self.SUMMARY: self.get_summary(),
         }
 
