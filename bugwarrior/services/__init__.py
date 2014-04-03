@@ -415,6 +415,7 @@ def aggregate_issues(conf):
 
     log.name('bugwarrior').info("Spawning %i workers." % len(targets))
     processes = []
+
     for target in targets:
         proc = multiprocessing.Process(
             target=_aggregate_issues,
