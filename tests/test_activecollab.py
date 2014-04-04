@@ -48,7 +48,8 @@ class TestActiveCollabIssue(ServiceTest):
                 'mysql': arbitrary_created_on.isoformat()
             },
             'created_by_id': '10',
-            'body': pypandoc.convert('<p>Ticket Body</p>', 'md', format='html'),
+            'body': pypandoc.convert('<p>Ticket Body</p>', 'md',
+                                     format='html'),
             'name': 'Anonymous',
         }
 
