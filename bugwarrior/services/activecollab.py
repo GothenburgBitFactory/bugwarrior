@@ -6,6 +6,7 @@ import time
 import six
 from twiggy import log
 
+from pyac.library import activeCollab
 from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import die
 
@@ -16,6 +17,7 @@ class ActiveCollabClient(object):
         self.key = key
         self.user_id = user_id
         self.projects = projects
+        self.ac = activeCollab(key=key, url=url, user_id=user_id)
 
     def get_task_dict(self, project, key, task):
         assigned_task = {
@@ -23,17 +25,16 @@ class ActiveCollabClient(object):
         }
         if task[u'type'] == 'Task':
             # Load Task data
-            ticket_data = self.call_api(
-                "/projects/" + six.text_type(task[u'project_id']) +
-                "/tickets/" + six.text_type(task[u'ticket_id']))
-            assignees = ticket_data[u'assignees']
+            task_data = self.ac.get_task(task[u'project_id'],
+                                         task[u'ticket_id'])
+            assignees = task_data[u'assignees']
 
             for k, v in enumerate(assignees):
                 if (
                     (v[u'is_owner'] is True)
                     and (v[u'user_id'] == int(self.user_id))
                 ):
-                    assigned_task.update(ticket_data)
+                    assigned_task.update(task_data)
                     return assigned_task
         elif task[u'type'] == 'Subtask':
             # Load SubTask data
@@ -44,19 +45,8 @@ class ActiveCollabClient(object):
         project_name = permalink.split('/')[4]
         return project_name
 
-    def call_api(self, uri, key, url):
-        url = url.rstrip("/") + "?auth_api_token=" + key + \
-            "&path_info=" + uri + "&format=json"
-        req = urllib2.Request(url)
-        res = urllib2.urlopen(req)
-        return json.loads(res.read())
-
     def get_issue_generator(self, user_id, project_id, project_name):
-        user_tasks_data = self.call_api(
-            "/projects/" + six.text_type(project_id) + "/tasks",
-            self.key,
-            self.url
-        )
+        user_tasks_data = self.ac.get_project_tasks(project_id)
         if user_tasks_data:
             for key, task in enumerate(user_tasks_data):
                 if (
@@ -68,11 +58,7 @@ class ActiveCollabClient(object):
                     yield task
 
         # Subtasks
-        user_subtasks_data = self.call_api(
-            "/projects/" + six.text_type(project_id) + "/subtasks",
-            self.key,
-            self.url
-        )
+        user_subtasks_data = self.ac.get_subtasks(project_id)
         if user_subtasks_data:
             for key, subtask in enumerate(user_subtasks_data):
                 if (
@@ -206,8 +192,9 @@ class ActiveCollabService(IssueService):
         self.client = ActiveCollabClient(
             self.url, self.key, self.user_id, self.projects
         )
+        self.ac = activeCollab(url=self.url, key=self.key, user_id=self.user_id)
 
-        data = self.client.call_api("/projects", self.key, self.url)
+        data = self.ac.get_projects()
         for item in data:
             if item[u'is_favorite'] == 1:
                 self.projects.append(dict([(item[u'id'], item[u'name'])]))

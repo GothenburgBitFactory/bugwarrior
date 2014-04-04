@@ -360,6 +360,8 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # list. Note that if you have 10 projects in your favorites list, bugwarrior
   # will make 21 API calls on each run: 1 call to get a list of favorites, then
   # 2 API calls per projects, one for tasks and one for subtasks.
+  #
+  # You must install the pyac library (python-activecollab): `pip install pyac`.
   [activecollab]
   service = activecollab
   activecollab.url = https://ac.example.org/api.php
