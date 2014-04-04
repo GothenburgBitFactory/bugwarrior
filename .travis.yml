@@ -12,6 +12,8 @@ before_install:
   - pip install unittest2
   - pip install megaplan
   - pip install jira-python
+  - pip install pypandoc
+  - pip install pyac
 install: python setup.py install
 script: nosetests -w tests
 notifications:
