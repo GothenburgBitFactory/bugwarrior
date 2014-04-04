@@ -1,6 +1,7 @@
 import datetime
 
 import mock
+import pypandoc
 
 from bugwarrior.services.activecollab import (
     ActiveCollabClient,
@@ -47,11 +48,13 @@ class TestActiveCollabIssue(ServiceTest):
                 'mysql': arbitrary_created_on.isoformat()
             },
             'created_by_id': '10',
-            'body': 'Ticket Body',
+            'body': pypandoc.convert('<p>Ticket Body</p>', 'md', format='html'),
             'name': 'Anonymous',
         }
 
-        issue = self.service.get_issue_for_record(arbitrary_issue)
+        issue = self.service.get_issue_for_record(
+            arbitrary_issue, arbitrary_extra
+        )
 
         expected_output = {
             'project': arbitrary_issue['project'],
