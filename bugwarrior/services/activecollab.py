@@ -1,11 +1,9 @@
 import itertools
-import json
-import urllib2
 import time
 
-import six
 from twiggy import log
 
+import pypandoc
 from pyac.library import activeCollab
 from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import die
@@ -128,7 +126,8 @@ class ActiveCollabIssue(Issue):
             'project': self.record['project'],
             'priority': self.get_priority(),
             self.NAME: self.record.get('name'),
-            self.BODY: self.record.get('body'),
+            self.BODY: pypandoc.convert(self.record.get('body'),
+                                        'md', format='html'),
             self.PERMALINK: self.record['permalink'],
             self.TASK_ID: self.record.get('task_id'),
             self.PROJECT_ID: self.record['project'],
@@ -192,7 +191,8 @@ class ActiveCollabService(IssueService):
         self.client = ActiveCollabClient(
             self.url, self.key, self.user_id, self.projects
         )
-        self.ac = activeCollab(url=self.url, key=self.key, user_id=self.user_id)
+        self.ac = activeCollab(url=self.url, key=self.key,
+                               user_id=self.user_id)
 
         data = self.ac.get_projects()
         for item in data:

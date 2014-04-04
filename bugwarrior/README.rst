@@ -15,7 +15,7 @@ It currently supports the following remote resources:
  - `teamlab <http://www.teamlab.com/>`_
  - `redmine <http://www.redmine.org/>`_
  - `jira <http://www.atlassian.com/software/jira/overview>`_
- - `activecollab <http://www.activecollab.com>`_ (2.x and 3.x)
+ - `activecollab <http://www.activecollab.com>`_ (2.x and 3.x/4.x)
  - `phabricator <http://phabricator.org/>`_
 
 Configuring
@@ -361,7 +361,11 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # will make 21 API calls on each run: 1 call to get a list of favorites, then
   # 2 API calls per projects, one for tasks and one for subtasks.
   #
-  # You must install the pyac library (python-activecollab): `pip install pyac`.
+  # Required python modules:
+  #
+  # - pypandoc
+  # - pyac
+  #
   [activecollab]
   service = activecollab
   activecollab.url = https://ac.example.org/api.php
