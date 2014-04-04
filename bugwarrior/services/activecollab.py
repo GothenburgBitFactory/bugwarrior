@@ -125,6 +125,7 @@ class ActiveCollabIssue(Issue):
         record = {
             'project': self.record['project'],
             'priority': self.get_priority(),
+            'annotations': self.extra.get('annotations', []),
             self.NAME: self.record.get('name'),
             self.BODY: pypandoc.convert(self.record.get('body'),
                                         'md', format='html'),
@@ -209,6 +210,30 @@ class ActiveCollabService(IssueService):
 
         IssueService.validate_config(config, target)
 
+    def _comments(self, issue):
+        comments = self.ac.get_comments(issue[u'permalink'].split('/')[4],
+                                        issue[u'task_id'])
+        comments_formatted = []
+        if comments is not None:
+            for comment in comments:
+                comments_formatted.append(
+                    dict(user=comment[u'created_by'][u'display_name'],
+                         body=comment[u'body']))
+        return comments_formatted
+
+    def annotations(self, issue):
+        if issue[u'type'] is 'subtask':
+            return []
+        comments = self._comments(issue)
+        if comments is None:
+            return []
+        return self.build_annotations(
+            (
+                c['user'],
+                pypandoc.convert(c['body'], 'md', format='html'),
+            ) for c in comments
+        )
+
     def issues(self):
         # Loop through each project
         start = time.time()
@@ -229,4 +254,7 @@ class ActiveCollabService(IssueService):
             " Elapsed Time: %s" % (time.time() - start))
 
         for record in itertools.chain(*issue_generators):
-            yield self.get_issue_for_record(record)
+            extra = {
+                'annotations': self.annotations(record)
+            }
+            yield self.get_issue_for_record(record, extra)
