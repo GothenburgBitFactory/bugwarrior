@@ -159,6 +159,9 @@ class ActiveCollabIssue(Issue):
             )
         return record
 
+    def get_annotations(self):
+        return self.extra.get('annotations', [])
+
     def get_project(self):
         project_id = self.record['permalink'].split('/')[4]
         if (project_id.isdigit()):

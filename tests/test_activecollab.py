@@ -20,7 +20,7 @@ class TestActiveCollabIssue(ServiceTest):
 
     def setUp(self):
         with mock.patch(
-            'bugwarrior.services.activecollab.ActiveCollabClient.call_api'
+            'pyac.library.activeCollab.call_api'
         ):
             self.service = self.get_mock_service(ActiveCollabService)
 
@@ -31,6 +31,9 @@ class TestActiveCollabIssue(ServiceTest):
         arbitrary_created_on = (
             datetime.datetime.now() - datetime.timedelta(hours=2)
         )
+        arbitrary_extra = {
+            'annotations': ['an annotation'],
+        }
         arbitrary_issue = {
             'project': 'something',
             'due_on': arbitrary_due_on.isoformat(),
@@ -54,6 +57,7 @@ class TestActiveCollabIssue(ServiceTest):
             'project': arbitrary_issue['project'],
             'due': arbitrary_due_on.isoformat(),
             'priority': 'M',
+            'annotations': arbitrary_extra['annotations'],
             issue.PERMALINK: arbitrary_issue['permalink'],
             issue.PROJECT_ID: arbitrary_issue['project_id'],
             issue.TYPE: arbitrary_issue['type'],
