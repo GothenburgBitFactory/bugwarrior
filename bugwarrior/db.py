@@ -355,6 +355,14 @@ def synchronize(issue_generator, conf):
             _, task = tw.get_task(uuid=existing_uuid)
             task_copy = copy.deepcopy(task)
 
+            # Kill off any dependency information from the loaded task
+            # This would actually be nice to track, but taskwarrior has
+            # problems when we try to re-import our copy of the task.
+            if 'depends' in task_copy:
+                del task_copy['depends']
+            if 'depends' in issue:
+                del issue_dict['depends']
+
             annotations_changed = merge_annotations(issue_dict, task)
 
             if annotations_changed:
