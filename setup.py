@@ -39,7 +39,6 @@ setup(name='bugwarrior',
           "six",
           "jinja2>=2.7.2",
           "pycurl",
-          "bitlyapi>=0.1.1",
           "dogpile.cache>=0.5.3",
       ],
       tests_require=[

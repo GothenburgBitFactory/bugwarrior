@@ -7,6 +7,7 @@ from jinja2 import Template
 import six
 from twiggy import log
 
+from bugwarrior.config import asbool
 from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
 
 
@@ -34,13 +35,9 @@ class IssueService(object):
         if config.has_option('general', 'annotation_length'):
             self.anno_len = self.config.getint('general', 'annotation_length')
 
-        self.bitly_api_user = None
-        if config.has_option('general', 'bitly.api_user'):
-            self.bitly_api_user = config.get('general', 'bitly.api_user')
-
-        self.bitly_api_key = None
-        if config.has_option('general', 'bitly.api_key'):
-            self.bitly_api_key = config.get('general', 'bitly.api_key')
+        self.shorten = False
+        if config.has_option('general', 'shorten'):
+            self.shorten = asbool(config.get('general', 'shorten'))
 
         self.description_template = None
         if config.has_option(self.target, 'description_template'):
@@ -89,8 +86,7 @@ class IssueService(object):
             'description_length': self.desc_len,
             'description_template': self.description_template,
             'target': self.target,
-            'bitly_api_key': self.bitly_api_key,
-            'bitly_api_user': self.bitly_api_user,
+            'shorten': self.shorten,
             'add_tags': self.add_tags,
         }
         origin.update(self.get_service_metadata())
@@ -247,20 +243,15 @@ class Issue(object):
     def get_processed_url(self, url):
         """ Returns a URL with conditional processing.
 
-        If the following config keys are set:
+        If the following config key are set:
 
-        - [general]bitly.api_user
-        - [general]bitly.api_key
+        - [general]shorten
 
         returns a shortened URL; otherwise returns the URL unaltered.
 
         """
-        if (self.origin['bitly_api_user'] and self.origin['bitly_api_key']):
-            shortener = URLShortener(
-                self.origin['bitly_api_user'],
-                self.origin['bitly_api_key'],
-            )
-            return shortener.shorten(url)
+        if self.origin['shorten']:
+            return URLShortener().shorten(url)
         return url
 
     def parse_date(self, date):

@@ -61,6 +61,9 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # If unspecified, the default taskwarrior config will be used.
   #taskrc = /path/to/.taskrc
 
+  # Setting this to true will shorten links with http://da.gd/
+  #shorten = False
+
   # Defines whether or not issues should be matched based upon their description.
   # For historical reasons, and by default, we will attempt to match issues
   # based upon the presence of the '(bw)' marker in the task description.
