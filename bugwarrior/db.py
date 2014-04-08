@@ -1,5 +1,7 @@
 from ConfigParser import NoOptionError
 import copy
+import datetime
+import dateutil.parser
 import os
 import re
 import warnings
@@ -106,19 +108,38 @@ def tasks_differ(left, right):
         ):
             if set(left.get(k, [])) != set(right.get(k, [])):
                 return True
-        else:
-            if six.text_type(left.get(k)) != six.text_type(right.get(k)):
-                log.name('db').debug(
-                    (u"%s:%s has changed from (%r)'%s' to (%r)'%s'." % (
-                        sanitize(left['uuid']),
-                        sanitize(k),
-                        type(left.get(k)),
-                        sanitize(left.get(k)),
-                        type(right.get(k)),
-                        sanitize(right.get(k))
-                    )).encode('utf-8')
-                )
+        elif (
+            not isinstance(left.get(k), datetime.datetime)
+            and isinstance(right.get(k), datetime.datetime)
+        ):
+            # TODO -- this block is here only temporarily until we can get
+            # taskw data marshalling working with bugwarrior.  It handles a
+            # specific case where dates are not deserialized into nice datetime
+            # objects.
+            left_value = dateutil.parser.parse(left.get(k))
+            if left_value != right.get(k):
+                log.name('db').debug(u"%s:%s dates changed from %r to %r" % (
+                    sanitize(left['uuid']),
+                    sanitize(k),
+                    sanitize(left_value),
+                    sanitize(right.get(k)),
+                ))
                 return True
+        elif not left.get(k) and not right.get(k):
+            # If one is None and the other is the empty string, then..
+            return False
+        elif six.text_type(left.get(k)) != six.text_type(right.get(k)):
+            log.name('db').debug(
+                (u"%s:%s has changed from (%r)'%s' to (%r)'%s'." % (
+                    sanitize(left['uuid']),
+                    sanitize(k),
+                    type(left.get(k)),
+                    sanitize(left.get(k)),
+                    type(right.get(k)),
+                    sanitize(right.get(k))
+                )).encode('utf-8')
+            )
+            return True
     return False
 
 
