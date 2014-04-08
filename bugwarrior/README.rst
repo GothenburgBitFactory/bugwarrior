@@ -29,13 +29,13 @@ Build Status
    :alt: Build Status - develop branch
    :target: http://travis-ci.org/#!/ralphbean/bugwarrior
 
-+---------+--------+---------+--+
-| Branch  | Status |         |  |
-+=========+========+=========+==+
-| master  |        | master  |  |
-+---------+--------+---------+--+
-| develop |        | develop |  |
-+---------+--------+---------+--+
++----------+-----------+
+| Branch   | Status    |
++==========+===========+
+| master   | |master|  |
++----------+-----------+
+| develop  | |develop| |
++----------+-----------+
 
 Configuring
 -----------
