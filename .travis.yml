@@ -6,6 +6,7 @@ before_install:
   - sudo add-apt-repository ppa:ultrafredde/ppa -y
   - sudo apt-get update -qq
   - sudo apt-get install -qq task
+  - sudo apt-get install -qq pandoc
   - task --version
   - pip install taskw
   - pip install mock
