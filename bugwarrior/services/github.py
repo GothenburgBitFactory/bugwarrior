@@ -55,6 +55,10 @@ class GithubIssue(Issue):
     UNIQUE_KEY = (URL, TYPE,)
 
     def to_taskwarrior(self):
+        milestone = self.record['milestone']
+        if milestone:
+            milestone = milestone['id']
+
         return {
             'project': self.extra['project'],
             'priority': self.origin['default_priority'],
@@ -65,7 +69,7 @@ class GithubIssue(Issue):
             self.TYPE: self.extra['type'],
             self.TITLE: self.record['title'],
             self.BODY: self.record['body'].replace('\r\n', '\n'),
-            self.MILESTONE: self.record['milestone'],
+            self.MILESTONE: milestone,
             self.NUMBER: self.record['number'],
             self.CREATED_AT: self.parse_date(self.record['created_at']),
             self.UPDATED_AT: self.parse_date(self.record['updated_at'])
