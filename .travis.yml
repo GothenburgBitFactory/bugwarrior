@@ -12,7 +12,7 @@ before_install:
   - pip install mock
   - pip install unittest2
   - pip install megaplan
-  - pip install jira-python
+  - pip install jira
   - pip install pypandoc
   - pip install pyac
 install: python setup.py install
