@@ -109,10 +109,12 @@ def tasks_differ(left, right):
         else:
             if six.text_type(left.get(k)) != six.text_type(right.get(k)):
                 log.name('db').debug(
-                    (u"%s:%s has changed from '%s' to '%s'." % (
+                    (u"%s:%s has changed from (%r)'%s' to (%r)'%s'." % (
                         sanitize(left['uuid']),
                         sanitize(k),
+                        type(left.get(k)),
                         sanitize(left.get(k)),
+                        type(right.get(k)),
                         sanitize(right.get(k))
                     )).encode('utf-8')
                 )
