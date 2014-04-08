@@ -59,6 +59,10 @@ class GithubIssue(Issue):
         if milestone:
             milestone = milestone['id']
 
+        body = self.record['body']
+        if body:
+            body = body.replace('\r\n', '\n')
+
         return {
             'project': self.extra['project'],
             'priority': self.origin['default_priority'],
@@ -68,7 +72,7 @@ class GithubIssue(Issue):
             self.URL: self.record['html_url'],
             self.TYPE: self.extra['type'],
             self.TITLE: self.record['title'],
-            self.BODY: self.record['body'].replace('\r\n', '\n'),
+            self.BODY: body,
             self.MILESTONE: milestone,
             self.NUMBER: self.record['number'],
             self.CREATED_AT: self.parse_date(self.record['created_at']),
