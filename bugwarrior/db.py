@@ -70,6 +70,17 @@ def get_normalized_annotation(annotation):
     )
 
 
+def sanitize(string):
+    """ Sanitize a string for logging with twiggy.
+
+    It is obnoxious that we have to do this ourselves, but twiggy doesn't like
+    strings with non-ascii characters or with curly braces in them.
+    """
+    if not isinstance(string, six.string_types):
+        return string
+    return six.text_type(string.replace('{', '{{').replace('}', '}}'))
+
+
 def tasks_differ(left, right):
     if set(left) - set(right):
         return True
@@ -96,14 +107,14 @@ def tasks_differ(left, right):
             if set(left.get(k, [])) != set(right.get(k, [])):
                 return True
         else:
-            if unicode(left.get(k)) != unicode(right.get(k)):
+            if six.text_type(left.get(k)) != six.text_type(right.get(k)):
                 log.name('db').debug(
-                    "%s:%s has changed from '%s' to '%s'." % (
-                        left['uuid'],
-                        k,
-                        left.get(k),
-                        right.get(k)
-                    )
+                    (u"%s:%s has changed from '%s' to '%s'." % (
+                        sanitize(left['uuid']),
+                        sanitize(k),
+                        sanitize(left.get(k)),
+                        sanitize(right.get(k))
+                    )).encode('utf-8')
                 )
                 return True
     return False
