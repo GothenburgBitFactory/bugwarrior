@@ -5,7 +5,13 @@ python:
 before_install:
   - sudo add-apt-repository ppa:ultrafredde/ppa -y
   - sudo apt-get update -qq
-  - sudo apt-get install -qq task
+  - wget http://taskwarrior.org/download/task-2.3.0.tar.gz
+  - gunzip task-2.3.0.tar.gz
+  - tar xf task-2.3.0.tar
+  - cd task-2.3.0
+  - cmake .
+  - make
+  - sudo make install
   - sudo apt-get install -qq pandoc
   - task --version
   - pip install taskw
