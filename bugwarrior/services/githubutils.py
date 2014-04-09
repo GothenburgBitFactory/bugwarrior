@@ -45,8 +45,12 @@ def get_issues(username, repo, auth):
 
 
 def get_directly_assigned_issues(auth):
-    """ username and repo should be strings
-    auth should be a tuple of username and password.
+    """ Returns all issues assigned to authenticated user.
+
+    This will return all issues assigned to the authenticated user
+    regardless of whether the user owns the repositories in which the
+    issues exist.
+
     """
     url = "https://api.github.com/user/issues?per_page=100"
     return _getter(url, auth)
