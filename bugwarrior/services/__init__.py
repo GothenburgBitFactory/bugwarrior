@@ -407,13 +407,25 @@ def aggregate_issues(conf):
     log.name('bugwarrior').info("Spawning %i workers." % len(targets))
     processes = []
 
-    for target in targets:
-        proc = multiprocessing.Process(
-            target=_aggregate_issues,
-            args=(conf, target, queue, conf.get(target, 'service'))
-        )
-        proc.start()
-        processes.append(proc)
+    if (
+        conf.has_option('general', 'development')
+        and asbool(conf.get('general', 'development'))
+    ):
+        for target in targets:
+            _aggregate_issues(
+                conf,
+                target,
+                queue,
+                conf.get(target, 'service')
+            )
+    else:
+        for target in targets:
+            proc = multiprocessing.Process(
+                target=_aggregate_issues,
+                args=(conf, target, queue, conf.get(target, 'service'))
+            )
+            proc.start()
+            processes.append(proc)
 
     currently_running = len(targets)
     while currently_running > 0:
