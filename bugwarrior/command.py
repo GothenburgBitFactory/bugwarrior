@@ -24,12 +24,16 @@ def pull():
             'bugwarrior.lockfile'
         )
 
-        with PIDLockFile(lockfile_path, timeout=10):
+        lockfile = PIDLockFile(lockfile_path)
+        lockfile.acquire(timeout=10)
+        try:
             # Get all the issues.  This can take a while.
             issue_generator = aggregate_issues(config)
 
             # Stuff them in the taskwarrior db as necessary
             synchronize(issue_generator, config)
+        finally:
+            lockfile.release()
     except LockTimeout:
         log.name('command').critical(
             'Your taskrc repository is currently locked. '
