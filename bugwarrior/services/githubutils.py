@@ -44,6 +44,14 @@ def get_issues(username, repo, auth):
     return _getter(url, auth)
 
 
+def get_directly_assigned_issues(auth):
+    """ username and repo should be strings
+    auth should be a tuple of username and password.
+    """
+    url = "https://api.github.com/user/issues?per_page=100"
+    return _getter(url, auth)
+
+
 def get_comments(username, repo, number, auth):
     tmpl = "https://api.github.com/repos/{username}/{repo}/issues/" + \
         "{number}/comments?per_page=100"
