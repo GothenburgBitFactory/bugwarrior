@@ -1,5 +1,7 @@
-from jinja2 import Template
+import re
 import six
+
+from jinja2 import Template
 from twiggy import log
 
 from bugwarrior.config import asbool, die, get_service_password
@@ -152,12 +154,27 @@ class GithubService(IssueService):
             'label_template': self.label_template,
         }
 
-    def _issues(self, tag):
+    def get_owned_repo_issues(self, tag):
         """ Grab all the issues """
-        return [
-            (tag, i) for i in
-            githubutils.get_issues(*tag.split('/'), auth=self.auth)
-        ]
+        issues = {}
+        for issue in githubutils.get_issues(*tag.split('/'), auth=self.auth):
+            issues[issue['url']] = (tag, issue)
+        return issues
+
+    def get_directly_assigned_issues(self):
+        project_matcher = re.compile(
+            r'.*/repos/(?P<owner>[^/]+)/(?P<project>[^/]+)/.*'
+        )
+        issues = {}
+        for issue in githubutils.get_directly_assigned_issues(auth=self.auth):
+            match_dict = project_matcher.match(issue['url']).groupdict()
+            issues[issue['url']] = (
+                '{owner}/{project}'.format(
+                    **match_dict
+                ),
+                issue
+            )
+        return issues
 
     def _comments(self, tag, number):
         user, repo = tag.split('/')
@@ -213,11 +230,16 @@ class GithubService(IssueService):
 
         all_repos = githubutils.get_repos(username=user, auth=self.auth)
         assert(type(all_repos) == list)
-
         repos = filter(self.filter_repos_for_issues, all_repos)
-        issues = sum([self._issues(user + "/" + r['name']) for r in repos], [])
+
+        issues = {}
+        for repo in repos:
+            issues.update(
+                self.get_owned_repo_issues(user + "/" + repo['name'])
+            )
+        issues.update(self.get_directly_assigned_issues())
         log.name(self.target).debug(" Found {0} total.", len(issues))
-        issues = filter(self.include, issues)
+        issues = filter(self.include, issues.values())
         log.name(self.target).debug(" Pruned down to {0}", len(issues))
 
         # Next, get all the pull requests (and don't prune)
