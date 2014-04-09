@@ -444,8 +444,6 @@ def aggregate_issues(conf):
     log.name('bugwarrior').info("Done aggregating remote issues.")
 
 
-from .activecollab2 import ActiveCollab2Service
-from .activecollab import ActiveCollabService
 from .bitbucket import BitbucketService
 from .bz import BugzillaService
 from .github import GithubService
@@ -462,9 +460,19 @@ SERVICES = {
     'bugzilla': BugzillaService,
     'teamlab': TeamLabService,
     'redmine': RedMineService,
-    'activecollab2': ActiveCollab2Service,
-    'activecollab': ActiveCollabService,
 }
+
+try:
+    from .activecollab2 import ActiveCollab2Service
+    SERVICES['activecollab2'] = ActiveCollab2Service
+except ImportError:
+    pass
+
+try:
+    from .activecollab import ActiveCollabService
+    SERVICES['activecollab'] = ActiveCollabService
+except ImportError:
+    pass
 
 try:
     from .jira import JiraService
