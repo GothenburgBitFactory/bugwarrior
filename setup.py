@@ -40,6 +40,7 @@ setup(name='bugwarrior',
           "jinja2>=2.7.2",
           "pycurl",
           "dogpile.cache>=0.5.3",
+          "lockfile>=0.9.1"
       ],
       tests_require=[
           "Mock",

@@ -14,7 +14,7 @@ from twiggy import log
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
-from bugwarrior.config import asbool
+from bugwarrior.config import asbool, get_taskrc_path
 from bugwarrior.notifications import send_notification
 
 
@@ -342,12 +342,8 @@ def synchronize(issue_generator, conf):
 
     notify = _bool_option('notifications', 'notifications', 'False')
 
-    path = '~/.taskrc'
-    if conf.has_option('general', 'taskrc'):
-        path = conf.get('general', 'taskrc')
-
     tw = TaskWarriorShellout(
-        config_filename=path,
+        config_filename=get_taskrc_path(conf),
         config_overrides=dict(uda_list)
     )
 
