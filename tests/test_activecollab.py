@@ -1,6 +1,7 @@
 import datetime
 
 import mock
+import pypandoc
 
 from bugwarrior.services.activecollab import (
     ActiveCollabClient,
@@ -20,7 +21,7 @@ class TestActiveCollabIssue(ServiceTest):
 
     def setUp(self):
         with mock.patch(
-            'bugwarrior.services.activecollab.ActiveCollabClient.call_api'
+            'pyac.library.activeCollab.call_api'
         ):
             self.service = self.get_mock_service(ActiveCollabService)
 
@@ -31,6 +32,9 @@ class TestActiveCollabIssue(ServiceTest):
         arbitrary_created_on = (
             datetime.datetime.now() - datetime.timedelta(hours=2)
         )
+        arbitrary_extra = {
+            'annotations': ['an annotation'],
+        }
         arbitrary_issue = {
             'project': 'something',
             'due_on': arbitrary_due_on.isoformat(),
@@ -44,16 +48,20 @@ class TestActiveCollabIssue(ServiceTest):
                 'mysql': arbitrary_created_on.isoformat()
             },
             'created_by_id': '10',
-            'body': 'Ticket Body',
+            'body': pypandoc.convert('<p>Ticket Body</p>', 'md',
+                                     format='html'),
             'name': 'Anonymous',
         }
 
-        issue = self.service.get_issue_for_record(arbitrary_issue)
+        issue = self.service.get_issue_for_record(
+            arbitrary_issue, arbitrary_extra
+        )
 
         expected_output = {
             'project': arbitrary_issue['project'],
             'due': arbitrary_due_on.isoformat(),
             'priority': 'M',
+            'annotations': arbitrary_extra['annotations'],
             issue.PERMALINK: arbitrary_issue['permalink'],
             issue.PROJECT_ID: arbitrary_issue['project_id'],
             issue.TYPE: arbitrary_issue['type'],

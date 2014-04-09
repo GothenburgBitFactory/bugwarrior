@@ -15,8 +15,27 @@ It currently supports the following remote resources:
  - `teamlab <http://www.teamlab.com/>`_
  - `redmine <http://www.redmine.org/>`_
  - `jira <http://www.atlassian.com/software/jira/overview>`_
- - `activecollab <http://www.activecollab.com>`_ (2.x and 3.x)
+ - `activecollab <http://www.activecollab.com>`_ (2.x and 3.x/4.x)
  - `phabricator <http://phabricator.org/>`_
+
+Build Status
+------------
+
+.. |master| image:: https://secure.travis-ci.org/ralphbean/bugwarrior.png?branch=master
+   :alt: Build Status - master branch
+   :target: http://travis-ci.org/#!/ralphbean/bugwarrior
+
+.. |develop| image:: https://secure.travis-ci.org/ralphbean/bugwarrior.png?branch=develop
+   :alt: Build Status - develop branch
+   :target: http://travis-ci.org/#!/ralphbean/bugwarrior
+
++----------+-----------+
+| Branch   | Status    |
++==========+===========+
+| master   | |master|  |
++----------+-----------+
+| develop  | |develop| |
++----------+-----------+
 
 Configuring
 -----------
@@ -363,6 +382,12 @@ Create a ``~/.bugwarriorrc`` file with the following contents.
   # list. Note that if you have 10 projects in your favorites list, bugwarrior
   # will make 21 API calls on each run: 1 call to get a list of favorites, then
   # 2 API calls per projects, one for tasks and one for subtasks.
+  #
+  # Required python modules:
+  #
+  # - pypandoc
+  # - pyac
+  #
   [activecollab]
   service = activecollab
   activecollab.url = https://ac.example.org/api.php
