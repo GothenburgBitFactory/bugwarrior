@@ -96,10 +96,6 @@ def die(msg):
     sys.exit(1)
 
 
-# This needs to be imported here and not above to avoid a circular-import.
-from bugwarrior.services import SERVICES
-
-
 def parse_args():
     p = optparse.OptionParser()
     p.add_option('-f', '--config', default='~/.bugwarriorrc')
@@ -154,3 +150,16 @@ def load_config():
     validate_config(config)
 
     return config
+
+
+def get_taskrc_path(conf):
+    path = '~/.taskrc'
+    if conf.has_option('general', 'taskrc'):
+        path = conf.get('general', 'taskrc')
+    return os.path.normpath(
+        os.path.expanduser(path)
+    )
+
+
+# This needs to be imported here and not above to avoid a circular-import.
+from bugwarrior.services import SERVICES
