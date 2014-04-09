@@ -43,10 +43,12 @@ class TestJiraIssue(ServiceTest):
                 issue.PRIORITY_MAP[arbitrary_record['fields']['priority']]
             ),
             'annotations': arbitrary_extra['annotations'],
+            'tags': [],
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: arbitrary_record['key'],
             issue.SUMMARY: arbitrary_summary,
+            issue.DESCRIPTION: None,
         }
 
         def get_url(*args):
