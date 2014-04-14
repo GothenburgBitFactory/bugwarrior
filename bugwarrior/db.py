@@ -364,7 +364,7 @@ def synchronize(issue_generator, conf):
             send_notification(issue, 'Created', conf)
 
         try:
-            tw.task_add(**issue.serialized())
+            tw.task_add(**issue)
         except TaskwarriorError as e:
             log.name('db').trace(e)
 
