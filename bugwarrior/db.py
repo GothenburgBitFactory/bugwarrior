@@ -1,10 +1,8 @@
 from ConfigParser import NoOptionError
-import copy
 import datetime
 import dateutil.parser
 import os
 import re
-import warnings
 import subprocess
 
 import requests
@@ -273,50 +271,75 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
     )
 
 
-def merge_annotations(remote_issue, local_task):
-    """ Merge annotations from the local task into the remote issue dict
+def merge_left(field, local_task, remote_issue, hamming=False):
+    """ Merge array field from the remote_issue into local_task
 
-    If there are new annotations in the remote issue that do not appears in the
-    local task, additionally return True signalling that the new remote
-    annotations should be synched to the db.
+    * Local 'left' entries are preserved without modification
+    * Remote 'left' are appended to task if not present in local.
+
+    :param `field`: Task field to merge.
+    :param `local_task`: `taskw.task.Task` object into which to merge
+        remote changes.
+    :param `remote_issue`: `dict` instance from which to merge into
+        local task.
+    :param `hamming`: (default `False`) If `True`, compare entries by
+        truncating to maximum length, and comparing hamming distances.
+        Useful generally only for annotations.
+
     """
 
     # Ensure that empty defaults are present
-    remote_issue['annotations'] = remote_issue.get('annotations', [])
-    local_task['annotations'] = local_task.get('annotations', [])
+    local_field = local_task.get(field, [])
+    remote_field = remote_issue.get(field, [])
 
-    # Setup some shorthands
-    remote_annotations = [a for a in remote_issue['annotations']]
-    local_annotations = [a['description'] for a in local_task['annotations']]
-
-    # Do two things.
-    # * If a local does not appears in remote, then add it there so users can
-    #   maintain their own list of locals.
-    # * If a remote does not appear in local, then return True
-
-    # Part 1
-    for local in local_annotations:
-        for remote in remote_annotations:
-            if get_annotation_hamming_distance(remote, local) == 0:
-                remote_issue['annotations'].append(local)
-                break
-
-    # Part 2
-    for remote in remote_annotations:
+    # If a remote does not appear in local, add it to the local task
+    new_count = 0
+    for remote in remote_field:
         found = False
-        for local in local_annotations:
-            if get_annotation_hamming_distance(remote, local) == 0:
+        for local in local_field:
+            if (
+                # For annotations, they don't have to match *exactly*.
+                (
+                    hamming
+                    and get_annotation_hamming_distance(remote, local) == 0
+                )
+                # But for everything else, they should.
+                or (
+                    remote == local
+                )
+            ):
                 found = True
                 break
-
-        # Then we have a new remote annotation that should be synced locally.
         if not found:
             log.name('db').debug(
-                "%s not found in %r" % (remote, local_annotations))
-            return True
+                "%s not found in %r" % (remote, local_field)
+            )
+            local_task[field].append(remote)
+            new_count += 1
+    if new_count > 0:
+        log.name('db').debug(
+            'Added %s new values to %s (total: %s)' % (
+                new_count,
+                field,
+                len(local_task[field]),
+            )
+        )
 
-    # Otherwise, we found all of our remotes in our local annotations.
-    return False
+
+def run_hooks(conf, name):
+    if conf.has_option('hooks', name):
+        pre_import = [
+            t.strip() for t in conf.get('hooks', name).split(',')
+        ]
+        if pre_import is not None:
+            for hook in pre_import:
+                exit_code = subprocess.call(hook, shell=True)
+                if exit_code is not 0:
+                    msg = 'Non-zero exit code %d on hook %s' % (
+                        exit_code, hook
+                    )
+                    log.name('hooks:%s' % name).error(msg)
+                    raise RuntimeError(msg)
 
 
 def synchronize(issue_generator, conf):
@@ -330,20 +353,24 @@ def synchronize(issue_generator, conf):
     targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
     services = set([conf.get(target, 'service') for target in targets])
     key_list = build_key_list(services)
-    uda_list = build_uda_list(services)
+    uda_list = build_uda_config_overrides(services)
     if uda_list:
         log.name('bugwarrior').info(
             'Service-defined UDAs (you can optionally add these to your '
             '~/.taskrc for use in reports):'
         )
-        for uda in uda_list:
-            log.name('bugwarrior').info('%s=%s' % uda)
+        for uda in convert_override_args_to_taskrc_settings(uda_list):
+            log.name('bugwarrior').info(uda)
+
+    # Before running CRUD operations, call the pre_import hook(s).
+    run_hooks(conf, 'pre_import')
 
     notify = _bool_option('notifications', 'notifications', 'False')
 
     tw = TaskWarriorShellout(
         config_filename=get_taskrc_path(conf),
-        config_overrides=dict(uda_list)
+        config_overrides=uda_list,
+        marshal=True,
     )
 
     legacy_matching = _bool_option('general', 'legacy_matching', 'True')
@@ -355,21 +382,6 @@ def synchronize(issue_generator, conf):
         'closed': get_managed_task_uuids(tw, key_list, legacy_matching),
     }
 
-    # Before running CRUD operations, call the pre_import hook(s).
-    if conf.has_option('hooks', 'pre_import'):
-        pre_import = [
-            t.strip() for t in conf.get('hooks', 'pre_import').split(',')
-        ]
-        if pre_import is not None:
-            for hook in pre_import:
-                exit_code = subprocess.call(hook, shell=True)
-                if exit_code is not 0:
-                    msg = 'Non-zero exit code %d on hook %s' % (
-                        exit_code, hook
-                    )
-                    log.name('hooks:pre_import').error(msg)
-                    raise RuntimeError(msg)
-
     for issue in issue_generator:
         if isinstance(issue, tuple) and issue[0] == ABORT_PROCESSING:
             raise RuntimeError(issue[1])
@@ -379,30 +391,17 @@ def synchronize(issue_generator, conf):
             )
             issue_dict = dict(issue)
             _, task = tw.get_task(uuid=existing_uuid)
-            task_copy = copy.deepcopy(task)
 
-            # Kill off any dependency information from the loaded task
-            # This would actually be nice to track, but taskwarrior has
-            # problems when we try to re-import our copy of the task.
-            if 'depends' in task_copy:
-                del task_copy['depends']
-            if 'depends' in issue:
-                del issue_dict['depends']
+            # Merge annotations & tags from online into our task object
+            merge_left('annotations', task, issue_dict, hamming=True)
+            merge_left('tags', task, issue_dict)
 
-            annotations_changed = merge_annotations(issue_dict, task)
-
-            if annotations_changed:
-                log.name('db').debug("%s annotations changed." % existing_uuid)
-
-            # Merging tags, too
-            for tag in task.get('tags', []):
-                if not 'tags' in issue_dict:
-                    issue_dict['tags'] = []
-                if tag not in issue_dict['tags']:
-                    issue_dict['tags'].append(tag)
+            issue_dict.pop('annotations', None)
+            issue_dict.pop('tags', None)
 
             task.update(issue_dict)
-            if tasks_differ(task_copy, task) or annotations_changed:
+
+            if task.get_changes(keep=True):
                 issue_updates['changed'].append(task)
             else:
                 issue_updates['existing'].append(task)
@@ -427,7 +426,7 @@ def synchronize(issue_generator, conf):
             send_notification(issue, 'Created', conf)
 
         try:
-            tw.task_add(**issue)
+            tw.task_add(**issue.serialized())
         except TaskwarriorError as e:
             log.name('db').trace(e)
 
@@ -482,11 +481,11 @@ def build_key_list(targets):
     return keys
 
 
-def build_uda_list(targets):
+def build_uda_config_overrides(targets):
     """ Returns a list of UDAs defined by given targets
 
-    For all targets in `targets`, build a list of 2-tuples representing
-    the UDAs defined by the passed-in services (`targets`).
+    For all targets in `targets`, build a dictionary of configuration overrides
+    representing the UDAs defined by the passed-in services (`targets`).
 
     Given a hypothetical situation in which you have two services, the first
     of which defining a UDA named 'serviceAid' ("Service A ID", string) and
@@ -494,41 +493,50 @@ def build_uda_list(targets):
     ("Service B Project", string) and 'serviceBnumber'
     ("Service B Number", numeric), this would return the following structure::
 
-        [
-            ('uda.serviceAid.label', 'Service A ID'),
-            ('uda.serviceAid.type', 'string'),
-            ('uda.serviceBid.label', 'Service B Project'),
-            ('uda.serviceBid.type', 'string'),
-            ('uda.serviceBnumber.label', 'Service B Number'),
-            ('uda.serviceBnumber.type', 'numeric'),
-        ]
-
+        {
+            'uda': {
+                'serviceAid': {
+                    'label': 'Service A ID',
+                    'type': 'string',
+                },
+                'serviceBproject': {
+                    'label': 'Service B Project',
+                    'type': 'string',
+                },
+                'serviceBnumber': {
+                    'label': 'Service B Number',
+                    'type': 'numeric',
+                }
+            }
+        }
 
     """
 
     from bugwarrior.services import SERVICES
 
-    uda_output = []
     targets_udas = {}
     for target in targets:
         targets_udas.update(SERVICES[target].ISSUE_CLASS.UDAS)
-    for name, uda_attributes in six.iteritems(targets_udas):
-        for attrib, value in six.iteritems(uda_attributes):
-            if '_' in name:
-                warnings.warn(
-                    "Service '%s' has defined a potentially invalid UDA "
-                    "named '%s'.  As of the time of this writing, UDAs "
-                    "must be alphanumeric, and may not contain "
-                    "underscores." % (
-                        target,
-                        name,
-                    ),
-                    RuntimeWarning
-                )
-            uda_output.append(
-                (
-                    'uda.%s.%s' % (name, attrib, ),
-                    '%s' % (value, ),
+    return {
+        'uda': targets_udas
+    }
+
+
+def convert_override_args_to_taskrc_settings(config, prefix=''):
+    args = []
+    for k, v in six.iteritems(config):
+        if isinstance(v, dict):
+            args.extend(
+                convert_override_args_to_taskrc_settings(
+                    v,
+                    prefix='.'.join([
+                        prefix,
+                        k,
+                    ]) if prefix else k
                 )
             )
-    return sorted(uda_output)
+        else:
+            v = six.text_type(v)
+            left = (prefix + '.' if prefix else '') + k
+            args.append('='.join([left, v]))
+    return args
