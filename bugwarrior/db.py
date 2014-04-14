@@ -230,6 +230,11 @@ def merge_left(field, local_task, remote_issue, hamming=False):
     local_field = local_task.get(field, [])
     remote_field = remote_issue.get(field, [])
 
+    # We need to make sure an array exists for this field because
+    # we will be appending to it in a moment.
+    if field not in local_task:
+        local_task[field] = []
+
     # If a remote does not appear in local, add it to the local task
     new_count = 0
     for remote in remote_field:
