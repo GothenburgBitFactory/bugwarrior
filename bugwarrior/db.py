@@ -1,6 +1,4 @@
 from ConfigParser import NoOptionError
-import datetime
-import dateutil.parser
 import os
 import re
 import subprocess
@@ -79,66 +77,6 @@ def sanitize(string):
     if not isinstance(string, six.string_types):
         return string
     return six.text_type(string.replace('{', '{{').replace('}', '}}'))
-
-
-def tasks_differ(left, right):
-    if set(left) - set(right):
-        return True
-
-    all_keys = set(left.keys()) | set(right.keys())
-    for k in all_keys:
-        # We want to allow the user to locally modify their priority,
-        # annotations, etc, without us setting those values back everytime we
-        # run... so, ignore these.
-        if k in ('annotations', 'urgency', 'priority', ):
-            continue
-
-        # If a taskwarrior task has 0 tags, the 'left' value is None.
-        # If a bugwarrior remote issue has 0 tags, the 'right' is []
-        # Here, we avoid declaring things are different by checking falsiness
-        if k in ('tags',):
-            if not left.get(k) and not right.get(k):
-                continue
-
-        if (
-            isinstance(left.get(k), (list, tuple))
-            and isinstance(right.get(k), (list, tuple))
-        ):
-            if set(left.get(k, [])) != set(right.get(k, [])):
-                return True
-        elif (
-            not isinstance(left.get(k), datetime.datetime)
-            and isinstance(right.get(k), datetime.datetime)
-        ):
-            # TODO -- this block is here only temporarily until we can get
-            # taskw data marshalling working with bugwarrior.  It handles a
-            # specific case where dates are not deserialized into nice datetime
-            # objects.
-            left_value = dateutil.parser.parse(left.get(k))
-            if left_value != right.get(k):
-                log.name('db').debug(u"%s:%s dates changed from %r to %r" % (
-                    sanitize(left['uuid']),
-                    sanitize(k),
-                    sanitize(left_value),
-                    sanitize(right.get(k)),
-                ))
-                return True
-        elif not left.get(k) and not right.get(k):
-            # If one is None and the other is the empty string, then..
-            return False
-        elif six.text_type(left.get(k)) != six.text_type(right.get(k)):
-            log.name('db').debug(
-                (u"%s:%s has changed from (%r)'%s' to (%r)'%s'." % (
-                    sanitize(left['uuid']),
-                    sanitize(k),
-                    type(left.get(k)),
-                    sanitize(left.get(k)),
-                    type(right.get(k)),
-                    sanitize(right.get(k))
-                )).encode('utf-8')
-            )
-            return True
-    return False
 
 
 def get_annotation_hamming_distance(left, right):
