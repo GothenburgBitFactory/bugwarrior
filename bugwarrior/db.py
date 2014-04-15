@@ -64,7 +64,7 @@ def get_normalized_annotation(annotation):
     return re.sub(
         r'[\W_]',
         '',
-        annotation
+        six.text_type(annotation)
     )
 
 
