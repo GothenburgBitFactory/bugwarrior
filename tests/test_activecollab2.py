@@ -1,5 +1,7 @@
 import datetime
 
+import pytz
+
 from bugwarrior.services.activecollab2 import ActiveCollab2Service
 
 from .base import ServiceTest
@@ -19,10 +21,10 @@ class TestActiveCollab2Issue(ServiceTest):
     def test_to_taskwarrior(self):
         arbitrary_due_on = (
             datetime.datetime.now() - datetime.timedelta(hours=1)
-        )
+        ).replace(tzinfo=pytz.UTC)
         arbitrary_created_on = (
             datetime.datetime.now() - datetime.timedelta(hours=2)
-        )
+        ).replace(tzinfo=pytz.UTC)
         arbitrary_issue = {
             'project': 'something',
             'priority': 2,

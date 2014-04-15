@@ -4,6 +4,7 @@ import time
 
 from dateutil.parser import parse as parse_date
 from jinja2 import Template
+import pytz
 import six
 from twiggy import log
 
@@ -254,9 +255,20 @@ class Issue(object):
             return URLShortener().shorten(url)
         return url
 
-    def parse_date(self, date):
+    def parse_date(self, date, timezone='UTC'):
+        """ Parse a date string into a datetime object.
+
+        :param `date`: A time string parseable by `dateutil.parser.parse`
+        :param `timezone`: The string timezone name (from `pytz.all_timezones`)
+            to use as a default should the parsed time string not include
+            timezone information.
+
+        """
         if date:
-            return parse_date(date)
+            date = parse_date(date)
+            if not date.tzinfo:
+                date = date.replace(tzinfo=pytz.timezone(timezone))
+            return date
         return None
 
     def build_default_description(
