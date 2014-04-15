@@ -1,5 +1,7 @@
 import datetime
 
+import pytz
+
 from bugwarrior.services.github import GithubService
 
 from .base import ServiceTest
@@ -17,9 +19,9 @@ class TestGithubIssue(ServiceTest):
 
     def test_to_taskwarrior(self):
         arbitrary_created = (
-            datetime.datetime.now() - datetime.timedelta(hours=1)
-        )
-        arbitrary_updated = datetime.datetime.now()
+            datetime.datetime.utcnow() - datetime.timedelta(hours=1)
+        ).replace(tzinfo=pytz.UTC)
+        arbitrary_updated = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
         arbitrary_issue = {
             'title': 'Hallo',
             'html_url': 'http://whanot.com/',
