@@ -375,9 +375,18 @@ def synchronize(issue_generator, conf):
 
     log.name('db').info("Updating {0} tasks", len(issue_updates['changed']))
     for issue in issue_updates['changed']:
+        changes = '; '.join([
+            '{field}: {f} -> {t}'.format(
+                field=field,
+                f=repr(ch[0]),
+                t=repr(ch[1])
+            )
+            for field, ch in six.iteritems(issue.get_changes(keep=True))
+        ])
         log.name('db').info(
-            "Updating task {0}",
-            issue['description'].encode("utf-8")
+            "Updating task {0}; {1}",
+            issue['description'].encode("utf-8"),
+            changes,
         )
         try:
             tw.task_update(issue)
