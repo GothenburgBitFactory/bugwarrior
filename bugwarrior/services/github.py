@@ -38,7 +38,7 @@ class GithubIssue(Issue):
             'label': 'Github Updated',
         },
         MILESTONE: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'Github Milestone',
         },
         URL: {
