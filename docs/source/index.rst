@@ -3,14 +3,43 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Bugwarrior's documentation!
-======================================
+Bugwarrior
+==========
 
-Contents:
+``bugwarrior`` is a command line utility for updating your local `taskwarrior <http://taskwarrior.org>`_ database from your forge issue trackers.
+
+Build Status
+------------
+
+.. |master| image:: https://secure.travis-ci.org/ralphbean/bugwarrior.png?branch=master
+   :alt: Build Status - master branch
+   :target: http://travis-ci.org/#!/ralphbean/bugwarrior
+
+.. |develop| image:: https://secure.travis-ci.org/ralphbean/bugwarrior.png?branch=develop
+   :alt: Build Status - develop branch
+   :target: http://travis-ci.org/#!/ralphbean/bugwarrior
+
++----------+-----------+
+| Branch   | Status    |
++==========+===========+
+| master   | |master|  |
++----------+-----------+
+| develop  | |develop| |
++----------+-----------+
+
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
 
+   getting
+   using
+   common_configuration
+   services
+   configuration
+   contributing
 
 
 Indices and tables

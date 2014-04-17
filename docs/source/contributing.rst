@@ -1,5 +1,5 @@
-Working on bugwarrior
-=====================
+How to Contribute
+=================
 
 Setting up your development environment
 ---------------------------------------
@@ -40,7 +40,3 @@ This will actually run it.. be careful and back up your task directory!
 
     (bugwarrior)$ bugwarrior-pull
 
-Writing a new service backend
------------------------------
-
-TODO

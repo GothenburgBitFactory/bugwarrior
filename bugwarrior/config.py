@@ -71,8 +71,10 @@ def get_service_password(service, username, oracle=None, interactive=False):
 
 
 def load_example_rc():
-    root = '/'.join(__file__.split('/')[:-1])
-    fname = root + '/README.rst'
+    fname = os.path.join(
+        os.path.dirname(__file__),
+        '../docs/source/configuration.rst'
+    )
     with open(fname, 'r') as f:
         readme = f.read()
     example = readme.split('.. example')[1][4:]

@@ -320,7 +320,6 @@ def merge_annotations(remote_issue, local_task):
 
 
 def synchronize(issue_generator, conf):
-
     def _bool_option(section, option, default):
         try:
             return section in conf.sections() and \
