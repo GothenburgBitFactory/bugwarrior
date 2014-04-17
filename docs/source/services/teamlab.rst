@@ -16,6 +16,10 @@ Here's an example of an Teamlab target::
     teamlab.password = secret
     teamlab.project_name = example_teamlab
 
+The above example is the minimum required to import issues from
+Teamlab.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`.
+
 Provided UDA Fields
 -------------------
 

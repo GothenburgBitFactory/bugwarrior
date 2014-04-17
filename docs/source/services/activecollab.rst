@@ -45,6 +45,10 @@ see :ref:`activecollab2` for activeCollab2.x.
     activecollab.key = your-api-key
     activecollab.user_id = 15
 
+The above example is the minimum required to import issues from
+ActiveCollab 3.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`.
+
 Provided UDA Fields
 -------------------
 

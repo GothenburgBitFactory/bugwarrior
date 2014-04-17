@@ -14,6 +14,9 @@ Here's an example of an Bitbucket target::
     bitbucket.username = ralphbean
     bitbucket.password = mypassword
 
+The above example is the minimum required to import issues from
+Bitbucket.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`.
 
 Provided UDA Fields
 -------------------

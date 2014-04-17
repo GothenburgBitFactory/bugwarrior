@@ -26,6 +26,10 @@ make bugwarrior support more robust!
     bugzilla.username = rbean@redhat.com
     bugzilla.password = OMG_LULZ
 
+The above example is the minimum required to import issues from
+Bugzilla.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`.
+
 Provided UDA Fields
 -------------------
 
