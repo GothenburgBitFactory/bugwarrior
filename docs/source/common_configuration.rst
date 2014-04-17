@@ -42,13 +42,13 @@ service example:
 * ``default_priority``: Assign this priority ('L', 'M', or 'H') to
   newly-imported issues.
 * ``add_tags``: Add these tags to newly-imported issues.
-* ``description_template``: Build the issue description following this
-  template.  See `Description Templates`_ for more details.
+* ``<fieldname>_template``: Generate the value of a field using a template.
+  See `Field Templates`_ for more details.
 
 .. _description_templates:
 
-Description Templates
----------------------
+Field Templates
+---------------
 
 By default, Bugwarrior will import issues with a fairly verbose description
 template looking something like this::
@@ -64,15 +64,34 @@ one can enter a one-line Jinja template.  The context available includes
 all Taskwarrior fields and all UDAs (see section named 'Provided UDA Fields'
 for each service) defined for the relevant service.
 
-For example, to pull-in github issues assigned to
+.. note::
+
+   Jinja templates can be very complex.  For more details about
+   Jinja templates, please consult
+   `Jinja's Template Documentation <http://jinja.pocoo.org/docs/templates/>`_.
+
+For example, to pull-in Github issues assigned to
 `@ralphbean <https://github.com/ralphbean>`_, setting the issue description
-such that it is composed of only the github issue number and title, you could
+such that it is composed of only the Github issue number and title, you could
 create a service entry like this::
 
     [ralphs_github_account]
     service = github
     github.username = ralphbean
     description_template = {{githubnumber}}: {{githubtitle}}
+
+You can also use this tool for altering the generated value of any other
+Taskwarrior record field by using the same kind of template.
+
+Uppercasing the project name for imported issues::
+
+    project_template = {{project|upper}}
+
+You can also use this feature to override the generated value of any field.
+This example causes imported issues to be assigned to the 'Office' project
+regardless of what project was assigned by the service itself::
+
+    project_template = Office
 
 Password Management
 -------------------
