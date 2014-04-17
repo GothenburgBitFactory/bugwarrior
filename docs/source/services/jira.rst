@@ -70,7 +70,7 @@ to all fields on the Taskwarrior task if needed.
 
 .. note::
 
-   See :ref:`description_templates` for more details regarding how templates
+   See :ref:`field_templates` for more details regarding how templates
    are processed.
 
 Provided UDA Fields

@@ -45,7 +45,7 @@ service example:
 * ``<fieldname>_template``: Generate the value of a field using a template.
   See `Field Templates`_ for more details.
 
-.. _description_templates:
+.. _field_templates:
 
 Field Templates
 ---------------
