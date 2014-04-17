@@ -14,6 +14,11 @@ Here's an example of an Github target::
     github.login = ralphbean
     github.password = OMG_LULZ
 
+The above example is the minimum required to import issues from
+Github.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`
+or described in `Service Features`_ below.
+
 Service Features
 ----------------
 

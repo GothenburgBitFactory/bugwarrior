@@ -16,6 +16,10 @@ Here's an example of an Redmine target::
     redmine.user_id = 7
     redmine.project_name = redmine
 
+The above example is the minimum required to import issues from
+Redmine.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`.
+
 Provided UDA Fields
 -------------------
 

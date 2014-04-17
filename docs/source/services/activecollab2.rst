@@ -40,6 +40,10 @@ with ActiveCollab 2.x - see above for 3.x and greater.
     activecollab2.user_id = 15
     activecollab2.projects = 1:first_project, 5:another_project
 
+The above example is the minimum required to import issues from
+ActiveCollab 2.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`.
+
 Provided UDA Fields
 -------------------
 

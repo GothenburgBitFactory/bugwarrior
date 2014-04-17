@@ -19,6 +19,11 @@ Here's an example of a jira project::
 
    The ``base_uri`` must not have a trailing slash.
 
+The above example is the minimum required to import issues from
+Jira.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`
+or described in `Service Features`_ below.
+
 Service Features
 ----------------
 

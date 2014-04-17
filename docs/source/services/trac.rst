@@ -20,6 +20,10 @@ Here's an example of an Trac target::
    Your Trac installation must have the XML-RPC plugin enabled
    for Bugwarrior to work.
 
+The above example is the minimum required to import issues from
+Trac.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`.
+
 Service Features
 ----------------
 

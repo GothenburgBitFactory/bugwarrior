@@ -26,6 +26,8 @@ Optional options include:
 
 A more-detailed example configuration can be found at :ref:`example_configuration`.
 
+.. _common_configuration_options:
+
 Common Service Configuration Options
 ------------------------------------
 

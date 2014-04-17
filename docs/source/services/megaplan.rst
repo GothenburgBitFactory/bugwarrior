@@ -16,6 +16,10 @@ Here's an example of an Megaplan target::
     megaplan.password = secret
     megaplan.project_name = example
 
+The above example is the minimum required to import issues from
+Megaplab.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`.
+
 Provided UDA Fields
 -------------------
 

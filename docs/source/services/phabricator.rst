@@ -18,6 +18,10 @@ Here's an example of an Phabricator target::
    to gather information from Phabricator, 
    but credentials will be gathered from the user's ``~/.arcrc``.
 
+The above example is the minimum required to import issues from
+Phabricator.  You can also feel free to use any of the
+configuration options described in :ref:`common_configuration_options`.
+
 Provided UDA Fields
 -------------------
 
