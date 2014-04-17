@@ -286,7 +286,6 @@ def run_hooks(conf, name):
 
 
 def synchronize(issue_generator, conf):
-
     def _bool_option(section, option, default):
         try:
             return section in conf.sections() and \
