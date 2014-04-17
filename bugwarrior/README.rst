@@ -18,6 +18,12 @@ It currently supports the following remote resources:
  - `activecollab <http://www.activecollab.com>`_ (2.x and 3.x/4.x)
  - `phabricator <http://phabricator.org/>`_
 
+Documentation
+-------------
+
+For information on how to install and use bugwarrior, read `the docs
+<http://bugwarrior.rtfd.org>`_ on RTFD.
+
 Build Status
 ------------
 
