@@ -143,19 +143,19 @@ class ActiveCollabIssue(Issue):
 
         due_on = self.record.get('due_on')
         if isinstance(due_on, dict):
-            record['due'] = self.parse_date(due_on['mysql'])
+            record['due'] = self.parse_date(due_on['mysql'], 'US/Eastern')
         elif due_on is not None:
-            record['due'] = due_on
+            record['due'] = self.parse_date(due_on, 'US/Eastern')
 
         if isinstance(self.record.get('created_on'), basestring):
             record[self.CREATED_ON] = self.parse_date(
-                self.record['created_on']
+                self.record['created_on'], 'US/Eastern'
             )
         elif isinstance(
             self.record.get('created_on', {}).get('mysql'), basestring
         ):
             record[self.CREATED_ON] = self.parse_date(
-                self.record['created_on']['mysql']
+                self.record['created_on']['mysql'], 'US/Eastern'
             )
         return record
 
