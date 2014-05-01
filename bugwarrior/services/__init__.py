@@ -8,6 +8,8 @@ import pytz
 import six
 from twiggy import log
 
+from taskw.task import Task
+
 from bugwarrior.config import asbool
 from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
 
@@ -40,12 +42,6 @@ class IssueService(object):
         if config.has_option('general', 'shorten'):
             self.shorten = asbool(config.get('general', 'shorten'))
 
-        self.description_template = None
-        if config.has_option(self.target, 'description_template'):
-            self.description_template = self.config.get(
-                self.target, 'description_template'
-            )
-
         self.add_tags = []
         if config.has_option(self.target, 'add_tags'):
             for raw_option in self.config.get(self.target, 'add_tags').split():
@@ -58,6 +54,40 @@ class IssueService(object):
             self.default_priority = config.get(self.target, 'default_priority')
 
         log.name(target).info("Working on [{0}]", self.target)
+
+    def get_templates(self):
+        """ Get any defined templates for configuration values.
+
+        Users can override the value of any Taskwarrior field using
+        this feature on a per-key basis.  The key should be the name of
+        the field to you would like to configure the value of, followed
+        by '_template', and the value should be a Jinja template
+        generating the field's value.  As context variables, all fields
+        on the taskwarrior record are available.
+
+        For example, to prefix the returned
+        project name for tickets returned by a service with 'workproject_',
+        you could add an entry reading:
+
+            project_template = workproject_{{project}}
+
+        Or, if you'd simply like to override the returned project name
+        for all tickets incoming from a specific service, you could add
+        an entry like:
+
+            project_template = myprojectname
+
+        The above would cause all issues to recieve a project name
+        of 'myprojectname', regardless of what the project name of the
+        generated issue was.
+
+        """
+        templates = {}
+        for key in six.iterkeys(Task.FIELDS):
+            template_key = '%s_template' % key
+            if self.config.has_option(self.target, template_key):
+                templates[key] = self.config.get(self.target, template_key)
+        return templates
 
     def config_get_default(self, key, default=None, to_type=None):
         try:
@@ -85,7 +115,7 @@ class IssueService(object):
             'annotation_length': self.anno_len,
             'default_priority': self.default_priority,
             'description_length': self.desc_len,
-            'description_template': self.description_template,
+            'templates': self.get_templates(),
             'target': self.target,
             'shorten': self.shorten,
             'add_tags': self.add_tags,
@@ -224,12 +254,12 @@ class Issue(object):
         """
         raise NotImplementedError()
 
-    def get_taskwarrior_record(self, with_description=True):
+    def get_taskwarrior_record(self, refined=True):
         if not getattr(self, '_taskwarrior_record', None):
             self._taskwarrior_record = self.to_taskwarrior()
         record = copy.deepcopy(self._taskwarrior_record)
-        if with_description:
-            record['description'] = self.get_rendered_description()
+        if refined:
+            record = self.refine_record(record)
         if not 'tags' in record:
             record['tags'] = []
         record['tags'].extend(self.origin['add_tags'])
@@ -296,16 +326,21 @@ class Issue(object):
             (key, record[key],) for key in self.UNIQUE_KEY
         ])
 
-    def get_rendered_description(self):
-        if not hasattr(self, '_description'):
-            if self.origin['description_template']:
-                record = self.get_taskwarrior_record(with_description=False)
-                context = record.copy()
+    def refine_record(self, record):
+        for field in six.iterkeys(Task.FIELDS):
+            if field in self.origin['templates']:
+                context = (
+                    self.get_taskwarrior_record(refined=False).copy()
+                )
                 context.update(self.extra)
-                template = Template(self.origin['description_template'])
-                return template.render(context)
-            self._description = self.get_default_description()
-        return self._description
+                context.update({
+                    'description': self.get_default_description(),
+                })
+                template = Template(self.origin['templates'][field])
+                record[field] = template.render(context)
+            elif hasattr(self, 'get_default_%s' % field):
+                record[field] = getattr(self, 'get_default_%s' % field)()
+        return record
 
     def __iter__(self):
         record = self.get_taskwarrior_record()
@@ -367,7 +402,7 @@ class Issue(object):
     def __unicode__(self):
         return '%s: %s' % (
             self.origin['target'],
-            self.get_rendered_description()
+            self.get_taskwarrior_record()['description']
         )
 
     def __str__(self):
