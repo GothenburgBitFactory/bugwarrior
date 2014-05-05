@@ -20,7 +20,7 @@ class TracIssue(Issue):
             'label': 'Trac URL',
         },
         NUMBER: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'Trac Number',
         },
     }
