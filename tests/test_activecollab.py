@@ -60,7 +60,7 @@ class TestActiveCollabIssue(ServiceTest):
 
         expected_output = {
             'project': arbitrary_issue['project'],
-            'due': arbitrary_due_on.isoformat(),
+            'due': arbitrary_due_on,
             'priority': 'M',
             'annotations': arbitrary_extra['annotations'],
             issue.PERMALINK: arbitrary_issue['permalink'],
