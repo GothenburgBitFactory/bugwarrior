@@ -13,7 +13,9 @@ class TestTemplates(ServiceTest):
             'priority': 'H',
         }
 
-    def get_issue(self, templates, issue=None, description=None):
+    def get_issue(
+        self, templates=None, issue=None, description=None, add_tags=None
+    ):
         templates = {} if templates is None else templates
         origin = {
             'annotation_length': 100,  # Arbitrary
@@ -21,7 +23,7 @@ class TestTemplates(ServiceTest):
             'description_length': 100,  # Arbitrary
             'templates': templates,
             'shorten': False,  # Arbitrary
-            'add_tags': [],  # Arbitrary
+            'add_tags': add_tags if add_tags else [],
         }
 
         issue = Issue({}, origin)
@@ -78,6 +80,18 @@ class TestTemplates(ServiceTest):
             'description': self.arbitrary_default_description,
             'project': 'wat_%s' % self.arbitrary_issue['project'].upper(),
             'tags': [],
+        })
+
+        self.assertEqual(record, expected_record)
+
+    def test_tag_templates(self):
+        issue = self.get_issue(add_tags=['one', '{{ project }}'])
+
+        record = issue.get_taskwarrior_record()
+        expected_record = self.arbitrary_issue.copy()
+        expected_record.update({
+            'description': self.arbitrary_default_description,
+            'tags': ['one', self.arbitrary_issue['project']]
         })
 
         self.assertEqual(record, expected_record)

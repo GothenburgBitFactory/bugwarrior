@@ -44,8 +44,10 @@ class IssueService(object):
 
         self.add_tags = []
         if config.has_option(self.target, 'add_tags'):
-            for raw_option in self.config.get(self.target, 'add_tags').split():
-                option = raw_option.strip(' +,;')
+            for raw_option in self.config.get(
+                self.target, 'add_tags'
+            ).split(','):
+                option = raw_option.strip(' +;')
                 if option:
                     self.add_tags.append(option)
 
@@ -254,6 +256,15 @@ class Issue(object):
         """
         raise NotImplementedError()
 
+    def get_added_tags(self):
+        added_tags = []
+        for tag in self.origin['add_tags']:
+            tag = Template(tag).render(self.get_template_context())
+            if tag:
+                added_tags.append(tag)
+
+        return added_tags
+
     def get_taskwarrior_record(self, refined=True):
         if not getattr(self, '_taskwarrior_record', None):
             self._taskwarrior_record = self.to_taskwarrior()
@@ -262,7 +273,8 @@ class Issue(object):
             record = self.refine_record(record)
         if not 'tags' in record:
             record['tags'] = []
-        record['tags'].extend(self.origin['add_tags'])
+        if refined:
+            record['tags'].extend(self.get_added_tags())
         return record
 
     def get_priority(self):
@@ -326,18 +338,21 @@ class Issue(object):
             (key, record[key],) for key in self.UNIQUE_KEY
         ])
 
+    def get_template_context(self):
+        context = (
+            self.get_taskwarrior_record(refined=False).copy()
+        )
+        context.update(self.extra)
+        context.update({
+            'description': self.get_default_description(),
+        })
+        return context
+
     def refine_record(self, record):
         for field in six.iterkeys(Task.FIELDS):
             if field in self.origin['templates']:
-                context = (
-                    self.get_taskwarrior_record(refined=False).copy()
-                )
-                context.update(self.extra)
-                context.update({
-                    'description': self.get_default_description(),
-                })
                 template = Template(self.origin['templates'][field])
-                record[field] = template.render(context)
+                record[field] = template.render(self.get_template_context())
             elif hasattr(self, 'get_default_%s' % field):
                 record[field] = getattr(self, 'get_default_%s' % field)()
         return record
