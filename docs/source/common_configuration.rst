@@ -41,9 +41,12 @@ service example:
   that are not assigned to anybody.
 * ``default_priority``: Assign this priority ('L', 'M', or 'H') to
   newly-imported issues.
-* ``add_tags``: Add these tags to newly-imported issues.
 * ``<fieldname>_template``: Generate the value of a field using a template.
   See `Field Templates`_ for more details.
+* ``add_tags``: A comma-separated list of tags to add to an issue.  In most
+  cases, this will just be a series of strings, but you can also make
+  tags by defining one of your tags following the example set in
+  `Field Templates`_.
 
 .. _field_templates:
 
