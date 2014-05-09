@@ -297,6 +297,7 @@ def synchronize(issue_generator, conf):
     services = set([conf.get(target, 'service') for target in targets])
     key_list = build_key_list(services)
     uda_list = build_uda_config_overrides(services)
+
     if uda_list:
         log.name('bugwarrior').info(
             'Service-defined UDAs (you can optionally add these to your '
@@ -304,6 +305,10 @@ def synchronize(issue_generator, conf):
         )
         for uda in convert_override_args_to_taskrc_settings(uda_list):
             log.name('bugwarrior').info(uda)
+
+    static_fields = static_fields_default = ['priority']
+    if conf.has_option('general', 'static_fields'):
+        static_fields = conf.get('general', 'static_fields').split(',')
 
     # Before running CRUD operations, call the pre_import hook(s).
     run_hooks(conf, 'pre_import')
@@ -334,6 +339,11 @@ def synchronize(issue_generator, conf):
             )
             issue_dict = dict(issue)
             _, task = tw.get_task(uuid=existing_uuid)
+
+            # Drop static fields from the upstream issue.  We don't want to
+            # overwrite local changes to fields we declare static.
+            for field in static_fields:
+                del issue_dict[field]
 
             # Merge annotations & tags from online into our task object
             merge_left('annotations', task, issue_dict, hamming=True)
