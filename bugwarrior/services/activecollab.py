@@ -55,7 +55,7 @@ class ActiveCollabIssue(Issue):
             'label': 'ActiveCollab ID',
         },
         PROJECT_ID: {
-            'type': 'numeric',
+            'type': 'string',
             'label': 'ActiveCollab Project ID'
         },
         TYPE: {
