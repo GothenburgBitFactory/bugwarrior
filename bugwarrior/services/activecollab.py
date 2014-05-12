@@ -85,10 +85,16 @@ class ActiveCollabIssue(Issue):
     }
     UNIQUE_KEY = (FOREIGN_ID, )
 
+    def get_tags(self):
+        tags = []
+        tags.append(self.record.get('label'))
+        return tags
+
     def to_taskwarrior(self):
         record = {
             'project': str(re.sub(r'\W+', '-',
                            self.record['project']).lower()),
+            'tags': self.get_tags(),
             'priority': self.get_priority(),
             'annotations': self.extra.get('annotations', []),
             self.NAME: str(self.record.get('name', '')),
@@ -110,12 +116,12 @@ class ActiveCollabIssue(Issue):
             record['actaskid'] = int(self.record['task_id'])
 
         if isinstance(self.record.get('due_on'), dict):
-            record['due'] = self.record.get('due_on')['timestamp']
+            record['due'] = self.parse_date(
+                self.record.get('due_on')['formatted_date']
+            )
 
         if isinstance(self.record.get('created_on'), dict):
             record[self.CREATED_ON] = str(self.record['created_on']['mysql'])
-        import pprint
-        pprint.pprint(record)
         return record
 
     def get_annotations(self):
@@ -205,7 +211,7 @@ class ActiveCollabService(IssueService):
         label_data = self.activecollab.get_assignment_labels()
         labels = dict()
         for item in label_data:
-            labels[item['label_id']] = item['name']
+            labels[item['id']] = str(re.sub(r'\W+', '_', item['name']))
         task_count = 0
         issues = []
         for key, record in data.iteritems():
@@ -226,7 +232,7 @@ class ActiveCollabService(IssueService):
                             subtask['task_id'] = task['task_id']
                             subtask['milestone'] = task['milestone']
                             issues.append(subtask)
-        log.name(self.target).debug(" Found {0} total.", task_count)
+        log.name(self.target).debug(" Found {0} total", task_count)
         log.name(self.target).debug(" Pruned down to {0}", len(issues))
         for issue in issues:
             extra = {
