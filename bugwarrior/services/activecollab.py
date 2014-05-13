@@ -1,6 +1,7 @@
 import re
 
 import pypandoc
+import six
 from twiggy import log
 from pyac.library import activeCollab
 from bugwarrior.services import IssueService, Issue
@@ -26,6 +27,7 @@ class ActiveCollabIssue(Issue):
     TASK_ID = 'actaskid'
     FOREIGN_ID = 'acid'
     PROJECT_ID = 'acprojectid'
+    PROJECT_NAME = 'acprojectname'
     TYPE = 'actype'
     CREATED_ON = 'accreatedon'
     CREATED_BY_NAME = 'accreatedbyname'
@@ -55,8 +57,12 @@ class ActiveCollabIssue(Issue):
             'label': 'ActiveCollab ID',
         },
         PROJECT_ID: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'ActiveCollab Project ID'
+        },
+        PROJECT_NAME: {
+            'type': 'string',
+            'label': 'ActiveCollab Project Name'
         },
         TYPE: {
             'type': 'string',
@@ -87,25 +93,26 @@ class ActiveCollabIssue(Issue):
 
     def get_tags(self):
         tags = []
-        tags.append(self.record.get('label'))
+        tags.append(self.record.get('label', ''))
         return tags
 
     def to_taskwarrior(self):
         record = {
-            'project': str(re.sub(r'\W+', '-',
+            'project': six.text_type(re.sub(r'\W+', '-',
                            self.record['project']).lower()),
             'tags': self.get_tags(),
             'priority': self.get_priority(),
             'annotations': self.extra.get('annotations', []),
-            self.NAME: str(self.record.get('name', '')),
+            self.NAME: six.text_type(self.record.get('name', '')),
             self.BODY: pypandoc.convert(self.record.get('body'),
                                         'md', format='html').rstrip(),
-            self.PERMALINK: str(self.record['permalink']),
+            self.PERMALINK: six.text_type(self.record['permalink']),
             self.TASK_ID: int(self.record.get('task_id')),
-            self.PROJECT_ID: str(self.record['project']),
+            self.PROJECT_NAME: six.text_type(self.record['project']),
+            self.PROJECT_ID: int(self.record['project_id']),
             self.FOREIGN_ID: int(self.record['id']),
-            self.TYPE: str(self.record.get('type', 'subtask').lower()),
-            self.CREATED_BY_NAME: str(self.record['created_by_name']),
+            self.TYPE: six.text_type(self.record.get('type', 'subtask').lower()),
+            self.CREATED_BY_NAME: six.text_type(self.record['created_by_name']),
             self.MILESTONE: self.record['milestone'],
             self.ESTIMATED_TIME: self.record.get('estimated_time', 0),
             self.TRACKED_TIME: self.record.get('tracked_time', 0),
@@ -120,8 +127,8 @@ class ActiveCollabIssue(Issue):
                 self.record.get('due_on')['formatted_date']
             )
 
-        if isinstance(self.record.get('created_on'), dict):
-            record[self.CREATED_ON] = str(self.record['created_on']['mysql'])
+        #if isinstance(self.record.get('created_on'), dict):
+            #record[self.CREATED_ON] = self.parse_date(self.record.get('created_on')['formatted_date'])
         return record
 
     def get_annotations(self):
@@ -201,7 +208,7 @@ class ActiveCollabService(IssueService):
             return []
         return self.build_annotations(
             (
-                str(c['user']),
+                six.text_type(c['user']),
                 pypandoc.convert(c['body'], 'md', format='html').rstrip()
             ) for c in comments
         )
@@ -211,7 +218,7 @@ class ActiveCollabService(IssueService):
         label_data = self.activecollab.get_assignment_labels()
         labels = dict()
         for item in label_data:
-            labels[item['id']] = str(re.sub(r'\W+', '_', item['name']))
+            labels[item['id']] = six.text_type(re.sub(r'\W+', '_', item['name']))
         task_count = 0
         issues = []
         for key, record in data.iteritems():
@@ -228,6 +235,7 @@ class ActiveCollabService(IssueService):
                         if subtask['assignee_id'] is self.user_id:
                             # Add some data from the parent task
                             subtask['label'] = labels.get(subtask['label_id'])
+                            subtask['project_id'] = task['project_id']
                             subtask['project'] = task['project']
                             subtask['task_id'] = task['task_id']
                             subtask['milestone'] = task['milestone']

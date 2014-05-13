@@ -43,7 +43,8 @@ class TestActiveCollabIssue(ServiceTest):
             'due_on': arbitrary_due_on.isoformat(),
             'permalink': 'http://wherever/',
             'task_id': 10,
-            'project_id': 'something',
+            'project_name': 'something',
+            'project_id': 10,
             'id': 30,
             'type': 'issue',
             'created_on': {
@@ -70,6 +71,7 @@ class TestActiveCollabIssue(ServiceTest):
             'annotations': arbitrary_extra['annotations'],
             issue.PERMALINK: arbitrary_issue['permalink'],
             issue.PROJECT_ID: arbitrary_issue['project_id'],
+            issue.PROJECT_NAME: arbitrary_issue['project_name'],
             issue.TYPE: arbitrary_issue['type'],
             issue.CREATED_ON: arbitrary_created_on,
             issue.CREATED_BY_NAME: arbitrary_issue['created_by_name'],
