@@ -1,9 +1,9 @@
-.. _activecollab3:
+.. _activecollab4:
 
-ActiveCollab 3
+ActiveCollab 4
 ==============
 
-You can import tasks from your ActiveCollab3 instance using
+You can import tasks from your activeCollab 4.x instance using
 the ``activecollab`` service name.
 
 Instructions
@@ -16,14 +16,12 @@ number that appears after "/user/" is your user ID.
 On the same page, go to Options and API Subscriptions. Generate a read-only
 API key and add that to your bugwarriorrc file.
 
-Bugwarrior will only gather tasks and subtasks for projects in your "Favorites"
-list. Note that if you have 10 projects in your favorites list, bugwarrior
-will make 21 API calls on each run: 1 call to get a list of favorites, then
-2 API calls per projects, one for tasks and one for subtasks.
+Bugwarrior will gather tasks and subtasks returned from the `my-tasks` API call.
+Additional API calls will be made to gather comments associated with each task.
 
 .. note::
 
-   Use of the ActiveCollab3 service requires that the following additional
+   Use of the ActiveCollab service requires that the following additional
    python modules be installed.
 
    - `pypandoc <https://github.com/bebraw/pypandoc>`_
@@ -34,7 +32,7 @@ Example Service
 ---------------
 
 Here's an example of an activecollab target.
-This is only valid for activeCollab 3.x and greater,
+This is only valid for activeCollab 4.x and greater,
 see :ref:`activecollab2` for activeCollab2.x.
 
 ::
@@ -46,30 +44,36 @@ see :ref:`activecollab2` for activeCollab2.x.
     activecollab.user_id = 15
 
 The above example is the minimum required to import issues from
-ActiveCollab 3.  You can also feel free to use any of the
+ActiveCollab 4.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`.
 
 Provided UDA Fields
 -------------------
 
-+-------------------+-------------------+-------------------+
-| Field Name        | Description       | Type              |
-+===================+===================+===================+
-| ``acbody``        | Body              | Text (string)     |
-+-------------------+-------------------+-------------------+
-| ``accreatedbyid`` | Created By        | Text (string)     |
-+-------------------+-------------------+-------------------+
-| ``accreatedon``   | Created On        | Date & Time       |
-+-------------------+-------------------+-------------------+
-| ``acid``          | ID                | Text (string)     |
-+-------------------+-------------------+-------------------+
-| ``acname``        | Name              | Text (string)     |
-+-------------------+-------------------+-------------------+
-| ``acpermalink``   | Permalink         | Text (string)     |
-+-------------------+-------------------+-------------------+
-| ``acprojectid``   | Project ID        | Text (string)     |
-+-------------------+-------------------+-------------------+
-| ``actaskid``      | Task ID           | Text (string)     |
-+-------------------+-------------------+-------------------+
-| ``actype``        | Task Type         | Text (string)     |
-+-------------------+-------------------+-------------------+
++---------------------+-----------------+----------------+
+| Field Name          | Description     | Type           |
++=====================+=================+================+
+| ``acbody``          | Body            | Text (string)  |
++---------------------+-----------------+----------------+
+| ``accreatedbyname`` | Created By Name | Text (string)  |
++---------------------+-----------------+----------------+
+| ``accreatedon``     | Created On      | Date & Time    |
++---------------------+-----------------+----------------+
+| ``acid``            | ID              | Text (string)  |
++---------------------+-----------------+----------------+
+| ``acname``          | Name            | Text (string)  |
++---------------------+-----------------+----------------+
+| ``acpermalink``     | Permalink       | Text (string)  |
++---------------------+-----------------+----------------+
+| ``acprojectid``     | Project ID      | Text (string)  |
++---------------------+-----------------+----------------+
+| ``actaskid``        | Task ID         | Text (string)  |
++---------------------+-----------------+----------------+
+| ``actype``          | Task Type       | Text (string)  |
++---------------------+-----------------+----------------+
+| ``acestimatedtime`` | Estimated Time  | Text (numeric) |
++---------------------+-----------------+----------------+
+| ``actrackedtime``   | Tracked Time    | Text (numeric) |
++---------------------+-----------------+----------------+
+| ``acmilestone``     | Milestone       | Text (string)  |
++---------------------+-----------------+----------------+

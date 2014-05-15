@@ -15,7 +15,7 @@ It currently supports the following remote resources:
  - `teamlab <http://www.teamlab.com/>`_
  - `redmine <http://www.redmine.org/>`_
  - `jira <http://www.atlassian.com/software/jira/overview>`_
- - `activecollab <http://www.activecollab.com>`_ (2.x and 3.x/4.x)
+ - `activecollab <http://www.activecollab.com>`_ (2.x and 4.x)
  - `phabricator <http://phabricator.org/>`_
 
 Documentation
@@ -51,7 +51,7 @@ Contributors
 - Justin Forest (contributed support for RedMine, TeamLab, and MegaPlan, as
   well as some unicode help)
 - Tycho Garen (contributed support for Jira)
-- Kosta Harlan (contributed support for ActiveCollab 2.x/3.x, notifications,
+- Kosta Harlan (contributed support for activeCollab, notifications,
   and experimental taskw support)
 - Luke Macken (contributed some code cleaning)
 - James Rowe (contributed to the docs)

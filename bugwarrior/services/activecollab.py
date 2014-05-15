@@ -1,73 +1,22 @@
-import itertools
-import time
-
-from twiggy import log
+import re
 
 import pypandoc
+from twiggy import log
 from pyac.library import activeCollab
 from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import die
 
 
 class ActiveCollabClient(object):
-    def __init__(self, url, key, user_id, projects):
+    def __init__(self, url, key, user_id):
         self.url = url
         self.key = key
-        self.user_id = user_id
-        self.projects = projects
-        self.ac = activeCollab(key=key, url=url, user_id=user_id)
-
-    def get_task_dict(self, project, key, task):
-        assigned_task = {
-            'project': project
-        }
-        if task[u'type'] == 'Task':
-            # Load Task data
-            task_data = self.ac.get_task(task[u'project_id'],
-                                         task[u'ticket_id'])
-            assignees = task_data[u'assignees']
-
-            for k, v in enumerate(assignees):
-                if (
-                    (v[u'is_owner'] is True)
-                    and (v[u'user_id'] == int(self.user_id))
-                ):
-                    assigned_task.update(task_data)
-                    return assigned_task
-        elif task[u'type'] == 'Subtask':
-            # Load SubTask data
-            assigned_task.update(task)
-            return assigned_task
-
-    def get_project_slug(self, permalink):
-        project_name = permalink.split('/')[4]
-        return project_name
-
-    def get_issue_generator(self, user_id, project_id, project_name):
-        user_tasks_data = self.ac.get_project_tasks(project_id)
-        if user_tasks_data:
-            for key, task in enumerate(user_tasks_data):
-                if (
-                    (task[u'assignee_id'] == int(self.user_id))
-                    and (task[u'completed_on'] is None)
-                ):
-                    task['project'] = self.get_project_slug(task['permalink'])
-                    task['type'] = 'task'
-                    yield task
-
-        # Subtasks
-        user_subtasks_data = self.ac.get_subtasks(project_id)
-        if user_subtasks_data:
-            for key, subtask in enumerate(user_subtasks_data):
-                if (
-                    (subtask[u'assignee_id'] == int(self.user_id))
-                    and (subtask[u'completed_on'] is None)
-                ):
-                    subtask['project'] = self.get_project_slug(
-                        subtask['permalink']
-                    )
-                    subtask['type'] = 'subtask'
-                    yield subtask
+        self.user_id = int(user_id)
+        self.activecollabtivecollab = activeCollab(
+            key=key,
+            url=url,
+            user_id=user_id
+        )
 
 
 class ActiveCollabIssue(Issue):
@@ -77,9 +26,14 @@ class ActiveCollabIssue(Issue):
     TASK_ID = 'actaskid'
     FOREIGN_ID = 'acid'
     PROJECT_ID = 'acprojectid'
+    PROJECT_NAME = 'acprojectname'
     TYPE = 'actype'
     CREATED_ON = 'accreatedon'
-    CREATED_BY_ID = 'accreatedbyid'
+    CREATED_BY_NAME = 'accreatedbyname'
+    ESTIMATED_TIME = 'acestimatedtime'
+    TRACKED_TIME = 'actrackedtime'
+    MILESTONE = 'acmilestone'
+    LABEL = 'aclabel'
 
     UDAS = {
         BODY: {
@@ -95,16 +49,20 @@ class ActiveCollabIssue(Issue):
             'label': 'ActiveCollab Permalink'
         },
         TASK_ID: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'ActiveCollab Task ID'
         },
         FOREIGN_ID: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'ActiveCollab ID',
         },
         PROJECT_ID: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'ActiveCollab Project ID'
+        },
+        PROJECT_NAME: {
+            'type': 'string',
+            'label': 'ActiveCollab Project Name'
         },
         TYPE: {
             'type': 'string',
@@ -114,59 +72,76 @@ class ActiveCollabIssue(Issue):
             'type': 'date',
             'label': 'ActiveCollab Created On'
         },
-        CREATED_BY_ID: {
+        CREATED_BY_NAME: {
             'type': 'string',
             'label': 'ActiveCollab Created By'
         },
+        ESTIMATED_TIME: {
+            'type': 'numeric',
+            'label': 'ActiveCollab Estimated Time'
+        },
+        TRACKED_TIME: {
+            'type': 'numeric',
+            'label': 'ActiveCollab Tracked Time'
+        },
+        MILESTONE: {
+            'type': 'string',
+            'label': 'ActiveCollab Milestone'
+        },
+        LABEL: {
+            'type': 'string',
+            'label': 'ActiveCollab Label'
+        }
     }
     UNIQUE_KEY = (FOREIGN_ID, )
 
     def to_taskwarrior(self):
         record = {
-            'project': self.record['project'],
+            'project': re.sub(r'\W+', '-', self.record['project']).lower(),
             'priority': self.get_priority(),
             'annotations': self.extra.get('annotations', []),
-            self.NAME: self.record.get('name'),
+            self.NAME: self.record.get('name', ''),
             self.BODY: pypandoc.convert(self.record.get('body'),
-                                        'md', format='html'),
+                                        'md', format='html').rstrip(),
             self.PERMALINK: self.record['permalink'],
-            self.TASK_ID: self.record.get('task_id'),
-            self.PROJECT_ID: self.record['project'],
-            self.FOREIGN_ID: self.record['id'],
-            self.TYPE: self.record['type'],
-            self.CREATED_BY_ID: self.record['created_by_id'],
+            self.TASK_ID: int(self.record.get('task_id')),
+            self.PROJECT_NAME: self.record['project'],
+            self.PROJECT_ID: int(self.record['project_id']),
+            self.FOREIGN_ID: int(self.record['id']),
+            self.TYPE: self.record.get('type', 'subtask').lower(),
+            self.CREATED_BY_NAME: self.record['created_by_name'],
+            self.MILESTONE: self.record['milestone'],
+            self.ESTIMATED_TIME: self.record.get('estimated_time', 0),
+            self.TRACKED_TIME: self.record.get('tracked_time', 0),
+            self.LABEL: self.record.get('label'),
         }
 
-        if self.record['type'] == 'subtask':
+        if self.TYPE == 'subtask':
             # Store the parent task ID for subtasks
-            record['actaskid'] = self.record['permalink'].split('/')[6]
+            record['actaskid'] = int(self.record['task_id'])
 
-        due_on = self.record.get('due_on')
-        if isinstance(due_on, dict):
-            record['due'] = self.parse_date(due_on['mysql'], 'US/Eastern')
-        elif due_on is not None:
-            record['due'] = self.parse_date(due_on, 'US/Eastern')
-
-        if isinstance(self.record.get('created_on'), basestring):
-            record[self.CREATED_ON] = self.parse_date(
-                self.record['created_on'], 'US/Eastern'
+        if isinstance(self.record.get('due_on'), dict):
+            record['due'] = self.parse_date(
+                self.record.get('due_on')['formatted_date']
             )
-        elif isinstance(
-            self.record.get('created_on', {}).get('mysql'), basestring
-        ):
+
+        if isinstance(self.record.get('created_on'), dict):
             record[self.CREATED_ON] = self.parse_date(
-                self.record['created_on']['mysql'], 'US/Eastern'
+                self.record.get('created_on')['formatted_date']
             )
         return record
 
     def get_annotations(self):
         return self.extra.get('annotations', [])
 
-    def get_project(self):
-        project_id = self.record['permalink'].split('/')[4]
-        if (project_id.isdigit()):
-            return self.record['project']
-        return project_id
+    def get_priority(self):
+        value = self.record.get('priority')
+        if value > 0:
+            return 'H'
+        elif value < 0:
+            return 'L'
+        else:
+            return 'M'
 
     def get_default_description(self):
         return self.build_default_description(
@@ -177,7 +152,7 @@ class ActiveCollabIssue(Issue):
             ),
             url=self.get_processed_url(self.record['permalink']),
             number=self.record['id'],
-            cls=self.record['type'],
+            cls=self.record.get('type', 'subtask').lower(),
         )
 
 
@@ -190,18 +165,12 @@ class ActiveCollabService(IssueService):
 
         self.url = self.config_get('url').rstrip('/')
         self.key = self.config_get('key')
-        self.user_id = self.config_get('user_id')
-        self.projects = []
+        self.user_id = int(self.config_get('user_id'))
         self.client = ActiveCollabClient(
-            self.url, self.key, self.user_id, self.projects
+            self.url, self.key, self.user_id
         )
-        self.ac = activeCollab(url=self.url, key=self.key,
-                               user_id=self.user_id)
-
-        data = self.ac.get_projects()
-        for item in data:
-            if item[u'is_favorite'] == 1:
-                self.projects.append(dict([(item[u'id'], item[u'name'])]))
+        self.activecollab = activeCollab(url=self.url, key=self.key,
+                                         user_id=self.user_id)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -214,18 +183,25 @@ class ActiveCollabService(IssueService):
         IssueService.validate_config(config, target)
 
     def _comments(self, issue):
-        comments = self.ac.get_comments(issue[u'permalink'].split('/')[4],
-                                        issue[u'task_id'])
+        comments = self.activecollab.get_comments(
+            issue['project_id'],
+            issue['task_id']
+        )
         comments_formatted = []
         if comments is not None:
             for comment in comments:
                 comments_formatted.append(
-                    dict(user=comment[u'created_by'][u'display_name'],
-                         body=comment[u'body']))
+                    dict(user=comment['created_by']['display_name'],
+                         body=comment['body']))
         return comments_formatted
 
+    def get_owner(self, issue):
+        if issue['assignee_id']:
+            return issue['assignee_id']
+
     def annotations(self, issue):
-        if issue[u'type'] is 'subtask':
+        if 'type' not in issue:
+            # Subtask
             return []
         comments = self._comments(issue)
         if comments is None:
@@ -233,31 +209,41 @@ class ActiveCollabService(IssueService):
         return self.build_annotations(
             (
                 c['user'],
-                pypandoc.convert(c['body'], 'md', format='html'),
+                pypandoc.convert(c['body'], 'md', format='html').rstrip()
             ) for c in comments
         )
 
     def issues(self):
-        # Loop through each project
-        start = time.time()
-        issue_generators = []
-        projects = self.projects
-        for project in projects:
-            for project_id, project_name in project.iteritems():
-                log.name(self.target).debug(
-                    " Getting tasks for #%d %s" % (project_id, project_name)
-                )
-                issue_generators.append(
-                    self.client.get_issue_generator(
-                        self.user_id, project_id, project_name
-                    )
-                )
-
-        log.name(self.target).debug(
-            " Elapsed Time: %s" % (time.time() - start))
-
-        for record in itertools.chain(*issue_generators):
+        data = self.activecollab.get_my_tasks()
+        label_data = self.activecollab.get_assignment_labels()
+        labels = dict()
+        for item in label_data:
+            labels[item['id']] = re.sub(r'\W+', '_', item['name'])
+        task_count = 0
+        issues = []
+        for key, record in data.iteritems():
+            for task_id, task in record['assignments'].iteritems():
+                task_count = task_count + 1
+                # Add tasks
+                if task['assignee_id'] == self.user_id:
+                    task['label'] = labels.get(task['label_id'])
+                    issues.append(task)
+                if 'subtasks' in task:
+                    for subtask_id, subtask in task['subtasks'].iteritems():
+                        # Add subtasks
+                        task_count = task_count + 1
+                        if subtask['assignee_id'] is self.user_id:
+                            # Add some data from the parent task
+                            subtask['label'] = labels.get(subtask['label_id'])
+                            subtask['project_id'] = task['project_id']
+                            subtask['project'] = task['project']
+                            subtask['task_id'] = task['task_id']
+                            subtask['milestone'] = task['milestone']
+                            issues.append(subtask)
+        log.name(self.target).debug(" Found {0} total", task_count)
+        log.name(self.target).debug(" Pruned down to {0}", len(issues))
+        for issue in issues:
             extra = {
-                'annotations': self.annotations(record)
+                'annotations': self.annotations(issue)
             }
-            yield self.get_issue_for_record(record, extra)
+            yield self.get_issue_for_record(issue, extra)
