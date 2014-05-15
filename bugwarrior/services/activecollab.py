@@ -1,7 +1,6 @@
 import re
 
 import pypandoc
-import six
 from twiggy import log
 from pyac.library import activeCollab
 from bugwarrior.services import IssueService, Issue
@@ -34,6 +33,7 @@ class ActiveCollabIssue(Issue):
     ESTIMATED_TIME = 'acestimatedtime'
     TRACKED_TIME = 'actrackedtime'
     MILESTONE = 'acmilestone'
+    LABEL = 'aclabel'
 
     UDAS = {
         BODY: {
@@ -69,7 +69,7 @@ class ActiveCollabIssue(Issue):
             'label': 'ActiveCollab Task Type'
         },
         CREATED_ON: {
-            'type': 'string',
+            'type': 'date',
             'label': 'ActiveCollab Created On'
         },
         CREATED_BY_NAME: {
@@ -87,35 +87,33 @@ class ActiveCollabIssue(Issue):
         MILESTONE: {
             'type': 'string',
             'label': 'ActiveCollab Milestone'
+        },
+        LABEL: {
+            'type': 'string',
+            'label': 'ActiveCollab Label'
         }
     }
     UNIQUE_KEY = (FOREIGN_ID, )
 
-    def get_tags(self):
-        tags = []
-        tags.append(self.record.get('label', ''))
-        return tags
-
     def to_taskwarrior(self):
         record = {
-            'project': six.text_type(re.sub(r'\W+', '-',
-                           self.record['project']).lower()),
-            'tags': self.get_tags(),
+            'project': re.sub(r'\W+', '-', self.record['project']).lower(),
             'priority': self.get_priority(),
             'annotations': self.extra.get('annotations', []),
-            self.NAME: six.text_type(self.record.get('name', '')),
+            self.NAME: self.record.get('name', ''),
             self.BODY: pypandoc.convert(self.record.get('body'),
                                         'md', format='html').rstrip(),
-            self.PERMALINK: six.text_type(self.record['permalink']),
+            self.PERMALINK: self.record['permalink'],
             self.TASK_ID: int(self.record.get('task_id')),
-            self.PROJECT_NAME: six.text_type(self.record['project']),
+            self.PROJECT_NAME: self.record['project'],
             self.PROJECT_ID: int(self.record['project_id']),
             self.FOREIGN_ID: int(self.record['id']),
-            self.TYPE: six.text_type(self.record.get('type', 'subtask').lower()),
-            self.CREATED_BY_NAME: six.text_type(self.record['created_by_name']),
+            self.TYPE: self.record.get('type', 'subtask').lower(),
+            self.CREATED_BY_NAME: self.record['created_by_name'],
             self.MILESTONE: self.record['milestone'],
             self.ESTIMATED_TIME: self.record.get('estimated_time', 0),
             self.TRACKED_TIME: self.record.get('tracked_time', 0),
+            self.LABEL: self.record.get('label'),
         }
 
         if self.TYPE == 'subtask':
@@ -127,8 +125,10 @@ class ActiveCollabIssue(Issue):
                 self.record.get('due_on')['formatted_date']
             )
 
-        #if isinstance(self.record.get('created_on'), dict):
-            #record[self.CREATED_ON] = self.parse_date(self.record.get('created_on')['formatted_date'])
+        if isinstance(self.record.get('created_on'), dict):
+            record[self.CREATED_ON] = self.parse_date(
+                self.record.get('created_on')['formatted_date']
+            )
         return record
 
     def get_annotations(self):
@@ -208,7 +208,7 @@ class ActiveCollabService(IssueService):
             return []
         return self.build_annotations(
             (
-                six.text_type(c['user']),
+                c['user'],
                 pypandoc.convert(c['body'], 'md', format='html').rstrip()
             ) for c in comments
         )
@@ -218,7 +218,7 @@ class ActiveCollabService(IssueService):
         label_data = self.activecollab.get_assignment_labels()
         labels = dict()
         for item in label_data:
-            labels[item['id']] = six.text_type(re.sub(r'\W+', '_', item['name']))
+            labels[item['id']] = re.sub(r'\W+', '_', item['name'])
         task_count = 0
         issues = []
         for key, record in data.iteritems():

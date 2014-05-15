@@ -1,11 +1,9 @@
 import datetime
-
 import mock
 import pypandoc
 import pytz
 
 from bugwarrior.services.activecollab import (
-    ActiveCollabClient,
     ActiveCollabService
 )
 
@@ -40,7 +38,9 @@ class TestActiveCollabIssue(ServiceTest):
         arbitrary_issue = {
             'priority': 0,
             'project': 'something',
-            'due_on': arbitrary_due_on.isoformat(),
+            'due_on': {
+                'formatted_date': arbitrary_due_on.isoformat(),
+            },
             'permalink': 'http://wherever/',
             'task_id': 10,
             'project_name': 'something',
@@ -48,7 +48,7 @@ class TestActiveCollabIssue(ServiceTest):
             'id': 30,
             'type': 'issue',
             'created_on': {
-                'mysql': arbitrary_created_on
+                'formatted_date': arbitrary_created_on.isoformat(),
             },
             'created_by_name': 'Tester',
             'body': pypandoc.convert('<p>Ticket Body</p>', 'md',
@@ -57,6 +57,7 @@ class TestActiveCollabIssue(ServiceTest):
             'milestone': 'Sprint 1',
             'estimated_time': 1,
             'tracked_time': 10,
+            'label': 'ON_HOLD',
         }
 
         issue = self.service.get_issue_for_record(
@@ -67,7 +68,6 @@ class TestActiveCollabIssue(ServiceTest):
             'project': arbitrary_issue['project'],
             'due': arbitrary_due_on,
             'priority': 'M',
-            'tags': [],
             'annotations': arbitrary_extra['annotations'],
             issue.PERMALINK: arbitrary_issue['permalink'],
             issue.PROJECT_ID: arbitrary_issue['project_id'],
@@ -82,6 +82,7 @@ class TestActiveCollabIssue(ServiceTest):
             issue.ESTIMATED_TIME: arbitrary_issue['estimated_time'],
             issue.TRACKED_TIME: arbitrary_issue['tracked_time'],
             issue.MILESTONE: arbitrary_issue['milestone'],
+            issue.LABEL: arbitrary_issue['label'],
         }
         actual_output = issue.to_taskwarrior()
 
