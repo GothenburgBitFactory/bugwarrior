@@ -11,8 +11,8 @@ Here's an example of a jira project::
 
     [my_issue_tracker]
     service = jira
-    jira.base_uri = https://jira.example.org
-    jira.usrname = ralph
+    jira.base_uri = https://bug.tasktools.org
+    jira.username = ralph
     jira.password = OMG_LULZ
 
 .. note::
