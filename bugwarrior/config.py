@@ -60,7 +60,7 @@ def get_service_password(service, username, oracle=None, interactive=False):
             command,
             shell=True,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
+            #stderr=subprocess.STDOUT
         )
         password = p.stdout.read()[:-1]
 
