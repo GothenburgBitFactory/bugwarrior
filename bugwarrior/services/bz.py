@@ -142,7 +142,7 @@ class BugzillaService(IssueService):
                 (
                     _parse_author(c['author']),
                     _parse_body(c)
-                ) for c in issue['longdescs']
+                ) for c in comments
             )
 
     def issues(self):
@@ -160,17 +160,17 @@ class BugzillaService(IssueService):
             emailtype1="substring",
         )
 
+
         if self.advanced:
             # Required for new bugzilla
             # https://bugzilla.redhat.com/show_bug.cgi?id=825370
             query['query_format'] = 'advanced'
 
         bugs = self.bz.query(query)
-
         # Convert to dicts
         bugs = [
             dict(
-                ((col, getattr(bug, col)) for col in self.COLUMN_LIST)
+                ((col, _get_bug_attr(bug, col)) for col in self.COLUMN_LIST)
             ) for bug in bugs
         ]
 
@@ -185,3 +185,10 @@ class BugzillaService(IssueService):
                 'annotations': self.annotations(tag, issue),
             }
             yield self.get_issue_for_record(issue, extra)
+
+
+def _get_bug_attr(bug, attr):
+    """Default only the longdescs case to [] since it may not be present."""
+    if attr == "longdescs":
+        return getattr(bug, attr, [])
+    return getattr(bug, attr)
