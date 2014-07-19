@@ -79,7 +79,8 @@ class BugzillaService(IssueService):
         self.base_uri = self.config_get('base_uri')
         self.username = self.config_get('username')
         self.password = self.config_get('password')
-
+        self.ignore_cc = self.config_get_default('ignore_cc', default=False,
+                                                 to_type=lambda x: x == "True")
         # So more modern bugzilla's require that we specify
         # query_format=advanced along with the xmlrpc request.
         # https://bugzilla.redhat.com/show_bug.cgi?id=825370
@@ -154,12 +155,13 @@ class BugzillaService(IssueService):
             bug_status=self.OPEN_STATUSES,
             email1=email,
             emailreporter1=1,
-            emailcc1=1,
             emailassigned_to1=1,
             emailqa_contact1=1,
             emailtype1="substring",
         )
 
+        if not self.ignore_cc:
+            query['emailcc1'] = 1
 
         if self.advanced:
             # Required for new bugzilla
