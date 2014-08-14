@@ -186,12 +186,14 @@ class GithubService(IssueService):
         return githubutils.get_comments(user, repo, number, auth=self.auth)
 
     def annotations(self, tag, issue):
+        url = issue['html_url']
         comments = self._comments(tag, issue['number'])
         return self.build_annotations(
-            (
+            ((
                 c['user']['login'],
                 c['body'],
-            ) for c in comments
+            ) for c in comments),
+            self.get_issue_for_record(issue).get_processed_url(url)
         )
 
     def _reqs(self, tag):

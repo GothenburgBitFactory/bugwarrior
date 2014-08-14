@@ -38,6 +38,10 @@ class IssueService(object):
         if config.has_option('general', 'annotation_length'):
             self.anno_len = self.config.getint('general', 'annotation_length')
 
+        self.inline_links = True
+        if config.has_option('general', 'inline_links'):
+            self.inline_links = asbool(config.get('general', 'inline_links'))
+
         self.shorten = False
         if config.has_option('general', 'shorten'):
             self.shorten = asbool(config.get('general', 'shorten'))
@@ -120,13 +124,16 @@ class IssueService(object):
             'templates': self.get_templates(),
             'target': self.target,
             'shorten': self.shorten,
+            'inline_links': self.inline_links,
             'add_tags': self.add_tags,
         }
         origin.update(self.get_service_metadata())
         return self.ISSUE_CLASS(record, origin=origin, extra=extra)
 
-    def build_annotations(self, annotations):
+    def build_annotations(self, annotations, url):
         final = []
+        if not self.inline_links:
+            final.append(url)
         for author, message in annotations:
             message = message.strip()
             if not message or not author:
@@ -323,6 +330,7 @@ class Issue(object):
             'subtask': 'Subtask #',
         }
         url_separator = ' .. '
+        url = url if self.origin['inline_links'] else ''
         return "%s%s#%s - %s%s%s" % (
             MARKUP,
             cls_markup[cls],

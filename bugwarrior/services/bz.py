@@ -115,13 +115,20 @@ class BugzillaService(IssueService):
         raise NotImplementedError
 
     def annotations(self, tag, issue):
+
+        issue_obj = self.get_issue_for_record(issue)
+        base_url = "https://%s/show_bug.cgi?id=" % self.base_uri
+        long_url = base_url + six.text_type(issue['id'])
+        url = issue_obj.get_processed_url(long_url)
+
         if 'comments' in issue:
             comments = issue.get('comments', [])
             return self.build_annotations(
-                (
+                ((
                     c['author'].split('@')[0],
                     c['text'],
-                ) for c in comments
+                ) for c in comments),
+                url
             )
         else:
             # Backwards compatibility (old python-bugzilla/bugzilla instances)
@@ -140,10 +147,11 @@ class BugzillaService(IssueService):
                 return obj.get('text', obj.get('body'))
 
             return self.build_annotations(
-                (
+                ((
                     _parse_author(c['author']),
                     _parse_body(c)
-                ) for c in comments
+                ) for c in comments),
+                url
             )
 
     def issues(self):

@@ -94,7 +94,9 @@ class TracService(IssueService):
             if field == 'comment':
                 annotations.append((author, newvalue, ))
 
-        return self.build_annotations(annotations)
+        url = issue['url']
+        url = self.get_issue_for_record(issue).get_processed_url(url)
+        return self.build_annotations(annotations, url)
 
     def get_owner(self, issue):
         tag, issue = issue

@@ -206,11 +206,14 @@ class ActiveCollabService(IssueService):
         comments = self._comments(issue)
         if comments is None:
             return []
+
+        issue_obj = self.get_issue_for_record(issue)
         return self.build_annotations(
-            (
+            ((
                 c['user'],
                 pypandoc.convert(c['body'], 'md', format='html').rstrip()
-            ) for c in comments
+            ) for c in comments),
+            issue_obj.get_processed_url(issue_obj.record['permalink']),
         )
 
     def issues(self):

@@ -109,11 +109,13 @@ class BitbucketService(IssueService):
         response = self.get_data(
             '/repositories/%s/issues/%i/comments' % (tag, issue['local_id'])
         )
+        issue_obj = self.get_issue_for_record(issue)
         return self.build_annotations(
-            (
+            ((
                 comment['author_info']['username'],
                 comment['content'],
-            ) for comment in response
+            ) for comment in response),
+            issue_obj.get_processed_url(issue_obj.extra['url'])
         )
 
     def get_owner(self, issue):

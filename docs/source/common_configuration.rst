@@ -13,6 +13,8 @@ Optional options include:
 * ``taskrc``: Specify which TaskRC configuration file to use.  By default,
   will use the system default (usually ``~/.taskrc``).
 * ``shorten``: Set to ``True`` to shorten links.
+* ``inline_link``: When ``False``, links are appended as an annotation.
+  Defaults to ``True``.
 * ``legacy_matching``: Set to ``False`` to instruct Bugwarrior to match
   issues using only the issue's unique identifiers (rather than matching
   on description).
