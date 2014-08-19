@@ -497,6 +497,12 @@ def aggregate_issues(conf):
             proc.start()
             processes.append(proc)
 
+            # Sleep for 1 second here to try and avoid a race condition where
+            # all N workers start up and ask the gpg-agent process for
+            # information at the same time.  This causes gpg-agent to fumble
+            # and tell some of our workers some incomplete things.
+            time.sleep(1)
+
     currently_running = len(targets)
     while currently_running > 0:
         issue = queue.get(True)
