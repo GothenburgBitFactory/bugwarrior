@@ -241,18 +241,18 @@ class GithubService(IssueService):
                 self.get_owned_repo_issues(user + "/" + repo['name'])
             )
         issues.update(self.get_directly_assigned_issues())
-        log.name(self.target).debug(" Found {0} issues total.", len(issues))
+        log.name(self.target).debug(" Found {0} issues.", len(issues))
         issues = filter(self.include, issues.values())
-        log.name(self.target).debug(" Pruned down to {0} issues", len(issues))
+        log.name(self.target).debug(" Pruned down to {0} issues.", len(issues))
 
         # Next, get all the pull requests (and don't prune by default)
         repos = filter(self.filter_repos_for_prs, all_repos)
         requests = sum([self._reqs(user + "/" + r['name']) for r in repos], [])
-        log.name(self.target).debug(" Found {0} pull requests", len(requests))
+        log.name(self.target).debug(" Found {0} pull requests.", len(requests))
         if self.filter_pull_requests:
             requests = filter(self.include, requests)
             log.name(self.target).debug(
-                " Pruned down to {0} pull requests",
+                " Pruned down to {0} pull requests.",
                 len(requests)
             )
 
