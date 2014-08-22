@@ -74,7 +74,7 @@ to all fields on the Taskwarrior task if needed.
 Filter Pull Requests
 ++++++++++++++++++++
 
-Although you can filter issues using `common_configuration_options`_,
+Although you can filter issues using :ref:`common_configuration_options`,
 pull requests are not filtered by default.  You can filter pull requests
 by adding the following configuration option::
 
