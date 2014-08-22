@@ -71,6 +71,15 @@ to all fields on the Taskwarrior task if needed.
    See :ref:`field_templates` for more details regarding how templates
    are processed.
 
+Filter Pull Requests
+++++++++++++++++++++
+
+Although you can filter issues using `common_configuration_options`_,
+pull requests are not filtered by default.  You can filter pull requests
+by adding the following configuration option::
+
+    github.filter_pull_requests = True
+
 Provided UDA Fields
 -------------------
 
