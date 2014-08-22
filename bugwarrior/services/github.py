@@ -251,7 +251,9 @@ class GithubService(IssueService):
         # let's strip those out of the "issues" list so that we don't have
         # unnecessary duplicates.
         request_urls = [r[1]['html_url'] for r in requests]
+
         issues = [i for i in issues if not i[1]['html_url'] in request_urls]
+        log.name(self.target).debug(" Added {0} pull requests", len(requests))
 
         for tag, issue in issues:
             extra = {
