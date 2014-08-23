@@ -1,5 +1,6 @@
 import offtrac
 from twiggy import log
+import urllib
 
 from bugwarrior.config import die, get_service_password
 from bugwarrior.services import Issue, IssueService
@@ -76,7 +77,8 @@ class TracService(IssueService):
                 interactive=self.config.interactive
             )
 
-        uri = 'https://%s:%s@%s/login/xmlrpc' % (username, password, base_uri)
+        auth = '%s:%s' % (username, password)
+        uri = 'https://%s@%s/login/xmlrpc' % (urllib.quote_plus(auth), base_uri)
         self.trac = offtrac.TracServer(uri)
 
     @classmethod
