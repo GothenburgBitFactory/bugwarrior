@@ -42,6 +42,12 @@ class IssueService(object):
         if config.has_option('general', 'inline_links'):
             self.inline_links = asbool(config.get('general', 'inline_links'))
 
+        self.annotation_links = not self.inline_links
+        if config.has_option('general', 'annotation_links'):
+            self.annotation_links = asbool(
+                config.get('general', 'annotation_links')
+            )
+
         self.shorten = False
         if config.has_option('general', 'shorten'):
             self.shorten = asbool(config.get('general', 'shorten'))
@@ -132,7 +138,7 @@ class IssueService(object):
 
     def build_annotations(self, annotations, url):
         final = []
-        if not self.inline_links:
+        if not self.annotation_links:
             final.append(url)
         for author, message in annotations:
             message = message.strip()
