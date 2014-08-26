@@ -105,11 +105,10 @@ class BitbucketService(IssueService):
         response = self.get_data('/repositories/%s/issues/' % tag)
         return [(tag, issue) for issue in response['issues']]
 
-    def get_annotations(self, tag, issue):
+    def get_annotations(self, tag, issue, issue_obj):
         response = self.get_data(
             '/repositories/%s/issues/%i/comments' % (tag, issue['local_id'])
         )
-        issue_obj = self.get_issue_for_record(issue)
         return self.build_annotations(
             ((
                 comment['author_info']['username'],
@@ -140,11 +139,13 @@ class BitbucketService(IssueService):
         log.name(self.target).debug(" Pruned down to {0}", len(issues))
 
         for tag, issue in issues:
+            issue_obj = self.get_issue_for_record(issue)
             extras = {
                 'project': tag.split('/')[1],
                 'url': self.BASE_URL + '/'.join(
                     issue['resource_uri'].split('/')[3:]
                 ).replace('issues', 'issue'),
-                'annotations': self.get_annotations(tag, issue)
+                'annotations': self.get_annotations(tag, issue, issue_obj)
             }
-            yield self.get_issue_for_record(issue, extras)
+            issue_obj.update_extra(extras)
+            yield issue_obj
