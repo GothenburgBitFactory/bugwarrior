@@ -188,7 +188,7 @@ class GithubService(IssueService):
         user, repo = tag.split('/')
         return githubutils.get_comments(user, repo, number, auth=self.auth)
 
-    def annotations(self, tag, issue):
+    def annotations(self, tag, issue, issue_obj):
         url = issue['html_url']
         comments = self._comments(tag, issue['number'])
         return self.build_annotations(
@@ -196,7 +196,7 @@ class GithubService(IssueService):
                 c['user']['login'],
                 c['body'],
             ) for c in comments),
-            self.get_issue_for_record(issue).get_processed_url(url)
+            issue_obj.get_processed_url(url)
         )
 
     def _reqs(self, tag):
@@ -271,20 +271,24 @@ class GithubService(IssueService):
         issues = [i for i in issues if not i[1]['html_url'] in request_urls]
 
         for tag, issue in issues:
+            issue_obj = self.get_issue_for_record(issue)
             extra = {
                 'project': tag.split('/')[1],
                 'type': 'issue',
-                'annotations': self.annotations(tag, issue)
+                'annotations': self.annotations(tag, issue, issue_obj)
             }
-            yield self.get_issue_for_record(issue, extra)
+            issue_obj.update_extra(extra)
+            yield issue_obj
 
         for tag, request in requests:
+            issue_obj = self.get_issue_for_record(request)
             extra = {
                 'project': tag.split('/')[1],
                 'type': 'pull_request',
-                'annotations': self.annotations(tag, request)
+                'annotations': self.annotations(tag, request, issue_obj)
             }
-            yield self.get_issue_for_record(request, extra)
+            issue_obj.update_extra(extra)
+            yield issue_obj
 
     @classmethod
     def validate_config(cls, config, target):
