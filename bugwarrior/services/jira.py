@@ -159,12 +159,12 @@ class JiraService(IssueService):
         IssueService.validate_config(config, target)
 
     def annotations(self, issue):
-        comments = self.jira.comments(issue)
+        comments = self.jira.comments(issue.key)
 
         if not comments:
             return []
         else:
-            issue_obj = self.get_issue_for_record(issue)
+            issue_obj = self.get_issue_for_record(issue.raw)
             return self.build_annotations(
                 ((
                     comment.author.name,
@@ -186,6 +186,6 @@ class JiraService(IssueService):
             }
             if jira_version > 4:
                 extra.update({
-                    'annotations': self.annotations(case.key)
+                    'annotations': self.annotations(case)
                 })
             yield self.get_issue_for_record(case.raw, extra)
