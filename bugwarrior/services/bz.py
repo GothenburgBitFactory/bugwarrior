@@ -114,9 +114,7 @@ class BugzillaService(IssueService):
         # used by this IssueService.
         raise NotImplementedError
 
-    def annotations(self, tag, issue):
-
-        issue_obj = self.get_issue_for_record(issue)
+    def annotations(self, tag, issue, issue_obj):
         base_url = "https://%s/show_bug.cgi?id=" % self.base_uri
         long_url = base_url + six.text_type(issue['id'])
         url = issue_obj.get_processed_url(long_url)
@@ -190,11 +188,13 @@ class BugzillaService(IssueService):
         # Build a url for each issue
         base_url = "https://%s/show_bug.cgi?id=" % (self.base_uri)
         for tag, issue in issues:
+            issue_obj = self.get_issue_for_record(issue)
             extra = {
                 'url': base_url + six.text_type(issue['id']),
-                'annotations': self.annotations(tag, issue),
+                'annotations': self.annotations(tag, issue, issue_obj),
             }
-            yield self.get_issue_for_record(issue, extra)
+            issue_obj.update_extra(extra)
+            yield issue_obj
 
 
 def _get_bug_attr(bug, attr):
