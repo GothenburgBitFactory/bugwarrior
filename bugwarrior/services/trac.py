@@ -78,7 +78,9 @@ class TracService(IssueService):
             )
 
         auth = '%s:%s' % (username, password)
-        uri = 'https://%s@%s/login/xmlrpc' % (urllib.quote_plus(auth), base_uri)
+        uri = 'https://%s@%s/login/xmlrpc' % (
+            urllib.quote_plus(auth), base_uri
+        )
         self.trac = offtrac.TracServer(uri)
 
     @classmethod
