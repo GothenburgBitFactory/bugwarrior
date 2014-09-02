@@ -199,7 +199,7 @@ class ActiveCollabService(IssueService):
         if issue['assignee_id']:
             return issue['assignee_id']
 
-    def annotations(self, issue):
+    def annotations(self, issue, issue_obj):
         if 'type' not in issue:
             # Subtask
             return []
@@ -207,7 +207,6 @@ class ActiveCollabService(IssueService):
         if comments is None:
             return []
 
-        issue_obj = self.get_issue_for_record(issue)
         return self.build_annotations(
             ((
                 c['user'],
@@ -246,7 +245,9 @@ class ActiveCollabService(IssueService):
         log.name(self.target).debug(" Found {0} total", task_count)
         log.name(self.target).debug(" Pruned down to {0}", len(issues))
         for issue in issues:
+            issue_obj = self.get_issue_for_record(issue)
             extra = {
-                'annotations': self.annotations(issue)
+                'annotations': self.annotations(issue, issue_obj)
             }
-            yield self.get_issue_for_record(issue, extra)
+            issue_obj.update_extra(extra)
+            yield issue_obj

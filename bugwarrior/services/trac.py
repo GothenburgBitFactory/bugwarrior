@@ -91,15 +91,14 @@ class TracService(IssueService):
 
         IssueService.validate_config(config, target)
 
-    def annotations(self, tag, issue):
+    def annotations(self, tag, issue, issue_obj):
         annotations = []
         changelog = self.trac.server.ticket.changeLog(issue['number'])
         for time, author, field, oldvalue, newvalue, permament in changelog:
             if field == 'comment':
                 annotations.append((author, newvalue, ))
 
-        url = issue['url']
-        url = self.get_issue_for_record(issue).get_processed_url(url)
+        url = issue_obj.get_processed_url(issue['url'])
         return self.build_annotations(annotations, url)
 
     def get_owner(self, issue):
@@ -122,8 +121,10 @@ class TracService(IssueService):
         log.name(self.target).debug(" Pruned down to {0}", len(issues))
 
         for project, issue in issues:
+            issue_obj = self.get_issue_for_record(issue)
             extra = {
-                'annotations': self.annotations(project, issue),
+                'annotations': self.annotations(project, issue, issue_obj),
                 'project': project,
             }
-            yield self.get_issue_for_record(issue, extra)
+            issue_obj.update_extra(extra)
+            yield issue_obj

@@ -253,6 +253,9 @@ class Issue(object):
         self._origin = origin if origin else {}
         self._extra = extra if extra else {}
 
+    def update_extra(self, extra):
+        self._extra.update(extra)
+
     def to_taskwarrior(self):
         """ Transform a foreign record into a taskwarrior dictionary."""
         raise NotImplementedError()
