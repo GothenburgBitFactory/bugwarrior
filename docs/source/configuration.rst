@@ -21,7 +21,13 @@ Example Configuration
     
     # Setting this to true will shorten links with http://da.gd/
     #shorten = False
-    
+
+    # Setting this to True will include a link to the ticket in the description
+    inline_links = False
+
+    # Setting this to True will include a link to the ticket as an annotation
+    annotation_links = True
+
     # Defines whether or not issues should be matched based upon their description.
     # For historical reasons, and by default, we will attempt to match issues
     # based upon the presence of the '(bw)' marker in the task description.
