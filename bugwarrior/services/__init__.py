@@ -138,7 +138,7 @@ class IssueService(object):
 
     def build_annotations(self, annotations, url):
         final = []
-        if not self.annotation_links:
+        if self.annotation_links:
             final.append(url)
         for author, message in annotations:
             message = message.strip()
