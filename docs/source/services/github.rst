@@ -27,7 +27,7 @@ Include and Exclude Certain Repositories
 
 If you happen to be working with a large number of projects, you
 may want to pull issues from only a subset of your repositories.  To 
-do that, you can use the ``githiub.include_repos`` option.
+do that, you can use the ``github.include_repos`` option.
 
 For example, if you would like to only pull-in issues from
 your ``project_foo`` and ``project_fox`` repositories, you could add
