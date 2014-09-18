@@ -119,10 +119,9 @@ class JiraService(IssueService):
         self.url = self.config_get('base_uri')
         password = self.config_get('password')
         if not password or password.startswith("@oracle:"):
-            service = "jira://%s@%s" % (self.username, self.url)
             password = get_service_password(
-                service, self.username,
-                oracle=password,
+                self.get_keyring_service(self.config, self.target),
+                self.username, oracle=password,
                 interactive=self.config.interactive
             )
 
@@ -142,6 +141,12 @@ class JiraService(IssueService):
         self.label_template = self.config_get_default(
             'label_template', default='{{label}}', to_type=six.text_type
         )
+
+    @classmethod
+    def get_keyring_service(cls, config, section):
+        username = config.get(section, cls._get_key('username'))
+        base_uri = config.get(section, cls._get_key('base_uri'))
+        return "jira://%s@%s" % (username, base_uri)
 
     def get_service_metadata(self):
         return {

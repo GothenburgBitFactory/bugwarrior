@@ -90,15 +90,21 @@ class BugzillaService(IssueService):
         self.advanced = asbool(self.config_get_default('advanced', 'no'))
 
         if not self.password or self.password.startswith("@oracle:"):
-            service = "bugzilla://%s@%s" % (self.username, self.base_uri)
             self.password = get_service_password(
-                service, self.username, oracle=self.password,
+                self.get_keyring_service(self.config, self.target),
+                self.username, oracle=self.password,
                 interactive=self.config.interactive
             )
 
         url = 'https://%s/xmlrpc.cgi' % self.base_uri
         self.bz = bugzilla.Bugzilla(url=url)
         self.bz.login(self.username, self.password)
+
+    @classmethod
+    def get_keyring_service(cls, config, section):
+        username = config.get(section, cls._get_key('username'))
+        base_uri = config.get(section, cls._get_key('base_uri'))
+        return "bugzilla://%s@%s" % (username, base_uri)
 
     @classmethod
     def validate_config(cls, config, target):

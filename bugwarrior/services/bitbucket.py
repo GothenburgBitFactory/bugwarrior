@@ -70,12 +70,18 @@ class BitbucketService(IssueService):
             password = self.config_get_default('password')
             if not password or password.startswith('@oracle:'):
                 username = self.config_get('username')
-                service = "bitbucket://%s@bitbucket.org/%s" % (login, username)
                 password = get_service_password(
-                    service, login, oracle=password,
+                    self.get_keyring_service(self.config, self.target),
+                    login, oracle=password,
                     interactive=self.config.interactive)
 
             self.auth = (login, password)
+
+    @classmethod
+    def get_keyring_service(cls, config, section):
+        login = config.get(section, cls._get_key('login'))
+        username = config.get(section, cls._get_key('username'))
+        return "bitbucket://%s@bitbucket.org/%s" % (login, username)
 
     def get_data(self, url):
         response = requests.get(self.BASE_API + url, auth=self.auth)

@@ -107,7 +107,12 @@ from:
 
 * ``password = @oracle:use_keyring``: Retrieve a password from a keyring.
 * ``password = @oracle:ask_password``: Ask for a password at runtime.
-* ``password = @oracle:eval:<command>`` Use the output of <command> as the password.
+* ``password = @oracle:eval:<command>`` Use the output of <command> as the
+  password.
+
+If you use the ``use_keyring`` oracle, you may want to also check out the
+``bugwarrior-vault`` command line tool.  It can be used to manage your
+passwords as stored in your local keyring (say to reset them or clear them).
 
 Hooks
 -----
