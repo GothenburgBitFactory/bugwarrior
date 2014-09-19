@@ -1,6 +1,208 @@
 Changelog
 =========
 
+1.0.0
+-----
+
+- Clock how long each target takes. `4a580b722 <https://github.com/ralphbean/bugwarrior/commit/4a580b722f7d5c9b8970071de038ab50a840c625>`_
+- Pull requests should honour include and exclude filters too `129fd40c3 <https://github.com/ralphbean/bugwarrior/commit/129fd40c340f729ebf5ad88ec8c4bb59c9138d84>`_
+- Off by one `b67cdccf2 <https://github.com/ralphbean/bugwarrior/commit/b67cdccf2d97cab94bc2ca5af5839215da064b24>`_
+- style(github): cleanup `fb3dbb422 <https://github.com/ralphbean/bugwarrior/commit/fb3dbb422616c3af4be83a7d096824fe8e189b5e>`_
+- Merge pull request #91 from do3cc/repo_filter_for_prs `ab1a44354 <https://github.com/ralphbean/bugwarrior/commit/ab1a4435498aa478b3b2f4db39f8af29cace144d>`_
+- Significant bugwarrior refactor. `182c0ddcd <https://github.com/ralphbean/bugwarrior/commit/182c0ddcd4fc630a242d5cb0d1fc122f3b2ce1a9>`_
+- Testing and cleanup of bugwarrior refactor. `cde5c2e4d <https://github.com/ralphbean/bugwarrior/commit/cde5c2e4d07d8d89abbd29a055c397446e514911>`_
+- Adding tests. `09685d671 <https://github.com/ralphbean/bugwarrior/commit/09685d6714764e10fff1ed4808ce9b68ab119462>`_
+- Re-adding URL shortening via Bit.ly. `179a4c4f5 <https://github.com/ralphbean/bugwarrior/commit/179a4c4f5f8397043374400fcc2fab2af0ce72c7>`_
+- Fixing two PEP-8 failures. `2a2f4f858 <https://github.com/ralphbean/bugwarrior/commit/2a2f4f858613e6098976dc408d99b6978e46aa50>`_
+- Updating a slightly out-of-date line in the readme. `5d6af8f18 <https://github.com/ralphbean/bugwarrior/commit/5d6af8f18a4cff14f5e547ad11e22c3e5ed1b972>`_
+- Don't declare tasks different if the user has modified the priority locally. `0596653b7 <https://github.com/ralphbean/bugwarrior/commit/0596653b7d3706544a6879ce1021d295c96092ab>`_
+- Careful for the default locale here... \ó/ `bbf5e29b2 <https://github.com/ralphbean/bugwarrior/commit/bbf5e29b27ad5c49cc20ee8cec3a5939a1b6a381>`_
+- Strip links when doing legacy comparisons. `e29f5c612 <https://github.com/ralphbean/bugwarrior/commit/e29f5c612006a936084db1f47e8eb6d617528cab>`_
+- Pass along details of the MultipleMatches exception. `b64169bd9 <https://github.com/ralphbean/bugwarrior/commit/b64169bd954843d4a7f532f6acd1ecae0acc2bfb>`_
+- Proceed along happily if taskwarrior shellout fails at something. `595b77850 <https://github.com/ralphbean/bugwarrior/commit/595b7785052eba5dec734c8c4d7426f069800ffc>`_
+- Misc fixes to the bugzilla service. `48eb4c4ed <https://github.com/ralphbean/bugwarrior/commit/48eb4c4ed8f4767a2eefd140b8341ff74b64c577>`_
+- Misc fixes to the trac service. `fd18dd656 <https://github.com/ralphbean/bugwarrior/commit/fd18dd65698cf26c2cbf8093f061e55a4143bb18>`_
+- Bugfix. `44ed534a6 <https://github.com/ralphbean/bugwarrior/commit/44ed534a6cad6796b55dc6c4b23957c5a43f0dc8>`_
+- Removing EXPERIMENTAL.rst. `d52327f0c <https://github.com/ralphbean/bugwarrior/commit/d52327f0ca27094cf90eed66c0f21a27bf240363>`_
+- Adding a couple clarification docstrings. `6df94a864 <https://github.com/ralphbean/bugwarrior/commit/6df94a8643105f02a6755d4f4196c19c206220f4>`_
+- Let's actually explain how this works. `0dfd5cdb0 <https://github.com/ralphbean/bugwarrior/commit/0dfd5cdb0967ee4bfbd80a014f95b3b7bc4e5945>`_
+- Adding myself to contributors list. `af6585053 <https://github.com/ralphbean/bugwarrior/commit/af6585053ede20bd62453af973d1c97f5d7f5481>`_
+- Converting from str to six.text_type. `b442d9691 <https://github.com/ralphbean/bugwarrior/commit/b442d9691d1ab903364ccc5619dd2ff4d4095e4d>`_
+- Fixing error handling such that processing is aborted if there is a single failure. `c96ef590e <https://github.com/ralphbean/bugwarrior/commit/c96ef590e398756bd21ad51319bc70db3247200b>`_
+- Improve logging during task-db manipulation. `eb53716b0 <https://github.com/ralphbean/bugwarrior/commit/eb53716b03898aa8774597cc209e8188dfddb5ca>`_
+- Improve bitbucket error message. `8059b11a4 <https://github.com/ralphbean/bugwarrior/commit/8059b11a4602791a989ae64095cafc66fc9ddfd7>`_
+- Typofix. `57462968b <https://github.com/ralphbean/bugwarrior/commit/57462968b8d5ad0cd5f2c22d5ee0122da91037db>`_
+- Check specifically for pending and waiting tasks. `324de2944 <https://github.com/ralphbean/bugwarrior/commit/324de2944a41868e3ae5cc157510b92a241a11f0>`_
+- Only remove existing uuids if they are found. `2b09d2f35 <https://github.com/ralphbean/bugwarrior/commit/2b09d2f357835e3a89591768a532f2fccb9796fc>`_
+- Log a little more here. `371622be1 <https://github.com/ralphbean/bugwarrior/commit/371622be1c6b69c148ddd524700b1e1b10cfc589>`_
+- Update UDAS documentation to properly describe the data structure in use. `23882caf3 <https://github.com/ralphbean/bugwarrior/commit/23882caf3228d0158724b061499b703236211076>`_
+- Change service-defined UDAs message to not imply necessity. `cf78e6884 <https://github.com/ralphbean/bugwarrior/commit/cf78e6884683f9ea9b9998c44994295b88ea7d16>`_
+- Confining myself to 80 chars. `c5408d938 <https://github.com/ralphbean/bugwarrior/commit/c5408d938f85e1fc665cc0cb5b83c461a09e21c7>`_
+- Restrict description matches during check for managed tasks to tasks that are not completed; move managed task gathering into a separate function. `a1c17a6a2 <https://github.com/ralphbean/bugwarrior/commit/a1c17a6a29f9336cc70c18f1b159f19c5e85bb59>`_
+- Read config file in as unicode to allow one to specify tags containing non-ascii characters. `2b2b6823c <https://github.com/ralphbean/bugwarrior/commit/2b2b6823c5720b6639dce38de59512e2dafb88fc>`_
+- Adding option allowing one to specify tags that will be automaically added to all incoming issues of this type. `7e78f7506 <https://github.com/ralphbean/bugwarrior/commit/7e78f7506183770fda9bfb54ed75d97db9b871fe>`_
+- Updating and fixing documentation. `79b322036 <https://github.com/ralphbean/bugwarrior/commit/79b322036574ba016b4db61037317b5010f3e1d6>`_
+- Adding option allowing one to import github labels as tags. `1f2cbf8f6 <https://github.com/ralphbean/bugwarrior/commit/1f2cbf8f699f2feb30bc80810daa8654f83fc6ce>`_
+- Merge pull request #93 from coddingtonbear/refactor_bugwarrior `8d0dd7ac1 <https://github.com/ralphbean/bugwarrior/commit/8d0dd7ac19aa463514a079a3e8a7596412893d28>`_
+- Merge pull request #94 from coddingtonbear/add_tags_option `64e6b26fe <https://github.com/ralphbean/bugwarrior/commit/64e6b26fea2fe03d64b74245f7c8e4cff472fc2e>`_
+- Merge pull request #95 from coddingtonbear/add_github_labels `b83864c22 <https://github.com/ralphbean/bugwarrior/commit/b83864c228cb670789410faff1c10a43ce132433>`_
+- Avoid false positive in tasks_differ. `3b5be9a72 <https://github.com/ralphbean/bugwarrior/commit/3b5be9a727733d00d496f519051a078484ea7ba3>`_
+- Include just the description here. `e03fe0b23 <https://github.com/ralphbean/bugwarrior/commit/e03fe0b236f12438ba89f83a823517af6f317583>`_
+- Support multiple UNIQUE_KEYs per service. `fdfecbf86 <https://github.com/ralphbean/bugwarrior/commit/fdfecbf8634e4e26ab73fb99a0b97ef33635fce2>`_
+- Use the TYPE as a second unique key for github issues. `cccbe7da3 <https://github.com/ralphbean/bugwarrior/commit/cccbe7da3265d76e6a59a62498f9cc9fee560f9e>`_
+- Stop duplicating github pull requests. `3abdc9d2a <https://github.com/ralphbean/bugwarrior/commit/3abdc9d2af3f3fc92f61607d8e594104df899070>`_
+- Break out and fix "merge_annotations" `466cfa2df <https://github.com/ralphbean/bugwarrior/commit/466cfa2df4d03dfd3af303679fb42f488680ba0f>`_
+- Initial refactoring of ActiveCollab3 integration `dc18c30b9 <https://github.com/ralphbean/bugwarrior/commit/dc18c30b9d6b4b7f1c6eadab8610e0d7fe8e1891>`_
+- Rename ActiveCollab3 to ActiveCollab `143f68513 <https://github.com/ralphbean/bugwarrior/commit/143f685138b71bc718abed715cad1dd6a6960b52>`_
+- Resolve merge `ee02377df <https://github.com/ralphbean/bugwarrior/commit/ee02377dfb7865b8d971597922a0fd3b8ff4621c>`_
+- More search and replace `0bb531388 <https://github.com/ralphbean/bugwarrior/commit/0bb531388f79df963735c562fb98993651e1e395>`_
+- Clean up due dates, permalinks, misc `aabb28e3c <https://github.com/ralphbean/bugwarrior/commit/aabb28e3c7fc3c81bb96fbd4a593a2e8cc8a6dfb>`_
+- Store the parent task id for subtasks `8590e4a82 <https://github.com/ralphbean/bugwarrior/commit/8590e4a82d6816708486740836a492e91f50fa1a>`_
+- Merge pull request #96 from kostajh/refactor_bugwarrior_ac3 `833f7c5c4 <https://github.com/ralphbean/bugwarrior/commit/833f7c5c4863a1433ff7a64fb29ca4eb2ffb4e0b>`_
+- Start up a new hacking doc. `9a2b8da28 <https://github.com/ralphbean/bugwarrior/commit/9a2b8da28cad39ca9625c0f3e76320f930f7f52d>`_
+- Ignore eggs. `0784be364 <https://github.com/ralphbean/bugwarrior/commit/0784be3645cff99db4709de84b0ca43b7c2f56f4>`_
+- Add a phabricator service. `74072bda2 <https://github.com/ralphbean/bugwarrior/commit/74072bda24f1fe4ae6055e34ff80ab2417d8c22e>`_
+- Initial work on adding a pre_import hook `4a1304a43 <https://github.com/ralphbean/bugwarrior/commit/4a1304a4342c5e0afc173ffa33f23d9eedfa1840>`_
+- Merge pull request #99 from kostajh/hooks `17f4f5ff1 <https://github.com/ralphbean/bugwarrior/commit/17f4f5ff1019fdf9eafe028acdef6fb0c5deca6f>`_
+- Use FOREIGN_ID for task matching instead of PERMALINK `3ec1e206e <https://github.com/ralphbean/bugwarrior/commit/3ec1e206edfe9af6049f0e266d21fe6de00dbfbd>`_
+- Initial work on Travis CI `a5e6f4224 <https://github.com/ralphbean/bugwarrior/commit/a5e6f4224850c8824fb7a2d8c40d063830449edd>`_
+- Remove IRC for now `4fa9a503d <https://github.com/ralphbean/bugwarrior/commit/4fa9a503d3470d0d6399b77eed07cebbd78ec9eb>`_
+- Install some modules `a1736bf04 <https://github.com/ralphbean/bugwarrior/commit/a1736bf04333c616acb9d82caffae13e07d07469>`_
+- Fix jira-python reference `85710f6ea <https://github.com/ralphbean/bugwarrior/commit/85710f6eaae65eb0fa0c43cf64fcf5b133a78cfe>`_
+- Merge pull request #101 from kostajh/develop `102fb6073 <https://github.com/ralphbean/bugwarrior/commit/102fb60735d618c06967dc242aa1dc4141208cf1>`_
+- Merge pull request #102 from kostajh/travis `dd785d39f <https://github.com/ralphbean/bugwarrior/commit/dd785d39f43b8aea56c768de2d6d550d8e0bccde>`_
+- Only use this identifier. `8812b94bb <https://github.com/ralphbean/bugwarrior/commit/8812b94bb0ede6f9b7d35071182f1f3698f2ba86>`_
+- Add irc notifications to travis config. `c0073bf62 <https://github.com/ralphbean/bugwarrior/commit/c0073bf62b78c70f556186f74670b84a6e064da5>`_
+- Fix failing test for activecollab `41cc4580a <https://github.com/ralphbean/bugwarrior/commit/41cc4580a010a98c6fdfeddcd59fcde31be121ec>`_
+- Merge branch 'develop' of https://github.com/ralphbean/bugwarrior into activecollab-test `878a5af3c <https://github.com/ralphbean/bugwarrior/commit/878a5af3c35f6fd0f48315a70d6517a9508f98db>`_
+- Merge pull request #103 from kostajh/activecollab-test `ee2b4e2f3 <https://github.com/ralphbean/bugwarrior/commit/ee2b4e2f3840f3716d7b29931b63e502bc05668c>`_
+- Fix identification of matching tasks by UDA. `f01159934 <https://github.com/ralphbean/bugwarrior/commit/f011599349f1634714a6b877e3fc5ffacf6c14ff>`_
+- PEP-8/style fixes. `307069f5c <https://github.com/ralphbean/bugwarrior/commit/307069f5c619ef514ecfd6ec8363e8d97d660d7f>`_
+- Merge pull request #104 from coddingtonbear/fix_local_uuid_matching_keys `968b02747 <https://github.com/ralphbean/bugwarrior/commit/968b027474122746ef9648df7ebb9a5e62c01c65>`_
+- Merge pull request #105 from coddingtonbear/fix_pep8_errors `9eb3f6d10 <https://github.com/ralphbean/bugwarrior/commit/9eb3f6d10c77275f5106251bf800f1f1dc56242b>`_
+- Gather a couple of additional fields from github while we're up there. `13db46fae <https://github.com/ralphbean/bugwarrior/commit/13db46fae37a698fc5a982bd073dbfa00b1482c7>`_
+- Merge pull request #106 from coddingtonbear/github_description `496f881e9 <https://github.com/ralphbean/bugwarrior/commit/496f881e97b9ebd17323ae43e690487f3f92416e>`_
+- Handle JIRA priority slightly more gracefully. `277a8850a <https://github.com/ralphbean/bugwarrior/commit/277a8850a3656b170799116aaea241b2f18041d2>`_
+- Merge pull request #108 from coddingtonbear/handle_jira_priority_more_gracefully `3008ce157 <https://github.com/ralphbean/bugwarrior/commit/3008ce157b059102ffc19df58606382c7c1123f1>`_
+- Adding JIRA's 'description' field to stored task data. `715a7dfc0 <https://github.com/ralphbean/bugwarrior/commit/715a7dfc0726f5e34de78307bebab4ba39b67fa4>`_
+- Fixing ability to pull-in annotations; updating readme. `1be6dc037 <https://github.com/ralphbean/bugwarrior/commit/1be6dc03750c80c79f09df00fd72ad5b7330b851>`_
+- Merge pull request #109 from coddingtonbear/jira_enhancements `0aa464a50 <https://github.com/ralphbean/bugwarrior/commit/0aa464a5033acaf2b07038277787640f0498cfe3>`_
+- Use the pyac library for calling ActiveCollab. Tests need work. `3eda81dc2 <https://github.com/ralphbean/bugwarrior/commit/3eda81dc2eeda46a101cdeb21b9bc43041bf16bb>`_
+- Convert body text to markdown `db3f6dff7 <https://github.com/ralphbean/bugwarrior/commit/db3f6dff72345c0a6c760ab6e0e670e5301be22d>`_
+- Pull comments from tasks in as annotations. (work in progress) `875bc4ab1 <https://github.com/ralphbean/bugwarrior/commit/875bc4ab1c26852e612b02c07cbc30cd6dcd032d>`_
+- Implement get_annotations(). Try to fix tests. `cd95e1da4 <https://github.com/ralphbean/bugwarrior/commit/cd95e1da46c72bb7da66b581afb8274287cb11e0>`_
+- Install required python modules `4c2aafea9 <https://github.com/ralphbean/bugwarrior/commit/4c2aafea969e637fab1c38f66c3ab7271da1decf>`_
+- Fix test case for pypandoc conversion. Pass annotations to TW for test. `129037c88 <https://github.com/ralphbean/bugwarrior/commit/129037c88b2944780a7178d0ce88c2a14eea0381>`_
+- PEP8 `79488f4a8 <https://github.com/ralphbean/bugwarrior/commit/79488f4a8a4d42572852687e6964cf359b25f002>`_
+- Kill off dep information if present. `44421dc93 <https://github.com/ralphbean/bugwarrior/commit/44421dc93d851c59fa4a08923d39951a4140e297>`_
+- Move from bitly over to da.gd.  It is free software. `383b55cac <https://github.com/ralphbean/bugwarrior/commit/383b55cac63aa44f0c88e278b29e4ed252067191>`_
+- Install pandoc `be94dbb89 <https://github.com/ralphbean/bugwarrior/commit/be94dbb89a6a1f64d5c389525e0bfd04b52570ac>`_
+- Update jira python module `5fd48177c <https://github.com/ralphbean/bugwarrior/commit/5fd48177c5ec8989d5a7b0b931a1d9695c600f73>`_
+- Install latest stable of taskwarrior `689ed3d01 <https://github.com/ralphbean/bugwarrior/commit/689ed3d01e997b5b56ff539d1a96660360b38e4f>`_
+- Install libuuid `a3f650ef3 <https://github.com/ralphbean/bugwarrior/commit/a3f650ef38d3391780f21f21d13705d8b052fbbe>`_
+- Wrong packagename, try uuid-dev `697d1a1b0 <https://github.com/ralphbean/bugwarrior/commit/697d1a1b0c524357c0b031dfae112e961d2b8ca6>`_
+- cd back to build dir. `daaf5d3bd <https://github.com/ralphbean/bugwarrior/commit/daaf5d3bda2cdc86665befc7625dc05efb84dc36>`_
+- Add in the Travis CI status images `be19334e6 <https://github.com/ralphbean/bugwarrior/commit/be19334e65b48802e308daafbf7ba3c2e724ace1>`_
+- Hmm, let's fix that table. `d46affcff <https://github.com/ralphbean/bugwarrior/commit/d46affcffec9e0c3aab1dafb02f9206e437539ed>`_
+- Try to sanitize strings before logging here.  Twiggy freaks out in some cases. `883b3abbf <https://github.com/ralphbean/bugwarrior/commit/883b3abbfdeb882e35a6b3671d95ba70a4ccfaf3>`_
+- Github's API sometimes returns a troublesome dict here. `21a08f09b <https://github.com/ralphbean/bugwarrior/commit/21a08f09b3b17af7c1975ec1e851cba0140c9400>`_
+- A little more debugging. `945099b9f <https://github.com/ralphbean/bugwarrior/commit/945099b9f9f0fec04605d1a119066bd1308ed299>`_
+- Handle some conversion cases to minimize erroneous "diffs" `89a82ebc0 <https://github.com/ralphbean/bugwarrior/commit/89a82ebc0cb075b782504b4b3f1028c49f5b9b4c>`_
+- Sometimes, also, this is None. `15f678ea0 <https://github.com/ralphbean/bugwarrior/commit/15f678ea019dc8e66ba09c6da62163d562cc1c63>`_
+- Fixing various test failures that are all my fault. `f844a1f3a <https://github.com/ralphbean/bugwarrior/commit/f844a1f3a51c5472889589e8ad5a3145b29f3fe7>`_
+- Also gather issues directly-assigned to a user, regardless of whether the originating repository is owned by the user. `c62dbc0e2 <https://github.com/ralphbean/bugwarrior/commit/c62dbc0e27f3eafd3b2ed8c210cb5c42d68f0596>`_
+- Add a development mode flag. `8187b5776 <https://github.com/ralphbean/bugwarrior/commit/8187b5776cdb3b09bfba317eee772f95073335b1>`_
+- Use a PID lockfile to prevent multiple bugwarrior processes from running simultaneously on the same repository.  Fixes #112. `c4de7f030 <https://github.com/ralphbean/bugwarrior/commit/c4de7f030671932a8a2ab461fbc147e3bbc46005>`_
+- Updating an inaccurate docstring. `fe54aa088 <https://github.com/ralphbean/bugwarrior/commit/fe54aa088426803116b7ec74a01f75afe557d274>`_
+- Merge pull request #116 from coddingtonbear/issue_112 `a9519a8b8 <https://github.com/ralphbean/bugwarrior/commit/a9519a8b8f6e6ff3382aad7300cb218db0d9a5ac>`_
+- Merge pull request #115 from coddingtonbear/add_development_mode_flag `7a4dd8d0e <https://github.com/ralphbean/bugwarrior/commit/7a4dd8d0e798f544f27b1914ce3c0bc2fe92f9cd>`_
+- Merge pull request #114 from coddingtonbear/gather_directly_assigned_issues `286e92a46 <https://github.com/ralphbean/bugwarrior/commit/286e92a469d4112c624157c35f5649b5054f0b2c>`_
+- Merge pull request #113 from coddingtonbear/fix_tests_apr `4d698561a <https://github.com/ralphbean/bugwarrior/commit/4d698561ad4d33acd28b4d87a72522e21119bbfc>`_
+- Merge pull request #111 from kostajh/activecollab-enhancements `26d8380e8 <https://github.com/ralphbean/bugwarrior/commit/26d8380e83b254e6cefbac74422ee14120de5f00>`_
+- Older versions of lockfile don't support timeout in the context manager.. unfortunately.  :( `9cbf0e5e4 <https://github.com/ralphbean/bugwarrior/commit/9cbf0e5e433971f8d3d4f398b0fbd5c613596ac0>`_
+- Make activecollab optional (mostly due to the pandoc dep). `f3166d378 <https://github.com/ralphbean/bugwarrior/commit/f3166d378f4aa9286838dc7ee182084bccad84d5>`_
+- Add new UDA handling; use task object journaling instead of checking for changes manually. `71e0bea70 <https://github.com/ralphbean/bugwarrior/commit/71e0bea705f3a1f83234d36fe14ae0cbc3d05392>`_
+- Removing now-unncessary function for finding task changes. `f6d64b66b <https://github.com/ralphbean/bugwarrior/commit/f6d64b66bd0c948a6c238fd0de08f38cbc169410>`_
+- Always add timezone information to parsed datetimes; allow one to specify a default timezone. `ba2899335 <https://github.com/ralphbean/bugwarrior/commit/ba2899335cd182c759f800ec865a73b9451f218b>`_
+- Do not attempt to use task methods for new tasks. `3817537df <https://github.com/ralphbean/bugwarrior/commit/3817537dfe2850571ba7b28340630fff6d0de716>`_
+- Make sure that an array exists always. `4f03bb43c <https://github.com/ralphbean/bugwarrior/commit/4f03bb43c87624ca3a418156768e3db7071334f4>`_
+- Adding arbitrary timezone information to test datetimes. `595f4544e <https://github.com/ralphbean/bugwarrior/commit/595f4544ecb2ed6ab3264effc8c3ff4ec1a72517>`_
+- Adding timezone information to github test. `5e158c9f7 <https://github.com/ralphbean/bugwarrior/commit/5e158c9f76d087af543c627c1c14ea7cbc7c8a18>`_
+- Convert incoming annotations to strings. `a3acc1da4 <https://github.com/ralphbean/bugwarrior/commit/a3acc1da4a6cf36acfe70650aa6883f2c2251c1f>`_
+- Merge pull request #119 from coddingtonbear/always_timezones_always `a4a745c38 <https://github.com/ralphbean/bugwarrior/commit/a4a745c383ff37c5b61fd240c68ee2eefb4f7ba7>`_
+- Merge remote-tracking branch 'upstream/develop' into bugwarrior_marshalling `367801ea5 <https://github.com/ralphbean/bugwarrior/commit/367801ea50502defebb624fa87a046a7de775d69>`_
+- Report which fields have changed when updating a task. `8d19b6edc <https://github.com/ralphbean/bugwarrior/commit/8d19b6edcc7c43803014f41d2bfdd9ee322cb5d6>`_
+- Github milestones are integers. `525add3bd <https://github.com/ralphbean/bugwarrior/commit/525add3bdc4fc09985cd2ecde1ce09be2e445c1c>`_
+- And so it begins. `841698744 <https://github.com/ralphbean/bugwarrior/commit/84169874484c51a00e321647289d8b5b2a57a825>`_
+- Create sphinx (read-the-docs compatible) docs for Bugwarrior. `e981cc2cb <https://github.com/ralphbean/bugwarrior/commit/e981cc2cbea5a33586bd80bf5cd46a4390be5299>`_
+- Merge pull request #120 from coddingtonbear/hor_em_akhet `8ce1c0227 <https://github.com/ralphbean/bugwarrior/commit/8ce1c0227f0f9a440eeee498786c3dc7713e667f>`_
+- Link to rtfd. `61f9070a2 <https://github.com/ralphbean/bugwarrior/commit/61f9070a2b04900536c00c6404875b3d7bac281f>`_
+- Link common configuration options explicitly. `0e13c4bed <https://github.com/ralphbean/bugwarrior/commit/0e13c4bede618e9feaaf70ace2e8098a4d3b9707>`_
+- Merge pull request #121 from coddingtonbear/make_common_options_explicit `7047c354b <https://github.com/ralphbean/bugwarrior/commit/7047c354baba6e7db3764c6da9e16e6566d23583>`_
+- Merge branch 'develop' into bugwarrior_marshalling `2c811b88c <https://github.com/ralphbean/bugwarrior/commit/2c811b88c1131e5c0dea662f24342b464d27f775>`_
+- Generalize field templating logic to allow overriding the generated value of any field. `baf15abd9 <https://github.com/ralphbean/bugwarrior/commit/baf15abd9be1a90bbd5f202ba5f58418a51f5cf6>`_
+- Updating documentation to link to field templates rather than description templates. `ffad15b9b <https://github.com/ralphbean/bugwarrior/commit/ffad15b9b9507b3b242fe93fd7104041de4fe587>`_
+- ActiveCollab Service: Make dates timezone aware, and default to US/Eastern. If users request a change we can add this as a config option `de34d36e9 <https://github.com/ralphbean/bugwarrior/commit/de34d36e9bff968a9e37dbd83d81639542245221>`_
+- Merge pull request #124 from kostajh/develop `572faf9fa <https://github.com/ralphbean/bugwarrior/commit/572faf9fa643e99e1eb0ba1acbdd2c64db665378>`_
+- Merge pull request #122 from coddingtonbear/generalize_template_handling `259c75ed4 <https://github.com/ralphbean/bugwarrior/commit/259c75ed4b46e1c96963018959a560be3e5622e6>`_
+- Add new UDA handling; use task object journaling instead of checking for changes manually. `5ff726337 <https://github.com/ralphbean/bugwarrior/commit/5ff726337340c79ba1dc3ee3c19eb58d7d6fe3e2>`_
+- Removing now-unncessary function for finding task changes. `cf2502559 <https://github.com/ralphbean/bugwarrior/commit/cf25025591a755c2ab0ce43421240bb895de0e09>`_
+- Do not attempt to use task methods for new tasks. `f7765ef7c <https://github.com/ralphbean/bugwarrior/commit/f7765ef7cc5faac86d3ce2d25daa60d87e14611e>`_
+- Make sure that an array exists always. `fbbaa2661 <https://github.com/ralphbean/bugwarrior/commit/fbbaa26610aca2a5e7207cb632b381fe3fb52d3d>`_
+- Convert incoming annotations to strings. `82c36e994 <https://github.com/ralphbean/bugwarrior/commit/82c36e9948beb0ac8e1bf268428dd54e7195b0c1>`_
+- Report which fields have changed when updating a task. `f8d3b2599 <https://github.com/ralphbean/bugwarrior/commit/f8d3b259927891901a3149392df6475577b8aa04>`_
+- Github milestones are integers. `eb2247af7 <https://github.com/ralphbean/bugwarrior/commit/eb2247af71ee62c742a94e897d737c187374a000>`_
+- Nope.  That's numeric... `021e59dac <https://github.com/ralphbean/bugwarrior/commit/021e59dac8c15fd9afe8da742b2640df3014dcc2>`_
+- Merge pull request #118 from coddingtonbear/bugwarrior_marshalling `92fdb5de1 <https://github.com/ralphbean/bugwarrior/commit/92fdb5de10bb212fbae3e90ead899c4824866ab2>`_
+- Allow one to specify tags using templates, too. `62f3f0581 <https://github.com/ralphbean/bugwarrior/commit/62f3f0581f03db9ee343860ea46ac0675770dab9>`_
+- Fixes a broken activecollab test. `cc7ed66ac <https://github.com/ralphbean/bugwarrior/commit/cc7ed66ac548d77c0c31e259b9984e2ead128c59>`_
+- Merge pull request #127 from coddingtonbear/fix_activecollab_test `d3c4e7d98 <https://github.com/ralphbean/bugwarrior/commit/d3c4e7d986477d981bd3ddc8da0699732d9cd3d0>`_
+- Merge pull request #126 from coddingtonbear/tag_templates `12e37342a <https://github.com/ralphbean/bugwarrior/commit/12e37342a2ea3a9ca3a582d6beca39ecf99578b7>`_
+- Add a failing test for db.merge_left. `c50fce5b8 <https://github.com/ralphbean/bugwarrior/commit/c50fce5b85ba4424cf162bd6efdef02e99e50bf8>`_
+- Static fields. `14dbcff0e <https://github.com/ralphbean/bugwarrior/commit/14dbcff0e2ee4cd439439d9c0cea8c4ab88f7829>`_
+- WIP `502f2789a <https://github.com/ralphbean/bugwarrior/commit/502f2789abbc15fd0efa4cb9660f0ae1ef069055>`_
+- Update docs and test `e3a4af4c0 <https://github.com/ralphbean/bugwarrior/commit/e3a4af4c012172a32a9755d08aa0a023fcdb433a>`_
+- Project ID is a string `b964e4679 <https://github.com/ralphbean/bugwarrior/commit/b964e46799ba0a41a0dab7a14a2b54d84130a30c>`_
+- Use six `b5db5d0bb <https://github.com/ralphbean/bugwarrior/commit/b5db5d0bbdc00897de21e58903371ef088e916ff>`_
+- Set issue Label as a UDA rather than a task. Remove unnecessary use of six.text_type(). Set created on as a date, not a string. And fix the tests! `96182a4d9 <https://github.com/ralphbean/bugwarrior/commit/96182a4d97d18fec415d09c94b7bdf2fb1766ce0>`_
+- Merge pull request #128 from kostajh/activecollab-refactor `1e5489468 <https://github.com/ralphbean/bugwarrior/commit/1e5489468577d37b757e68d648246e0c6cedfdee>`_
+- Make pull requests a top priority. `79b7d3194 <https://github.com/ralphbean/bugwarrior/commit/79b7d31942bd7da3018844956d46f118f9c51ef7>`_
+- Suppress stderr. `416f52e24 <https://github.com/ralphbean/bugwarrior/commit/416f52e2428956a6b940e65a1e25f2326b209d03>`_
+- Make tasktools.org an example for JIRA.  Fixes #107. `9ca33e0a8 <https://github.com/ralphbean/bugwarrior/commit/9ca33e0a8d2b4a037f9ce64e79fad523ae32385a>`_
+- fix issue with missing longdesc `458e9b460 <https://github.com/ralphbean/bugwarrior/commit/458e9b460bdd2802677a363161ca67a024951d29>`_
+- Merge pull request #133 from mvcisback/longdesc `c235822be <https://github.com/ralphbean/bugwarrior/commit/c235822be52efcaac01c4ad46cf882f2f5e924ce>`_
+- optionally ignore cc'd bugs `95fca9595 <https://github.com/ralphbean/bugwarrior/commit/95fca95953289430206f8d1b2f670355510c8696>`_
+- Merge pull request #134 from mvcisback/no_cc `c7fdf2b39 <https://github.com/ralphbean/bugwarrior/commit/c7fdf2b398f02c429d7091a78b6e5c84b8042148>`_
+- New inline_links option. `de0071048 <https://github.com/ralphbean/bugwarrior/commit/de00710483d4e616eae3ef452763ff23d2c17e7b>`_
+- Sleep so we can take it easy on gpg-agent. `a531f3ae5 <https://github.com/ralphbean/bugwarrior/commit/a531f3ae58c44888708476c7543f9c3308d11fc4>`_
+- Include a message indicating how many pull requests were found. `1373df691 <https://github.com/ralphbean/bugwarrior/commit/1373df69173dc3190ac211f6675de76f2b96e51d>`_
+- Conditionally filter pull requests, too, if github.filter_pull_requests is true. `469d14dfa <https://github.com/ralphbean/bugwarrior/commit/469d14dfaedcfbfb64e62f30a93da113ab9abe1a>`_
+- Adding documentation of the 'github.filter_pull_requests' option. `6b5a03b38 <https://github.com/ralphbean/bugwarrior/commit/6b5a03b3817cccf8d1a00bf2fea479c8ac59e24b>`_
+- Cleaning up log messages to be slightly more consistent. `cf5489ad2 <https://github.com/ralphbean/bugwarrior/commit/cf5489ad2e043b64f050fb9846ece654cb250571>`_
+- Removing unnecessary whitespace. `4ac7b7fbb <https://github.com/ralphbean/bugwarrior/commit/4ac7b7fbb2e41478cc828ccd7c7f3c73a14f8dfc>`_
+- Properly link to the 'Common Configuration Options' reference. `d4e320688 <https://github.com/ralphbean/bugwarrior/commit/d4e3206880f1bcb60071ea8d07f3ba6c6cf8e817>`_
+- Merge pull request #137 from coddingtonbear/github_filterable_pull_requests `7c72431f1 <https://github.com/ralphbean/bugwarrior/commit/7c72431f10c17d76794728f6aabbcde376a21eff>`_
+- Make trac.py url quote the username/password `f52bf411e <https://github.com/ralphbean/bugwarrior/commit/f52bf411ebd3e5aea818c4b982cb48d1844bfc72>`_
+- Merge pull request #138 from puiterwijk/feature/complex-passwords `44201a97a <https://github.com/ralphbean/bugwarrior/commit/44201a97ac2f1c3bfd052e76837888eb20aff9ca>`_
+- Allow explicit configuration setting for disabling/enabling Issue URL annotations. `f8358a61d <https://github.com/ralphbean/bugwarrior/commit/f8358a61d9b20c8b515791608f58233ecd717e1b>`_
+- Fixing JIRA issue gathering. `d2a4dd346 <https://github.com/ralphbean/bugwarrior/commit/d2a4dd34611807fc07dcee569891e3b493f1a20e>`_
+- Shortening one of the lines to satisfy Pep8Bot. `7a5a02c75 <https://github.com/ralphbean/bugwarrior/commit/7a5a02c754d3fb3823d03c12112b916aabed1eff>`_
+- Merge pull request #139 from coddingtonbear/inline_annotation_links_fix `1410fff72 <https://github.com/ralphbean/bugwarrior/commit/1410fff72972c2c3c0335a5fc90559960f851c22>`_
+- Adding functionality allowing one to update extra post-object-creation. `e91636fd4 <https://github.com/ralphbean/bugwarrior/commit/e91636fd4407ab91f7ee0e3b6c7046a84c318cc8>`_
+- Only create JiraIssue instance once. `2a9f1b8fa <https://github.com/ralphbean/bugwarrior/commit/2a9f1b8fae6013e914d951854d46c514dedddc09>`_
+- Only create ActivecollabIssue instance once. `3ef7e3f5b <https://github.com/ralphbean/bugwarrior/commit/3ef7e3f5b3dfbe7fc65497b76b5aab1d8fc7f210>`_
+- Only create BitbucketIssue instance once. `e63745500 <https://github.com/ralphbean/bugwarrior/commit/e63745500d13b8c50064ec37934d60258c9b456b>`_
+- Only create BugzillaIssue instance once. `8c572587c <https://github.com/ralphbean/bugwarrior/commit/8c572587cd2dd0716cdb00bf1ef5bef120eda049>`_
+- Only create GithubIssue instance once. `2ca1ec0ed <https://github.com/ralphbean/bugwarrior/commit/2ca1ec0edfb533874e1911c397b35aaf47a4e525>`_
+- Only create TracIssue instance once. `61ed88f76 <https://github.com/ralphbean/bugwarrior/commit/61ed88f76e2314631f372256ec80d18b72a48e86>`_
+- Merge pull request #140 from coddingtonbear/inline_annotation_links_fix_single_create `e6d78175a <https://github.com/ralphbean/bugwarrior/commit/e6d78175a0b6f19c8314e6f8944446e3b90dfb82>`_
+- More prominently document these options. `bfdb3975b <https://github.com/ralphbean/bugwarrior/commit/bfdb3975beda26566ab7fe141d7c6446fb2d6908>`_
+- Fix incorrect logic. `93fc03fef <https://github.com/ralphbean/bugwarrior/commit/93fc03fefcbeb793bc6df8f6bb3c1c25d99a8ead>`_
+- Fix a typo in the github docs `87c10db6a <https://github.com/ralphbean/bugwarrior/commit/87c10db6acd5984398d2e5a04bd767436ba4e9b7>`_
+- Merge pull request #142 from lmacken/develop `2bbc92fd8 <https://github.com/ralphbean/bugwarrior/commit/2bbc92fd82ede52170c6bc06365991741e0e1570>`_
+- Add a bugwarrior-vault command. `7f1c31798 <https://github.com/ralphbean/bugwarrior/commit/7f1c3179815750b9ec317a0ae4589db3e22d10ce>`_
+- Merge pull request #143 from ralphbean/feature/vault `c97e512c6 <https://github.com/ralphbean/bugwarrior/commit/c97e512c6abc93e20b30ec8962f4ee98d0544b91>`_
+
 0.7.0
 -----
 
