@@ -71,9 +71,9 @@ class TracService(IssueService):
         username = self.config_get('username')
         password = self.config_get('password')
         if not password or password.startswith('@oracle:'):
-            service = "https://%s@%s/" % (username, base_uri)
             password = get_service_password(
-                service, username, oracle=password,
+                self.get_keyring_service(self.config, self.target),
+                username, oracle=password,
                 interactive=self.config.interactive
             )
 
@@ -82,6 +82,12 @@ class TracService(IssueService):
             urllib.quote_plus(auth), base_uri
         )
         self.trac = offtrac.TracServer(uri)
+
+    @classmethod
+    def get_keyring_service(cls, config, section):
+        username = config.get(section, cls._get_key('username'))
+        base_uri = config.get(section, cls._get_key('base_uri'))
+        return "https://%s@%s/" % (username, base_uri)
 
     @classmethod
     def validate_config(cls, config, target):

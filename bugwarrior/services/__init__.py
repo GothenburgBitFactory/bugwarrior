@@ -113,11 +113,9 @@ class IssueService(object):
             return to_type(value)
         return value
 
-    def _get_key(self, key):
-        return '%s.%s' % (
-            self.CONFIG_PREFIX,
-            key
-        )
+    @classmethod
+    def _get_key(cls, key):
+        return '%s.%s' % (cls.CONFIG_PREFIX, key)
 
     def get_service_metadata(self):
         return {}
@@ -221,6 +219,11 @@ class IssueService(object):
         The priority should be one of "H", "M", or "L".
         """
         raise NotImplementedError()
+
+    @classmethod
+    def get_keyring_service(cls, config, section):
+        """ Given the keyring service name for this service. """
+        raise NotImplementedError
 
 
 class Issue(object):

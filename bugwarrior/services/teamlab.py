@@ -124,9 +124,9 @@ class TeamLabService(IssueService):
         _login = self.config_get('login')
         _password = self.config_get('password')
         if not _password or _password.startswith("@oracle:"):
-            service = "teamlab://%s@%s" % (_login, self.hostname)
             _password = get_service_password(
-                service, _login, oracle=_password,
+                self.get_keyring_service(self.config, self.target),
+                _login, oracle=_password,
                 interactive=self.config.interactive
             )
 
@@ -136,6 +136,12 @@ class TeamLabService(IssueService):
         self.project_name = self.config_get_default(
             'project_name', self.hostname
         )
+
+    @classmethod
+    def get_keyring_service(cls, config, section):
+        login = config.get(section, cls._get_key('login'))
+        hostname = config.get(section, cls._get_key('hostname'))
+        return "teamlab://%s@%s" % (login, hostname)
 
     def get_service_metadata(self):
         return {
