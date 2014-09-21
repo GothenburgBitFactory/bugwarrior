@@ -80,9 +80,14 @@ Example Configuration
     # or not."
     [my_github]
     service = github
-    github.username = ralphbean
     default_priority = H
     add_tags = open_source
+    
+    # This specifies that we should pull issues from repositories belonging
+    # to the 'ralphbean' github account.  See the note below about
+    # 'github.username' and 'github.login'.  They are different, and you need
+    # both.
+    github.username = ralphbean
     
     # I want taskwarrior to include issues from all my repos, except these
     # two because they're spammy or something.
@@ -92,8 +97,13 @@ Example Configuration
     # can also simply include just a limited set.
     github.include_repos = project_foo,project_foz
     
-    # Note that login and username can be different.  I can login as me, but
+    # Note that login and username can be different:  I can login as me, but
     # scrape issues from an organization's repos.
+    #
+    # - 'github.login' is the username you ask bugwarrior to
+    #   login as.  Set it to your account.
+    # - 'github.username' is the github entity you want to pull
+    #   issues for.  It could be you, or some other user entirely.
     github.login = ralphbean
     github.password = OMG_LULZ
     
