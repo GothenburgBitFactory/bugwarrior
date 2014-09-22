@@ -11,6 +11,7 @@ Here's an example of an Github target::
 
     [my_issue_tracker]
     service = github
+    github.username = ralphbean
     github.login = ralphbean
     github.password = OMG_LULZ
 
@@ -18,6 +19,14 @@ The above example is the minimum required to import issues from
 Github.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
+
+Note that both ``github.username`` and ``github.login`` are required and can be
+set to different values.  ``github.login`` is used to specify what account
+bugwarrior should use to login to github.  ``github.username`` indicates which
+repositories should be scraped.  For instance, I always have ``github.login``
+set to ralphbean (my account).  But I have some targets with
+``github.username`` pointed at organizations or other users to watch issues
+there.
 
 Service Features
 ----------------

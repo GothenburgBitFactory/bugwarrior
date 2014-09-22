@@ -4,6 +4,7 @@ from twiggy import log
 from lockfile import LockTimeout
 from lockfile.pidlockfile import PIDLockFile
 
+import twiggy
 import getpass
 import keyring
 import click
@@ -25,6 +26,7 @@ def pull():
 
     Relies on configuration in ~/.bugwarriorrc
     """
+    twiggy.quickSetup()
     try:
         # Load our config file
         config = load_config()
