@@ -1,6 +1,14 @@
 Changelog
 =========
 
+1.0.1
+-----
+
+- Elaborate on github.username and github.login. `06dfee567 <https://github.com/ralphbean/bugwarrior/commit/06dfee567e05b625be8dc9014df00b4b914e0e9e>`_
+- This definitely requires taskw.  Fixes 146. `7cf09804b <https://github.com/ralphbean/bugwarrior/commit/7cf09804b43cc16d2bb77dc7419afafb41e9937b>`_
+- Setup logging before we check the config. `bce65c0c8 <https://github.com/ralphbean/bugwarrior/commit/bce65c0c806cff9b9c88eed08fd7e8591c23ebb9>`_
+- Reorganize the way docs are shipped.. `027f05c63 <https://github.com/ralphbean/bugwarrior/commit/027f05c6349c29ccb0ec06d51a7dd8641e04be7b>`_
+
 1.0.0
 -----
 
