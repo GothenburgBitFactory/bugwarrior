@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.0.2
+-----
+
+- Fix dep typo. `bd53a4c73 <https://github.com/ralphbean/bugwarrior/commit/bd53a4c738f52cd5b85bbdfff77112db99712610>`_
+
 1.0.1
 -----
 
