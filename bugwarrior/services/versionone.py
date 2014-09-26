@@ -20,6 +20,7 @@ class VersionOneIssue(Issue):
     STORY_ESTIMATE = 'versiononestoryestimate'
     STORY_DETAIL_ESTIMATE = 'versiononestorydetailestimate'
     STORY_URL = 'versiononestoryurl'
+    STORY_NUMBER = 'versiononestorynumber'
     STORY_OID = 'versiononestoryoid'
 
     UDAS = {
@@ -32,15 +33,15 @@ class VersionOneIssue(Issue):
             'label': 'VersionOne Task Description'
         },
         TASK_ESTIMATE: {
-            'type': 'numeric',
+            'type': 'string',
             'label': 'VersionOne Task Estimate'
         },
         TASK_DETAIL_ESTIMATE: {
-            'type': 'numeric',
+            'type': 'string',
             'label': 'VersionOne Task Detail Estimate',
         },
         TASK_TO_DO: {
-            'type': 'numeric',
+            'type': 'string',
             'label': 'VersionOne Task To Do'
         },
         TASK_REFERENCE: {
@@ -64,16 +65,20 @@ class VersionOneIssue(Issue):
             'label': 'VersionOne Story Description'
         },
         STORY_ESTIMATE: {
-            'type': 'numeric',
+            'type': 'string',
             'label': 'VersionOne Story Estimate'
         },
         STORY_DETAIL_ESTIMATE: {
-            'type': 'numeric',
+            'type': 'string',
             'label': 'VersionOne Story Detail Estimate'
         },
         STORY_URL: {
             'type': 'string',
             'label': 'VersionOne Story URL'
+        },
+        STORY_NUMBER: {
+            'type': 'string',
+            'label': 'VersionOne Story Number'
         },
         STORY_OID: {
             'type': 'string',
@@ -86,6 +91,7 @@ class VersionOneIssue(Issue):
     def to_taskwarrior(self):
         return {
             'project': self.extra['project'],
+            'priority': self.origin['default_priority'],
 
             self.TASK_NAME: self.record['task']['Name'],
             self.TASK_DESCRIPTION: self.record['task']['Description'],
@@ -102,6 +108,7 @@ class VersionOneIssue(Issue):
             self.STORY_DETAIL_ESTIMATE: self.record['story']['DetailEstimate'],
             self.STORY_URL: self.record['story']['url'],
             self.STORY_OID: self.record['story']['idref'],
+            self.STORY_NUMBER: self.record['story']['Number'],
         }
 
     def get_default_description(self):
