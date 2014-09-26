@@ -1,60 +1,106 @@
-import json
-import requests
-from twiggy import log
+from v1pysdk import V1Meta
+from six.moves.urllib import parse
 
 from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import die, get_service_password
 
 
 class VersionOneIssue(Issue):
-    OID = 'versiononeoid'
-    DESCRIPTION = 'versiononedescription'
-    ESTIMATE = 'versiononeestimate'
-    DETAIL_ESTIMATE = 'versiononedetailestimate'
-    TYPE = 'versiononetype'
-    NAME = 'versiononename'
+    TASK_NAME = 'versiononetaskname'
+    TASK_DESCRIPTION = 'versiononetaskdescrption'
+    TASK_ESTIMATE = 'versiononetaskestimate'
+    TASK_DETAIL_ESTIMATE = 'versiononetaskdetailestimate'
+    TASK_TO_DO = 'versiononetasktodo'
+    TASK_REFERENCE = 'versiononetaskreference'
+    TASK_URL = 'versiononetaskurl'
+
+    STORY_NAME = 'versiononestoryname'
+    STORY_DESCRIPTION = 'versiononestorydescription'
+    STORY_ESTIMATE = 'versiononestoryestimate'
+    STORY_DETAIL_ESTIMATE = 'versiononestorydetailestimate'
+    STORY_URL = 'versiononestoryurl'
 
     UDAS = {
-        OID: {
+        TASK_NAME: {
             'type': 'string',
-            'label': 'VersionOne ID',
+            'label': 'VersionOne Task Name'
         },
-        DESCRIPTION: {
+        TASK_DESCRIPTION: {
             'type': 'string',
-            'label': 'VersionOne Description',
+            'label': 'VersionOne Task Description'
         },
-        ESTIMATE: {
+        TASK_ESTIMATE: {
             'type': 'numeric',
-            'label': 'VersionOne Estimate',
+            'label': 'VersionOne Task Estimate'
         },
-        DETAIL_ESTIMATE: {
+        TASK_DETAIL_ESTIMATE: {
             'type': 'numeric',
-            'label': 'VersionOne DetailEstimate',
+            'label': 'VersionOne Task Detail Estimate',
         },
-        TYPE: {
-            'type': 'string',
-            'label': 'VersionOne Type',
+        TASK_TO_DO: {
+            'type': 'numeric',
+            'label': 'VersionOne Task To Do'
         },
-        NAME: {
+        TASK_REFERENCE: {
             'type': 'string',
-            'label': 'VersionOne Name',
-        }
+            'label': 'VersionOne Task Reference'
+        },
+        TASK_URL: {
+            'type': 'string',
+            'label': 'VersionOne Task URL'
+        },
+        STORY_NAME: {
+            'type': 'string',
+            'label': 'VersionOne Story Name'
+        },
+        STORY_DESCRIPTION: {
+            'type': 'string',
+            'label': 'VersionOne Story Description'
+        },
+        STORY_ESTIMATE: {
+            'type': 'numeric',
+            'label': 'VersionOne Story Estimate'
+        },
+        STORY_DETAIL_ESTIMATE: {
+            'type': 'numeric',
+            'label': 'VersionOne Story Detail Estimate'
+        },
+        STORY_URL: {
+            'type': 'string',
+            'label': 'VersionOne Story URL'
+        },
     }
-    UNIQUE_KEY = (OID, )
+
+    UNIQUE_KEY = (TASK_URL, )
 
     def to_taskwarrior(self):
         return {
-            self.OID: self.record['_oid'],
-            self.DESCRIPTION: self.record['Description'],
-            self.ESTIMATE: self.record['Estimate'],
-            self.DETAIL_ESTIMATE: self.record['DetailEstimate'],
-            self.NAME: self.record['Name'],
+            'project': self.extra['project'],
+
+            self.TASK_NAME: self.record['task']['Name'],
+            self.TASK_DESCRIPTION: self.record['task']['Description'],
+            self.TASK_ESTIMATE: self.record['task']['Estimate'],
+            self.TASK_DETAIL_ESTIMATE: self.record['task']['DetailEstimate'],
+            self.TASK_TO_DO: self.record['task']['ToDo'],
+            self.TASK_REFERENCE: self.record['task']['Reference'],
+            self.TASK_URL: self.record['task']['url'],
+
+            self.STORY_NAME: self.record['story']['Name'],
+            self.STORY_DESCRIPTION: self.record['story']['Description'],
+            self.STORY_ESTIMATE: self.record['story']['Estimate'],
+            self.STORY_DETAIL_ESTIMATE: self.record['story']['DetailEstimate'],
+            self.STORY_URL: self.record['story']['url'],
         }
 
     def get_default_description(self):
         return self.build_default_description(
-            title=self.record['Name'],
-            number=self.record['OID'],
+            title=': '.join([
+                self.record['story']['Name'],
+                self.record['task']['Name'],
+            ]),
+            url=self.record['task']['url'],
+            number=self.record['story']['Number'],
+            cls='task',
         )
 
 
@@ -62,46 +108,44 @@ class VersionOneService(IssueService):
     ISSUE_CLASS = VersionOneIssue
     CONFIG_PREFIX = 'versionone'
 
-    ITEMTYPES = {
-        'Task': {
-            'columns': [
-                'Name',
-                'Estimate',
-                'DetailEstimate',
-                'Description',
-            ],
-        },
+    TASK_COLLECT_DATA = {
+        'Name',
+        'Description',
+        'Estimate',
+        'DetailEstimate',
+        'ToDo',
+        'Reference',
+        'url',
+    }
+    STORY_COLLECT_DATA = {
+        'Name',
+        'Description',
+        'Estimate',
+        'DetailEstimate',
+        'Number',
+        'url',
     }
 
     def __init__(self, *args, **kw):
         super(VersionOneService, self).__init__(*args, **kw)
 
-        self.url = self.config_get('base_uri')
-        username = self.config_get('username')
-        password = self.config_get('password')
+        parsed_address = parse.urlparse(
+            self.config_get('base_uri')
+        )
+        self.address = parsed_address.netloc
+        self.instance = parsed_address.path.strip('/')
+        self.username = self.config_get('username')
+        self.password = self.config_get('password')
+        self.project = self.config_get_default('project', default='')
+        self.timebox_name = self.config_get_default('timebox_name')
 
-        raw_item_types = self.config_get_default(
-            'item_types',
-            default='Task',
-            to_type=six.text_type
-        ).split(',')
-        self.item_types = []
-        for item_type in raw_item_types:
-            if item_type in self.ITEMTYPES:
-                self.item_types.append(item_type)
-            else:
-                log.name(self.target).warning(
-                    "%s is not a known VersionOne item type", item_type
-                )
-
-        if not password or password.startswith('@oracle:'):
+        if not self.password or self.password.startswith('@oracle:'):
             username = self.config_get('username')
             service = "versionone://%s@v1host.com/%s" % (username, username)
-            password = get_service_password(
-                service, username, oracle=password,
+            self.password = get_service_password(
+                service, username, oracle=self.password,
                 interactive=self.config.interactive
             )
-        self.auth = (username, password)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -114,68 +158,59 @@ class VersionOneService(IssueService):
             if not config.has_option(target, option):
                 die("[%s] has no '%s'" % (target, option))
 
-        return super(VersionOneService, self).validate_config(config, target)
+        IssueService.validate_config(config, target)
 
-    def get_data(self, query):
-        response = requests.get(
-            self.url + '/query.v1',
-            auth=self.auth,
-            data=json.dumps(query)
-        )
-
-        if response.status_code != 200:
-            raise IOError(
-                "Non-200 status code %s; %s; %s" % (
-                    response.status_code,
-                    json.dumps(query),
-                    response.text
-                )
+    def get_meta(self):
+        if not hasattr(self, '_meta'):
+            self._meta = V1Meta(
+                address=self.address,
+                instance=self.instance,
+                username=self.username,
+                password=self.password
             )
-        if callable(response.json):
-            # Newer python-requests
-            return response.json()
-        else:
-            # Older python-requests
-            return response.json
-
-    def get_item_data(self, oid):
-        item_type, _ = oid.split(':', 1)
-        data = self.get-data({
-            'from': item_type,
-            'select': self.ITEMTYPES[item_type]['columns'],
-            'where': {
-                'ID': oid
-            }
-        })[0][0]
-
-        return item_type, data
+        return self._meta
 
     def get_assignments(self, username):
-        items = {}
+        meta = self.get_meta()
+        where = {
+            'IsCompleted': False
+        }
+        if self.timebox_name:
+            where['Parent.Timebox.Name'] = self.timebox_name
 
-        result = self.get_data({
-            'from': 'Member'
-            'select': [
-                'OwnedWorkitems',
-            ],
-            'where': {
-                'Username': username
-            }
-        })
-        for item in result[0][0]['OwnedWorkItems']:
-            item_type, _ = item['_oid'].split(':', 1)
-
-            if item_type not in items:
-                items[item_type] = []
-
-            items[item_type].append(item['_oid'])
-
-        for item_type, items in item_type.items():
-            if item_type not in self.item_types:
-                continue
-            for item in items:
-                yield self.get_item_data(item)
+        tasks = meta.Task.select(
+            'Name',
+            'Parent',
+            'Description',
+            'Estimate',
+            'DetailEstimate',
+            'ToDo',
+            'Reference',
+        ).filter(
+            "Owners.Username='{username}'".format(username=self.username)
+        ).where(**where)
+        return tasks
 
     def issues(self):
-        for item_type, issue in self.get_assignments(self.username):
-            yield self.get_issue_for_record(issue)
+        for issue in self.get_assignments(self.username):
+            issue_data = {
+                'task': {},
+                'story': {}
+            }
+            for column in self.TASK_COLLECT_DATA:
+                issue_data['task'][column] = getattr(
+                    issue, column, None
+                )
+            for column in self.STORY_COLLECT_DATA:
+                issue_data['story'][column] = getattr(
+                    issue.Parent, column, None
+                )
+
+            extras = {
+                'project': self.project
+            }
+
+            yield self.get_issue_for_record(
+                issue_data,
+                extras
+            )
