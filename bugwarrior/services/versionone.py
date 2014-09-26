@@ -13,12 +13,14 @@ class VersionOneIssue(Issue):
     TASK_TO_DO = 'versiononetasktodo'
     TASK_REFERENCE = 'versiononetaskreference'
     TASK_URL = 'versiononetaskurl'
+    TASK_OID = 'versiononetaskoid'
 
     STORY_NAME = 'versiononestoryname'
     STORY_DESCRIPTION = 'versiononestorydescription'
     STORY_ESTIMATE = 'versiononestoryestimate'
     STORY_DETAIL_ESTIMATE = 'versiononestorydetailestimate'
     STORY_URL = 'versiononestoryurl'
+    STORY_OID = 'versiononestoryoid'
 
     UDAS = {
         TASK_NAME: {
@@ -49,6 +51,10 @@ class VersionOneIssue(Issue):
             'type': 'string',
             'label': 'VersionOne Task URL'
         },
+        TASK_OID: {
+            'type': 'string',
+            'label': 'VersionOne Task Object ID'
+        },
         STORY_NAME: {
             'type': 'string',
             'label': 'VersionOne Story Name'
@@ -69,6 +75,10 @@ class VersionOneIssue(Issue):
             'type': 'string',
             'label': 'VersionOne Story URL'
         },
+        STORY_OID: {
+            'type': 'string',
+            'label': 'VersionOne Story Object ID'
+        },
     }
 
     UNIQUE_KEY = (TASK_URL, )
@@ -84,12 +94,14 @@ class VersionOneIssue(Issue):
             self.TASK_TO_DO: self.record['task']['ToDo'],
             self.TASK_REFERENCE: self.record['task']['Reference'],
             self.TASK_URL: self.record['task']['url'],
+            self.TASK_OID: self.record['task']['idref'],
 
             self.STORY_NAME: self.record['story']['Name'],
             self.STORY_DESCRIPTION: self.record['story']['Description'],
             self.STORY_ESTIMATE: self.record['story']['Estimate'],
             self.STORY_DETAIL_ESTIMATE: self.record['story']['DetailEstimate'],
             self.STORY_URL: self.record['story']['url'],
+            self.STORY_OID: self.record['story']['idref'],
         }
 
     def get_default_description(self):
@@ -116,6 +128,7 @@ class VersionOneService(IssueService):
         'ToDo',
         'Reference',
         'url',
+        'idref',
     }
     STORY_COLLECT_DATA = {
         'Name',
@@ -124,6 +137,7 @@ class VersionOneService(IssueService):
         'DetailEstimate',
         'Number',
         'url',
+        'idref',
     }
 
     def __init__(self, *args, **kw):
