@@ -157,7 +157,7 @@ class VersionOneService(IssueService):
         self.instance = parsed_address.path.strip('/')
         self.username = self.config_get('username')
         self.password = self.config_get('password')
-        self.project = self.config_get_default('project', default='')
+        self.project = self.config_get_default('project_name', default='')
         self.timebox_name = self.config_get_default('timebox_name')
 
         if not self.password or self.password.startswith('@oracle:'):
