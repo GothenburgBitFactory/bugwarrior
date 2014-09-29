@@ -156,24 +156,34 @@ class VersionOneService(IssueService):
         self.address = parsed_address.netloc
         self.instance = parsed_address.path.strip('/')
         self.username = self.config_get('username')
-        self.password = self.config_get('password')
+        self.password = self.config_get_default('password')
+        if not self.password or self.password.startswith('@oracle:'):
+            self.password = get_service_password(
+                self.get_keyring_service(self.config, self.target),
+                self.username, oracle=self.password,
+                interactive=self.config.interactive
+            )
+
         self.project = self.config_get_default('project_name', default='')
         self.timebox_name = self.config_get_default('timebox_name')
 
-        if not self.password or self.password.startswith('@oracle:'):
-            username = self.config_get('username')
-            service = "versionone://%s@v1host.com/%s" % (username, username)
-            self.password = get_service_password(
-                service, username, oracle=self.password,
-                interactive=self.config.interactive
-            )
+    @classmethod
+    def get_keyring_service(cls, config, section):
+        parsed_address = parse.urlparse(
+            config.get(section, cls._get_key('base_uri'))
+        )
+        username = config.get(section, cls._get_key('username'))
+        return "versionone://%s@%s%s" % (
+            username,
+            parsed_address.netloc,
+            parsed_address.path
+        )
 
     @classmethod
     def validate_config(cls, config, target):
         options = (
             'versionone.base_uri',
             'versionone.username',
-            'versionone.password'
         )
         for option in options:
             if not config.has_option(target, option):
