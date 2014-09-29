@@ -127,7 +127,7 @@ class VersionOneService(IssueService):
     ISSUE_CLASS = VersionOneIssue
     CONFIG_PREFIX = 'versionone'
 
-    TASK_COLLECT_DATA = {
+    TASK_COLLECT_DATA = (
         'Name',
         'Description',
         'Estimate',
@@ -136,8 +136,8 @@ class VersionOneService(IssueService):
         'Reference',
         'url',
         'idref',
-    }
-    STORY_COLLECT_DATA = {
+    )
+    STORY_COLLECT_DATA = (
         'Name',
         'Description',
         'Estimate',
@@ -145,7 +145,7 @@ class VersionOneService(IssueService):
         'Number',
         'url',
         'idref',
-    }
+    )
 
     def __init__(self, *args, **kw):
         super(VersionOneService, self).__init__(*args, **kw)
