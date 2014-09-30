@@ -579,3 +579,9 @@ try:
     SERVICES['phabricator'] = PhabricatorService
 except ImportError as e:
     pass
+
+try:
+    from .versionone import VersionOneService
+    SERVICES['versionone'] = VersionOneService
+except ImportError as e:
+    pass
