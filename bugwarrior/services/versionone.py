@@ -204,7 +204,11 @@ class VersionOneService(IssueService):
     def get_assignments(self, username):
         meta = self.get_meta()
         where = {
-            'IsCompleted': False
+            'IsClosed': False,
+            'IsCompleted': False,
+            'IsDead': False,
+            'IsDeleted': False,
+            'IsInactive': False,
         }
         if self.timebox_name:
             where['Parent.Timebox.Name'] = self.timebox_name
