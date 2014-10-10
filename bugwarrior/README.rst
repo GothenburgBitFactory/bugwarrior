@@ -17,6 +17,7 @@ It currently supports the following remote resources:
  - `jira <http://www.atlassian.com/software/jira/overview>`_
  - `activecollab <http://www.activecollab.com>`_ (2.x and 4.x)
  - `phabricator <http://phabricator.org/>`_
+ - `versionone <http://http://www.versionone.com/>`_
 
 Documentation
 -------------
