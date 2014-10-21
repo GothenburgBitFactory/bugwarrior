@@ -407,9 +407,9 @@ def synchronize(issue_generator, conf):
     for issue in issue_updates['closed']:
         _, task_info = tw.get_task(uuid=issue)
         log.name('db').info(
-            "Completing task {0} {1}",
-            task_info['uuid'],
-            task_info['description'],
+            "Completing task {0}) {2}",
+            issue,
+            task_info.get('description'),
         )
         if notify:
             send_notification(task_info, 'Completed', conf)
