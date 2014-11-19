@@ -55,6 +55,14 @@ class RedMineIssue(Issue):
     }
     UNIQUE_KEY = (URL, )
 
+    PRIORITY_MAP = {
+        0: 'L',
+        1: 'L',
+        2: 'M',
+        3: 'H',
+        4: 'H',
+    }
+
     def to_taskwarrior(self):
         return {
             'project': self.get_project_name(),
@@ -64,6 +72,12 @@ class RedMineIssue(Issue):
             self.SUBJECT: self.record['subject'],
             self.ID: self.record['id']
         }
+
+    def get_priority(self):
+        return self.PRIORITY_MAP.get(
+            self.record.get('priority', {}).get('id'),
+            self.origin['default_priority']
+        )
 
     def get_issue_url(self):
         return (
