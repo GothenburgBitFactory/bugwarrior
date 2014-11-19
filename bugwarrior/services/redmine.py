@@ -92,7 +92,7 @@ class RedMineIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.record['subject'],
-            url=self.get_processed_url(self.record['url']),
+            url=self.get_processed_url(self.get_issue_url()),
             number=self.record['id'],
             cls='issue',
         )
