@@ -18,11 +18,36 @@ class TestRedmineIssue(ServiceTest):
     def test_to_taskwarrior(self):
         arbitrary_url = 'http://lkjlj.com'
         arbitrary_issue = {
-            'project': {
-                'name': 'Something',
+            "assigned_to": {
+                "id": 35546,
+                "name": "Adam Coddington"
             },
-            'subject': 'The Subject',
-            'id': 'The ID',
+            "author": {
+                "id": 35546,
+                "name": "Adam Coddington"
+            },
+            "created_on": "2014-11-19T16:40:29Z",
+            "description": "This is a test issue.",
+            "done_ratio": 0,
+            "id": 363901,
+            "priority": {
+                "id": 4,
+                "name": "Normal"
+            },
+            "project": {
+                "id": 27375,
+                "name": "Bugwarrior"
+            },
+            "status": {
+                "id": 1,
+                "name": "New"
+            },
+            "subject": "Biscuits",
+            "tracker": {
+                "id": 4,
+                "name": "Task"
+            },
+            "updated_on": "2014-11-19T16:40:29Z"
         }
 
         issue = self.service.get_issue_for_record(arbitrary_issue)
