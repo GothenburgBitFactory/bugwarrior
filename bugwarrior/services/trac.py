@@ -68,6 +68,7 @@ class TracService(IssueService):
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
         base_uri = self.config_get('base_uri')
+        scheme = self.config_get_default('scheme', default='https')
         username = self.config_get('username')
         password = self.config_get('password')
         if not password or password.startswith('@oracle:'):
@@ -78,8 +79,8 @@ class TracService(IssueService):
             )
 
         auth = '%s:%s' % (username, password)
-        uri = 'https://%s@%s/login/xmlrpc' % (
-            urllib.quote_plus(auth), base_uri
+        uri = '%s://%s@%s/login/xmlrpc' % (
+            scheme, urllib.quote_plus(auth), base_uri
         )
         self.trac = offtrac.TracServer(uri)
 
