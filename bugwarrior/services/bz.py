@@ -10,6 +10,7 @@ from bugwarrior.services import IssueService, Issue
 class BugzillaIssue(Issue):
     URL = 'bugzillaurl'
     SUMMARY = 'bugzillasummary'
+    BUG_ID = 'bugzillabugid'
 
     UDAS = {
         URL: {
@@ -19,7 +20,11 @@ class BugzillaIssue(Issue):
         SUMMARY: {
             'type': 'string',
             'label': 'Bugzilla Summary',
-        }
+        },
+        BUG_ID: {
+            'type': 'numeric',
+            'label': 'Bugzilla Bug ID',
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -39,6 +44,7 @@ class BugzillaIssue(Issue):
 
             self.URL: self.extra['url'],
             self.SUMMARY: self.record['summary'],
+            self.BUG_ID: self.record['id'],
         }
 
     def get_default_description(self):

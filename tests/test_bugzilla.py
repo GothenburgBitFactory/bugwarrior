@@ -20,7 +20,8 @@ class TestBugzillaService(ServiceTest):
         arbitrary_record = {
             'component': 'Something',
             'priority': 'urgent',
-            'summary': 'This is the issue summary'
+            'summary': 'This is the issue summary',
+            'id': 1234567,
         }
         arbitrary_extra = {
             'url': 'http://path/to/issue/',
@@ -41,6 +42,7 @@ class TestBugzillaService(ServiceTest):
 
             issue.URL: arbitrary_extra['url'],
             issue.SUMMARY: arbitrary_record['summary'],
+            issue.BUG_ID: arbitrary_record['id']
         }
         actual_output = issue.to_taskwarrior()
 
