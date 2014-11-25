@@ -17,6 +17,7 @@ class GithubIssue(Issue):
     UPDATED_AT = 'githubupdatedat'
     MILESTONE = 'githubmilestone'
     URL = 'githuburl'
+    REPO = 'githubrepo'
     TYPE = 'githubtype'
     NUMBER = 'githubnumber'
 
@@ -40,6 +41,10 @@ class GithubIssue(Issue):
         MILESTONE: {
             'type': 'numeric',
             'label': 'Github Milestone',
+        },
+        REPO: {
+            'type': 'string',
+            'label': 'Github Repo Slug',
         },
         URL: {
             'type': 'string',
@@ -77,6 +82,7 @@ class GithubIssue(Issue):
             'tags': self.get_tags(),
 
             self.URL: self.record['html_url'],
+            self.REPO: self.record['repo'],
             self.TYPE: self.extra['type'],
             self.TITLE: self.record['title'],
             self.BODY: body,
@@ -277,6 +283,10 @@ class GithubService(IssueService):
         issues = [i for i in issues if not i[1]['html_url'] in request_urls]
 
         for tag, issue in issues:
+            # Stuff this value into the upstream dict for:
+            # https://github.com/ralphbean/bugwarrior/issues/159
+            issue['repo'] = tag
+
             issue_obj = self.get_issue_for_record(issue)
             extra = {
                 'project': tag.split('/')[1],
@@ -287,6 +297,10 @@ class GithubService(IssueService):
             yield issue_obj
 
         for tag, request in requests:
+            # Stuff this value into the upstream dict for:
+            # https://github.com/ralphbean/bugwarrior/issues/159
+            request['repo'] = tag
+
             issue_obj = self.get_issue_for_record(request)
             extra = {
                 'project': tag.split('/')[1],
