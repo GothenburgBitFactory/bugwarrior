@@ -22,7 +22,7 @@ class BugzillaIssue(Issue):
             'label': 'Bugzilla Summary',
         },
         BUG_ID: {
-            'type': 'number',
+            'type': 'numeric',
             'label': 'Bugzilla Bug ID',
         },
     }
