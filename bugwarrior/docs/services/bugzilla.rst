@@ -30,6 +30,10 @@ The above example is the minimum required to import issues from
 Bugzilla.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`.
 
+There is also an option to ignore bugs that you are only cc'd on::
+
+    bugzilla.ignore_cc = True
+
 Provided UDA Fields
 -------------------
 
