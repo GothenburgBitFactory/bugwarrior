@@ -30,6 +30,7 @@ class TestGithubIssue(ServiceTest):
             'milestone': {'id': 'alpha'},
             'created_at': arbitrary_created.isoformat(),
             'updated_at': arbitrary_updated.isoformat(),
+            'repo': 'ralphbean/bugwarrior',
         }
         arbitrary_extra = {
             'project': 'one',
@@ -49,6 +50,7 @@ class TestGithubIssue(ServiceTest):
             'tags': [],
 
             issue.URL: arbitrary_issue['html_url'],
+            issue.REPO: arbitrary_issue['repo'],
             issue.TYPE: arbitrary_extra['type'],
             issue.TITLE: arbitrary_issue['title'],
             issue.NUMBER: arbitrary_issue['number'],
