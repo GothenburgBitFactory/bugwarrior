@@ -12,6 +12,7 @@ Here's an example of an Trac target::
     [my_issue_tracker]
     service = trac
     trac.base_uri = fedorahosted.org/moksha
+    trac.scheme = https
     trac.username = ralph
     trac.password = OMG_LULZ
 
