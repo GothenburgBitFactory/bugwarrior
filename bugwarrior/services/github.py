@@ -222,7 +222,7 @@ class GithubService(IssueService):
         if issue[1]['assignee']:
             return issue[1]['assignee']['login']
 
-    def _filter_repos_base(self, repo):
+    def filter_repos(self, repo):
         if self.exclude_repos:
             if repo['name'] in self.exclude_repos:
                 return False
@@ -235,24 +235,17 @@ class GithubService(IssueService):
 
         return True
 
-    def filter_repos_for_prs(self, repo):
-        if repo['forks'] < 1:
-            return False
-        else:
-            return self._filter_repos_base(repo)
-
-    def filter_repos_for_issues(self, repo):
-        if not (repo['has_issues'] and repo['open_issues_count'] > 0):
-            return False
-        else:
-            return self._filter_repos_base(repo)
+    def include(self, issue):
+        if 'pull_request' in issue[1] and not self.filter_pull_requests:
+            return True
+        return super(GithubService, self).include(issue)
 
     def issues(self):
         user = self.config.get(self.target, 'github.username')
 
         all_repos = githubutils.get_repos(username=user, auth=self.auth)
         assert(type(all_repos) == list)
-        repos = filter(self.filter_repos_for_issues, all_repos)
+        repos = filter(self.filter_repos, all_repos)
 
         issues = {}
         for repo in repos:
@@ -264,24 +257,6 @@ class GithubService(IssueService):
         issues = filter(self.include, issues.values())
         log.name(self.target).debug(" Pruned down to {0} issues.", len(issues))
 
-        # Next, get all the pull requests (and don't prune by default)
-        repos = filter(self.filter_repos_for_prs, all_repos)
-        requests = sum([self._reqs(user + "/" + r['name']) for r in repos], [])
-        log.name(self.target).debug(" Found {0} pull requests.", len(requests))
-        if self.filter_pull_requests:
-            requests = filter(self.include, requests)
-            log.name(self.target).debug(
-                " Pruned down to {0} pull requests.",
-                len(requests)
-            )
-
-        # For pull requests, github lists an 'issue' and a 'pull request' with
-        # the same id and the same URL.  So, if we find any pull requests,
-        # let's strip those out of the "issues" list so that we don't have
-        # unnecessary duplicates.
-        request_urls = [r[1]['html_url'] for r in requests]
-        issues = [i for i in issues if not i[1]['html_url'] in request_urls]
-
         for tag, issue in issues:
             # Stuff this value into the upstream dict for:
             # https://github.com/ralphbean/bugwarrior/issues/159
@@ -290,22 +265,8 @@ class GithubService(IssueService):
             issue_obj = self.get_issue_for_record(issue)
             extra = {
                 'project': tag.split('/')[1],
-                'type': 'issue',
+                'type': 'pull_request' if 'pull_request' in issue else 'issue',
                 'annotations': self.annotations(tag, issue, issue_obj)
-            }
-            issue_obj.update_extra(extra)
-            yield issue_obj
-
-        for tag, request in requests:
-            # Stuff this value into the upstream dict for:
-            # https://github.com/ralphbean/bugwarrior/issues/159
-            request['repo'] = tag
-
-            issue_obj = self.get_issue_for_record(request)
-            extra = {
-                'project': tag.split('/')[1],
-                'type': 'pull_request',
-                'annotations': self.annotations(tag, request, issue_obj)
             }
             issue_obj.update_extra(extra)
             yield issue_obj
