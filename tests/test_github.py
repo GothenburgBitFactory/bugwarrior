@@ -28,6 +28,9 @@ class TestGithubIssue(ServiceTest):
             'number': 10,
             'body': 'Something',
             'milestone': {'id': 'alpha'},
+            'labels': [
+                {'name': 'bugfix'},
+            ],
             'created_at': arbitrary_created.isoformat(),
             'updated_at': arbitrary_updated.isoformat(),
             'repo': 'ralphbean/bugwarrior',
@@ -38,6 +41,7 @@ class TestGithubIssue(ServiceTest):
             'annotations': [],
         }
 
+        self.service.import_labels_as_tags = True
         issue = self.service.get_issue_for_record(
             arbitrary_issue,
             arbitrary_extra
@@ -47,7 +51,7 @@ class TestGithubIssue(ServiceTest):
             'project': arbitrary_extra['project'],
             'priority': self.service.default_priority,
             'annotations': [],
-            'tags': [],
+            'tags': ['bugfix'],
 
             issue.URL: arbitrary_issue['html_url'],
             issue.REPO: arbitrary_issue['repo'],
