@@ -1,6 +1,5 @@
 import codecs
 from ConfigParser import ConfigParser
-import optparse
 import os
 import subprocess
 import sys
@@ -98,13 +97,6 @@ def die(msg):
     sys.exit(1)
 
 
-def parse_args():
-    p = optparse.OptionParser()
-    p.add_option('-f', '--config', default='~/.bugwarriorrc')
-    p.add_option('-i', '--interactive', action='store_true', default=False)
-    return p.parse_args()
-
-
 def validate_config(config):
     if not config.has_section('general'):
         die("No [general] section found.")
@@ -138,17 +130,15 @@ def validate_config(config):
 
 
 def load_config():
-    opts, args = parse_args()
-
     config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
     config.readfp(
         codecs.open(
-            os.path.expanduser(opts.config),
+            os.path.expanduser("~/.bugwarriorrc"),
             "r",
             "utf-8",
         )
     )
-    config.interactive = opts.interactive
+    config.interactive = False  # TODO: make this a command-line option
     validate_config(config)
 
     return config
