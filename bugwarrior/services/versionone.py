@@ -23,6 +23,10 @@ class VersionOneIssue(Issue):
     STORY_NUMBER = 'versiononestorynumber'
     STORY_OID = 'versiononestoryoid'
 
+    TIMEBOX_BEGIN_DATE = 'versiononetimeboxbegindate'
+    TIMEBOX_END_DATE = 'versiononetimeboxenddate'
+    TIMEBOX_NAME = 'versiononetimeboxname'
+
     UDAS = {
         TASK_NAME: {
             'type': 'string',
@@ -84,6 +88,18 @@ class VersionOneIssue(Issue):
             'type': 'string',
             'label': 'VersionOne Story Object ID'
         },
+        TIMEBOX_BEGIN_DATE: {
+            'type': 'string',
+            'label': 'VersionOne Timebox Begin Date'
+        },
+        TIMEBOX_END_DATE: {
+            'type': 'string',
+            'label': 'VersionOne Timebox End Date'
+        },
+        TIMEBOX_NAME: {
+            'type': 'string',
+            'label': 'VersionOne Timebox Name'
+        }
     }
 
     UNIQUE_KEY = (TASK_URL, )
@@ -92,6 +108,7 @@ class VersionOneIssue(Issue):
         return {
             'project': self.extra['project'],
             'priority': self.origin['default_priority'],
+            'due': self.parse_date(self.record['timebox']['EndDate']),
 
             self.TASK_NAME: self.record['task']['Name'],
             self.TASK_DESCRIPTION: self.record['task']['Description'],
@@ -109,6 +126,10 @@ class VersionOneIssue(Issue):
             self.STORY_URL: self.record['story']['url'],
             self.STORY_OID: self.record['story']['idref'],
             self.STORY_NUMBER: self.record['story']['Number'],
+
+            self.TIMEBOX_BEGIN_DATE: self.record['timebox']['BeginDate'],
+            self.TIMEBOX_END_DATE: self.record['timebox']['EndDate'],
+            self.TIMEBOX_NAME: self.record['timebox']['Name'],
         }
 
     def get_default_description(self):
@@ -145,6 +166,11 @@ class VersionOneService(IssueService):
         'Number',
         'url',
         'idref',
+    )
+    TIMEBOX_COLLECT_DATA = (
+        'BeginDate',
+        'EndDate',
+        'Name',
     )
 
     def __init__(self, *args, **kw):
@@ -230,7 +256,8 @@ class VersionOneService(IssueService):
         for issue in self.get_assignments(self.username):
             issue_data = {
                 'task': {},
-                'story': {}
+                'story': {},
+                'timebox': {},
             }
             for column in self.TASK_COLLECT_DATA:
                 issue_data['task'][column] = getattr(
@@ -239,6 +266,10 @@ class VersionOneService(IssueService):
             for column in self.STORY_COLLECT_DATA:
                 issue_data['story'][column] = getattr(
                     issue.Parent, column, None
+                )
+            for column in self.TIMEBOX_COLLECT_DATA:
+                issue_data['timebox'][column] = getattr(
+                    issue.Parent.Timebox, column, None
                 )
 
             extras = {
