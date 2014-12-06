@@ -285,7 +285,7 @@ def run_hooks(conf, name):
                     raise RuntimeError(msg)
 
 
-def synchronize(issue_generator, conf):
+def synchronize(issue_generator, conf, dry_run=False):
     def _bool_option(section, option, default):
         try:
             return section in conf.sections() and \
@@ -313,7 +313,7 @@ def synchronize(issue_generator, conf):
     # Before running CRUD operations, call the pre_import hook(s).
     run_hooks(conf, 'pre_import')
 
-    notify = _bool_option('notifications', 'notifications', 'False')
+    notify = _bool_option('notifications', 'notifications', 'False') and not dry_run
 
     tw = TaskWarriorShellout(
         config_filename=get_taskrc_path(conf),
@@ -368,13 +368,17 @@ def synchronize(issue_generator, conf):
         except NotFound:
             issue_updates['new'].append(dict(issue))
 
+    notreally = ' (not really)' if dry_run else ''
     # Add new issues
     log.name('db').info("Adding {0} tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
         log.name('db').info(
-            "Adding task {0}",
-            issue['description'].encode("utf-8")
+            "Adding task {0}{1}",
+            issue['description'].encode("utf-8"),
+            notreally
         )
+        if dry_run:
+            continue
         if notify:
             send_notification(issue, 'Created', conf)
 
@@ -394,10 +398,14 @@ def synchronize(issue_generator, conf):
             for field, ch in six.iteritems(issue.get_changes(keep=True))
         ])
         log.name('db').info(
-            "Updating task {0}; {1}",
+            "Updating task {0}; {1}{2}",
             issue['description'].encode("utf-8"),
             changes,
+            notreally
         )
+        if dry_run:
+            continue
+
         try:
             tw.task_update(issue)
         except TaskwarriorError as e:
@@ -407,10 +415,14 @@ def synchronize(issue_generator, conf):
     for issue in issue_updates['closed']:
         _, task_info = tw.get_task(uuid=issue)
         log.name('db').info(
-            "Completing task {0} {1}",
+            "Completing task {0} {1}{2}",
             issue,
             task_info.get('description'),
+            notreally
         )
+        if dry_run:
+            continue
+
         if notify:
             send_notification(task_info, 'Completed', conf)
 

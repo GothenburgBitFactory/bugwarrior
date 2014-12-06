@@ -21,7 +21,8 @@ lst = list
 
 
 @click.command()
-def pull():
+@click.option('--dry-run', is_flag=True)
+def pull(dry_run):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.
 
     Relies on configuration in ~/.bugwarriorrc
@@ -46,7 +47,7 @@ def pull():
             issue_generator = aggregate_issues(config)
 
             # Stuff them in the taskwarrior db as necessary
-            synchronize(issue_generator, config)
+            synchronize(issue_generator, config, dry_run)
         finally:
             lockfile.release()
     except LockTimeout:
