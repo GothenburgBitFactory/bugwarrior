@@ -87,6 +87,8 @@ class BugzillaService(IssueService):
         self.password = self.config_get('password')
         self.ignore_cc = self.config_get_default('ignore_cc', default=False,
                                                  to_type=lambda x: x == "True")
+        self.query_url = self.config_get_default('query_url', default=None)
+
         # So more modern bugzilla's require that we specify
         # query_format=advanced along with the xmlrpc request.
         # https://bugzilla.redhat.com/show_bug.cgi?id=825370
@@ -168,18 +170,22 @@ class BugzillaService(IssueService):
         email = self.username
         # TODO -- doing something with blockedby would be nice.
 
-        query = dict(
-            column_list=self.COLUMN_LIST,
-            bug_status=self.OPEN_STATUSES,
-            email1=email,
-            emailreporter1=1,
-            emailassigned_to1=1,
-            emailqa_contact1=1,
-            emailtype1="substring",
-        )
+        if self.query_url:
+            query = self.bz.url_to_query(self.query_url)
+            query['column_list'] = self.COLUMN_LIST
+        else:
+            query = dict(
+                column_list=self.COLUMN_LIST,
+                bug_status=self.OPEN_STATUSES,
+                email1=email,
+                emailreporter1=1,
+                emailassigned_to1=1,
+                emailqa_contact1=1,
+                emailtype1="substring",
+            )
 
-        if not self.ignore_cc:
-            query['emailcc1'] = 1
+            if not self.ignore_cc:
+                query['emailcc1'] = 1
 
         if self.advanced:
             # Required for new bugzilla
