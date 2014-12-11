@@ -39,6 +39,12 @@ There is an option to ignore bugs that you are only cc'd on::
 But this will continue to include bugs that you reported, regardless of
 whether they are assigned to you.
 
+If the filtering options are not sufficient to find the set of bugs you'd like,
+you can tell Bugwarrior exactly which bugs to sync by pasting a full query URL
+from your browser into the ``bugzilla.query_url`` option::
+
+    bugzilla.query_url = https://bugzilla.mozilla.org/query.cgi?bug_status=ASSIGNED&email1=myname%40mozilla.com&emailassigned_to1=1&emailtype1=exact
+
 Provided UDA Fields
 -------------------
 
