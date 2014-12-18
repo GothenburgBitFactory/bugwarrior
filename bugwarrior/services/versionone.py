@@ -1,7 +1,7 @@
 from v1pysdk import V1Meta
 from six.moves.urllib import parse
 
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import IssueService, Issue, LOCAL_TIMEZONE
 from bugwarrior.config import die, get_service_password
 
 
@@ -108,7 +108,10 @@ class VersionOneIssue(Issue):
         return {
             'project': self.extra['project'],
             'priority': self.origin['default_priority'],
-            'due': self.parse_date(self.record['timebox']['EndDate']),
+            'due': self.parse_date(
+                self.record['timebox']['EndDate'],
+                self.origin['timezone']
+            ),
 
             self.TASK_NAME: self.record['task']['Name'],
             self.TASK_DESCRIPTION: self.record['task']['Description'],
@@ -190,6 +193,10 @@ class VersionOneService(IssueService):
                 interactive=self.config.interactive
             )
 
+        self.timezone = self.config_get_default(
+            'timezone',
+            default=LOCAL_TIMEZONE
+        )
         self.project = self.config_get_default('project_name', default='')
         self.timebox_name = self.config_get_default('timebox_name')
 
@@ -204,6 +211,11 @@ class VersionOneService(IssueService):
             parsed_address.netloc,
             parsed_address.path
         )
+
+    def get_service_metadata(self):
+        return {
+            'timezone': self.timezone
+        }
 
     @classmethod
     def validate_config(cls, config, target):

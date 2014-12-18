@@ -3,6 +3,7 @@ import multiprocessing
 import time
 
 from dateutil.parser import parse as parse_date
+from dateutil.tz import tzlocal
 from jinja2 import Template
 import pytz
 import six
@@ -17,6 +18,10 @@ from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
 # Sentinels for process completion status
 SERVICE_FINISHED_OK = 0
 SERVICE_FINISHED_ERROR = 1
+
+# Used by `parse_date` as a timezone when you would like a naive
+# date string to be parsed as if it were in your local timezone
+LOCAL_TIMEZONE = 'LOCAL_TIMEZONE'
 
 
 class IssueService(object):
@@ -328,7 +333,11 @@ class Issue(object):
         if date:
             date = parse_date(date)
             if not date.tzinfo:
-                date = date.replace(tzinfo=pytz.timezone(timezone))
+                if timezone == LOCAL_TIMEZONE:
+                    tzinfo = tzlocal()
+                else:
+                    tzinfo = pytz.timezone(timezone)
+                date = date.replace(tzinfo=tzinfo)
             return date
         return None
 

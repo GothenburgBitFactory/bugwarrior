@@ -52,6 +52,15 @@ example, to add imported tasks to the project 'important_project'::
 
     versionone.project_name = important_project
 
+Set the Timezone Used for Due Dates
++++++++++++++++++++++++++++++++++++
+
+You can configure the timezone used for setting your tasks' due dates
+by setting the ``versionone.timezone`` option.  By default, your local
+timezone will be used.  For example::
+
+    versionone.timezone = America/Los_Angeles
+
 Provided UDA Fields
 -------------------
 
