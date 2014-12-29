@@ -3,6 +3,13 @@ VersionOne
 
 You can import tasks from VersionOne using the ``versionone`` service name.
 
+Additional Requirements
+-----------------------
+
+Install the following package using ``pip``:
+
+* ``v1pysdk-unofficial``
+
 Example Service
 ---------------
 
