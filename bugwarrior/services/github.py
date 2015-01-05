@@ -61,6 +61,9 @@ class GithubIssue(Issue):
     }
     UNIQUE_KEY = (URL, TYPE,)
 
+    def _normalize_label_to_tag(self, label):
+        return re.sub(r'[^a-zA-Z0-9]', '_', label)
+
     def to_taskwarrior(self):
         milestone = self.record['milestone']
         if milestone:
@@ -103,7 +106,7 @@ class GithubIssue(Issue):
 
         for label_dict in self.record.get('labels', []):
             context.update({
-                'label': label_dict['name']
+                'label': self._normalize_label_to_tag(label_dict['name'])
             })
             tags.append(
                 label_template.render(context)
