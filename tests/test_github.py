@@ -24,6 +24,7 @@ class TestGithubIssue(ServiceTest):
         'number': 10,
         'body': 'Something',
         'milestone': {'id': 'alpha'},
+        'labels': [{'name': 'bugfix'}],
         'created_at': arbitrary_created.isoformat(),
         'updated_at': arbitrary_updated.isoformat(),
         'repo': 'ralphbean/bugwarrior',
@@ -46,6 +47,7 @@ class TestGithubIssue(ServiceTest):
                          'needs_work')
 
     def test_to_taskwarrior(self):
+        self.service.import_labels_as_tags = True
         issue = self.service.get_issue_for_record(
             self.arbitrary_issue,
             self.arbitrary_extra
