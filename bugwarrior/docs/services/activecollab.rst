@@ -6,6 +6,14 @@ ActiveCollab 4
 You can import tasks from your activeCollab 4.x instance using
 the ``activecollab`` service name.
 
+Additional Requirements
+-----------------------
+
+Install the following packages using ``pip``:
+
+* ``pypandoc``
+* ``pyac``
+
 Instructions
 ------------
 

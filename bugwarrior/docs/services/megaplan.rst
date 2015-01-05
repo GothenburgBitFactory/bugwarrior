@@ -4,6 +4,13 @@ Megaplan
 You can import tasks from your Megaplan instance using
 the ``megaplan`` service name.
 
+Additional Requirements
+-----------------------
+
+Install the following package using ``pip``:
+
+* ``megaplan``
+
 Example Service
 ---------------
 

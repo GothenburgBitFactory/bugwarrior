@@ -4,6 +4,13 @@ Jira
 You can import tasks from your Jira instance using
 the ``jira`` service name.
 
+Additional Requirements
+-----------------------
+
+Install the following package using ``pip``:
+
+* ``jira``
+
 Example Service
 ---------------
 
