@@ -19,7 +19,7 @@ MARKUP = "(bw)"
 
 DOGPILE_CACHE_PATH = os.path.expanduser('~/.cache/dagd.dbm')
 if not os.path.isdir(os.path.dirname(DOGPILE_CACHE_PATH)):
-    os.mkdirs(os.path.dirname(DOGPILE_CACHE_PATH))
+    os.makedirs(os.path.dirname(DOGPILE_CACHE_PATH))
 CACHE_REGION = dogpile.cache.make_region().configure(
     "dogpile.cache.dbm",
     arguments=dict(filename=DOGPILE_CACHE_PATH),
