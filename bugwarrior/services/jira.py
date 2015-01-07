@@ -132,6 +132,7 @@ class JiraService(IssueService):
             options={
                 'server': self.config_get('base_uri'),
                 'rest_api_version': 'latest',
+                'verify': self.config_get_default('verify_ssl', default=None, to_type=asbool),
             },
             basic_auth=(self.username, password)
         )

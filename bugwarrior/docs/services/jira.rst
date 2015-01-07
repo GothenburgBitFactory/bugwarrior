@@ -52,6 +52,13 @@ configuration option to your service configuration::
 
     jira.version = 4
 
+Disabling SSL Verification
+++++++++++++++++++++++++++
+
+If your Jira instance is only available over HTTPS, and you're running into
+``SSL: CERTIFICATE_VERIFY_FAILED``, it's possible to disable SSL verification::
+
+    jira.verify_ssl = False
 
 Import Labels as Tags
 +++++++++++++++++++++
