@@ -1,4 +1,5 @@
 from v1pysdk import V1Meta
+from v1pysdk.none_deref import NoneDeref
 from six.moves.urllib import parse
 
 from bugwarrior.services import IssueService, Issue, LOCAL_TIMEZONE
@@ -271,18 +272,18 @@ class VersionOneService(IssueService):
                 'story': {},
                 'timebox': {},
             }
-            for column in self.TASK_COLLECT_DATA:
-                issue_data['task'][column] = getattr(
-                    issue, column, None
-                )
-            for column in self.STORY_COLLECT_DATA:
-                issue_data['story'][column] = getattr(
-                    issue.Parent, column, None
-                )
-            for column in self.TIMEBOX_COLLECT_DATA:
-                issue_data['timebox'][column] = getattr(
-                    issue.Parent.Timebox, column, None
-                )
+            field_maps = (
+                ('task', issue, self.TASK_COLLECT_DATA, ),
+                ('story', issue.Parent, self.STORY_COLLECT_DATA, ),
+                ('timebox', issue.Parent.Timebox, self.TIMEBOX_COLLECT_DATA, ),
+            )
+            for key, source, columns in field_maps:
+                for column in columns:
+                    value = getattr(source, column, None)
+                    # NoneDeref is a special kind of None used by the v1 client
+                    if isinstance(value, NoneDeref):
+                        value = None
+                    issue_data[key][column] = value
 
             extras = {
                 'project': self.project
