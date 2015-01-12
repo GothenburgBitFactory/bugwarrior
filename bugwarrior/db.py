@@ -102,7 +102,7 @@ def get_managed_task_uuids(tw, key_list, legacy_matching):
     expected_task_ids = set([])
     for keys in key_list.values():
         tasks = tw.filter_tasks({
-            'and': [('%s.not' % key, '') for key in keys],
+            'and': [('%s.any' % key, None) for key in keys],
             'or': [
                 ('status', 'pending'),
                 ('status', 'waiting'),
