@@ -128,5 +128,7 @@ def set(target, username):
 @click.command()
 def uda():
     conf = load_config()
+    print "# Bugwarrior UDAs"
     for uda in get_defined_udas_as_strings(conf):
         print uda
+    print "# END Bugwarrior UDAs"
