@@ -385,6 +385,7 @@ def synchronize(issue_generator, conf, dry_run=False):
         try:
             tw.task_add(**issue)
         except TaskwarriorError as e:
+            log.name('db').error("Unable to add task: %s" % e.stderr)
             log.name('db').trace(e)
 
     log.name('db').info("Updating {0} tasks", len(issue_updates['changed']))
@@ -409,6 +410,7 @@ def synchronize(issue_generator, conf, dry_run=False):
         try:
             tw.task_update(issue)
         except TaskwarriorError as e:
+            log.name('db').error("Unable to modify task: %s" % e.stderr)
             log.name('db').trace(e)
 
     log.name('db').info("Closing {0} tasks", len(issue_updates['closed']))
@@ -429,6 +431,7 @@ def synchronize(issue_generator, conf, dry_run=False):
         try:
             tw.task_done(uuid=issue)
         except TaskwarriorError as e:
+            log.name('db').error("Unable to close task: %s" % e.stderr)
             log.name('db').trace(e)
 
     # Send notifications
