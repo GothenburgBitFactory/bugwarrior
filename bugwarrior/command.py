@@ -13,7 +13,10 @@ from taskw.warrior import TaskWarriorBase
 
 from bugwarrior.config import get_taskrc_path, load_config
 from bugwarrior.services import aggregate_issues, SERVICES
-from bugwarrior.db import synchronize
+from bugwarrior.db import (
+    get_defined_udas_as_strings,
+    synchronize,
+)
 
 
 # We overwrite 'list' further down.
@@ -120,3 +123,10 @@ def set(target, username):
 
     keyring.set_password(target, username, getpass.getpass())
     print "Password set for %s, %s" % (target, username)
+
+
+@click.command()
+def uda():
+    conf = load_config()
+    for uda in get_defined_udas_as_strings(conf):
+        print uda
