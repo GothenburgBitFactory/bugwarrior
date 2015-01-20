@@ -55,5 +55,6 @@ setup(name='bugwarrior',
       [console_scripts]
       bugwarrior-pull = bugwarrior:pull
       bugwarrior-vault = bugwarrior:vault
+      bugwarrior-uda = bugwarrior:uda
       """,
       )

@@ -300,11 +300,10 @@ def synchronize(issue_generator, conf, dry_run=False):
 
     if uda_list:
         log.name('bugwarrior').info(
-            'Service-defined UDAs (you can optionally add these to your '
-            '~/.taskrc for use in reports):'
+            'Service-defined UDAs exist: you can optionally use the '
+            '`bugwarrior-uda` command to export a list of UDAs you can '
+            'add to your ~/.taskrc file.'
         )
-        for uda in convert_override_args_to_taskrc_settings(uda_list):
-            log.name('bugwarrior').info(uda)
 
     static_fields = static_fields_default = ['priority']
     if conf.has_option('general', 'static_fields'):
@@ -456,6 +455,15 @@ def build_key_list(targets):
     for target in targets:
         keys[target] = SERVICES[target].ISSUE_CLASS.UNIQUE_KEY
     return keys
+
+
+def get_defined_udas_as_strings(conf):
+    targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
+    services = set([conf.get(target, 'service') for target in targets])
+    uda_list = build_uda_config_overrides(services)
+
+    for uda in convert_override_args_to_taskrc_settings(uda_list):
+        yield uda
 
 
 def build_uda_config_overrides(targets):
