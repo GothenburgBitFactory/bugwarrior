@@ -183,7 +183,7 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
     for service, key_list in six.iteritems(keys):
         if any([key in issue for key in key_list]):
             results = tw.filter_tasks({
-                'and': [(key, issue[key]) for key in key_list],
+                'and': [("%s.is", issue[key]) for key in key_list],
                 'or': [
                     ('status', 'pending'),
                     ('status', 'waiting'),
