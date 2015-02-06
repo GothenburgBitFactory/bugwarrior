@@ -8,6 +8,7 @@ import six
 import twiggy
 from twiggy import log
 from twiggy.levels import name2level
+from xdg import BaseDirectory
 
 
 def asbool(some_value):
@@ -131,9 +132,16 @@ def validate_config(config):
 
 def load_config():
     config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
+    path = os.path.join(BaseDirectory.load_first_config('bugwarrior'), 'bugwarriorrc')
+    old_path = os.path.expanduser("~/.bugwarriorrc")
+    if path is None or not os.path.exists(path):
+        if os.path.exists(old_path):
+            path = old_path
+        else:
+            path = os.path.join(BaseDirectory.save_config_path('bugwarrior'), 'bugwarriorrc')
     config.readfp(
         codecs.open(
-            os.path.expanduser("~/.bugwarriorrc"),
+            path,
             "r",
             "utf-8",
         )
