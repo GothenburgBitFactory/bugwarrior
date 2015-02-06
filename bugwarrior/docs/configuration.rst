@@ -7,7 +7,7 @@ Example Configuration
 
 ::
 
-    # Example ~/.bugwarriorrc
+    # Example bugwarriorrc
     
     # General stuff.
     [general]

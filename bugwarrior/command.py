@@ -28,7 +28,7 @@ lst = list
 def pull(dry_run):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.
 
-    Relies on configuration in ~/.bugwarriorrc
+    Relies on configuration in bugwarriorrc
     """
     twiggy.quickSetup()
     try:
@@ -93,7 +93,7 @@ def targets():
 @vault.command()
 def list():
     pws = lst(targets())
-    print "%i @oracle:use_keyring passwords in .bugwarriorrc" % len(pws)
+    print "%i @oracle:use_keyring passwords in bugwarriorrc" % len(pws)
     for section in pws:
         print "-", section
 

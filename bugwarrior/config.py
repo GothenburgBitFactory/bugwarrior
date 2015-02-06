@@ -82,7 +82,7 @@ def load_example_rc():
 
 error_template = """
 *************************************************
-* There was a problem with your ~/.bugwarriorrc *
+* There was a problem with your bugwarriorrc    *
 *   {msg}
 * Here's an example template to help:           *
 *************************************************
@@ -132,7 +132,10 @@ def validate_config(config):
 
 def load_config():
     config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
-    path = os.path.join(BaseDirectory.load_first_config('bugwarrior'), 'bugwarriorrc')
+    path = None
+    first_path = BaseDirectory.load_first_config('bugwarrior')
+    if first_path is not None:
+        path = os.path.join(first_path, 'bugwarriorrc')
     old_path = os.path.expanduser("~/.bugwarriorrc")
     if path is None or not os.path.exists(path):
         if os.path.exists(old_path):
