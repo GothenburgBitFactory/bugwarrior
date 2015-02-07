@@ -111,7 +111,10 @@ def validate_config(config, main_section):
         die("No targets= item in [%s] found." % main_section)
 
     targets = config.get(main_section, 'targets')
-    targets = [t.strip() for t in targets.split(",")]
+    targets = filter(lambda t: len(t), [t.strip() for t in targets.split(",")])
+
+    if not targets:
+        die("Empty targets= item in [%s]." % main_section)
 
     for target in targets:
         if target not in config.sections():
