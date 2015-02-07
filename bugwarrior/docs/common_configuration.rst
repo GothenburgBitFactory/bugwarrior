@@ -106,7 +106,7 @@ regardless of what project was assigned by the service itself::
 Password Management
 -------------------
 
-You need not store your password in plain text in your `~/.bugwarriorrc` file; 
+You need not store your password in plain text in your `bugwarriorrc` file; 
 you can enter the following values to control where to gather your password
 from:
 

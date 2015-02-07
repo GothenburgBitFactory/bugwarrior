@@ -45,7 +45,7 @@ class ActiveCollab2Client(object):
         """
         Approach:
 
-        1. Get user ID from .bugwarriorrc file
+        1. Get user ID from bugwarriorrc file
         2. Get list of tickets from /user-tasks for a given project
         3. For each ticket/task returned from #2, get ticket/task info and
            check if logged-in user is primary (look at `is_owner` and
