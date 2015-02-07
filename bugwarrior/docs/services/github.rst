@@ -7,7 +7,7 @@ the ``github`` service name.
 Example Service
 ---------------
 
-Here's an example of an Github target::
+Here's an example of a Github target::
 
     [my_issue_tracker]
     service = github

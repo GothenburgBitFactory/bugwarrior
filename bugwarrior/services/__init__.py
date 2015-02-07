@@ -348,6 +348,7 @@ class Issue(object):
         cls_markup = {
             'issue': 'Is',
             'pull_request': 'PR',
+            'merge_request': 'MR',
             'task': '',
             'subtask': 'Subtask #',
         }
@@ -546,6 +547,7 @@ def aggregate_issues(conf, main_section):
 from .bitbucket import BitbucketService
 from .bz import BugzillaService
 from .github import GithubService
+from .gitlab import GitlabService
 from .teamlab import TeamLabService
 from .redmine import RedMineService
 from .trac import TracService
@@ -554,6 +556,7 @@ from .trac import TracService
 # Constant dict to be used all around town.
 SERVICES = {
     'github': GithubService,
+    'gitlab': GitlabService,
     'bitbucket': BitbucketService,
     'trac': TracService,
     'bugzilla': BugzillaService,
