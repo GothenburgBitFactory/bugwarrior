@@ -11,7 +11,6 @@ Here's an example of a Gitlab target::
 
     [my_issue_tracker]
     service = gitlab
-    gitlab.username = ralphbean
     gitlab.login = ralphbean
     gitlab.token = OMG_LULZ
 
@@ -20,13 +19,7 @@ Gitlab.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
-Note that both ``gitlab.username`` and ``gitlab.login`` are required and can be
-set to different values.  ``gitlab.login`` is used to specify what account
-bugwarrior should use to login to gitlab.  ``gitlab.username`` indicates which
-repositories should be scraped.  For instance, I always have ``gitlab.login``
-set to ralphbean (my account).  But I have some targets with
-``gitlab.username`` pointed at organizations or other users to watch issues
-there. The ``gitlab.token`` is your private API token.
+The ``gitlab.token`` is your private API token.
 
 Service Features
 ----------------

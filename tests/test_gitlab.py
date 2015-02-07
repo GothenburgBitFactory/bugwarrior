@@ -13,7 +13,6 @@ class TestGitlabIssue(ServiceTest):
         'gitlab.host': 'gitlab.example.com',
         'gitlab.login': 'arbitrary_login',
         'gitlab.token': 'arbitrary_token',
-        'gitlab.username': 'arbitrary_username',
     }
     arbitrary_created = (
         datetime.datetime.utcnow() - datetime.timedelta(hours=1)

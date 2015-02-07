@@ -155,7 +155,6 @@ class GitlabService(IssueService):
         self.login = self.config_get('login')
         token = self.config_get('token')
         if not token or token.startswith('@oracle:'):
-            username = self.config_get('username')
             token = get_service_password(
                 self.get_keyring_service(self.config, self.target),
                 self.login, oracle=password,
@@ -190,8 +189,7 @@ class GitlabService(IssueService):
     @classmethod
     def get_keyring_service(cls, config, section):
         login = config.get(section, cls._get_key('login'))
-        username = config.get(section, cls._get_key('username'))
-        return "gitlab://%s@%s/%s" % (login, host, username)
+        return "gitlab://%s@%s" % (login, host)
 
     def get_service_metadata(self):
         return {
@@ -256,8 +254,6 @@ class GitlabService(IssueService):
         return issues
 
     def issues(self):
-        user = self.config.get(self.target, 'gitlab.username')
-
         tmpl = 'https://{host}/api/v3/projects'
         all_repos = self._fetch(tmpl)
         repos = filter(self.filter_repos, all_repos)
@@ -322,9 +318,6 @@ class GitlabService(IssueService):
 
         if not config.has_option(target, 'gitlab.login'):
             die("[%s] has no 'gitlab.login'" % target)
-
-        if not config.has_option(target, 'gitlab.username'):
-            die("[%s] has no 'gitlab.username'" % target)
 
         if not config.has_option(target, 'gitlab.token'):
             die("[%s] has no 'gitlab.token'" % target)
