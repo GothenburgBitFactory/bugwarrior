@@ -23,19 +23,28 @@ from bugwarrior.db import (
 lst = list
 
 
+def _get_section_name(flavor):
+    if flavor:
+        return 'flavor.' + flavor
+    return 'general'
+
+
 @click.command()
 @click.option('--dry-run', is_flag=True)
-def pull(dry_run):
+@click.option('--flavor', default=None, help='The flavor to use')
+def pull(dry_run, flavor):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.
 
     Relies on configuration in ~/.bugwarriorrc
     """
     twiggy.quickSetup()
     try:
-        # Load our config file
-        config = load_config()
+        main_section = _get_section_name(flavor)
 
-        tw_config = TaskWarriorBase.load_config(get_taskrc_path(config))
+        # Load our config file
+        config = load_config(main_section)
+
+        tw_config = TaskWarriorBase.load_config(get_taskrc_path(config, main_section))
         lockfile_path = os.path.join(
             os.path.expanduser(
                 tw_config['data']['location']
@@ -47,10 +56,10 @@ def pull(dry_run):
         lockfile.acquire(timeout=10)
         try:
             # Get all the issues.  This can take a while.
-            issue_generator = aggregate_issues(config)
+            issue_generator = aggregate_issues(config, main_section)
 
             # Stuff them in the taskwarrior db as necessary
-            synchronize(issue_generator, config, dry_run)
+            synchronize(issue_generator, config, main_section, dry_run)
         finally:
             lockfile.release()
     except LockTimeout:
@@ -76,9 +85,10 @@ def vault():
 
 
 def targets():
-    config = load_config()
+    config = load_config('general')
     for section in config.sections():
-        if section in ['general']:
+        if section in ['general'] or \
+           section.startswith('flavor.'):
             continue
         service_name = config.get(section, 'service')
         service_class = SERVICES[service_name]
@@ -126,9 +136,11 @@ def set(target, username):
 
 
 @click.command()
-def uda():
-    conf = load_config()
+@click.option('--flavor', default=None, help='The flavor to use')
+def uda(flavor):
+    main_section = _get_section_name(flavor)
+    conf = load_config(main_section)
     print "# Bugwarrior UDAs"
-    for uda in get_defined_udas_as_strings(conf):
+    for uda in get_defined_udas_as_strings(conf, main_section):
         print uda
     print "# END Bugwarrior UDAs"
