@@ -8,6 +8,7 @@ bugwarrior - Pull tickets from github, bitbucket, bugzilla, jira, trac, and othe
 It currently supports the following remote resources:
 
  - `github <https://github.com>`_ (api v3)
+ - `gitlab <https://gitlab.com>`_ (api v3)
  - `bitbucket <https://bitbucket.org>`_
  - `trac <https://trac.edgewall.org/>`_
  - `bugzilla <https://www.bugzilla.org/>`_
@@ -49,6 +50,7 @@ Contributors
 ------------
 
 - Ralph Bean (primary author)
+- Ben Boeckel(contributed support for Gitlab)
 - Justin Forest (contributed support for RedMine, TeamLab, and MegaPlan, as
   well as some unicode help)
 - Tycho Garen (contributed support for Jira)
