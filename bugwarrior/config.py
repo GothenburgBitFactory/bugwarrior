@@ -97,19 +97,19 @@ def die(msg):
     sys.exit(1)
 
 
-def validate_config(config):
-    if not config.has_section('general'):
-        die("No [general] section found.")
+def validate_config(config, main_section):
+    if not config.has_section(main_section):
+        die("No [%s] section found." % main_section)
 
     twiggy.quickSetup(
-        name2level(config.get('general', 'log.level')),
-        config.get('general', 'log.file')
+        name2level(config.get(main_section, 'log.level')),
+        config.get(main_section, 'log.file')
     )
 
-    if not config.has_option('general', 'targets'):
-        die("No targets= item in [general] found.")
+    if not config.has_option(main_section, 'targets'):
+        die("No targets= item in [%s] found." % main_section)
 
-    targets = config.get('general', 'targets')
+    targets = config.get(main_section, 'targets')
     targets = [t.strip() for t in targets.split(",")]
 
     for target in targets:
@@ -129,7 +129,7 @@ def validate_config(config):
         SERVICES[service].validate_config(config, target)
 
 
-def load_config():
+def load_config(main_section):
     config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
     config.readfp(
         codecs.open(
@@ -139,15 +139,15 @@ def load_config():
         )
     )
     config.interactive = False  # TODO: make this a command-line option
-    validate_config(config)
+    validate_config(config, main_section)
 
     return config
 
 
-def get_taskrc_path(conf):
+def get_taskrc_path(conf, main_section):
     path = '~/.taskrc'
-    if conf.has_option('general', 'taskrc'):
-        path = conf.get('general', 'taskrc')
+    if conf.has_option(main_section, 'taskrc'):
+        path = conf.get(main_section, 'taskrc')
     return os.path.normpath(
         os.path.expanduser(path)
     )

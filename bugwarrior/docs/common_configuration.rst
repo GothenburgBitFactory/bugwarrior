@@ -26,6 +26,11 @@ Optional options include:
 * ``annotation_length``: Import maximally this number of characters
   of incoming annotations.  Default: 45.
 
+In addition to the ``[general]`` section, sections may be named
+``[flavor.myflavor]`` and may be selected using the ``--flavor`` option to
+``bugwarrior-pull``. This section will then be used rather than the
+``[general]`` section.
+
 A more-detailed example configuration can be found at :ref:`example_configuration`.
 
 .. _common_configuration_options:

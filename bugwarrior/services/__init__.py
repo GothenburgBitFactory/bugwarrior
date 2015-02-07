@@ -31,31 +31,32 @@ class IssueService(object):
     # What prefix should we use for this service's configuration values
     CONFIG_PREFIX = ''
 
-    def __init__(self, config, target):
+    def __init__(self, config, main_section, target):
         self.config = config
+        self.main_section = main_section
         self.target = target
 
         self.desc_len = 35
-        if config.has_option('general', 'description_length'):
-            self.desc_len = self.config.getint('general', 'description_length')
+        if config.has_option(self.main_section, 'description_length'):
+            self.desc_len = self.config.getint(self.main_section, 'description_length')
 
         self.anno_len = 45
-        if config.has_option('general', 'annotation_length'):
-            self.anno_len = self.config.getint('general', 'annotation_length')
+        if config.has_option(self.main_section, 'annotation_length'):
+            self.anno_len = self.config.getint(self.main_section, 'annotation_length')
 
         self.inline_links = True
-        if config.has_option('general', 'inline_links'):
-            self.inline_links = asbool(config.get('general', 'inline_links'))
+        if config.has_option(self.main_section, 'inline_links'):
+            self.inline_links = asbool(config.get(self.main_section, 'inline_links'))
 
         self.annotation_links = not self.inline_links
-        if config.has_option('general', 'annotation_links'):
+        if config.has_option(self.main_section, 'annotation_links'):
             self.annotation_links = asbool(
-                config.get('general', 'annotation_links')
+                config.get(self.main_section, 'annotation_links')
             )
 
         self.shorten = False
-        if config.has_option('general', 'shorten'):
-            self.shorten = asbool(config.get('general', 'shorten'))
+        if config.has_option(self.main_section, 'shorten'):
+            self.shorten = asbool(config.get(self.main_section, 'shorten'))
 
         self.add_tags = []
         if config.has_option(self.target, 'add_tags'):
@@ -456,7 +457,7 @@ class Issue(object):
         return '<%s>' % self.__unicode__()
 
 
-def _aggregate_issues(conf, target, queue, service_name):
+def _aggregate_issues(conf, main_section, target, queue, service_name):
     """ This worker function is separated out from the main
     :func:`aggregate_issues` func only so that we can use multiprocessing
     on it for speed reasons.
@@ -465,7 +466,7 @@ def _aggregate_issues(conf, target, queue, service_name):
     start = time.time()
 
     try:
-        service = SERVICES[service_name](conf, target)
+        service = SERVICES[service_name](conf, main_section, target)
         issue_count = 0
         for issue in service.issues():
             queue.put(issue)
@@ -486,12 +487,12 @@ def _aggregate_issues(conf, target, queue, service_name):
         log.name(target).info("Done with [%s] in %fs" % (target, duration))
 
 
-def aggregate_issues(conf):
+def aggregate_issues(conf, main_section):
     """ Return all issues from every target. """
     log.name('bugwarrior').info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
-    targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
+    targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
 
     queue = multiprocessing.Queue()
 
@@ -499,12 +500,13 @@ def aggregate_issues(conf):
     processes = []
 
     if (
-        conf.has_option('general', 'development')
-        and asbool(conf.get('general', 'development'))
+        conf.has_option(main_section, 'development')
+        and asbool(conf.get(main_section, 'development'))
     ):
         for target in targets:
             _aggregate_issues(
                 conf,
+                main_section,
                 target,
                 queue,
                 conf.get(target, 'service')
@@ -513,7 +515,7 @@ def aggregate_issues(conf):
         for target in targets:
             proc = multiprocessing.Process(
                 target=_aggregate_issues,
-                args=(conf, target, queue, conf.get(target, 'service'))
+                args=(conf, main_section, target, queue, conf.get(target, 'service'))
             )
             proc.start()
             processes.append(proc)

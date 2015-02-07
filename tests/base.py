@@ -40,6 +40,6 @@ class ServiceTest(unittest2.TestCase):
         config.get = mock.Mock(side_effect=get_option)
         config.getint = mock.Mock(side_effect=get_int)
 
-        service = service(config, section)
+        service = service(config, 'general', section)
 
         return service

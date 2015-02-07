@@ -285,7 +285,7 @@ def run_hooks(conf, name):
                     raise RuntimeError(msg)
 
 
-def synchronize(issue_generator, conf, dry_run=False):
+def synchronize(issue_generator, conf, main_section, dry_run=False):
     def _bool_option(section, option, default):
         try:
             return section in conf.sections() and \
@@ -293,7 +293,7 @@ def synchronize(issue_generator, conf, dry_run=False):
         except NoOptionError:
             return default
 
-    targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
+    targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
     services = set([conf.get(target, 'service') for target in targets])
     key_list = build_key_list(services)
     uda_list = build_uda_config_overrides(services)
@@ -306,8 +306,8 @@ def synchronize(issue_generator, conf, dry_run=False):
         )
 
     static_fields = static_fields_default = ['priority']
-    if conf.has_option('general', 'static_fields'):
-        static_fields = conf.get('general', 'static_fields').split(',')
+    if conf.has_option(main_section, 'static_fields'):
+        static_fields = conf.get(main_section, 'static_fields').split(',')
 
     # Before running CRUD operations, call the pre_import hook(s).
     run_hooks(conf, 'pre_import')
@@ -320,7 +320,7 @@ def synchronize(issue_generator, conf, dry_run=False):
         marshal=True,
     )
 
-    legacy_matching = _bool_option('general', 'legacy_matching', 'True')
+    legacy_matching = _bool_option(main_section, 'legacy_matching', 'True')
 
     issue_updates = {
         'new': [],
@@ -457,8 +457,8 @@ def build_key_list(targets):
     return keys
 
 
-def get_defined_udas_as_strings(conf):
-    targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
+def get_defined_udas_as_strings(conf, main_section):
+    targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
     services = set([conf.get(target, 'service') for target in targets])
     uda_list = build_uda_config_overrides(services)
 
