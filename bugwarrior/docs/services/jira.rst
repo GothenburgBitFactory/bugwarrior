@@ -44,7 +44,7 @@ could add the following configuration option::
 
     jira.query = assignee = ralph and status != closed and status != resolved
 
-This query needs to be modified accordingly to the literal values of you Jira
+This query needs to be modified accordingly to the literal values of your Jira
 instance; if the name contains any character, just put it in quotes, e.g.
 
     jira.query = assignee = 'firstname.lastname' and status != Closed and status != Resolved and status != Done
