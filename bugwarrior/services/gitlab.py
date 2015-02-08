@@ -229,7 +229,7 @@ class GitlabService(IssueService):
     def _fetch(self, tmpl):
         url = tmpl.format(host=self.auth[0])
         headers = {'PRIVATE-TOKEN': self.auth[1]}
-        response = requests.get(url, verify=False, headers=headers)
+        response = requests.get(url, headers=headers)
 
         if response.status_code != 200:
             raise IOError(
