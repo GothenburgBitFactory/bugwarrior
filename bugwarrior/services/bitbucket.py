@@ -138,7 +138,7 @@ class BitbucketService(IssueService):
         response = self.get_data('/repositories/%s/issues/' % tag)
         return [(tag, issue) for issue in response['issues']]
 
-    def get_annotations(self, tag, issue, issue_obj):
+    def get_annotations(self, tag, issue, issue_obj, url):
         response = self.get_data(
             '/repositories/%s/issues/%i/comments' % (tag, issue['local_id'])
         )
@@ -147,7 +147,7 @@ class BitbucketService(IssueService):
                 comment['author_info']['username'],
                 comment['content'],
             ) for comment in response),
-            issue_obj.get_processed_url(issue_obj.extra['url'])
+            issue_obj.get_processed_url(url)
         )
 
     def get_owner(self, issue):
@@ -174,12 +174,13 @@ class BitbucketService(IssueService):
 
         for tag, issue in issues:
             issue_obj = self.get_issue_for_record(issue)
+            url = self.BASE_URL + '/'.join(
+                issue['resource_uri'].split('/')[3:]
+            ).replace('issues', 'issue')
             extras = {
                 'project': tag.split('/')[1],
-                'url': self.BASE_URL + '/'.join(
-                    issue['resource_uri'].split('/')[3:]
-                ).replace('issues', 'issue'),
-                'annotations': self.get_annotations(tag, issue, issue_obj)
+                'url': url,
+                'annotations': self.get_annotations(tag, issue, issue_obj, url)
             }
             issue_obj.update_extra(extras)
             yield issue_obj
