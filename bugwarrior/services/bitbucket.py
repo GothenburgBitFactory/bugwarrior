@@ -2,7 +2,7 @@ import requests
 from twiggy import log
 
 from bugwarrior.services import IssueService, Issue
-from bugwarrior.config import die, get_service_password
+from bugwarrior.config import asbool, die, get_service_password
 
 
 class BitbucketIssue(Issue):
@@ -59,6 +59,7 @@ class BitbucketService(IssueService):
     CONFIG_PREFIX = 'bitbucket'
 
     BASE_API = 'https://api.bitbucket.org/1.0'
+    BASE_API2 = 'https://api.bitbucket.org/2.0'
     BASE_URL = 'http://bitbucket.org/'
 
     def __init__(self, *args, **kw):
@@ -91,6 +92,10 @@ class BitbucketService(IssueService):
                 self.config_get('include_repos').strip().split(',')
             ]
 
+        self.filter_merge_requests = self.config_get_default(
+            'filter_merge_requests', default=False, to_type=asbool
+        )
+
     @classmethod
     def get_keyring_service(cls, config, section):
         login = config.get(section, cls._get_key('login'))
@@ -109,6 +114,23 @@ class BitbucketService(IssueService):
                 return False
 
         return True
+
+    def get_data2(self, url):
+        response = requests.get(self.BASE_API2 + url, auth=self.auth)
+
+        # And.. if we didn't get good results, just bail.
+        if response.status_code != 200:
+            raise IOError(
+                "Non-200 status code %r; %r; %r" % (
+                    response.status_code, url, response.text,
+                )
+            )
+        if callable(response.json):
+            # Newer python-requests
+            return response.json()
+        else:
+            # Older python-requests
+            return response.json
 
     def get_data(self, url):
         response = requests.get(self.BASE_API + url, auth=self.auth)
@@ -134,9 +156,13 @@ class BitbucketService(IssueService):
 
         IssueService.validate_config(config, target)
 
-    def pull(self, tag):
-        response = self.get_data('/repositories/%s/issues/' % tag)
+    def fetch_issues(self, tag):
+        response = self.get_data('/repositories/%s/issues/' % (tag))
         return [(tag, issue) for issue in response['issues']]
+
+    def fetch_pull_requests(self, tag):
+        response = self.get_data2('/repositories/%s/pullrequests/' % tag)
+        return [(tag, issue) for issue in response['values']]
 
     def get_annotations(self, tag, issue, issue_obj, url):
         response = self.get_data(
@@ -147,6 +173,18 @@ class BitbucketService(IssueService):
                 comment['author_info']['username'],
                 comment['content'],
             ) for comment in response),
+            issue_obj.get_processed_url(url)
+        )
+
+    def get_annotations2(self, tag, issue, issue_obj, url):
+        response = self.get_data2(
+            '/repositories/%s/pullrequests/%i/comments' % (tag, issue['id'])
+        )
+        return self.build_annotations(
+            ((
+                comment['user']['username'],
+                comment['content']['raw'],
+            ) for comment in response['values']),
             issue_obj.get_processed_url(url)
         )
 
@@ -163,7 +201,7 @@ class BitbucketService(IssueService):
         ]
         repos = filter(self.filter_repos, all_repos)
 
-        issues = sum([self.pull(user + "/" + repo) for repo in repos], [])
+        issues = sum([self.fetch_issues(user + "/" + repo) for repo in repos], [])
         log.name(self.target).debug(" Found {0} total.", len(issues))
 
         closed = ['resolved', 'duplicate', 'wontfix', 'invalid']
@@ -184,3 +222,30 @@ class BitbucketService(IssueService):
             }
             issue_obj.update_extra(extras)
             yield issue_obj
+
+        if not self.filter_merge_requests:
+            pull_requests = sum([self.fetch_pull_requests(user + "/" + repo) for repo in repos], [])
+            log.name(self.target).debug(" Found {0} total.", len(pull_requests))
+
+            closed = ['rejected', 'fulfilled']
+            not_resolved = lambda tup: tup[1]['state'] not in closed
+            pull_requests = filter(not_resolved, pull_requests)
+            pull_requests = filter(self.include, pull_requests)
+            log.name(self.target).debug(" Pruned down to {0}", len(pull_requests))
+
+            for tag, issue in pull_requests:
+                # Pull requests are only accessible over API v2.0 which has
+                # this difference.
+                issue['local_id'] = issue['id']
+
+                issue_obj = self.get_issue_for_record(issue)
+                url = self.BASE_URL + '/'.join(
+                    issue['links']['html']['href'].split('/')[3:]
+                ).replace('pullrequests', 'pullrequest')
+                extras = {
+                    'project': tag.split('/')[1],
+                    'url': url,
+                    'annotations': self.get_annotations2(tag, issue, issue_obj, url)
+                }
+                issue_obj.update_extra(extras)
+                yield issue_obj

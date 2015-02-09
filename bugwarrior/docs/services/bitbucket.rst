@@ -46,6 +46,15 @@ In this example, ``noisy_repository`` is the repository you would
 Please note that the API returns all lowercase names regardless of
 the case of the repository in the web interface.
 
+Filter Pull Requests
+++++++++++++++++++++
+
+Although you can filter issues using :ref:`common_configuration_options`,
+pull requests are not filtered by default.  You can filter pull requests
+by adding the following configuration option::
+
+    bitbucket.filter_pull_requests = True
+
 Provided UDA Fields
 -------------------
 
