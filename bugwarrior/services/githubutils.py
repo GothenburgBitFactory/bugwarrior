@@ -76,10 +76,19 @@ def get_pulls(username, repo, auth):
 def _getter(url, auth):
     """ Pagination utility.  Obnoxious. """
 
+    kwargs = {}
+
+    if 'token' in auth:
+        kwargs['headers'] = {
+            'Authorization': 'token ' + auth['token']
+        }
+    elif 'basic' in auth:
+        kwargs['auth'] = auth['basic']
+
     results = []
     link = dict(next=url)
     while 'next' in link:
-        response = requests.get(link['next'], auth=auth)
+        response = requests.get(link['next'], **kwargs)
 
         # And.. if we didn't get good results, just bail.
         if response.status_code != 200:

@@ -28,6 +28,11 @@ set to ralphbean (my account).  But I have some targets with
 ``github.username`` pointed at organizations or other users to watch issues
 there.
 
+If two-factor authentication is used, ``github.token`` must be given rather
+than ``github.password``. To get a token, go to the "Applications" section of
+your profile settings. Only the ``public_repo`` scope is required, but access
+to private repos can be gained with ``repo`` as well.
+
 Service Features
 ----------------
 
