@@ -315,7 +315,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     notify = _bool_option('notifications', 'notifications', 'False') and not dry_run
 
     tw = TaskWarriorShellout(
-        config_filename=get_taskrc_path(conf),
+        config_filename=get_taskrc_path(conf, main_section),
         config_overrides=uda_list,
         marshal=True,
     )
