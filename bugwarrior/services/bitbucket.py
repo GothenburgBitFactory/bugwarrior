@@ -60,7 +60,7 @@ class BitbucketService(IssueService):
 
     BASE_API = 'https://api.bitbucket.org/1.0'
     BASE_API2 = 'https://api.bitbucket.org/2.0'
-    BASE_URL = 'http://bitbucket.org/'
+    BASE_URL = 'https://bitbucket.org/'
 
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
