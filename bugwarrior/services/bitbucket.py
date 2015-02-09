@@ -77,11 +77,38 @@ class BitbucketService(IssueService):
 
             self.auth = (login, password)
 
+        self.exclude_repos = []
+        if self.config_get_default('exclude_repos', None):
+            self.exclude_repos = [
+                item.strip() for item in
+                self.config_get('exclude_repos').strip().split(',')
+            ]
+
+        self.include_repos = []
+        if self.config_get_default('include_repos', None):
+            self.include_repos = [
+                item.strip() for item in
+                self.config_get('include_repos').strip().split(',')
+            ]
+
     @classmethod
     def get_keyring_service(cls, config, section):
         login = config.get(section, cls._get_key('login'))
         username = config.get(section, cls._get_key('username'))
         return "bitbucket://%s@bitbucket.org/%s" % (login, username)
+
+    def filter_repos(self, repo):
+        if self.exclude_repos:
+            if repo in self.exclude_repos:
+                return False
+
+        if self.include_repos:
+            if repo in self.include_repos:
+                return True
+            else:
+                return False
+
+        return True
 
     def get_data(self, url):
         response = requests.get(self.BASE_API + url, auth=self.auth)
@@ -130,10 +157,11 @@ class BitbucketService(IssueService):
     def issues(self):
         user = self.config.get(self.target, 'bitbucket.username')
         response = self.get_data('/users/' + user + '/')
-        repos = [
+        all_repos = [
             repo.get('slug') for repo in response.get('repositories')
             if repo.get('has_issues')
         ]
+        repos = filter(self.filter_repos, all_repos)
 
         issues = sum([self.pull(user + "/" + repo) for repo in repos], [])
         log.name(self.target).debug(" Found {0} total.", len(issues))
