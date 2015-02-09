@@ -87,7 +87,7 @@ def vault():
 def targets():
     config = load_config('general')
     for section in config.sections():
-        if section in ['general'] or \
+        if section in ['general', 'notifications'] or \
            section.startswith('flavor.'):
             continue
         service_name = config.get(section, 'service')
