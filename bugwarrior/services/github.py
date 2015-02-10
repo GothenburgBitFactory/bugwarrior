@@ -130,16 +130,29 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
+        self.auth = {}
+
         login = self.config_get('login')
-        password = self.config_get_default('password')
-        if not password or password.startswith('@oracle:'):
-            username = self.config_get('username')
-            password = get_service_password(
-                self.get_keyring_service(self.config, self.target),
-                login, oracle=password,
-                interactive=self.config.interactive
-            )
-        self.auth = (login, password)
+        token = self.config_get_default('token')
+        if token:
+            if token.startswith('@oracle:'):
+                username = self.config_get('username')
+                token = get_service_password(
+                    self.get_keyring_service(self.config, self.target),
+                    login, oracle=token,
+                    interactive=self.config.interactive
+                )
+            self.auth['token'] = token
+        else:
+            password = self.config_get_default('password')
+            if not password or password.startswith('@oracle:'):
+                username = self.config_get('username')
+                password = get_service_password(
+                    self.get_keyring_service(self.config, self.target),
+                    login, oracle=password,
+                    interactive=self.config.interactive
+                )
+            self.auth['basic'] = (login, password)
 
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
@@ -279,8 +292,9 @@ class GithubService(IssueService):
         if not config.has_option(target, 'github.login'):
             die("[%s] has no 'github.login'" % target)
 
-        if not config.has_option(target, 'github.password'):
-            die("[%s] has no 'github.password'" % target)
+        if not config.has_option(target, 'github.token') and \
+           not config.has_option(target, 'github.password'):
+            die("[%s] has no 'github.token' or 'github.password'" % target)
 
         if not config.has_option(target, 'github.username'):
             die("[%s] has no 'github.username'" % target)
