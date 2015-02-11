@@ -1,3 +1,5 @@
+from nose.tools import raises
+
 import unittest2
 
 import bugwarrior.utils
@@ -7,6 +9,10 @@ class UtilsTest(unittest2.TestCase):
     def setUp(self):
         self.d = bugwarrior.utils.DeferredImportingDict({
             'chain': 'itertools:chain',
+        })
+        self.fail = bugwarrior.utils.DeferredImportingDict({
+            'dne1': 'itertools:DNE',
+            'dne2': 'notarealmodule:something',
         })
 
     def test_importing_dict_access_success(self):
@@ -22,3 +28,11 @@ class UtilsTest(unittest2.TestCase):
 
     def test_importing_dict_keys(self):
         self.assertEquals(set(self.d.keys()), set(['chain']))
+
+    @raises(ImportError)
+    def test_importing_unimportable_object(self):
+        self.fail['dne1']
+
+    @raises(ImportError)
+    def test_importing_unimportable_module(self):
+        self.fail['dne2']
