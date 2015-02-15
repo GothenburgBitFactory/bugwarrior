@@ -398,7 +398,8 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             for field, ch in six.iteritems(issue.get_changes(keep=True))
         ])
         log.name('db').info(
-            "Updating task {0}; {1}{2}",
+            "Updating task {0}, {1}; {2}{3}",
+            six.text_type(issue['uuid']).encode("utf-8"),
             issue['description'].encode("utf-8"),
             changes,
             notreally
