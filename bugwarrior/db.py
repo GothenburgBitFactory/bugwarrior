@@ -418,7 +418,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         log.name('db').info(
             "Completing task {0} {1}{2}",
             issue,
-            task_info.get('description'),
+            task_info.get('description', '').encode('utf-8'),
             notreally
         )
         if dry_run:
