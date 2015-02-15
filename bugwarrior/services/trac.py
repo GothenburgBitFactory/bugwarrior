@@ -50,10 +50,16 @@ class TracIssue(Issue):
         }
 
     def get_default_description(self):
+
+        if 'number' in self.record:
+            number = self.record['number']
+        else:
+            number = self.record['id']
+
         return self.build_default_description(
             title=self.record['summary'],
             url=self.get_processed_url(self.record['url']),
-            number=self.record['id'],
+            number=number,
             cls='issue'
         )
 
