@@ -82,7 +82,7 @@ class TracService(IssueService):
                     interactive=self.config.interactive
                 )
 
-            auth = urllib.quote_plus('%s:%s@' % (username, password))
+            auth = urllib.quote_plus('%s:%s' % (username, password)) + '@'
         else:
             auth = ''
         if self.config_get_default('no_xmlrpc', default=False):
