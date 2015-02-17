@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.1.1
+-----
+
+- Fixes a couple minor typos in service classpaths listed in DeferredImportingDict. `7844a0beb <https://github.com/ralphbean/bugwarrior/commit/7844a0beb0bce92009338327fe3a7c8cc4c78196>`_
+- Merge pull request #206 from coddingtonbear/fix_service_classpath `d50486ee6 <https://github.com/ralphbean/bugwarrior/commit/d50486ee6cb7cf2abc68a92bf0fc5247fb58ee51>`_
+
 1.1.0
 -----
 
