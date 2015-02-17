@@ -10,6 +10,7 @@ from bugwarrior.services import IssueService, Issue
 class BugzillaIssue(Issue):
     URL = 'bugzillaurl'
     SUMMARY = 'bugzillasummary'
+    BUG_ID = 'bugzillabugid'
 
     UDAS = {
         URL: {
@@ -19,7 +20,11 @@ class BugzillaIssue(Issue):
         SUMMARY: {
             'type': 'string',
             'label': 'Bugzilla Summary',
-        }
+        },
+        BUG_ID: {
+            'type': 'numeric',
+            'label': 'Bugzilla Bug ID',
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -39,6 +44,7 @@ class BugzillaIssue(Issue):
 
             self.URL: self.extra['url'],
             self.SUMMARY: self.record['summary'],
+            self.BUG_ID: self.record['id'],
         }
 
     def get_default_description(self):
@@ -81,6 +87,8 @@ class BugzillaService(IssueService):
         self.password = self.config_get('password')
         self.ignore_cc = self.config_get_default('ignore_cc', default=False,
                                                  to_type=lambda x: x == "True")
+        self.query_url = self.config_get_default('query_url', default=None)
+
         # So more modern bugzilla's require that we specify
         # query_format=advanced along with the xmlrpc request.
         # https://bugzilla.redhat.com/show_bug.cgi?id=825370
@@ -162,18 +170,22 @@ class BugzillaService(IssueService):
         email = self.username
         # TODO -- doing something with blockedby would be nice.
 
-        query = dict(
-            column_list=self.COLUMN_LIST,
-            bug_status=self.OPEN_STATUSES,
-            email1=email,
-            emailreporter1=1,
-            emailassigned_to1=1,
-            emailqa_contact1=1,
-            emailtype1="substring",
-        )
+        if self.query_url:
+            query = self.bz.url_to_query(self.query_url)
+            query['column_list'] = self.COLUMN_LIST
+        else:
+            query = dict(
+                column_list=self.COLUMN_LIST,
+                bug_status=self.OPEN_STATUSES,
+                email1=email,
+                emailreporter1=1,
+                emailassigned_to1=1,
+                emailqa_contact1=1,
+                emailtype1="substring",
+            )
 
-        if not self.ignore_cc:
-            query['emailcc1'] = 1
+            if not self.ignore_cc:
+                query['emailcc1'] = 1
 
         if self.advanced:
             # Required for new bugzilla

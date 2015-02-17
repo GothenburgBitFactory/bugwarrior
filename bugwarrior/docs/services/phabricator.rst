@@ -4,6 +4,13 @@ Phabricator
 You can import tasks from your Phabricator instance using
 the ``phabricator`` service name.
 
+Additional Requirements
+-----------------------
+
+Install the following package using ``pip``:
+
+* ``phabricator``
+
 Example Service
 ---------------
 

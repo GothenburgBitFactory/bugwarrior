@@ -19,7 +19,7 @@ MARKUP = "(bw)"
 
 DOGPILE_CACHE_PATH = os.path.expanduser('~/.cache/dagd.dbm')
 if not os.path.isdir(os.path.dirname(DOGPILE_CACHE_PATH)):
-    os.mkdirs(os.path.dirname(DOGPILE_CACHE_PATH))
+    os.makedirs(os.path.dirname(DOGPILE_CACHE_PATH))
 CACHE_REGION = dogpile.cache.make_region().configure(
     "dogpile.cache.dbm",
     arguments=dict(filename=DOGPILE_CACHE_PATH),
@@ -102,7 +102,7 @@ def get_managed_task_uuids(tw, key_list, legacy_matching):
     expected_task_ids = set([])
     for keys in key_list.values():
         tasks = tw.filter_tasks({
-            'and': [('%s.not' % key, '') for key in keys],
+            'and': [('%s.any' % key, None) for key in keys],
             'or': [
                 ('status', 'pending'),
                 ('status', 'waiting'),
@@ -183,7 +183,7 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
     for service, key_list in six.iteritems(keys):
         if any([key in issue for key in key_list]):
             results = tw.filter_tasks({
-                'and': [(key, issue[key]) for key in key_list],
+                'and': [("%s.is" % key, issue[key]) for key in key_list],
                 'or': [
                     ('status', 'pending'),
                     ('status', 'waiting'),
@@ -285,7 +285,7 @@ def run_hooks(conf, name):
                     raise RuntimeError(msg)
 
 
-def synchronize(issue_generator, conf):
+def synchronize(issue_generator, conf, main_section, dry_run=False):
     def _bool_option(section, option, default):
         try:
             return section in conf.sections() and \
@@ -293,35 +293,34 @@ def synchronize(issue_generator, conf):
         except NoOptionError:
             return default
 
-    targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
+    targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
     services = set([conf.get(target, 'service') for target in targets])
     key_list = build_key_list(services)
     uda_list = build_uda_config_overrides(services)
 
     if uda_list:
         log.name('bugwarrior').info(
-            'Service-defined UDAs (you can optionally add these to your '
-            '~/.taskrc for use in reports):'
+            'Service-defined UDAs exist: you can optionally use the '
+            '`bugwarrior-uda` command to export a list of UDAs you can '
+            'add to your ~/.taskrc file.'
         )
-        for uda in convert_override_args_to_taskrc_settings(uda_list):
-            log.name('bugwarrior').info(uda)
 
     static_fields = static_fields_default = ['priority']
-    if conf.has_option('general', 'static_fields'):
-        static_fields = conf.get('general', 'static_fields').split(',')
+    if conf.has_option(main_section, 'static_fields'):
+        static_fields = conf.get(main_section, 'static_fields').split(',')
 
     # Before running CRUD operations, call the pre_import hook(s).
     run_hooks(conf, 'pre_import')
 
-    notify = _bool_option('notifications', 'notifications', 'False')
+    notify = _bool_option('notifications', 'notifications', 'False') and not dry_run
 
     tw = TaskWarriorShellout(
-        config_filename=get_taskrc_path(conf),
+        config_filename=get_taskrc_path(conf, main_section),
         config_overrides=uda_list,
         marshal=True,
     )
 
-    legacy_matching = _bool_option('general', 'legacy_matching', 'True')
+    legacy_matching = _bool_option(main_section, 'legacy_matching', 'True')
 
     issue_updates = {
         'new': [],
@@ -368,19 +367,24 @@ def synchronize(issue_generator, conf):
         except NotFound:
             issue_updates['new'].append(dict(issue))
 
+    notreally = ' (not really)' if dry_run else ''
     # Add new issues
     log.name('db').info("Adding {0} tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
         log.name('db').info(
-            "Adding task {0}",
-            issue['description'].encode("utf-8")
+            "Adding task {0}{1}",
+            issue['description'].encode("utf-8"),
+            notreally
         )
+        if dry_run:
+            continue
         if notify:
             send_notification(issue, 'Created', conf)
 
         try:
             tw.task_add(**issue)
         except TaskwarriorError as e:
+            log.name('db').error("Unable to add task: %s" % e.stderr)
             log.name('db').trace(e)
 
     log.name('db').info("Updating {0} tasks", len(issue_updates['changed']))
@@ -394,29 +398,40 @@ def synchronize(issue_generator, conf):
             for field, ch in six.iteritems(issue.get_changes(keep=True))
         ])
         log.name('db').info(
-            "Updating task {0}; {1}",
+            "Updating task {0}, {1}; {2}{3}",
+            six.text_type(issue['uuid']).encode("utf-8"),
             issue['description'].encode("utf-8"),
             changes,
+            notreally
         )
+        if dry_run:
+            continue
+
         try:
             tw.task_update(issue)
         except TaskwarriorError as e:
+            log.name('db').error("Unable to modify task: %s" % e.stderr)
             log.name('db').trace(e)
 
     log.name('db').info("Closing {0} tasks", len(issue_updates['closed']))
     for issue in issue_updates['closed']:
         _, task_info = tw.get_task(uuid=issue)
         log.name('db').info(
-            "Completing task {0} {1}",
-            task_info['uuid'],
-            task_info['description'],
+            "Completing task {0} {1}{2}",
+            issue,
+            task_info.get('description', '').encode('utf-8'),
+            notreally
         )
+        if dry_run:
+            continue
+
         if notify:
             send_notification(task_info, 'Completed', conf)
 
         try:
             tw.task_done(uuid=issue)
         except TaskwarriorError as e:
+            log.name('db').error("Unable to close task: %s" % e.stderr)
             log.name('db').trace(e)
 
     # Send notifications
@@ -441,6 +456,15 @@ def build_key_list(targets):
     for target in targets:
         keys[target] = SERVICES[target].ISSUE_CLASS.UNIQUE_KEY
     return keys
+
+
+def get_defined_udas_as_strings(conf, main_section):
+    targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
+    services = set([conf.get(target, 'service') for target in targets])
+    uda_list = build_uda_config_overrides(services)
+
+    for uda in convert_override_args_to_taskrc_settings(uda_list):
+        yield uda
 
 
 def build_uda_config_overrides(targets):

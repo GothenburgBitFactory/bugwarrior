@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '1.0.2'
+version = '1.1.0'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -43,6 +43,7 @@ setup(name='bugwarrior',
           "dogpile.cache>=0.5.3",
           "lockfile>=0.9.1",
           "click",
+          "pyxdg",
       ],
       tests_require=[
           "Mock",
@@ -55,5 +56,6 @@ setup(name='bugwarrior',
       [console_scripts]
       bugwarrior-pull = bugwarrior:pull
       bugwarrior-vault = bugwarrior:vault
+      bugwarrior-uda = bugwarrior:uda
       """,
       )

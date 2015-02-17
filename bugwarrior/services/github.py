@@ -17,6 +17,7 @@ class GithubIssue(Issue):
     UPDATED_AT = 'githubupdatedat'
     MILESTONE = 'githubmilestone'
     URL = 'githuburl'
+    REPO = 'githubrepo'
     TYPE = 'githubtype'
     NUMBER = 'githubnumber'
 
@@ -40,6 +41,10 @@ class GithubIssue(Issue):
         MILESTONE: {
             'type': 'numeric',
             'label': 'Github Milestone',
+        },
+        REPO: {
+            'type': 'string',
+            'label': 'Github Repo Slug',
         },
         URL: {
             'type': 'string',
@@ -80,6 +85,7 @@ class GithubIssue(Issue):
             'tags': self.get_tags(),
 
             self.URL: self.record['html_url'],
+            self.REPO: self.record['repo'],
             self.TYPE: self.extra['type'],
             self.TITLE: self.record['title'],
             self.BODY: body,
@@ -124,16 +130,29 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
+        self.auth = {}
+
         login = self.config_get('login')
-        password = self.config_get_default('password')
-        if not password or password.startswith('@oracle:'):
-            username = self.config_get('username')
-            password = get_service_password(
-                self.get_keyring_service(self.config, self.target),
-                login, oracle=password,
-                interactive=self.config.interactive
-            )
-        self.auth = (login, password)
+        token = self.config_get_default('token')
+        if token:
+            if token.startswith('@oracle:'):
+                username = self.config_get('username')
+                token = get_service_password(
+                    self.get_keyring_service(self.config, self.target),
+                    login, oracle=token,
+                    interactive=self.config.interactive
+                )
+            self.auth['token'] = token
+        else:
+            password = self.config_get_default('password')
+            if not password or password.startswith('@oracle:'):
+                username = self.config_get('username')
+                password = get_service_password(
+                    self.get_keyring_service(self.config, self.target),
+                    login, oracle=password,
+                    interactive=self.config.interactive
+                )
+            self.auth['basic'] = (login, password)
 
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
@@ -219,7 +238,7 @@ class GithubService(IssueService):
         if issue[1]['assignee']:
             return issue[1]['assignee']['login']
 
-    def _filter_repos_base(self, repo):
+    def filter_repos(self, repo):
         if self.exclude_repos:
             if repo['name'] in self.exclude_repos:
                 return False
@@ -232,24 +251,17 @@ class GithubService(IssueService):
 
         return True
 
-    def filter_repos_for_prs(self, repo):
-        if repo['forks'] < 1:
-            return False
-        else:
-            return self._filter_repos_base(repo)
-
-    def filter_repos_for_issues(self, repo):
-        if not (repo['has_issues'] and repo['open_issues_count'] > 0):
-            return False
-        else:
-            return self._filter_repos_base(repo)
+    def include(self, issue):
+        if 'pull_request' in issue[1] and not self.filter_pull_requests:
+            return True
+        return super(GithubService, self).include(issue)
 
     def issues(self):
         user = self.config.get(self.target, 'github.username')
 
         all_repos = githubutils.get_repos(username=user, auth=self.auth)
         assert(type(all_repos) == list)
-        repos = filter(self.filter_repos_for_issues, all_repos)
+        repos = filter(self.filter_repos, all_repos)
 
         issues = {}
         for repo in repos:
@@ -261,40 +273,16 @@ class GithubService(IssueService):
         issues = filter(self.include, issues.values())
         log.name(self.target).debug(" Pruned down to {0} issues.", len(issues))
 
-        # Next, get all the pull requests (and don't prune by default)
-        repos = filter(self.filter_repos_for_prs, all_repos)
-        requests = sum([self._reqs(user + "/" + r['name']) for r in repos], [])
-        log.name(self.target).debug(" Found {0} pull requests.", len(requests))
-        if self.filter_pull_requests:
-            requests = filter(self.include, requests)
-            log.name(self.target).debug(
-                " Pruned down to {0} pull requests.",
-                len(requests)
-            )
-
-        # For pull requests, github lists an 'issue' and a 'pull request' with
-        # the same id and the same URL.  So, if we find any pull requests,
-        # let's strip those out of the "issues" list so that we don't have
-        # unnecessary duplicates.
-        request_urls = [r[1]['html_url'] for r in requests]
-        issues = [i for i in issues if not i[1]['html_url'] in request_urls]
-
         for tag, issue in issues:
+            # Stuff this value into the upstream dict for:
+            # https://github.com/ralphbean/bugwarrior/issues/159
+            issue['repo'] = tag
+
             issue_obj = self.get_issue_for_record(issue)
             extra = {
                 'project': tag.split('/')[1],
-                'type': 'issue',
+                'type': 'pull_request' if 'pull_request' in issue else 'issue',
                 'annotations': self.annotations(tag, issue, issue_obj)
-            }
-            issue_obj.update_extra(extra)
-            yield issue_obj
-
-        for tag, request in requests:
-            issue_obj = self.get_issue_for_record(request)
-            extra = {
-                'project': tag.split('/')[1],
-                'type': 'pull_request',
-                'annotations': self.annotations(tag, request, issue_obj)
             }
             issue_obj.update_extra(extra)
             yield issue_obj
@@ -304,8 +292,9 @@ class GithubService(IssueService):
         if not config.has_option(target, 'github.login'):
             die("[%s] has no 'github.login'" % target)
 
-        if not config.has_option(target, 'github.password'):
-            die("[%s] has no 'github.password'" % target)
+        if not config.has_option(target, 'github.token') and \
+           not config.has_option(target, 'github.password'):
+            die("[%s] has no 'github.token' or 'github.password'" % target)
 
         if not config.has_option(target, 'github.username'):
             die("[%s] has no 'github.username'" % target)

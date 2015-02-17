@@ -3,6 +3,7 @@ import multiprocessing
 import time
 
 from dateutil.parser import parse as parse_date
+from dateutil.tz import tzlocal
 from jinja2 import Template
 import pytz
 import six
@@ -10,6 +11,7 @@ from twiggy import log
 
 from taskw.task import Task
 
+from bugwarrior.utils import DeferredImportingDict
 from bugwarrior.config import asbool
 from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
 
@@ -17,6 +19,30 @@ from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
 # Sentinels for process completion status
 SERVICE_FINISHED_OK = 0
 SERVICE_FINISHED_ERROR = 1
+
+# Used by `parse_date` as a timezone when you would like a naive
+# date string to be parsed as if it were in your local timezone
+LOCAL_TIMEZONE = 'LOCAL_TIMEZONE'
+
+# Constant dict to be used all around town.
+# It will defer actually importing a service until someone tries to access it
+# in the dict.  This should help expose odd ImportErrors in a more obvious way
+# for end users.  See https://github.com/ralphbean/bugwarrior/issues/132
+SERVICES = DeferredImportingDict({
+    'github':        'bugwarrior.services.github:GithubService',
+    'gitlab':        'bugwarrior.services.gitlab:GitlabService',
+    'bitbucket':     'bugwarrior.services.bitbucket:BitbucketService',
+    'trac':          'bugwarrior.services.trac:TracService',
+    'bugzilla':      'bugwarrior.services.bz:BugzillaService',
+    'teamlab':       'bugwarrior.services.teamlab:TeamLabService',
+    'redmine':       'bugwarrior.services.redmine:RedMineService',
+    'activecollab2': 'bugwarrior.services.activecollab2:ActiveCollab2Service',
+    'activecollab':  'bugwarrior.services.activecollab:ActiveCollabService',
+    'jira':          'bugwarrior.services.jira:JiraService',
+    'megaplan':      'bugwarrior.services.megaplan:megaplanService',
+    'phabricator':   'bugwarrior.services.phabricator:phabricatorService',
+    'versionone':    'bugwarrior.services.versionone:versiononeService',
+})
 
 
 class IssueService(object):
@@ -26,31 +52,32 @@ class IssueService(object):
     # What prefix should we use for this service's configuration values
     CONFIG_PREFIX = ''
 
-    def __init__(self, config, target):
+    def __init__(self, config, main_section, target):
         self.config = config
+        self.main_section = main_section
         self.target = target
 
         self.desc_len = 35
-        if config.has_option('general', 'description_length'):
-            self.desc_len = self.config.getint('general', 'description_length')
+        if config.has_option(self.main_section, 'description_length'):
+            self.desc_len = self.config.getint(self.main_section, 'description_length')
 
         self.anno_len = 45
-        if config.has_option('general', 'annotation_length'):
-            self.anno_len = self.config.getint('general', 'annotation_length')
+        if config.has_option(self.main_section, 'annotation_length'):
+            self.anno_len = self.config.getint(self.main_section, 'annotation_length')
 
         self.inline_links = True
-        if config.has_option('general', 'inline_links'):
-            self.inline_links = asbool(config.get('general', 'inline_links'))
+        if config.has_option(self.main_section, 'inline_links'):
+            self.inline_links = asbool(config.get(self.main_section, 'inline_links'))
 
         self.annotation_links = not self.inline_links
-        if config.has_option('general', 'annotation_links'):
+        if config.has_option(self.main_section, 'annotation_links'):
             self.annotation_links = asbool(
-                config.get('general', 'annotation_links')
+                config.get(self.main_section, 'annotation_links')
             )
 
         self.shorten = False
-        if config.has_option('general', 'shorten'):
-            self.shorten = asbool(config.get('general', 'shorten'))
+        if config.has_option(self.main_section, 'shorten'):
+            self.shorten = asbool(config.get(self.main_section, 'shorten'))
 
         self.add_tags = []
         if config.has_option(self.target, 'add_tags'):
@@ -328,7 +355,11 @@ class Issue(object):
         if date:
             date = parse_date(date)
             if not date.tzinfo:
-                date = date.replace(tzinfo=pytz.timezone(timezone))
+                if timezone == LOCAL_TIMEZONE:
+                    tzinfo = tzlocal()
+                else:
+                    tzinfo = pytz.timezone(timezone)
+                date = date.replace(tzinfo=tzinfo)
             return date
         return None
 
@@ -338,6 +369,7 @@ class Issue(object):
         cls_markup = {
             'issue': 'Is',
             'pull_request': 'PR',
+            'merge_request': 'MR',
             'task': '',
             'subtask': 'Subtask #',
         }
@@ -447,7 +479,7 @@ class Issue(object):
         return '<%s>' % self.__unicode__()
 
 
-def _aggregate_issues(conf, target, queue, service_name):
+def _aggregate_issues(conf, main_section, target, queue, service_name):
     """ This worker function is separated out from the main
     :func:`aggregate_issues` func only so that we can use multiprocessing
     on it for speed reasons.
@@ -456,7 +488,7 @@ def _aggregate_issues(conf, target, queue, service_name):
     start = time.time()
 
     try:
-        service = SERVICES[service_name](conf, target)
+        service = SERVICES[service_name](conf, main_section, target)
         issue_count = 0
         for issue in service.issues():
             queue.put(issue)
@@ -477,12 +509,12 @@ def _aggregate_issues(conf, target, queue, service_name):
         log.name(target).info("Done with [%s] in %fs" % (target, duration))
 
 
-def aggregate_issues(conf):
+def aggregate_issues(conf, main_section):
     """ Return all issues from every target. """
     log.name('bugwarrior').info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
-    targets = [t.strip() for t in conf.get('general', 'targets').split(',')]
+    targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
 
     queue = multiprocessing.Queue()
 
@@ -490,12 +522,13 @@ def aggregate_issues(conf):
     processes = []
 
     if (
-        conf.has_option('general', 'development')
-        and asbool(conf.get('general', 'development'))
+        conf.has_option(main_section, 'development')
+        and asbool(conf.get(main_section, 'development'))
     ):
         for target in targets:
             _aggregate_issues(
                 conf,
+                main_section,
                 target,
                 queue,
                 conf.get(target, 'service')
@@ -504,7 +537,7 @@ def aggregate_issues(conf):
         for target in targets:
             proc = multiprocessing.Process(
                 target=_aggregate_issues,
-                args=(conf, target, queue, conf.get(target, 'service'))
+                args=(conf, main_section, target, queue, conf.get(target, 'service'))
             )
             proc.start()
             processes.append(proc)
@@ -530,52 +563,3 @@ def aggregate_issues(conf):
         yield issue
 
     log.name('bugwarrior').info("Done aggregating remote issues.")
-
-
-from .bitbucket import BitbucketService
-from .bz import BugzillaService
-from .github import GithubService
-from .teamlab import TeamLabService
-from .redmine import RedMineService
-from .trac import TracService
-
-
-# Constant dict to be used all around town.
-SERVICES = {
-    'github': GithubService,
-    'bitbucket': BitbucketService,
-    'trac': TracService,
-    'bugzilla': BugzillaService,
-    'teamlab': TeamLabService,
-    'redmine': RedMineService,
-}
-
-try:
-    from .activecollab2 import ActiveCollab2Service
-    SERVICES['activecollab2'] = ActiveCollab2Service
-except ImportError:
-    pass
-
-try:
-    from .activecollab import ActiveCollabService
-    SERVICES['activecollab'] = ActiveCollabService
-except ImportError:
-    pass
-
-try:
-    from .jira import JiraService
-    SERVICES['jira'] = JiraService
-except ImportError:
-    pass
-
-try:
-    from .mplan import MegaplanService
-    SERVICES['megaplan'] = MegaplanService
-except ImportError:
-    pass
-
-try:
-    from .phab import PhabricatorService
-    SERVICES['phabricator'] = PhabricatorService
-except ImportError as e:
-    pass

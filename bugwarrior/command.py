@@ -13,25 +13,38 @@ from taskw.warrior import TaskWarriorBase
 
 from bugwarrior.config import get_taskrc_path, load_config
 from bugwarrior.services import aggregate_issues, SERVICES
-from bugwarrior.db import synchronize
+from bugwarrior.db import (
+    get_defined_udas_as_strings,
+    synchronize,
+)
 
 
 # We overwrite 'list' further down.
 lst = list
 
 
+def _get_section_name(flavor):
+    if flavor:
+        return 'flavor.' + flavor
+    return 'general'
+
+
 @click.command()
-def pull():
+@click.option('--dry-run', is_flag=True)
+@click.option('--flavor', default=None, help='The flavor to use')
+def pull(dry_run, flavor):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.
 
-    Relies on configuration in ~/.bugwarriorrc
+    Relies on configuration in bugwarriorrc
     """
     twiggy.quickSetup()
     try:
-        # Load our config file
-        config = load_config()
+        main_section = _get_section_name(flavor)
 
-        tw_config = TaskWarriorBase.load_config(get_taskrc_path(config))
+        # Load our config file
+        config = load_config(main_section)
+
+        tw_config = TaskWarriorBase.load_config(get_taskrc_path(config, main_section))
         lockfile_path = os.path.join(
             os.path.expanduser(
                 tw_config['data']['location']
@@ -43,10 +56,10 @@ def pull():
         lockfile.acquire(timeout=10)
         try:
             # Get all the issues.  This can take a while.
-            issue_generator = aggregate_issues(config)
+            issue_generator = aggregate_issues(config, main_section)
 
             # Stuff them in the taskwarrior db as necessary
-            synchronize(issue_generator, config)
+            synchronize(issue_generator, config, main_section, dry_run)
         finally:
             lockfile.release()
     except LockTimeout:
@@ -72,9 +85,10 @@ def vault():
 
 
 def targets():
-    config = load_config()
+    config = load_config('general')
     for section in config.sections():
-        if section in ['general']:
+        if section in ['general', 'notifications'] or \
+           section.startswith('flavor.'):
             continue
         service_name = config.get(section, 'service')
         service_class = SERVICES[service_name]
@@ -89,7 +103,7 @@ def targets():
 @vault.command()
 def list():
     pws = lst(targets())
-    print "%i @oracle:use_keyring passwords in .bugwarriorrc" % len(pws)
+    print "%i @oracle:use_keyring passwords in bugwarriorrc" % len(pws)
     for section in pws:
         print "-", section
 
@@ -119,3 +133,14 @@ def set(target, username):
 
     keyring.set_password(target, username, getpass.getpass())
     print "Password set for %s, %s" % (target, username)
+
+
+@click.command()
+@click.option('--flavor', default=None, help='The flavor to use')
+def uda(flavor):
+    main_section = _get_section_name(flavor)
+    conf = load_config(main_section)
+    print "# Bugwarrior UDAs"
+    for uda in get_defined_udas_as_strings(conf, main_section):
+        print uda
+    print "# END Bugwarrior UDAs"

@@ -1,6 +1,5 @@
 import codecs
 from ConfigParser import ConfigParser
-import optparse
 import os
 import subprocess
 import sys
@@ -9,6 +8,7 @@ import six
 import twiggy
 from twiggy import log
 from twiggy.levels import name2level
+from xdg import BaseDirectory
 
 
 def asbool(some_value):
@@ -82,7 +82,7 @@ def load_example_rc():
 
 error_template = """
 *************************************************
-* There was a problem with your ~/.bugwarriorrc *
+* There was a problem with your bugwarriorrc    *
 *   {msg}
 * Here's an example template to help:           *
 *************************************************
@@ -98,27 +98,23 @@ def die(msg):
     sys.exit(1)
 
 
-def parse_args():
-    p = optparse.OptionParser()
-    p.add_option('-f', '--config', default='~/.bugwarriorrc')
-    p.add_option('-i', '--interactive', action='store_true', default=False)
-    return p.parse_args()
-
-
-def validate_config(config):
-    if not config.has_section('general'):
-        die("No [general] section found.")
+def validate_config(config, main_section):
+    if not config.has_section(main_section):
+        die("No [%s] section found." % main_section)
 
     twiggy.quickSetup(
-        name2level(config.get('general', 'log.level')),
-        config.get('general', 'log.file')
+        name2level(config.get(main_section, 'log.level')),
+        config.get(main_section, 'log.file')
     )
 
-    if not config.has_option('general', 'targets'):
-        die("No targets= item in [general] found.")
+    if not config.has_option(main_section, 'targets'):
+        die("No targets= item in [%s] found." % main_section)
 
-    targets = config.get('general', 'targets')
-    targets = [t.strip() for t in targets.split(",")]
+    targets = config.get(main_section, 'targets')
+    targets = filter(lambda t: len(t), [t.strip() for t in targets.split(",")])
+
+    if not targets:
+        die("Empty targets= item in [%s]." % main_section)
 
     for target in targets:
         if target not in config.sections():
@@ -137,27 +133,35 @@ def validate_config(config):
         SERVICES[service].validate_config(config, target)
 
 
-def load_config():
-    opts, args = parse_args()
-
+def load_config(main_section):
     config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
+    path = None
+    first_path = BaseDirectory.load_first_config('bugwarrior')
+    if first_path is not None:
+        path = os.path.join(first_path, 'bugwarriorrc')
+    old_path = os.path.expanduser("~/.bugwarriorrc")
+    if path is None or not os.path.exists(path):
+        if os.path.exists(old_path):
+            path = old_path
+        else:
+            path = os.path.join(BaseDirectory.save_config_path('bugwarrior'), 'bugwarriorrc')
     config.readfp(
         codecs.open(
-            os.path.expanduser(opts.config),
+            path,
             "r",
             "utf-8",
         )
     )
-    config.interactive = opts.interactive
-    validate_config(config)
+    config.interactive = False  # TODO: make this a command-line option
+    validate_config(config, main_section)
 
     return config
 
 
-def get_taskrc_path(conf):
+def get_taskrc_path(conf, main_section):
     path = '~/.taskrc'
-    if conf.has_option('general', 'taskrc'):
-        path = conf.get('general', 'taskrc')
+    if conf.has_option(main_section, 'taskrc'):
+        path = conf.get(main_section, 'taskrc')
     return os.path.normpath(
         os.path.expanduser(path)
     )

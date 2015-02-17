@@ -12,13 +12,17 @@ Here's an example of an Trac target::
     [my_issue_tracker]
     service = trac
     trac.base_uri = fedorahosted.org/moksha
+    trac.scheme = https
+
+By default, this service uses the XML-RPC Trac plugin, which must be installed
+on the Trac instance.  If this is not available, the service can use Trac's
+built-in CSV support, but in this mode it cannot add annotations based on
+ticket comments.  To enable this mode, add ``trac.no_xmlrpc = true``.
+
+If your trac instance requires authentication to perform the query, add::
+
     trac.username = ralph
     trac.password = OMG_LULZ
-
-.. note::
-
-   Your Trac installation must have the XML-RPC plugin enabled
-   for Bugwarrior to work.
 
 The above example is the minimum required to import issues from
 Trac.  You can also feel free to use any of the

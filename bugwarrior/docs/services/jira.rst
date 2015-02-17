@@ -4,6 +4,13 @@ Jira
 You can import tasks from your Jira instance using
 the ``jira`` service name.
 
+Additional Requirements
+-----------------------
+
+Install the following package using ``pip``:
+
+* ``jira``
+
 Example Service
 ---------------
 
@@ -37,6 +44,11 @@ could add the following configuration option::
 
     jira.query = assignee = ralph and status != closed and status != resolved
 
+This query needs to be modified accordingly to the literal values of your Jira
+instance; if the name contains any character, just put it in quotes, e.g.
+
+    jira.query = assignee = 'firstname.lastname' and status != Closed and status != Resolved and status != Done
+
 Jira v4 Support
 +++++++++++++++
 
@@ -45,6 +57,13 @@ configuration option to your service configuration::
 
     jira.version = 4
 
+Disabling SSL Verification
+++++++++++++++++++++++++++
+
+If your Jira instance is only available over HTTPS, and you're running into
+``SSL: CERTIFICATE_VERIFY_FAILED``, it's possible to disable SSL verification::
+
+    jira.verify_ssl = False
 
 Import Labels as Tags
 +++++++++++++++++++++

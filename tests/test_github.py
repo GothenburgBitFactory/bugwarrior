@@ -8,6 +8,7 @@ from .base import ServiceTest
 
 
 class TestGithubIssue(ServiceTest):
+    maxDiff = None
     SERVICE_CONFIG = {
         'github.login': 'arbitrary_login',
         'github.password': 'arbitrary_password',
@@ -23,8 +24,10 @@ class TestGithubIssue(ServiceTest):
         'number': 10,
         'body': 'Something',
         'milestone': {'id': 'alpha'},
+        'labels': [{'name': 'bugfix'}],
         'created_at': arbitrary_created.isoformat(),
         'updated_at': arbitrary_updated.isoformat(),
+        'repo': 'ralphbean/bugwarrior',
     }
     arbitrary_extra = {
         'project': 'one',
@@ -44,6 +47,7 @@ class TestGithubIssue(ServiceTest):
                          'needs_work')
 
     def test_to_taskwarrior(self):
+        self.service.import_labels_as_tags = True
         issue = self.service.get_issue_for_record(
             self.arbitrary_issue,
             self.arbitrary_extra
@@ -53,9 +57,9 @@ class TestGithubIssue(ServiceTest):
             'project': self.arbitrary_extra['project'],
             'priority': self.service.default_priority,
             'annotations': [],
-            'tags': [],
-
+            'tags': ['bugfix'],
             issue.URL: self.arbitrary_issue['html_url'],
+            issue.REPO: self.arbitrary_issue['repo'],
             issue.TYPE: self.arbitrary_extra['type'],
             issue.TITLE: self.arbitrary_issue['title'],
             issue.NUMBER: self.arbitrary_issue['number'],
