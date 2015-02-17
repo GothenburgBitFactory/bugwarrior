@@ -1,6 +1,119 @@
 Changelog
 =========
 
+1.1.0
+-----
+
+- Rudimentary support for VersionOne. `c774952e9 <https://github.com/ralphbean/bugwarrior/commit/c774952e9cb189f37ca29629604ec5a150d6b7c5>`_
+- Adding working VersionOne implementation.  Fixes #149. `1ee7a01e7 <https://github.com/ralphbean/bugwarrior/commit/1ee7a01e7e30bdb907da28a7c7ff839dab2f1d90>`_
+- Collect the OID, too, just in case it might be needed for future API operations. `c0e7c88d3 <https://github.com/ralphbean/bugwarrior/commit/c0e7c88d37c1e3be063d13fb3de21f81b2dcc6d9>`_
+- Add story number and priority fields. `a98fb97bf <https://github.com/ralphbean/bugwarrior/commit/a98fb97bf232d6e2e558382534e624a9243ea3b1>`_
+- Follow the same pattern as the redmine importer for what to name the project name configuration option. `f5f9ef067 <https://github.com/ralphbean/bugwarrior/commit/f5f9ef067de332ffc1e27339bc4922039ef79016>`_
+- Adding documentation for new VersionOnes service. `894bfec02 <https://github.com/ralphbean/bugwarrior/commit/894bfec022ecfe65e73f1745965564832373151d>`_
+- Assemble keyring URL in get_keyring_service method; allow blank passwords to be entered. `709bd7036 <https://github.com/ralphbean/bugwarrior/commit/709bd7036cc57ef5fc0567048f0b0f901585b0c2>`_
+- There's no reason for this to be a set rather than just a normal tuple. `a43c28386 <https://github.com/ralphbean/bugwarrior/commit/a43c283865cb4935fdedf55ab5c671ee0f95f750>`_
+- Merge pull request #150 from coddingtonbear/add_version_one `8297f18d7 <https://github.com/ralphbean/bugwarrior/commit/8297f18d75a039b2fd3254a2430460975c8f2694>`_
+- Further limit which tasks are returned to only actionable items. `6e8333e0a <https://github.com/ralphbean/bugwarrior/commit/6e8333e0ac410fa183fa5d1d40b6f826afab07ef>`_
+- Merge pull request #152 from coddingtonbear/versionone_tweaks `4da7f2208 <https://github.com/ralphbean/bugwarrior/commit/4da7f2208f481e5e9a6d35c8be810ac141af67e8>`_
+- Adding VersionOne link to readme. `4a0ad1779 <https://github.com/ralphbean/bugwarrior/commit/4a0ad1779b947c94fada45b632c7986798581eca>`_
+- Merge pull request #153 from coddingtonbear/versionone_in_readme `b4f757f2c <https://github.com/ralphbean/bugwarrior/commit/b4f757f2c3928abc99c507752d0e2ce8fd4b2ab2>`_
+- Handle debugging in odd case where uuid doesn't return a task. `b987c9859 <https://github.com/ralphbean/bugwarrior/commit/b987c985994f7daac3849b5b55b717a234b31c7b>`_
+- Messy... `0f11061e4 <https://github.com/ralphbean/bugwarrior/commit/0f11061e4c26298137bd66a4a5eb980397cbbfec>`_
+- Extract priorities from redmine responses appropriately. `6dccc13c7 <https://github.com/ralphbean/bugwarrior/commit/6dccc13c780dfbdae536a3d35795e70e0073dc43>`_
+- Use priority Name instead of id. `89b0195fc <https://github.com/ralphbean/bugwarrior/commit/89b0195fcbd164139e3344728a448c749202041b>`_
+- Add a test for new redmine behavior and fix another bug. `4a3960256 <https://github.com/ralphbean/bugwarrior/commit/4a39602563285d7d1a37e6126c5279df3e303ba7>`_
+- Merge pull request #155 from ralphbean/feature/redmine-priorities `2a8c1d889 <https://github.com/ralphbean/bugwarrior/commit/2a8c1d889401290e769f691a7c80d3c9023c41cc>`_
+- Add a github repo UDA. `d136b9894 <https://github.com/ralphbean/bugwarrior/commit/d136b98945071b2e42f9d5bb3187916be34352b8>`_
+- Allow trac scheme to be configurable. `e932b20d6 <https://github.com/ralphbean/bugwarrior/commit/e932b20d661c43c92b64095e5c91e81d9b72cf6a>`_
+- Mention the new githubrepo UDA in the docs. `51ac27931 <https://github.com/ralphbean/bugwarrior/commit/51ac27931fc8a139004b49772fe25a19e42221b6>`_
+- Add bugzilla bug id as a UDA. `a3dc9aebc <https://github.com/ralphbean/bugwarrior/commit/a3dc9aebc122a691ef3a0772a99e10ef96c10a15>`_
+- Document the ignore_cc option. `d74788b50 <https://github.com/ralphbean/bugwarrior/commit/d74788b50153f66a771d3c74286339714067ad52>`_
+- Merge pull request #164 from ralphbean/feature/bz-filter `d0e608394 <https://github.com/ralphbean/bugwarrior/commit/d0e608394749d7d514b546e9d8e14eec9e89486b>`_
+- Numeric, for sure. `ea50d7107 <https://github.com/ralphbean/bugwarrior/commit/ea50d710787cc75225187db03dc3b5b07d820bc0>`_
+- Merge pull request #163 from ralphbean/feature/bz-id-uda `c56ae0bbd <https://github.com/ralphbean/bugwarrior/commit/c56ae0bbdee9fee3e09e0c936ba454d559b8aa19>`_
+- Merge pull request #162 from ralphbean/feature/trac-scheme `0e65c59c6 <https://github.com/ralphbean/bugwarrior/commit/0e65c59c608275acd48626c278692a67e56a8793>`_
+- Merge pull request #161 from ralphbean/feature/github-updates `7dc3a69e4 <https://github.com/ralphbean/bugwarrior/commit/7dc3a69e43ab1fba32f1e098992b472f8cb14fb4>`_
+- Normalize github labels to fit tag syntax `bc04158c1 <https://github.com/ralphbean/bugwarrior/commit/bc04158c1919ccb82041959c2410b7aa410f1a58>`_
+- add test `177d69be6 <https://github.com/ralphbean/bugwarrior/commit/177d69be6ec19023422bf167f2c1835c56d184fb>`_
+- trac: use CSV downloads if TracXmlRpc is not available `5bc5a768f <https://github.com/ralphbean/bugwarrior/commit/5bc5a768f57e4aac9f0adf4cd8e2715c393a5c08>`_
+- Clarify that filtering doesn't work for Bugzilla `f3f800118 <https://github.com/ralphbean/bugwarrior/commit/f3f800118aed84774c40806fec8b536636fce0ff>`_
+- Merge pull request #168 from djmitche/bz-docs-fix `c3627304f <https://github.com/ralphbean/bugwarrior/commit/c3627304f1942685d6f389258e20897a16f01efe>`_
+- Merge pull request #166 from djmitche/normalize-github-tags `84a084550 <https://github.com/ralphbean/bugwarrior/commit/84a084550ec5933e01c8c6b610b950ca34fa87f1>`_
+- Merge pull request #167 from djmitche/trac-csv `8a696a8a2 <https://github.com/ralphbean/bugwarrior/commit/8a696a8a294011c6f8802cd19c88b1176efe9bca>`_
+- Only use github issues `821a864dc <https://github.com/ralphbean/bugwarrior/commit/821a864dcdd2ff35fc5383cb41690ece5f0aefc6>`_
+- add test `b5b76d5db <https://github.com/ralphbean/bugwarrior/commit/b5b76d5db4fed7ffb43ad70b6ccdf0b8ec9164d1>`_
+- remove non-functional optparse usage `51f06c89f <https://github.com/ralphbean/bugwarrior/commit/51f06c89f5a104371e3b95d661b25721ebc6cab6>`_
+- VersionOne: Adds support for timebox data and due dates. `2b0609bed <https://github.com/ralphbean/bugwarrior/commit/2b0609bedf9e4b70e1add171c8952e8e28f33433>`_
+- Add a --dry-run option `ae66d6ae8 <https://github.com/ralphbean/bugwarrior/commit/ae66d6ae806b12f2b4ddb6fa3a9f68ac4e2e3d73>`_
+- Merge pull request #170 from djmitche/issue148 `fe1e1557e <https://github.com/ralphbean/bugwarrior/commit/fe1e1557e954fb951a676736c7bb876077968349>`_
+- Allow users to specify a Bugzilla query URL `014f5b60a <https://github.com/ralphbean/bugwarrior/commit/014f5b60a4669b420147f4374f1dfd96e59c4b44>`_
+- Merge pull request #172 from djmitche/issue160 `c050b6553 <https://github.com/ralphbean/bugwarrior/commit/c050b6553177dc4cd6ce160bfc4052b73bf74fd0>`_
+- Merge pull request #169 from coddingtonbear/add_versionone_timebox_and_due_date `c328c2503 <https://github.com/ralphbean/bugwarrior/commit/c328c2503d2bfc0f493abbc0b845fe797bb067e4>`_
+- Better handling for due dates for VersionOne tasks. `cafd926f2 <https://github.com/ralphbean/bugwarrior/commit/cafd926f22268580493efbe19dfb47b631ee9eeb>`_
+- Merge pull request #173 from coddingtonbear/add_timezone_support_to_versionone `fb0c8f832 <https://github.com/ralphbean/bugwarrior/commit/fb0c8f8322987ad9e4b30a7d1e30f82c8cfa9de5>`_
+- Adding minimal documentation regarding what external packages are required for each service. `0cb81a124 <https://github.com/ralphbean/bugwarrior/commit/0cb81a1240ae67f55e53b9b616513167d29b54bf>`_
+- Merge branch 'normalize-github-tags' of git://github.com/djmitche/bugwarrior into develop `634601f7d <https://github.com/ralphbean/bugwarrior/commit/634601f7d42aa8376f00a0ff14f56203cdb7e160>`_
+- Fix labels-as-tags test. `85d9a6822 <https://github.com/ralphbean/bugwarrior/commit/85d9a6822b0641b7c36666a7dbd7a2e8550090dd>`_
+- Merge pull request #175 from coddingtonbear/add_external_requirements `28c27d006 <https://github.com/ralphbean/bugwarrior/commit/28c27d006cae300283db2fba3026d7b24ea11ff4>`_
+- Use os.makedirs for directory creation. `15e537c28 <https://github.com/ralphbean/bugwarrior/commit/15e537c28bb6b180be94991611813265f2b214a6>`_
+- Add an option to disable SSL verification for Jira `37354467e <https://github.com/ralphbean/bugwarrior/commit/37354467efc897a09aadf0367ffb29177126856c>`_
+- Add doc about jira.verify_ssl `ec8b773a6 <https://github.com/ralphbean/bugwarrior/commit/ec8b773a65c1e6090b2a6b51865a75f73a45cebe>`_
+- Merge pull request #179 from mavant/feature/ssl-verify-flag `df19eda63 <https://github.com/ralphbean/bugwarrior/commit/df19eda6329d0a50de9cd5d9eb4edf991426ca50>`_
+- Merge pull request #178 from mavant/develop `dbef39509 <https://github.com/ralphbean/bugwarrior/commit/dbef395092f44061687a5b51cdf413a1b5bc96df>`_
+- Adding handling for NoneDeref instances returned by VersionOne. `0d0d9bc4d <https://github.com/ralphbean/bugwarrior/commit/0d0d9bc4d1fb29a9fdee3c21f27891ea7e2a9291>`_
+- Merge pull request #180 from coddingtonbear/handle_v1_nonederef `e3a959988 <https://github.com/ralphbean/bugwarrior/commit/e3a959988891092b097a9a1b488beafc2e706e84>`_
+- Fix 'not empty' filter for string-type UDAs, #181 `e7f2328fc <https://github.com/ralphbean/bugwarrior/commit/e7f2328fc5bee574b6fc51120e1e5026042f5e54>`_
+- Merge pull request #182 from bmbove/empty-filter-fix `765b90759 <https://github.com/ralphbean/bugwarrior/commit/765b907595e4f8ffea4185a2a5da04acea5bcb3a>`_
+- Show a message to the user in the event that we were unable to perform the operation. `4b0184b6f <https://github.com/ralphbean/bugwarrior/commit/4b0184b6fc6158792c045a3c5750e277e7e1283e>`_
+- Merge pull request #183 from coddingtonbear/show_errors_when_unable_to_add `e407d6e85 <https://github.com/ralphbean/bugwarrior/commit/e407d6e8546c77027d947ea2937763af1115bc3f>`_
+- Adding a new 'bugwarrior-uda' command that will print a list of UDAs to the console directly. `054e5045c <https://github.com/ralphbean/bugwarrior/commit/054e5045cc58e642731c9a7eefe9a7542eef370c>`_
+- Adding a note about how to export UDAs. `64ad46544 <https://github.com/ralphbean/bugwarrior/commit/64ad465449fdd37066cad465c68f85bbcf3e270f>`_
+- Also add markers so users will find it easier to know which UDAs were generated by Bugwarrior. `c5f97314c <https://github.com/ralphbean/bugwarrior/commit/c5f97314cdf9ba327a1160f8706541acdfe384a2>`_
+- Merge pull request #184 from coddingtonbear/add_uda_export_command `462794241 <https://github.com/ralphbean/bugwarrior/commit/462794241c9ce85a28a1f25fd364d20099dd03bb>`_
+- Hack to let task-2.4.x search for url UDAs. `ae3db7d94 <https://github.com/ralphbean/bugwarrior/commit/ae3db7d941d338f9f49b68db57a50af384106768>`_
+- Merge pull request #185 from ralphbean/feature/url-hack `a59743514 <https://github.com/ralphbean/bugwarrior/commit/a597435147ad9b0616afc135de3d8e09bb16bf5d>`_
+- Typofix. `a9d273637 <https://github.com/ralphbean/bugwarrior/commit/a9d273637c23ff2d0fe23713b1b9e0411e49fae6>`_
+- Merge branch 'feature/url-hack' into develop `c01f68359 <https://github.com/ralphbean/bugwarrior/commit/c01f683590d790d60d872138a9919c884d2ff802>`_
+- fixed docs for Jira, requirements `7664e1264 <https://github.com/ralphbean/bugwarrior/commit/7664e12645e70b9392b666f36e9ac074c74d0898>`_
+- config: add support for XDG paths `feda0993d <https://github.com/ralphbean/bugwarrior/commit/feda0993d852ccb450c4d59312159bb6bf2a311b>`_
+- docs: update references to .bugwarriorrc `07148bce5 <https://github.com/ralphbean/bugwarrior/commit/07148bce5cafdf6d69225e71eb14c7c8ce86f16a>`_
+- Mention nosetests in the contributing docs. `c1d54e908 <https://github.com/ralphbean/bugwarrior/commit/c1d54e908f82bfe3e719cabfa778252f13e1f645>`_
+- README: use https where possible `2f8d2b26c <https://github.com/ralphbean/bugwarrior/commit/2f8d2b26c321ccbe4cfe5840b67c447a2738cedd>`_
+- docs: fix a typo `4e94081f0 <https://github.com/ralphbean/bugwarrior/commit/4e94081f04dbbb417cbe30781f9cf285a048fd73>`_
+- gitlab: add initial gitlab support `23c1d2491 <https://github.com/ralphbean/bugwarrior/commit/23c1d2491b6441c57c4aea9231089da2db1dfbfb>`_
+- gitlab: add docs `4d2dedf5b <https://github.com/ralphbean/bugwarrior/commit/4d2dedf5b43693c085b16f67538f6b536fa98fb8>`_
+- gitlab: add tests `8215127cf <https://github.com/ralphbean/bugwarrior/commit/8215127cf626c598889984551461219d866ec6d9>`_
+- config: add --flavor option `6af8b6f0f <https://github.com/ralphbean/bugwarrior/commit/6af8b6f0f2c75b720693bfc018d530032506b49f>`_
+- Merge pull request #192 from mathstuf/configuration-option `063d03d27 <https://github.com/ralphbean/bugwarrior/commit/063d03d276c027d19137e4f0d45d89dd905578ce>`_
+- Merge pull request #190 from mathstuf/xdg-support `ce5b8ffda <https://github.com/ralphbean/bugwarrior/commit/ce5b8ffdaa33ecfee782b71f4f9a3d6cf6bcf23d>`_
+- Merge pull request #191 from mathstuf/gitlab-support `ed9af7ff5 <https://github.com/ralphbean/bugwarrior/commit/ed9af7ff599c7a2e5e95846d962d8d52cb094b9a>`_
+- config: give a meaningful error message for empty targets `7d910ff29 <https://github.com/ralphbean/bugwarrior/commit/7d910ff2983b81d605a34292275248165571dd47>`_
+- gitlab: remove 'username' configuration `060e9da15 <https://github.com/ralphbean/bugwarrior/commit/060e9da15480ba32a0cc6236b114a3815df310c2>`_
+- removed requirements, fixed typo `62520981d <https://github.com/ralphbean/bugwarrior/commit/62520981d1bb25b06eb1326ba0179722b8d9fde9>`_
+- gitlab: verify SSL certs `52473d6e5 <https://github.com/ralphbean/bugwarrior/commit/52473d6e55adbed613624fc38a54f2e627e4ed3b>`_
+- Merge pull request #194 from mathstuf/gitlab-username `b5275da70 <https://github.com/ralphbean/bugwarrior/commit/b5275da70a0c3b82ac5e9c366a6cd355181e4157>`_
+- Merge pull request #195 from mathstuf/gitlab-verify-ssl `0e5fd2ff8 <https://github.com/ralphbean/bugwarrior/commit/0e5fd2ff80891748b9d4163f42c3d96eb1222849>`_
+- Merge pull request #187 from fradeve/FDV_fix_jira_docs `35ad25fe3 <https://github.com/ralphbean/bugwarrior/commit/35ad25fe35d73ded52280bcf9c6c262d220d7ad2>`_
+- Merge pull request #193 from mathstuf/empty-targets `d170615d3 <https://github.com/ralphbean/bugwarrior/commit/d170615d3b26e3e488e0dd36e9e66a3d80e5709c>`_
+- targets: ignore notifications section as well `49d95f9eb <https://github.com/ralphbean/bugwarrior/commit/49d95f9eb68a60567811660bf20642aa56d2eda0>`_
+- db: fix missing argument `4c7e84e1b <https://github.com/ralphbean/bugwarrior/commit/4c7e84e1bdf79e43cb8402085edb3c8c3d7cc20e>`_
+- Merge pull request #196 from mathstuf/ignore-notifications `2ce32161c <https://github.com/ralphbean/bugwarrior/commit/2ce32161cb197ec24386dcb4a1a61281506cca64>`_
+- Merge pull request #197 from mathstuf/fix-missing-argument `0e9d0c6a5 <https://github.com/ralphbean/bugwarrior/commit/0e9d0c6a5cba177762073fd7dde8d5c22799222d>`_
+- github: add support for OAuth2 authentication `7f96476ca <https://github.com/ralphbean/bugwarrior/commit/7f96476ca72ff84c3ec8650f508b30eea5d9d5f4>`_
+- bitbucket: allow filtering repos `74b9ded52 <https://github.com/ralphbean/bugwarrior/commit/74b9ded52ff325cda990d7972a30c29d6610e4b0>`_
+- bitbucket: fix url logic `4a327ab3f <https://github.com/ralphbean/bugwarrior/commit/4a327ab3f9eb1697b55e3aae25300a09f505b6fb>`_
+- bitbucket: support fetching pull requests `970e20bf7 <https://github.com/ralphbean/bugwarrior/commit/970e20bf75d73a59739ed78615456a6417f022fa>`_
+- bitbucket: prefer https `8725635b0 <https://github.com/ralphbean/bugwarrior/commit/8725635b09aefc81b749f5ba4064b99bea384d36>`_
+- Merge pull request #199 from mathstuf/github-oauth `3e02be4e3 <https://github.com/ralphbean/bugwarrior/commit/3e02be4e349be14782133182edaf998b8e36da12>`_
+- Merge pull request #200 from mathstuf/bitbucket-filter-repo `408421ec2 <https://github.com/ralphbean/bugwarrior/commit/408421ec2c520481bf09c3e3cdb73f12eb549032>`_
+- Defer importing services until they are needed. `63d1a8365 <https://github.com/ralphbean/bugwarrior/commit/63d1a8365c50519842c90eb7ecfbb26b95722cc8>`_
+- Add some tests for importability. `c07481093 <https://github.com/ralphbean/bugwarrior/commit/c074810932bce68fc1cb98d0df430f61b8c68c9b>`_
+- Merge pull request #203 from ralphbean/feature/dynamic-services `09105b029 <https://github.com/ralphbean/bugwarrior/commit/09105b029f503ae2f71c22539c7bd4c2648596a0>`_
+- (trac) Fix misquote of "@" character. `bc1d0421b <https://github.com/ralphbean/bugwarrior/commit/bc1d0421b9d6623f9a18ff28077e005d85d3c358>`_
+- (trac) support both xmlrpc and the other way. `0365275fd <https://github.com/ralphbean/bugwarrior/commit/0365275fdb437568b563000484ebb9e72018154d>`_
+- It's a shame that twiggy doesn't handle encodings gracefully.  Bad choice of a logging lib, @ralphbean. `e3442f517 <https://github.com/ralphbean/bugwarrior/commit/e3442f517cd27679f0caa981915f842557a2808d>`_
+- Add uuid for debuggery. `671be26a1 <https://github.com/ralphbean/bugwarrior/commit/671be26a110c4d86c83421ee3cdea5204eded71a>`_
+
 1.0.2
 -----
 
