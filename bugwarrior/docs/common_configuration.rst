@@ -25,6 +25,10 @@ Optional options include:
   written.  By default, logging messages will be written to stderr.
 * ``annotation_length``: Import maximally this number of characters
   of incoming annotations.  Default: 45.
+* ``merge_annotations``: If ``False``, bugwarrior won't bother with adding
+  annotations to your tasks at all.  Default: ``True``.
+* ``merge_tags``: If ``False``, bugwarrior won't bother with adding
+  tags to your tasks at all.  Default: ``True``.
 
 In addition to the ``[general]`` section, sections may be named
 ``[flavor.myflavor]`` and may be selected using the ``--flavor`` option to
