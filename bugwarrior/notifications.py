@@ -118,6 +118,6 @@ def send_notification(issue, op, conf):
                 op, issue['description'].encode("utf-8"))
             metadata = _get_metadata(issue)
             if metadata is not None:
-                message += metadata
+                message += metadata.encode("utf-8")
 
         Notify.Notification.new("Bugwarrior", message, logo_path).show()
