@@ -321,6 +321,8 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     )
 
     legacy_matching = _bool_option(main_section, 'legacy_matching', 'True')
+    merge_annotations = _bool_option(main_section, 'merge_annotations', 'True')
+    merge_tags = _bool_option(main_section, 'merge_tags', 'True')
 
     issue_updates = {
         'new': [],
@@ -345,8 +347,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 del issue_dict[field]
 
             # Merge annotations & tags from online into our task object
-            merge_left('annotations', task, issue_dict, hamming=True)
-            merge_left('tags', task, issue_dict)
+            if merge_annotations:
+                merge_left('annotations', task, issue_dict, hamming=True)
+
+            if merge_tags:
+                merge_left('tags', task, issue_dict)
 
             issue_dict.pop('annotations', None)
             issue_dict.pop('tags', None)

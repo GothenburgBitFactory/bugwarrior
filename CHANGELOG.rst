@@ -1,6 +1,14 @@
 Changelog
 =========
 
+1.1.2
+-----
+
+- Make merging in annotations to the task db optional. `52468ac5c <https://github.com/ralphbean/bugwarrior/commit/52468ac5ca2a18aca23fc5fb7733cc9caa6dadfe>`_
+- Merge pull request #207 from ralphbean/feature/optional-annotations `9b65f6cf4 <https://github.com/ralphbean/bugwarrior/commit/9b65f6cf47b23852647c0963875c3c7f949d11d9>`_
+- Fixup notification error with bad encoding `2348b8ac5 <https://github.com/ralphbean/bugwarrior/commit/2348b8ac5001f1deb83d6400f5dfba2587ed55a0>`_
+- Merge pull request #208 from metal3d/develop `e7928d343 <https://github.com/ralphbean/bugwarrior/commit/e7928d343f3d954152f1eb18d79c13335d4b7da5>`_
+
 1.1.1
 -----
 
