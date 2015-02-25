@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.1.3
+-----
+
+- Bugfix for legacy_matching. `b973e925b <https://github.com/ralphbean/bugwarrior/commit/b973e925bdda8da35b5090ff82212ba4a3a8190c>`_
+
 1.1.2
 -----
 
