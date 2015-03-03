@@ -39,7 +39,7 @@ Specify the Query to Use for Gathering Issues
 
 By default, the JIRA plugin will include any issues that are assigned to you
 but do not yet have a resolution set, but you can fine-tune the query used
-for gather issues by setting the ``jira.query`` parameter.
+for gathering issues by setting the ``jira.query`` parameter.
 
 For example, to select issues assigned to 'ralph' having a status that is
 not 'closed' and is not 'resolved', you could add the following
