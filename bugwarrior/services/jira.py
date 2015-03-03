@@ -126,7 +126,7 @@ class JiraService(IssueService):
             )
 
         default_query = 'assignee=' + self.username + \
-            ' AND status != closed and status != resolved'
+            ' AND resolution is null'
         self.query = self.config_get_default('query', default_query)
         self.jira = JIRA(
             options={
