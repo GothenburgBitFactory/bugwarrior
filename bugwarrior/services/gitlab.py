@@ -81,9 +81,9 @@ class GitlabIssue(Issue):
     def to_taskwarrior(self):
         if self.extra['type'] == 'merge_request':
             priority = 'H'
-            milestone = '' # No milestone
-            created = '' # No creation time
-            updated = '' # No updated time
+            milestone = self.record['milestone']
+            created = self.record['created_at']
+            updated = self.record['updated_at']
             state = self.record['state']
             upvotes = self.record['upvotes']
             downvotes = self.record['downvotes']
