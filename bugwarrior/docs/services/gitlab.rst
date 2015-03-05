@@ -80,7 +80,7 @@ Although you can filter issues using :ref:`common_configuration_options`,
 merge requests are not filtered by default.  You can filter merge requests
 by adding the following configuration option::
 
-    gitlab.filter_merge_requests = False
+    gitlab.filter_merge_requests = True
 
 Provided UDA Fields
 -------------------
