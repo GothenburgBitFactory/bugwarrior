@@ -19,6 +19,7 @@ class GitlabIssue(Issue):
     REPO = 'gitlabrepo'
     TYPE = 'gitlabtype'
     NUMBER = 'gitlabnumber'
+    STATE = 'gitlabstate'
     UPVOTES = 'gitlabupvotes'
     DOWNVOTES = 'gitlabdownvotes'
 
@@ -59,6 +60,10 @@ class GitlabIssue(Issue):
             'type': 'numeric',
             'label': 'Gitlab Issue/MR #',
         },
+        STATE: {
+            'type': 'string',
+            'label': 'Gitlab Issue/MR State',
+        },
         UPVOTES: {
             'type': 'numeric',
             'label': 'Gitlab Upvotes',
@@ -76,9 +81,10 @@ class GitlabIssue(Issue):
     def to_taskwarrior(self):
         if self.extra['type'] == 'merge_request':
             priority = 'H'
-            milestone = '' # No milestone
-            created = '' # No creation time
-            updated = '' # No updated time
+            milestone = self.record['milestone']
+            created = self.record['created_at']
+            updated = self.record['updated_at']
+            state = self.record['state']
             upvotes = self.record['upvotes']
             downvotes = self.record['downvotes']
         else:
@@ -86,6 +92,7 @@ class GitlabIssue(Issue):
             milestone = self.record['milestone']
             created = self.record['created_at']
             updated = self.record['updated_at']
+            state = self.record['state']
             upvotes = 0
             downvotes = 0
 
@@ -111,6 +118,7 @@ class GitlabIssue(Issue):
             self.NUMBER: self.record['iid'],
             self.CREATED_AT: created,
             self.UPDATED_AT: updated,
+            self.STATE: state,
             self.UPVOTES: upvotes,
             self.DOWNVOTES: downvotes,
         }
@@ -212,7 +220,7 @@ class GitlabService(IssueService):
 
     def _get_notes(self, rid, issue_type, issueid):
         tmpl = 'https://{host}/api/v3/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
-        return self._fetch(tmpl)
+        return self._fetch_paged(tmpl)
 
     def annotations(self, repo, url, issue_type, issue, issue_obj):
         notes = self._get_notes(repo['id'], issue_type, issue['id'])
@@ -224,10 +232,11 @@ class GitlabService(IssueService):
             issue_obj.get_processed_url(url)
         )
 
-    def _fetch(self, tmpl):
+    def _fetch(self, tmpl, **kwargs):
         url = tmpl.format(host=self.auth[0])
         headers = {'PRIVATE-TOKEN': self.auth[1]}
-        response = requests.get(url, headers=headers)
+
+        response = requests.get(url, headers=headers, **kwargs)
 
         if response.status_code != 200:
             raise IOError(
@@ -239,23 +248,39 @@ class GitlabService(IssueService):
         else:
             return response.json
 
+    def _fetch_paged(self, tmpl):
+        params = {
+            'page': 1,
+            'per_page': 100,
+        }
+
+        full = []
+        while True:
+            items = self._fetch(tmpl, params=params)
+            full += items
+            if len(items) < params['per_page']:
+                break
+            params['page'] += 1
+
+        return full
+
     def get_repo_issues(self, rid):
         tmpl = 'https://{host}/api/v3/projects/%d/issues' % rid
         issues = {}
-        for issue in self._fetch(tmpl):
+        for issue in self._fetch_paged(tmpl):
             issues[issue['id']] = (rid, issue)
         return issues
 
     def get_repo_merge_requests(self, rid):
         tmpl = 'https://{host}/api/v3/projects/%d/merge_requests' % rid
         issues = {}
-        for issue in self._fetch(tmpl):
+        for issue in self._fetch_paged(tmpl):
             issues[issue['id']] = (rid, issue)
         return issues
 
     def issues(self):
         tmpl = 'https://{host}/api/v3/projects'
-        all_repos = self._fetch(tmpl)
+        all_repos = self._fetch_paged(tmpl)
         repos = filter(self.filter_repos, all_repos)
 
         repo_map = {}
