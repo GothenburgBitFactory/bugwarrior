@@ -19,6 +19,7 @@ class GitlabIssue(Issue):
     REPO = 'gitlabrepo'
     TYPE = 'gitlabtype'
     NUMBER = 'gitlabnumber'
+    STATE = 'gitlabstate'
     UPVOTES = 'gitlabupvotes'
     DOWNVOTES = 'gitlabdownvotes'
 
@@ -59,6 +60,10 @@ class GitlabIssue(Issue):
             'type': 'numeric',
             'label': 'Gitlab Issue/MR #',
         },
+        STATE: {
+            'type': 'string',
+            'label': 'Gitlab Issue/MR State',
+        },
         UPVOTES: {
             'type': 'numeric',
             'label': 'Gitlab Upvotes',
@@ -79,6 +84,7 @@ class GitlabIssue(Issue):
             milestone = '' # No milestone
             created = '' # No creation time
             updated = '' # No updated time
+            state = self.record['state']
             upvotes = self.record['upvotes']
             downvotes = self.record['downvotes']
         else:
@@ -86,6 +92,7 @@ class GitlabIssue(Issue):
             milestone = self.record['milestone']
             created = self.record['created_at']
             updated = self.record['updated_at']
+            state = self.record['state']
             upvotes = 0
             downvotes = 0
 
@@ -111,6 +118,7 @@ class GitlabIssue(Issue):
             self.NUMBER: self.record['iid'],
             self.CREATED_AT: created,
             self.UPDATED_AT: updated,
+            self.STATE: state,
             self.UPVOTES: upvotes,
             self.DOWNVOTES: downvotes,
         }
