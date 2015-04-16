@@ -88,19 +88,27 @@ class PhabricatorService(IssueService):
             except IndexError:
                 pass
 
+            this_issue_matches = False
+
+            if self.shown_user_phids is None and self.shown_project_phids is None:
+                this_issue_matches = True
+
             if self.shown_user_phids is not None:
                 # Checking whether authorPHID, ccPHIDs, ownerPHID
                 # are intersecting with self.shown_user_phids
                 issue_relevant_to = set(issue['ccPHIDs'] + [issue['ownerPHID'], issue['authorPHID']])
-                if len(issue_relevant_to.intersection(self.shown_user_phids)) == 0:
-                    continue
+                if len(issue_relevant_to.intersection(self.shown_user_phids)) > 0:
+                    this_issue_matches = True
 
             if self.shown_project_phids is not None:
                 # Checking whether projectPHIDs
                 # is intersecting with self.shown_project_phids
                 issue_relevant_to = set(issue['projectPHIDs'])
-                if len(issue_relevant_to.intersection(self.shown_user_phids)) == 0:
-                    continue
+                if len(issue_relevant_to.intersection(self.shown_user_phids)) > 0:
+                    this_issue_matches = True
+
+            if not this_issue_matches:
+                continue
 
             extra = {
                 'project': project,
