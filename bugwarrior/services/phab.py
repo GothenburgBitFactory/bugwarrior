@@ -6,7 +6,6 @@ from bugwarrior.services import IssueService, Issue
 # This comes from PyPI
 import phabricator
 
-
 class PhabricatorIssue(Issue):
     TITLE = 'phabricatortitle'
     URL = 'phabricatorurl'
@@ -63,6 +62,14 @@ class PhabricatorService(IssueService):
         # These reads in login credentials from ~/.arcrc
         self.api = phabricator.Phabricator()
 
+        self.shown_user_phids = self.config_get_default("user_phids", "").strip().split(',')
+        if self.shown_user_phids[0] == "":
+            self.shown_user_phids = None
+
+        self.shown_project_phids = self.config_get_default("project_phids", "").strip().split(',')
+        if self.shown_project_phids[0] == "":
+            self.shown_project_phids = None
+
     def issues(self):
 
         # TODO -- get a list of these from the api
@@ -74,17 +81,33 @@ class PhabricatorService(IssueService):
         log.name(self.target).info("Found %i issues" % len(issues))
 
         for phid, issue in issues:
+
             project = self.target  # a sensible default
             try:
                 project = projects.get(issue['projectPHIDs'][0], project)
             except IndexError:
                 pass
 
+            if self.shown_user_phids is not None:
+                # Checking whether authorPHID, ccPHIDs, ownerPHID
+                # are intersecting with self.shown_user_phids
+                issue_relevant_to = set(issue['ccPHIDs'] + [issue['ownerPHID'], issue['authorPHID']])
+                if len(issue_relevant_to.intersection(self.shown_user_phids)) == 0:
+                    continue
+
+            if self.shown_project_phids is not None:
+                # Checking whether projectPHIDs
+                # is intersecting with self.shown_project_phids
+                issue_relevant_to = set(issue['projectPHIDs'])
+                if len(issue_relevant_to.intersection(self.shown_user_phids)) == 0:
+                    continue
+
             extra = {
                 'project': project,
                 'type': 'issue',
                 #'annotations': self.annotations(phid, issue)
             }
+
             yield self.get_issue_for_record(issue, extra)
 
         diffs = self.api.differential.query(status='status-open')
@@ -93,11 +116,40 @@ class PhabricatorService(IssueService):
         log.name(self.target).info("Found %i differentials" % len(diffs))
 
         for diff in list(diffs):
+
             project = self.target  # a sensible default
             try:
                 project = projects.get(issue['projectPHIDs'][0], project)
             except IndexError:
                 pass
+
+            this_diff_matches = False
+
+            if self.shown_user_phids is None and self.shown_project_phids is None:
+                this_diff_matches = True
+
+            if self.shown_user_phids is not None:
+                # Checking whether authorPHID, ccPHIDs, ownerPHID
+                # are intersecting with self.shown_user_phids
+                diff_relevant_to = set(diff['reviewers'] + [diff['authorPHID']])
+                if len(diff_relevant_to.intersection(self.shown_user_phids)) > 0:
+                    this_diff_matches = True
+
+            if self.shown_project_phids is not None:
+                # Checking whether projectPHIDs
+                # is intersecting with self.shown_project_phids
+                phabricator_projects = []
+                try:
+                    phabricator_projects = diff['phabricator:projects']
+                except KeyError:
+                    pass
+
+                diff_relevant_to = set(phabricator_projects + [diff['repositoryPHID']])
+                if len(diff_relevant_to.intersection(self.shown_user_phids)) > 0:
+                    this_diff_matches = True
+
+            if not this_diff_matches:
+                continue
 
             extra = {
                 'project': project,
