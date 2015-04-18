@@ -88,6 +88,7 @@ class TestGitlabIssue(ServiceTest):
             'tags': ['feature'],
             issue.URL: self.arbitrary_extra['issue_url'],
             issue.REPO: 'project',
+            issue.STATE: self.arbitrary_issue['state'],
             issue.TYPE: self.arbitrary_extra['type'],
             issue.TITLE: self.arbitrary_issue['title'],
             issue.NUMBER: self.arbitrary_issue['iid'],
