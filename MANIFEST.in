@@ -3,3 +3,4 @@ include README.rst
 include LICENSE.txt
 recursive-include docs *
 recursive-include bugwarrior/docs *.rst
+recursive-include tests *
