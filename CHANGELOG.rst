@@ -1,6 +1,28 @@
 Changelog
 =========
 
+1.1.4
+-----
+
+- Alter default JIRA query to handle situations in which instances do not use the column names we are expecting. `34d99341e <https://github.com/ralphbean/bugwarrior/commit/34d99341e463cbdedd2ed12493c885c3ec771eec>`_
+- Merge pull request #213 from coddingtonbear/generalize_jira_query `9ef8f17e3 <https://github.com/ralphbean/bugwarrior/commit/9ef8f17e37105cbc10bb79fc9191b5a3da25de19>`_
+- It's a gerund! `5189ef81d <https://github.com/ralphbean/bugwarrior/commit/5189ef81db1d389ecf32e464e13c9fa53c440b9f>`_
+- gitlab: handle pagination `3067b32bc <https://github.com/ralphbean/bugwarrior/commit/3067b32bc341008f8a4fab553cb2a115ae2cec01>`_
+- gitlab: fix documentation typo `a2f1e87c9 <https://github.com/ralphbean/bugwarrior/commit/a2f1e87c96ac40b8237bc630aeb3d445ec69b437>`_
+- gitlab: add a state entry `7790450a3 <https://github.com/ralphbean/bugwarrior/commit/7790450a3cc2eb042325b21f8f3e30eaa2e4a6f0>`_
+- gitlab: fill in milestone and update/create time `a37eff259 <https://github.com/ralphbean/bugwarrior/commit/a37eff2596804e0028a1510468e22e7938b5c08f>`_
+- Merge pull request #214 from mathstuf/gitlab-pagination `befe0ed46 <https://github.com/ralphbean/bugwarrior/commit/befe0ed4666934c4cbdf97e2910c2fee514f36aa>`_
+- Phabricator service is not called phabricator, but phab `df96e346b <https://github.com/ralphbean/bugwarrior/commit/df96e346b70dbc38e65aec68b687da181583d3b6>`_
+- Phabricator service: Adding option to filter on users and projects `584b28fc3 <https://github.com/ralphbean/bugwarrior/commit/584b28fc3f8fafa6ec2ade3680ee7602dd9b50d1>`_
+- Unified filtering handling `29714c432 <https://github.com/ralphbean/bugwarrior/commit/29714c432e7600b8708a89830acb40870ac534c4>`_
+- Fixing a slightly-out-of-date gitlab test. `7174361ab <https://github.com/ralphbean/bugwarrior/commit/7174361ab3bd51ba5e4959dc7d7209cabfa9d1c7>`_
+- Adding the documentation for phabricator filtering options. `15a6a43a0 <https://github.com/ralphbean/bugwarrior/commit/15a6a43a0249dc3441e18a7f8aae401839f1478d>`_
+- Fix link to remove the browser warning of invalid certificate `77f84855b <https://github.com/ralphbean/bugwarrior/commit/77f84855b09da5af213c1ae7638d61a4d9ba34c2>`_
+- Merge pull request #218 from jonan/develop `07ef02dbd <https://github.com/ralphbean/bugwarrior/commit/07ef02dbd7c15026e59780dc743a554b5abf8d59>`_
+- Merge pull request #216 from ivan-cukic/develop `1f1f4f00e <https://github.com/ralphbean/bugwarrior/commit/1f1f4f00e72af4bc734690737d4ef0c9a0ebfd5c>`_
+- Add tests to MANIFEST.in `a4d643234 <https://github.com/ralphbean/bugwarrior/commit/a4d6432343cdcf1862b87a6d5ea381c8fa9e45c8>`_
+- Merge pull request #221 from koobs/patch-1 `42d320a05 <https://github.com/ralphbean/bugwarrior/commit/42d320a0581fe6d7f6cd79cab5460433fac70c1b>`_
+
 1.1.3
 -----
 
