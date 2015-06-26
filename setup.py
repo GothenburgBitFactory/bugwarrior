@@ -52,6 +52,7 @@ setup(name='bugwarrior',
           "jira>=0.22",
           "megaplan>=1.4",
       ],
+      test_suite='nose.collector',
       entry_points="""
       [console_scripts]
       bugwarrior-pull = bugwarrior:pull
