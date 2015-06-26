@@ -40,7 +40,7 @@ SERVICES = DeferredImportingDict({
     'activecollab':  'bugwarrior.services.activecollab:ActiveCollabService',
     'jira':          'bugwarrior.services.jira:JiraService',
     'megaplan':      'bugwarrior.services.megaplan:MegaplanService',
-    'phabricator':   'bugwarrior.services.phabricator:PhabricatorService',
+    'phabricator':   'bugwarrior.services.phab:PhabricatorService',
     'versionone':    'bugwarrior.services.versionone:VersionOneService',
 })
 

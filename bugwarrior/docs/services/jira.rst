@@ -37,10 +37,13 @@ Service Features
 Specify the Query to Use for Gathering Issues
 +++++++++++++++++++++++++++++++++++++++++++++
 
-You can specify the query used for gathering issues by using the
-``jira.query`` parameter.  For example, to select issues assigned to
-'ralph' having a status that is not 'closed' and is not 'resolved', you
-could add the following configuration option::
+By default, the JIRA plugin will include any issues that are assigned to you
+but do not yet have a resolution set, but you can fine-tune the query used
+for gathering issues by setting the ``jira.query`` parameter.
+
+For example, to select issues assigned to 'ralph' having a status that is
+not 'closed' and is not 'resolved', you could add the following
+configuration option::
 
     jira.query = assignee = ralph and status != closed and status != resolved
 
