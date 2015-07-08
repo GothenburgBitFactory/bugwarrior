@@ -205,6 +205,11 @@ class GitlabService(IssueService):
             'label_template': self.label_template,
         }
 
+
+    def get_owner(self, issue):
+        if issue[1]['assignee'] != None and issue[1]['assignee']['username']:
+            return issue[1]['assignee']['username']
+
     def filter_repos(self, repo):
         if self.exclude_repos:
             if repo['path_with_namespace'] in self.exclude_repos:
