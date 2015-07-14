@@ -360,6 +360,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             issue_dict.pop('annotations', None)
             issue_dict.pop('tags', None)
 
+            for key in issue_dict:
+                if issue_dict[key]:
+                    issue_dict[key] = issue_dict[key].replace('+', '\+')
             task.update(issue_dict)
 
             if task.get_changes(keep=True):
