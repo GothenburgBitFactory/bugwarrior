@@ -73,6 +73,7 @@ Example Configuration
     # backend = growlnotify
     # finished_querying_sticky = False
     # task_crud_sticky = True
+    # only_on_new_tasks = True
     
     
     # This is a github example.  It says, "scrape every issue from every repository
