@@ -315,7 +315,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     # Before running CRUD operations, call the pre_import hook(s).
     run_hooks(conf, 'pre_import')
 
-    notify = _bool_option('notifications', 'notifications', 'False') and not dry_run
+    notify = _bool_option('notifications', 'notifications', False) and not dry_run
 
     tw = TaskWarriorShellout(
         config_filename=get_taskrc_path(conf, main_section),
@@ -444,17 +444,19 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
     # Send notifications
     if notify:
-        send_notification(
-            dict(
-                description="New: %d, Changed: %d, Completed: %d" % (
-                    len(issue_updates['new']),
-                    len(issue_updates['changed']),
-                    len(issue_updates['closed'])
-                )
-            ),
-            'bw_finished',
-            conf,
-        )
+        only_on_new_tasks = _bool_option('notifications', 'only_on_new_tasks', False)
+        if not only_on_new_tasks or len(issue_updates['new']) + len(issue_updates['changed']) + len(issue_updates['closed']) > 0:
+            send_notification(
+                dict(
+                    description="New: %d, Changed: %d, Completed: %d" % (
+                        len(issue_updates['new']),
+                        len(issue_updates['changed']),
+                        len(issue_updates['closed'])
+                    )
+                ),
+                'bw_finished',
+                conf,
+            )
 
 
 def build_key_list(targets):
