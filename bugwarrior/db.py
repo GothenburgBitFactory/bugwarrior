@@ -172,6 +172,7 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
         # Furthermore, we have to kill off any single quotes which break in
         # task-2.4.x, as much as it saddens me.
         legacy_description = legacy_description.split("'")[0]
+        legacy_description = re.sub(r'([\[\(\{\}\)\]])', r'\\\1', legacy_description)
         results = tw.filter_tasks({
             'description.startswith': legacy_description,
             'or': [
