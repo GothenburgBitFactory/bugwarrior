@@ -13,6 +13,7 @@ class JiraIssue(Issue):
     URL = 'jiraurl'
     FOREIGN_ID = 'jiraid'
     DESCRIPTION = 'jiradescription'
+    ESTIMATE = 'estimate'
 
     UDAS = {
         SUMMARY: {
@@ -30,6 +31,10 @@ class JiraIssue(Issue):
         FOREIGN_ID: {
             'type': 'string',
             'label': 'Jira Issue ID'
+        },
+        ESTIMATE: {
+            'type': 'numeric',
+            'label': 'Estimate'
         }
     }
     UNIQUE_KEY = (URL, )
@@ -53,6 +58,7 @@ class JiraIssue(Issue):
             self.FOREIGN_ID: self.record['key'],
             self.DESCRIPTION: self.record.get('fields', {}).get('description'),
             self.SUMMARY: self.get_summary(),
+            self.ESTIMATE: self.get_estimate(),
         }
 
     def get_tags(self):
@@ -90,6 +96,11 @@ class JiraIssue(Issue):
         if self.extra.get('jira_version') == 4:
             return self.record['fields']['summary']['value']
         return self.record['fields']['summary']
+
+    def get_estimate(self):
+        if self.extra.get('jira_version') == 4:
+            return self.record['fields']['timeestimate']['value']
+        return self.record['fields']['timeestimate'] / 60 / 60
 
     def get_priority(self):
         value = self.record['fields'].get('priority')

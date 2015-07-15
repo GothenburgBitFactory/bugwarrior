@@ -361,7 +361,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             issue_dict.pop('tags', None)
 
             for key in issue_dict:
-                if issue_dict[key]:
+                if issue_dict[key] and issue_dict[key] is str:
                     issue_dict[key] = issue_dict[key].replace('+', '\+')
             task.update(issue_dict)
 
