@@ -62,22 +62,24 @@ class BugzillaIssue(Issue):
         )
 
 
+_open_statuses = [
+    'NEW',
+    'ASSIGNED',
+    'NEEDINFO',
+    'ON_DEV',
+    'MODIFIED',
+    'POST',
+    'REOPENED',
+    'ON_QA',
+    'FAILS_QA',
+    'PASSES_QA',
+]
+
+
 class BugzillaService(IssueService):
     ISSUE_CLASS = BugzillaIssue
     CONFIG_PREFIX = 'bugzilla'
 
-    OPEN_STATUSES = [
-        'NEW',
-        'ASSIGNED',
-        'NEEDINFO',
-        'ON_DEV',
-        'MODIFIED',
-        'POST',
-        'REOPENED',
-        'ON_QA',
-        'FAILS_QA',
-        'PASSES_QA',
-    ]
     COLUMN_LIST = [
         'id',
         'status',
@@ -95,6 +97,9 @@ class BugzillaService(IssueService):
         self.ignore_cc = self.config_get_default('ignore_cc', default=False,
                                                  to_type=lambda x: x == "True")
         self.query_url = self.config_get_default('query_url', default=None)
+        self.open_statuses = self.config_get_default(
+            'open_statuses', _open_statuses, to_type=lambda x: x.split(','))
+        log.name(self.target).debug(" filtering on statuses: {0}", self.open_statuses)
 
         # So more modern bugzilla's require that we specify
         # query_format=advanced along with the xmlrpc request.
@@ -183,7 +188,7 @@ class BugzillaService(IssueService):
         else:
             query = dict(
                 column_list=self.COLUMN_LIST,
-                bug_status=self.OPEN_STATUSES,
+                bug_status=self.open_statuses,
                 email1=email,
                 emailreporter1=1,
                 emailassigned_to1=1,
