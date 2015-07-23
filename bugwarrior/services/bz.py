@@ -11,6 +11,7 @@ class BugzillaIssue(Issue):
     URL = 'bugzillaurl'
     SUMMARY = 'bugzillasummary'
     BUG_ID = 'bugzillabugid'
+    STATUS = 'bugzillastatus'
 
     UDAS = {
         URL: {
@@ -20,6 +21,10 @@ class BugzillaIssue(Issue):
         SUMMARY: {
             'type': 'string',
             'label': 'Bugzilla Summary',
+        },
+        STATUS: {
+            'type': 'string',
+            'label': 'Bugzilla Status',
         },
         BUG_ID: {
             'type': 'numeric',
@@ -45,6 +50,7 @@ class BugzillaIssue(Issue):
             self.URL: self.extra['url'],
             self.SUMMARY: self.record['summary'],
             self.BUG_ID: self.record['id'],
+            self.STATUS: self.record['status'],
         }
 
     def get_default_description(self):
@@ -74,6 +80,7 @@ class BugzillaService(IssueService):
     ]
     COLUMN_LIST = [
         'id',
+        'status',
         'summary',
         'priority',
         'component',
