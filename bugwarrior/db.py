@@ -172,6 +172,7 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
         # Furthermore, we have to kill off any single quotes which break in
         # task-2.4.x, as much as it saddens me.
         legacy_description = legacy_description.split("'")[0]
+        legacy_description = re.sub(r'([\[\(\{\}\)\]])', r'\\\1', legacy_description)
         results = tw.filter_tasks({
             'description.startswith': legacy_description,
             'or': [
@@ -315,7 +316,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     # Before running CRUD operations, call the pre_import hook(s).
     run_hooks(conf, 'pre_import')
 
-    notify = _bool_option('notifications', 'notifications', 'False') and not dry_run
+    notify = _bool_option('notifications', 'notifications', False) and not dry_run
 
     tw = TaskWarriorShellout(
         config_filename=get_taskrc_path(conf, main_section),
@@ -359,6 +360,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             issue_dict.pop('annotations', None)
             issue_dict.pop('tags', None)
 
+            for key in issue_dict:
+                if issue_dict[key] and issue_dict[key] is str:
+                    issue_dict[key] = issue_dict[key].replace('+', '\+')
             task.update(issue_dict)
 
             if task.get_changes(keep=True):
@@ -444,17 +448,19 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
     # Send notifications
     if notify:
-        send_notification(
-            dict(
-                description="New: %d, Changed: %d, Completed: %d" % (
-                    len(issue_updates['new']),
-                    len(issue_updates['changed']),
-                    len(issue_updates['closed'])
-                )
-            ),
-            'bw_finished',
-            conf,
-        )
+        only_on_new_tasks = _bool_option('notifications', 'only_on_new_tasks', False)
+        if not only_on_new_tasks or len(issue_updates['new']) + len(issue_updates['changed']) + len(issue_updates['closed']) > 0:
+            send_notification(
+                dict(
+                    description="New: %d, Changed: %d, Completed: %d" % (
+                        len(issue_updates['new']),
+                        len(issue_updates['changed']),
+                        len(issue_updates['closed'])
+                    )
+                ),
+                'bw_finished',
+                conf,
+            )
 
 
 def build_key_list(targets):

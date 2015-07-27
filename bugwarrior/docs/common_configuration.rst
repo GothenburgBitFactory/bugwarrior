@@ -158,6 +158,7 @@ by ``bugwarrior-pull``::
   backend = growlnotify
   finished_querying_sticky = False
   task_crud_sticky = True
+  only_on_new_tasks = True
 
 Backend options:
 
