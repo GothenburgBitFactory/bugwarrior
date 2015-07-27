@@ -39,6 +39,13 @@ There is an option to ignore bugs that you are only cc'd on::
 But this will continue to include bugs that you reported, regardless of
 whether they are assigned to you.
 
+If your bugzilla "actionable" bugs only include ON_QA, FAILS_QA, PASSES_QA, and POST::
+
+    bugzilla.open_statuses = ON_QA,FAILS_QA,PASSES_QA,POST
+
+This won't create tasks for bugs in other states. The default open statuses:
+"NEW,ASSIGNED,NEEDINFO,ON_DEV,MODIFIED,POST,REOPENED,ON_QA,FAILS_QA,PASSES_QA"
+
 If the filtering options are not sufficient to find the set of bugs you'd like,
 you can tell Bugwarrior exactly which bugs to sync by pasting a full query URL
 from your browser into the ``bugzilla.query_url`` option::
@@ -56,4 +63,6 @@ Provided UDA Fields
 | ``bugzillaurl``     | URL                 | Text (string)       |
 +---------------------+---------------------+---------------------+
 | ``bugzillabugid``   | Bug ID              | Numeric (integer)   |
++---------------------+---------------------+---------------------+
+| ``bugzillastatus``  | Bugzilla Status     | Text (string)       |
 +---------------------+---------------------+---------------------+
