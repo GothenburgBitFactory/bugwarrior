@@ -170,6 +170,11 @@ class GitlabService(IssueService):
             )
         self.auth = (host, token)
 
+        if self.config_get('https') == 'https':
+            self.https = 'https'
+        else:
+            self.https = 'http'
+
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
             self.exclude_repos = [
@@ -224,7 +229,7 @@ class GitlabService(IssueService):
         return True
 
     def _get_notes(self, rid, issue_type, issueid):
-        tmpl = 'https://{host}/api/v3/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
+        tmpl = '{https}://{host}/api/v3/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
         return self._fetch_paged(tmpl)
 
     def annotations(self, repo, url, issue_type, issue, issue_obj):
@@ -238,7 +243,7 @@ class GitlabService(IssueService):
         )
 
     def _fetch(self, tmpl, **kwargs):
-        url = tmpl.format(host=self.auth[0])
+        url = tmpl.format(https=self.https, host=self.auth[0])
         headers = {'PRIVATE-TOKEN': self.auth[1]}
 
         response = requests.get(url, headers=headers, **kwargs)
@@ -270,21 +275,21 @@ class GitlabService(IssueService):
         return full
 
     def get_repo_issues(self, rid):
-        tmpl = 'https://{host}/api/v3/projects/%d/issues' % rid
+        tmpl = '{https}://{host}/api/v3/projects/%d/issues' % rid
         issues = {}
         for issue in self._fetch_paged(tmpl):
             issues[issue['id']] = (rid, issue)
         return issues
 
     def get_repo_merge_requests(self, rid):
-        tmpl = 'https://{host}/api/v3/projects/%d/merge_requests' % rid
+        tmpl = '{https}://{host}/api/v3/projects/%d/merge_requests' % rid
         issues = {}
         for issue in self._fetch_paged(tmpl):
             issues[issue['id']] = (rid, issue)
         return issues
 
     def issues(self):
-        tmpl = 'https://{host}/api/v3/projects'
+        tmpl = '{https}://{host}/api/v3/projects'
         all_repos = self._fetch_paged(tmpl)
         repos = filter(self.filter_repos, all_repos)
 
