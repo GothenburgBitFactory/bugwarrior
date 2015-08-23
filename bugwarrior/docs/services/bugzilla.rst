@@ -46,6 +46,14 @@ If your bugzilla "actionable" bugs only include ON_QA, FAILS_QA, PASSES_QA, and 
 This won't create tasks for bugs in other states. The default open statuses:
 "NEW,ASSIGNED,NEEDINFO,ON_DEV,MODIFIED,POST,REOPENED,ON_QA,FAILS_QA,PASSES_QA"
 
+If you're on a more recent Bugzilla install, the NEEDINFO status no longer
+exists, and has been replaced by the "needinfo?" flag. Set
+"bugzilla.include_needinfos" to "True" to have taskwarrior also add bugs where
+information is requested of you. The "bugzillaneedinfo" UDA will be filled in
+with the date the needinfo was set.
+
+To see all your needinfo bugs, you can use "task bugzillaneedinfo.any: list".
+
 If the filtering options are not sufficient to find the set of bugs you'd like,
 you can tell Bugwarrior exactly which bugs to sync by pasting a full query URL
 from your browser into the ``bugzilla.query_url`` option::
@@ -55,14 +63,16 @@ from your browser into the ``bugzilla.query_url`` option::
 Provided UDA Fields
 -------------------
 
-+---------------------+---------------------+---------------------+
-| Field Name          | Description         | Type                |
-+=====================+=====================+=====================+
-| ``bugzillasummary`` | Summary             | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``bugzillaurl``     | URL                 | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``bugzillabugid``   | Bug ID              | Numeric (integer)   |
-+---------------------+---------------------+---------------------+
-| ``bugzillastatus``  | Bugzilla Status     | Text (string)       |
-+---------------------+---------------------+---------------------+
++----------------------+---------------------+---------------------+
+| Field Name           | Description         | Type                |
++======================+=====================+=====================+
+| ``bugzillasummary``  | Summary             | Text (string)       |
++----------------------+---------------------+---------------------+
+| ``bugzillaurl``      | URL                 | Text (string)       |
++----------------------+---------------------+---------------------+
+| ``bugzillabugid``    | Bug ID              | Numeric (integer)   |
++----------------------+---------------------+---------------------+
+| ``bugzillastatus``   | Bugzilla Status     | Text (string)       |
++----------------------+---------------------+---------------------+
+| ``bugzillaneedinfo`` | Needinfo            | Date                |
++----------------------+---------------------+---------------------+
