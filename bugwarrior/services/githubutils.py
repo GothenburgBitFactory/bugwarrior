@@ -34,6 +34,16 @@ def get_repos(username, auth):
     return _getter(url, auth)
 
 
+def get_involved_issues(username, auth):
+    """ username should be a string
+    auth should be a tuple of username and password.
+    """
+
+    tmpl = "https://api.github.com/search/issues?q=involves%3A{username}&per_page=100"
+    url = tmpl.format(username=username)
+    return _getter(url, auth, subkey='items')
+
+
 def get_issues(username, repo, auth):
     """ username and repo should be strings
     auth should be a tuple of username and password.

@@ -94,6 +94,17 @@ by adding the following configuration option::
 
     github.filter_pull_requests = True
 
+Get involved issues
++++++++++++++++++++
+
+Instead of fetching issues and pull requests based on ``{{username}}``'s owned
+repositories, you may instead get those that ``{{username}}`` is involved in.
+This includes all issues and pull requests where the user is the author, the
+assignee, mentioned in, or has commented on.  To do so, add the following
+configuration option::
+
+    github.involved_issues = True
+
 Provided UDA Fields
 -------------------
 
