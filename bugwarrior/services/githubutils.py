@@ -73,7 +73,7 @@ def get_pulls(username, repo, auth):
     return _getter(url, auth)
 
 
-def _getter(url, auth):
+def _getter(url, auth, subkey=None):
     """ Pagination utility.  Obnoxious. """
 
     kwargs = {}
@@ -98,10 +98,15 @@ def _getter(url, auth):
 
         if callable(response.json):
             # Newer python-requests
-            results += response.json()
+            json_res = response.json()
         else:
             # Older python-requests
-            results += response.json
+            json_res = response.json
+
+        if subkey is not None:
+            json_res = json_res[subkey]
+
+        results += json_res
 
         link = _link_field_to_dict(response.headers.get('link', None))
 
