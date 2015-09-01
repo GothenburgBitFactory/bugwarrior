@@ -281,6 +281,8 @@ class GitlabService(IssueService):
         tmpl = 'https://{host}/api/v3/projects/%d/issues' % rid
         issues = {}
         for issue in self._fetch_paged(tmpl):
+            if issue['state'] != 'opened':
+                continue
             issues[issue['id']] = (rid, issue)
         return issues
 
@@ -288,6 +290,8 @@ class GitlabService(IssueService):
         tmpl = 'https://{host}/api/v3/projects/%d/merge_requests' % rid
         issues = {}
         for issue in self._fetch_paged(tmpl):
+            if issue['state'] != 'opened':
+                continue
             issues[issue['id']] = (rid, issue)
         return issues
 
