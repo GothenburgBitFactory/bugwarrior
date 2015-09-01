@@ -268,9 +268,23 @@ class GitlabService(IssueService):
         }
 
         full = []
+        detect_broken_gitlab_pagination = []
         while True:
             items = self._fetch(tmpl, params=params)
+            if not items:
+                break
+
+            # XXX: Some gitlab versions have a bug where pagination doesn't
+            # work and instead return the entire result no matter what. Detect
+            # this by seeing if the results are the same as the last time
+            # around and bail if so. Unfortunately, while it is a GitLab bug,
+            # we have to deal with instances where it exists.
+            if items == detect_broken_gitlab_pagination:
+                break
+            detect_broken_gitlab_pagination = items
+
             full += items
+
             if len(items) < params['per_page']:
                 break
             params['page'] += 1
