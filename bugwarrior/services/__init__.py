@@ -171,20 +171,19 @@ class IssueService(object):
         final = []
         if self.annotation_links:
             final.append(url)
-        if not self.annotation_comments:
-            return final
-        for author, message in annotations:
-            message = message.strip()
-            if not message or not author:
-                continue
-            message = message.replace('\n', '').replace('\r', '')
-            final.append(
-                '@%s - %s%s' % (
-                    author,
-                    message[0:self.anno_len],
-                    '...' if len(message) > self.anno_len else ''
+        if self.annotation_comments:
+            for author, message in annotations:
+                message = message.strip()
+                if not message or not author:
+                    continue
+                message = message.replace('\n', '').replace('\r', '')
+                final.append(
+                    '@%s - %s%s' % (
+                        author,
+                        message[0:self.anno_len],
+                        '...' if len(message) > self.anno_len else ''
+                    )
                 )
-            )
         return final
 
     @classmethod
