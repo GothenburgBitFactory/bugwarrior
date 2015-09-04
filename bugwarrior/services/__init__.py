@@ -75,6 +75,12 @@ class IssueService(object):
                 config.get(self.main_section, 'annotation_links')
             )
 
+        self.annotation_comments = True
+        if config.has_option(self.main_section, 'annotation_comments'):
+            self.annotation_comments = asbool(
+                config.get(self.main_section, 'annotation_comments')
+            )
+
         self.shorten = False
         if config.has_option(self.main_section, 'shorten'):
             self.shorten = asbool(config.get(self.main_section, 'shorten'))
@@ -165,6 +171,8 @@ class IssueService(object):
         final = []
         if self.annotation_links:
             final.append(url)
+        if not self.annotation_comments:
+            return final
         for author, message in annotations:
             message = message.strip()
             if not message or not author:
