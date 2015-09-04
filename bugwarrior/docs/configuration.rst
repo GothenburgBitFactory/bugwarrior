@@ -28,6 +28,10 @@ Example Configuration
     # Setting this to True will include a link to the ticket as an annotation
     annotation_links = True
 
+    # Setting this to True will include issue comments and author name in task
+    # annotations
+    annotation_comments = True
+
     # Defines whether or not issues should be matched based upon their description.
     # For historical reasons, and by default, we will attempt to match issues
     # based upon the presence of the '(bw)' marker in the task description.
