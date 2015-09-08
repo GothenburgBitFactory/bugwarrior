@@ -23,6 +23,8 @@ class GitlabIssue(Issue):
     UPVOTES = 'gitlabupvotes'
     DOWNVOTES = 'gitlabdownvotes'
     WORK_IN_PROGRESS = 'gitlabwip'
+    AUTHOR = 'gitlabauthor'
+    ASSIGNEE = 'gitlabassignee'
 
     UDAS = {
         TITLE: {
@@ -77,6 +79,14 @@ class GitlabIssue(Issue):
             'type': 'numeric',
             'label': 'Gitlab MR Work-In-Progress Flag',
         },
+        AUTHOR: {
+            'type': 'string',
+            'label': 'Gitlab Author',
+        },
+        ASSIGNEE: {
+            'type': 'string',
+            'label': 'Gitlab Assignee',
+        },
     }
     UNIQUE_KEY = (REPO, TYPE, NUMBER,)
 
@@ -93,6 +103,8 @@ class GitlabIssue(Issue):
             upvotes = self.record['upvotes']
             downvotes = self.record['downvotes']
             work_in_progress = self.record.get('work_in_progress', 0)
+            author = self.record['author']
+            assignee = self.record['assignee']
         else:
             priority = self.origin['default_priority']
             milestone = self.record['milestone']
@@ -102,6 +114,8 @@ class GitlabIssue(Issue):
             upvotes = 0
             downvotes = 0
             work_in_progress = 0
+            author = self.record['author']
+            assignee = self.record['assignee']
 
         if milestone:
             milestone = milestone['title']
@@ -109,6 +123,10 @@ class GitlabIssue(Issue):
             created = self.parse_date(created)
         if updated:
             updated = self.parse_date(updated)
+        if author:
+            author = author['username']
+        if assignee:
+            assignee = assignee['username']
 
         return {
             'project': self.extra['project'],
@@ -129,6 +147,8 @@ class GitlabIssue(Issue):
             self.UPVOTES: upvotes,
             self.DOWNVOTES: downvotes,
             self.WORK_IN_PROGRESS: work_in_progress,
+            self.AUTHOR: author,
+            self.ASSIGNEE: assignee,
         }
 
     def get_tags(self):
