@@ -21,10 +21,12 @@ class TestJiraIssue(ServiceTest):
         arbitrary_id = '10'
         arbitrary_url = 'http://one'
         arbitrary_summary = 'lkjaldsfjaldf'
+        arbitrary_estimation = 3600
         arbitrary_record = {
             'fields': {
                 'priority': 'Blocker',
                 'summary': arbitrary_summary,
+                'timeestimate': arbitrary_estimation,
             },
             'key': '%s-%s' % (arbitrary_project, arbitrary_id, ),
         }
@@ -49,6 +51,7 @@ class TestJiraIssue(ServiceTest):
             issue.FOREIGN_ID: arbitrary_record['key'],
             issue.SUMMARY: arbitrary_summary,
             issue.DESCRIPTION: None,
+            issue.ESTIMATE: arbitrary_estimation / 60 / 60,
         }
 
         def get_url(*args):

@@ -82,6 +82,14 @@ by adding the following configuration option::
 
     gitlab.filter_merge_requests = True
 
+Use HTTP
+++++++++
+
+If your Gitlab instance is only available over HTTP, set::
+
+    gitlab.use_https = False
+
+
 Provided UDA Fields
 -------------------
 
@@ -109,4 +117,10 @@ Provided UDA Fields
 | ``gitlabupvotes``     | Number of upvotes     | Numeric             |
 +-----------------------+-----------------------+---------------------+
 | ``gitlabdownvotes``   | Number of downvotes   | Numeric             |
++-----------------------+-----------------------+---------------------+
+| ``gitlabwip``         | Work-in-Progress flag | Numeric             |
++-----------------------+-----------------------+---------------------+
+| ``gitlabauthor``      | Issue/MR author       | Text (string)       |
++-----------------------+-----------------------+---------------------+
+| ``gitlabassignee``    | Issue/MR assignee     | Text (string)       |
 +-----------------------+-----------------------+---------------------+

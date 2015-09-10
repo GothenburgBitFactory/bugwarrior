@@ -177,6 +177,9 @@ class GithubService(IssueService):
         self.filter_pull_requests = self.config_get_default(
             'filter_pull_requests', default=False, to_type=asbool
         )
+        self.involved_issues = self.config_get_default(
+            'involved_issues', default=False, to_type=asbool
+        )
 
     @classmethod
     def get_keyring_service(cls, config, section):
@@ -195,6 +198,18 @@ class GithubService(IssueService):
         issues = {}
         for issue in githubutils.get_issues(*tag.split('/'), auth=self.auth):
             issues[issue['url']] = (tag, issue)
+        return issues
+
+    def get_involved_issues(self, user):
+        """ Grab all 'interesting' issues """
+        issues = {}
+        for issue in githubutils.get_involved_issues(user, auth=self.auth):
+            url = issue['html_url']
+            tag = re.match('.*github\\.com/(.*)/(issues|pull)/[^/]*$', url)
+            if tag is None:
+                log.name(self.target).critical(" Unrecognized issue URL: {0}.", url)
+                continue
+            issues[url] = (tag.group(1), issue)
         return issues
 
     def get_directly_assigned_issues(self):
@@ -264,10 +279,15 @@ class GithubService(IssueService):
         repos = filter(self.filter_repos, all_repos)
 
         issues = {}
-        for repo in repos:
+        if self.involved_issues:
             issues.update(
-                self.get_owned_repo_issues(user + "/" + repo['name'])
+                self.get_involved_issues(user)
             )
+        else:
+            for repo in repos:
+                issues.update(
+                    self.get_owned_repo_issues(user + "/" + repo['name'])
+                )
         issues.update(self.get_directly_assigned_issues())
         log.name(self.target).debug(" Found {0} issues.", len(issues))
         issues = filter(self.include, issues.values())

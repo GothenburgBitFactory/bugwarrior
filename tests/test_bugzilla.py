@@ -20,6 +20,7 @@ class TestBugzillaService(ServiceTest):
         arbitrary_record = {
             'component': 'Something',
             'priority': 'urgent',
+            'status': 'NEW',
             'summary': 'This is the issue summary',
             'id': 1234567,
         }
@@ -40,6 +41,7 @@ class TestBugzillaService(ServiceTest):
             'priority': issue.PRIORITY_MAP[arbitrary_record['priority']],
             'annotations': arbitrary_extra['annotations'],
 
+            issue.STATUS: arbitrary_record['status'],
             issue.URL: arbitrary_extra['url'],
             issue.SUMMARY: arbitrary_record['summary'],
             issue.BUG_ID: arbitrary_record['id']

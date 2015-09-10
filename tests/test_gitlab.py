@@ -54,7 +54,8 @@ class TestGitlabIssue(ServiceTest):
         },
         "state": "opened",
         "updated_at": arbitrary_updated.isoformat(),
-        "created_at": arbitrary_created.isoformat()
+        "created_at": arbitrary_created.isoformat(),
+        "work_in_progress": True
     }
     arbitrary_extra = {
         'issue_url': 'https://gitlab.example.com/arbitrary_username/project/issues/3',
@@ -98,6 +99,7 @@ class TestGitlabIssue(ServiceTest):
             issue.MILESTONE: self.arbitrary_issue['milestone']['title'],
             issue.UPVOTES: 0,
             issue.DOWNVOTES: 0,
+            issue.WORK_IN_PROGRESS: 0,
         }
         actual_output = issue.to_taskwarrior()
 

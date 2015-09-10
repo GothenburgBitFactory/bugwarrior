@@ -22,6 +22,9 @@ class GitlabIssue(Issue):
     STATE = 'gitlabstate'
     UPVOTES = 'gitlabupvotes'
     DOWNVOTES = 'gitlabdownvotes'
+    WORK_IN_PROGRESS = 'gitlabwip'
+    AUTHOR = 'gitlabauthor'
+    ASSIGNEE = 'gitlabassignee'
 
     UDAS = {
         TITLE: {
@@ -72,6 +75,18 @@ class GitlabIssue(Issue):
             'type': 'numeric',
             'label': 'Gitlab Downvotes',
         },
+        WORK_IN_PROGRESS: {
+            'type': 'numeric',
+            'label': 'Gitlab MR Work-In-Progress Flag',
+        },
+        AUTHOR: {
+            'type': 'string',
+            'label': 'Gitlab Author',
+        },
+        ASSIGNEE: {
+            'type': 'string',
+            'label': 'Gitlab Assignee',
+        },
     }
     UNIQUE_KEY = (REPO, TYPE, NUMBER,)
 
@@ -87,6 +102,9 @@ class GitlabIssue(Issue):
             state = self.record['state']
             upvotes = self.record['upvotes']
             downvotes = self.record['downvotes']
+            work_in_progress = self.record.get('work_in_progress', 0)
+            author = self.record['author']
+            assignee = self.record['assignee']
         else:
             priority = self.origin['default_priority']
             milestone = self.record['milestone']
@@ -95,6 +113,9 @@ class GitlabIssue(Issue):
             state = self.record['state']
             upvotes = 0
             downvotes = 0
+            work_in_progress = 0
+            author = self.record['author']
+            assignee = self.record['assignee']
 
         if milestone:
             milestone = milestone['title']
@@ -102,6 +123,10 @@ class GitlabIssue(Issue):
             created = self.parse_date(created)
         if updated:
             updated = self.parse_date(updated)
+        if author:
+            author = author['username']
+        if assignee:
+            assignee = assignee['username']
 
         return {
             'project': self.extra['project'],
@@ -121,6 +146,9 @@ class GitlabIssue(Issue):
             self.STATE: state,
             self.UPVOTES: upvotes,
             self.DOWNVOTES: downvotes,
+            self.WORK_IN_PROGRESS: work_in_progress,
+            self.AUTHOR: author,
+            self.ASSIGNEE: assignee,
         }
 
     def get_tags(self):
@@ -170,6 +198,11 @@ class GitlabService(IssueService):
             )
         self.auth = (host, token)
 
+        if self.config_get_default('use_https', default=True, to_type=asbool):
+            self.scheme = 'https'
+        else:
+            self.scheme = 'http'
+
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
             self.exclude_repos = [
@@ -205,6 +238,11 @@ class GitlabService(IssueService):
             'label_template': self.label_template,
         }
 
+
+    def get_owner(self, issue):
+        if issue[1]['assignee'] != None and issue[1]['assignee']['username']:
+            return issue[1]['assignee']['username']
+
     def filter_repos(self, repo):
         if self.exclude_repos:
             if repo['path_with_namespace'] in self.exclude_repos:
@@ -219,7 +257,7 @@ class GitlabService(IssueService):
         return True
 
     def _get_notes(self, rid, issue_type, issueid):
-        tmpl = 'https://{host}/api/v3/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
+        tmpl = '{scheme}://{host}/api/v3/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
         return self._fetch_paged(tmpl)
 
     def annotations(self, repo, url, issue_type, issue, issue_obj):
@@ -233,7 +271,7 @@ class GitlabService(IssueService):
         )
 
     def _fetch(self, tmpl, **kwargs):
-        url = tmpl.format(host=self.auth[0])
+        url = tmpl.format(scheme=self.scheme, host=self.auth[0])
         headers = {'PRIVATE-TOKEN': self.auth[1]}
 
         response = requests.get(url, headers=headers, **kwargs)
@@ -255,9 +293,23 @@ class GitlabService(IssueService):
         }
 
         full = []
+        detect_broken_gitlab_pagination = []
         while True:
             items = self._fetch(tmpl, params=params)
+            if not items:
+                break
+
+            # XXX: Some gitlab versions have a bug where pagination doesn't
+            # work and instead return the entire result no matter what. Detect
+            # this by seeing if the results are the same as the last time
+            # around and bail if so. Unfortunately, while it is a GitLab bug,
+            # we have to deal with instances where it exists.
+            if items == detect_broken_gitlab_pagination:
+                break
+            detect_broken_gitlab_pagination = items
+
             full += items
+
             if len(items) < params['per_page']:
                 break
             params['page'] += 1
@@ -265,21 +317,25 @@ class GitlabService(IssueService):
         return full
 
     def get_repo_issues(self, rid):
-        tmpl = 'https://{host}/api/v3/projects/%d/issues' % rid
+        tmpl = '{scheme}://{host}/api/v3/projects/%d/issues' % rid
         issues = {}
         for issue in self._fetch_paged(tmpl):
+            if issue['state'] != 'opened':
+                continue
             issues[issue['id']] = (rid, issue)
         return issues
 
     def get_repo_merge_requests(self, rid):
-        tmpl = 'https://{host}/api/v3/projects/%d/merge_requests' % rid
+        tmpl = '{scheme}://{host}/api/v3/projects/%d/merge_requests' % rid
         issues = {}
         for issue in self._fetch_paged(tmpl):
+            if issue['state'] != 'opened':
+                continue
             issues[issue['id']] = (rid, issue)
         return issues
 
     def issues(self):
-        tmpl = 'https://{host}/api/v3/projects'
+        tmpl = '{scheme}://{host}/api/v3/projects'
         all_repos = self._fetch_paged(tmpl)
         repos = filter(self.filter_repos, all_repos)
 

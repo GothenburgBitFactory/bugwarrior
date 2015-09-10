@@ -15,6 +15,10 @@ Optional options include:
 * ``shorten``: Set to ``True`` to shorten links.
 * ``inline_link``: When ``False``, links are appended as an annotation.
   Defaults to ``True``.
+* ``annotation_links``: When ``True`` will include a link to the ticket as an
+  annotation. Defaults to ``False``.
+* ``annotation_comments``: When ``True`` skips putting issue comments into
+  annotations. Defaults to ``True``.
 * ``legacy_matching``: Set to ``False`` to instruct Bugwarrior to match
   issues using only the issue's unique identifiers (rather than matching
   on description).
@@ -158,6 +162,7 @@ by ``bugwarrior-pull``::
   backend = growlnotify
   finished_querying_sticky = False
   task_crud_sticky = True
+  only_on_new_tasks = True
 
 Backend options:
 

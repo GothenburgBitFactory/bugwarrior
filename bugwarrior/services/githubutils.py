@@ -34,6 +34,16 @@ def get_repos(username, auth):
     return _getter(url, auth)
 
 
+def get_involved_issues(username, auth):
+    """ username should be a string
+    auth should be a tuple of username and password.
+    """
+
+    tmpl = "https://api.github.com/search/issues?q=involves%3A{username}&per_page=100"
+    url = tmpl.format(username=username)
+    return _getter(url, auth, subkey='items')
+
+
 def get_issues(username, repo, auth):
     """ username and repo should be strings
     auth should be a tuple of username and password.
@@ -73,7 +83,7 @@ def get_pulls(username, repo, auth):
     return _getter(url, auth)
 
 
-def _getter(url, auth):
+def _getter(url, auth, subkey=None):
     """ Pagination utility.  Obnoxious. """
 
     kwargs = {}
@@ -98,10 +108,15 @@ def _getter(url, auth):
 
         if callable(response.json):
             # Newer python-requests
-            results += response.json()
+            json_res = response.json()
         else:
             # Older python-requests
-            results += response.json
+            json_res = response.json
+
+        if subkey is not None:
+            json_res = json_res[subkey]
+
+        results += json_res
 
         link = _link_field_to_dict(response.headers.get('link', None))
 
