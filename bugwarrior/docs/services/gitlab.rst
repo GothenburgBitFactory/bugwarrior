@@ -82,6 +82,14 @@ by adding the following configuration option::
 
     gitlab.filter_merge_requests = True
 
+Use HTTP
+++++++++
+
+If your Gitlab instance is only available over HTTP, set::
+
+    gitlab.use_https = False
+
+
 Provided UDA Fields
 -------------------
 
