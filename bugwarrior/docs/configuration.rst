@@ -33,11 +33,11 @@ Example Configuration
     annotation_comments = True
 
     # Defines whether or not issues should be matched based upon their description.
-    # For historical reasons, and by default, we will attempt to match issues
-    # based upon the presence of the '(bw)' marker in the task description.
+    # In legacy mode, we will attempt to match issues to bugs based upon the
+    # presence of the '(bw)' marker in the task description.
     # If this is false, we will only select issues having the appropriate UDA
-    # fields defined
-    #legacy_matching=False
+    # fields defined (which is smarter, better, newer, etc..)
+    legacy_matching = False
 
     # log.level specifices the verbosity.  The default is DEBUG.
     # log.level can be one of DEBUG, INFO, WARNING, ERROR, CRITICAL, DISABLED
