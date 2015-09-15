@@ -72,7 +72,7 @@ Example Configuration
     # To configure, adjust the settings below.  Note that neither of the
     # "sticky" options have any effect on Linux with pynotify.  They only work
     # for growlnotify.
-    [notifications]
+    #[notifications]
     # notifications = True
     # backend = growlnotify
     # finished_querying_sticky = False
