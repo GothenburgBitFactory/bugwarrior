@@ -254,7 +254,7 @@ class BugzillaService(IssueService):
 
             needinfos = filter(lambda f: (    f['name'] == 'needinfo'
                                           and f['status'] == '?'
-                                          and f['requestee'] == self.username),
+                                          and f.get('requestee', self.username) == self.username),
                                issue['flags'])
             if needinfos:
                 last_mod = needinfos[0]['modification_date']
