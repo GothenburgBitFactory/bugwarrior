@@ -100,18 +100,18 @@ def _getter(url, auth, subkey=None):
     while 'next' in link:
         response = requests.get(link['next'], **kwargs)
 
-        # And.. if we didn't get good results, just bail.
-        if response.status_code != 200:
-            raise IOError(
-                "Non-200 status code %r; %r; %r" % (
-                    response.status_code, url, response.json))
-
         if callable(response.json):
             # Newer python-requests
             json_res = response.json()
         else:
             # Older python-requests
             json_res = response.json
+
+        # And.. if we didn't get good results, just bail.
+        if response.status_code != 200:
+            raise IOError(
+                "Non-200 status code %r; %r; %r" % (
+                    response.status_code, url, json_res))
 
         if subkey is not None:
             json_res = json_res[subkey]
