@@ -321,7 +321,12 @@ class GitlabService(IssueService):
     def get_repo_issues(self, rid):
         tmpl = '{scheme}://{host}/api/v3/projects/%d/issues' % rid
         issues = {}
-        for issue in self._fetch_paged(tmpl):
+        try:
+            repo_issues = self._fetch_paged(tmpl)
+        except:
+            # Projects may have issues disabled.
+            return []
+        for issue in repo_issues:
             if issue['state'] != 'opened':
                 continue
             issues[issue['id']] = (rid, issue)
@@ -330,7 +335,12 @@ class GitlabService(IssueService):
     def get_repo_merge_requests(self, rid):
         tmpl = '{scheme}://{host}/api/v3/projects/%d/merge_requests' % rid
         issues = {}
-        for issue in self._fetch_paged(tmpl):
+        try:
+            repo_merge_requests = self._fetch_paged(tmpl)
+        except:
+            # Projects may have merge requests disabled.
+            return []
+        for issue in repo_merge_requests:
             if issue['state'] != 'opened':
                 continue
             issues[issue['id']] = (rid, issue)
