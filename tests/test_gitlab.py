@@ -100,6 +100,8 @@ class TestGitlabIssue(ServiceTest):
             issue.UPVOTES: 0,
             issue.DOWNVOTES: 0,
             issue.WORK_IN_PROGRESS: 0,
+            issue.AUTHOR: 'john_smith',
+            issue.ASSIGNEE: 'jack_smith',
         }
         actual_output = issue.to_taskwarrior()
 
