@@ -327,7 +327,7 @@ class GitlabService(IssueService):
             # Projects may have issues disabled.
             return []
         for issue in repo_issues:
-            if issue['state'] != 'opened':
+            if issue['state'] not in ('opened', 'reopened'):
                 continue
             issues[issue['id']] = (rid, issue)
         return issues
@@ -341,7 +341,7 @@ class GitlabService(IssueService):
             # Projects may have merge requests disabled.
             return []
         for issue in repo_merge_requests:
-            if issue['state'] != 'opened':
+            if issue['state'] not in ('opened', 'reopened'):
                 continue
             issues[issue['id']] = (rid, issue)
         return issues
