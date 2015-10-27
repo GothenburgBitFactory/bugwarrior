@@ -1,6 +1,7 @@
 import re
 import six
 import datetime
+import pytz
 
 import requests
 
@@ -67,7 +68,7 @@ class PagureIssue(Issue):
             self.TITLE: self.record['title'],
             self.ID: self.record['id'],
             self.DATE_CREATED: datetime.datetime.fromtimestamp(
-                int(self.record['date_created'])),
+                int(self.record['date_created']), pytz.UTC),
         }
 
     def get_tags(self):
