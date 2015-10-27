@@ -276,15 +276,17 @@ class GitlabService(IssueService):
 
         response = requests.get(url, headers=headers, **kwargs)
 
+        if callable(response.json):
+            json_res = response.json()
+        else:
+            json_res = response.json
+
         if response.status_code != 200:
             raise IOError(
                 "Non-200 status code %r; %r; %r" %(
-                    response.status_code, url, response.json))
+                    response.status_code, url, json_res))
 
-        if callable(response.json):
-            return response.json()
-        else:
-            return response.json
+        return json_res
 
     def _fetch_paged(self, tmpl):
         params = {
