@@ -194,7 +194,8 @@ class BitbucketService(IssueService):
 
     def issues(self):
         user = self.config.get(self.target, 'bitbucket.username')
-        response = self.get_data('/users/' + user + '/')
+        user_type = 'teams' if self.config.get(self.target, 'bitbucket.is_team') else 'users'
+        response = self.get_data2('/' + user_type + '/' + user + '/repositories')
         all_repos = [
             repo.get('slug') for repo in response.get('repositories')
             if repo.get('has_issues')
