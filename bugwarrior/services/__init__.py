@@ -42,6 +42,7 @@ SERVICES = DeferredImportingDict({
     'megaplan':      'bugwarrior.services.megaplan:MegaplanService',
     'phabricator':   'bugwarrior.services.phab:PhabricatorService',
     'versionone':    'bugwarrior.services.versionone:VersionOneService',
+    'pagure':        'bugwarrior.services.pagure:PagureService',
 })
 
 
