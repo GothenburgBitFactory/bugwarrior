@@ -12,7 +12,7 @@ import click
 from taskw.warrior import TaskWarriorBase
 
 from bugwarrior.config import get_taskrc_path, load_config
-from bugwarrior.services import aggregate_issues, SERVICES
+from bugwarrior.services import aggregate_issues, get_service
 from bugwarrior.db import (
     get_defined_udas_as_strings,
     synchronize,
@@ -91,7 +91,7 @@ def targets():
            section.startswith('flavor.'):
             continue
         service_name = config.get(section, 'service')
-        service_class = SERVICES[service_name]
+        service_class = get_service(service_name)
         for option in config.options(section):
             value = config.get(section, option)
             if not value:

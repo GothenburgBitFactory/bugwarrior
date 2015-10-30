@@ -461,11 +461,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
 
 def build_key_list(targets):
-    from bugwarrior.services import SERVICES
+    from bugwarrior.services import get_service
 
     keys = {}
     for target in targets:
-        keys[target] = SERVICES[target].ISSUE_CLASS.UNIQUE_KEY
+        keys[target] = get_service(target).ISSUE_CLASS.UNIQUE_KEY
     return keys
 
 
@@ -509,11 +509,11 @@ def build_uda_config_overrides(targets):
 
     """
 
-    from bugwarrior.services import SERVICES
+    from bugwarrior.services import get_service
 
     targets_udas = {}
     for target in targets:
-        targets_udas.update(SERVICES[target].ISSUE_CLASS.UDAS)
+        targets_udas.update(get_service(target).ISSUE_CLASS.UDAS)
     return {
         'uda': targets_udas
     }

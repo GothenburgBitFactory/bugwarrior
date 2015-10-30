@@ -126,11 +126,11 @@ def validate_config(config, main_section):
         if not service:
             die("No 'service' in [%s]" % target)
 
-        if service not in SERVICES:
+        if not get_service(service):
             die("'%s' in [%s] is not a valid service." % (service, target))
 
         # Call the service-specific validator
-        SERVICES[service].validate_config(config, target)
+        get_service(service).validate_config(config, target)
 
 
 def load_config(main_section):
@@ -168,4 +168,4 @@ def get_taskrc_path(conf, main_section):
 
 
 # This needs to be imported here and not above to avoid a circular-import.
-from bugwarrior.services import SERVICES
+from bugwarrior.services import get_service
