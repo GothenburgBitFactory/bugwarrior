@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '1.2.0'
+version = '1.3.0'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -58,5 +58,20 @@ setup(name='bugwarrior',
       bugwarrior-pull = bugwarrior:pull
       bugwarrior-vault = bugwarrior:vault
       bugwarrior-uda = bugwarrior:uda
+      [bugwarrior.service]
+      github=bugwarrior.services.github:GithubService
+      gitlab=bugwarrior.services.gitlab:GitlabService
+      bitbucket=bugwarrior.services.bitbucket:BitbucketService
+      trac=bugwarrior.services.trac:TracService
+      bugzilla=bugwarrior.services.bz:BugzillaService
+      teamlab=bugwarrior.services.teamlab:TeamLabService
+      redmine=bugwarrior.services.redmine:RedMineService
+      activecollab2=bugwarrior.services.activecollab2:ActiveCollab2Service
+      activecollab=bugwarrior.services.activecollab:ActiveCollabService
+      jira=bugwarrior.services.jira:JiraService
+      megaplan=bugwarrior.services.megaplan:MegaplanService
+      phabricator=bugwarrior.services.phab:PhabricatorService
+      versionone=bugwarrior.services.versionone:VersionOneService
+      pagure=bugwarrior.services.pagure:PagureService
       """,
       )

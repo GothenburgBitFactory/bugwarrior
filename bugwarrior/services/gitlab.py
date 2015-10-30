@@ -276,15 +276,17 @@ class GitlabService(IssueService):
 
         response = requests.get(url, headers=headers, **kwargs)
 
+        if callable(response.json):
+            json_res = response.json()
+        else:
+            json_res = response.json
+
         if response.status_code != 200:
             raise IOError(
                 "Non-200 status code %r; %r; %r" %(
-                    response.status_code, url, response.json))
+                    response.status_code, url, json_res))
 
-        if callable(response.json):
-            return response.json()
-        else:
-            return response.json
+        return json_res
 
     def _fetch_paged(self, tmpl):
         params = {
@@ -319,8 +321,13 @@ class GitlabService(IssueService):
     def get_repo_issues(self, rid):
         tmpl = '{scheme}://{host}/api/v3/projects/%d/issues' % rid
         issues = {}
-        for issue in self._fetch_paged(tmpl):
-            if issue['state'] != 'opened':
+        try:
+            repo_issues = self._fetch_paged(tmpl)
+        except:
+            # Projects may have issues disabled.
+            return []
+        for issue in repo_issues:
+            if issue['state'] not in ('opened', 'reopened'):
                 continue
             issues[issue['id']] = (rid, issue)
         return issues
@@ -328,8 +335,13 @@ class GitlabService(IssueService):
     def get_repo_merge_requests(self, rid):
         tmpl = '{scheme}://{host}/api/v3/projects/%d/merge_requests' % rid
         issues = {}
-        for issue in self._fetch_paged(tmpl):
-            if issue['state'] != 'opened':
+        try:
+            repo_merge_requests = self._fetch_paged(tmpl)
+        except:
+            # Projects may have merge requests disabled.
+            return []
+        for issue in repo_merge_requests:
+            if issue['state'] not in ('opened', 'reopened'):
                 continue
             issues[issue['id']] = (rid, issue)
         return issues

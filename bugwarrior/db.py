@@ -127,7 +127,7 @@ def get_managed_task_uuids(tw, key_list, legacy_matching):
     return expected_task_ids
 
 
-def find_local_uuid(tw, keys, issue, legacy_matching=True):
+def find_local_uuid(tw, keys, issue, legacy_matching=False):
     """ For a given issue issue, find its local UUID.
 
     Assembles a list of task IDs existing in taskwarrior
@@ -150,9 +150,10 @@ def find_local_uuid(tw, keys, issue, legacy_matching=True):
         ]
 
     * `issue`: A instance of a subclass of `bugwarrior.services.Issue`.
-    * `legacy_matching`: By default, this is enabled, and it allows
+    * `legacy_matching`: By default, this is disabled, and it allows
       the matching algorithm to -- in addition to searching by stored
       issue keys -- search using the task's description for a match.
+      It is prone to error and should avoided if possible.
 
     :returns:
     * A single string UUID.
@@ -323,7 +324,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         marshal=True,
     )
 
-    legacy_matching = _bool_option(main_section, 'legacy_matching', 'True')
+    legacy_matching = _bool_option(main_section, 'legacy_matching', 'False')
     merge_annotations = _bool_option(main_section, 'merge_annotations', 'True')
     merge_tags = _bool_option(main_section, 'merge_tags', 'True')
 
@@ -460,11 +461,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
 
 def build_key_list(targets):
-    from bugwarrior.services import SERVICES
+    from bugwarrior.services import get_service
 
     keys = {}
     for target in targets:
-        keys[target] = SERVICES[target].ISSUE_CLASS.UNIQUE_KEY
+        keys[target] = get_service(target).ISSUE_CLASS.UNIQUE_KEY
     return keys
 
 
@@ -508,11 +509,11 @@ def build_uda_config_overrides(targets):
 
     """
 
-    from bugwarrior.services import SERVICES
+    from bugwarrior.services import get_service
 
     targets_udas = {}
     for target in targets:
-        targets_udas.update(SERVICES[target].ISSUE_CLASS.UDAS)
+        targets_udas.update(get_service(target).ISSUE_CLASS.UDAS)
     return {
         'uda': targets_udas
     }

@@ -2,6 +2,8 @@ import copy
 import multiprocessing
 import time
 
+from pkg_resources import iter_entry_points
+
 from dateutil.parser import parse as parse_date
 from dateutil.tz import tzlocal
 from jinja2 import Template
@@ -11,7 +13,6 @@ from twiggy import log
 
 from taskw.task import Task
 
-from bugwarrior.utils import DeferredImportingDict
 from bugwarrior.config import asbool
 from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
 
@@ -24,25 +25,14 @@ SERVICE_FINISHED_ERROR = 1
 # date string to be parsed as if it were in your local timezone
 LOCAL_TIMEZONE = 'LOCAL_TIMEZONE'
 
-# Constant dict to be used all around town.
-# It will defer actually importing a service until someone tries to access it
-# in the dict.  This should help expose odd ImportErrors in a more obvious way
-# for end users.  See https://github.com/ralphbean/bugwarrior/issues/132
-SERVICES = DeferredImportingDict({
-    'github':        'bugwarrior.services.github:GithubService',
-    'gitlab':        'bugwarrior.services.gitlab:GitlabService',
-    'bitbucket':     'bugwarrior.services.bitbucket:BitbucketService',
-    'trac':          'bugwarrior.services.trac:TracService',
-    'bugzilla':      'bugwarrior.services.bz:BugzillaService',
-    'teamlab':       'bugwarrior.services.teamlab:TeamLabService',
-    'redmine':       'bugwarrior.services.redmine:RedMineService',
-    'activecollab2': 'bugwarrior.services.activecollab2:ActiveCollab2Service',
-    'activecollab':  'bugwarrior.services.activecollab:ActiveCollabService',
-    'jira':          'bugwarrior.services.jira:JiraService',
-    'megaplan':      'bugwarrior.services.megaplan:MegaplanService',
-    'phabricator':   'bugwarrior.services.phab:PhabricatorService',
-    'versionone':    'bugwarrior.services.versionone:VersionOneService',
-})
+def get_service(service_name):
+    epoint = iter_entry_points(group='bugwarrior.service', name=service_name)
+    try:
+        epoint = epoint.next()
+    except StopIteration:
+        return None
+
+    return epoint.load()
 
 
 class IssueService(object):
@@ -495,7 +485,7 @@ def _aggregate_issues(conf, main_section, target, queue, service_name):
     start = time.time()
 
     try:
-        service = SERVICES[service_name](conf, main_section, target)
+        service = get_service(service_name)(conf, main_section, target)
         issue_count = 0
         for issue in service.issues():
             queue.put(issue)
