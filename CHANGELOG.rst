@@ -1,3 +1,58 @@
+
+1.3.0
+-----
+
+Pull Requests
+
+- (@ralphbean)      #241, Turn legacy_matching off by default.
+  https://github.com/ralphbean/bugwarrior/pull/241
+- (@ralphbean)      #242, Comment out this section header.
+  https://github.com/ralphbean/bugwarrior/pull/242
+- (@mathstuf)       #246, Better json info in errors
+  https://github.com/ralphbean/bugwarrior/pull/246
+- (@mathstuf)       #247, Reformat changelog
+  https://github.com/ralphbean/bugwarrior/pull/247
+- (@mathstuf)       #248, Fix gitlab tests
+  https://github.com/ralphbean/bugwarrior/pull/248
+- (@mathstuf)       #249, Rhbz handle open needinfo
+  https://github.com/ralphbean/bugwarrior/pull/249
+- (@mathstuf)       #251, Gitlab disabled features
+  https://github.com/ralphbean/bugwarrior/pull/251
+- (@ralphbean)      #252, Support for pagure.io.
+  https://github.com/ralphbean/bugwarrior/pull/252
+- (@puiterwijk)     #245, Use setuptools entry points instead of DeferredImport
+  https://github.com/ralphbean/bugwarrior/pull/245
+
+Commits
+
+- 220228d55 Turn legacy_matching off by default.
+  https://github.com/ralphbean/bugwarrior/commit/220228d55
+- edd2938c5 Comment out this section header.
+  https://github.com/ralphbean/bugwarrior/commit/edd2938c5
+- 2f3645bad githubutils: use the json_res for the exception info
+  https://github.com/ralphbean/bugwarrior/commit/2f3645bad
+- a34d66bd8 changelog: fix formatting
+  https://github.com/ralphbean/bugwarrior/commit/a34d66bd8
+- 3b0663b75 gitlab: expect author and assignee
+  https://github.com/ralphbean/bugwarrior/commit/3b0663b75
+- 3106350c3 bz: handle open-ended needinfo requests
+  https://github.com/ralphbean/bugwarrior/commit/3106350c3
+- 095ac8bc1 gitlab: use the proper json result
+  https://github.com/ralphbean/bugwarrior/commit/095ac8bc1
+- 11ddf04bc gitlab: handle projects with disable MRs or issues
+  https://github.com/ralphbean/bugwarrior/commit/11ddf04bc
+- 4d5f61b1d gitlab: handle reopened issues and MRs
+  https://github.com/ralphbean/bugwarrior/commit/4d5f61b1d
+- 9958d6662 Support for pagure.io.
+  https://github.com/ralphbean/bugwarrior/commit/9958d6662
+- 49abe33f5 Make that a timezone-aware object.
+  https://github.com/ralphbean/bugwarrior/commit/49abe33f5
+- 0750259ae Use setuptools entry points instead of DeferredImport
+  https://github.com/ralphbean/bugwarrior/commit/0750259ae
+- 285f9b1ba Add pagure to the README.
+  https://github.com/ralphbean/bugwarrior/commit/285f9b1ba
+- 93f0d6e8b Remove old changelog header.
+  https://github.com/ralphbean/bugwarrior/commit/93f0d6e8b
 1.2.0
 -----
 
