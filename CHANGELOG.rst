@@ -39,9 +39,6 @@ Lots of updates from various contributors:
 - Document use_https for gitlab. `5d95424f6 <https://github.com/ralphbean/bugwarrior/commit/5d95424f6f0c09bf0e54683ac1fa0c52ca2a3d11>`_
 - Merge branch 'https-or-http' into develop `f3b63baf1 <https://github.com/ralphbean/bugwarrior/commit/f3b63baf1298f64d95d6f39656520b4261150edd>`_
 
-Changelog
-=========
-
 1.1.4
 -----
 
