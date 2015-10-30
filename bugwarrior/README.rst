@@ -10,8 +10,9 @@ It currently supports the following remote resources:
  - `github <https://github.com>`_ (api v3)
  - `gitlab <https://gitlab.com>`_ (api v3)
  - `bitbucket <https://bitbucket.org>`_
- - `trac <https://trac.edgewall.org/>`_
+ - `pagure <https://pagure.io/>`_
  - `bugzilla <https://www.bugzilla.org/>`_
+ - `trac <https://trac.edgewall.org/>`_
  - `megaplan <https://www.megaplan.ru/>`_
  - `teamlab <https://www.teamlab.com/>`_
  - `redmine <https://www.redmine.org/>`_
