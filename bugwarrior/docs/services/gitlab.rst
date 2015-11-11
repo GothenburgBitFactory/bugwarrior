@@ -13,6 +13,7 @@ Here's an example of a Gitlab target::
     service = gitlab
     gitlab.login = ralphbean
     gitlab.token = OMG_LULZ
+    gitlab.host = gitlab.com
 
 The above example is the minimum required to import issues from
 Gitlab.  You can also feel free to use any of the
