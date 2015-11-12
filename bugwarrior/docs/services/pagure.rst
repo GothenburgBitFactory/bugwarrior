@@ -64,7 +64,7 @@ The Pagure issue tracker allows you to attach tags to issues; to
 use those pagure tags as taskwarrior tags, you can use the
 ``pagure.import_tags`` option::
 
-    github.import_tags = True
+    pagure.import_tags = True
 
 Also, if you would like to control how these taskwarrior tags are created, you
 can specify a template used for converting the Pagure tag into a Taskwarrior
