@@ -90,6 +90,13 @@ If your Gitlab instance is only available over HTTP, set::
 
     gitlab.use_https = False
 
+Do Not Verify SSL Certificate
++++++++++++++++++++++++++++++
+
+If want to ignore verifying the SSL certificate, set::
+
+    gitlab.verify_ssl = False
+
 
 Provided UDA Fields
 -------------------
