@@ -11,8 +11,8 @@ from bugwarrior.config import die, asbool
 DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')|upper}}"
 
 class TrelloIssue(Issue):
-    NAME = 'trelloname'
-    ID = 'trelloid'
+    NAME = 'trellocard'
+    ID = 'trellocardid'
     BOARD = 'trelloboard'
     LIST = 'trellolist'
     SHORTLINK = 'trelloshortlink'
@@ -20,12 +20,12 @@ class TrelloIssue(Issue):
     URL = 'trellourl'
 
     UDAS = {
-        NAME: {'type': 'string', 'label': 'Trello Name'},
-        ID: {'type': 'string', 'label': 'Trello ID'},
-        BOARD: {'type': 'string', 'label': 'Trello Board'},
-        LIST: {'type': 'string', 'label': 'Trello List'},
-        SHORTLINK: {'type': 'string', 'label': 'Trello Shortlink'},
-        SHORTURL: {'type': 'string', 'label': 'Trello Shorturl'},
+        NAME: {'type': 'string', 'label': 'Trello card name'},
+        ID: {'type': 'string', 'label': 'Trello card ID'},
+        BOARD: {'type': 'string', 'label': 'Trello board name'},
+        LIST: {'type': 'string', 'label': 'Trello list name'},
+        SHORTLINK: {'type': 'string', 'label': 'Trello shortlink'},
+        SHORTURL: {'type': 'string', 'label': 'Trello short URL'},
         URL: {'type': 'string', 'label': 'Trello URL'},
     }
     UNIQUE_KEY = (ID,)
