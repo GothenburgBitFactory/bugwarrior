@@ -51,6 +51,8 @@ setup(name='bugwarrior',
           "nose",
           "jira>=0.22",
           "megaplan>=1.4",
+          "pypandoc",
+          "pyac"
       ],
       test_suite='nose.collector',
       entry_points="""
