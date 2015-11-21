@@ -1,11 +1,14 @@
+from __future__ import unicode_literals
 from ConfigParser import NoOptionError
 import re
 
+from jinja2 import Template
 import requests
 
 from bugwarrior.services import IssueService, Issue
-from bugwarrior.config import die
+from bugwarrior.config import die, asbool
 
+DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')|upper}}"
 
 class TrelloIssue(Issue):
     NAME = 'trelloname'
@@ -37,8 +40,14 @@ class TrelloIssue(Issue):
             cls='task',
         )
 
+    def get_tags(self, twdict):
+        tmpl = Template(self.origin['label_template'])
+        return [
+            tmpl.render(twdict, label=label['name'])
+            for label in self.record['labels']]
+
     def to_taskwarrior(self):
-        return {
+        twdict = {
             'project': self.extra['boardname'],
             'priority': 'M',
             self.NAME: self.record['name'],
@@ -49,6 +58,9 @@ class TrelloIssue(Issue):
             self.SHORTURL: self.record['shortUrl'],
             self.URL: self.record['url'],
         }
+        if self.origin['import_labels_as_tags']:
+            twdict['tags'] = self.get_tags(twdict)
+        return twdict
 
     def _sluggify(self, s):
         """
@@ -75,6 +87,19 @@ class TrelloService(IssueService):
 
         super(TrelloService, cls).validate_config(config, target)
 
+    def get_service_metadata(self):
+        """
+        Return extra config options to be passed to the TrelloIssue class
+        """
+        return {
+            'import_labels_as_tags':
+                self.config_get_default('import_labels_as_tags', False, asbool),
+            'label_template':
+                self.config_get_default(
+                    'label_template', DEFAULT_LABEL_TEMPLATE),
+        }
+
+
     def issues(self):
         """
         Returns a list of dicts representing issues from a remote service.
@@ -89,7 +114,7 @@ class TrelloService(IssueService):
             listextra = dict(boardname=board['name'], listname=list['name'])
             cards = self.api_request(
                 "/1/lists/{list_id}/cards/open".format(list_id=list['id']),
-                fields='name,idShort,shortLink,shortUrl,url')
+                fields='name,idShort,shortLink,shortUrl,url,labels')
             for card in cards:
                 yield self.get_issue_for_record(card, extra=listextra)
 
