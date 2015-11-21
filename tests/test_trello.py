@@ -4,7 +4,7 @@ import ConfigParser
 import unittest2
 from mock import patch
 
-from bugwarrior.services.trello import TrelloService
+from bugwarrior.services.trello import TrelloService, TrelloIssue
 from .base import ServiceTest
 
 
@@ -39,6 +39,7 @@ class ValidateConfigTest(unittest2.TestCase):
         self.arbitrary_config = mkConfig({'mytrello': {
             'trello.token': 'aaaabbbbccccddddeeeeffff',
             'trello.api_key': '000011112222333344445555',
+            'trello.board': 'foobar',
         }})
 
     @patch('bugwarrior.services.trello.die')
@@ -58,7 +59,36 @@ class ValidateConfigTest(unittest2.TestCase):
         TrelloService.validate_config(self.arbitrary_config, 'mytrello')
         die.assert_called_with("[mytrello] has no 'trello.api_key'")
 
+    @patch('bugwarrior.services.trello.die')
+    def test_no_board(self, die):
+        self.arbitrary_config.remove_option('mytrello', 'trello.board')
+        TrelloService.validate_config(self.arbitrary_config, 'mytrello')
+        die.assert_called_with("[mytrello] has no 'trello.board'")
 
-class TestGitlabIssue(ServiceTest):
-    pass
 
+class TestTrelloIssue(ServiceTest):
+    JSON = {
+        "id": "542bbb6583d705eb05bbe491",
+        "idShort": 42,
+        "name": "So long, and thanks for all the fish!",
+        "shortLink": "AAaaBBbb",
+        "shortUrl": "https://trello.com/c/AAaaBBbb",
+        "url": "https://trello.com/c/AAaBBbb/42-so-long",
+        }
+
+    def setUp(self):
+        origin = dict(inline_links=True, description_length=31)
+        extra = {'boardname': 'Hyperspatial express route'}
+        self.issue = TrelloIssue(self.JSON, origin, extra)
+
+    def test_default_description(self):
+        """ Test the generated description """
+        expected_desc = "(bw)#42 - So long, and thanks for all the" \
+                        " .. https://trello.com/c/AAaaBBbb"
+        self.assertEqual(expected_desc, self.issue.get_default_description())
+
+    def test_to_taskwarrior__project(self):
+        """ By default, the project is the board name """
+        expected_project = "Hyperspatial express route"
+        self.assertEqual(expected_project,
+                         self.issue.to_taskwarrior().get('project', None))

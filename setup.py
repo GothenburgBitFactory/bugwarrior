@@ -81,5 +81,6 @@ setup(name='bugwarrior',
       pagure=bugwarrior.services.pagure:PagureService
       taiga=bugwarrior.services.taiga:TaigaService
       gerrit=bugwarrior.services.gerrit:GerritService
+      trello=bugwarrior.services.trello:TrelloService
       """,
       )
