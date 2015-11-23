@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 from ConfigParser import NoOptionError
-import re
 
 from jinja2 import Template
 import requests
@@ -10,9 +9,10 @@ from bugwarrior.config import die, asbool
 
 DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')|upper}}"
 
+
 class TrelloIssue(Issue):
     NAME = 'trellocard'
-    ID = 'trellocardid'
+    CARDID = 'trellocardid'
     BOARD = 'trelloboard'
     LIST = 'trellolist'
     SHORTLINK = 'trelloshortlink'
@@ -21,14 +21,14 @@ class TrelloIssue(Issue):
 
     UDAS = {
         NAME: {'type': 'string', 'label': 'Trello card name'},
-        ID: {'type': 'string', 'label': 'Trello card ID'},
+        CARDID: {'type': 'string', 'label': 'Trello card ID'},
         BOARD: {'type': 'string', 'label': 'Trello board name'},
         LIST: {'type': 'string', 'label': 'Trello list name'},
         SHORTLINK: {'type': 'string', 'label': 'Trello shortlink'},
         SHORTURL: {'type': 'string', 'label': 'Trello short URL'},
         URL: {'type': 'string', 'label': 'Trello URL'},
     }
-    UNIQUE_KEY = (ID,)
+    UNIQUE_KEY = (CARDID,)
 
     def get_default_description(self):
         """ Return the old-style verbose description from bugwarrior.
@@ -51,7 +51,7 @@ class TrelloIssue(Issue):
             'project': self.extra['boardname'],
             'priority': 'M',
             self.NAME: self.record['name'],
-            self.ID: self.record['id'],
+            self.CARDID: self.record['id'],
             self.BOARD: self.extra['boardname'],
             self.LIST: self.extra['listname'],
             self.SHORTLINK: self.record['shortLink'],
@@ -62,12 +62,6 @@ class TrelloIssue(Issue):
             twdict['tags'] = self.get_tags(twdict)
         return twdict
 
-    def _sluggify(self, s):
-        """
-        Sluggify a string: remove spaces and non ascii alphanumeric characters
-        """
-        return re.sub(r'[^a-zA-Z0-9]', '_', s)
-
 
 class TrelloService(IssueService):
     ISSUE_CLASS = TrelloIssue
@@ -77,15 +71,14 @@ class TrelloService(IssueService):
     @classmethod
     def validate_config(cls, config, target):
         def check_key(opt):
+            """ Check that the given key exist in the configuration  """
             key = cls._get_key(opt)
             if not config.has_option(target, key):
                 die("[{}] has no '{}'".format(target, key))
-
+        super(TrelloService, cls).validate_config(config, target)
         check_key('token')
         check_key('api_key')
         check_key('board')
-
-        super(TrelloService, cls).validate_config(config, target)
 
     def get_service_metadata(self):
         """
@@ -93,12 +86,10 @@ class TrelloService(IssueService):
         """
         return {
             'import_labels_as_tags':
-                self.config_get_default('import_labels_as_tags', False, asbool),
+            self.config_get_default('import_labels_as_tags', False, asbool),
             'label_template':
-                self.config_get_default(
-                    'label_template', DEFAULT_LABEL_TEMPLATE),
+            self.config_get_default('label_template', DEFAULT_LABEL_TEMPLATE),
         }
-
 
     def issues(self):
         """
@@ -110,10 +101,10 @@ class TrelloService(IssueService):
             fields='name', lists='open', list_fiels='name')
         lists = self.filter_lists(board['lists'])
         # For each of the remaining lists, we get the open cards
-        for list in lists:
-            listextra = dict(boardname=board['name'], listname=list['name'])
+        for lst in lists:
+            listextra = dict(boardname=board['name'], listname=lst['name'])
             cards = self.api_request(
-                "/1/lists/{list_id}/cards/open".format(list_id=list['id']),
+                "/1/lists/{list_id}/cards/open".format(list_id=lst['id']),
                 fields='name,idShort,shortLink,shortUrl,url,labels')
             for card in cards:
                 yield self.get_issue_for_record(card, extra=listextra)
