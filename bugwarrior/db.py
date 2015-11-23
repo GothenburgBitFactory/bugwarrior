@@ -1,4 +1,4 @@
-from ConfigParser import NoOptionError
+from ConfigParser import NoOptionError, NoSectionError
 import os
 import re
 import subprocess
@@ -292,9 +292,8 @@ def run_hooks(conf, name):
 def synchronize(issue_generator, conf, main_section, dry_run=False):
     def _bool_option(section, option, default):
         try:
-            return section in conf.sections() and \
-                asbool(conf.get(section, option, default))
-        except NoOptionError:
+            return asbool(conf.get(section, option))
+        except (NoSectionError, NoOptionError):
             return default
 
     targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
@@ -324,9 +323,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         marshal=True,
     )
 
-    legacy_matching = _bool_option(main_section, 'legacy_matching', 'False')
-    merge_annotations = _bool_option(main_section, 'merge_annotations', 'True')
-    merge_tags = _bool_option(main_section, 'merge_tags', 'True')
+    legacy_matching = _bool_option(main_section, 'legacy_matching', False)
+    merge_annotations = _bool_option(main_section, 'merge_annotations', True)
+    merge_tags = _bool_option(main_section, 'merge_tags', True)
 
     issue_updates = {
         'new': [],
