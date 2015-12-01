@@ -120,9 +120,9 @@ class GitlabIssue(Issue):
         if milestone:
             milestone = milestone['title']
         if created:
-            created = self.parse_date(created)
+            created = self.parse_date(created).replace(microsecond=0)
         if updated:
-            updated = self.parse_date(updated)
+            updated = self.parse_date(updated).replace(microsecond=0)
         if author:
             author = author['username']
         if assignee:
@@ -203,6 +203,10 @@ class GitlabService(IssueService):
         else:
             self.scheme = 'http'
 
+        self.verify_ssl = self.config_get_default(
+            'verify_ssl', default=True, to_type=asbool
+        )
+
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
             self.exclude_repos = [
@@ -274,7 +278,9 @@ class GitlabService(IssueService):
         url = tmpl.format(scheme=self.scheme, host=self.auth[0])
         headers = {'PRIVATE-TOKEN': self.auth[1]}
 
-        response = requests.get(url, headers=headers, **kwargs)
+        if not self.verify_ssl:
+            requests.packages.urllib3.disable_warnings()
+        response = requests.get(url, headers=headers, verify=self.verify_ssl, **kwargs)
 
         if callable(response.json):
             json_res = response.json()
