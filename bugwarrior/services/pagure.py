@@ -144,7 +144,12 @@ class PagureService(IssueService):
         response = requests.get(url)
 
         if not bool(response):
-            raise IOError('Failed to talk to %r %r' % (url, response))
+            error = response.json()
+            code = error['error_code']
+            if code == 'ETRACKERDISABLED':
+                return []
+            else:
+                raise IOError('Failed to talk to %r %r' % (url, error))
 
         issues = []
         for result in response.json()[key2]:
