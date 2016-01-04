@@ -23,3 +23,10 @@ download the latest tarball::
     $ tar -xzvf bugwarrior-latest.tar.gz
     $ cd ralphbean-bugwarrior-*
     $ python setup.py install
+
+Installing from Distribution Packages
+-------------------------------------
+
+bugwarrior has been packaged for Fedora.  You can install it with the standard dnf (yum) package management tools as follows:
+
+    $ sudo dnf install bugwarrior
