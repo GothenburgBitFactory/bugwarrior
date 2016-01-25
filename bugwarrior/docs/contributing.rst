@@ -42,5 +42,4 @@ This will actually run it.. be careful and back up your task directory!
 
 If you're developing, it can be helpful to run the test suite::
 
-    (bugwarrior)$ pip install nose
-    (bugwarrior)$ nosetests
+    (bugwarrior)$ python setup.py nosetests
