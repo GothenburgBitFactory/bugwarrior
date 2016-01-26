@@ -15,7 +15,7 @@ class TestBitbucketIssue(ServiceTest):
     def test_to_taskwarrior(self):
         arbitrary_issue = {
             'priority': 'trivial',
-            'local_id': '100',
+            'id': '100',
             'title': 'Some Title',
         }
         arbitrary_extra = {
@@ -36,7 +36,7 @@ class TestBitbucketIssue(ServiceTest):
             'annotations': arbitrary_extra['annotations'],
 
             issue.URL: arbitrary_extra['url'],
-            issue.FOREIGN_ID: arbitrary_issue['local_id'],
+            issue.FOREIGN_ID: arbitrary_issue['id'],
             issue.TITLE: arbitrary_issue['title'],
         }
         actual_output = issue.to_taskwarrior()
