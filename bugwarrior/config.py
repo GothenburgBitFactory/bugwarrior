@@ -133,7 +133,7 @@ def validate_config(config, main_section):
         get_service(service).validate_config(config, target)
 
 
-def load_config(main_section):
+def load_config(main_section, interactive=False):
     config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
     path = None
     first_path = BaseDirectory.load_first_config('bugwarrior')
@@ -152,7 +152,7 @@ def load_config(main_section):
             "utf-8",
         )
     )
-    config.interactive = False  # TODO: make this a command-line option
+    config.interactive = interactive
     validate_config(config, main_section)
 
     return config
