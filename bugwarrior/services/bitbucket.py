@@ -1,6 +1,7 @@
 import requests
 from twiggy import log
 
+from bugwarrior import data
 from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import asbool, die
 
@@ -65,11 +66,36 @@ class BitbucketService(IssueService):
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
 
-        self.auth = None
-        login = self.config_get('login')
-        password = self.config_get_password('password', login)
 
-        self.auth = (login, password)
+        key = self.config_get_default('key')
+        secret = self.config_get_default('secret')
+        self.auth = {'oauth': (key, secret)}
+
+        refresh_token = data.get('bitbucket_refresh_token')
+
+        if not refresh_token:
+            login = self.config_get('login')
+            password = self.config_get_password('password', login)
+            self.auth['basic'] = (login, password)
+
+        if key and secret:
+            if refresh_token:
+                response = requests.post(
+                    self.BASE_URL + 'site/oauth2/access_token',
+                    data={'grant_type': 'refresh_token',
+                          'refresh_token': refresh_token},
+                    auth=self.auth['oauth']).json()
+            else:
+                response = requests.post(
+                    self.BASE_URL + 'site/oauth2/access_token',
+                    data={'grant_type': 'password',
+                          'username': login,
+                          'password': password},
+                    auth=self.auth['oauth']).json()
+
+                data.set('bitbucket_refresh_token', response['refresh_token'])
+
+            self.auth['token'] = response['access_token']
 
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
@@ -112,7 +138,15 @@ class BitbucketService(IssueService):
 
     def get_data(self, url, **kwargs):
         api = kwargs.get('api', self.BASE_API2)
-        response = requests.get(api + url, auth=self.auth)
+
+        kwargs = {}
+        if 'token' in self.auth:
+            kwargs['headers'] = {
+                'Authorization': 'Bearer ' + self.auth['token']}
+        elif 'basic' in self.auth:
+            kwargs['auth'] = self.auth['basic']
+
+        response = requests.get(api + url, **kwargs)
 
         # And.. if we didn't get good results, just bail.
         if response.status_code != 200:
