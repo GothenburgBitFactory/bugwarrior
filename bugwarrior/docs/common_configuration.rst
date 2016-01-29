@@ -17,7 +17,7 @@ Optional options include:
   Defaults to ``True``.
 * ``annotation_links``: When ``True`` will include a link to the ticket as an
   annotation. Defaults to ``False``.
-* ``annotation_comments``: When ``True`` skips putting issue comments into
+* ``annotation_comments``: When ``False`` skips putting issue comments into
   annotations. Defaults to ``True``.
 * ``legacy_matching``: Set to ``False`` to instruct Bugwarrior to match
   issues using only the issue's unique identifiers (rather than matching
