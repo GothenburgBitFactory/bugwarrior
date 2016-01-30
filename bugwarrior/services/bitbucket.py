@@ -204,7 +204,7 @@ class BitbucketService(IssueService):
         issues = sum([self.fetch_issues(user + "/" + repo) for repo in repos], [])
         log.name(self.target).debug(" Found {0} total.", len(issues))
 
-        closed = ['resolved', 'duplicate', 'wontfix', 'invalid']
+        closed = ['resolved', 'duplicate', 'wontfix', 'invalid', 'closed']
         not_resolved = lambda tup: tup[1]['status'] not in closed
         issues = filter(not_resolved, issues)
         issues = filter(self.include, issues)
