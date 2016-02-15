@@ -188,12 +188,12 @@ class GitlabService(IssueService):
 
         host = self.config_get_default(
             'host', default='gitlab.com', to_type=six.text_type)
-        self.login = self.config_get('login')
+        login = self.config_get('login')
         token = self.config_get('token')
-        if not token or token.startswith('@oracle:'):
+        if token.startswith('@oracle:'):
             token = get_service_password(
-                self.get_keyring_service(self.config, self.target),
-                self.login, oracle=password,
+                self.get_keyring_service(login, host),
+                login, oracle=token,
                 interactive=self.config.interactive
             )
         self.auth = (host, token)
@@ -231,9 +231,8 @@ class GitlabService(IssueService):
             'filter_merge_requests', default=False, to_type=asbool
         )
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        login = config.get(section, cls._get_key('login'))
+    @staticmethod
+    def get_keyring_service(login, host):
         return "gitlab://%s@%s" % (login, host)
 
     def get_service_metadata(self):
