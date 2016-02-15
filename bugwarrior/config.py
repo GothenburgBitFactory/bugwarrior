@@ -56,18 +56,25 @@ def get_service_password(service, username, oracle=None, interactive=False):
         password = getpass.getpass(prompt)
     elif oracle.startswith('@oracle:eval:'):
         command = oracle[13:]
-        p = subprocess.Popen(
-            command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            #stderr=subprocess.STDOUT
-        )
-        password = p.stdout.read()[:-1]
+        return oracle_eval(command)
 
     if password is None:
         die("MISSING PASSWORD: oracle='%s', interactive=%s for service=%s" %
             (oracle, interactive, service))
     return password
+
+
+def oracle_eval(command):
+    """ Retrieve password from the given command """
+    p = subprocess.Popen(
+        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.wait()
+    if p.returncode == 0:
+        return p.stdout.readline().strip()
+    else:
+        die(
+            "Error retrieving password: `{command}` returned '{error}'".format(
+                command=command, error=p.stderr.read().strip()))
 
 
 def load_example_rc():
