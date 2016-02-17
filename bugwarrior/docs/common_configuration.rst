@@ -17,7 +17,7 @@ Optional options include:
   Defaults to ``True``.
 * ``annotation_links``: When ``True`` will include a link to the ticket as an
   annotation. Defaults to ``False``.
-* ``annotation_comments``: When ``True`` skips putting issue comments into
+* ``annotation_comments``: When ``False`` skips putting issue comments into
   annotations. Defaults to ``True``.
 * ``legacy_matching``: Set to ``False`` to instruct Bugwarrior to match
   issues using only the issue's unique identifiers (rather than matching
@@ -29,6 +29,8 @@ Optional options include:
   written.  By default, logging messages will be written to stderr.
 * ``annotation_length``: Import maximally this number of characters
   of incoming annotations.  Default: 45.
+* ``description_length``: Use maximally this number of characters in the
+  description. Default: 35.
 * ``merge_annotations``: If ``False``, bugwarrior won't bother with adding
   annotations to your tasks at all.  Default: ``True``.
 * ``merge_tags``: If ``False``, bugwarrior won't bother with adding
