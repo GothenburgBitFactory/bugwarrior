@@ -159,7 +159,7 @@ def load_config(main_section):
 
 
 def get_taskrc_path(conf, main_section):
-    path = '~/.taskrc'
+    path = os.getenv('TASKRC', '~/.taskrc')
     if conf.has_option(main_section, 'taskrc'):
         path = conf.get(main_section, 'taskrc')
     return os.path.normpath(
