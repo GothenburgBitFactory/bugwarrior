@@ -21,6 +21,13 @@ configuration options described in :ref:`common_configuration_options`.
 Service Features
 ----------------
 
+Sync with a team
+++++++++++++++++
+
+If the ``bitbucket.username`` is the name of a team, you may use it with::
+
+    bitbucket.is_team = True
+
 Include and Exclude Certain Repositories
 ++++++++++++++++++++++++++++++++++++++++
 
