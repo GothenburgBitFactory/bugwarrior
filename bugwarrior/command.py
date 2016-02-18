@@ -32,7 +32,8 @@ def _get_section_name(flavor):
 @click.command()
 @click.option('--dry-run', is_flag=True)
 @click.option('--flavor', default=None, help='The flavor to use')
-def pull(dry_run, flavor):
+@click.option('--interactive', is_flag=True)
+def pull(dry_run, flavor, interactive):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.
 
     Relies on configuration in bugwarriorrc
@@ -42,7 +43,7 @@ def pull(dry_run, flavor):
         main_section = _get_section_name(flavor)
 
         # Load our config file
-        config = load_config(main_section)
+        config = load_config(main_section, interactive)
 
         tw_config = TaskWarriorBase.load_config(get_taskrc_path(config, main_section))
         lockfile_path = os.path.join(
