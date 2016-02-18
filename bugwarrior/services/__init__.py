@@ -13,7 +13,7 @@ from twiggy import log
 
 from taskw.task import Task
 
-from bugwarrior.config import asbool
+from bugwarrior.config import asbool, get_service_password
 from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
 
 
@@ -124,6 +124,9 @@ class IssueService(object):
                 templates[key] = self.config.get(self.target, template_key)
         return templates
 
+    def config_has(self, key):
+        return self.config.has_option(self.target, self._get_key(key))
+
     def config_get_default(self, key, default=None, to_type=None):
         try:
             return self.config_get(key, to_type=to_type)
@@ -135,6 +138,14 @@ class IssueService(object):
         if to_type:
             return to_type(value)
         return value
+
+    def config_get_password(self, key, keyring_service, login):
+        password = self.config_get_default(key)
+        if not password or password.startswith("@oracle:"):
+            password = get_service_password(
+                keyring_service, login, oracle=password,
+                interactive=self.config.interactive)
+        return password
 
     @classmethod
     def _get_key(cls, key):

@@ -5,7 +5,7 @@ import six
 from jinja2 import Template
 from twiggy import log
 
-from bugwarrior.config import asbool, die, get_service_password
+from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
 
 
@@ -189,13 +189,8 @@ class GitlabService(IssueService):
         host = self.config_get_default(
             'host', default='gitlab.com', to_type=six.text_type)
         login = self.config_get('login')
-        token = self.config_get('token')
-        if token.startswith('@oracle:'):
-            token = get_service_password(
-                self.get_keyring_service(login, host),
-                login, oracle=token,
-                interactive=self.config.interactive
-            )
+        token = self.config_get_password(
+            'token', self.get_keyring_service(login, host), login)
         self.auth = (host, token)
 
         if self.config_get_default('use_https', default=True, to_type=asbool):

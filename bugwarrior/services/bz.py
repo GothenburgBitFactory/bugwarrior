@@ -6,7 +6,7 @@ import pytz
 import datetime
 import six
 
-from bugwarrior.config import die, asbool, get_service_password
+from bugwarrior.config import die, asbool
 from bugwarrior.services import IssueService, Issue
 
 
@@ -124,12 +124,10 @@ class BugzillaService(IssueService):
         # to pass that argument or not.
         self.advanced = asbool(self.config_get_default('advanced', 'no'))
 
-        if not self.password or self.password.startswith("@oracle:"):
-            self.password = get_service_password(
-                self.get_keyring_service(self.config, self.target),
-                self.username, oracle=self.password,
-                interactive=self.config.interactive
-            )
+        self.password = self.config_get_password(
+            'password',
+            self.get_keyring_service(self.config, self.target),
+            self.username)
 
         url = 'https://%s/xmlrpc.cgi' % self.base_uri
         self.bz = bugzilla.Bugzilla(url=url)

@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import megaplan
 from twiggy import log
 
-from bugwarrior.config import die, get_service_password
+from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue
 
 
@@ -73,13 +73,10 @@ class MegaplanService(IssueService):
 
         self.hostname = self.config_get('hostname')
         _login = self.config_get('login')
-        _password = self.config_get('password')
-        if not _password or _password.startswith("@oracle:"):
-            _password = get_service_password(
-                self.get_keyring_service(self.config, self.target),
-                _login, oracle=_password,
-                interactive=self.config.interactive
-            )
+        _password = self.config_get_password(
+            'password',
+            self.get_keyring_service(self.config, self.target),
+            _login)
 
         self.client = megaplan.Client(self.hostname)
         self.client.authenticate(_login, _password)

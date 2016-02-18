@@ -4,7 +4,7 @@ import six
 from jinja2 import Template
 from twiggy import log
 
-from bugwarrior.config import asbool, die, get_service_password
+from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
 
 from . import githubutils
@@ -134,24 +134,17 @@ class GithubService(IssueService):
 
         login = self.config_get('login')
         token = self.config_get_default('token')
-        if token:
-            if token.startswith('@oracle:'):
-                username = self.config_get('username')
-                token = get_service_password(
-                    self.get_keyring_service(self.config, self.target),
-                    login, oracle=token,
-                    interactive=self.config.interactive
-                )
+        if self.config_has('token'):
+            token = self.config_get_password(
+                'token',
+                self.get_keyring_service(self.config, self.target),
+                login)
             self.auth['token'] = token
         else:
-            password = self.config_get_default('password')
-            if not password or password.startswith('@oracle:'):
-                username = self.config_get('username')
-                password = get_service_password(
-                    self.get_keyring_service(self.config, self.target),
-                    login, oracle=password,
-                    interactive=self.config.interactive
-                )
+            password = self.config_get_password(
+                'password',
+                self.get_keyring_service(self.config, self.target),
+                login)
             self.auth['basic'] = (login, password)
 
         self.exclude_repos = []
