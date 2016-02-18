@@ -12,11 +12,20 @@ Here's an example of an Bitbucket target::
     [my_issue_tracker]
     service = bitbucket
     bitbucket.username = ralphbean
+    bitbucket.login = ralphbean
     bitbucket.password = mypassword
 
 The above example is the minimum required to import issues from
 Bitbucket.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`.
+
+Note that both ``bitbucket.username`` and ``bitbucket.login`` are required and can be
+set to different values.  ``bitbucket.login`` is used to specify what account
+bugwarrior should use to login to bitbucket.  ``bitbucket.username`` indicates which
+repositories should be scraped.  For instance, I always have ``bitbucket.login``
+set to ralphbean (my account).  But I have some targets with
+``bitbucket.username`` pointed at organizations or other users to watch issues
+there.
 
 Service Features
 ----------------
