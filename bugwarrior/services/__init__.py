@@ -14,7 +14,7 @@ from twiggy import log
 from taskw.task import Task
 
 from bugwarrior.config import asbool, get_service_password
-from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
+from bugwarrior.db import MARKUP, URLShortener
 
 
 # Sentinels for process completion status
@@ -563,9 +563,11 @@ def aggregate_issues(conf, main_section):
             completion_type, args = issue
             if completion_type == SERVICE_FINISHED_ERROR:
                 target, e = args
+                log.name('bugwarrior').info("Terminating workers")
                 for process in processes:
                     process.terminate()
-                yield ABORT_PROCESSING, e
+                raise RuntimeError(
+                    "critical error in target '{}'".format(target))
             currently_running -= 1
             continue
         yield issue
