@@ -71,6 +71,8 @@ def pull(dry_run, flavor, interactive):
                 lockfile_path
             )
         )
+    except RuntimeError as e:
+        log.name('command').critical("Aborted (%s)" % e)
     except:
         log.name('command').trace('error').critical('oh noes')
 

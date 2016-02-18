@@ -501,6 +501,9 @@ def _aggregate_issues(conf, main_section, target, queue, service_name):
         for issue in service.issues():
             queue.put(issue)
             issue_count += 1
+    except SystemExit as e:
+        log.name(target).critical(str(e))
+        queue.put((SERVICE_FINISHED_ERROR, (target, e)))
     except BaseException as e:
         log.name(target).trace('error').critical(
             "Worker for [%s] failed: %s" % (target, e)
