@@ -66,14 +66,13 @@ class BitbucketService(IssueService):
         super(BitbucketService, self).__init__(*args, **kw)
 
         self.auth = None
-        if self.config_get_default('login'):
-            login = self.config_get('login')
-            password = self.config_get_password(
-                'password',
-                self.get_keyring_service(self.config, self.target),
-                login)
+        login = self.config_get('login')
+        password = self.config_get_password(
+            'password',
+            self.get_keyring_service(self.config, self.target),
+            login)
 
-            self.auth = (login, password)
+        self.auth = (login, password)
 
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
@@ -136,6 +135,8 @@ class BitbucketService(IssueService):
     def validate_config(cls, config, target):
         if not config.has_option(target, 'bitbucket.username'):
             die("[%s] has no 'username'" % target)
+        if not config.has_option(target, 'bitbucket.login'):
+            die("[%s] has no 'login'" % target)
 
         IssueService.validate_config(config, target)
 

@@ -6,6 +6,7 @@ from .base import ServiceTest
 class TestBitbucketIssue(ServiceTest):
     SERVICE_CONFIG = {
         'bitbucket.login': 'something',
+        'bitbucket.username': 'somename',
         'bitbucket.password': 'something else',
     }
 
