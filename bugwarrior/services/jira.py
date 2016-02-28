@@ -131,10 +131,7 @@ class JiraService(IssueService):
         super(JiraService, self).__init__(*args, **kw)
         self.username = self.config_get('username')
         self.url = self.config_get('base_uri')
-        password = self.config_get_password(
-            'password',
-            self.get_keyring_service(self.config, self.target),
-            self.username)
+        password = self.config_get_password('password', self.username)
 
         default_query = 'assignee=' + self.username + \
             ' AND resolution is null'

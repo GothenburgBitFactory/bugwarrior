@@ -80,10 +80,7 @@ class TracService(IssueService):
         scheme = self.config_get_default('scheme', default='https')
         username = self.config_get_default('username', default=None)
         if username:
-            password = self.config_get_password(
-                'password',
-                self.get_keyring_service(self.config, self.target),
-                username)
+            password = self.config_get_password('password', username)
 
             auth = urllib.quote_plus('%s:%s' % (username, password)) + '@'
         else:

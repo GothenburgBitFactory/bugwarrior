@@ -135,16 +135,10 @@ class GithubService(IssueService):
         login = self.config_get('login')
         token = self.config_get_default('token')
         if self.config_has('token'):
-            token = self.config_get_password(
-                'token',
-                self.get_keyring_service(self.config, self.target),
-                login)
+            token = self.config_get_password('token', login)
             self.auth['token'] = token
         else:
-            password = self.config_get_password(
-                'password',
-                self.get_keyring_service(self.config, self.target),
-                login)
+            password = self.config_get_password('password', login)
             self.auth['basic'] = (login, password)
 
         self.exclude_repos = []

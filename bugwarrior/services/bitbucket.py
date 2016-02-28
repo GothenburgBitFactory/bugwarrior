@@ -67,10 +67,7 @@ class BitbucketService(IssueService):
 
         self.auth = None
         login = self.config_get('login')
-        password = self.config_get_password(
-            'password',
-            self.get_keyring_service(self.config, self.target),
-            login)
+        password = self.config_get_password('password', login)
 
         self.auth = (login, password)
 
