@@ -1,3 +1,4 @@
+from ConfigParser import NoOptionError
 import re
 import requests
 import six
@@ -226,8 +227,13 @@ class GitlabService(IssueService):
             'filter_merge_requests', default=False, to_type=asbool
         )
 
-    @staticmethod
-    def get_keyring_service(login, host):
+    @classmethod
+    def get_keyring_service(cls, config, section):
+        login = config.get(section, cls._get_key('login'))
+        try:
+            host = config.get(section, cls._get_key('host'))
+        except NoOptionError:
+            host = 'gitlab.com'
         return "gitlab://%s@%s" % (login, host)
 
     def get_service_metadata(self):

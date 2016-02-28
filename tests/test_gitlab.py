@@ -1,10 +1,31 @@
+import ConfigParser
 import datetime
+from unittest2 import TestCase
 
 import pytz
 
 from bugwarrior.services.gitlab import GitlabService
 
 from .base import ServiceTest
+
+
+class TestGitlabService(TestCase):
+
+    def setUp(self):
+        self.config = ConfigParser.RawConfigParser()
+        self.config.add_section('myservice')
+        self.config.set('myservice', 'gitlab.login', 'foobar')
+
+    def test_get_keyring_service_default_host(self):
+        self.assertEqual(
+            GitlabService.get_keyring_service(self.config, 'myservice'),
+            'gitlab://foobar@gitlab.com')
+
+    def test_get_keyring_service_custom_host(self):
+        self.config.set('myservice', 'gitlab.host', 'gitlab.example.com')
+        self.assertEqual(
+            GitlabService.get_keyring_service(self.config, 'myservice'),
+            'gitlab://foobar@gitlab.example.com')
 
 
 class TestGitlabIssue(ServiceTest):
