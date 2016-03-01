@@ -4,7 +4,7 @@ from jinja2 import Template
 from jira.client import JIRA
 import six
 
-from bugwarrior.config import asbool, die, get_service_password
+from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
 
 
@@ -131,13 +131,7 @@ class JiraService(IssueService):
         super(JiraService, self).__init__(*args, **kw)
         self.username = self.config_get('username')
         self.url = self.config_get('base_uri')
-        password = self.config_get('password')
-        if not password or password.startswith("@oracle:"):
-            password = get_service_password(
-                self.get_keyring_service(self.config, self.target),
-                self.username, oracle=password,
-                interactive=self.config.interactive
-            )
+        password = self.config_get_password('password', self.username)
 
         default_query = 'assignee=' + self.username + \
             ' AND resolution is null'

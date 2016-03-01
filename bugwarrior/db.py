@@ -26,10 +26,6 @@ CACHE_REGION = dogpile.cache.make_region().configure(
 )
 
 
-# Sentinel value used for aborting processing of tasks
-ABORT_PROCESSING = 2
-
-
 class URLShortener(object):
     _instance = None
 
@@ -335,8 +331,6 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     }
 
     for issue in issue_generator:
-        if isinstance(issue, tuple) and issue[0] == ABORT_PROCESSING:
-            raise RuntimeError(issue[1])
         try:
             existing_uuid = find_local_uuid(
                 tw, key_list, issue, legacy_matching=legacy_matching

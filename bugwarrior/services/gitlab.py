@@ -1,3 +1,4 @@
+from ConfigParser import NoOptionError
 import re
 import requests
 import six
@@ -5,7 +6,7 @@ import six
 from jinja2 import Template
 from twiggy import log
 
-from bugwarrior.config import asbool, die, get_service_password
+from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
 
 
@@ -188,14 +189,8 @@ class GitlabService(IssueService):
 
         host = self.config_get_default(
             'host', default='gitlab.com', to_type=six.text_type)
-        self.login = self.config_get('login')
-        token = self.config_get('token')
-        if not token or token.startswith('@oracle:'):
-            token = get_service_password(
-                self.get_keyring_service(self.config, self.target),
-                self.login, oracle=password,
-                interactive=self.config.interactive
-            )
+        login = self.config_get('login')
+        token = self.config_get_password('token', login)
         self.auth = (host, token)
 
         if self.config_get_default('use_https', default=True, to_type=asbool):
@@ -234,6 +229,10 @@ class GitlabService(IssueService):
     @classmethod
     def get_keyring_service(cls, config, section):
         login = config.get(section, cls._get_key('login'))
+        try:
+            host = config.get(section, cls._get_key('host'))
+        except NoOptionError:
+            host = 'gitlab.com'
         return "gitlab://%s@%s" % (login, host)
 
     def get_service_metadata(self):

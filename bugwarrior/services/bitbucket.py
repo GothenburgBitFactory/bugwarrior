@@ -2,7 +2,7 @@ import requests
 from twiggy import log
 
 from bugwarrior.services import IssueService, Issue
-from bugwarrior.config import asbool, die, get_service_password
+from bugwarrior.config import asbool, die
 
 
 class BitbucketIssue(Issue):
@@ -66,17 +66,10 @@ class BitbucketService(IssueService):
         super(BitbucketService, self).__init__(*args, **kw)
 
         self.auth = None
-        if self.config_get_default('login'):
-            login = self.config_get('login')
-            password = self.config_get_default('password')
-            if not password or password.startswith('@oracle:'):
-                username = self.config_get('username')
-                password = get_service_password(
-                    self.get_keyring_service(self.config, self.target),
-                    login, oracle=password,
-                    interactive=self.config.interactive)
+        login = self.config_get('login')
+        password = self.config_get_password('password', login)
 
-            self.auth = (login, password)
+        self.auth = (login, password)
 
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
@@ -139,6 +132,8 @@ class BitbucketService(IssueService):
     def validate_config(cls, config, target):
         if not config.has_option(target, 'bitbucket.username'):
             die("[%s] has no 'username'" % target)
+        if not config.has_option(target, 'bitbucket.login'):
+            die("[%s] has no 'login'" % target)
 
         IssueService.validate_config(config, target)
 

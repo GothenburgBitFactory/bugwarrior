@@ -5,7 +5,7 @@ import requests
 from twiggy import log
 import urllib
 
-from bugwarrior.config import die, get_service_password
+from bugwarrior.config import die
 from bugwarrior.services import Issue, IssueService
 
 
@@ -80,13 +80,7 @@ class TracService(IssueService):
         scheme = self.config_get_default('scheme', default='https')
         username = self.config_get_default('username', default=None)
         if username:
-            password = self.config_get('password')
-            if not password or password.startswith('@oracle:'):
-                password = get_service_password(
-                    self.get_keyring_service(self.config, self.target),
-                    username, oracle=password,
-                    interactive=self.config.interactive
-                )
+            password = self.config_get_password('password', username)
 
             auth = urllib.quote_plus('%s:%s' % (username, password)) + '@'
         else:
