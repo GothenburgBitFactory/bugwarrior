@@ -17,7 +17,7 @@ before_install:
   - pip install mock
   - pip install unittest2
   - cd $TRAVIS_BUILD_DIR
-install: python setup.py install
+install: pip install .[jira,megaplan,activecollab]
 script: nosetests -w tests
 notifications:
     email: true

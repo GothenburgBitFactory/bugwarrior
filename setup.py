@@ -44,11 +44,12 @@ setup(name='bugwarrior',
           "lockfile>=0.9.1",
           "click",
           "pyxdg",
-          "jira>=0.22",
-          "megaplan>=1.4",
-          "pypandoc",
-          "pyac",
       ],
+      extras_require=dict(
+          jira=["jira>=0.22"],
+          megaplan=["megaplan>=1.4"],
+          activecollab=["pypandoc", "pyac"]
+      ),
       tests_require=[
           "Mock",
           "unittest2",
