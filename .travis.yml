@@ -13,6 +13,7 @@ before_install:
   - sudo make install
   - sudo apt-get install -qq pandoc
   - task --version
+  - pip install --upgrade pip
   - pip install taskw
   - pip install mock
   - pip install unittest2
