@@ -50,6 +50,10 @@ a comma-separated (no spaces) list of PHIDs.
 
 If you specify both, you will get tasks and diffs that match one **or** the other.
 
+When working on a Phabricator installations with a huge number of users or projects,
+it is recommended that you specify ``phabricator.user_phids`` and/or ``phabricator.project_phids``,
+as the Phabricator API may return a timeout for a query with too many results.
+
 If you do not know PHID of a user, project or repository,
 you can find it out by querying Phabricator Conduit
 (``https://YOUR_PHABRICATOR_HOST/conduit/``) --
