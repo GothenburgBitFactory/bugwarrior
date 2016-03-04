@@ -13,15 +13,12 @@ before_install:
   - sudo make install
   - sudo apt-get install -qq pandoc
   - task --version
+  - pip install --upgrade pip
   - pip install taskw
   - pip install mock
   - pip install unittest2
-  - pip install megaplan
-  - pip install jira
-  - pip install pypandoc
-  - pip install pyac
   - cd $TRAVIS_BUILD_DIR
-install: python setup.py install
+install: pip install .[jira,megaplan,activecollab]
 script: nosetests -w tests
 notifications:
     email: true

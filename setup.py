@@ -39,20 +39,20 @@ setup(name='bugwarrior',
           "keyring",
           "six",
           "jinja2>=2.7.2",
-          "pycurl",
           "dogpile.cache>=0.5.3",
           "lockfile>=0.9.1",
           "click",
           "pyxdg",
       ],
+      extras_require=dict(
+          jira=["jira>=0.22"],
+          megaplan=["megaplan>=1.4"],
+          activecollab=["pypandoc", "pyac"]
+      ),
       tests_require=[
           "Mock",
           "unittest2",
           "nose",
-          "jira>=0.22",
-          "megaplan>=1.4",
-          "pypandoc",
-          "pyac"
       ],
       test_suite='nose.collector',
       entry_points="""
