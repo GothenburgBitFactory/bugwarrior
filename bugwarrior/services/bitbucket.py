@@ -185,8 +185,10 @@ class BitbucketService(IssueService):
         log.name(self.target).debug(" Found {0} total.", len(issues))
 
         closed = ['resolved', 'duplicate', 'wontfix', 'invalid', 'closed']
-        not_resolved = lambda tup: tup[1]['status'] not in closed
-        issues = filter(not_resolved, issues)
+        try:
+            issues = filter(lambda tup: tup[1]['status'] not in closed, issues)
+        except KeyError:  # Undocumented API change.
+            issues = filter(lambda tup: tup[1]['state'] not in closed, issues)
         issues = filter(self.include, issues)
         log.name(self.target).debug(" Pruned down to {0}", len(issues))
 
