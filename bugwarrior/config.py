@@ -174,5 +174,9 @@ def get_taskrc_path(conf, main_section):
     )
 
 
+def get_data_path():
+    return os.path.expanduser(os.getenv('TASKDATA', '~/.task'))
+
+
 # This needs to be imported here and not above to avoid a circular-import.
 from bugwarrior.services import get_service

@@ -9,9 +9,7 @@ import getpass
 import keyring
 import click
 
-from taskw.warrior import TaskWarriorBase
-
-from bugwarrior.config import get_taskrc_path, load_config
+from bugwarrior.config import get_data_path, load_config
 from bugwarrior.services import aggregate_issues, get_service
 from bugwarrior.db import (
     get_defined_udas_as_strings,
@@ -45,14 +43,7 @@ def pull(dry_run, flavor, interactive):
         # Load our config file
         config = load_config(main_section, interactive)
 
-        tw_config = TaskWarriorBase.load_config(get_taskrc_path(config, main_section))
-        lockfile_path = os.path.join(
-            os.path.expanduser(
-                tw_config['data']['location']
-            ),
-            'bugwarrior.lockfile'
-        )
-
+        lockfile_path = os.path.join(get_data_path(), 'bugwarrior.lockfile')
         lockfile = PIDLockFile(lockfile_path)
         lockfile.acquire(timeout=10)
         try:
