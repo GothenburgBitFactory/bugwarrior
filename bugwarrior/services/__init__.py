@@ -521,7 +521,7 @@ def _aggregate_issues(conf, main_section, target, queue, service_name):
         log.name(target).info("Done with [%s] in %fs" % (target, duration))
 
 
-def aggregate_issues(conf, main_section):
+def aggregate_issues(conf, main_section, debug):
     """ Return all issues from every target. """
     log.name('bugwarrior').info("Starting to aggregate remote issues.")
 
@@ -533,10 +533,7 @@ def aggregate_issues(conf, main_section):
     log.name('bugwarrior').info("Spawning %i workers." % len(targets))
     processes = []
 
-    if (
-        conf.has_option(main_section, 'development')
-        and asbool(conf.get(main_section, 'development'))
-    ):
+    if debug:
         for target in targets:
             _aggregate_issues(
                 conf,
