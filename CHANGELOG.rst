@@ -1,4 +1,143 @@
 
+1.4.0
+-----
+
+Pull Requests
+
+- (@gdetrez)        #253, Update instructions to get a github token
+  https://github.com/ralphbean/bugwarrior/pull/253
+- (@muxync)         #260, Ignore microseconds for gitlab
+  https://github.com/ralphbean/bugwarrior/pull/260
+- (@muxync)         #258, Add gitlab.host to example Gitlab target
+  https://github.com/ralphbean/bugwarrior/pull/258
+- (@sayanchowdhury) #255, Fix documentation for pagure
+  https://github.com/ralphbean/bugwarrior/pull/255
+- (@muxync)         #261, add verify_ssl option to gitlab service
+  https://github.com/ralphbean/bugwarrior/pull/261
+- (@gdetrez)        #266, Add missing test dependencies
+  https://github.com/ralphbean/bugwarrior/pull/266
+- (@gdetrez)        #265, Fix some subtle option parsing problems:
+  https://github.com/ralphbean/bugwarrior/pull/265
+- (@gdetrez)        #264, Fix the broken tests
+  https://github.com/ralphbean/bugwarrior/pull/264
+- (@bexelbie)       #269, Add information about Fedora Package
+  https://github.com/ralphbean/bugwarrior/pull/269
+- (@ryneeverett)    #273, Minimal CI and documentation fixes.
+  https://github.com/ralphbean/bugwarrior/pull/273
+- (@ryneeverett)    #274, Use TASKRC environmental variable when assigned.
+  https://github.com/ralphbean/bugwarrior/pull/274
+- (@ryneeverett)    #275, bitbucket.login is a required setting
+  https://github.com/ralphbean/bugwarrior/pull/275
+- (@ryneeverett)    #277, Add --interactive flag to bugwarrior-pull.
+  https://github.com/ralphbean/bugwarrior/pull/277
+- (@ryneeverett)    #281, Bitbucket closed status
+  https://github.com/ralphbean/bugwarrior/pull/281
+- (@ryneeverett)    #276, bitbucket: More v2 API. Progress on #129.
+  https://github.com/ralphbean/bugwarrior/pull/276
+- (@gdetrez)        #285, Password oracle improvements
+  https://github.com/ralphbean/bugwarrior/pull/285
+- (@johl)           #286, Avoid time out with Phabricator installations with huge userbase
+  https://github.com/ralphbean/bugwarrior/pull/286
+- (@gdetrez)        #287, Move some test dependencies to install dependencies
+  https://github.com/ralphbean/bugwarrior/pull/287
+- (@ryneeverett)    #290, Add Coveralls coverage testing to CI.
+  https://github.com/ralphbean/bugwarrior/pull/290
+- (@ryneeverett)    #289, Fix nosetests.
+  https://github.com/ralphbean/bugwarrior/pull/289
+- (@ryneeverett)    #288, Fix bitbucket undocumented API change.
+  https://github.com/ralphbean/bugwarrior/pull/288
+- (@ryneeverett)    #280, Bitbucket OAuth. Resolve #201.
+  https://github.com/ralphbean/bugwarrior/pull/280
+- (@ryneeverett)    #291, Fix #254 "Edit on Github" documentation links.
+  https://github.com/ralphbean/bugwarrior/pull/291
+
+Commits
+
+- c79d7e1c8 Update instructions to get a github token
+  https://github.com/ralphbean/bugwarrior/commit/c79d7e1c8
+- 43aa33755 Fix documentation for pagure
+  https://github.com/ralphbean/bugwarrior/commit/43aa33755
+- 812300ac5 add gitlab.host to example Gitlab target
+  https://github.com/ralphbean/bugwarrior/commit/812300ac5
+- 20ef13da0 ignore microseconds for gitlab to prevent issue updates on every bugwarrior-pull
+  https://github.com/ralphbean/bugwarrior/commit/20ef13da0
+- a67e7eebc add verify_ssl option to gitlab service
+  https://github.com/ralphbean/bugwarrior/commit/a67e7eebc
+- f3b9eba04 Fix the broken tests
+  https://github.com/ralphbean/bugwarrior/commit/f3b9eba04
+- a86e6e392 Add missing test dependencies
+  https://github.com/ralphbean/bugwarrior/commit/a86e6e392
+- 7d90c1925 Fix some subtle option parsing problems:
+  https://github.com/ralphbean/bugwarrior/commit/7d90c1925
+- aa91974e8 Handle pagure repos with disabled trackers.
+  https://github.com/ralphbean/bugwarrior/commit/aa91974e8
+- a6462057b Merge branch 'develop' of github.com:ralphbean/bugwarrior into develop
+  https://github.com/ralphbean/bugwarrior/commit/a6462057b
+- 8bf4b4cf7 Add information about Fedora Package
+  https://github.com/ralphbean/bugwarrior/commit/8bf4b4cf7
+- 96435cd57 Fix test command documentation.
+  https://github.com/ralphbean/bugwarrior/commit/96435cd57
+- 00c660924 Drop python 2.6 support to fix travis build.
+  https://github.com/ralphbean/bugwarrior/commit/00c660924
+- f1cfad268 Use TASKRC environmental variable when assigned.
+  https://github.com/ralphbean/bugwarrior/commit/f1cfad268
+- 69362e312 Fix docs typo.
+  https://github.com/ralphbean/bugwarrior/commit/69362e312
+- d8a82d2b8 Document description_length option.
+  https://github.com/ralphbean/bugwarrior/commit/d8a82d2b8
+- f48f489fc bitbucket.login is a required setting
+  https://github.com/ralphbean/bugwarrior/commit/f48f489fc
+- b8032db9d Add --interactive flag to bugwarrior-pull.
+  https://github.com/ralphbean/bugwarrior/commit/b8032db9d
+- a0e4b74cb Bitbucket: add 'closed' status.
+  https://github.com/ralphbean/bugwarrior/commit/a0e4b74cb
+- 1b5b71496 bitbucket: More v2 API. Progress on #129.
+  https://github.com/ralphbean/bugwarrior/commit/1b5b71496
+- 0b91ff2d9 Fix using @oracle with gitlab
+  https://github.com/ralphbean/bugwarrior/commit/0b91ff2d9
+- 544dae6fa Improve feedback using @oracle:eval
+  https://github.com/ralphbean/bugwarrior/commit/544dae6fa
+- cfd85ab08 Extract method config_get_password
+  https://github.com/ralphbean/bugwarrior/commit/cfd85ab08
+- 4903451aa Push exception raising
+  https://github.com/ralphbean/bugwarrior/commit/4903451aa
+- bf6b3ad7f Fix hang when a service die
+  https://github.com/ralphbean/bugwarrior/commit/bf6b3ad7f
+- ca19b58c8 Supress stack trace for SystemExit and RuntimeError
+  https://github.com/ralphbean/bugwarrior/commit/ca19b58c8
+- bd4e33434 If self.shown_user_phids or self.shown_project_phids is set, retrict API calls to user_phids or project_phids to avoid time out with Phabricator installations with huge userbase.
+  https://github.com/ralphbean/bugwarrior/commit/bd4e33434
+- a48f01cf3 Fix bitbucket test
+  https://github.com/ralphbean/bugwarrior/commit/a48f01cf3
+- a65a26af6 Refactor the get_keyring_service method in gitlab
+  https://github.com/ralphbean/bugwarrior/commit/a65a26af6
+- 8516f968c Call self.get_keyring_service in IssueService.config_get_password
+  https://github.com/ralphbean/bugwarrior/commit/8516f968c
+- 8cf8950de Move some test dependencies to install dependencies
+  https://github.com/ralphbean/bugwarrior/commit/8cf8950de
+- 022713932 Add jira, megaplan and activecollab deps as extras
+  https://github.com/ralphbean/bugwarrior/commit/022713932
+- fad124f6f Upgrade the pip version on travis
+  https://github.com/ralphbean/bugwarrior/commit/fad124f6f
+- 0e6a153ad Update install documentation
+  https://github.com/ralphbean/bugwarrior/commit/0e6a153ad
+- 4c04c0c1a Remove unused dependency pycurl
+  https://github.com/ralphbean/bugwarrior/commit/4c04c0c1a
+- ef1935c03 Clearified documentation for Phabricator.
+  https://github.com/ralphbean/bugwarrior/commit/ef1935c03
+- d02d507fd Fix bitbucket undocumented API change.
+  https://github.com/ralphbean/bugwarrior/commit/d02d507fd
+- a03db792c Add extras back to tests_require.
+  https://github.com/ralphbean/bugwarrior/commit/a03db792c
+- 623a02a25 Add Coveralls coverage testing to CI.
+  https://github.com/ralphbean/bugwarrior/commit/623a02a25
+- a6fa41d68 Bitbucket OAuth. Resolve #201.
+  https://github.com/ralphbean/bugwarrior/commit/a6fa41d68
+- e2dfc826f Data store improvements.
+  https://github.com/ralphbean/bugwarrior/commit/e2dfc826f
+- 65895fbd2 Fix #254 "Edit on Github" documentation links.
+  https://github.com/ralphbean/bugwarrior/commit/65895fbd2
+
 1.3.0
 -----
 

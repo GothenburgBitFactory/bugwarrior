@@ -1,3 +1,4 @@
+from ConfigParser import NoOptionError
 import re
 import requests
 import six
@@ -5,7 +6,7 @@ import six
 from jinja2 import Template
 from twiggy import log
 
-from bugwarrior.config import asbool, die, get_service_password
+from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
 
 
@@ -120,9 +121,9 @@ class GitlabIssue(Issue):
         if milestone:
             milestone = milestone['title']
         if created:
-            created = self.parse_date(created)
+            created = self.parse_date(created).replace(microsecond=0)
         if updated:
-            updated = self.parse_date(updated)
+            updated = self.parse_date(updated).replace(microsecond=0)
         if author:
             author = author['username']
         if assignee:
@@ -188,20 +189,18 @@ class GitlabService(IssueService):
 
         host = self.config_get_default(
             'host', default='gitlab.com', to_type=six.text_type)
-        self.login = self.config_get('login')
-        token = self.config_get('token')
-        if not token or token.startswith('@oracle:'):
-            token = get_service_password(
-                self.get_keyring_service(self.config, self.target),
-                self.login, oracle=password,
-                interactive=self.config.interactive
-            )
+        login = self.config_get('login')
+        token = self.config_get_password('token', login)
         self.auth = (host, token)
 
         if self.config_get_default('use_https', default=True, to_type=asbool):
             self.scheme = 'https'
         else:
             self.scheme = 'http'
+
+        self.verify_ssl = self.config_get_default(
+            'verify_ssl', default=True, to_type=asbool
+        )
 
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
@@ -230,6 +229,10 @@ class GitlabService(IssueService):
     @classmethod
     def get_keyring_service(cls, config, section):
         login = config.get(section, cls._get_key('login'))
+        try:
+            host = config.get(section, cls._get_key('host'))
+        except NoOptionError:
+            host = 'gitlab.com'
         return "gitlab://%s@%s" % (login, host)
 
     def get_service_metadata(self):
@@ -274,7 +277,9 @@ class GitlabService(IssueService):
         url = tmpl.format(scheme=self.scheme, host=self.auth[0])
         headers = {'PRIVATE-TOKEN': self.auth[1]}
 
-        response = requests.get(url, headers=headers, **kwargs)
+        if not self.verify_ssl:
+            requests.packages.urllib3.disable_warnings()
+        response = requests.get(url, headers=headers, verify=self.verify_ssl, **kwargs)
 
         if callable(response.json):
             json_res = response.json()

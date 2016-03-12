@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '1.3.0'
+version = '1.4.0'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -39,18 +39,23 @@ setup(name='bugwarrior',
           "keyring",
           "six",
           "jinja2>=2.7.2",
-          "pycurl",
           "dogpile.cache>=0.5.3",
           "lockfile>=0.9.1",
           "click",
           "pyxdg",
       ],
+      extras_require=dict(
+          jira=["jira>=0.22"],
+          megaplan=["megaplan>=1.4"],
+          activecollab=["pypandoc", "pyac"]
+      ),
       tests_require=[
           "Mock",
           "unittest2",
           "nose",
-          "jira>=0.22",
-          "megaplan>=1.4",
+          "bugwarrior[jira]",
+          "bugwarrior[megaplan]",
+          "bugwarrior[activecollab]",
       ],
       test_suite='nose.collector',
       entry_points="""

@@ -56,18 +56,25 @@ def get_service_password(service, username, oracle=None, interactive=False):
         password = getpass.getpass(prompt)
     elif oracle.startswith('@oracle:eval:'):
         command = oracle[13:]
-        p = subprocess.Popen(
-            command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            #stderr=subprocess.STDOUT
-        )
-        password = p.stdout.read()[:-1]
+        return oracle_eval(command)
 
     if password is None:
         die("MISSING PASSWORD: oracle='%s', interactive=%s for service=%s" %
             (oracle, interactive, service))
     return password
+
+
+def oracle_eval(command):
+    """ Retrieve password from the given command """
+    p = subprocess.Popen(
+        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.wait()
+    if p.returncode == 0:
+        return p.stdout.readline().strip()
+    else:
+        die(
+            "Error retrieving password: `{command}` returned '{error}'".format(
+                command=command, error=p.stderr.read().strip()))
 
 
 def load_example_rc():
@@ -133,7 +140,7 @@ def validate_config(config, main_section):
         get_service(service).validate_config(config, target)
 
 
-def load_config(main_section):
+def load_config(main_section, interactive=False):
     config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
     path = None
     first_path = BaseDirectory.load_first_config('bugwarrior')
@@ -152,19 +159,23 @@ def load_config(main_section):
             "utf-8",
         )
     )
-    config.interactive = False  # TODO: make this a command-line option
+    config.interactive = interactive
     validate_config(config, main_section)
 
     return config
 
 
 def get_taskrc_path(conf, main_section):
-    path = '~/.taskrc'
+    path = os.getenv('TASKRC', '~/.taskrc')
     if conf.has_option(main_section, 'taskrc'):
         path = conf.get(main_section, 'taskrc')
     return os.path.normpath(
         os.path.expanduser(path)
     )
+
+
+def get_data_path():
+    return os.path.expanduser(os.getenv('TASKDATA', '~/.task'))
 
 
 # This needs to be imported here and not above to avoid a circular-import.

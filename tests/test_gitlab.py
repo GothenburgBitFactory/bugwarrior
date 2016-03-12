@@ -1,10 +1,31 @@
+import ConfigParser
 import datetime
+from unittest2 import TestCase
 
 import pytz
 
 from bugwarrior.services.gitlab import GitlabService
 
 from .base import ServiceTest
+
+
+class TestGitlabService(TestCase):
+
+    def setUp(self):
+        self.config = ConfigParser.RawConfigParser()
+        self.config.add_section('myservice')
+        self.config.set('myservice', 'gitlab.login', 'foobar')
+
+    def test_get_keyring_service_default_host(self):
+        self.assertEqual(
+            GitlabService.get_keyring_service(self.config, 'myservice'),
+            'gitlab://foobar@gitlab.com')
+
+    def test_get_keyring_service_custom_host(self):
+        self.config.set('myservice', 'gitlab.host', 'gitlab.example.com')
+        self.assertEqual(
+            GitlabService.get_keyring_service(self.config, 'myservice'),
+            'gitlab://foobar@gitlab.example.com')
 
 
 class TestGitlabIssue(ServiceTest):
@@ -86,15 +107,15 @@ class TestGitlabIssue(ServiceTest):
             'project': self.arbitrary_extra['project'],
             'priority': self.service.default_priority,
             'annotations': [],
-            'tags': ['feature'],
+            'tags': [u'feature'],
             issue.URL: self.arbitrary_extra['issue_url'],
             issue.REPO: 'project',
             issue.STATE: self.arbitrary_issue['state'],
             issue.TYPE: self.arbitrary_extra['type'],
             issue.TITLE: self.arbitrary_issue['title'],
             issue.NUMBER: self.arbitrary_issue['iid'],
-            issue.UPDATED_AT: self.arbitrary_updated,
-            issue.CREATED_AT: self.arbitrary_created,
+            issue.UPDATED_AT: self.arbitrary_updated.replace(microsecond=0),
+            issue.CREATED_AT: self.arbitrary_created.replace(microsecond=0),
             issue.DESCRIPTION: self.arbitrary_issue['description'],
             issue.MILESTONE: self.arbitrary_issue['milestone']['title'],
             issue.UPVOTES: 0,

@@ -1,6 +1,5 @@
 language: python
 python:
- - "2.6"
  - "2.7"
 before_install:
   - sudo apt-get update -qq
@@ -14,16 +13,17 @@ before_install:
   - sudo make install
   - sudo apt-get install -qq pandoc
   - task --version
+  - pip install --upgrade pip
   - pip install taskw
   - pip install mock
   - pip install unittest2
-  - pip install megaplan
-  - pip install jira
-  - pip install pypandoc
-  - pip install pyac
   - cd $TRAVIS_BUILD_DIR
-install: python setup.py install
-script: nosetests -w tests
+install:
+  - pip install .[jira,megaplan,activecollab]
+  - pip install coveralls
+  - pip install coverage
+script: nosetests -w tests --with-coverage --cover-package=bugwarrior
+after_success: coveralls
 notifications:
     email: true
     irc:

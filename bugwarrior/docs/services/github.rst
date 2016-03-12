@@ -29,7 +29,7 @@ set to ralphbean (my account).  But I have some targets with
 there.
 
 If two-factor authentication is used, ``github.token`` must be given rather
-than ``github.password``. To get a token, go to the "Applications" section of
+than ``github.password``. To get a token, go to the "Personal access tokens" section of
 your profile settings. Only the ``public_repo`` scope is required, but access
 to private repos can be gained with ``repo`` as well.
 

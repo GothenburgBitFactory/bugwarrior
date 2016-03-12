@@ -1,4 +1,4 @@
-from ConfigParser import NoOptionError
+from ConfigParser import NoOptionError, NoSectionError
 import os
 import re
 import subprocess
@@ -24,10 +24,6 @@ CACHE_REGION = dogpile.cache.make_region().configure(
     "dogpile.cache.dbm",
     arguments=dict(filename=DOGPILE_CACHE_PATH),
 )
-
-
-# Sentinel value used for aborting processing of tasks
-ABORT_PROCESSING = 2
 
 
 class URLShortener(object):
@@ -292,9 +288,8 @@ def run_hooks(conf, name):
 def synchronize(issue_generator, conf, main_section, dry_run=False):
     def _bool_option(section, option, default):
         try:
-            return section in conf.sections() and \
-                asbool(conf.get(section, option, default))
-        except NoOptionError:
+            return asbool(conf.get(section, option))
+        except (NoSectionError, NoOptionError):
             return default
 
     targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
@@ -324,9 +319,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         marshal=True,
     )
 
-    legacy_matching = _bool_option(main_section, 'legacy_matching', 'False')
-    merge_annotations = _bool_option(main_section, 'merge_annotations', 'True')
-    merge_tags = _bool_option(main_section, 'merge_tags', 'True')
+    legacy_matching = _bool_option(main_section, 'legacy_matching', False)
+    merge_annotations = _bool_option(main_section, 'merge_annotations', True)
+    merge_tags = _bool_option(main_section, 'merge_tags', True)
 
     issue_updates = {
         'new': [],
@@ -336,8 +331,6 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     }
 
     for issue in issue_generator:
-        if isinstance(issue, tuple) and issue[0] == ABORT_PROCESSING:
-            raise RuntimeError(issue[1])
         try:
             existing_uuid = find_local_uuid(
                 tw, key_list, issue, legacy_matching=legacy_matching

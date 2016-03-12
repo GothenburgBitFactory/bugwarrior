@@ -3,7 +3,7 @@ from v1pysdk.none_deref import NoneDeref
 from six.moves.urllib import parse
 
 from bugwarrior.services import IssueService, Issue, LOCAL_TIMEZONE
-from bugwarrior.config import die, get_service_password
+from bugwarrior.config import die
 
 
 class VersionOneIssue(Issue):
@@ -186,13 +186,7 @@ class VersionOneService(IssueService):
         self.address = parsed_address.netloc
         self.instance = parsed_address.path.strip('/')
         self.username = self.config_get('username')
-        self.password = self.config_get_default('password')
-        if not self.password or self.password.startswith('@oracle:'):
-            self.password = get_service_password(
-                self.get_keyring_service(self.config, self.target),
-                self.username, oracle=self.password,
-                interactive=self.config.interactive
-            )
+        self.password = self.config_get_password('password', self.username)
 
         self.timezone = self.config_get_default(
             'timezone',

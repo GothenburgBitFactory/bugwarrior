@@ -13,6 +13,7 @@ Here's an example of a Gitlab target::
     service = gitlab
     gitlab.login = ralphbean
     gitlab.token = OMG_LULZ
+    gitlab.host = gitlab.com
 
 The above example is the minimum required to import issues from
 Gitlab.  You can also feel free to use any of the
@@ -88,6 +89,13 @@ Use HTTP
 If your Gitlab instance is only available over HTTP, set::
 
     gitlab.use_https = False
+
+Do Not Verify SSL Certificate
++++++++++++++++++++++++++++++
+
+If want to ignore verifying the SSL certificate, set::
+
+    gitlab.verify_ssl = False
 
 
 Provided UDA Fields

@@ -74,9 +74,23 @@ class PhabricatorService(IssueService):
 
         # TODO -- get a list of these from the api
         projects = {}
-
-        issues = self.api.maniphest.query(status='status-open')
-        issues = list(issues.iteritems())
+        # If self.shown_user_phids or self.shown_project_phids is set, retrict API calls to user_phids or project_phids
+        # to avoid time out with Phabricator installations with huge userbase
+        if (self.shown_user_phids is not None) or (self.shown_project_phids is not None):
+            if self.shown_user_phids is not None:
+                issues_owner = self.api.maniphest.query(status='status-open', ownerPHIDs=self.shown_user_phids)
+                issues_cc = self.api.maniphest.query(status='status-open', ccPHIDs=self.shown_user_phids)
+                issues_author = self.api.maniphest.query(status='status-open', authorPHIDs=self.shown_user_phids)
+                issues = list(list(issues_owner.iteritems()) + list(issues_cc.iteritems()) + list(issues_author.iteritems()))
+                # Delete duplicates
+                seen = set()
+                issues = [item for item in issues if str(item[1]) not in seen and not seen.add(str(item[1]))]
+            if self.shown_project_phids is not None:
+                issues = self.api.maniphest.query(status='status-open', projectsPHIDs = self.shown_project_phids)
+                issues = list(issues.iteritems())
+        else:
+            issues = self.api.maniphest.query(status='status-open')
+            issues = list(issues.iteritems())
 
         log.name(self.target).info("Found %i issues" % len(issues))
 

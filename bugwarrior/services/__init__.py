@@ -13,8 +13,8 @@ from twiggy import log
 
 from taskw.task import Task
 
-from bugwarrior.config import asbool
-from bugwarrior.db import MARKUP, URLShortener, ABORT_PROCESSING
+from bugwarrior.config import asbool, get_service_password
+from bugwarrior.db import MARKUP, URLShortener
 
 
 # Sentinels for process completion status
@@ -124,6 +124,9 @@ class IssueService(object):
                 templates[key] = self.config.get(self.target, template_key)
         return templates
 
+    def config_has(self, key):
+        return self.config.has_option(self.target, self._get_key(key))
+
     def config_get_default(self, key, default=None, to_type=None):
         try:
             return self.config_get(key, to_type=to_type)
@@ -135,6 +138,15 @@ class IssueService(object):
         if to_type:
             return to_type(value)
         return value
+
+    def config_get_password(self, key, login):
+        password = self.config_get_default(key)
+        keyring_service = self.get_keyring_service(self.config, self.target),
+        if not password or password.startswith("@oracle:"):
+            password = get_service_password(
+                keyring_service, login, oracle=password,
+                interactive=self.config.interactive)
+        return password
 
     @classmethod
     def _get_key(cls, key):
@@ -490,7 +502,10 @@ def _aggregate_issues(conf, main_section, target, queue, service_name):
         for issue in service.issues():
             queue.put(issue)
             issue_count += 1
-    except Exception as e:
+    except SystemExit as e:
+        log.name(target).critical(str(e))
+        queue.put((SERVICE_FINISHED_ERROR, (target, e)))
+    except BaseException as e:
         log.name(target).trace('error').critical(
             "Worker for [%s] failed: %s" % (target, e)
         )
@@ -552,9 +567,11 @@ def aggregate_issues(conf, main_section):
             completion_type, args = issue
             if completion_type == SERVICE_FINISHED_ERROR:
                 target, e = args
+                log.name('bugwarrior').info("Terminating workers")
                 for process in processes:
                     process.terminate()
-                yield ABORT_PROCESSING, e
+                raise RuntimeError(
+                    "critical error in target '{}'".format(target))
             currently_running -= 1
             continue
         yield issue
