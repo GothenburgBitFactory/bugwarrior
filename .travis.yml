@@ -16,6 +16,7 @@ before_install:
   - pip install --upgrade pip
   - pip install taskw
   - pip install mock
+  - pip install responses
   - cd $TRAVIS_BUILD_DIR
 install:
   - pip install .[jira,megaplan,activecollab]
