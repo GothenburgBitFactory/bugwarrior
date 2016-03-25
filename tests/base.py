@@ -1,8 +1,8 @@
 import mock
-import unittest2
+import unittest
 
 
-class ServiceTest(unittest2.TestCase):
+class ServiceTest(unittest.TestCase):
     GENERAL_CONFIG = {
         'annotation_length': 100,
         'description_length': 100,
