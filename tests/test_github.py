@@ -1,6 +1,7 @@
 import datetime
 
 import pytz
+import responses
 
 from bugwarrior.services.github import GithubService
 
@@ -16,11 +17,13 @@ class TestGithubIssue(ServiceTest):
     }
     arbitrary_created = (
         datetime.datetime.utcnow() - datetime.timedelta(hours=1)
-    ).replace(tzinfo=pytz.UTC)
-    arbitrary_updated = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+    ).replace(tzinfo=pytz.UTC, microsecond=0)
+    arbitrary_updated = datetime.datetime.utcnow().replace(
+        tzinfo=pytz.UTC, microsecond=0)
     arbitrary_issue = {
         'title': 'Hallo',
         'html_url': 'http://whanot.com/',
+        'url': 'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/1',
         'number': 10,
         'body': 'Something',
         'milestone': {'id': 'alpha'},
@@ -71,3 +74,52 @@ class TestGithubIssue(ServiceTest):
         actual_output = issue.to_taskwarrior()
 
         self.assertEqual(actual_output, expected_output)
+
+    @responses.activate
+    def test_issues(self):
+        responses.add(
+            responses.GET,
+            'https://api.github.com/users/arbitrary_username/repos?per_page=100',
+            match_querystring=True,
+            json=[{'name': 'arbitrary_repo'}])
+
+        responses.add(
+            responses.GET,
+            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues?per_page=100',
+            match_querystring=True,
+            json=[self.arbitrary_issue])
+
+        responses.add(
+            responses.GET,
+            'https://api.github.com/user/issues?per_page=100',
+            match_querystring=True,
+            json=[self.arbitrary_issue])
+
+        responses.add(
+            responses.GET,
+            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',
+            match_querystring=True,
+            json=[{
+                'user': {'login': 'arbitrary_login'},
+                'body': 'Arbitrary comment.'
+            }])
+
+        issue = next(self.service.issues())
+
+        self.assertEqual(issue['project'], 'arbitrary_repo')
+        self.assertEqual(issue['githubcreatedon'], self.arbitrary_created)
+        self.assertEqual(issue['githubnumber'], 10)
+        self.assertEqual(issue['githubtitle'], 'Hallo')
+        self.assertEqual(issue['tags'], [])
+        self.assertEqual(issue['githubtype'], 'issue')
+        self.assertEqual(issue['githubbody'], 'Something')
+        self.assertEqual(issue['priority'], 'M')
+        self.assertEqual(issue['githuburl'], 'http://whanot.com/')
+        self.assertEqual(issue['githubupdatedat'], self.arbitrary_updated)
+        self.assertEqual(
+            issue['githubrepo'], 'arbitrary_username/arbitrary_repo')
+        self.assertEqual(issue['githubmilestone'], 'alpha')
+        self.assertEqual(
+            issue['annotations'], ['@arbitrary_login - Arbitrary comment.'])
+        self.assertEqual(
+            issue['description'], '(bw)Is#10 - Hallo .. http://whanot.com/')
