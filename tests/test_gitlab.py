@@ -3,6 +3,7 @@ import datetime
 from unittest import TestCase
 
 import pytz
+import responses
 
 from bugwarrior.services.gitlab import GitlabService
 
@@ -37,8 +38,9 @@ class TestGitlabIssue(ServiceTest):
     }
     arbitrary_created = (
         datetime.datetime.utcnow() - datetime.timedelta(hours=1)
-    ).replace(tzinfo=pytz.UTC)
-    arbitrary_updated = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+    ).replace(tzinfo=pytz.UTC, microsecond=0)
+    arbitrary_updated = datetime.datetime.utcnow().replace(
+        tzinfo=pytz.UTC, microsecond=0)
     arbitrary_issue = {
         "id": 42,
         "iid": 3,
@@ -127,3 +129,55 @@ class TestGitlabIssue(ServiceTest):
         actual_output = issue.to_taskwarrior()
 
         self.assertEqual(actual_output, expected_output)
+
+    @responses.activate
+    def test_issues(self):
+        responses.add(
+            responses.GET,
+            'https://gitlab.example.com/api/v3/projects?per_page=100&page=1',
+            match_querystring=True,
+            json=[{
+                'id': 1,
+                'path': 'arbitrary_username/project',
+                'web_url': 'example.com'
+            }])
+
+        responses.add(
+            responses.GET,
+            'https://gitlab.example.com/api/v3/projects/1/issues?per_page=100&page=1',
+            match_querystring=True,
+            json=[self.arbitrary_issue])
+
+        responses.add(
+            responses.GET,
+            'https://gitlab.example.com/api/v3/projects/1/issues/42/notes?per_page=100&page=1',
+            match_querystring=True,
+            json=[{
+                'author': {'username': 'john_smith'},
+                'body': 'Some comment.'
+            }])
+
+        issue = next(self.service.issues())
+
+        self.assertEqual(issue['project'], 'arbitrary_username/project')
+        self.assertEqual(issue['gitlabrepo'], 'arbitrary_username/project')
+        self.assertEqual(
+            issue['description'],
+            '(bw)Is#3 - Add user settings .. example.com/issues/3')
+        self.assertEqual(issue['tags'], [])
+        self.assertEqual(issue['gitlabupvotes'], 0)
+        self.assertEqual(issue['gitlaburl'], 'example.com/issues/3')
+        self.assertEqual(issue['gitlabcreatedon'], self.arbitrary_created)
+        self.assertEqual(issue['gitlabmilestone'], 'v1.0')
+        self.assertEqual(issue['gitlabtitle'], 'Add user settings')
+        self.assertEqual(issue['priority'], 'M')
+        self.assertEqual(issue['gitlabwip'], 0)
+        self.assertEqual(issue['gitlabstate'], 'opened')
+        self.assertEqual(issue['gitlabauthor'], 'john_smith')
+        self.assertEqual(issue['gitlabnumber'], 3)
+        self.assertEqual(issue['gitlabdescription'], '')
+        self.assertEqual(issue['gitlabassignee'], 'jack_smith')
+        self.assertEqual(issue['gitlabtype'], 'issue')
+        self.assertEqual(issue['annotations'], ['@john_smith - Some comment.'])
+        self.assertEqual(issue['gitlabupdatedat'], self.arbitrary_updated)
+        self.assertEqual(issue['gitlabdownvotes'], 0)
