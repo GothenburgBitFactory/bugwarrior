@@ -1,10 +1,10 @@
-import unittest2
+import unittest
 
 import taskw.task
 from bugwarrior.db import merge_left
 
 
-class DBTest(unittest2.TestCase):
+class DBTest(unittest.TestCase):
     def setUp(self):
         self.issue_dict = {'annotations': ['testing']}
 
