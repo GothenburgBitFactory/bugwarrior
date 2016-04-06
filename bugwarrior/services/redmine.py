@@ -1,9 +1,5 @@
-import base64
-import urllib
-import urllib2
-import json
-
 import six
+import requests
 from twiggy import log
 
 from bugwarrior.config import die
@@ -22,22 +18,30 @@ class RedMineClient(object):
             args["assigned_to_id"] = user_id
         return self.call_api("/issues.json", args)["issues"]
 
-    def call_api(self, uri, get=None):
+    def call_api(self, uri, params):
         url = self.url.rstrip("/") + uri
-
-        if get:
-            url += "?" + urllib.urlencode(get)
-
-        req = urllib2.Request(url)
-        req.add_header("X-Redmine-API-Key", self.key)
+        kwargs = {
+            'headers': {'X-Redmine-API-Key': self.key},
+            'params': params}
 
         if self.auth:
-            base64string = base64.encodestring('%s:%s' % self.auth).rstrip()
-            req.add_header("Authorization", "Basic %s" % base64string)
+            kwargs['auth'] = self.auth
 
-        res = urllib2.urlopen(req)
+        response = requests.get(url, **kwargs)
 
-        return json.loads(res.read())
+        # And.. if we didn't get good results, just bail.
+        if response.status_code != 200:
+            raise IOError(
+                "Non-200 status code %r; %r; %r" % (
+                    response.status_code, url, response.text,
+                )
+            )
+        if callable(response.json):
+            # Newer python-requests
+            return response.json()
+        else:
+            # Older python-requests
+            return response.json
 
 
 class RedMineIssue(Issue):
