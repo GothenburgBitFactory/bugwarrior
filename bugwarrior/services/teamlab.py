@@ -3,10 +3,10 @@ import requests
 from twiggy import log
 
 from bugwarrior.config import die
-from bugwarrior.services import Issue, IssueService
+from bugwarrior.services import Issue, IssueService, ServiceClient
 
 
-class TeamLabClient(object):
+class TeamLabClient(ServiceClient):
     def __init__(self, hostname, verbose=False):
         self.hostname = hostname
         self.verbose = verbose
@@ -34,19 +34,7 @@ class TeamLabClient(object):
         response = (requests.post(uri, data=post, **kwargs) if post
                     else requests.get(uri, **kwargs))
 
-        # And.. if we didn't get good results, just bail.
-        if response.status_code != 200:
-            raise IOError(
-                "Non-200 status code %r; %r; %r" % (
-                    response.status_code, uri, response.text,
-                )
-            )
-        if callable(response.json):
-            # Newer python-requests
-            return response.json()
-        else:
-            # Older python-requests
-            return response.json
+        return self.json_response(response, uri)
 
 
 class TeamLabIssue(Issue):

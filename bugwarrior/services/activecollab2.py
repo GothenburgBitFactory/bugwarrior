@@ -5,11 +5,11 @@ import six
 import requests
 from twiggy import log
 
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import IssueService, Issue, ServiceClient
 from bugwarrior.config import die
 
 
-class ActiveCollab2Client(object):
+class ActiveCollab2Client(ServiceClient):
     def __init__(self, url, key, user_id, projects):
         self.url = url
         self.key = key
@@ -71,21 +71,7 @@ class ActiveCollab2Client(object):
             'path_info': uri,
             'format': 'json'}
 
-        response = requests.get(url, params=params)
-
-        # And.. if we didn't get good results, just bail.
-        if response.status_code != 200:
-            raise IOError(
-                "Non-200 status code %r; %r; %r" % (
-                    response.status_code, url, response.text,
-                )
-            )
-        if callable(response.json):
-            # Newer python-requests
-            return response.json()
-        else:
-            # Older python-requests
-            return response.json
+        return self.json_response(requests.get(url, params=params), url)
 
 
 class ActiveCollab2Issue(Issue):

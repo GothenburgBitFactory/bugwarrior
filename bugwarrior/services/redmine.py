@@ -3,10 +3,10 @@ import requests
 from twiggy import log
 
 from bugwarrior.config import die
-from bugwarrior.services import Issue, IssueService
+from bugwarrior.services import Issue, IssueService, ServiceClient
 
 
-class RedMineClient(object):
+class RedMineClient(ServiceClient):
     def __init__(self, url, key, auth):
         self.url = url
         self.key = key
@@ -27,21 +27,7 @@ class RedMineClient(object):
         if self.auth:
             kwargs['auth'] = self.auth
 
-        response = requests.get(url, **kwargs)
-
-        # And.. if we didn't get good results, just bail.
-        if response.status_code != 200:
-            raise IOError(
-                "Non-200 status code %r; %r; %r" % (
-                    response.status_code, url, response.text,
-                )
-            )
-        if callable(response.json):
-            # Newer python-requests
-            return response.json()
-        else:
-            # Older python-requests
-            return response.json
+        return self.json_response(requests.get(url, **kwargs), url)
 
 
 class RedMineIssue(Issue):

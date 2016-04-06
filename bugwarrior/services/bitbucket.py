@@ -2,7 +2,7 @@ import requests
 from twiggy import log
 
 from bugwarrior import data
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import IssueService, Issue, ServiceClient
 from bugwarrior.config import asbool, die
 
 
@@ -55,7 +55,7 @@ class BitbucketIssue(Issue):
         )
 
 
-class BitbucketService(IssueService):
+class BitbucketService(IssueService, ServiceClient):
     ISSUE_CLASS = BitbucketIssue
     CONFIG_PREFIX = 'bitbucket'
 
@@ -145,21 +145,7 @@ class BitbucketService(IssueService):
         elif 'basic' in self.auth:
             kwargs['auth'] = self.auth['basic']
 
-        response = requests.get(api + url, **kwargs)
-
-        # And.. if we didn't get good results, just bail.
-        if response.status_code != 200:
-            raise IOError(
-                "Non-200 status code %r; %r; %r" % (
-                    response.status_code, url, response.text,
-                )
-            )
-        if callable(response.json):
-            # Newer python-requests
-            return response.json()
-        else:
-            # Older python-requests
-            return response.json
+        return self.json_response(requests.get(api + url, **kwargs), url)
 
     @classmethod
     def validate_config(cls, config, target):

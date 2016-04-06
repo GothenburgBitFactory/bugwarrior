@@ -7,7 +7,7 @@ from jinja2 import Template
 from twiggy import log
 
 from bugwarrior.config import asbool, die
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import IssueService, Issue, ServiceClient
 
 
 class GitlabIssue(Issue):
@@ -180,7 +180,7 @@ class GitlabIssue(Issue):
         )
 
 
-class GitlabService(IssueService):
+class GitlabService(IssueService, ServiceClient):
     ISSUE_CLASS = GitlabIssue
     CONFIG_PREFIX = 'gitlab'
 
@@ -281,17 +281,7 @@ class GitlabService(IssueService):
             requests.packages.urllib3.disable_warnings()
         response = requests.get(url, headers=headers, verify=self.verify_ssl, **kwargs)
 
-        if callable(response.json):
-            json_res = response.json()
-        else:
-            json_res = response.json
-
-        if response.status_code != 200:
-            raise IOError(
-                "Non-200 status code %r; %r; %r" %(
-                    response.status_code, url, json_res))
-
-        return json_res
+        return self.json_response(response, url)
 
     def _fetch_paged(self, tmpl):
         params = {

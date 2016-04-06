@@ -488,6 +488,23 @@ class Issue(object):
         return '<%s>' % self.__unicode__()
 
 
+class ServiceClient(object):
+    @staticmethod
+    def json_response(response, url):
+        # If we didn't get good results, just bail.
+        if response.status_code != 200:
+            raise IOError(
+                "Non-200 status code %r; %r; %r" % (
+                    response.status_code, url, response.text,
+                ))
+        if callable(response.json):
+            # Newer python-requests
+            return response.json()
+        else:
+            # Older python-requests
+            return response.json
+
+
 def _aggregate_issues(conf, main_section, target, queue, service_name):
     """ This worker function is separated out from the main
     :func:`aggregate_issues` func only so that we can use multiprocessing
