@@ -1,8 +1,5 @@
-import urllib
-import urllib2
-import json
-
 import six
+import requests
 from twiggy import log
 
 from bugwarrior.config import die
@@ -10,9 +7,10 @@ from bugwarrior.services import Issue, IssueService
 
 
 class RedMineClient(object):
-    def __init__(self, url, key):
+    def __init__(self, url, key, auth):
         self.url = url
         self.key = key
+        self.auth = auth
 
     def find_issues(self, user_id=None):
         args = {}
@@ -20,18 +18,30 @@ class RedMineClient(object):
             args["assigned_to_id"] = user_id
         return self.call_api("/issues.json", args)["issues"]
 
-    def call_api(self, uri, get=None):
+    def call_api(self, uri, params):
         url = self.url.rstrip("/") + uri
+        kwargs = {
+            'headers': {'X-Redmine-API-Key': self.key},
+            'params': params}
 
-        if get:
-            url += "?" + urllib.urlencode(get)
+        if self.auth:
+            kwargs['auth'] = self.auth
 
-        req = urllib2.Request(url)
-        req.add_header("X-Redmine-API-Key", self.key)
+        response = requests.get(url, **kwargs)
 
-        res = urllib2.urlopen(req)
-
-        return json.loads(res.read())
+        # And.. if we didn't get good results, just bail.
+        if response.status_code != 200:
+            raise IOError(
+                "Non-200 status code %r; %r; %r" % (
+                    response.status_code, url, response.text,
+                )
+            )
+        if callable(response.json):
+            # Newer python-requests
+            return response.json()
+        else:
+            # Older python-requests
+            return response.json
 
 
 class RedMineIssue(Issue):
@@ -109,7 +119,11 @@ class RedMineService(IssueService):
         self.key = self.config_get('key')
         self.user_id = self.config_get('user_id')
 
-        self.client = RedMineClient(self.url, self.key)
+        login = self.config_get_default('login')
+        if login:
+            password = self.config_get_password('password', login)
+        auth = (login, password) if (login and password) else None
+        self.client = RedMineClient(self.url, self.key, auth)
 
         self.project_name = self.config_get_default('project_name')
 
@@ -118,6 +132,13 @@ class RedMineService(IssueService):
             'project_name': self.project_name,
             'url': self.url,
         }
+
+    @classmethod
+    def get_keyring_service(cls, config, section):
+        url = config.get(section, cls._get_key('url'))
+        login = config.get(section, cls._get_key('login'))
+        user_id = config.get(section, cls._get_key('user_id'))
+        return "redmine://%s@%s/%s" % (login, url, user_id)
 
     @classmethod
     def validate_config(cls, config, target):

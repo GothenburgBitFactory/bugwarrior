@@ -66,7 +66,6 @@ class BitbucketService(IssueService):
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
 
-
         key = self.config_get_default('key')
         secret = self.config_get_default('secret')
         self.auth = {'oauth': (key, secret)}
