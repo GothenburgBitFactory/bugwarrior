@@ -10,9 +10,13 @@ from bugwarrior.services import Issue, IssueService
 
 
 class RedMineClient(object):
-    def __init__(self, url, key):
+    def __init__(self, url, key, **kw):
         self.url = url
         self.key = key
+
+        if "basic_auth_username" in kw and "basic_auth_password" in kw:
+            self.basic_auth_username = kw["basic_auth_username"]
+            self.basic_auth_password = kw["basic_auth_password"]
 
     def find_issues(self, user_id=None):
         args = {}
@@ -28,6 +32,11 @@ class RedMineClient(object):
 
         req = urllib2.Request(url)
         req.add_header("X-Redmine-API-Key", self.key)
+
+        if hasattr(self, 'basic_auth_username') and hasattr(self, 'basic_auth_password'):
+            import base64
+            base64string = base64.encodestring('%s:%s' % (self.basic_auth_username, self.basic_auth_password)).replace('\n', '')
+            req.add_header("Authorization", "Basic %s" % base64string)
 
         res = urllib2.urlopen(req)
 
@@ -108,8 +117,10 @@ class RedMineService(IssueService):
         self.url = self.config_get('url').rstrip("/")
         self.key = self.config_get('key')
         self.user_id = self.config_get('user_id')
+        self.basic_auth_username = self.config_get('basic_auth_username')
+        self.basic_auth_password = self.config_get_password('password', self.basic_auth_username)
 
-        self.client = RedMineClient(self.url, self.key)
+        self.client = RedMineClient(self.url, self.key, basic_auth_username=self.basic_auth_username, basic_auth_password=self.basic_auth_password)
 
         self.project_name = self.config_get_default('project_name')
 
@@ -118,6 +129,11 @@ class RedMineService(IssueService):
             'project_name': self.project_name,
             'url': self.url,
         }
+
+    @classmethod
+    def get_keyring_service(cls, config, section):
+        url = config.get(section, cls._get_key('url'))
+        return section
 
     @classmethod
     def validate_config(cls, config, target):

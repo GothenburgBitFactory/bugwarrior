@@ -141,7 +141,7 @@ class IssueService(object):
 
     def config_get_password(self, key, login):
         password = self.config_get_default(key)
-        keyring_service = self.get_keyring_service(self.config, self.target),
+        keyring_service = self.get_keyring_service(self.config, self.target)
         if not password or password.startswith("@oracle:"):
             password = get_service_password(
                 keyring_service, login, oracle=password,
