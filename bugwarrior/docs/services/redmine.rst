@@ -20,6 +20,9 @@ The above example is the minimum required to import issues from
 Redmine.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`.
 
+There are also `redmine.login`/`redmine.password` settings if your
+instance is behind basic auth.
+
 Provided UDA Fields
 -------------------
 
