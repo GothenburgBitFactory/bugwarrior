@@ -17,6 +17,7 @@ It currently supports the following remote resources:
  - `teamlab <https://www.teamlab.com/>`_
  - `redmine <https://www.redmine.org/>`_
  - `jira <https://www.atlassian.com/software/jira/overview>`_
+ - `taiga <https://taiga.io>`_
  - `activecollab <https://www.activecollab.com>`_ (2.x and 4.x)
  - `phabricator <http://phabricator.org/>`_
  - `versionone <http://www.versionone.com/>`_
