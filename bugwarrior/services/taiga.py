@@ -23,7 +23,7 @@ class TaigaIssue(Issue):
             'label': 'Taiga URL',
         },
         FOREIGN_ID: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'Taiga Issue ID'
         },
     }
