@@ -1,8 +1,5 @@
-import json
-import urllib
-import urllib2
-
 import six
+import requests
 from twiggy import log
 
 from bugwarrior.config import die
@@ -27,29 +24,29 @@ class TeamLabClient(object):
         resp = self.call_api("/api/1.0/project/task/@self.json")
         return resp
 
-    def call_api(self, uri, post=None, get=None):
+    def call_api(self, uri, post=None, params=None):
         uri = "http://" + self.hostname + uri
+        kwargs = {'params': params}
 
-        if post is None:
-            data = None
+        if self.token:
+            kwargs['headers'] = {'Authorization': self.token}
+
+        response = (requests.post(uri, data=post, **kwargs) if post
+                    else requests.get(uri, **kwargs))
+
+        # And.. if we didn't get good results, just bail.
+        if response.status_code != 200:
+            raise IOError(
+                "Non-200 status code %r; %r; %r" % (
+                    response.status_code, uri, response.text,
+                )
+            )
+        if callable(response.json):
+            # Newer python-requests
+            return response.json()
         else:
-            data = urllib.urlencode(post)
-
-        if get is not None:
-            uri += "?" + urllib.urlencode(get)
-
-        req = urllib2.Request(uri, data)
-        if self.token is not None:
-            req.add_header("Authorization", self.token)
-        req.add_header("Accept", "application/json")
-
-        res = urllib2.urlopen(req)
-        if res.getcode() >= 400:
-            raise Exception("Error accessing the API: %s" % res.read())
-
-        response = res.read()
-
-        return json.loads(response)["response"]
+            # Older python-requests
+            return response.json
 
 
 class TeamLabIssue(Issue):

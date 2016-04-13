@@ -1,9 +1,8 @@
 import itertools
-import json
 import time
-import urllib2
 
 import six
+import requests
 from twiggy import log
 
 from bugwarrior.services import IssueService, Issue
@@ -65,13 +64,28 @@ class ActiveCollab2Client(object):
                     "' to task list.")
                 yield assigned_task
 
-    def call_api(self, uri, get=None):
-        url = self.url.rstrip("/") + "?token=" + self.key + \
-            "&path_info=" + uri + "&format=json"
-        req = urllib2.Request(url)
-        res = urllib2.urlopen(req)
+    def call_api(self, uri):
+        url = self.url.rstrip("/")
+        params = {
+            'token': self.key,
+            'path_info': uri,
+            'format': 'json'}
 
-        return json.loads(res.read())
+        response = requests.get(url, params=params)
+
+        # And.. if we didn't get good results, just bail.
+        if response.status_code != 200:
+            raise IOError(
+                "Non-200 status code %r; %r; %r" % (
+                    response.status_code, url, response.text,
+                )
+            )
+        if callable(response.json):
+            # Newer python-requests
+            return response.json()
+        else:
+            # Older python-requests
+            return response.json
 
 
 class ActiveCollab2Issue(Issue):
