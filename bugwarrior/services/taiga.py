@@ -62,6 +62,10 @@ class TaigaService(IssueService):
             'label_template', default='{{label}}', to_type=six.text_type
         )
         self.session = requests.session()
+        self.session.headers.update({
+            'Accept': 'application/json',
+            'Authorization': 'Bearer %s' % self.auth_token,
+        })
 
     @classmethod
     def get_keyring_service(cls, config, section):
@@ -82,20 +86,14 @@ class TaigaService(IssueService):
 
         IssueService.validate_config(config, target)
 
-    def headers(self):
-        return {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer %s' % self.auth_token,
-        }
-
     def issues(self):
         url = self.url + '/api/v1/users/me'
-        me = self.session.get(url, headers=self.headers())
+        me = self.session.get(url)
         userid = me.json()['id']
 
         url = self.url + '/api/v1/userstories'
         params = dict(assigned_to=userid, status__is_closed="false")
-        response = self.session.get(url, params=params, headers=self.headers())
+        response = self.session.get(url, params=params)
         stories = response.json()
 
         for story in stories:
@@ -110,7 +108,7 @@ class TaigaService(IssueService):
     @cache.cache_on_arguments()
     def get_project(self, project_id):
         url = '%s/api/v1/projects/%i' % (self.url, project_id)
-        response = self.session.get(url, headers=self.headers())
+        response = self.session.get(url)
         if not bool(response):
             raise IOError("Failed to talk to %r, %r" % (url, response))
         return response.json()
@@ -120,7 +118,7 @@ class TaigaService(IssueService):
 
     def annotations(self, story, project):
         url = '%s/api/v1/history/userstory/%i' % (self.url, story['id'])
-        response = self.session.get(url, headers=self.headers())
+        response = self.session.get(url)
         history = response.json()
         return self.build_annotations(
             ((
