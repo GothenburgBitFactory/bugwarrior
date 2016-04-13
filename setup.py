@@ -76,5 +76,6 @@ setup(name='bugwarrior',
       phabricator=bugwarrior.services.phab:PhabricatorService
       versionone=bugwarrior.services.versionone:VersionOneService
       pagure=bugwarrior.services.pagure:PagureService
+      taiga=bugwarrior.services.taiga:TaigaService
       """,
       )
