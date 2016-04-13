@@ -139,7 +139,7 @@ class IssueService(object):
             return to_type(value)
         return value
 
-    def config_get_password(self, key, login):
+    def config_get_password(self, key, login='nousername'):
         password = self.config_get_default(key)
         keyring_service = self.get_keyring_service(self.config, self.target)
         if not password or password.startswith("@oracle:"):
