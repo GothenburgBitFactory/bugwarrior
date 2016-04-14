@@ -5,7 +5,7 @@ import six
 
 from bugwarrior.db import CACHE_REGION as cache
 from bugwarrior.config import die
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import IssueService, Issue, ServiceClient
 
 
 class TaigaIssue(Issue):
@@ -50,7 +50,7 @@ class TaigaIssue(Issue):
         )
 
 
-class TaigaService(IssueService):
+class TaigaService(IssueService, ServiceClient):
     ISSUE_CLASS = TaigaIssue
     CONFIG_PREFIX = 'taiga'
 
@@ -108,10 +108,7 @@ class TaigaService(IssueService):
     @cache.cache_on_arguments()
     def get_project(self, project_id):
         url = '%s/api/v1/projects/%i' % (self.url, project_id)
-        response = self.session.get(url)
-        if not bool(response):
-            raise IOError("Failed to talk to %r, %r" % (url, response))
-        return response.json()
+        return self.json_response(self.session.get(url))
 
     def build_url(self, story, project):
         return '%s/project/%s/us/%i' % (self.url, project['slug'], story['ref'])
