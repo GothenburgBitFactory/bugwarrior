@@ -195,33 +195,19 @@ class IssueService(object):
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
+        only_if_assigned = self.config.get(
+            self.target, 'only_if_assigned', None)
 
-        # TODO -- evaluate cleaning this up.  It's the ugliest stretch of code
-        # in here.
+        if only_if_assigned:
+            owner = self.get_owner(issue)
+            include_owners = [only_if_assigned]
 
-        only_if_assigned, also_unassigned = None, None
-        try:
-            only_if_assigned = self.config.get(
-                self.target, 'only_if_assigned')
-        except Exception:
-            pass
+            if self.config.getboolean(self.target, 'also_unassigned', None):
+                include_owners.append(None)
 
-        try:
-            also_unassigned = self.config.getboolean(
-                self.target, 'also_unassigned')
-        except Exception:
-            pass
+            return owner in include_owners
 
-        if only_if_assigned and also_unassigned:
-            return self.get_owner(issue) in [only_if_assigned, None]
-        elif only_if_assigned and not also_unassigned:
-            return self.get_owner(issue) in [only_if_assigned]
-        elif not only_if_assigned and also_unassigned:
-            return True
-        elif not only_if_assigned and not also_unassigned:
-            return True
-        else:
-            pass  # Impossible to get here.
+        return True
 
     def get_owner(self, issue):
         """ Override this for filtering on tickets """
