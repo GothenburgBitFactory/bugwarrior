@@ -220,12 +220,16 @@ class GithubService(IssueService):
 
     def annotations(self, tag, issue, issue_obj):
         url = issue['html_url']
-        comments = self._comments(tag, issue['number'])
-        return self.build_annotations(
-            ((
+        annotations = []
+        if self.annotation_comments:
+            comments = self._comments(tag, issue['number'])
+            log.name(self.target).debug(" got comments for {0}", issue['html_url'])
+            annotations = ((
                 c['user']['login'],
                 c['body'],
             ) for c in comments),
+        return self.build_annotations(
+            annotations,
             issue_obj.get_processed_url(url)
         )
 
