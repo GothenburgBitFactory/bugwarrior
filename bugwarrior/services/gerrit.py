@@ -92,6 +92,8 @@ class GerritService(IssueService, ServiceClient):
         IssueService.validate_config(config, target)
 
     def issues(self):
+        # Construct the whole url by hand here, because otherwise requests will
+        # percent-encode the ':' characters, which gerrit doesn't like.
         url = self.url + '/a/changes/' + \
             '?q=is:open+is:reviewer' + \
             '&o=MESSAGES&o=DETAILED_ACCOUNTS'
