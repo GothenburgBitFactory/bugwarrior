@@ -227,7 +227,7 @@ class GithubService(IssueService):
             annotations = ((
                 c['user']['login'],
                 c['body'],
-            ) for c in comments),
+            ) for c in comments)
         return self.build_annotations(
             annotations,
             issue_obj.get_processed_url(url)
