@@ -96,7 +96,9 @@ class GerritService(IssueService, ServiceClient):
             '?q=is:open+is:reviewer' + \
             '&o=MESSAGES&o=DETAILED_ACCOUNTS'
         response = self.session.get(url)
-        changes = json.loads(response.text[4:])
+        # The response has some ")]}'" garbage prefixed.
+        body = response.text[4:]
+        changes = json.loads(body)
 
         for change in changes:
             extra = {
