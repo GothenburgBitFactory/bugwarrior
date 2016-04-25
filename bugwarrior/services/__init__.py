@@ -196,7 +196,7 @@ class IssueService(object):
     def include(self, issue):
         """ Return true if the issue in question should be included """
         only_if_assigned = self.config_get_default(
-            'only_if_assigned', None, asbool)
+            'only_if_assigned', None)
 
         if only_if_assigned:
             owner = self.get_owner(issue)
