@@ -77,5 +77,6 @@ setup(name='bugwarrior',
       versionone=bugwarrior.services.versionone:VersionOneService
       pagure=bugwarrior.services.pagure:PagureService
       taiga=bugwarrior.services.taiga:TaigaService
+      gerrit=bugwarrior.services.gerrit:GerritService
       """,
       )

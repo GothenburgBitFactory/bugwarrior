@@ -18,6 +18,7 @@ It currently supports the following remote resources:
  - `redmine <https://www.redmine.org/>`_
  - `jira <https://www.atlassian.com/software/jira/overview>`_
  - `taiga <https://taiga.io>`_
+ - `gerrit <https://www.gerritcodereview.com/>`_
  - `activecollab <https://www.activecollab.com>`_ (2.x and 4.x)
  - `phabricator <http://phabricator.org/>`_
  - `versionone <http://www.versionone.com/>`_
