@@ -191,12 +191,17 @@ class IssueService(object):
     @classmethod
     def validate_config(cls, config, target):
         """ Validate generic options for a particular target """
-        pass
+        if config.has_option(target, 'only_if_assigned'):
+            die("[%s] has a 'only_if_assigned' option.  Should be "
+                "'%s.only_if_assigned'." % (target, cls.CONFIG_PREFIX))
+        if config.has_option(target, 'also_unassigned'):
+            die("[%s] has a 'also_unassigned' option.  Should be "
+                "'%s.also_unassigned'." % (target, cls.CONFIG_PREFIX))
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
         only_if_assigned = self.config_get_default(
-            'only_if_assigned', None, asbool)
+            'only_if_assigned', None)
 
         if only_if_assigned:
             owner = self.get_owner(issue)
