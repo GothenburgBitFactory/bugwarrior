@@ -108,7 +108,7 @@ class TaigaService(IssueService, ServiceClient):
     @cache.cache_on_arguments()
     def get_project(self, project_id):
         url = '%s/api/v1/projects/%i' % (self.url, project_id)
-        return self.json_response(self.session.get(url))
+        return self.json_response(self.session.get(url), url)
 
     def build_url(self, story, project):
         return '%s/project/%s/us/%i' % (self.url, project['slug'], story['ref'])
@@ -124,4 +124,3 @@ class TaigaService(IssueService, ServiceClient):
             ) for item in history if item['comment']),
             self.build_url(story, project)
         )
-
