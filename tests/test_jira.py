@@ -4,7 +4,7 @@ import mock
 
 from bugwarrior.services.jira import JiraService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
 class FakeJiraClient(object):
@@ -19,7 +19,7 @@ class FakeJiraClient(object):
         return None
 
 
-class TestJiraIssue(ServiceTest):
+class TestJiraIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'jira.username': 'one',
         'jira.base_uri': 'two',

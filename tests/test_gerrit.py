@@ -3,10 +3,10 @@ import json
 import responses
 
 from bugwarrior.services.gerrit import GerritService
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
-class TestGerritIssue(ServiceTest):
+class TestGerritIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'gerrit.base_uri': 'https://one',
         'gerrit.username': 'two',

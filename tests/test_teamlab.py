@@ -3,10 +3,10 @@ import responses
 
 from bugwarrior.services.teamlab import TeamLabService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
-class TestTeamlabIssue(ServiceTest):
+class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'teamlab.hostname': 'something',
         'teamlab.login': 'alkjdsf',

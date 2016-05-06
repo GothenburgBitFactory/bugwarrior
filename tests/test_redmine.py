@@ -3,10 +3,10 @@ import responses
 
 from bugwarrior.services.redmine import RedMineService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
-class TestRedmineIssue(ServiceTest):
+class TestRedmineIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'redmine.url': 'https://something',
         'redmine.key': 'something_else',

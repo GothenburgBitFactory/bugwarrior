@@ -2,10 +2,10 @@ import responses
 
 from bugwarrior.services.taiga import TaigaService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
-class TestTaigaIssue(ServiceTest):
+class TestTaigaIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'taiga.base_uri': 'https://one',
         'taiga.auth_token': 'two',

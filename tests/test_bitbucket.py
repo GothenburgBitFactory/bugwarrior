@@ -2,10 +2,10 @@ import responses
 
 from bugwarrior.services.bitbucket import BitbucketService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
-class TestBitbucketIssue(ServiceTest):
+class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'bitbucket.login': 'something',
         'bitbucket.username': 'somename',

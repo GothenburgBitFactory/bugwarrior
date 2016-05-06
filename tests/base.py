@@ -2,6 +2,24 @@ import mock
 import unittest
 
 
+class AbstractServiceTest(object):
+    """ Ensures that certain test methods are implemented for each service. """
+    def test_to_taskwarrior(self):
+        """ Test Service.to_taskwarrior(). """
+        raise NotImplementedError
+
+    def test_issues(self):
+        """
+        Test Service.issues().
+
+        - When the API is accessed via requests, use the responses library to
+        mock requests.
+        - When the API is accessed via a third party library, substitute a fake
+        implementation class for it.
+        """
+        raise NotImplementedError
+
+
 class ServiceTest(unittest.TestCase):
     GENERAL_CONFIG = {
         'annotation_length': 100,

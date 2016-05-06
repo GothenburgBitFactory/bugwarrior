@@ -7,7 +7,7 @@ import responses
 
 from bugwarrior.services.gitlab import GitlabService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
 class TestGitlabService(TestCase):
@@ -29,7 +29,7 @@ class TestGitlabService(TestCase):
             'gitlab://foobar@gitlab.example.com')
 
 
-class TestGitlabIssue(ServiceTest):
+class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'gitlab.host': 'gitlab.example.com',

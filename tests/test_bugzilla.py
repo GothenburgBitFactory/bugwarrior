@@ -3,7 +3,7 @@ from collections import namedtuple
 
 from bugwarrior.services.bz import BugzillaService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
 class FakeBugzillaLib(object):
@@ -15,7 +15,7 @@ class FakeBugzillaLib(object):
         return [Record(**self.record)]
 
 
-class TestBugzillaService(ServiceTest):
+class TestBugzillaService(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'bugzilla.base_uri': 'http://one.com/',
         'bugzilla.username': 'hello',

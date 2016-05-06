@@ -5,10 +5,10 @@ import responses
 
 from bugwarrior.services.github import GithubService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
-class TestGithubIssue(ServiceTest):
+class TestGithubIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'github.login': 'arbitrary_login',

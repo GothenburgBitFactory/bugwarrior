@@ -1,5 +1,3 @@
-import mock
-
 from bugwarrior.services import Issue
 
 from .base import ServiceTest

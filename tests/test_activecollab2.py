@@ -6,10 +6,10 @@ import responses
 
 from bugwarrior.services.activecollab2 import ActiveCollab2Service
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
-class TestActiveCollab2Issue(ServiceTest):
+class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'activecollab2.url': 'http://hello',
         'activecollab2.key': 'howdy',

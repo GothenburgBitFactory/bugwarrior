@@ -2,7 +2,7 @@ import mock
 
 from bugwarrior.services.mplan import MegaplanService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
 class FakeMegaplanClient(object):
@@ -12,7 +12,7 @@ class FakeMegaplanClient(object):
         return [self.record]
 
 
-class TestMegaplanIssue(ServiceTest):
+class TestMegaplanIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'megaplan.hostname': 'something',
         'megaplan.login': 'something_else',

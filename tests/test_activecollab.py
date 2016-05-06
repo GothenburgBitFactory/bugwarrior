@@ -7,7 +7,7 @@ from bugwarrior.services.activecollab import (
     ActiveCollabService
 )
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
 class FakeActiveCollabLib(object):
@@ -25,7 +25,7 @@ class FakeActiveCollabLib(object):
         return []
 
 
-class TestActiveCollabIssues(ServiceTest):
+class TestActiveCollabIssues(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'activecollab.url': 'hello',
         'activecollab.key': 'howdy',
