@@ -1,6 +1,8 @@
 import mock
 import unittest
 
+import responses
+
 
 class AbstractServiceTest(object):
     """ Ensures that certain test methods are implemented for each service. """
@@ -61,3 +63,7 @@ class ServiceTest(unittest.TestCase):
         service = service(config, 'general', section)
 
         return service
+
+    @staticmethod
+    def add_response(url, **kwargs):
+        responses.add(responses.GET, url, match_querystring=True, **kwargs)

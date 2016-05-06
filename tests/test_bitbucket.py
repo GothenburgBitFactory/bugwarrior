@@ -48,16 +48,14 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://api.bitbucket.org/2.0/repositories/somename/',
             json={'values': [{
                 'full_name': 'somename/somerepo',
                 'has_issues': True
             }]})
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/',
             json={'values': [{
                 'title': 'Some Bug',
@@ -66,16 +64,14 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
                 'id': 1
             }]})
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://api.bitbucket.org/1.0/repositories/somename/somerepo/issues/1/comments',
             json=[{
                 'author_info': {'username': 'nobody'},
                 'content': 'Some comment.'
             }])
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/pullrequests/',
             json={'values': [{
                 'title': 'Some Feature',
@@ -84,8 +80,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
                 'id': 1
             }]})
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/pullrequests/1/comments',
             json={'values': [{
                 'user': {'username': 'nobody'},

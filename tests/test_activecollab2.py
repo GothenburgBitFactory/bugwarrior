@@ -69,17 +69,13 @@ class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        responses.add(
-            responses.GET,
+        self.add_response(
             re.compile(
                 'http://hello/\?token=howdy&path_info=%2Fprojects%2F[1-2]%2Fuser-tasks&format=json'),
-            match_querystring=True,
             json=[self.arbitrary_issue])
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'http://hello/?token=howdy&path_info=%2Fprojects%2F20%2Ftickets%2F10&format=json',
-            match_querystring=True,
             json=self.arbitrary_issue)
 
         issue = next(self.service.issues())

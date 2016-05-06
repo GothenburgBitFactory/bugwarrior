@@ -132,26 +132,20 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://gitlab.example.com/api/v3/projects?per_page=100&page=1',
-            match_querystring=True,
             json=[{
                 'id': 1,
                 'path': 'arbitrary_username/project',
                 'web_url': 'example.com'
             }])
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://gitlab.example.com/api/v3/projects/1/issues?per_page=100&page=1',
-            match_querystring=True,
             json=[self.arbitrary_issue])
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://gitlab.example.com/api/v3/projects/1/issues/42/notes?per_page=100&page=1',
-            match_querystring=True,
             json=[{
                 'author': {'username': 'john_smith'},
                 'body': 'Some comment.'

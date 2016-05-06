@@ -49,10 +49,8 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://one/a/changes/?q=is:open+is:reviewer&o=MESSAGES&o=DETAILED_ACCOUNTS',
-            match_querystring=True,
             # The response has some ")]}'" garbage prefixed.
             body=")]}'" + json.dumps([self.record]))
 

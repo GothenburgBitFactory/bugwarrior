@@ -52,8 +52,7 @@ class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        responses.add(
-            responses.GET,
+        self.add_response(
             'http://something/api/1.0/project/task/@self.json',
             json=[self.arbitrary_issue])
 

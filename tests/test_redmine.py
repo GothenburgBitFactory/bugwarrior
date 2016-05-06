@@ -72,10 +72,8 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://something/issues.json?assigned_to_id=10834u0234',
-            match_querystring=True,
             json={'issues': [self.arbitrary_issue]})
 
         issue = next(self.service.issues())

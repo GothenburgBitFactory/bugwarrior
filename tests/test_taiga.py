@@ -50,25 +50,20 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         userid = 1
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://one/api/v1/users/me',
             json={'id': userid})
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://one/api/v1/userstories?status__is_closed=false&assigned_to={0}'.format(
                 userid),
-            match_querystring=True,
             json=[self.record])
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://one/api/v1/projects/{0}'.format(self.record['project']),
             json={'slug': 'something'})
 
-        responses.add(
-            responses.GET,
+        self.add_response(
             'https://one/api/v1/history/userstory/{0}'.format(
                 self.record['id']),
             json=[{'user': {'username': 'you'}, 'comment': 'Blah blah blah!'}])
