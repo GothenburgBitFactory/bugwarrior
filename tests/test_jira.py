@@ -86,15 +86,16 @@ class TestJiraIssue(ServiceTest):
     def test_issues(self):
         issue = next(self.service.issues())
 
-        self.assertEqual(issue['jiraurl'], 'two/browse/DONUT-10')
-        self.assertEqual(issue['priority'], 'H')
-        self.assertEqual(
-            issue['description'],
-            '(bw)Is#10 - lkjaldsfjaldf .. two/browse/DONUT-10')
-        self.assertEqual(issue['tags'], [])
-        self.assertEqual(issue['jiradescription'], None)
-        self.assertEqual(issue['jiraid'], 'DONUT-10')
-        self.assertEqual(issue['project'], 'DONUT')
-        self.assertEqual(issue['jiraestimate'], 1)
-        self.assertEqual(issue['jirasummary'], 'lkjaldsfjaldf')
-        self.assertEqual(issue['annotations'], [])
+        expected = {
+            'annotations': [],
+            'description': '(bw)Is#10 - lkjaldsfjaldf .. two/browse/DONUT-10',
+            'jiradescription': None,
+            'jiraestimate': 1,
+            'jiraid': 'DONUT-10',
+            'jirasummary': 'lkjaldsfjaldf',
+            'jiraurl': 'two/browse/DONUT-10',
+            'priority': 'H',
+            'project': 'DONUT',
+            'tags': []}
+
+        self.assertEqual(issue.get_taskwarrior_record(), expected)

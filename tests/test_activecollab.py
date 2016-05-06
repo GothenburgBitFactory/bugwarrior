@@ -112,24 +112,26 @@ class TestActiveCollabIssues(ServiceTest):
     def test_issues(self):
         issue = next(self.service.issues())
 
-        self.assertEqual(issue['acpermalink'], 'http://wherever/')
-        self.assertEqual(issue['project'], 'something')
-        self.assertEqual(issue['acbody'], 'Ticket Body')
-        self.assertEqual(issue['acid'], 30)
-        self.assertEqual(issue['accreatedbyname'], 'Tester')
-        self.assertEqual(issue['acname'], 'Anonymous')
-        self.assertEqual(issue['accreatedon'], self.arbitrary_created_on)
-        self.assertEqual(issue['acestimatedtime'], 1)
-        self.assertEqual(issue['acprojectid'], 10)
-        self.assertEqual(issue['due'], self.arbitrary_due_on)
-        self.assertEqual(issue['aclabel'], None)
-        self.assertEqual(issue['priority'], 'M')
-        self.assertEqual(issue['actaskid'], 10)
-        self.assertEqual(issue['tags'], [])
-        self.assertEqual(issue['acmilestone'], 'Sprint 1')
-        self.assertEqual(issue['actrackedtime'], 10)
-        self.assertEqual(issue['acprojectname'], 'something')
-        self.assertEqual(issue['annotations'], [])
-        self.assertEqual(issue['actype'], 'issue')
-        self.assertEqual(
-            issue['description'], '(bw)Is#30 - Anonymous .. http://wherever/')
+        expected = {
+            'acbody': u'Ticket Body',
+            'accreatedbyname': 'Tester',
+            'accreatedon': self.arbitrary_created_on,
+            'acestimatedtime': 1,
+            'acid': 30,
+            'aclabel': None,
+            'acmilestone': 'Sprint 1',
+            'acname': 'Anonymous',
+            'acpermalink': 'http://wherever/',
+            'acprojectid': 10,
+            'acprojectname': 'something',
+            'actaskid': 10,
+            'actrackedtime': 10,
+            'actype': 'issue',
+            'annotations': [],
+            'description': '(bw)Is#30 - Anonymous .. http://wherever/',
+            'due': self.arbitrary_due_on,
+            'priority': 'M',
+            'project': 'something',
+            'tags': []}
+
+        self.assertEqual(issue.get_taskwarrior_record(), expected)

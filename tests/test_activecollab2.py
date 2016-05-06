@@ -84,17 +84,19 @@ class TestActiveCollab2Issue(ServiceTest):
 
         issue = next(self.service.issues())
 
-        self.assertEqual(issue['ac2name'], 'Anonymous')
-        self.assertEqual(issue['project'], 'something')
-        self.assertEqual(issue['ac2projectid'], 20)
-        self.assertEqual(issue['ac2createdon'], self.arbitrary_created_on)
-        self.assertEqual(issue['tags'], [])
-        self.assertEqual(issue['ac2body'], 'Ticket Body')
-        self.assertEqual(
-            issue['description'], '(bw)Is#10 - Anonymous .. http://wherever/')
-        self.assertEqual(issue['ac2createdbyid'], '10')
-        self.assertEqual(issue['due'], self.arbitrary_due_on)
-        self.assertEqual(issue['priority'], 'H')
-        self.assertEqual(issue['ac2permalink'], 'http://wherever/')
-        self.assertEqual(issue['ac2ticketid'], 10)
-        self.assertEqual(issue['ac2type'], 'Ticket')
+        expected = {
+            'ac2body': u'Ticket Body',
+            'ac2createdbyid': u'10',
+            'ac2createdon': self.arbitrary_created_on,
+            'ac2name': u'Anonymous',
+            'ac2permalink': u'http://wherever/',
+            'ac2projectid': 20,
+            'ac2ticketid': 10,
+            'ac2type': u'Ticket',
+            'description': u'(bw)Is#10 - Anonymous .. http://wherever/',
+            'due': self.arbitrary_due_on,
+            'priority': 'H',
+            'project': u'something',
+            'tags': []}
+
+        self.assertEqual(issue.get_taskwarrior_record(), expected)

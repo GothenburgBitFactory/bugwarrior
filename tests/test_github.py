@@ -106,20 +106,20 @@ class TestGithubIssue(ServiceTest):
 
         issue = next(self.service.issues())
 
-        self.assertEqual(issue['project'], 'arbitrary_repo')
-        self.assertEqual(issue['githubcreatedon'], self.arbitrary_created)
-        self.assertEqual(issue['githubnumber'], 10)
-        self.assertEqual(issue['githubtitle'], 'Hallo')
-        self.assertEqual(issue['tags'], [])
-        self.assertEqual(issue['githubtype'], 'issue')
-        self.assertEqual(issue['githubbody'], 'Something')
-        self.assertEqual(issue['priority'], 'M')
-        self.assertEqual(issue['githuburl'], 'http://whanot.com/')
-        self.assertEqual(issue['githubupdatedat'], self.arbitrary_updated)
-        self.assertEqual(
-            issue['githubrepo'], 'arbitrary_username/arbitrary_repo')
-        self.assertEqual(issue['githubmilestone'], 'alpha')
-        self.assertEqual(
-            issue['annotations'], ['@arbitrary_login - Arbitrary comment.'])
-        self.assertEqual(
-            issue['description'], '(bw)Is#10 - Hallo .. http://whanot.com/')
+        expected = {
+            'annotations': [u'@arbitrary_login - Arbitrary comment.'],
+            'description': u'(bw)Is#10 - Hallo .. http://whanot.com/',
+            'githubbody': u'Something',
+            'githubcreatedon': self.arbitrary_created,
+            'githubmilestone': u'alpha',
+            'githubnumber': 10,
+            'githubrepo': 'arbitrary_username/arbitrary_repo',
+            'githubtitle': u'Hallo',
+            'githubtype': 'issue',
+            'githubupdatedat': self.arbitrary_updated,
+            'githuburl': u'http://whanot.com/',
+            'priority': 'M',
+            'project': 'arbitrary_repo',
+            'tags': []}
+
+        self.assertEqual(issue.get_taskwarrior_record(), expected)

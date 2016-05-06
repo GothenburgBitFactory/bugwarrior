@@ -71,15 +71,15 @@ class TestBugzillaService(ServiceTest):
     def test_issues(self):
         issue = next(self.service.issues())
 
-        self.assertEqual(issue['bugzillasummary'], 'This is the issue summary')
-        self.assertEqual(
-            issue['description'],
-            '(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567')
-        self.assertEqual(issue['project'], 'Something')
-        self.assertEqual(issue['tags'], [])
-        self.assertEqual(issue['bugzillastatus'], 'NEW')
-        self.assertEqual(issue['priority'], 'H')
-        self.assertEqual(issue['bugzillaurl'],
-                         'https://http://one.com//show_bug.cgi?id=1234567')
-        self.assertEqual(issue['bugzillabugid'], 1234567)
-        self.assertEqual(issue['annotations'], [])
+        expected = {
+            'annotations': [],
+            'bugzillabugid': 1234567,
+            'bugzillastatus': 'NEW',
+            'bugzillasummary': 'This is the issue summary',
+            'bugzillaurl': u'https://http://one.com//show_bug.cgi?id=1234567',
+            'description': u'(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',
+            'priority': 'H',
+            'project': 'Something',
+            'tags': []}
+
+        self.assertEqual(issue.get_taskwarrior_record(), expected)

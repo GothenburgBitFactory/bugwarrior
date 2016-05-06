@@ -94,23 +94,26 @@ class TestBitbucketIssue(ServiceTest):
 
         issue, pr = [i for i in self.service.issues()]
 
-        self.assertEqual(issue['bitbuckettitle'], 'Some Bug')
-        self.assertEqual(
-            issue['description'], '(bw)Is#1 - Some Bug .. example.com')
-        self.assertEqual(issue['project'], 'somerepo')
-        self.assertEqual(issue['tags'], [])
-        self.assertEqual(issue['bitbucketurl'], 'example.com')
-        self.assertEqual(issue['priority'], 'M')
-        self.assertEqual(issue['bitbucketid'], 1)
-        self.assertEqual(issue['annotations'], ['@nobody - Some comment.'])
+        expected_issue = {
+            'annotations': [u'@nobody - Some comment.'],
+            'bitbucketid': 1,
+            'bitbuckettitle': u'Some Bug',
+            'bitbucketurl': u'example.com',
+            'description': u'(bw)Is#1 - Some Bug .. example.com',
+            'priority': 'M',
+            'project': u'somerepo',
+            'tags': []}
 
-        self.assertEqual(pr['bitbuckettitle'], 'Some Feature')
-        self.assertEqual(
-            pr['description'],
-            '(bw)Is#1 - Some Feature .. https://bitbucket.org/')
-        self.assertEqual(pr['project'], 'somerepo')
-        self.assertEqual(pr['tags'], [])
-        self.assertEqual(pr['bitbucketurl'], 'https://bitbucket.org/')
-        self.assertEqual(pr['priority'], 'M')
-        self.assertEqual(pr['bitbucketid'], 1)
-        self.assertEqual(pr['annotations'], ['@nobody - Some comment.'])
+        self.assertEqual(issue.get_taskwarrior_record(), expected_issue)
+
+        expected_pr = {
+            'annotations': [u'@nobody - Some comment.'],
+            'bitbucketid': 1,
+            'bitbuckettitle': u'Some Feature',
+            'bitbucketurl': 'https://bitbucket.org/',
+            'description': u'(bw)Is#1 - Some Feature .. https://bitbucket.org/',
+            'priority': 'M',
+            'project': u'somerepo',
+            'tags': []}
+
+        self.assertEqual(pr.get_taskwarrior_record(), expected_pr)

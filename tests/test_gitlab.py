@@ -159,25 +159,27 @@ class TestGitlabIssue(ServiceTest):
 
         issue = next(self.service.issues())
 
-        self.assertEqual(issue['project'], 'arbitrary_username/project')
-        self.assertEqual(issue['gitlabrepo'], 'arbitrary_username/project')
-        self.assertEqual(
-            issue['description'],
-            '(bw)Is#3 - Add user settings .. example.com/issues/3')
-        self.assertEqual(issue['tags'], [])
-        self.assertEqual(issue['gitlabupvotes'], 0)
-        self.assertEqual(issue['gitlaburl'], 'example.com/issues/3')
-        self.assertEqual(issue['gitlabcreatedon'], self.arbitrary_created)
-        self.assertEqual(issue['gitlabmilestone'], 'v1.0')
-        self.assertEqual(issue['gitlabtitle'], 'Add user settings')
-        self.assertEqual(issue['priority'], 'M')
-        self.assertEqual(issue['gitlabwip'], 0)
-        self.assertEqual(issue['gitlabstate'], 'opened')
-        self.assertEqual(issue['gitlabauthor'], 'john_smith')
-        self.assertEqual(issue['gitlabnumber'], 3)
-        self.assertEqual(issue['gitlabdescription'], '')
-        self.assertEqual(issue['gitlabassignee'], 'jack_smith')
-        self.assertEqual(issue['gitlabtype'], 'issue')
-        self.assertEqual(issue['annotations'], ['@john_smith - Some comment.'])
-        self.assertEqual(issue['gitlabupdatedat'], self.arbitrary_updated)
-        self.assertEqual(issue['gitlabdownvotes'], 0)
+        expected = {
+            'annotations': [u'@john_smith - Some comment.'],
+            'description':
+                u'(bw)Is#3 - Add user settings .. example.com/issues/3',
+            'gitlabassignee': u'jack_smith',
+            'gitlabauthor': u'john_smith',
+            'gitlabcreatedon': self.arbitrary_created,
+            'gitlabdescription': u'',
+            'gitlabdownvotes': 0,
+            'gitlabmilestone': u'v1.0',
+            'gitlabnumber': 3,
+            'gitlabrepo': u'arbitrary_username/project',
+            'gitlabstate': u'opened',
+            'gitlabtitle': u'Add user settings',
+            'gitlabtype': 'issue',
+            'gitlabupdatedat': self.arbitrary_updated,
+            'gitlabupvotes': 0,
+            'gitlaburl': u'example.com/issues/3',
+            'gitlabwip': 0,
+            'priority': 'M',
+            'project': u'arbitrary_username/project',
+            'tags': []}
+
+        self.assertEqual(issue.get_taskwarrior_record(), expected)

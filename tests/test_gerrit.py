@@ -58,15 +58,14 @@ class TestGerritIssue(ServiceTest):
 
         issue = next(self.service.issues())
 
-        expected = [
-            ('project', u'nova'),
-            ('description',
-             u'(bw)PR#1 - this is a title .. https://one/#/c/1/'),
-            ('tags', []),
-            ('gerritsummary', u'this is a title'),
-            ('gerriturl', 'https://one/#/c/1/'),
-            ('priority', 'M'),
-            ('gerritid', 1),
-            ('annotations', [u'@Iam Author - is is a message'])]
+        expected = {
+            'annotations': [u'@Iam Author - is is a message'],
+            'description': u'(bw)PR#1 - this is a title .. https://one/#/c/1/',
+            'gerritid': 1,
+            'gerritsummary': u'this is a title',
+            'gerriturl': 'https://one/#/c/1/',
+            'priority': 'M',
+            'project': u'nova',
+            'tags': []}
 
-        self.assertEqual(issue.items(), expected)
+        self.assertEqual(issue.get_taskwarrior_record(), expected)
