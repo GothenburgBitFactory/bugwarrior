@@ -481,12 +481,12 @@ class Issue(object):
 
 class ServiceClient(object):
     @staticmethod
-    def json_response(response, url):
+    def json_response(response):
         # If we didn't get good results, just bail.
         if response.status_code != 200:
             raise IOError(
                 "Non-200 status code %r; %r; %r" % (
-                    response.status_code, url, response.text,
+                    response.status_code, response.url, response.text,
                 ))
         if callable(response.json):
             # Newer python-requests

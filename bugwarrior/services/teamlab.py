@@ -34,7 +34,7 @@ class TeamLabClient(ServiceClient):
         response = (requests.post(uri, data=post, **kwargs) if post
                     else requests.get(uri, **kwargs))
 
-        return self.json_response(response, uri)
+        return self.json_response(response)
 
 
 class TeamLabIssue(Issue):
