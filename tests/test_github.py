@@ -1,13 +1,14 @@
 import datetime
 
 import pytz
+import responses
 
 from bugwarrior.services.github import GithubService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
-class TestGithubIssue(ServiceTest):
+class TestGithubIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'github.login': 'arbitrary_login',
@@ -16,11 +17,13 @@ class TestGithubIssue(ServiceTest):
     }
     arbitrary_created = (
         datetime.datetime.utcnow() - datetime.timedelta(hours=1)
-    ).replace(tzinfo=pytz.UTC)
-    arbitrary_updated = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+    ).replace(tzinfo=pytz.UTC, microsecond=0)
+    arbitrary_updated = datetime.datetime.utcnow().replace(
+        tzinfo=pytz.UTC, microsecond=0)
     arbitrary_issue = {
         'title': 'Hallo',
         'html_url': 'http://whanot.com/',
+        'url': 'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/1',
         'number': 10,
         'body': 'Something',
         'milestone': {'id': 'alpha'},
@@ -71,3 +74,44 @@ class TestGithubIssue(ServiceTest):
         actual_output = issue.to_taskwarrior()
 
         self.assertEqual(actual_output, expected_output)
+
+    @responses.activate
+    def test_issues(self):
+        self.add_response(
+            'https://api.github.com/users/arbitrary_username/repos?per_page=100',
+            json=[{'name': 'arbitrary_repo'}])
+
+        self.add_response(
+            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues?per_page=100',
+            json=[self.arbitrary_issue])
+
+        self.add_response(
+            'https://api.github.com/user/issues?per_page=100',
+            json=[self.arbitrary_issue])
+
+        self.add_response(
+            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',
+            json=[{
+                'user': {'login': 'arbitrary_login'},
+                'body': 'Arbitrary comment.'
+            }])
+
+        issue = next(self.service.issues())
+
+        expected = {
+            'annotations': [u'@arbitrary_login - Arbitrary comment.'],
+            'description': u'(bw)Is#10 - Hallo .. http://whanot.com/',
+            'githubbody': u'Something',
+            'githubcreatedon': self.arbitrary_created,
+            'githubmilestone': u'alpha',
+            'githubnumber': 10,
+            'githubrepo': 'arbitrary_username/arbitrary_repo',
+            'githubtitle': u'Hallo',
+            'githubtype': 'issue',
+            'githubupdatedat': self.arbitrary_updated,
+            'githuburl': u'http://whanot.com/',
+            'priority': 'M',
+            'project': 'arbitrary_repo',
+            'tags': []}
+
+        self.assertEqual(issue.get_taskwarrior_record(), expected)

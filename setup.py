@@ -51,6 +51,7 @@ setup(name='bugwarrior',
       tests_require=[
           "Mock",
           "nose",
+          "responses",
           "bugwarrior[jira]",
           "bugwarrior[megaplan]",
           "bugwarrior[activecollab]",

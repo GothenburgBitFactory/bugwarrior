@@ -3,10 +3,11 @@ import datetime
 from unittest import TestCase
 
 import pytz
+import responses
 
 from bugwarrior.services.gitlab import GitlabService
 
-from .base import ServiceTest
+from .base import ServiceTest, AbstractServiceTest
 
 
 class TestGitlabService(TestCase):
@@ -28,7 +29,7 @@ class TestGitlabService(TestCase):
             'gitlab://foobar@gitlab.example.com')
 
 
-class TestGitlabIssue(ServiceTest):
+class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'gitlab.host': 'gitlab.example.com',
@@ -37,8 +38,9 @@ class TestGitlabIssue(ServiceTest):
     }
     arbitrary_created = (
         datetime.datetime.utcnow() - datetime.timedelta(hours=1)
-    ).replace(tzinfo=pytz.UTC)
-    arbitrary_updated = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+    ).replace(tzinfo=pytz.UTC, microsecond=0)
+    arbitrary_updated = datetime.datetime.utcnow().replace(
+        tzinfo=pytz.UTC, microsecond=0)
     arbitrary_issue = {
         "id": 42,
         "iid": 3,
@@ -127,3 +129,51 @@ class TestGitlabIssue(ServiceTest):
         actual_output = issue.to_taskwarrior()
 
         self.assertEqual(actual_output, expected_output)
+
+    @responses.activate
+    def test_issues(self):
+        self.add_response(
+            'https://gitlab.example.com/api/v3/projects?per_page=100&page=1',
+            json=[{
+                'id': 1,
+                'path': 'arbitrary_username/project',
+                'web_url': 'example.com'
+            }])
+
+        self.add_response(
+            'https://gitlab.example.com/api/v3/projects/1/issues?per_page=100&page=1',
+            json=[self.arbitrary_issue])
+
+        self.add_response(
+            'https://gitlab.example.com/api/v3/projects/1/issues/42/notes?per_page=100&page=1',
+            json=[{
+                'author': {'username': 'john_smith'},
+                'body': 'Some comment.'
+            }])
+
+        issue = next(self.service.issues())
+
+        expected = {
+            'annotations': [u'@john_smith - Some comment.'],
+            'description':
+                u'(bw)Is#3 - Add user settings .. example.com/issues/3',
+            'gitlabassignee': u'jack_smith',
+            'gitlabauthor': u'john_smith',
+            'gitlabcreatedon': self.arbitrary_created,
+            'gitlabdescription': u'',
+            'gitlabdownvotes': 0,
+            'gitlabmilestone': u'v1.0',
+            'gitlabnumber': 3,
+            'gitlabrepo': u'arbitrary_username/project',
+            'gitlabstate': u'opened',
+            'gitlabtitle': u'Add user settings',
+            'gitlabtype': 'issue',
+            'gitlabupdatedat': self.arbitrary_updated,
+            'gitlabupvotes': 0,
+            'gitlaburl': u'example.com/issues/3',
+            'gitlabwip': 0,
+            'priority': 'M',
+            'project': u'arbitrary_username/project',
+            'tags': []}
+
+        self.assertEqual(issue.get_taskwarrior_record(), expected)

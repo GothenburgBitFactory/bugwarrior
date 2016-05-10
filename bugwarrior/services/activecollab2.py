@@ -10,11 +10,12 @@ from bugwarrior.config import die
 
 
 class ActiveCollab2Client(ServiceClient):
-    def __init__(self, url, key, user_id, projects):
+    def __init__(self, url, key, user_id, projects, target):
         self.url = url
         self.key = key
         self.user_id = user_id
         self.projects = projects
+        self.target = target
 
     def get_task_dict(self, project, key, task):
         assigned_task = {
@@ -28,10 +29,10 @@ class ActiveCollab2Client(ServiceClient):
                 "/tickets/" + six.text_type(task[u'ticket_id']))
             assignees = ticket_data[u'assignees']
 
-            for k, v in enumerate(assignees):
+            for assignee in assignees:
                 if (
-                    (v[u'is_owner'] is True)
-                    and (v[u'user_id'] == int(self.user_id))
+                    (assignee[u'is_owner'] is True)
+                    and (assignee[u'user_id'] == int(self.user_id))
                 ):
                     assigned_task.update(ticket_data)
                     return assigned_task
@@ -146,6 +147,9 @@ class ActiveCollab2Issue(Issue):
         return record
 
     def get_default_description(self):
+        record_type = self.record['type'].lower()
+        record_type = 'issue' if record_type == 'ticket' else record_type
+
         return self.build_default_description(
             title=(
                 self.record['name']
@@ -154,7 +158,7 @@ class ActiveCollab2Issue(Issue):
             ),
             url=self.get_processed_url(self.record['permalink']),
             number=self.record['ticket_id'],
-            cls=self.record['type'].lower(),
+            cls=record_type,
         )
 
 
@@ -180,7 +184,7 @@ class ActiveCollab2Service(IssueService):
         self.projects = projects
 
         self.client = ActiveCollab2Client(
-            self.url, self.key, self.user_id, self.projects
+            self.url, self.key, self.user_id, self.projects, self.target
         )
 
     @classmethod
