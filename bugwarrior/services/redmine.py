@@ -27,7 +27,7 @@ class RedMineClient(ServiceClient):
         if self.auth:
             kwargs['auth'] = self.auth
 
-        return self.json_response(requests.get(url, **kwargs), url)
+        return self.json_response(requests.get(url, **kwargs))
 
 
 class RedMineIssue(Issue):

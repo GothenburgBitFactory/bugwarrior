@@ -145,7 +145,7 @@ class BitbucketService(IssueService, ServiceClient):
         elif 'basic' in self.auth:
             kwargs['auth'] = self.auth['basic']
 
-        return self.json_response(requests.get(api + url, **kwargs), url)
+        return self.json_response(requests.get(api + url, **kwargs))
 
     @classmethod
     def validate_config(cls, config, target):

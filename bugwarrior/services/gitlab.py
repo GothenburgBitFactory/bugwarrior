@@ -281,7 +281,7 @@ class GitlabService(IssueService, ServiceClient):
             requests.packages.urllib3.disable_warnings()
         response = requests.get(url, headers=headers, verify=self.verify_ssl, **kwargs)
 
-        return self.json_response(response, url)
+        return self.json_response(response)
 
     def _fetch_paged(self, tmpl):
         params = {

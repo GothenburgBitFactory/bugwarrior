@@ -72,7 +72,7 @@ class ActiveCollab2Client(ServiceClient):
             'path_info': uri,
             'format': 'json'}
 
-        return self.json_response(requests.get(url, params=params), url)
+        return self.json_response(requests.get(url, params=params))
 
 
 class ActiveCollab2Issue(Issue):
