@@ -480,6 +480,7 @@ class Issue(object):
 
 
 class ServiceClient(object):
+    """ Abstract class responsible for making requests to service API's. """
     @staticmethod
     def json_response(response):
         # If we didn't get good results, just bail.
