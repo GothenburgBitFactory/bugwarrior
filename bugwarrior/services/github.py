@@ -7,7 +7,7 @@ from twiggy import log
 from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
 
-from . import githubutils
+from .githubutils import GithubClient
 
 
 class GithubIssue(Issue):
@@ -130,16 +130,17 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
-        self.auth = {}
-
+        auth = {}
         login = self.config_get('login')
         token = self.config_get_default('token')
         if self.config_has('token'):
             token = self.config_get_password('token', login)
-            self.auth['token'] = token
+            auth['token'] = token
         else:
             password = self.config_get_password('password', login)
-            self.auth['basic'] = (login, password)
+            auth['basic'] = (login, password)
+
+        self.client = GithubClient(auth)
 
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
@@ -183,14 +184,14 @@ class GithubService(IssueService):
     def get_owned_repo_issues(self, tag):
         """ Grab all the issues """
         issues = {}
-        for issue in githubutils.get_issues(*tag.split('/'), auth=self.auth):
+        for issue in self.client.get_issues(*tag.split('/')):
             issues[issue['url']] = (tag, issue)
         return issues
 
     def get_involved_issues(self, user):
         """ Grab all 'interesting' issues """
         issues = {}
-        for issue in githubutils.get_involved_issues(user, auth=self.auth):
+        for issue in self.client.get_involved_issues(user):
             url = issue['html_url']
             tag = re.match('.*github\\.com/(.*)/(issues|pull)/[^/]*$', url)
             if tag is None:
@@ -204,7 +205,7 @@ class GithubService(IssueService):
             r'.*/repos/(?P<owner>[^/]+)/(?P<project>[^/]+)/.*'
         )
         issues = {}
-        for issue in githubutils.get_directly_assigned_issues(auth=self.auth):
+        for issue in self.client.get_directly_assigned_issues():
             match_dict = project_matcher.match(issue['url']).groupdict()
             issues[issue['url']] = (
                 '{owner}/{project}'.format(
@@ -216,7 +217,7 @@ class GithubService(IssueService):
 
     def _comments(self, tag, number):
         user, repo = tag.split('/')
-        return githubutils.get_comments(user, repo, number, auth=self.auth)
+        return self.client.get_comments(user, repo, number)
 
     def annotations(self, tag, issue, issue_obj):
         url = issue['html_url']
@@ -237,7 +238,7 @@ class GithubService(IssueService):
         """ Grab all the pull requests """
         return [
             (tag, i) for i in
-            githubutils.get_pulls(*tag.split('/'), auth=self.auth)
+            self.client.get_pulls(*tag.split('/'))
         ]
 
     def get_owner(self, issue):
@@ -265,7 +266,7 @@ class GithubService(IssueService):
     def issues(self):
         user = self.config.get(self.target, 'github.username')
 
-        all_repos = githubutils.get_repos(username=user, auth=self.auth)
+        all_repos = self.client.get_repos(user)
         assert(type(all_repos) == list)
         repos = filter(self.filter_repos, all_repos)
 

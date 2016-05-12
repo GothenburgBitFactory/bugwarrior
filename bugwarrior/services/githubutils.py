@@ -5,6 +5,8 @@ I tried using pygithub3, but it really sucks.
 
 import requests
 
+from bugwarrior.services import ServiceClient
+
 
 def _link_field_to_dict(field):
     """ Utility for ripping apart github's Link header field.
@@ -22,111 +24,70 @@ def _link_field_to_dict(field):
     ])
 
 
-def get_repos(username, auth):
-    """ username should be a string
-    auth should be a tuple of username and password.
+class GithubClient(ServiceClient):
+    def __init__(self, auth):
+        self.auth = auth
 
-    item can be one of "repos" or "orgs"
-    """
+    def get_repos(self, username):
+        tmpl = "https://api.github.com/users/{username}/repos?per_page=100"
+        url = tmpl.format(username=username)
+        return self._getter(url)
 
-    tmpl = "https://api.github.com/users/{username}/repos?per_page=100"
-    url = tmpl.format(username=username)
-    return _getter(url, auth)
+    def get_involved_issues(self, username):
+        tmpl = "https://api.github.com/search/issues?q=involves%3A{username}&per_page=100"
+        url = tmpl.format(username=username)
+        return self._getter(url, subkey='items')
 
+    def get_issues(self, username, repo):
+        tmpl = "https://api.github.com/repos/{username}/{repo}/issues?per_page=100"
+        url = tmpl.format(username=username, repo=repo)
+        return self._getter(url)
 
-def get_involved_issues(username, auth):
-    """ username should be a string
-    auth should be a tuple of username and password.
-    """
+    def get_directly_assigned_issues(self):
+        """ Returns all issues assigned to authenticated user.
 
-    tmpl = "https://api.github.com/search/issues?q=involves%3A{username}&per_page=100"
-    url = tmpl.format(username=username)
-    return _getter(url, auth, subkey='items')
+        This will return all issues assigned to the authenticated user
+        regardless of whether the user owns the repositories in which the
+        issues exist.
+        """
+        url = "https://api.github.com/user/issues?per_page=100"
+        return self._getter(url)
 
+    def get_comments(self, username, repo, number):
+        tmpl = "https://api.github.com/repos/{username}/{repo}/issues/" + \
+            "{number}/comments?per_page=100"
+        url = tmpl.format(username=username, repo=repo, number=number)
+        return self._getter(url)
 
-def get_issues(username, repo, auth):
-    """ username and repo should be strings
-    auth should be a tuple of username and password.
-    """
+    def get_pulls(self, username, repo):
+        tmpl = "https://api.github.com/repos/{username}/{repo}/pulls?per_page=100"
+        url = tmpl.format(username=username, repo=repo)
+        return self._getter(url)
 
-    tmpl = "https://api.github.com/repos/{username}/{repo}/issues?per_page=100"
-    url = tmpl.format(username=username, repo=repo)
-    return _getter(url, auth)
+    def _getter(self, url, subkey=None):
+        """ Pagination utility.  Obnoxious. """
 
+        kwargs = {}
 
-def get_directly_assigned_issues(auth):
-    """ Returns all issues assigned to authenticated user.
+        if 'token' in self.auth:
+            kwargs['headers'] = {
+                'Authorization': 'token ' + self.auth['token']
+            }
+        elif 'basic' in self.auth:
+            kwargs['auth'] = self.auth['basic']
 
-    This will return all issues assigned to the authenticated user
-    regardless of whether the user owns the repositories in which the
-    issues exist.
+        results = []
+        link = dict(next=url)
 
-    """
-    url = "https://api.github.com/user/issues?per_page=100"
-    return _getter(url, auth)
+        while 'next' in link:
+            response = requests.get(link['next'], **kwargs)
+            json_res = self.json_response(response)
 
+            if subkey is not None:
+                json_res = json_res[subkey]
 
-def get_comments(username, repo, number, auth):
-    tmpl = "https://api.github.com/repos/{username}/{repo}/issues/" + \
-        "{number}/comments?per_page=100"
-    url = tmpl.format(username=username, repo=repo, number=number)
-    return _getter(url, auth)
+            results += json_res
 
+            link = _link_field_to_dict(response.headers.get('link', None))
 
-def get_pulls(username, repo, auth):
-    """ username and repo should be strings
-    auth should be a tuple of username and password.
-    """
-
-    tmpl = "https://api.github.com/repos/{username}/{repo}/pulls?per_page=100"
-    url = tmpl.format(username=username, repo=repo)
-    return _getter(url, auth)
-
-
-def _getter(url, auth, subkey=None):
-    """ Pagination utility.  Obnoxious. """
-
-    kwargs = {}
-
-    if 'token' in auth:
-        kwargs['headers'] = {
-            'Authorization': 'token ' + auth['token']
-        }
-    elif 'basic' in auth:
-        kwargs['auth'] = auth['basic']
-
-    results = []
-    link = dict(next=url)
-    while 'next' in link:
-        response = requests.get(link['next'], **kwargs)
-
-        if callable(response.json):
-            # Newer python-requests
-            json_res = response.json()
-        else:
-            # Older python-requests
-            json_res = response.json
-
-        # And.. if we didn't get good results, just bail.
-        if response.status_code != 200:
-            raise IOError(
-                "Non-200 status code %r; %r; %r" % (
-                    response.status_code, url, json_res))
-
-        if subkey is not None:
-            json_res = json_res[subkey]
-
-        results += json_res
-
-        link = _link_field_to_dict(response.headers.get('link', None))
-
-    return results
-
-if __name__ == '__main__':
-    # Little test.
-    import getpass
-    username = raw_input("GitHub Username: ")
-    password = getpass.getpass()
-
-    results = get_all(username, (username, password))
-    print len(results), "repos found."
+        return results
