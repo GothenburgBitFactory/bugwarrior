@@ -1,13 +1,97 @@
 import re
 import six
 
+import requests
 from jinja2 import Template
 from twiggy import log
 
 from bugwarrior.config import asbool, die
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import IssueService, Issue, ServiceClient
 
-from . import githubutils
+
+class GithubClient(ServiceClient):
+    def __init__(self, auth):
+        self.auth = auth
+
+    def get_repos(self, username):
+        tmpl = "https://api.github.com/users/{username}/repos?per_page=100"
+        url = tmpl.format(username=username)
+        return self._getter(url)
+
+    def get_involved_issues(self, username):
+        tmpl = "https://api.github.com/search/issues?q=involves%3A{username}&per_page=100"
+        url = tmpl.format(username=username)
+        return self._getter(url, subkey='items')
+
+    def get_issues(self, username, repo):
+        tmpl = "https://api.github.com/repos/{username}/{repo}/issues?per_page=100"
+        url = tmpl.format(username=username, repo=repo)
+        return self._getter(url)
+
+    def get_directly_assigned_issues(self):
+        """ Returns all issues assigned to authenticated user.
+
+        This will return all issues assigned to the authenticated user
+        regardless of whether the user owns the repositories in which the
+        issues exist.
+        """
+        url = "https://api.github.com/user/issues?per_page=100"
+        return self._getter(url)
+
+    def get_comments(self, username, repo, number):
+        tmpl = "https://api.github.com/repos/{username}/{repo}/issues/" + \
+            "{number}/comments?per_page=100"
+        url = tmpl.format(username=username, repo=repo, number=number)
+        return self._getter(url)
+
+    def get_pulls(self, username, repo):
+        tmpl = "https://api.github.com/repos/{username}/{repo}/pulls?per_page=100"
+        url = tmpl.format(username=username, repo=repo)
+        return self._getter(url)
+
+    def _getter(self, url, subkey=None):
+        """ Pagination utility.  Obnoxious. """
+
+        kwargs = {}
+
+        if 'token' in self.auth:
+            kwargs['headers'] = {
+                'Authorization': 'token ' + self.auth['token']
+            }
+        elif 'basic' in self.auth:
+            kwargs['auth'] = self.auth['basic']
+
+        results = []
+        link = dict(next=url)
+
+        while 'next' in link:
+            response = requests.get(link['next'], **kwargs)
+            json_res = self.json_response(response)
+
+            if subkey is not None:
+                json_res = json_res[subkey]
+
+            results += json_res
+
+            link = self._link_field_to_dict(response.headers.get('link', None))
+
+        return results
+
+    @staticmethod
+    def _link_field_to_dict(field):
+        """ Utility for ripping apart github's Link header field.
+        It's kind of ugly.
+        """
+
+        if not field:
+            return dict()
+
+        return dict([
+            (
+                part.split('; ')[1][5:-1],
+                part.split('; ')[0][1:-1],
+            ) for part in field.split(', ')
+        ])
 
 
 class GithubIssue(Issue):
@@ -130,16 +214,17 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
-        self.auth = {}
-
+        auth = {}
         login = self.config_get('login')
         token = self.config_get_default('token')
         if self.config_has('token'):
             token = self.config_get_password('token', login)
-            self.auth['token'] = token
+            auth['token'] = token
         else:
             password = self.config_get_password('password', login)
-            self.auth['basic'] = (login, password)
+            auth['basic'] = (login, password)
+
+        self.client = GithubClient(auth)
 
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
@@ -183,14 +268,14 @@ class GithubService(IssueService):
     def get_owned_repo_issues(self, tag):
         """ Grab all the issues """
         issues = {}
-        for issue in githubutils.get_issues(*tag.split('/'), auth=self.auth):
+        for issue in self.client.get_issues(*tag.split('/')):
             issues[issue['url']] = (tag, issue)
         return issues
 
     def get_involved_issues(self, user):
         """ Grab all 'interesting' issues """
         issues = {}
-        for issue in githubutils.get_involved_issues(user, auth=self.auth):
+        for issue in self.client.get_involved_issues(user):
             url = issue['html_url']
             tag = re.match('.*github\\.com/(.*)/(issues|pull)/[^/]*$', url)
             if tag is None:
@@ -204,7 +289,7 @@ class GithubService(IssueService):
             r'.*/repos/(?P<owner>[^/]+)/(?P<project>[^/]+)/.*'
         )
         issues = {}
-        for issue in githubutils.get_directly_assigned_issues(auth=self.auth):
+        for issue in self.client.get_directly_assigned_issues():
             match_dict = project_matcher.match(issue['url']).groupdict()
             issues[issue['url']] = (
                 '{owner}/{project}'.format(
@@ -216,7 +301,7 @@ class GithubService(IssueService):
 
     def _comments(self, tag, number):
         user, repo = tag.split('/')
-        return githubutils.get_comments(user, repo, number, auth=self.auth)
+        return self.client.get_comments(user, repo, number)
 
     def annotations(self, tag, issue, issue_obj):
         url = issue['html_url']
@@ -237,7 +322,7 @@ class GithubService(IssueService):
         """ Grab all the pull requests """
         return [
             (tag, i) for i in
-            githubutils.get_pulls(*tag.split('/'), auth=self.auth)
+            self.client.get_pulls(*tag.split('/'))
         ]
 
     def get_owner(self, issue):
@@ -265,7 +350,7 @@ class GithubService(IssueService):
     def issues(self):
         user = self.config.get(self.target, 'github.username')
 
-        all_repos = githubutils.get_repos(username=user, auth=self.auth)
+        all_repos = self.client.get_repos(user)
         assert(type(all_repos) == list)
         repos = filter(self.filter_repos, all_repos)
 
