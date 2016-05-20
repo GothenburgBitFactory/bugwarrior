@@ -204,8 +204,10 @@ class BitbucketService(IssueService, ServiceClient):
         )
 
     def get_owner(self, issue):
-        tag, issue = issue
-        return issue.get('responsible', {}).get('username', None)
+        _, issue = issue
+        assignee = issue.get('assignee', None)
+        if assignee is not None:
+            return assignee.get('username', None)
 
     def issues(self):
         user = self.config.get(self.target, 'bitbucket.username')
