@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from ConfigParser import NoOptionError, NoSectionError
 import os
 import re

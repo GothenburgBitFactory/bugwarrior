@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import requests
 from twiggy import log
 
@@ -135,17 +137,31 @@ class BitbucketService(IssueService, ServiceClient):
 
         return True
 
-    def get_data(self, url, **kwargs):
-        api = kwargs.get('api', self.BASE_API2)
-
+    def _get_json(self, url):
+        """ This function sets-up the authentication, perform a request to the
+        given url and return json-parsed data. """
         kwargs = {}
         if 'token' in self.auth:
             kwargs['headers'] = {
                 'Authorization': 'Bearer ' + self.auth['token']}
         elif 'basic' in self.auth:
             kwargs['auth'] = self.auth['basic']
+        return self.json_response(requests.get(url, **kwargs))
 
-        return self.json_response(requests.get(api + url, **kwargs))
+    def get_data(self, url, **kwargs):
+        api = kwargs.get('api', self.BASE_API2)
+        return self._get_json(api + url)
+
+    def get_collection(self, url):
+        """ Pages through an object collection from the bitbucket API.
+        Returns an iterator that lazily goes through all the 'values'
+        of all the pages in the collection. """
+        url = self.BASE_API2 + url
+        while url is not None:
+            response = self._get_json(url)
+            for value in response['values']:
+                yield value
+            url = response.get('next', None)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -157,12 +173,12 @@ class BitbucketService(IssueService, ServiceClient):
         IssueService.validate_config(config, target)
 
     def fetch_issues(self, tag):
-        response = self.get_data('/repositories/%s/issues/' % (tag))
-        return [(tag, issue) for issue in response['values']]
+        response = self.get_collection('/repositories/%s/issues/' % (tag))
+        return [(tag, issue) for issue in response]
 
     def fetch_pull_requests(self, tag):
-        response = self.get_data('/repositories/%s/pullrequests/' % tag)
-        return [(tag, issue) for issue in response['values']]
+        response = self.get_collection('/repositories/%s/pullrequests/' % tag)
+        return [(tag, issue) for issue in response]
 
     def get_annotations(self, tag, issue, issue_obj, url):
         response = self.get_data(
@@ -177,26 +193,28 @@ class BitbucketService(IssueService, ServiceClient):
         )
 
     def get_annotations2(self, tag, issue, issue_obj, url):
-        response = self.get_data(
+        response = self.get_collection(
             '/repositories/%s/pullrequests/%i/comments' % (tag, issue['id'])
         )
         return self.build_annotations(
             ((
                 comment['user']['username'],
                 comment['content']['raw'],
-            ) for comment in response['values']),
+            ) for comment in response),
             issue_obj.get_processed_url(url)
         )
 
     def get_owner(self, issue):
-        tag, issue = issue
-        return issue.get('responsible', {}).get('username', None)
+        _, issue = issue
+        assignee = issue.get('assignee', None)
+        if assignee is not None:
+            return assignee.get('username', None)
 
     def issues(self):
         user = self.config.get(self.target, 'bitbucket.username')
-        response = self.get_data('/repositories/' + user + '/')
+        response = self.get_collection('/repositories/' + user + '/')
         repo_tags = filter(self.filter_repos, [
-            repo['full_name'] for repo in response.get('values')
+            repo['full_name'] for repo in response
             if repo.get('has_issues')
         ])
 
