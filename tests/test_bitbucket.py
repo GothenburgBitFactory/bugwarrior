@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import responses
 
 from bugwarrior.services.bitbucket import BitbucketService
@@ -112,3 +114,57 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
             'tags': []}
 
         self.assertEqual(pr.get_taskwarrior_record(), expected_pr)
+
+    def test_get_owner(self):
+        issue = {
+            'title': 'Foobar',
+            'assignee': {'username': 'tintin'},
+        }
+        self.assertEqual(self.service.get_owner(('foo', issue)), 'tintin')
+
+    def test_get_owner_none(self):
+        issue = {
+            'title': 'Foobar',
+            'assignee': None,
+        }
+        self.assertIsNone(self.service.get_owner(('foo', issue)))
+
+    @responses.activate
+    def test_fetch_issues_pagination(self):
+        self.add_response(
+            'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/',
+            json={
+                'values': [{
+                    'title': 'Some Bug',
+                    'status': 'open',
+                    'links': {'html': {'href': 'example.com'}},
+                    'id': 1
+                }],
+                'next': 'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/?page=2',
+            })
+        self.add_response(
+            'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/?page=2',
+            json={
+                'values': [{
+                    'title': 'Some Other Bug',
+                    'status': 'open',
+                    'links': {'html': {'href': 'example.com'}},
+                    'id': 2
+                }],
+            })
+        issues = list(self.service.fetch_issues('somename/somerepo'))
+        expected = [
+            ('somename/somerepo', {
+                'title': 'Some Bug',
+                'status': 'open',
+                'links': {'html': {'href': 'example.com'}},
+                'id': 1
+            }),
+            ('somename/somerepo', {
+                'title': 'Some Other Bug',
+                'status': 'open',
+                'links': {'html': {'href': 'example.com'}},
+                'id': 2
+            }),
+        ]
+        self.assertEqual(issues, expected)
