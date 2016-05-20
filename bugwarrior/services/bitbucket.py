@@ -144,14 +144,9 @@ class BitbucketService(IssueService, ServiceClient):
 
         return True
 
-    def _get_json(self, url):
+    def get_data(self, url):
         """ Perform a request to the fully qualified url and return json. """
         return self.json_response(requests.get(url, **self.requests_kwargs))
-
-    def get_data(self, url, **kwargs):
-        """ Perform a request to the relative url and return json. """
-        api = kwargs.get('api', self.BASE_API2)
-        return self._get_json(api + url)
 
     def get_collection(self, url):
         """ Pages through an object collection from the bitbucket API.
@@ -159,7 +154,7 @@ class BitbucketService(IssueService, ServiceClient):
         of all the pages in the collection. """
         url = self.BASE_API2 + url
         while url is not None:
-            response = self._get_json(url)
+            response = self.get_data(url)
             for value in response['values']:
                 yield value
             url = response.get('next', None)
@@ -183,8 +178,8 @@ class BitbucketService(IssueService, ServiceClient):
 
     def get_annotations(self, tag, issue, issue_obj, url):
         response = self.get_data(
-            '/repositories/%s/issues/%i/comments' % (tag, issue['id']),
-            api=self.BASE_API)
+            self.BASE_API +
+            '/repositories/%s/issues/%i/comments' % (tag, issue['id']))
         return self.build_annotations(
             ((
                 comment['author_info']['username'],
