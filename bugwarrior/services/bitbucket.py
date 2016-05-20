@@ -70,14 +70,14 @@ class BitbucketService(IssueService, ServiceClient):
 
         key = self.config_get_default('key')
         secret = self.config_get_default('secret')
-        self.auth = {'oauth': (key, secret)}
+        auth = {'oauth': (key, secret)}
 
         refresh_token = data.get('bitbucket_refresh_token')
 
         if not refresh_token:
             login = self.config_get('login')
             password = self.config_get_password('password', login)
-            self.auth['basic'] = (login, password)
+            auth['basic'] = (login, password)
 
         if key and secret:
             if refresh_token:
@@ -85,18 +85,25 @@ class BitbucketService(IssueService, ServiceClient):
                     self.BASE_URL + 'site/oauth2/access_token',
                     data={'grant_type': 'refresh_token',
                           'refresh_token': refresh_token},
-                    auth=self.auth['oauth']).json()
+                    auth=auth['oauth']).json()
             else:
                 response = requests.post(
                     self.BASE_URL + 'site/oauth2/access_token',
                     data={'grant_type': 'password',
                           'username': login,
                           'password': password},
-                    auth=self.auth['oauth']).json()
+                    auth=auth['oauth']).json()
 
                 data.set('bitbucket_refresh_token', response['refresh_token'])
 
-            self.auth['token'] = response['access_token']
+            auth['token'] = response['access_token']
+
+        self.requests_kwargs = {}
+        if 'token' in auth:
+            self.requests_kwargs['headers'] = {
+                'Authorization': 'Bearer ' + auth['token']}
+        elif 'basic' in auth:
+            self.requests_kwargs['auth'] = auth['basic']
 
         self.exclude_repos = []
         if self.config_get_default('exclude_repos', None):
@@ -138,17 +145,11 @@ class BitbucketService(IssueService, ServiceClient):
         return True
 
     def _get_json(self, url):
-        """ This function sets-up the authentication, perform a request to the
-        given url and return json-parsed data. """
-        kwargs = {}
-        if 'token' in self.auth:
-            kwargs['headers'] = {
-                'Authorization': 'Bearer ' + self.auth['token']}
-        elif 'basic' in self.auth:
-            kwargs['auth'] = self.auth['basic']
-        return self.json_response(requests.get(url, **kwargs))
+        """ Perform a request to the fully qualified url and return json. """
+        return self.json_response(requests.get(url, **self.requests_kwargs))
 
     def get_data(self, url, **kwargs):
+        """ Perform a request to the relative url and return json. """
         api = kwargs.get('api', self.BASE_API2)
         return self._get_json(api + url)
 
