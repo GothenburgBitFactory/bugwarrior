@@ -174,8 +174,7 @@ class BitbucketService(IssueService, ServiceClient):
 
     def fetch_issues(self, tag):
         response = self.get_collection('/repositories/%s/issues/' % (tag))
-        for issue in response:
-            yield (tag, issue)
+        return [(tag, issue) for issue in response]
 
     def fetch_pull_requests(self, tag):
         response = self.get_collection('/repositories/%s/pullrequests/' % tag)
@@ -219,7 +218,7 @@ class BitbucketService(IssueService, ServiceClient):
             if repo.get('has_issues')
         ])
 
-        issues = sum([list(self.fetch_issues(repo)) for repo in repo_tags], [])
+        issues = sum([self.fetch_issues(repo) for repo in repo_tags], [])
         log.name(self.target).debug(" Found {0} total.", len(issues))
 
         closed = ['resolved', 'duplicate', 'wontfix', 'invalid', 'closed']
