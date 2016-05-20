@@ -40,6 +40,15 @@ This will actually run it.. be careful and back up your task directory!
 
     (bugwarrior)$ bugwarrior-pull
 
-If you're developing, it can be helpful to run the test suite::
+Making a pull request
+---------------------
+
+Create a new branch for each pull request based off the ``develop`` branch::
+
+    (bugwarrior)$ git checkout -b my-shiny-new-feature develop
+
+Please add tests when appropriate and run the test suite before opening a PR::
 
     (bugwarrior)$ python setup.py nosetests
+
+We look forward to your contribution!
