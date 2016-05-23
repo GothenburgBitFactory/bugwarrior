@@ -13,7 +13,7 @@ Optional options include:
 * ``taskrc``: Specify which TaskRC configuration file to use.  By default,
   will use the system default (usually ``~/.taskrc``).
 * ``shorten``: Set to ``True`` to shorten links.
-* ``inline_link``: When ``False``, links are appended as an annotation.
+* ``inline_links``: When ``False``, links are appended as an annotation.
   Defaults to ``True``.
 * ``annotation_links``: When ``True`` will include a link to the ticket as an
   annotation. Defaults to ``False``.

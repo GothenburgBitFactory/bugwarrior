@@ -1,6 +1,8 @@
 How to Contribute
 =================
 
+.. highlight:: console
+
 Setting up your development environment
 ---------------------------------------
 
