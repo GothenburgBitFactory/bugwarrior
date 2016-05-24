@@ -1,0 +1,1 @@
+bugwarrior/docs/contributing.rst

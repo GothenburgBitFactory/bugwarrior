@@ -54,3 +54,14 @@ Please add tests when appropriate and run the test suite before opening a PR::
     (bugwarrior)$ python setup.py nosetests
 
 We look forward to your contribution!
+
+Works in progress
+-----------------
+
+The best way to get help and feedback before you pour too much time and effort
+into your branch is to open a "work in progress" pull request. We will not leave
+it open indefinitely if it doesn't seem to be progressing, but there's nothing to
+lose in soliciting some pointers and concerns.
+
+Please begin the title of your work in progress pr with "[WIP]" and explain what
+remains to be done or what you're having trouble with.
