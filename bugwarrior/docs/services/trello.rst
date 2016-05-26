@@ -22,6 +22,9 @@ navigate to the board you want to pull cards from and look at the URL, it
 should be something like ``https://trello.com/b/xxxxxxxx/myboard``: copy the
 part between ``/b/`` and the next ``/`` in the ``trello.board`` field.
 
+.. image:: pictures/trello_url.png
+   :height: 1cm
+
 Feel free to use any of the configuration options described in
 :ref:`common_configuration_options` or described in `Service Features`_ below.
 
