@@ -379,7 +379,7 @@ class Issue(object):
         }
         url_separator = ' .. '
         url = url if self.origin['inline_links'] else ''
-        return "%s%s#%s - %s%s%s" % (
+        return u"%s%s#%s - %s%s%s" % (
             MARKUP,
             cls_markup[cls],
             number,
