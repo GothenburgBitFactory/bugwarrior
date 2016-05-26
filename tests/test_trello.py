@@ -1,69 +1,12 @@
 from __future__ import unicode_literals, print_function
 
 import ConfigParser
-import unittest2
+from unittest import TestCase
 from mock import patch
+import responses
 
 from bugwarrior.services.trello import TrelloService, TrelloIssue
 from .base import ServiceTest
-
-
-def mkConfig(data):
-    """ Create a configuration object to use in tests """
-    config = ConfigParser.RawConfigParser()
-    for section in data:
-        config.add_section(section)
-        for opt in data[section]:
-            config.set(section, opt, data[section][opt])
-    return config
-
-
-class MkConfigTest(unittest2.TestCase):
-    """ Test the mkConfig test utility """
-
-    def setUp(self):
-        self.testconf = mkConfig({'mysection': {'foo': 'bar'}})
-
-    def test_section(self):
-        conf = mkConfig({'mysection': {'foo': 'bar', 'fooo': 'baar'}})
-        self.assertTrue(conf.has_section('mysection'))
-
-    def test_option(self):
-        self.assertTrue(self.testconf.has_option('mysection', 'foo'))
-        self.assertEqual(self.testconf.get('mysection', 'foo'), 'bar')
-
-
-class ValidateConfigTest(unittest2.TestCase):
-
-    def setUp(self):
-        self.arbitrary_config = mkConfig({'mytrello': {
-            'trello.token': 'aaaabbbbccccddddeeeeffff',
-            'trello.api_key': '000011112222333344445555',
-            'trello.board': 'foobar',
-        }})
-
-    @patch('bugwarrior.services.trello.die')
-    def test_valid_config(self, die):
-        TrelloService.validate_config(self.arbitrary_config, 'mytrello')
-        die.assert_not_called()
-
-    @patch('bugwarrior.services.trello.die')
-    def test_no_access_token(self, die):
-        self.arbitrary_config.remove_option('mytrello', 'trello.token')
-        TrelloService.validate_config(self.arbitrary_config, 'mytrello')
-        die.assert_called_with("[mytrello] has no 'trello.token'")
-
-    @patch('bugwarrior.services.trello.die')
-    def test_no_api_key(self, die):
-        self.arbitrary_config.remove_option('mytrello', 'trello.api_key')
-        TrelloService.validate_config(self.arbitrary_config, 'mytrello')
-        die.assert_called_with("[mytrello] has no 'trello.api_key'")
-
-    @patch('bugwarrior.services.trello.die')
-    def test_no_board(self, die):
-        self.arbitrary_config.remove_option('mytrello', 'trello.board')
-        TrelloService.validate_config(self.arbitrary_config, 'mytrello')
-        die.assert_called_with("[mytrello] has no 'trello.board'")
 
 
 class TestTrelloIssue(ServiceTest):
@@ -74,11 +17,14 @@ class TestTrelloIssue(ServiceTest):
         "shortLink": "AAaaBBbb",
         "shortUrl": "https://trello.com/c/AAaaBBbb",
         "url": "https://trello.com/c/AAaBBbb/42-so-long",
+        "labels": [{'name': "foo"}, {"name": "bar"}],
         }
 
     def setUp(self):
-        origin = dict(inline_links=True, description_length=31)
-        extra = {'boardname': 'Hyperspatial express route'}
+        origin = dict(inline_links=True, description_length=31,
+                      import_labels_as_tags=True)
+        extra = {'boardname': 'Hyperspatial express route',
+                 'listname': 'Something'}
         self.issue = TrelloIssue(self.JSON, origin, extra)
 
     def test_default_description(self):
@@ -92,3 +38,80 @@ class TestTrelloIssue(ServiceTest):
         expected_project = "Hyperspatial express route"
         self.assertEqual(expected_project,
                          self.issue.to_taskwarrior().get('project', None))
+
+
+class TestTrelloService(TestCase):
+    CARD1 = {'name': 'Card 1', 'members': [{'username': 'tintin'}]}
+    CARD2 = {'name': 'Card 2', 'members': [{'username': 'mario'}]}
+    CARD3 = {'name': 'Card 3', 'members': []}
+    LIST1 = {'name': 'List 1'}
+    LIST2 = {'name': 'List 2'}
+
+    def setUp(self):
+        self.config = ConfigParser.RawConfigParser()
+        self.config.add_section('mytrello')
+        self.config.set('mytrello', 'trello.api_key', 'XXXX')
+        self.config.set('mytrello', 'trello.token', 'YYYY')
+        self.config.set('mytrello', 'trello.board', 'B04RD')
+        responses.add(responses.GET,
+                      'https://api.trello.com/1/lists/L15T/cards/open',
+                      json=[self.CARD1, self.CARD2, self.CARD3])
+        responses.add(responses.GET,
+                      'https://api.trello.com/1/boards/B04RD/lists/open',
+                      json=[self.LIST1, self.LIST2])
+
+    @responses.activate
+    def test_get_lists(self):
+        service = TrelloService(self.config, 'general', 'mytrello')
+        lists = service.get_lists('B04RD')
+        self.assertEqual(list(lists), [self.LIST1, self.LIST2])
+
+    @responses.activate
+    def test_get_lists_include(self):
+        self.config.set('mytrello', 'trello.include_lists', 'List 1')
+        service = TrelloService(self.config, 'general', 'mytrello')
+        lists = service.get_lists('B04RD')
+        self.assertEqual(list(lists), [self.LIST1])
+
+    @responses.activate
+    def test_get_lists_exclude(self):
+        self.config.set('mytrello', 'trello.exclude_lists', 'List 1')
+        service = TrelloService(self.config, 'general', 'mytrello')
+        lists = service.get_lists('B04RD')
+        self.assertEqual(list(lists), [self.LIST2])
+
+    @responses.activate
+    def test_get_cards(self):
+        service = TrelloService(self.config, 'general', 'mytrello')
+        cards = service.get_cards('L15T')
+        self.assertEqual(list(cards), [self.CARD1, self.CARD2, self.CARD3])
+
+    @responses.activate
+    def test_get_cards_member(self):
+        self.config.set('mytrello', 'trello.only_if_member', 'tintin')
+        service = TrelloService(self.config, 'general', 'mytrello')
+        cards = service.get_cards('L15T')
+        self.assertEqual(list(cards), [self.CARD1])
+
+    @patch('bugwarrior.services.trello.die')
+    def test_validate_config(self, die):
+        TrelloService.validate_config(self.config, 'mytrello')
+        die.assert_not_called()
+
+    @patch('bugwarrior.services.trello.die')
+    def test_valid_config_no_access_token(self, die):
+        self.config.remove_option('mytrello', 'trello.token')
+        TrelloService.validate_config(self.config, 'mytrello')
+        die.assert_called_with("[mytrello] has no 'trello.token'")
+
+    @patch('bugwarrior.services.trello.die')
+    def test_valid_config_no_api_key(self, die):
+        self.config.remove_option('mytrello', 'trello.api_key')
+        TrelloService.validate_config(self.config, 'mytrello')
+        die.assert_called_with("[mytrello] has no 'trello.api_key'")
+
+    @patch('bugwarrior.services.trello.die')
+    def test_valid_config_no_board(self, die):
+        self.config.remove_option('mytrello', 'trello.board')
+        TrelloService.validate_config(self.config, 'mytrello')
+        die.assert_called_with("[mytrello] has no 'trello.board'")

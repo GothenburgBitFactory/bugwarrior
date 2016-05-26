@@ -41,10 +41,10 @@ class TrelloIssue(Issue):
         )
 
     def get_tags(self, twdict):
-        tmpl = Template(self.origin['label_template'])
-        return [
-            tmpl.render(twdict, label=label['name'])
-            for label in self.record['labels']]
+        tmpl = Template(
+            self.origin.get('label_template', DEFAULT_LABEL_TEMPLATE))
+        return [tmpl.render(twdict, label=label['name'])
+                for label in self.record['labels']]
 
     def to_taskwarrior(self):
         twdict = {
@@ -89,31 +89,30 @@ class TrelloService(IssueService):
             self.config_get_default('import_labels_as_tags', False, asbool),
             'label_template':
             self.config_get_default('label_template', DEFAULT_LABEL_TEMPLATE),
-        }
+            }
 
     def issues(self):
         """
         Returns a list of dicts representing issues from a remote service.
         """
-        # First, we get the board meta-data and the open lists
+        # First, we get the board name
+        board_id = self.config_get('board')
         board = self.api_request(
-            "/1/boards/{board_id}".format(board_id=self.config_get('board')),
-            fields='name', lists='open', list_fiels='name')
-        lists = self.filter_lists(board['lists'])
-        # For each of the remaining lists, we get the open cards
-        for lst in lists:
+            "/1/boards/{board_id}".format(board_id=board_id), fields='name')
+        for lst in self.get_lists(board_id):
             listextra = dict(boardname=board['name'], listname=lst['name'])
-            cards = self.api_request(
-                "/1/lists/{list_id}/cards/open".format(list_id=lst['id']),
-                fields='name,idShort,shortLink,shortUrl,url,labels')
-            for card in cards:
+            for card in self.get_cards(lst['id']):
                 yield self.get_issue_for_record(card, extra=listextra)
 
-    def filter_lists(self, lists):
+    def get_lists(self, board):
         """
+        Returns a list of the filtered lists for the given board
         This filters the trello lists according to the configuration values of
         trello.include_lists and trello.exclude_lists.
         """
+        lists = self.api_request(
+            "/1/boards/{board_id}/lists/open".format(board_id=board),
+            fields='name')
         try:
             include_lists = self.config_get_list('include_lists')
             lists = [l for l in lists if l['name'] in include_lists]
@@ -125,6 +124,22 @@ class TrelloService(IssueService):
         except NoOptionError:
             pass
         return lists
+
+    def get_cards(self, list_id):
+        """ Returns an iterator for the cards in a given list, filtered
+        according to configuration value trello.only_if_member """
+        params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels'}
+        member = self.config_get_default('only_if_member', None)
+        if member is not None:
+            params['members'] = 'true'
+            params['member_fields'] = 'username'
+        cards = self.api_request(
+            "/1/lists/{list_id}/cards/open".format(list_id=list_id),
+            **params)
+        for card in cards:
+            if (member is None
+                    or member in [m['username'] for m in card['members']]):
+                yield card
 
     def api_request(self, url, **params):
         """
