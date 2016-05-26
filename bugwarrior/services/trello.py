@@ -7,7 +7,7 @@ import requests
 from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import die, asbool
 
-DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')|upper}}"
+DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')}}"
 
 
 class TrelloIssue(Issue):
