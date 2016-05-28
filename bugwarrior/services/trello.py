@@ -4,7 +4,7 @@ from ConfigParser import NoOptionError
 from jinja2 import Template
 import requests
 
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import IssueService, Issue, json_response
 from bugwarrior.config import die, asbool
 
 DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')}}"
@@ -150,7 +150,7 @@ class TrelloService(IssueService):
         params['key'] = self.config_get('api_key'),
         params['token'] = self.config_get('token'),
         url = "https://api.trello.com" + url
-        return requests.get(url, params=params).json()
+        return json_response(requests.get(url, params=params))
 
     def config_get_list(self, key):
         """ Helper function similar to config_get but parse the resulting
