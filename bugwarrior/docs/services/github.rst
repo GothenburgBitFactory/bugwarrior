@@ -97,6 +97,12 @@ by adding the following configuration option::
 Get involved issues
 +++++++++++++++++++
 
+By default, bugwarrior pulls all issues across owned and member repositories
+assigned to the authenticated user.  To disable this behavior, use::
+
+    github.include_user_issues = False
+
+
 Instead of fetching issues and pull requests based on ``{{username}}``'s owned
 repositories, you may instead get those that ``{{username}}`` is involved in.
 This includes all issues and pull requests where the user is the author, the
