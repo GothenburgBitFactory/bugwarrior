@@ -38,10 +38,6 @@ Options
    If set, skip cards from lists whose name is present in
    ``trello.exclude_lists``.
 
-.. describe:: trello.only_if_assigned
-
-   Set to a Trello username to only pull the cards this user is a member of.
-
 .. describe:: trello.import_labels_as_tags
 
    A boolean that indicate whether the Trello labels should be imported as tags
