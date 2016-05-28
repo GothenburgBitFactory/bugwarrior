@@ -3,6 +3,57 @@ Trello
 
 You can import tasks from Trello cards using the ``trello`` service name.
 
+
+Options
+-------
+
+.. describe:: trello.api_key
+
+   Your Trello API key, available from https://trello.com/app-key
+
+.. describe:: trello.token
+
+   Trello token, see bellow for how to get it.
+
+.. describe:: trello.include_boards
+
+   The list of board to include. If omitted, bugwarrior will use all board
+   the authenticated user is a member of.
+   This can be either the board ids of the board "short links".  The later is
+   the easiest option as it is part of the board URL: in your browser, navigate
+   to the board you want to pull cards from and look at the URL, it should be
+   something like ``https://trello.com/b/xxxxxxxx/myboard``: copy the part
+   between ``/b/`` and the next ``/`` in the ``trello.include_boards`` field.
+
+   .. image:: pictures/trello_url.png
+      :height: 1cm
+
+.. describe:: trello.include_lists
+
+   If set, only pull cards from lists whose name is present in
+   ``trello.include_lists``.
+
+.. describe:: trello.exclude_lists
+
+   If set, skip cards from lists whose name is present in
+   ``trello.exclude_lists``.
+
+.. describe:: trello.only_if_member
+
+   Set to a Trello username to only pull the cards this user is a member of.
+
+.. describe:: trello.import_labels_as_tags
+
+   A boolean that indicate whether the Trello labels should be imported as tags
+   in taskwarrior. (Defaults to false.)
+
+.. describe:: trello.label_template
+
+   Template used to convert Trello labels to taskwarrior tags.
+   See :ref:`field_templates` for more details regarding how templates
+   are processed.
+   The default value is ``{{label|replace(' ', '_')}}``.
+
 Example Service
 ---------------
 
@@ -12,18 +63,24 @@ Here's an example of a Trello target::
     service = trello
     trello.api_key = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     trello.token = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    trello.board = AaBbCcDd
 
 The above example is the minimum required to import tasks from Trello.  This
-will import every card from the specified board.  The value for
-``trello.board`` can be either the board id of the board "short link".  The
-later is the easiest option as it is part of the board URL: in your browser,
-navigate to the board you want to pull cards from and look at the URL, it
-should be something like ``https://trello.com/b/xxxxxxxx/myboard``: copy the
-part between ``/b/`` and the next ``/`` in the ``trello.board`` field.
+will import every card from all the user's boards.
 
-.. image:: pictures/trello_url.png
-   :height: 1cm
+Here's an example with more options::
+
+    [my_project]
+    service = trello
+    trello.api_key = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    trello.token = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    trello.include_boards = AaBbCcDd, WwXxYyZz
+    trello.include_lists = Todo, Doing
+    trello.exclude_lists = Done
+    trello.only_if_member = someuser
+    trello.import_labels_as_tags = true
+
+In this case, ``bugwarrior`` will only import cards from the specified boards
+if they belong to the right lists..
 
 Feel free to use any of the configuration options described in
 :ref:`common_configuration_options` or described in `Service Features`_ below.
@@ -48,10 +105,10 @@ To do that, you can use the ``trello.include_lists`` and
 ``trello.exclude_lists`` options.
 
 For example, if you would like to only pull-in cards from
-your ``To do`` and ``Doing`` lists, you could add this line to your service
+your ``Todo`` and ``Doing`` lists, you could add this line to your service
 configuration::
 
-    trello.include_lists = To do, Doing
+    trello.include_lists = Todo, Doing
 
 
 Import Labels as Tags
