@@ -18,6 +18,11 @@ def asbool(some_value):
     ]
 
 
+def aslist(value):
+    """ Cast config values to lists of strings """
+    return [item.strip() for item in value.strip().split(',')]
+
+
 def get_service_password(service, username, oracle=None, interactive=False):
     """
     Retrieve the sensitive password for a service by:

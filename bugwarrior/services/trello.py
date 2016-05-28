@@ -5,7 +5,7 @@ from jinja2 import Template
 import requests
 
 from bugwarrior.services import IssueService, Issue, json_response
-from bugwarrior.config import die, asbool
+from bugwarrior.config import die, asbool, aslist
 
 DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')}}"
 
@@ -114,12 +114,12 @@ class TrelloService(IssueService):
             "/1/boards/{board_id}/lists/open".format(board_id=board),
             fields='name')
         try:
-            include_lists = self.config_get_list('include_lists')
+            include_lists = self.config_get('include_lists', aslist)
             lists = [l for l in lists if l['name'] in include_lists]
         except NoOptionError:
             pass
         try:
-            exclude_lists = self.config_get_list('exclude_lists')
+            exclude_lists = self.config_get('exclude_lists', aslist)
             lists = [l for l in lists if l['name'] not in exclude_lists]
         except NoOptionError:
             pass
@@ -151,9 +151,3 @@ class TrelloService(IssueService):
         params['token'] = self.config_get('token'),
         url = "https://api.trello.com" + url
         return json_response(requests.get(url, params=params))
-
-    def config_get_list(self, key):
-        """ Helper function similar to config_get but parse the resulting
-        string into a list by splitting on commas """
-        return [
-            item.strip() for item in self.config_get(key).strip().split(',')]
