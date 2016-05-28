@@ -115,7 +115,7 @@ class TestTrelloService(TestCase):
 
     @responses.activate
     def test_get_cards_member(self):
-        self.config.set('mytrello', 'trello.only_if_member', 'tintin')
+        self.config.set('mytrello', 'trello.only_if_assigned', 'tintin')
         service = TrelloService(self.config, 'general', 'mytrello')
         cards = service.get_cards('L15T')
         self.assertEqual(list(cards), [self.CARD1])
@@ -123,7 +123,7 @@ class TestTrelloService(TestCase):
     @responses.activate
     def test_issues(self):
         self.config.set('mytrello', 'trello.include_lists', 'List 1')
-        self.config.set('mytrello', 'trello.only_if_member', 'tintin')
+        self.config.set('mytrello', 'trello.only_if_assigned', 'tintin')
         service = TrelloService(self.config, 'general', 'mytrello')
         issues = service.issues()
         expected = {

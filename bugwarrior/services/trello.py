@@ -139,9 +139,9 @@ class TrelloService(IssueService):
 
     def get_cards(self, list_id):
         """ Returns an iterator for the cards in a given list, filtered
-        according to configuration value trello.only_if_member """
+        according to configuration value trello.only_if_assigned """
         params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels'}
-        member = self.config_get_default('only_if_member', None)
+        member = self.config_get_default('only_if_assigned', None)
         if member is not None:
             params['members'] = 'true'
             params['member_fields'] = 'username'

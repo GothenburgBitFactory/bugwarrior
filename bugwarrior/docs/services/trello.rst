@@ -38,7 +38,7 @@ Options
    If set, skip cards from lists whose name is present in
    ``trello.exclude_lists``.
 
-.. describe:: trello.only_if_member
+.. describe:: trello.only_if_assigned
 
    Set to a Trello username to only pull the cards this user is a member of.
 
@@ -76,7 +76,7 @@ Here's an example with more options::
     trello.include_boards = AaBbCcDd, WwXxYyZz
     trello.include_lists = Todo, Doing
     trello.exclude_lists = Done
-    trello.only_if_member = someuser
+    trello.only_if_assigned = someuser
     trello.import_labels_as_tags = true
 
 In this case, ``bugwarrior`` will only import cards from the specified boards
