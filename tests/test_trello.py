@@ -114,11 +114,19 @@ class TestTrelloService(TestCase):
         self.assertEqual(list(cards), [self.CARD1, self.CARD2, self.CARD3])
 
     @responses.activate
-    def test_get_cards_member(self):
+    def test_get_cards_assigned(self):
         self.config.set('mytrello', 'trello.only_if_assigned', 'tintin')
         service = TrelloService(self.config, 'general', 'mytrello')
         cards = service.get_cards('L15T')
         self.assertEqual(list(cards), [self.CARD1])
+
+    @responses.activate
+    def test_get_cards_assigned_unassigned(self):
+        self.config.set('mytrello', 'trello.only_if_assigned', 'tintin')
+        self.config.set('mytrello', 'trello.also_unassigned', 'true')
+        service = TrelloService(self.config, 'general', 'mytrello')
+        cards = service.get_cards('L15T')
+        self.assertEqual(list(cards), [self.CARD1, self.CARD3])
 
     @responses.activate
     def test_issues(self):

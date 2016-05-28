@@ -139,9 +139,11 @@ class TrelloService(IssueService):
 
     def get_cards(self, list_id):
         """ Returns an iterator for the cards in a given list, filtered
-        according to configuration value trello.only_if_assigned """
+        according to configuration values of trello.only_if_assigned and
+        trello.also_unassigned """
         params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels'}
         member = self.config_get_default('only_if_assigned', None)
+        unassigned = self.config_get_default('also_unassigned', False, asbool)
         if member is not None:
             params['members'] = 'true'
             params['member_fields'] = 'username'
@@ -150,7 +152,8 @@ class TrelloService(IssueService):
             **params)
         for card in cards:
             if (member is None
-                    or member in [m['username'] for m in card['members']]):
+                    or member in [m['username'] for m in card['members']]
+                    or (unassigned and not card['members'])):
                 yield card
 
     def api_request(self, url, **params):
