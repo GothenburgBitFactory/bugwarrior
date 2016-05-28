@@ -120,6 +120,29 @@ class TestTrelloService(TestCase):
         cards = service.get_cards('L15T')
         self.assertEqual(list(cards), [self.CARD1])
 
+    @responses.activate
+    def test_issues(self):
+        self.config.set('mytrello', 'trello.include_lists', 'List 1')
+        self.config.set('mytrello', 'trello.only_if_member', 'tintin')
+        service = TrelloService(self.config, 'general', 'mytrello')
+        issues = service.issues()
+        expected = {
+            'description': u'(bw)#1 - Card 1 .. https://trello.com/c/AAaaBBbb',
+            'priority': 'M',
+            'project': 'My Board',
+            'trelloboard': 'My Board',
+            'trellolist': 'List 1',
+            'trellocard': 'Card 1',
+            'trellocardid': 'C1',
+            'trelloshortlink': 'abcd',
+            'trelloshorturl': 'https://trello.com/c/AAaaBBbb',
+            'trellourl': 'https://trello.com/c/AAaBBbb/42-so-long',
+            'tags': []}
+        actual = next(issues).get_taskwarrior_record()
+        self.assertEqual(expected, actual)
+
+    maxDiff = None
+
     @patch('bugwarrior.services.trello.die')
     def test_validate_config(self, die):
         TrelloService.validate_config(self.config, 'mytrello')
