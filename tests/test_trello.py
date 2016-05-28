@@ -41,24 +41,51 @@ class TestTrelloIssue(ServiceTest):
 
 
 class TestTrelloService(TestCase):
-    CARD1 = {'name': 'Card 1', 'members': [{'username': 'tintin'}]}
-    CARD2 = {'name': 'Card 2', 'members': [{'username': 'mario'}]}
-    CARD3 = {'name': 'Card 3', 'members': []}
-    LIST1 = {'name': 'List 1'}
-    LIST2 = {'name': 'List 2'}
+    BOARD = {'id': 'B04RD', 'name': 'My Board'}
+    CARD1 = {'id': 'C1', 'name': 'Card 1', 'members': [{'username': 'tintin'}],
+             'idShort': 1,
+             'shortLink': 'abcd',
+             'shortUrl': 'https://trello.com/c/AAaaBBbb',
+             'url': 'https://trello.com/c/AAaBBbb/42-so-long'}
+    CARD2 = {'id': 'C2', 'name': 'Card 2', 'members': [{'username': 'mario'}]}
+    CARD3 = {'id': 'C3', 'name': 'Card 3', 'members': []}
+    LIST1 = {'id': 'L15T', 'name': 'List 1'}
+    LIST2 = {'id': 'ZZZZ', 'name': 'List 2'}
 
     def setUp(self):
         self.config = ConfigParser.RawConfigParser()
         self.config.add_section('mytrello')
         self.config.set('mytrello', 'trello.api_key', 'XXXX')
         self.config.set('mytrello', 'trello.token', 'YYYY')
-        self.config.set('mytrello', 'trello.board', 'B04RD')
         responses.add(responses.GET,
                       'https://api.trello.com/1/lists/L15T/cards/open',
                       json=[self.CARD1, self.CARD2, self.CARD3])
         responses.add(responses.GET,
                       'https://api.trello.com/1/boards/B04RD/lists/open',
                       json=[self.LIST1, self.LIST2])
+        responses.add(responses.GET,
+                      'https://api.trello.com/1/boards/F00',
+                      json={'id': 'F00', 'name': 'Foo Board'})
+        responses.add(responses.GET,
+                      'https://api.trello.com/1/boards/B4R',
+                      json={'id': 'B4R', 'name': 'Bar Board'})
+        responses.add(responses.GET,
+                      'https://api.trello.com/1/members/me/boards',
+                      json=[self.BOARD])
+
+    @responses.activate
+    def test_get_boards_config(self):
+        self.config.set('mytrello', 'trello.include_boards', 'F00, B4R')
+        service = TrelloService(self.config, 'general', 'mytrello')
+        boards = service.get_boards()
+        self.assertEqual(list(boards), [{'id': 'F00', 'name': 'Foo Board'},
+                                        {'id': 'B4R', 'name': 'Bar Board'}])
+
+    @responses.activate
+    def test_get_boards_api(self):
+        service = TrelloService(self.config, 'general', 'mytrello')
+        boards = service.get_boards()
+        self.assertEqual(list(boards), [self.BOARD])
 
     @responses.activate
     def test_get_lists(self):
@@ -109,9 +136,3 @@ class TestTrelloService(TestCase):
         self.config.remove_option('mytrello', 'trello.api_key')
         TrelloService.validate_config(self.config, 'mytrello')
         die.assert_called_with("[mytrello] has no 'trello.api_key'")
-
-    @patch('bugwarrior.services.trello.die')
-    def test_valid_config_no_board(self, die):
-        self.config.remove_option('mytrello', 'trello.board')
-        TrelloService.validate_config(self.config, 'mytrello')
-        die.assert_called_with("[mytrello] has no 'trello.board'")

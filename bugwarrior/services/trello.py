@@ -78,7 +78,6 @@ class TrelloService(IssueService):
         super(TrelloService, cls).validate_config(config, target)
         check_key('token')
         check_key('api_key')
-        check_key('board')
 
     def get_service_metadata(self):
         """
@@ -95,14 +94,27 @@ class TrelloService(IssueService):
         """
         Returns a list of dicts representing issues from a remote service.
         """
-        # First, we get the board name
-        board_id = self.config_get('board')
-        board = self.api_request(
-            "/1/boards/{board_id}".format(board_id=board_id), fields='name')
-        for lst in self.get_lists(board_id):
-            listextra = dict(boardname=board['name'], listname=lst['name'])
-            for card in self.get_cards(lst['id']):
-                yield self.get_issue_for_record(card, extra=listextra)
+        for board in self.get_boards():
+            for lst in self.get_lists(board['id']):
+                listextra = dict(boardname=board['name'], listname=lst['name'])
+                for card in self.get_cards(lst['id']):
+                    yield self.get_issue_for_record(card, extra=listextra)
+
+    def get_boards(self):
+        """
+        Get the list of boards to pull cards from.  If the user gave a value to
+        trello.include_boards use that, otherwise ask the Trello API for the
+        user's boards.
+        """
+        if self.config_has('include_boards'):
+            for boardid in self.config_get('include_boards', aslist):
+                # Get the board name
+                yield self.api_request(
+                    "/1/boards/{id}".format(id=boardid), fields='name')
+        else:
+            boards = self.api_request("/1/members/me/boards", fields='name')
+            for board in boards:
+                yield board
 
     def get_lists(self, board):
         """
