@@ -1,5 +1,6 @@
 import six
 
+from bugwarrior.config import aslist
 from bugwarrior.services import IssueService, Issue
 
 # This comes from PyPI
@@ -65,13 +66,11 @@ class PhabricatorService(IssueService):
         # These reads in login credentials from ~/.arcrc
         self.api = phabricator.Phabricator()
 
-        self.shown_user_phids = self.config_get_default("user_phids", "").strip().split(',')
-        if self.shown_user_phids[0] == "":
-            self.shown_user_phids = None
+        self.shown_user_phids = (
+            self.config_get_default("user_phids", None, aslist))
 
-        self.shown_project_phids = self.config_get_default("project_phids", "").strip().split(',')
-        if self.shown_project_phids[0] == "":
-            self.shown_project_phids = None
+        self.shown_project_phids = (
+            self.config_get_default("project_phids", None, aslist))
 
     def issues(self):
 
