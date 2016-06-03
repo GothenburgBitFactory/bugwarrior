@@ -42,7 +42,7 @@ class URLShortener(object):
     def shorten(self, url):
         if not url:
             return ''
-        base = 'http://da.gd/s'
+        base = 'https://da.gd/s'
         return requests.get(base, params=dict(url=url)).text.strip()
 
 
