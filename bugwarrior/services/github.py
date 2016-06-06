@@ -13,9 +13,12 @@ class GithubClient(ServiceClient):
     def __init__(self, auth):
         self.auth = auth
 
-    def get_repos(self, username):
-        tmpl = "https://api.github.com/users/{username}/repos?per_page=100"
-        url = tmpl.format(username=username)
+    def get_repos(self, username, public_only=True):
+        url = (
+            "https://api.github.com/users/{username}/repos?per_page=100".format(
+                username=username)
+            if public_only else
+            "https://api.github.com/user/repos?per_page=100")
         return self._getter(url)
 
     def get_involved_issues(self, username):
@@ -214,15 +217,17 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
+        self.login = self.config_get('login')
+        self.username = self.config_get('username')
+
         auth = {}
-        login = self.config_get('login')
         token = self.config_get_default('token')
         if self.config_has('token'):
-            token = self.config_get_password('token', login)
+            token = self.config_get_password('token', self.login)
             auth['token'] = token
         else:
-            password = self.config_get_password('password', login)
-            auth['basic'] = (login, password)
+            password = self.config_get_password('password', self.login)
+            auth['basic'] = (self.login, password)
 
         self.client = GithubClient(auth)
 
@@ -348,21 +353,21 @@ class GithubService(IssueService):
         return super(GithubService, self).include(issue)
 
     def issues(self):
-        user = self.config.get(self.target, 'github.username')
-
-        all_repos = self.client.get_repos(user)
+        all_repos = self.client.get_repos(
+            self.username, public_only=self.username != self.login)
         assert(type(all_repos) == list)
         repos = filter(self.filter_repos, all_repos)
 
         issues = {}
         if self.involved_issues:
             issues.update(
-                self.get_involved_issues(user)
+                self.get_involved_issues(self.username)
             )
         else:
             for repo in repos:
                 issues.update(
-                    self.get_owned_repo_issues(user + "/" + repo['name'])
+                    self.get_owned_repo_issues(
+                        self.username + "/" + repo['name'])
                 )
         if self.config_get_default('include_user_issues', True, asbool):
             issues.update(self.get_directly_assigned_issues())
