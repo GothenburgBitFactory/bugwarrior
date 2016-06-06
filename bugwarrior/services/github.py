@@ -14,9 +14,12 @@ class GithubClient(ServiceClient):
         self.auth = auth
 
     def get_repos(self, username):
-        tmpl = "https://api.github.com/users/{username}/repos?per_page=100"
-        url = tmpl.format(username=username)
-        return self._getter(url)
+        user_repos = self._getter(
+            "https://api.github.com/user/repos?per_page=100")
+        public_repos = self._getter(
+            "https://api.github.com/users/{username}/repos?per_page=100".format(
+                username=username))
+        return user_repos + public_repos
 
     def get_involved_issues(self, username):
         tmpl = "https://api.github.com/search/issues?q=involves%3A{username}&per_page=100"
@@ -214,15 +217,17 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
+        self.login = self.config_get('login')
+        self.username = self.config_get('username')
+
         auth = {}
-        login = self.config_get('login')
         token = self.config_get_default('token')
         if self.config_has('token'):
-            token = self.config_get_password('token', login)
+            token = self.config_get_password('token', self.login)
             auth['token'] = token
         else:
-            password = self.config_get_password('password', login)
-            auth['basic'] = (login, password)
+            password = self.config_get_password('password', self.login)
+            auth['basic'] = (self.login, password)
 
         self.client = GithubClient(auth)
 
@@ -330,6 +335,9 @@ class GithubService(IssueService):
             return issue[1]['assignee']['login']
 
     def filter_repos(self, repo):
+        if repo['owner']['login'] != self.username:
+            return False
+
         if self.exclude_repos:
             if repo['name'] in self.exclude_repos:
                 return False
@@ -348,21 +356,20 @@ class GithubService(IssueService):
         return super(GithubService, self).include(issue)
 
     def issues(self):
-        user = self.config.get(self.target, 'github.username')
-
-        all_repos = self.client.get_repos(user)
+        all_repos = self.client.get_repos(self.username)
         assert(type(all_repos) == list)
         repos = filter(self.filter_repos, all_repos)
 
         issues = {}
         if self.involved_issues:
             issues.update(
-                self.get_involved_issues(user)
+                self.get_involved_issues(self.username)
             )
         else:
             for repo in repos:
                 issues.update(
-                    self.get_owned_repo_issues(user + "/" + repo['name'])
+                    self.get_owned_repo_issues(
+                        self.username + "/" + repo['name'])
                 )
         if self.config_get_default('include_user_issues', True, asbool):
             issues.update(self.get_directly_assigned_issues())

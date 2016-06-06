@@ -78,8 +78,18 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         self.add_response(
+            'https://api.github.com/user/repos?per_page=100',
+            json=[{
+                'name': 'some_repo',
+                'owner': {'login': 'some_username'}
+            }])
+
+        self.add_response(
             'https://api.github.com/users/arbitrary_username/repos?per_page=100',
-            json=[{'name': 'arbitrary_repo'}])
+            json=[{
+                'name': 'arbitrary_repo',
+                'owner': {'login': 'arbitrary_username'}
+            }])
 
         self.add_response(
             'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues?per_page=100',
