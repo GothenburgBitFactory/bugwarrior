@@ -3,7 +3,6 @@ from collections import namedtuple
 import mock
 
 from bugwarrior.services.jira import JiraService
-
 from .base import ServiceTest, AbstractServiceTest
 
 
@@ -36,6 +35,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'priority': 'Blocker',
             'summary': arbitrary_summary,
             'timeestimate': arbitrary_estimation,
+            'created': '2016-06-06T06:07:08.123-0700',
+            'fixVersions': [{'name': '1.2.3'}]
         },
         'key': '%s-%s' % (arbitrary_project, arbitrary_id, ),
     }
@@ -67,12 +68,14 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             ),
             'annotations': arbitrary_extra['annotations'],
             'tags': [],
+            'entry': '20160606T060708-0700',
+            'jirafixversion': '1.2.3',
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: self.arbitrary_record['key'],
             issue.SUMMARY: self.arbitrary_summary,
             issue.DESCRIPTION: None,
-            issue.ESTIMATE: self.arbitrary_estimation / 60 / 60,
+            issue.ESTIMATE: self.arbitrary_estimation / 60 / 60
         }
 
         def get_url(*args):
@@ -89,8 +92,10 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         expected = {
             'annotations': [],
             'description': '(bw)Is#10 - lkjaldsfjaldf .. two/browse/DONUT-10',
+            'entry': '20160606T060708-0700',
             'jiradescription': None,
             'jiraestimate': 1,
+            'jirafixversion': '1.2.3',
             'jiraid': 'DONUT-10',
             'jirasummary': 'lkjaldsfjaldf',
             'jiraurl': 'two/browse/DONUT-10',

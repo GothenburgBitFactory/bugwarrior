@@ -1,11 +1,40 @@
 from __future__ import absolute_import
 
-from jinja2 import Template
-from jira.client import JIRA
+from datetime import datetime
+
 import six
+from jinja2 import Template
+from jira.client import JIRA as BaseJIRA
+from requests.cookies import RequestsCookieJar
 
 from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
+
+# The below `ObliviousCookieJar` and `JIRA` classes are MIT Licenced.
+# They were taken from this wonderful commit by @GaretJax
+# https://github.com/GaretJax/lancet/commit/f175cb2ec9a2135fb78188cf0b9f621b51d88977
+# Prevents Jira web client being logged out when API call is made.
+class ObliviousCookieJar(RequestsCookieJar):
+    def set_cookie(self, *args, **kwargs):
+        """Simply ignore any request to set a cookie."""
+        pass
+
+    def copy(self):
+        """Make sure to return an instance of the correct class on copying."""
+        return ObliviousCookieJar()
+
+
+class JIRA(BaseJIRA):
+    def _create_http_basic_session(self, username, password):
+        super(JIRA, self)._create_http_basic_session(username, password)
+
+        # XXX: JIRA logs the web user out if we send the session cookies we get
+        # back from the first request in any subsequent requests. As we don't
+        # need cookies when accessing the API anyway, just ignore all of them.
+        self._session.cookies = ObliviousCookieJar()
+
+    def close(self):
+        self._session.close()
 
 
 class JiraIssue(Issue):
@@ -14,6 +43,8 @@ class JiraIssue(Issue):
     FOREIGN_ID = 'jiraid'
     DESCRIPTION = 'jiradescription'
     ESTIMATE = 'jiraestimate'
+    FIX_VERSION = 'jirafixversion'
+    CREATED_AT = 'jiracreatedts'
 
     UDAS = {
         SUMMARY: {
@@ -35,11 +66,24 @@ class JiraIssue(Issue):
         ESTIMATE: {
             'type': 'numeric',
             'label': 'Estimate'
-        }
+        },
+        FIX_VERSION: {
+            'type': 'string',
+            'label': 'Fix Version'
+        },
+        CREATED_AT: {
+            'type': 'date',
+            'label': 'Created At'
+        },
     }
     UNIQUE_KEY = (URL, )
 
     PRIORITY_MAP = {
+        'Highest': 'H',
+        'High': 'H',
+        'Medium': 'M',
+        'Low': 'L',
+        'Lowest': 'L',
         'Trivial': 'L',
         'Minor': 'L',
         'Major': 'M',
@@ -53,13 +97,23 @@ class JiraIssue(Issue):
             'priority': self.get_priority(),
             'annotations': self.get_annotations(),
             'tags': self.get_tags(),
+            'entry': self.get_entry(),
 
             self.URL: self.get_url(),
             self.FOREIGN_ID: self.record['key'],
             self.DESCRIPTION: self.record.get('fields', {}).get('description'),
             self.SUMMARY: self.get_summary(),
             self.ESTIMATE: self.get_estimate(),
+            self.FIX_VERSION: self.get_fix_version()
         }
+
+    def get_entry(self):
+        created_at = self.record['fields']['created']
+
+        # strip off the timezone offset
+        timestamp, timezone = created_at[:-5], created_at[-5:]
+        timestamp = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f')
+        return timestamp.strftime('%Y%m%dT%H%M%S') + timezone
 
     def get_tags(self):
         tags = []
@@ -107,11 +161,10 @@ class JiraIssue(Issue):
 
     def get_priority(self):
         value = self.record['fields'].get('priority')
-        if isinstance(value, dict):
-            value = value.get('name')
-        elif value:
+        try:
+            value = value['name']
+        except (TypeError, ):
             value = str(value)
-
         return self.PRIORITY_MAP.get(value, self.origin['default_priority'])
 
     def get_default_description(self):
@@ -121,6 +174,12 @@ class JiraIssue(Issue):
             number=self.get_number(),
             cls='issue',
         )
+
+    def get_fix_version(self):
+        try:
+            return self.record['fields'].get('fixVersions', [{}])[0].get('name')
+        except (IndexError, KeyError, AttributeError, TypeError):
+            return None
 
 
 class JiraService(IssueService):
