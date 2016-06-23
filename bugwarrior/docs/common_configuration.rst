@@ -1,7 +1,7 @@
 How to Configure
 ================
 
-First, add a file named named ``.bugwarriorrc`` to your home folder.
+First, add a file named ``.bugwarriorrc`` to your home folder.
 This file must include at least a ``[general]`` section including
 the following option:
 

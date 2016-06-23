@@ -10,7 +10,7 @@ from requests.cookies import RequestsCookieJar
 from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
 
-# The below `ObliviousCookieJar` and `JIRA` classes are MIT Licenced.
+# The below `ObliviousCookieJar` and `JIRA` classes are MIT Licensed.
 # They were taken from this wonderful commit by @GaretJax
 # https://github.com/GaretJax/lancet/commit/f175cb2ec9a2135fb78188cf0b9f621b51d88977
 # Prevents Jira web client being logged out when API call is made.

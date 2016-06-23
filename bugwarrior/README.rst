@@ -53,7 +53,7 @@ Contributors
 ------------
 
 - Ralph Bean (primary author)
-- Ben Boeckel(contributed support for Gitlab)
+- Ben Boeckel (contributed support for Gitlab)
 - Justin Forest (contributed support for RedMine, TeamLab, and MegaPlan, as
   well as some unicode help)
 - Tycho Garen (contributed support for Jira)
