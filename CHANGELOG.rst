@@ -103,9 +103,9 @@ Commits
   https://github.com/ralphbean/bugwarrior/commit/4903451aa
 - bf6b3ad7f Fix hang when a service die
   https://github.com/ralphbean/bugwarrior/commit/bf6b3ad7f
-- ca19b58c8 Supress stack trace for SystemExit and RuntimeError
+- ca19b58c8 Suppress stack trace for SystemExit and RuntimeError
   https://github.com/ralphbean/bugwarrior/commit/ca19b58c8
-- bd4e33434 If self.shown_user_phids or self.shown_project_phids is set, retrict API calls to user_phids or project_phids to avoid time out with Phabricator installations with huge userbase.
+- bd4e33434 If self.shown_user_phids or self.shown_project_phids is set, restrict API calls to user_phids or project_phids to avoid time out with Phabricator installations with huge userbase.
   https://github.com/ralphbean/bugwarrior/commit/bd4e33434
 - a48f01cf3 Fix bitbucket test
   https://github.com/ralphbean/bugwarrior/commit/a48f01cf3
@@ -123,7 +123,7 @@ Commits
   https://github.com/ralphbean/bugwarrior/commit/0e6a153ad
 - 4c04c0c1a Remove unused dependency pycurl
   https://github.com/ralphbean/bugwarrior/commit/4c04c0c1a
-- ef1935c03 Clearified documentation for Phabricator.
+- ef1935c03 Clarified documentation for Phabricator.
   https://github.com/ralphbean/bugwarrior/commit/ef1935c03
 - d02d507fd Fix bitbucket undocumented API change.
   https://github.com/ralphbean/bugwarrior/commit/d02d507fd
@@ -731,7 +731,7 @@ Lots of updates from various contributors:
 - Fix due dates and priority `3fb653258 <https://github.com/ralphbean/bugwarrior/commit/3fb653258fe2e35590ed818369dfd6b33f8dccdf>`_
 - Add debug statements `30496b785 <https://github.com/ralphbean/bugwarrior/commit/30496b7850c98dc731db9447e4862050350139e1>`_
 - More debug statements `38b2c832f <https://github.com/ralphbean/bugwarrior/commit/38b2c832f04f626628edeee842d6ab5008467fa7>`_
-- Check if priority is set before assinging to issue `7d566463f <https://github.com/ralphbean/bugwarrior/commit/7d566463fd2e598090ea56c94e68a906fdaf92b5>`_
+- Check if priority is set before assigning to issue `7d566463f <https://github.com/ralphbean/bugwarrior/commit/7d566463fd2e598090ea56c94e68a906fdaf92b5>`_
 - Add due info only if it is present in the issue `382e8ec29 <https://github.com/ralphbean/bugwarrior/commit/382e8ec2903487471bc086b3c6956153cd1f3fec>`_
 - Merge pull request #44 from kostajh/priority-and-due-activecollab `22ce01be1 <https://github.com/ralphbean/bugwarrior/commit/22ce01be1ae6a8830d22ff4a6b2c3553392cf56e>`_
 - User defined JQL queries for Jira services `24b996753 <https://github.com/ralphbean/bugwarrior/commit/24b99675391ee82d02307f6c4cf6fdee26796f77>`_
@@ -752,7 +752,7 @@ Lots of updates from various contributors:
 - Reformat task description, add code for stripping html `b152c3eba <https://github.com/ralphbean/bugwarrior/commit/b152c3ebae2235b91855e8462415ff7635b73c1a>`_
 - Only add permalink as annotation. Comments are not useful. `78ce70cb9 <https://github.com/ralphbean/bugwarrior/commit/78ce70cb958a9a10e2a81ae1dfaf61f04707e037>`_
 - Cleanup formatting. `d117667ab <https://github.com/ralphbean/bugwarrior/commit/d117667abbe144450c5ccca5ec19f7697f7f0bf2>`_
-- Handle cases where user tasks data isnt returned `18494dc1e <https://github.com/ralphbean/bugwarrior/commit/18494dc1ebabacff75eff893123de993d3900680>`_
+- Handle cases where user tasks data isn't returned `18494dc1e <https://github.com/ralphbean/bugwarrior/commit/18494dc1ebabacff75eff893123de993d3900680>`_
 - Log task count for debugging `ae0396b8c <https://github.com/ralphbean/bugwarrior/commit/ae0396b8ceef891a73ecaa752699471c5c712454>`_
 - Debug formatting. `5e2a34716 <https://github.com/ralphbean/bugwarrior/commit/5e2a34716afd9ab20586b2093ecc5d349ca7d58b>`_
 - Add notes to README `06b8d0cad <https://github.com/ralphbean/bugwarrior/commit/06b8d0cadf8f92caa3124852b3532a68b877a7c8>`_
