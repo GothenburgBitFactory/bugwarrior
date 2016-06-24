@@ -15,7 +15,7 @@ from twiggy import log
 
 from taskw.task import Task
 
-from bugwarrior.config import asbool, get_service_password
+from bugwarrior.config import asbool, die, get_service_password
 from bugwarrior.db import MARKUP, URLShortener
 
 
