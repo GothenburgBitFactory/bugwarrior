@@ -102,7 +102,7 @@ class PagureService(IssueService):
     def __init__(self, *args, **kw):
         super(PagureService, self).__init__(*args, **kw)
 
-        self.auth = {}
+        self.session = requests.Session()
 
         self.tag = self.config_get_default('tag')
         self.repo = self.config_get_default('repo')
@@ -141,7 +141,7 @@ class PagureService(IssueService):
         key3 = key1[:-1]  # Just the singular form of key1
 
         url = self.base_url + "/api/0/" + repo + "/" + key1
-        response = requests.get(url)
+        response = self.session.get(url)
 
         if not bool(response):
             error = response.json()
@@ -189,7 +189,7 @@ class PagureService(IssueService):
     def issues(self):
         if self.tag:
             url = self.base_url + "/api/0/projects?tags=" + self.tag
-            response = requests.get(url)
+            response = self.session.get(url)
             if not bool(response):
                 raise IOError('Failed to talk to %r %r' % (url, response))
 
