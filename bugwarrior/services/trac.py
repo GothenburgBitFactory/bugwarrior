@@ -2,11 +2,13 @@ import offtrac
 import csv
 import cStringIO as StringIO
 import requests
-from twiggy import log
 import urllib
 
 from bugwarrior.config import die
 from bugwarrior.services import Issue, IssueService
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class TracIssue(Issue):
@@ -153,10 +155,10 @@ class TracService(IssueService):
                 issues[i][1]['url'] = "%s/ticket/%s" % (base_url, tickets[i]['id'])
                 issues[i][1]['number'] = int(tickets[i]['id'])
 
-        log.name(self.target).debug(" Found {0} total.", len(issues))
+        log.debug(" Found %i total.", len(issues))
 
         issues = filter(self.include, issues)
-        log.name(self.target).debug(" Pruned down to {0}", len(issues))
+        log.debug(" Pruned down to %i", len(issues))
 
         for project, issue in issues:
             issue_obj = self.get_issue_for_record(issue)

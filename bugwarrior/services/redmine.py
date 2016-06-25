@@ -1,9 +1,11 @@
 import six
 import requests
-from twiggy import log
 
 from bugwarrior.config import die
 from bugwarrior.services import Issue, IssueService, ServiceClient
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class RedMineClient(ServiceClient):
@@ -136,7 +138,7 @@ class RedMineService(IssueService):
 
     def issues(self):
         issues = self.client.find_issues(self.user_id)
-        log.name(self.target).debug(" Found {0} total.", len(issues))
+        log.debug(" Found %i total.", len(issues))
 
         for issue in issues:
             yield self.get_issue_for_record(issue)

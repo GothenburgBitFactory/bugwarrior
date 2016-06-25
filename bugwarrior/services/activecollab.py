@@ -1,10 +1,12 @@
 import re
 
 import pypandoc
-from twiggy import log
 from pyac.library import activeCollab
 from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import die
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class ActiveCollabClient(object):
@@ -242,8 +244,8 @@ class ActiveCollabService(IssueService):
                             subtask['task_id'] = task['task_id']
                             subtask['milestone'] = task['milestone']
                             issues.append(subtask)
-        log.name(self.target).debug(" Found {0} total", task_count)
-        log.name(self.target).debug(" Pruned down to {0}", len(issues))
+        log.debug(" Found %i total", task_count)
+        log.debug(" Pruned down to %i", len(issues))
         for issue in issues:
             issue_obj = self.get_issue_for_record(issue)
             extra = {

@@ -11,12 +11,14 @@ from dateutil.tz import tzlocal
 from jinja2 import Template
 import pytz
 import six
-from twiggy import log
 
 from taskw.task import Task
 
 from bugwarrior.config import asbool, die, get_service_password
 from bugwarrior.db import MARKUP, URLShortener
+
+import logging
+log = logging.getLogger(__name__)
 
 
 # Sentinels for process completion status
@@ -90,7 +92,7 @@ class IssueService(object):
         if config.has_option(self.target, 'default_priority'):
             self.default_priority = config.get(self.target, 'default_priority')
 
-        log.name(target).info("Working on [{0}]", self.target)
+        log.info("Working on [%s]", self.target)
 
     def get_templates(self):
         """ Get any defined templates for configuration values.
@@ -514,34 +516,28 @@ def _aggregate_issues(conf, main_section, target, queue, service_name):
             queue.put(issue)
             issue_count += 1
     except SystemExit as e:
-        log.name(target).critical(str(e))
+        log.critical(str(e))
         queue.put((SERVICE_FINISHED_ERROR, (target, e)))
     except BaseException as e:
-        log.name(target).trace('error').critical(
-            "Worker for [%s] failed: %s" % (target, e)
-        )
-        queue.put(
-            (SERVICE_FINISHED_ERROR, (target, e))
-        )
+        log.exception("Worker for [%s] failed: %s" % (target, e))
+        queue.put((SERVICE_FINISHED_ERROR, (target, e)))
     else:
-        queue.put(
-            (SERVICE_FINISHED_OK, (target, issue_count, ))
-        )
+        queue.put((SERVICE_FINISHED_OK, (target, issue_count, )))
     finally:
         duration = time.time() - start
-        log.name(target).info("Done with [%s] in %fs" % (target, duration))
+        log.info("Done with [%s] in %fs" % (target, duration))
 
 
 def aggregate_issues(conf, main_section, debug):
     """ Return all issues from every target. """
-    log.name('bugwarrior').info("Starting to aggregate remote issues.")
+    log.info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
     targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
 
     queue = multiprocessing.Queue()
 
-    log.name('bugwarrior').info("Spawning %i workers." % len(targets))
+    log.info("Spawning %i workers." % len(targets))
     processes = []
 
     if debug:
@@ -575,7 +571,7 @@ def aggregate_issues(conf, main_section, debug):
             completion_type, args = issue
             if completion_type == SERVICE_FINISHED_ERROR:
                 target, e = args
-                log.name('bugwarrior').info("Terminating workers")
+                log.info("Terminating workers")
                 for process in processes:
                     process.terminate()
                 raise RuntimeError(
@@ -584,4 +580,4 @@ def aggregate_issues(conf, main_section, debug):
             continue
         yield issue
 
-    log.name('bugwarrior').info("Done aggregating remote issues.")
+    log.info("Done aggregating remote issues.")

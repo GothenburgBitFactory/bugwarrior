@@ -1,9 +1,11 @@
 import six
 import requests
-from twiggy import log
 
 from bugwarrior.config import die
 from bugwarrior.services import Issue, IssueService, ServiceClient
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class TeamLabClient(ServiceClient):
@@ -138,13 +140,11 @@ class TeamLabService(IssueService):
 
     def issues(self):
         issues = self.client.get_task_list()
-        log.name(self.target).debug(
-            " Remote has {0} total issues.", len(issues))
+        log.debug(" Remote has %i total issues.", len(issues))
 
         # Filter out closed tasks.
         issues = filter(lambda i: i["status"] == 1, issues)
-        log.name(self.target).debug(
-            " Remote has {0} active issues.", len(issues))
+        log.debug(" Remote has %i active issues.", len(issues))
 
         for issue in issues:
             yield self.get_issue_for_record(issue)

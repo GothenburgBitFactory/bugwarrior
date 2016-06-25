@@ -5,10 +5,10 @@ import subprocess
 import sys
 
 import six
-import twiggy
-from twiggy import log
-from twiggy.levels import name2level
 from xdg import BaseDirectory
+
+import logging
+log = logging.getLogger(__name__)
 
 
 def asbool(some_value):
@@ -90,16 +90,16 @@ def load_example_rc():
 error_template = """
 *************************************************
 * There was a problem with your bugwarriorrc    *
-*   {msg}
+*   {error_msg}
 * Here's an example template to help:           *
 *************************************************
 {example}"""
 
 
-def die(msg):
-    log.options(suppress_newlines=False).critical(
+def die(error_msg):
+    log.critical(
         error_template,
-        msg=msg,
+        error_msg=error_msg,
         example=load_example_rc(),
     )
     sys.exit(1)
@@ -109,10 +109,21 @@ def validate_config(config, main_section):
     if not config.has_section(main_section):
         die("No [%s] section found." % main_section)
 
-    twiggy.quickSetup(
-        name2level(config.get(main_section, 'log.level')),
-        config.get(main_section, 'log.file')
+    logging.basicConfig(
+        level=getattr(logging, config.get(main_section, 'log.level')),
+        filename=config.get(main_section, 'log.file'),
     )
+
+    # In general, its nice to log "everything", but some of the loggers from
+    # our dependencies are very very spammy.  Here, we silence most of their
+    # noise:
+    spammers = [
+        'bugzilla.base',
+        'bugzilla.bug',
+        'requests.packages.urllib3.connectionpool',
+    ]
+    for spammer in spammers:
+        logging.getLogger(spammer).setLevel(logging.WARN)
 
     if not config.has_option(main_section, 'targets'):
         die("No targets= item in [%s] found." % main_section)
@@ -141,7 +152,7 @@ def validate_config(config, main_section):
 
 
 def load_config(main_section, interactive=False):
-    config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
+    config = ConfigParser({'log.level': "INFO", 'log.file': None})
     path = None
     first_path = BaseDirectory.load_first_config('bugwarrior')
     if first_path is not None:

@@ -1,10 +1,12 @@
 from __future__ import absolute_import
 
 import megaplan
-from twiggy import log
 
 from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class MegaplanIssue(Issue):
@@ -104,7 +106,7 @@ class MegaplanService(IssueService):
 
     def issues(self):
         issues = self.client.get_actual_tasks()
-        log.name(self.target).debug(" Found {0} total.", len(issues))
+        log.debug(" Found %i total.", len(issues))
 
         for issue in issues:
             yield self.get_issue_for_record(issue)

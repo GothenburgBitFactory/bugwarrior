@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
 
 import requests
-from twiggy import log
 
 from bugwarrior import data
 from bugwarrior.services import IssueService, Issue, ServiceClient
 from bugwarrior.config import asbool, die
 
+import logging
+log = logging.getLogger(__name__)
 
 class BitbucketIssue(Issue):
     TITLE = 'bitbuckettitle'
@@ -215,7 +216,7 @@ class BitbucketService(IssueService, ServiceClient):
         ])
 
         issues = sum([self.fetch_issues(repo) for repo in repo_tags], [])
-        log.name(self.target).debug(" Found {0} total.", len(issues))
+        log.debug(" Found %i total.", len(issues))
 
         closed = ['resolved', 'duplicate', 'wontfix', 'invalid', 'closed']
         try:
@@ -223,7 +224,7 @@ class BitbucketService(IssueService, ServiceClient):
         except KeyError:  # Undocumented API change.
             issues = filter(lambda tup: tup[1]['state'] not in closed, issues)
         issues = filter(self.include, issues)
-        log.name(self.target).debug(" Pruned down to {0}", len(issues))
+        log.debug(" Pruned down to %i", len(issues))
 
         for tag, issue in issues:
             issue_obj = self.get_issue_for_record(issue)
@@ -239,13 +240,13 @@ class BitbucketService(IssueService, ServiceClient):
         if not self.filter_merge_requests:
             pull_requests = sum(
                 [self.fetch_pull_requests(repo) for repo in repo_tags], [])
-            log.name(self.target).debug(" Found {0} total.", len(pull_requests))
+            log.debug(" Found %i total.", len(pull_requests))
 
             closed = ['rejected', 'fulfilled']
             not_resolved = lambda tup: tup[1]['state'] not in closed
             pull_requests = filter(not_resolved, pull_requests)
             pull_requests = filter(self.include, pull_requests)
-            log.name(self.target).debug(" Pruned down to {0}", len(pull_requests))
+            log.debug(" Pruned down to %i", len(pull_requests))
 
             for tag, issue in pull_requests:
                 issue_obj = self.get_issue_for_record(issue)

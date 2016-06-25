@@ -3,10 +3,12 @@ import time
 
 import six
 import requests
-from twiggy import log
 
 from bugwarrior.services import IssueService, Issue, ServiceClient
 from bugwarrior.config import die
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class ActiveCollab2Client(ServiceClient):
@@ -60,7 +62,7 @@ class ActiveCollab2Client(ServiceClient):
             assigned_task = self.get_task_dict(project_id, key, task)
 
             if assigned_task:
-                log.name(self.target).debug(
+                log.debug(
                     " Adding '" + assigned_task['description'] +
                     "' to task list.")
                 yield assigned_task
@@ -207,7 +209,7 @@ class ActiveCollab2Service(IssueService):
         projects = self.projects
         for project in projects:
             for project_id, project_name in project.iteritems():
-                log.name(self.target).debug(
+                log.debug(
                     " Getting tasks for #" + project_id +
                     " " + project_name + '"')
                 issue_generators.append(
@@ -216,8 +218,7 @@ class ActiveCollab2Service(IssueService):
                     )
                 )
 
-        log.name(self.target).debug(
-            " Elapsed Time: %s" % (time.time() - start))
+        log.debug(" Elapsed Time: %s" % (time.time() - start))
 
         for record in itertools.chain(*issue_generators):
             yield self.get_issue_for_record(record)
