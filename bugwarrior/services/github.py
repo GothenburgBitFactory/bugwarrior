@@ -12,6 +12,10 @@ from bugwarrior.services import IssueService, Issue, ServiceClient
 class GithubClient(ServiceClient):
     def __init__(self, auth):
         self.auth = auth
+        self.session = requests.Session()
+        if 'token' in self.auth:
+            authorization = 'token ' + self.auth['token']
+            self.session.headers = {'Authorization': authorization}
 
     def get_repos(self, username):
         user_repos = self._getter(
@@ -56,19 +60,14 @@ class GithubClient(ServiceClient):
         """ Pagination utility.  Obnoxious. """
 
         kwargs = {}
-
-        if 'token' in self.auth:
-            kwargs['headers'] = {
-                'Authorization': 'token ' + self.auth['token']
-            }
-        elif 'basic' in self.auth:
+        if 'basic' in self.auth:
             kwargs['auth'] = self.auth['basic']
 
         results = []
         link = dict(next=url)
 
         while 'next' in link:
-            response = requests.get(link['next'], **kwargs)
+            response = self.session.get(link['next'], **kwargs)
             json_res = self.json_response(response)
 
             if subkey is not None:
