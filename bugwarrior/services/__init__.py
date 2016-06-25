@@ -532,7 +532,7 @@ def _aggregate_issues(conf, main_section, target, queue, service_name):
         log.name(target).info("Done with [%s] in %fs" % (target, duration))
 
 
-def aggregate_issues(conf, main_section, debug):
+def aggregate_issues(conf, main_section):
     """ Return all issues from every target. """
     log.name('bugwarrior').info("Starting to aggregate remote issues.")
 
@@ -544,29 +544,19 @@ def aggregate_issues(conf, main_section, debug):
     log.name('bugwarrior').info("Spawning %i workers." % len(targets))
     processes = []
 
-    if debug:
-        for target in targets:
-            _aggregate_issues(
-                conf,
-                main_section,
-                target,
-                queue,
-                conf.get(target, 'service')
-            )
-    else:
-        for target in targets:
-            proc = multiprocessing.Process(
-                target=_aggregate_issues,
-                args=(conf, main_section, target, queue, conf.get(target, 'service'))
-            )
-            proc.start()
-            processes.append(proc)
+    for target in targets:
+        proc = multiprocessing.Process(
+            target=_aggregate_issues,
+            args=(conf, main_section, target, queue, conf.get(target, 'service'))
+        )
+        proc.start()
+        processes.append(proc)
 
-            # Sleep for 1 second here to try and avoid a race condition where
-            # all N workers start up and ask the gpg-agent process for
-            # information at the same time.  This causes gpg-agent to fumble
-            # and tell some of our workers some incomplete things.
-            time.sleep(1)
+        # Sleep for 1 second here to try and avoid a race condition where
+        # all N workers start up and ask the gpg-agent process for
+        # information at the same time.  This causes gpg-agent to fumble
+        # and tell some of our workers some incomplete things.
+        time.sleep(1)
 
     currently_running = len(targets)
     while currently_running > 0:
