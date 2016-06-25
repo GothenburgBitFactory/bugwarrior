@@ -1,5 +1,4 @@
 import bugzilla
-from twiggy import log
 
 import time
 import pytz
@@ -8,6 +7,9 @@ import six
 
 from bugwarrior.config import die, asbool
 from bugwarrior.services import IssueService, Issue
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class BugzillaIssue(Issue):
@@ -113,7 +115,7 @@ class BugzillaService(IssueService):
             'include_needinfos', False, to_type=lambda x: x == "True")
         self.open_statuses = self.config_get_default(
             'open_statuses', _open_statuses, to_type=lambda x: x.split(','))
-        log.name(self.target).debug(" filtering on statuses: {0}", self.open_statuses)
+        log.debug(" filtering on statuses: %r", self.open_statuses)
 
         # So more modern bugzilla's require that we specify
         # query_format=advanced along with the xmlrpc request.
@@ -235,7 +237,7 @@ class BugzillaService(IssueService):
         ]
 
         issues = [(self.target, bug) for bug in bugs]
-        log.name(self.target).debug(" Found {0} total.", len(issues))
+        log.debug(" Found %i total.", len(issues))
 
         # Build a url for each issue
         base_url = "https://%s/show_bug.cgi?id=" % (self.base_uri)

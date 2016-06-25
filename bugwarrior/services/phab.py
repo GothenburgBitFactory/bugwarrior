@@ -1,10 +1,13 @@
 import six
-from twiggy import log
 
 from bugwarrior.services import IssueService, Issue
 
 # This comes from PyPI
 import phabricator
+
+import logging
+log = logging.getLogger(__name__)
+
 
 class PhabricatorIssue(Issue):
     TITLE = 'phabricatortitle'
@@ -92,7 +95,7 @@ class PhabricatorService(IssueService):
             issues = self.api.maniphest.query(status='status-open')
             issues = list(issues.iteritems())
 
-        log.name(self.target).info("Found %i issues" % len(issues))
+        log.info("Found %i issues" % len(issues))
 
         for phid, issue in issues:
 
@@ -135,7 +138,7 @@ class PhabricatorService(IssueService):
         diffs = self.api.differential.query(status='status-open')
         diffs = list(diffs)
 
-        log.name(self.target).info("Found %i differentials" % len(diffs))
+        log.info("Found %i differentials" % len(diffs))
 
         for diff in list(diffs):
 

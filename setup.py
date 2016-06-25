@@ -28,7 +28,6 @@ setup(name='bugwarrior',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-          "twiggy",
           "requests",
           "offtrac",
           "python-bugzilla",

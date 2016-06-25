@@ -4,10 +4,12 @@ import requests
 import six
 
 from jinja2 import Template
-from twiggy import log
 
 from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue, ServiceClient
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class GitlabIssue(Issue):
@@ -354,9 +356,9 @@ class GitlabService(IssueService, ServiceClient):
             issues.update(
                 self.get_repo_issues(rid)
             )
-        log.name(self.target).debug(" Found {0} issues.", len(issues))
+        log.debug(" Found %i issues.", len(issues))
         issues = filter(self.include, issues.values())
-        log.name(self.target).debug(" Pruned down to {0} issues.", len(issues))
+        log.debug(" Pruned down to %i issues.", len(issues))
 
         for rid, issue in issues:
             repo = repo_map[rid]
@@ -380,9 +382,9 @@ class GitlabService(IssueService, ServiceClient):
                 merge_requests.update(
                     self.get_repo_merge_requests(rid)
                 )
-            log.name(self.target).debug(" Found {0} merge requests.", len(merge_requests))
+            log.debug(" Found %i merge requests.", len(merge_requests))
             merge_requests = filter(self.include, merge_requests.values())
-            log.name(self.target).debug(" Pruned down to {0} merge requests.", len(merge_requests))
+            log.debug(" Pruned down to %i merge requests.", len(merge_requests))
 
             for rid, issue in merge_requests:
                 repo = repo_map[rid]

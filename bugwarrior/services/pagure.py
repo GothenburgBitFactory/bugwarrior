@@ -6,10 +6,13 @@ import pytz
 import requests
 
 from jinja2 import Template
-from twiggy import log
 
 from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
+
+import logging
+log = logging.getLogger(__name__)
+
 
 class PagureIssue(Issue):
     TITLE = 'paguretitle'
@@ -204,9 +207,9 @@ class PagureService(IssueService):
             issues.extend(self.get_issues(repo, ('issues', 'issues')))
             issues.extend(self.get_issues(repo, ('pull-requests', 'requests')))
 
-        log.name(self.target).debug(" Found {0} issues.", len(issues))
+        log.debug(" Found %i issues.", len(issues))
         issues = filter(self.include, issues)
-        log.name(self.target).debug(" Pruned down to {0} issues.", len(issues))
+        log.debug(" Pruned down to %i issues.", len(issues))
 
         for repo, issue in issues:
             # Stuff this value into the upstream dict for:

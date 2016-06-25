@@ -1,10 +1,8 @@
 import os
 
-from twiggy import log
 from lockfile import LockTimeout
 from lockfile.pidlockfile import PIDLockFile
 
-import twiggy
 import getpass
 import keyring
 import click
@@ -15,6 +13,9 @@ from bugwarrior.db import (
     get_defined_udas_as_strings,
     synchronize,
 )
+
+import logging
+log = logging.getLogger(__name__)
 
 
 # We overwrite 'list' further down.
@@ -37,7 +38,7 @@ def pull(dry_run, flavor, interactive, debug):
 
     Relies on configuration in bugwarriorrc
     """
-    twiggy.quickSetup()
+
     try:
         main_section = _get_section_name(flavor)
 
@@ -56,7 +57,7 @@ def pull(dry_run, flavor, interactive, debug):
         finally:
             lockfile.release()
     except LockTimeout:
-        log.name('command').critical(
+        log.critical(
             'Your taskrc repository is currently locked. '
             'Remove the file at %s if you are sure no other '
             'bugwarrior processes are currently running.' % (
@@ -64,9 +65,9 @@ def pull(dry_run, flavor, interactive, debug):
             )
         )
     except RuntimeError as e:
-        log.name('command').critical("Aborted (%s)" % e)
+        log.critical("Aborted (%s)" % e)
     except:
-        log.name('command').trace('error').critical('oh noes')
+        log.exception('oh noes')
 
 
 @click.group()

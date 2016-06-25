@@ -3,10 +3,12 @@ import six
 
 import requests
 from jinja2 import Template
-from twiggy import log
 
 from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue, ServiceClient
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class GithubClient(ServiceClient):
@@ -284,7 +286,7 @@ class GithubService(IssueService):
             url = issue['html_url']
             tag = re.match('.*github\\.com/(.*)/(issues|pull)/[^/]*$', url)
             if tag is None:
-                log.name(self.target).critical(" Unrecognized issue URL: {0}.", url)
+                log.critical(" Unrecognized issue URL: %s.", url)
                 continue
             issues[url] = (tag.group(1), issue)
         return issues
@@ -313,7 +315,7 @@ class GithubService(IssueService):
         annotations = []
         if self.annotation_comments:
             comments = self._comments(tag, issue['number'])
-            log.name(self.target).debug(" got comments for {0}", issue['html_url'])
+            log.debug(" got comments for %s", issue['html_url'])
             annotations = ((
                 c['user']['login'],
                 c['body'],
@@ -373,9 +375,9 @@ class GithubService(IssueService):
                 )
         if self.config_get_default('include_user_issues', True, asbool):
             issues.update(self.get_directly_assigned_issues())
-        log.name(self.target).debug(" Found {0} issues.", len(issues))
+        log.debug(" Found %i issues.", len(issues))
         issues = filter(self.include, issues.values())
-        log.name(self.target).debug(" Pruned down to {0} issues.", len(issues))
+        log.debug(" Pruned down to %i issues.", len(issues))
 
         for tag, issue in issues:
             # Stuff this value into the upstream dict for:
