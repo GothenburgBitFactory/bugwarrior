@@ -31,8 +31,7 @@ def _get_section_name(flavor):
 @click.option('--dry-run', is_flag=True)
 @click.option('--flavor', default=None, help='The flavor to use')
 @click.option('--interactive', is_flag=True)
-@click.option('--debug', is_flag=True)
-def pull(dry_run, flavor, interactive, debug):
+def pull(dry_run, flavor, interactive):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.
 
     Relies on configuration in bugwarriorrc
@@ -49,7 +48,7 @@ def pull(dry_run, flavor, interactive, debug):
         lockfile.acquire(timeout=10)
         try:
             # Get all the issues.  This can take a while.
-            issue_generator = aggregate_issues(config, main_section, debug)
+            issue_generator = aggregate_issues(config, main_section)
 
             # Stuff them in the taskwarrior db as necessary
             synchronize(issue_generator, config, main_section, dry_run)
