@@ -15,6 +15,7 @@ class TracIssue(Issue):
     SUMMARY = 'tracsummary'
     URL = 'tracurl'
     NUMBER = 'tracnumber'
+    COMPONENT = 'traccomponent'
 
     UDAS = {
         SUMMARY: {
@@ -28,6 +29,10 @@ class TracIssue(Issue):
         NUMBER: {
             'type': 'numeric',
             'label': 'Trac Number',
+        },
+        COMPONENT: {
+            'type': 'string',
+            'label': 'Trac Component',
         },
     }
     UNIQUE_KEY = (URL, )
@@ -49,6 +54,7 @@ class TracIssue(Issue):
             self.URL: self.record['url'],
             self.SUMMARY: self.record['summary'],
             self.NUMBER: self.record['number'],
+            self.COMPONENT: self.record['component'],
         }
 
     def get_default_description(self):
@@ -143,7 +149,7 @@ class TracService(IssueService):
                     'status': '!closed',
                     'max': '0',
                     'format': 'csv',
-                    'col': ['id', 'summary', 'owner', 'priority'],
+                    'col': ['id', 'summary', 'owner', 'priority', 'component'],
                 })
             if resp.status_code != 200:
                 raise RuntimeError("Trac responded with %s" % resp)
