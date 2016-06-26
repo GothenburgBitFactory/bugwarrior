@@ -97,11 +97,10 @@ error_template = """
 
 
 def die(error_msg):
-    log.critical(
-        error_template,
+    log.critical(error_template.format(
         error_msg=error_msg,
         example=load_example_rc(),
-    )
+    ))
     sys.exit(1)
 
 
