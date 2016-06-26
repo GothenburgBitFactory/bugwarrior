@@ -38,6 +38,7 @@ class TestTracIssue(AbstractServiceTest, ServiceTest):
         'summary': 'Some Summary',
         'number': 204,
         'priority': 'critical',
+        'component': 'testcomponent',
     }
 
     def setUp(self):
@@ -69,6 +70,7 @@ class TestTracIssue(AbstractServiceTest, ServiceTest):
             issue.URL: self.arbitrary_issue['url'],
             issue.SUMMARY: self.arbitrary_issue['summary'],
             issue.NUMBER: self.arbitrary_issue['number'],
+            issue.COMPONENT: self.arbitrary_issue['component'],
         }
         actual_output = issue.to_taskwarrior()
 
@@ -86,6 +88,7 @@ class TestTracIssue(AbstractServiceTest, ServiceTest):
             'tags': [],
             'tracnumber': 1,
             'tracsummary': 'Some Summary',
-            'tracurl': 'https://http://ljlkajsdfl.com/ticket/1'}
+            'tracurl': 'https://http://ljlkajsdfl.com/ticket/1',
+            'traccomponent': 'testcomponent'}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)
