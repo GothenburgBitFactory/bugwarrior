@@ -17,7 +17,7 @@ class GithubClient(ServiceClient):
         self.session = requests.Session()
         if 'token' in self.auth:
             authorization = 'token ' + self.auth['token']
-            self.session.headers = {'Authorization': authorization}
+            self.session.headers['Authorization'] = authorization
 
     def get_repos(self, username):
         user_repos = self._getter(
