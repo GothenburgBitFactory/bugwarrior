@@ -50,7 +50,29 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Bugwarrior'
-copyright = u'2014, Ralph Bean'
+copyright = u'2014-2016, Ralph Bean and contributors'
+
+docs_authors = [
+    'Adam Coddington',
+    'Ben Boeckel',
+    'Boris Churzin',
+    'Brian (bex) Exelbierd',
+    'Dustin J. Mitchell',
+    'Francesco de Virgilio',
+    'Grégoire Détrez',
+    'Iain R. Learmonth',
+    'Ivan Čukić',
+    'Jakub Wilk',
+    'Jens Ohlig',
+    'Mark Mulligan',
+    'Matthew Avant',
+    'Nick Douma',
+    'Ralph Bean',
+    'Ryan S. Brown',
+    'Ryne Everett',
+    'Sayan Chowdhury',
+]
+
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -236,7 +258,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'bugwarrior', u'Bugwarrior Documentation',
-     [u'Ralph Bean'], 1)
+     docs_authors, 1)
 ]
 
 # If true, show URL addresses after external links.
