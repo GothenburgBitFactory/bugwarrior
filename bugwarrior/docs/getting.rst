@@ -22,6 +22,10 @@ want to use bugwarrior with Jira::
 
     $ pip install bugwarrior[jira]
 
+If you are using the z-shell (ZSH) you need to add quotation marks:
+
+    $ pip install "bugwarrior[jira]"
+
 
 Installing from Source
 ----------------------
