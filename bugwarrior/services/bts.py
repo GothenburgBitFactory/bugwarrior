@@ -1,0 +1,159 @@
+import debianbts
+import urllib2
+import urllib
+import json
+
+from bugwarrior.config import die
+from bugwarrior.services import Issue, IssueService
+
+import logging
+log = logging.getLogger(__name__)
+
+class BTSIssue(Issue):
+    SUBJECT = 'btssubject'
+    URL = 'btsurl'
+    NUMBER = 'btsnumber'
+    PACKAGE = 'btspackage'
+    SOURCE = 'btssource'
+    FORWARDED = 'btsforwarded'
+
+    UDAS = {
+        SUBJECT: {
+            'type': 'string',
+            'label': 'Debian BTS Subject',
+        },
+        URL: {
+            'type': 'string',
+            'label': 'Debian BTS URL',
+        },
+        NUMBER: {
+            'type': 'numeric',
+            'label': 'Debian BTS Number',
+        },
+        PACKAGE: {
+            'type': 'string',
+            'label': 'Debian BTS Package',
+        },
+        SOURCE: {
+            'type': 'string',
+            'label': 'Debian BTS Source Package',
+        },
+        FORWARDED: {
+            'type': 'string',
+            'label': 'Debian BTS Forwarded URL',
+        },
+    }
+    UNIQUE_KEY = (URL, )
+
+    PRIORITY_MAP = {
+        'wishlist': 'L',
+        'minor': 'L',
+        'normal': 'M',
+        'important': 'M',
+        'serious': 'H',
+        'grave': 'H',
+        'critical': 'H',
+    }
+
+    def to_taskwarrior(self):
+        return {
+            'priority': self.get_priority(),
+
+            self.URL: self.record['url'],
+            self.SUBJECT: self.record['subject'],
+            self.NUMBER: self.record['number'],
+            self.PACKAGE: self.record['package'],
+            self.SOURCE: self.record['source'],
+            self.FORWARDED: self.record['forwarded'],
+        }
+
+    def get_default_description(self):
+
+        return self.build_default_description(
+            title=self.record['subject'],
+            url=self.get_processed_url(self.record['url']),
+            number=self.record['number'],
+            cls='issue'
+        )
+
+    def get_priority(self):
+        return self.PRIORITY_MAP.get(
+            self.record.get('priority'),
+            self.origin['default_priority']
+        )
+
+
+class BTSService(IssueService):
+    ISSUE_CLASS = BTSIssue
+    CONFIG_PREFIX = 'bts'
+
+    def __init__(self, *args, **kw):
+        super(BTSService, self).__init__(*args, **kw)
+        self.email = self.config_get_default('email', default=None)
+        self.packages = self.config_get_default('packages', default=None)
+        self.udd = self.config_get_default('udd', default=False).lower() in ['true', 'yes', 'enabled']
+        self.udd_ignore_sponsor = self.config_get_default('udd_ignore_sponsor', default="True").lower() in ['true', 'yes', 'enabled']
+        self.ignore_pkg = self.config_get_default('ignore_pkg', default=None)
+        self.ignore_src = self.config_get_default('ignore_src', default=None)
+
+    @classmethod
+    def validate_config(cls, config, target):
+#        if not config.has_option(target, 'trac.base_uri'):
+#            die("[%s] has no 'base_uri'" % target)
+#        elif '://' in config.get(target, 'trac.base_uri'):
+#            die("[%s] do not include scheme in 'base_uri'" % target)
+
+        IssueService.validate_config(config, target)
+
+    def _issue_from_bug(self, bug):
+        return {'number': bug.bug_num,
+                'url': 'https://bugs.debian.org/' + str(bug.bug_num),
+                'package': bug.package,
+                'subject': bug.subject,
+                'severity': bug.severity,
+                'source': bug.source,
+                'forwarded': bug.forwarded,
+               }
+
+    def issues(self):
+        collected_bugs = []
+        if self.email:
+            owned_bugs = debianbts.get_bugs("owner", self.email, "status", "open")
+            collected_bugs.extend(owned_bugs)
+        if self.udd:
+            udd_url = "https://udd.debian.org/bugs/?format=json&dmd=1&email1=" + urllib.quote_plus(self.email)
+            if self.udd_ignore_sponsor:
+                udd_url = udd_url + "&nosponsor1=on"
+            udd = urllib2.urlopen(udd_url)
+            udd_result = json.loads(udd.read())
+            for bug in udd_result:
+                if bug not in collected_bugs:
+                    collected_bugs.append(bug['id'])
+        if self.packages:
+            packages = self.packages.split(",")
+            for pkg in packages:
+                pkg_bugs = debianbts.get_bugs("package", pkg, "status", "open")
+                for bug in pkg_bugs:
+                    if bug not in collected_bugs:
+                        collected_bugs.append(bug)
+        
+        issues = [self._issue_from_bug(bug) for bug in debianbts.get_status(collected_bugs)]
+
+        log.debug(" Found %i total.", len(issues))
+
+        if self.ignore_pkg:
+            ignore_pkg = self.ignore_pkg.split(",")
+            for pkg in ignore_pkg:
+                issues = [issue for issue in issues if not issue['package'] == pkg]
+
+        if self.ignore_src:
+            ignore_src = self.ignore_src.split(",")
+            for src in ignore_src:
+                issues = [issue for issue in issues if not issue['source'] == src]
+
+        log.debug(" Pruned down to %i.", len(issues))
+
+        for issue in issues:
+            issue_obj = self.get_issue_for_record(issue)
+            yield issue_obj
+

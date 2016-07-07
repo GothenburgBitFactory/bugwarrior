@@ -66,6 +66,7 @@ setup(name='bugwarrior',
       gitlab=bugwarrior.services.gitlab:GitlabService
       bitbucket=bugwarrior.services.bitbucket:BitbucketService
       trac=bugwarrior.services.trac:TracService
+      bts=bugwarrior.services.bts:BTSService
       bugzilla=bugwarrior.services.bz:BugzillaService
       teamlab=bugwarrior.services.teamlab:TeamLabService
       redmine=bugwarrior.services.redmine:RedMineService
