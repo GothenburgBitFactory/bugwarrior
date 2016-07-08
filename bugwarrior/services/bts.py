@@ -1,7 +1,7 @@
 import debianbts
 import requests
 
-from bugwarrior.config import die
+from bugwarrior.config import die, asbool
 from bugwarrior.services import Issue, IssueService, ServiceClient
 
 import logging
@@ -91,8 +91,8 @@ class BTSService(IssueService, ServiceClient):
         super(BTSService, self).__init__(*args, **kw)
         self.email = self.config_get_default('email', default=None)
         self.packages = self.config_get_default('packages', default=None)
-        self.udd = self.config_get_default('udd', default=False).lower() in ['true', 'yes', 'enabled']
-        self.udd_ignore_sponsor = self.config_get_default('udd_ignore_sponsor', default="True").lower() in ['true', 'yes', 'enabled']
+        self.udd = self.config_get_default('udd', default=False, to_type=asbool)
+        self.udd_ignore_sponsor = self.config_get_default('udd_ignore_sponsor', default=True, to_type=asbool)
         self.ignore_pkg = self.config_get_default('ignore_pkg', default=None)
         self.ignore_src = self.config_get_default('ignore_src', default=None)
 
