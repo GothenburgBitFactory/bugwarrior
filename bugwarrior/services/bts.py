@@ -1,13 +1,13 @@
 import debianbts
-import urllib2
-import urllib
-import json
+import requests
 
 from bugwarrior.config import die
-from bugwarrior.services import Issue, IssueService
+from bugwarrior.services import Issue, IssueService, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
+
+UDD_BUGS_SEARCH = "https://udd.debian.org/bugs/"
 
 class BTSIssue(Issue):
     SUBJECT = 'btssubject'
@@ -83,7 +83,7 @@ class BTSIssue(Issue):
         )
 
 
-class BTSService(IssueService):
+class BTSService(IssueService, ServiceClient):
     ISSUE_CLASS = BTSIssue
     CONFIG_PREFIX = 'bts'
 
@@ -115,20 +115,27 @@ class BTSService(IssueService):
                 'forwarded': bug.forwarded,
                }
 
+    def _get_udd_bugs(self):
+        request_params = {
+            'format': 'json',
+            'dmd': 1,
+            'email1': self.email,
+            }
+        if self.udd_ignore_sponsor:
+            request_params['nosponsor1'] = "on"
+        resp = requests.get(UDD_BUGS_SEARCH, request_params)
+        return self.json_response(resp)
+
     def issues(self):
+        # Initialise empty list of bug numbers
         collected_bugs = []
+
+        # Search BTS for bugs owned by email address
         if self.email:
             owned_bugs = debianbts.get_bugs("owner", self.email, "status", "open")
             collected_bugs.extend(owned_bugs)
-        if self.udd:
-            udd_url = "https://udd.debian.org/bugs/?format=json&dmd=1&email1=" + urllib.quote_plus(self.email)
-            if self.udd_ignore_sponsor:
-                udd_url = udd_url + "&nosponsor1=on"
-            udd = urllib2.urlopen(udd_url)
-            udd_result = json.loads(udd.read())
-            for bug in udd_result:
-                if bug not in collected_bugs:
-                    collected_bugs.append(bug['id'])
+
+        # Search BTS for bugs related to specified packages
         if self.packages:
             packages = self.packages.split(",")
             for pkg in packages:
@@ -136,7 +143,15 @@ class BTSService(IssueService):
                 for bug in pkg_bugs:
                     if bug not in collected_bugs:
                         collected_bugs.append(bug)
-        
+
+        # Search UDD bugs search for bugs belonging to packages that
+        # are maintained by the email address
+        if self.udd:
+            udd_bugs = self._get_udd_bugs()
+            for bug in udd_bugs:
+                if bug not in collected_bugs:
+                    collected_bugs.append(bug['id'])
+
         issues = [self._issue_from_bug(bug) for bug in debianbts.get_status(collected_bugs)]
 
         log.debug(" Found %i total.", len(issues))
