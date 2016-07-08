@@ -19,7 +19,7 @@ before_install:
   - pip install responses
   - cd $TRAVIS_BUILD_DIR
 install:
-  - pip install .[jira,megaplan,activecollab]
+  - pip install .[jira,megaplan,activecollab,bts]
   - pip install coveralls
   - pip install coverage
 script: nosetests -w tests --with-coverage --cover-package=bugwarrior

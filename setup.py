@@ -45,7 +45,8 @@ setup(name='bugwarrior',
       extras_require=dict(
           jira=["jira>=0.22"],
           megaplan=["megaplan>=1.4"],
-          activecollab=["pypandoc", "pyac"]
+          activecollab=["pypandoc", "pyac"],
+          bts=["PySimpleSOAP","python-debianbts"],
       ),
       tests_require=[
           "Mock",
@@ -54,6 +55,7 @@ setup(name='bugwarrior',
           "bugwarrior[jira]",
           "bugwarrior[megaplan]",
           "bugwarrior[activecollab]",
+          "bugwarrior[bts]",
       ],
       test_suite='nose.collector',
       entry_points="""
