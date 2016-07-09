@@ -17,6 +17,7 @@ before_install:
   - pip install taskw
   - pip install mock
   - pip install responses
+  - pip install PySimpleSOAP
   - cd $TRAVIS_BUILD_DIR
 install:
   - pip install .[jira,megaplan,activecollab,bts]
