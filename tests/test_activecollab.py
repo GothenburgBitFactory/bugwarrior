@@ -1,4 +1,6 @@
 import datetime
+import unittest
+
 import mock
 import pypandoc
 import pytz
@@ -39,6 +41,11 @@ class TestActiveCollabIssues(AbstractServiceTest, ServiceTest):
     arbitrary_created_on = (
         datetime.datetime.now() - datetime.timedelta(hours=2)
     ).replace(tzinfo=pytz.UTC)
+
+    try:
+        _body = pypandoc.convert('<p>Ticket Body</p>', 'md', format='html')
+    except OSError:
+        raise unittest.SkipTest('Pandoc is not installed.')
     arbitrary_issue = {
         'priority': 0,
         'project': 'something',
@@ -55,8 +62,7 @@ class TestActiveCollabIssues(AbstractServiceTest, ServiceTest):
             'formatted_date': arbitrary_created_on.isoformat(),
         },
         'created_by_name': 'Tester',
-        'body': pypandoc.convert('<p>Ticket Body</p>', 'md',
-                                 format='html').rstrip(),
+        'body': _body.rstrip(),
         'name': 'Anonymous',
         'milestone': 'Sprint 1',
         'estimated_time': 1,
