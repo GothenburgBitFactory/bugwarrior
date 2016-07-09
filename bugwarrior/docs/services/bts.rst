@@ -1,11 +1,20 @@
 Debian Bug Tracking System (BTS)
 ================================
 
-You can import tasks from your {{ service_name_humane }} instance using
-the ``{{ service_name }}`` service name.
+You can import tasks from the Debian Bug Tracking System (BTS) using
+the ``bts`` service name. Debian's bugs are public and no authentication
+information is required by bugwarrior for this service.
 
-Instructions
-------------
+Additional Requirements
+-----------------------
+
+You will need to install the following additional packages via ``pip``:
+
+ * ``PySimpleSOAP``
+ * ``python-debianbts``
+
+.. note:: If you have installed the Debian package for bugwarrior, this
+          dependency will already be satisfied.
 
 Example Service
 ---------------
@@ -28,14 +37,12 @@ Include all bugs for packages
 +++++++++++++++++++++++++++++
 
 If you would like more bugs than just those you are the owner of, you can specify
-the ```bts.packages``` option.
+the ``bts.packages`` option.
 
-For example if you wanted to include bugs on the ```hello``` package, you can add
-this line to your service configuration:
+For example if you wanted to include bugs on the ``hello`` package, you can add
+this line to your service configuration::
 
-```
-bts.packages = hello
-```
+    bts.packages = hello
 
 More packages can be specified seperated by commas.
 
@@ -47,11 +54,9 @@ packages where you are listed as a Maintainer or an Uploader in the Debian archi
 you can enable the use of the `UDD Bugs Search <https://udd.debian.org/bugs/>`_.
 
 This will peform a search and include the bugs from the result. To enable this
-feature, you can add this line to your service configuration:
+feature, you can add this line to your service configuration::
 
-```
-bts.udd = True
-```
+    bts.udd = True
 
 Excluding sponsored and NMU'd packages
 ++++++++++++++++++++++++++++++++++++++
@@ -61,11 +66,9 @@ packages.
 
 You can exclude packages that you have sponsored or have uploaded as a
 non-maintainer upload or team upload by adding the following line to your
-service configuration:
+service configuration::
 
-```
-bts.udd_ignore_sponsor = True
-```
+    bts.udd_ignore_sponsor = True
 
 .. note:: This will only affect the bugs returned by the UDD bugs search service
           and will not exclude bugs that are discovered due to ownership or due
@@ -78,14 +81,12 @@ If you would like to exclude a particularly noisy package, that is perhaps team
 maintained, or a package that you have orphaned and no longer have interest in but
 are still listed as Maintainer or Uploader in stable suites, you can explicitly
 ignore bugs based on their binary or source package names. To do this add one
-of the following lines to your service configuration:
+of the following lines to your service configuration::
 
-```
-bts.ignore_pkg = hello,anarchism
-bts.ignore_src = linux
-```
+    bts.ignore_pkg = hello,anarchism
+    bts.ignore_src = linux
 
-.. note:: The ```src:``` prefix that is commonly seen in the Debian BTS interface
+.. note:: The ``src:`` prefix that is commonly seen in the Debian BTS interface
           is not required when specifying source packages to exclude.
 
 Provided UDA Fields
