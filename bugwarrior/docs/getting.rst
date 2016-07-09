@@ -20,7 +20,7 @@ and Active Collab but those require extra dependencies that are installed by
 specifying ``bugwarrior[service]`` in the commands above. For example, if you
 want to use bugwarrior with Jira::
 
-    $ pip install bugwarrior[jira]
+    $ pip install "bugwarrior[jira]"
 
 
 Installing from Source
