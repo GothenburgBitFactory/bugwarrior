@@ -24,7 +24,7 @@ class BitbucketIssue(Issue):
             'label': 'Bitbucket URL',
         },
         FOREIGN_ID: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'Bitbucket Issue ID',
         }
     }
