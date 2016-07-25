@@ -23,7 +23,7 @@ Here's an example of a Debian BTS target::
 
     [debian_bts]
     service = bts
-    email = username@debian.org
+    bts.email = username@debian.org
 
 The above example is the minimum required to import issues from
 the Debian BTS.  You can also feel free to use any of the configuration options
