@@ -98,10 +98,14 @@ class BTSService(IssueService, ServiceClient):
 
     @classmethod
     def validate_config(cls, config, target):
-#        if not config.has_option(target, 'trac.base_uri'):
-#            die("[%s] has no 'base_uri'" % target)
-#        elif '://' in config.get(target, 'trac.base_uri'):
-#            die("[%s] do not include scheme in 'base_uri'" % target)
+	if ( config.has_option(target, 'bts.udd') and
+                asbool(config.get(target, 'bts.udd')) == True and
+                not config.has_option(target, 'bts.email') ):
+            die("[%s] has no 'bts.email' but UDD search was requested" % target)
+
+	if ( not config.has_option(target, 'bts.packages') and
+                not config.has_option(target, 'bts.email') ):
+            die("[%s] has neither 'bts.email' or 'bts.packages'" % target)
 
         IssueService.validate_config(config, target)
 
