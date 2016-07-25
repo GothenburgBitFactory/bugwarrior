@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 
 UDD_BUGS_SEARCH = "https://udd.debian.org/bugs/"
 
+
 class BTSIssue(Issue):
     SUBJECT = 'btssubject'
     URL = 'btsurl'
@@ -97,21 +98,27 @@ class BTSService(IssueService, ServiceClient):
         super(BTSService, self).__init__(*args, **kw)
         self.email = self.config_get_default('email', default=None)
         self.packages = self.config_get_default('packages', default=None)
-        self.udd = self.config_get_default('udd', default=False, to_type=asbool)
-        self.udd_ignore_sponsor = self.config_get_default('udd_ignore_sponsor', default=True, to_type=asbool)
+        self.udd = self.config_get_default('udd', default=False,
+                                           to_type=asbool)
+        self.udd_ignore_sponsor = self.config_get_default('udd_ignore_sponsor',
+                                                          default=True,
+                                                          to_type=asbool)
         self.ignore_pkg = self.config_get_default('ignore_pkg', default=None)
         self.ignore_src = self.config_get_default('ignore_src', default=None)
-	self.ignore_pending = self.config_get_default('ignore_pending', default=True, to_type=asbool)
+        self.ignore_pending = self.config_get_default('ignore_pending',
+                                                      default=True,
+                                                      to_type=asbool)
 
     @classmethod
     def validate_config(cls, config, target):
-	if ( config.has_option(target, 'bts.udd') and
-                asbool(config.get(target, 'bts.udd')) == True and
-                not config.has_option(target, 'bts.email') ):
-            die("[%s] has no 'bts.email' but UDD search was requested" % target)
+        if (config.has_option(target, 'bts.udd') and
+                asbool(config.get(target, 'bts.udd')) and
+                not config.has_option(target, 'bts.email')):
+            die("[%s] has no 'bts.email' but UDD search was requested" %
+                target)
 
-	if ( not config.has_option(target, 'bts.packages') and
-                not config.has_option(target, 'bts.email') ):
+        if (not config.has_option(target, 'bts.packages') and
+                not config.has_option(target, 'bts.email')):
             die("[%s] has neither 'bts.email' or 'bts.packages'" % target)
 
         IssueService.validate_config(config, target)
@@ -125,7 +132,7 @@ class BTSService(IssueService, ServiceClient):
                 'source': bug.source,
                 'forwarded': bug.forwarded,
                 'status': bug.pending,
-               }
+                }
 
     def _get_udd_bugs(self):
         request_params = {
@@ -144,14 +151,16 @@ class BTSService(IssueService, ServiceClient):
 
         # Search BTS for bugs owned by email address
         if self.email:
-            owned_bugs = debianbts.get_bugs("owner", self.email, "status", "open")
+            owned_bugs = debianbts.get_bugs("owner", self.email,
+                                            "status", "open")
             collected_bugs.extend(owned_bugs)
 
         # Search BTS for bugs related to specified packages
         if self.packages:
             packages = self.packages.split(",")
             for pkg in packages:
-                pkg_bugs = debianbts.get_bugs("package", pkg, "status", "open")
+                pkg_bugs = debianbts.get_bugs("package", pkg,
+                                              "status", "open")
                 for bug in pkg_bugs:
                     if bug not in collected_bugs:
                         collected_bugs.append(bug)
@@ -164,28 +173,35 @@ class BTSService(IssueService, ServiceClient):
                 if bug not in collected_bugs:
                     collected_bugs.append(bug['id'])
 
-        issues = [self._record_for_bug(bug) for bug in debianbts.get_status(collected_bugs)]
+        issues = [self._record_for_bug(bug)
+                  for bug in debianbts.get_status(collected_bugs)]
 
         log.debug(" Found %i total.", len(issues))
 
         if self.ignore_pkg:
             ignore_pkg = self.ignore_pkg.split(",")
             for pkg in ignore_pkg:
-                issues = [issue for issue in issues if not issue['package'] == pkg]
+                issues = [issue
+                          for issue in issues if not issue['package'] == pkg]
 
         if self.ignore_src:
             ignore_src = self.ignore_src.split(",")
             for src in ignore_src:
-                issues = [issue for issue in issues if not issue['source'] == src]
+                issues = [issue
+                          for issue in issues if not issue['source'] == src]
 
         if self.ignore_pending:
-            issues = [issue for issue in issues if not issue['status'] == 'pending-fixed']
-            
-        issues = [issue for issue in issues if not (issue['status'] == 'done' or issue['status'] == 'fixed')]
+            issues = [issue
+                      for issue in issues
+                      if not issue['status'] == 'pending-fixed']
+
+        issues = [issue
+                  for issue in issues
+                  if not (issue['status'] == 'done' or
+                          issue['status'] == 'fixed')]
 
         log.debug(" Pruned down to %i.", len(issues))
 
         for issue in issues:
             issue_obj = self.get_issue_for_record(issue)
             yield issue_obj
-

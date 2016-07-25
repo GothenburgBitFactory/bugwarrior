@@ -2,14 +2,18 @@ import bugwarrior.services.bts as bts
 
 from .base import ServiceTest, AbstractServiceTest
 
+
 class FakeBTSBug(object):
     bug_num = 810629
     package = "wnpp"
-    subject = "ITP: bugwarrior -- Pull tickets from github, bitbucket, bugzilla, jira, trac, and others into taskwarrior"
+    subject = ("ITP: bugwarrior -- Pull tickets from github, "
+               "bitbucket, bugzilla, jira, trac, and others into "
+               "taskwarrior")
     severity = "wishlist"
     source = ""
     forwarded = ""
     pending = "pending"
+
 
 class FakeBTSLib(object):
     def get_bugs(self, *args, **kwargs):
@@ -18,6 +22,7 @@ class FakeBTSLib(object):
     def get_status(self, bug_num):
         if bug_num == [810629]:
             return [FakeBTSBug]
+
 
 class TestBTSService(AbstractServiceTest, ServiceTest):
 
@@ -64,10 +69,15 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
             'btsnumber': 810629,
             'btsforwarded': '',
             'btspackage': 'wnpp',
-            'btssubject': 'ITP: bugwarrior -- Pull tickets from github, bitbucket, bugzilla, jira, trac, and others into taskwarrior',
+            'btssubject': ('ITP: bugwarrior -- Pull tickets from github, '
+                           'bitbucket, bugzilla, jira, trac, and others into '
+                           'taskwarrior'),
             'btsurl': 'https://bugs.debian.org/810629',
             'btssource': '',
-            'description': u'(bw)Is#810629 - ITP: bugwarrior -- Pull tickets from github, bitbucket, bugzilla, jira, trac, and others into taskwa .. https://bugs.debian.org/810629',
+            'description': (u'(bw)Is#810629 - ITP: bugwarrior -- Pull tickets'
+                            u' from github, bitbucket, bugzilla, jira, trac, '
+                            u'and others into taskwa .. https://bugs.debian.o'
+                            u'rg/810629'),
             'priority': 'L',
             'btsstatus': 'pending',
             u'tags': []}
