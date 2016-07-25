@@ -9,6 +9,7 @@ class FakeBTSBug(object):
     severity = "wishlist"
     source = ""
     forwarded = ""
+    pending = "pending"
 
 class FakeBTSLib(object):
     def get_bugs(self, *args, **kwargs):
@@ -50,6 +51,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
             issue.PACKAGE: FakeBTSBug.package,
             issue.SOURCE: FakeBTSBug.source,
             issue.FORWARDED: FakeBTSBug.forwarded,
+            issue.STATUS: FakeBTSBug.pending,
         }
         actual_output = issue.to_taskwarrior()
 
@@ -67,6 +69,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
             'btssource': '',
             'description': u'(bw)Is#810629 - ITP: bugwarrior -- Pull tickets from github, bitbucket, bugzilla, jira, trac, and others into taskwa .. https://bugs.debian.org/810629',
             'priority': 'L',
+            'btsstatus': 'pending',
             u'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)
