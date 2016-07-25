@@ -76,10 +76,6 @@ def pull(dry_run, flavor, interactive, debug):
         )
     except RuntimeError as e:
         log.critical("Aborted (%s)" % e)
-    except SystemExit as e:
-        sys.exit(e.code)
-    except:
-        log.exception('oh noes')
 
 
 @click.group()
