@@ -30,6 +30,15 @@ def _get_section_name(flavor):
     return 'general'
 
 
+def _try_load_config(main_section, interactive):
+    try:
+        return load_config(main_section, interactive)
+    except IOError:
+        log.critical("Could not load configuration. "
+                     "Maybe you have not created a configuration file.")
+        sys.exit(1)
+
+
 @click.command()
 @click.option('--dry-run', is_flag=True)
 @click.option('--flavor', default=None, help='The flavor to use')
@@ -44,14 +53,7 @@ def pull(dry_run, flavor, interactive, debug):
 
     try:
         main_section = _get_section_name(flavor)
-
-        # Load our config file
-        try:
-            config = load_config(main_section, interactive)
-        except IOError:
-            log.critical("Could not load configuration. "
-                         "Maybe you have not created a configuration file.")
-            sys.exit(1)
+        config = _try_load_config(main_section, interactive)
 
         lockfile_path = os.path.join(get_data_path(), 'bugwarrior.lockfile')
         lockfile = PIDLockFile(lockfile_path)
@@ -145,12 +147,7 @@ def set(target, username):
 @click.option('--flavor', default=None, help='The flavor to use')
 def uda(flavor):
     main_section = _get_section_name(flavor)
-    try:
-        conf = load_config(main_section)
-    except IOError:
-        log.critical("Could not load configuration. "
-                     "Maybe you have not created a configuration file.")
-        sys.exit(1)
+    conf = _try_load_config(main_section)
     print "# Bugwarrior UDAs"
     for uda in get_defined_udas_as_strings(conf, main_section):
         print uda
