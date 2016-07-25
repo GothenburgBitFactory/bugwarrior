@@ -16,7 +16,6 @@ from bugwarrior.db import (
 )
 
 import logging
-logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
@@ -34,6 +33,10 @@ def _try_load_config(main_section, interactive):
     try:
         return load_config(main_section, interactive)
     except IOError:
+        # Our standard logging configuration depends on the bugwarrior
+        # configuration file which just failed to load.
+        logging.basicConfig()
+
         log.critical("Could not load configuration. "
                      "Maybe you have not created a configuration file.")
         sys.exit(1)
