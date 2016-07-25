@@ -1,4 +1,5 @@
 import os
+import sys
 
 from lockfile import LockTimeout
 from lockfile.pidlockfile import PIDLockFile
@@ -15,6 +16,7 @@ from bugwarrior.db import (
 )
 
 import logging
+logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
@@ -44,7 +46,12 @@ def pull(dry_run, flavor, interactive, debug):
         main_section = _get_section_name(flavor)
 
         # Load our config file
-        config = load_config(main_section, interactive)
+        try:
+            config = load_config(main_section, interactive)
+        except IOError:
+            log.critical("Could not load configuration. "
+                         "Maybe you have not created a configuration file.")
+            sys.exit(1)
 
         lockfile_path = os.path.join(get_data_path(), 'bugwarrior.lockfile')
         lockfile = PIDLockFile(lockfile_path)
@@ -67,6 +74,8 @@ def pull(dry_run, flavor, interactive, debug):
         )
     except RuntimeError as e:
         log.critical("Aborted (%s)" % e)
+    except SystemExit:
+        pass
     except:
         log.exception('oh noes')
 
@@ -136,7 +145,12 @@ def set(target, username):
 @click.option('--flavor', default=None, help='The flavor to use')
 def uda(flavor):
     main_section = _get_section_name(flavor)
-    conf = load_config(main_section)
+    try:
+        conf = load_config(main_section)
+    except IOError:
+        log.critical("Could not load configuration. "
+                     "Maybe you have not created a configuration file.")
+        sys.exit(1)
     print "# Bugwarrior UDAs"
     for uda in get_defined_udas_as_strings(conf, main_section):
         print uda
