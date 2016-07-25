@@ -1,4 +1,4 @@
-from bugwarrior.services.bts import BTSService
+import bugwarrior.services.bts as bts
 
 from .base import ServiceTest, AbstractServiceTest
 
@@ -18,7 +18,6 @@ class FakeBTSLib(object):
         if bug_num == [810629]:
             return [FakeBTSBug]
 
-
 class TestBTSService(AbstractServiceTest, ServiceTest):
 
     maxDiff = None
@@ -29,12 +28,12 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        self.service = self.get_mock_service(BTSService)
+        self.service = self.get_mock_service(bts.BTSService)
 
     def get_mock_service(self, *args, **kwargs):
+        bts.debianbts = FakeBTSLib()
         service = super(TestBTSService, self).get_mock_service(
             *args, **kwargs)
-        service.bts = FakeBTSLib()
         return service
 
     def test_to_taskwarrior(self):
