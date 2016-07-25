@@ -1,4 +1,6 @@
-import bugwarrior.services.bts as bts
+import mock
+
+from bugwarrior.services import bts
 
 from .base import ServiceTest, AbstractServiceTest
 
@@ -36,12 +38,6 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
     def setUp(self):
         self.service = self.get_mock_service(bts.BTSService)
 
-    def get_mock_service(self, *args, **kwargs):
-        bts.debianbts = FakeBTSLib()
-        service = super(TestBTSService, self).get_mock_service(
-            *args, **kwargs)
-        return service
-
     def test_to_taskwarrior(self):
         issue = self.service.get_issue_for_record(
             self.service._record_for_bug(FakeBTSBug)
@@ -63,7 +59,8 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
         self.assertEqual(actual_output, expected_output)
 
     def test_issues(self):
-        issue = next(self.service.issues())
+        with mock.patch('bugwarrior.services.bts.debianbts', FakeBTSLib()):
+            issue = next(self.service.issues())
 
         expected = {
             'btsnumber': 810629,
