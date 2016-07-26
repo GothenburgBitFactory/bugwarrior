@@ -17,9 +17,10 @@ before_install:
   - pip install taskw
   - pip install mock
   - pip install responses
+  - pip install PySimpleSOAP
   - cd $TRAVIS_BUILD_DIR
 install:
-  - pip install .[jira,megaplan,activecollab]
+  - pip install .[jira,megaplan,activecollab,bts]
   - pip install coveralls
   - pip install coverage
 script: nosetests -w tests --with-coverage --cover-package=bugwarrior

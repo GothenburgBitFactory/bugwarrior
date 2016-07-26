@@ -62,3 +62,5 @@ Contributors
 - Luke Macken (contributed some code cleaning)
 - James Rowe (contributed to the docs)
 - Adam Coddington (anti-entropy crusader)
+- Iain R. Learmonth (contributed support for the Debian BTS and maintains the
+  Debian package)
