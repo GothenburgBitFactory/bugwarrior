@@ -138,7 +138,7 @@ def find_local_uuid(tw, keys, issue, legacy_matching=False):
             ['serviceBproject', 'serviceBnumber'],
         ]
 
-    * `issue`: A instance of a subclass of `bugwarrior.services.Issue`.
+    * `issue`: An instance of a subclass of `bugwarrior.services.Issue`.
     * `legacy_matching`: By default, this is disabled, and it allows
       the matching algorithm to -- in addition to searching by stored
       issue keys -- search using the task's description for a match.

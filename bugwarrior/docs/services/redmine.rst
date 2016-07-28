@@ -7,7 +7,7 @@ the ``redmine`` service name.
 Example Service
 ---------------
 
-Here's an example of an Redmine target::
+Here's an example of a Redmine target::
 
     [my_issue_tracker]
     service = redmine

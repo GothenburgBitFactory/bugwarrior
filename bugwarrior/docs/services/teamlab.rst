@@ -7,7 +7,7 @@ the ``teamlab`` service name.
 Example Service
 ---------------
 
-Here's an example of an Teamlab target::
+Here's an example of a Teamlab target::
 
     [my_issue_tracker]
     service = teamlab

@@ -14,7 +14,7 @@ Install the following package using ``pip``:
 Example Service
 ---------------
 
-Here's an example of an Megaplan target::
+Here's an example of a Megaplan target::
 
     [my_issue_tracker]
     service = megaplan

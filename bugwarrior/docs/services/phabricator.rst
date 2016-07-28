@@ -14,7 +14,7 @@ Install the following package using ``pip``:
 Example Service
 ---------------
 
-Here's an example of an Phabricator target::
+Here's an example of a Phabricator target::
 
     [my_issue_tracker]
     service = phabricator
