@@ -7,7 +7,7 @@ the ``trac`` service name.
 Example Service
 ---------------
 
-Here's an example of an Trac target::
+Here's an example of a Trac target::
 
     [my_issue_tracker]
     service = trac

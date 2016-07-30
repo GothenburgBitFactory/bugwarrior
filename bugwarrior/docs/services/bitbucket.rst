@@ -7,7 +7,7 @@ the ``bitbucket`` service name.
 Example Service
 ---------------
 
-Here's an example of an Bitbucket target::
+Here's an example of a Bitbucket target::
 
     [my_issue_tracker]
     service = bitbucket
