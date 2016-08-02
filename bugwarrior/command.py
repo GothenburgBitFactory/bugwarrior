@@ -29,7 +29,7 @@ def _get_section_name(flavor):
     return 'general'
 
 
-def _try_load_config(main_section, interactive):
+def _try_load_config(main_section, interactive=False):
     try:
         return load_config(main_section, interactive)
     except IOError:
