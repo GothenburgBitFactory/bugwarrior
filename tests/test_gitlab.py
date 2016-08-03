@@ -174,6 +174,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'gitlabtitle': u'Add user settings',
             'gitlabtype': 'issue',
             'gitlabupdatedat': self.arbitrary_updated,
+            'gitlabduedate': self.arbitrary_duedate,
             'gitlabupvotes': 0,
             'gitlaburl': u'example.com/issues/3',
             'gitlabwip': 0,

@@ -374,6 +374,7 @@ class Issue(object):
             'issue': 'Is',
             'pull_request': 'PR',
             'merge_request': 'MR',
+            'todo': '',
             'task': '',
             'subtask': 'Subtask #',
         }

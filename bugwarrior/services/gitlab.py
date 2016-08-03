@@ -102,7 +102,24 @@ class GitlabIssue(Issue):
         return re.sub(r'[^a-zA-Z0-9]', '_', label)
 
     def to_taskwarrior(self):
-        if self.extra['type'] == 'merge_request':
+        if self.extra['type'] == 'todo':
+            #title = see below.
+            description = self.record['body']
+            priority = 'H'
+            milestone = None
+            created = self.record['created_at']
+            updated = None
+            state = self.record['state']
+            upvotes = 0
+            downvotes = 0
+            work_in_progress = 0
+            author = self.record['author']
+            assignee = None
+            duedate = None
+            number = self.record['id']
+        elif self.extra['type'] == 'merge_request':
+            title = self.record['title']
+            description = self.record['description']
             priority = 'H'
             milestone = self.record['milestone']
             created = self.record['created_at']
@@ -116,7 +133,10 @@ class GitlabIssue(Issue):
             duedate = self.record.get('due_date')
             if duedate is None and milestone:
                 duedate = milestone['due_date']
-        else:
+            number = self.record['iid']
+        else: # 'issue'
+            title = self.record['title']
+            description = self.record['description']
             priority = self.origin['default_priority']
             milestone = self.record['milestone']
             created = self.record['created_at']
@@ -129,7 +149,8 @@ class GitlabIssue(Issue):
             assignee = self.record['assignee']
             duedate = None
             if milestone:
-                duedate = milestone['duedate']
+                duedate = milestone['due_date']
+            number = self.record['iid']
 
         if milestone:
             milestone = milestone['title']
@@ -144,6 +165,15 @@ class GitlabIssue(Issue):
         if assignee:
             assignee = assignee['username']
 
+        # Generate the title for todo items.
+        if self.extra['type'] == 'todo':
+            title = 'Todo from %s for %s' % (
+                    author,
+                    self.extra['project'],
+                )
+
+        self.title = title
+
         return {
             'project': self.extra['project'],
             'priority': priority,
@@ -153,10 +183,10 @@ class GitlabIssue(Issue):
             self.URL: self.extra['issue_url'],
             self.REPO: self.extra['project'],
             self.TYPE: self.extra['type'],
-            self.TITLE: self.record['title'],
-            self.DESCRIPTION: self.record['description'],
+            self.TITLE: title,
+            self.DESCRIPTION: description,
             self.MILESTONE: milestone,
-            self.NUMBER: self.record['iid'],
+            self.NUMBER: number,
             self.CREATED_AT: created,
             self.UPDATED_AT: updated,
             self.DUEDATE: duedate,
@@ -189,9 +219,9 @@ class GitlabIssue(Issue):
 
     def get_default_description(self):
         return self.build_default_description(
-            title=self.record['title'],
+            title=self.title,
             url=self.get_processed_url(self.extra['issue_url']),
-            number=self.record['iid'],
+            number=self.record.get('iid', ''),
             cls=self.extra['type'],
         )
 
@@ -240,6 +270,12 @@ class GitlabService(IssueService, ServiceClient):
         )
         self.filter_merge_requests = self.config_get_default(
             'filter_merge_requests', default=False, to_type=asbool
+        )
+        self.include_todos = self.config_get_default(
+            'include_todos', default=False, to_type=asbool
+        )
+        self.include_all_todos = self.config_get_default(
+            'include_all_todos', default=True, to_type=asbool
         )
 
     @classmethod
@@ -357,6 +393,31 @@ class GitlabService(IssueService, ServiceClient):
             issues[issue['id']] = (rid, issue)
         return issues
 
+    def get_todos(self):
+        tmpl = '{scheme}://{host}/api/v3/todos'
+        todos = {}
+        try:
+            fetched_todos = self._fetch_paged(tmpl)
+        except:
+            # Older gitlab versions do not have todo items.
+            return {}
+        for todo in fetched_todos:
+            if todo['state'] == 'done':
+                continue
+            todos[todo['id']] = (todo.get('project'), todo)
+        return todos
+
+    def include_todo(self, repos):
+        if self.include_all_todos:
+            def include_todo(todo):
+                return True
+        else:
+            ids = list(r['id'] for r in repos)
+            def include_todo(todo):
+                project, todo = todo
+                return project is None or project['id'] in ids
+        return include_todo
+
     def issues(self):
         tmpl = '{scheme}://{host}/api/v3/projects'
         all_repos = self._fetch_paged(tmpl)
@@ -414,6 +475,32 @@ class GitlabService(IssueService, ServiceClient):
                 }
                 issue_obj.update_extra(extra)
                 yield issue_obj
+
+        if self.include_todos:
+            todos = self.get_todos()
+            log.debug(" Found %i todo items.", len(todos))
+            todos = filter(self.include_todo(repos), todos.values())
+            log.debug(" Pruned down to %i todos.", len(todos))
+
+            for project, todo in todos:
+                if project is not None:
+                    repo = project
+                else:
+                    repo = {
+                        'path': 'the instance',
+                    }
+                todo['repo'] = repo['path']
+
+                todo_obj = self.get_issue_for_record(todo)
+                todo_url = todo['target_url']
+                extra = {
+                    'issue_url': todo_url,
+                    'project': repo['path'],
+                    'type': 'todo',
+                    'annotations': [],
+                }
+                todo_obj.update_extra(extra)
+                yield todo_obj
 
     @classmethod
     def validate_config(cls, config, target):
