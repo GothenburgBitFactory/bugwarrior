@@ -17,6 +17,7 @@ class GitlabIssue(Issue):
     DESCRIPTION = 'gitlabdescription'
     CREATED_AT = 'gitlabcreatedon'
     UPDATED_AT = 'gitlabupdatedat'
+    DUEDATE = 'gitlabduedate'
     MILESTONE = 'gitlabmilestone'
     URL = 'gitlaburl'
     REPO = 'gitlabrepo'
@@ -45,6 +46,10 @@ class GitlabIssue(Issue):
         UPDATED_AT: {
             'type': 'date',
             'label': 'Gitlab Updated',
+        },
+        DUEDATE: {
+            'type': 'date',
+            'label': 'Gitlab Due Date',
         },
         MILESTONE: {
             'type': 'string',
@@ -108,6 +113,9 @@ class GitlabIssue(Issue):
             work_in_progress = self.record.get('work_in_progress', 0)
             author = self.record['author']
             assignee = self.record['assignee']
+            duedate = self.record.get('due_date')
+            if duedate is None and milestone:
+                duedate = milestone['due_date']
         else:
             priority = self.origin['default_priority']
             milestone = self.record['milestone']
@@ -119,6 +127,9 @@ class GitlabIssue(Issue):
             work_in_progress = 0
             author = self.record['author']
             assignee = self.record['assignee']
+            duedate = None
+            if milestone:
+                duedate = milestone['duedate']
 
         if milestone:
             milestone = milestone['title']
@@ -126,6 +137,8 @@ class GitlabIssue(Issue):
             created = self.parse_date(created).replace(microsecond=0)
         if updated:
             updated = self.parse_date(updated).replace(microsecond=0)
+        if duedate:
+            duedate = self.parse_date(duedate)
         if author:
             author = author['username']
         if assignee:
@@ -146,6 +159,7 @@ class GitlabIssue(Issue):
             self.NUMBER: self.record['iid'],
             self.CREATED_AT: created,
             self.UPDATED_AT: updated,
+            self.DUEDATE: duedate,
             self.STATE: state,
             self.UPVOTES: upvotes,
             self.DOWNVOTES: downvotes,

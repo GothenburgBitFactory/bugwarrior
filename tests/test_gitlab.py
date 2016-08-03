@@ -41,6 +41,10 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     ).replace(tzinfo=pytz.UTC, microsecond=0)
     arbitrary_updated = datetime.datetime.utcnow().replace(
         tzinfo=pytz.UTC, microsecond=0)
+    arbitrary_duedate = (
+        datetime.datetime.combine(datetime.date.today(),
+                                  datetime.datetime.min.time())
+    ).replace(tzinfo=pytz.UTC)
     arbitrary_issue = {
         "id": 42,
         "iid": 3,
@@ -54,7 +58,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             "id": 1,
             "title": "v1.0",
             "description": "",
-            "due_date": "2012-07-20",
+            "due_date": arbitrary_duedate.date().isoformat(),
             "state": "closed",
             "updated_at": "2012-07-04T13:42:48Z",
             "created_at": "2012-07-04T13:42:48Z"
@@ -118,6 +122,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             issue.NUMBER: self.arbitrary_issue['iid'],
             issue.UPDATED_AT: self.arbitrary_updated.replace(microsecond=0),
             issue.CREATED_AT: self.arbitrary_created.replace(microsecond=0),
+            issue.DUEDATE: self.arbitrary_duedate,
             issue.DESCRIPTION: self.arbitrary_issue['description'],
             issue.MILESTONE: self.arbitrary_issue['milestone']['title'],
             issue.UPVOTES: 0,
