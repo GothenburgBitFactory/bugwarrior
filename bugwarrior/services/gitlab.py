@@ -122,8 +122,8 @@ class GitlabIssue(Issue):
             created = self.record['created_at']
             updated = self.record['updated_at']
             state = self.record['state']
-            upvotes = 0
-            downvotes = 0
+            upvotes = self.record.get('upvotes', 0)
+            downvotes = self.record.get('downvotes', 0)
             work_in_progress = 0
             author = self.record['author']
             assignee = self.record['assignee']
