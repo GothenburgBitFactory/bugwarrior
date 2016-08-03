@@ -336,7 +336,7 @@ class GitlabService(IssueService, ServiceClient):
             repo_issues = self._fetch_paged(tmpl)
         except:
             # Projects may have issues disabled.
-            return []
+            return {}
         for issue in repo_issues:
             if issue['state'] not in ('opened', 'reopened'):
                 continue
@@ -350,7 +350,7 @@ class GitlabService(IssueService, ServiceClient):
             repo_merge_requests = self._fetch_paged(tmpl)
         except:
             # Projects may have merge requests disabled.
-            return []
+            return {}
         for issue in repo_merge_requests:
             if issue['state'] not in ('opened', 'reopened'):
                 continue
