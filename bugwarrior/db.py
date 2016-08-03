@@ -287,7 +287,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         log.info(
             'Service-defined UDAs exist: you can optionally use the '
             '`bugwarrior-uda` command to export a list of UDAs you can '
-            'add to your ~/.taskrc file.'
+            'add to your taskrc file.'
         )
 
     static_fields = static_fields_default = ['priority']
