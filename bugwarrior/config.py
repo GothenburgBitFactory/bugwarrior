@@ -174,18 +174,48 @@ def load_config(main_section, interactive=False):
 
     return config
 
+# Memoize the taskrc and taskdata paths. We store them globally so that the
+# taskrc can be accessed when determining the data path.
+TASKRC_PATH = None
+TASKDATA_PATH = None
 
-def get_taskrc_path(conf, main_section):
-    path = os.getenv('TASKRC', '~/.taskrc')
-    if conf.has_option(main_section, 'taskrc'):
-        path = conf.get(main_section, 'taskrc')
-    return os.path.normpath(
-        os.path.expanduser(path)
-    )
+def get_taskrc_path(conf=None, main_section=None):
+    global TASKRC_PATH
+    if TASKRC_PATH is None:
+        path = os.getenv('TASKRC', '~/.taskrc')
+        if conf is not None and conf.has_option(main_section, 'taskrc'):
+            path = conf.get(main_section, 'taskrc')
+        TASKRC_PATH = os.path.normpath(
+            os.path.expanduser(path)
+        )
+    return TASKRC_PATH
 
 
 def get_data_path():
-    return os.path.expanduser(os.getenv('TASKDATA', '~/.task'))
+    global TASKDATA_PATH
+    if TASKDATA_PATH is None:
+        taskrc = get_taskrc_path()
+        # We cannot use the taskw module here because it doesn't really support
+        # the `_` subcommands properly (`rc:` can't be used for them).
+        tw = subprocess.Popen(['task', '_show'],
+            stdout=subprocess.PIPE,
+            stderr=None,
+            env={
+                'TASKRC': taskrc,
+            })
+        out, _ = tw.communicate()
+        line_prefix = 'data.location='
+        path = None
+        for line in out.split('\n'):
+            if line.startswith(line_prefix):
+                path = line[len(line_prefix):]
+                break
+        if path is None:
+            raise RuntimeError('unable to determine the data location')
+        TASKDATA_PATH = os.path.normpath(
+            os.path.expanduser(path)
+        )
+    return TASKDATA_PATH
 
 
 # This needs to be imported here and not above to avoid a circular-import.
