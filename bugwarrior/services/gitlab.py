@@ -370,7 +370,7 @@ class GitlabService(IssueService, ServiceClient):
         issues = {}
         try:
             repo_issues = self._fetch_paged(tmpl)
-        except:
+        except IOError:
             # Projects may have issues disabled.
             return {}
         for issue in repo_issues:
@@ -384,7 +384,7 @@ class GitlabService(IssueService, ServiceClient):
         issues = {}
         try:
             repo_merge_requests = self._fetch_paged(tmpl)
-        except:
+        except IOError:
             # Projects may have merge requests disabled.
             return {}
         for issue in repo_merge_requests:
@@ -398,7 +398,7 @@ class GitlabService(IssueService, ServiceClient):
         todos = {}
         try:
             fetched_todos = self._fetch_paged(tmpl)
-        except:
+        except IOError:
             # Older gitlab versions do not have todo items.
             return {}
         for todo in fetched_todos:
