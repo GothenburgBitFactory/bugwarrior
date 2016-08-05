@@ -29,7 +29,7 @@ def _get_section_name(flavor):
     return 'general'
 
 
-def _try_load_config(main_section, interactive):
+def _try_load_config(main_section, interactive=False):
     try:
         return load_config(main_section, interactive)
     except IOError:
@@ -37,8 +37,10 @@ def _try_load_config(main_section, interactive):
         # configuration file which just failed to load.
         logging.basicConfig()
 
+        exc_info = sys.exc_info()
         log.critical("Could not load configuration. "
-                     "Maybe you have not created a configuration file.")
+                     "Maybe you have not created a configuration file.",
+                     exc_info=(exc_info[0], exc_info[1], None))
         sys.exit(1)
 
 
