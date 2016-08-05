@@ -1,4 +1,8 @@
 import mock
+import shutil
+import os
+import os.path
+import tempfile
 import unittest
 
 import responses
@@ -38,6 +42,8 @@ class ServiceTest(unittest.TestCase):
             'general': self.GENERAL_CONFIG.copy(),
             section: self.SERVICE_CONFIG.copy(),
         }
+        options['general']['taskrc'] = self.taskrc
+
         if config_overrides:
             options[section].update(config_overrides)
         if general_overrides:
@@ -63,6 +69,22 @@ class ServiceTest(unittest.TestCase):
         service = service(config, 'general', section)
 
         return service
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tempdir = tempfile.mkdtemp(prefix='bugwarrior')
+        cls.taskrc = os.path.join(cls.tempdir, 'taskrc')
+        lists = os.mkdir(os.path.join(cls.tempdir, 'lists'))
+        with open(cls.taskrc, 'w+') as fout:
+            fout.write('data.location=%s\n' % lists)
+
+        # Clear the environment of external settings.
+        os.environ['TASKRC'] = cls.taskrc
+        os.environ.pop('TASKDATA', None)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tempdir, ignore_errors=True)
 
     @staticmethod
     def add_response(url, **kwargs):
