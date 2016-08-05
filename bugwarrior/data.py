@@ -6,13 +6,16 @@ from lockfile.pidlockfile import PIDLockFile
 from bugwarrior.config import get_data_path
 
 
-DATAFILE = os.path.join(get_data_path(), 'bugwarrior.data')
-LOCKFILE = os.path.join(get_data_path(), 'bugwarrior-data.lockfile')
+def datafile():
+    return os.path.join(get_data_path(), 'bugwarrior.data')
+
+def lockfile():
+    return os.path.join(get_data_path(), 'bugwarrior-data.lockfile')
 
 
 def get(key):
     try:
-        with open(DATAFILE, 'r') as jsondata:
+        with open(datafile(), 'r') as jsondata:
             try:
                 data = json.load(jsondata)
             except ValueError:  # File does not contain JSON.
@@ -24,12 +27,12 @@ def get(key):
 
 
 def set(key, value):
-    with PIDLockFile(LOCKFILE):
+    with PIDLockFile(lockfile()):
         try:
-            with open(DATAFILE, 'r+') as jsondata:
+            with open(datafile(), 'r+') as jsondata:
                 data = json.load(jsondata)
                 data[key] = value
                 json.dump(data, jsondata)
         except IOError:  # File does not exist.
-            with open(DATAFILE, 'w+') as jsondata:
+            with open(datafile(), 'w+') as jsondata:
                 json.dump({key: value}, jsondata)
