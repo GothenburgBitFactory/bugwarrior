@@ -60,7 +60,8 @@ def pull(dry_run, flavor, interactive, debug):
         main_section = _get_section_name(flavor)
         config = _try_load_config(main_section, interactive)
 
-        lockfile_path = os.path.join(get_data_path(), 'bugwarrior.lockfile')
+        lockfile_path = os.path.join(get_data_path(config, main_section),
+                                     'bugwarrior.lockfile')
         lockfile = PIDLockFile(lockfile_path)
         lockfile.acquire(timeout=10)
         try:
