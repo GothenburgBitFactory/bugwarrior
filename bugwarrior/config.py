@@ -220,10 +220,7 @@ def get_data_path(config, main_section):
     data_path = data_location[len(line_prefix):].rstrip()
 
     if not data_path:
-        data_path = os.getenv('TASKDATA', '~/.task')
-        log.warning(
-            'Unable to determine the data location. Falling back to %s.' %
-            data_path)
+        raise RuntimeError('Unable to determine the data location.')
 
     return os.path.normpath(os.path.expanduser(data_path))
 
