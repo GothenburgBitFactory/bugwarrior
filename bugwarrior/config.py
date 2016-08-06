@@ -215,7 +215,7 @@ def get_data_path(config, main_section):
     tw_show = subprocess.Popen(
         ('task', '_show'), stdout=subprocess.PIPE, env={'TASKRC': taskrc})
     data_location = subprocess.check_output(
-        ('grep', line_prefix), stdin=tw_show.stdout)
+        ('grep', '-e', '^' + line_prefix), stdin=tw_show.stdout)
     tw_show.wait()
     data_path = data_location[len(line_prefix):].rstrip()
 
