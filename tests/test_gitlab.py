@@ -82,7 +82,6 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         "state": "opened",
         "updated_at": arbitrary_updated.isoformat(),
         "created_at": arbitrary_created.isoformat(),
-        "work_in_progress": True
     }
     arbitrary_extra = {
         'issue_url': 'https://gitlab.example.com/arbitrary_username/project/issues/3',

@@ -102,56 +102,33 @@ class GitlabIssue(Issue):
         return re.sub(r'[^a-zA-Z0-9]', '_', label)
 
     def to_taskwarrior(self):
-        if self.extra['type'] == 'todo':
-            #title = see below.
-            description = self.record['body']
-            priority = 'H'
-            milestone = None
-            created = self.record['created_at']
-            updated = None
-            state = self.record['state']
-            upvotes = 0
-            downvotes = 0
-            work_in_progress = 0
-            author = self.record['author']
-            assignee = None
-            duedate = None
-            number = self.record['id']
-        elif self.extra['type'] == 'merge_request':
-            title = self.record['title']
-            description = self.record['description']
-            priority = 'H'
-            milestone = self.record['milestone']
-            created = self.record['created_at']
-            updated = self.record['updated_at']
-            state = self.record['state']
-            upvotes = self.record['upvotes']
-            downvotes = self.record['downvotes']
-            work_in_progress = self.record.get('work_in_progress', 0)
-            author = self.record['author']
-            assignee = self.record['assignee']
-            duedate = self.record.get('due_date')
-            if duedate is None and milestone:
-                duedate = milestone['due_date']
-            number = self.record['iid']
-        else: # 'issue'
-            title = self.record['title']
-            description = self.record['description']
-            priority = self.origin['default_priority']
-            milestone = self.record['milestone']
-            created = self.record['created_at']
-            updated = self.record['updated_at']
-            state = self.record['state']
-            upvotes = self.record.get('upvotes', 0)
-            downvotes = self.record.get('downvotes', 0)
-            work_in_progress = 0
-            author = self.record['author']
-            assignee = self.record['assignee']
-            duedate = None
-            if milestone:
-                duedate = milestone['due_date']
-            number = self.record['iid']
+        author = self.record['author']
+        milestone = self.record.get('milestone')
+        created = self.record['created_at']
+        updated = self.record.get('updated_at')
+        state = self.record['state']
+        upvotes = self.record.get('upvotes', 0)
+        downvotes = self.record.get('downvotes', 0)
+        work_in_progress = self.record.get('work_in_progress', 0)
+        assignee = self.record.get('assignee')
+        duedate = self.record.get('due_date')
+        number = (
+            self.record['id'] if self.extra['type'] == 'todo'
+            else self.record['iid'])
+        priority = (
+            self.origin['default_priority'] if self.extra['type'] == 'issue'
+            else 'H')
+        title = (
+            'Todo from %s for %s' % (author, self.extra['project'])
+            if self.extra['type'] == 'todo' else self.record['title'])
+        description = (
+           self.record['body'] if self.extra['type'] == 'todo'
+           else self.record['description'])
 
+        if milestone and (
+                self.extra['type'] == 'issue' or
+                (self.extra['type'] == 'merge_request' and duedate is None)):
+            duedate = milestone['due_date']
         if milestone:
             milestone = milestone['title']
         if created:
@@ -165,12 +142,6 @@ class GitlabIssue(Issue):
         if assignee:
             assignee = assignee['username']
 
-        # Generate the title for todo items.
-        if self.extra['type'] == 'todo':
-            title = 'Todo from %s for %s' % (
-                    author,
-                    self.extra['project'],
-                )
 
         self.title = title
 
