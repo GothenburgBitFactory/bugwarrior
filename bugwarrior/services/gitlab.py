@@ -408,14 +408,11 @@ class GitlabService(IssueService, ServiceClient):
         return todos
 
     def include_todo(self, repos):
-        if self.include_all_todos:
-            def include_todo(todo):
-                return True
-        else:
-            ids = list(r['id'] for r in repos)
-            def include_todo(todo):
-                project, todo = todo
-                return project is None or project['id'] in ids
+        ids = list(r['id'] for r in repos)
+
+        def include_todo(todo):
+            project, todo = todo
+            return project is None or project['id'] in ids
         return include_todo
 
     def issues(self):
@@ -479,7 +476,8 @@ class GitlabService(IssueService, ServiceClient):
         if self.include_todos:
             todos = self.get_todos()
             log.debug(" Found %i todo items.", len(todos))
-            todos = filter(self.include_todo(repos), todos.values())
+            if not self.include_all_todos:
+                todos = filter(self.include_todo(repos), todos.values())
             log.debug(" Pruned down to %i todos.", len(todos))
 
             for project, todo in todos:
