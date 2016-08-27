@@ -1,3 +1,10 @@
+"""
+Trello service
+
+Pulls trello cards as tasks.
+
+Trello API documentation available at https://developers.trello.com/
+"""
 from __future__ import unicode_literals
 from ConfigParser import NoOptionError
 
@@ -57,6 +64,7 @@ class TrelloIssue(Issue):
             self.SHORTLINK: self.record['shortLink'],
             self.SHORTURL: self.record['shortUrl'],
             self.URL: self.record['url'],
+            'annotations': self.extra.get('annotations', []),
         }
         if self.origin['import_labels_as_tags']:
             twdict['tags'] = self.get_tags(twdict)
@@ -98,7 +106,19 @@ class TrelloService(IssueService, ServiceClient):
             for lst in self.get_lists(board['id']):
                 listextra = dict(boardname=board['name'], listname=lst['name'])
                 for card in self.get_cards(lst['id']):
-                    yield self.get_issue_for_record(card, extra=listextra)
+                    issue = self.get_issue_for_record(card, extra=listextra)
+                    issue.update_extra({"annotations": self.annotations(card)})
+                    yield issue
+
+    def annotations(self, card_json):
+        """ A wrapper around get_comments that build the taskwarrior
+        annotations. """
+        comments = self.get_comments(card_json['id'])
+        annotations = self.build_annotations(
+            ((c['memberCreator']['username'], c['data']['text']) for c in comments),
+            card_json["shortUrl"])
+        return annotations
+
 
     def get_boards(self):
         """
@@ -155,6 +175,16 @@ class TrelloService(IssueService, ServiceClient):
                     or member in [m['username'] for m in card['members']]
                     or (unassigned and not card['members'])):
                 yield card
+
+    def get_comments(self, card_id):
+        """ Returns an iterator for the comments on a certain card. """
+        params = {'filter': 'commentCard', 'memberCreator_fields': 'username'}
+        comments = self.api_request(
+            "/1/cards/{card_id}/actions".format(card_id=card_id),
+            **params)
+        for comment in comments:
+            assert comment['type'] == 'commentCard'
+            yield comment
 
     def api_request(self, url, **params):
         """

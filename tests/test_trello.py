@@ -42,18 +42,25 @@ class TestTrelloIssue(ServiceTest):
 
 class TestTrelloService(TestCase):
     BOARD = {'id': 'B04RD', 'name': 'My Board'}
-    CARD1 = {'id': 'C1', 'name': 'Card 1', 'members': [{'username': 'tintin'}],
+    CARD1 = {'id': 'C4RD', 'name': 'Card 1', 'members': [{'username': 'tintin'}],
              'idShort': 1,
              'shortLink': 'abcd',
              'shortUrl': 'https://trello.com/c/AAaaBBbb',
              'url': 'https://trello.com/c/AAaBBbb/42-so-long'}
-    CARD2 = {'id': 'C2', 'name': 'Card 2', 'members': [{'username': 'mario'}]}
-    CARD3 = {'id': 'C3', 'name': 'Card 3', 'members': []}
+    CARD2 = {'id': 'kard', 'name': 'Card 2', 'members': [{'username': 'mario'}]}
+    CARD3 = {'id': 'K4rD', 'name': 'Card 3', 'members': []}
     LIST1 = {'id': 'L15T', 'name': 'List 1'}
     LIST2 = {'id': 'ZZZZ', 'name': 'List 2'}
+    COMMENT1 = { "type": "commentCard",
+                 "data": { "text": "Preums" },
+                 "memberCreator": { "username": "luidgi" } }
+    COMMENT2 = { "type": "commentCard",
+                 "data": { "text": "Deuz" },
+                 "memberCreator": { "username": "mario" } }
 
     def setUp(self):
         self.config = ConfigParser.RawConfigParser()
+        self.config.add_section('general')
         self.config.add_section('mytrello')
         self.config.set('mytrello', 'trello.api_key', 'XXXX')
         self.config.set('mytrello', 'trello.token', 'YYYY')
@@ -72,6 +79,9 @@ class TestTrelloService(TestCase):
         responses.add(responses.GET,
                       'https://api.trello.com/1/members/me/boards',
                       json=[self.BOARD])
+        responses.add(responses.GET,
+                      'https://api.trello.com/1/cards/C4RD/actions',
+                      json=[self.COMMENT1, self.COMMENT2])
 
     @responses.activate
     def test_get_boards_config(self):
@@ -129,6 +139,30 @@ class TestTrelloService(TestCase):
         self.assertEqual(list(cards), [self.CARD1, self.CARD3])
 
     @responses.activate
+    def test_get_comments(self):
+        service = TrelloService(self.config, 'general', 'mytrello')
+        comments = service.get_comments('C4RD')
+        self.assertEqual(list(comments), [self.COMMENT1, self.COMMENT2])
+
+    @responses.activate
+    def test_annotations(self):
+        service = TrelloService(self.config, 'general', 'mytrello')
+        annotations = service.annotations(self.CARD1)
+        self.assertEqual(
+            list(annotations), ["@luidgi - Preums", "@mario - Deuz"])
+
+    @responses.activate
+    def test_annotations_with_link(self):
+        self.config.set('general', 'annotation_links', 'true')
+        service = TrelloService(self.config, 'general', 'mytrello')
+        annotations = service.annotations(self.CARD1)
+        self.assertEqual(
+            list(annotations),
+            ["https://trello.com/c/AAaaBBbb",
+             "@luidgi - Preums",
+             "@mario - Deuz"])
+
+    @responses.activate
     def test_issues(self):
         self.config.set('mytrello', 'trello.include_lists', 'List 1')
         self.config.set('mytrello', 'trello.only_if_assigned', 'tintin')
@@ -141,10 +175,13 @@ class TestTrelloService(TestCase):
             'trelloboard': 'My Board',
             'trellolist': 'List 1',
             'trellocard': 'Card 1',
-            'trellocardid': 'C1',
+            'trellocardid': 'C4RD',
             'trelloshortlink': 'abcd',
             'trelloshorturl': 'https://trello.com/c/AAaaBBbb',
             'trellourl': 'https://trello.com/c/AAaBBbb/42-so-long',
+            'annotations': [
+                "@luidgi - Preums",
+                "@mario - Deuz" ],
             'tags': []}
         actual = next(issues).get_taskwarrior_record()
         self.assertEqual(expected, actual)
