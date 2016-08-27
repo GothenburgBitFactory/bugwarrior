@@ -11,6 +11,11 @@ import logging
 log = logging.getLogger(__name__)
 
 
+# The name of the environment variable that can be used to ovewrite the path
+# to the bugwarriorrc file
+BUGWARRIORRC = "BUGWARRIORRC"
+
+
 def asbool(some_value):
     """ Cast config values to boolean. """
     return six.text_type(some_value).lower() in [
@@ -150,28 +155,36 @@ def validate_config(config, main_section):
         get_service(service).validate_config(config, target)
 
 
-def load_config(main_section, interactive=False):
-    config = ConfigParser({'log.level': "INFO", 'log.file': None})
+def get_config_path():
+    """
+    Determine the path to the config file. This will return, in this order of
+    precedence:
+    - the value of $BUGWARRIORRC if set
+    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorc if exists
+    - <dir>/bugwarrior/bugwarriorc if exists, for dir in $XDG_CONFIG_DIRS
+    - ~/.bugwarriorrc if exists
+    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorc otherwise
+    """
+    if BUGWARRIORRC in os.environ:
+        return os.environ[BUGWARRIORRC]
     path = None
     first_path = BaseDirectory.load_first_config('bugwarrior')
     if first_path is not None:
         path = os.path.join(first_path, 'bugwarriorrc')
+        if os.path.exists(path):
+            return path
     old_path = os.path.expanduser("~/.bugwarriorrc")
-    if path is None or not os.path.exists(path):
-        if os.path.exists(old_path):
-            path = old_path
-        else:
-            path = os.path.join(BaseDirectory.save_config_path('bugwarrior'), 'bugwarriorrc')
-    config.readfp(
-        codecs.open(
-            path,
-            "r",
-            "utf-8",
-        )
-    )
+    if os.path.exists(old_path):
+        return old_path
+    return os.path.join(BaseDirectory.save_config_path('bugwarrior'), 'bugwarriorrc')
+
+
+def load_config(main_section, interactive=False):
+    config = ConfigParser({'log.level': "INFO", 'log.file': None})
+    path = get_config_path()
+    config.readfp(codecs.open(path, "r", "utf-8",))
     config.interactive = interactive
     validate_config(config, main_section)
-
     return config
 
 
