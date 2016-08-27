@@ -4,7 +4,7 @@ from ConfigParser import NoOptionError
 from jinja2 import Template
 import requests
 
-from bugwarrior.services import IssueService, Issue, json_response
+from bugwarrior.services import IssueService, Issue, ServiceClient
 from bugwarrior.config import die, asbool, aslist
 
 DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')}}"
@@ -63,7 +63,7 @@ class TrelloIssue(Issue):
         return twdict
 
 
-class TrelloService(IssueService):
+class TrelloService(IssueService, ServiceClient):
     ISSUE_CLASS = TrelloIssue
     # What prefix should we use for this service's configuration values
     CONFIG_PREFIX = 'trello'
@@ -165,4 +165,4 @@ class TrelloService(IssueService):
         params['key'] = self.config_get('api_key'),
         params['token'] = self.config_get('token'),
         url = "https://api.trello.com" + url
-        return json_response(requests.get(url, params=params))
+        return self.json_response(requests.get(url, params=params))
