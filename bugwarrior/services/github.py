@@ -127,7 +127,7 @@ class GithubIssue(Issue):
             'label': 'Github Updated',
         },
         MILESTONE: {
-            'type': 'numeric',
+            'type': 'string',
             'label': 'Github Milestone',
         },
         REPO: {
@@ -155,7 +155,7 @@ class GithubIssue(Issue):
     def to_taskwarrior(self):
         milestone = self.record['milestone']
         if milestone:
-            milestone = milestone['id']
+            milestone = milestone['title']
 
         body = self.record['body']
         if body:
