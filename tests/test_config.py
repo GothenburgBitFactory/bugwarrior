@@ -15,7 +15,7 @@ class TestGetConfigPath(unittest.TestCase):
 
     def setUp(self):
         self.tmpdir = mkdtemp()
-        self.old_HOME = os.environ.get('HOME', None)
+        self.old_environ = os.environ.copy()
         self.old_xdg_config_home = xdg.BaseDirectory.xdg_config_home
         self.old_xdg_config_dirs = xdg.BaseDirectory.xdg_config_dirs
         os.environ['HOME'] = self.tmpdir
@@ -26,7 +26,7 @@ class TestGetConfigPath(unittest.TestCase):
 
     def tearDown(self):
         rmtree(self.tmpdir)
-        os.environ['HOME'] = self.old_HOME
+        os.environ = self.old_environ
         xdg.BaseDirectory.xdg_config_home = self.old_xdg_config_home
         xdg.BaseDirectory.xdg_config_dirs = self.old_xdg_config_dirs
 
