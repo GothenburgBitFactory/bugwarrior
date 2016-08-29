@@ -14,8 +14,10 @@ class TestGitlabService(TestCase):
 
     def setUp(self):
         self.config = ConfigParser.RawConfigParser()
+        self.config.add_section('general')
         self.config.add_section('myservice')
         self.config.set('myservice', 'gitlab.login', 'foobar')
+        self.config.set('myservice', 'gitlab.token', 'XXXXXX')
 
     def test_get_keyring_service_default_host(self):
         self.assertEqual(
@@ -27,6 +29,16 @@ class TestGitlabService(TestCase):
         self.assertEqual(
             GitlabService.get_keyring_service(self.config, 'myservice'),
             'gitlab://foobar@gitlab.example.com')
+
+    def test_add_default_namespace_to_included_repos(self):
+        self.config.set('myservice', 'gitlab.include_repos', 'baz, banana/tree')
+        service = GitlabService(self.config, 'general', 'myservice')
+        self.assertEqual(service.include_repos, ['foobar/baz', 'banana/tree'])
+
+    def test_add_default_namespace_to_excluded_repos(self):
+        self.config.set('myservice', 'gitlab.exclude_repos', 'baz, banana/tree')
+        service = GitlabService(self.config, 'general', 'myservice')
+        self.assertEqual(service.exclude_repos, ['foobar/baz', 'banana/tree'])
 
 
 class TestGitlabIssue(AbstractServiceTest, ServiceTest):

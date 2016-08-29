@@ -1,3 +1,4 @@
+# coding: utf-8
 from ConfigParser import NoOptionError
 import re
 import requests
@@ -191,8 +192,8 @@ class GitlabService(IssueService, ServiceClient):
 
         host = self.config_get_default(
             'host', default='gitlab.com', to_type=six.text_type)
-        login = self.config_get('login')
-        token = self.config_get_password('token', login)
+        self.login = self.config_get('login')
+        token = self.config_get_password('token', self.login)
         self.auth = (host, token)
 
         if self.config_get_default('use_https', default=True, to_type=asbool):
@@ -218,6 +219,9 @@ class GitlabService(IssueService, ServiceClient):
                 self.config_get('include_repos').strip().split(',')
             ]
 
+        self.include_repos = map(self.add_default_namespace, self.include_repos)
+        self.exclude_repos = map(self.add_default_namespace, self.exclude_repos)
+
         self.import_labels_as_tags = self.config_get_default(
             'import_labels_as_tags', default=False, to_type=asbool
         )
@@ -227,6 +231,18 @@ class GitlabService(IssueService, ServiceClient):
         self.filter_merge_requests = self.config_get_default(
             'filter_merge_requests', default=False, to_type=asbool
         )
+
+    def add_default_namespace(self, repo):
+        """ Add a default namespace to a repository name.  If the name already
+        contains a namespace, it will be returned unchanged:
+            e.g. "foo/bar" → "foo/bar"
+        otherwise, the loggin will be prepended as namespace:
+            e.g. "bar" → "<login>/bar"
+        """
+        if repo.find('/') < 0:
+            return self.login + '/' + repo
+        else:
+            return repo
 
     @classmethod
     def get_keyring_service(cls, config, section):
