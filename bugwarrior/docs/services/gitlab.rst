@@ -96,6 +96,20 @@ by adding the following configuration option::
 
     gitlab.filter_merge_requests = True
 
+Include Todo Items
+++++++++++++++++++
+
+By default todo items are not included.  You may include them by adding the
+following configuration option::
+
+    gitlab.include_todos = True
+
+If todo items are included, by default, todo items for all projects are
+included.  To only fetch todo items for projects which are being fetched, you
+may set::
+
+    gitlab.include_all_todos = False
+
 Use HTTP
 ++++++++
 
@@ -130,6 +144,8 @@ Provided UDA Fields
 | ``gitlabtype``        | Type                  | Text (string)       |
 +-----------------------+-----------------------+---------------------+
 | ``gitlabupdatedat``   | Updated               | Date & Time         |
++-----------------------+-----------------------+---------------------+
+| ``gitlabduedate``     | Due Date              | Date                |
 +-----------------------+-----------------------+---------------------+
 | ``gitlaburl``         | URL                   | Text (string)       |
 +-----------------------+-----------------------+---------------------+
