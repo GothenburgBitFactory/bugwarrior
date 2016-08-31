@@ -22,6 +22,7 @@ It currently supports the following remote resources:
  - `activecollab <https://www.activecollab.com>`_ (2.x and 4.x)
  - `phabricator <http://phabricator.org/>`_
  - `versionone <http://www.versionone.com/>`_
+ - `trello <https://trello.com/>`_
 
 Documentation
 -------------
