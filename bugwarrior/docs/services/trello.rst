@@ -13,13 +13,13 @@ Options
 
 .. describe:: trello.token
 
-   Trello token, see bellow for how to get it.
+   Trello token, see below for how to get it.
 
 .. describe:: trello.include_boards
 
-   The list of board to include. If omitted, bugwarrior will use all board
+   The list of board to include. If omitted, bugwarrior will use all boards
    the authenticated user is a member of.
-   This can be either the board ids of the board "short links".  The later is
+   This can be either the board ids of the board "short links".  The latter is
    the easiest option as it is part of the board URL: in your browser, navigate
    to the board you want to pull cards from and look at the URL, it should be
    something like ``https://trello.com/b/xxxxxxxx/myboard``: copy the part
@@ -40,8 +40,8 @@ Options
 
 .. describe:: trello.import_labels_as_tags
 
-   A boolean that indicate whether the Trello labels should be imported as tags
-   in taskwarrior. (Defaults to false.)
+   A boolean that indicates whether the Trello labels should be imported as
+   tags in taskwarrior. (Defaults to false.)
 
 .. describe:: trello.label_template
 
