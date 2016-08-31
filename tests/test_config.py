@@ -4,31 +4,22 @@ import unittest
 import os
 from tempfile import mkdtemp
 from shutil import rmtree
-from mock import patch
 
 import bugwarrior.config as config
 
-
-import xdg
 
 class TestGetConfigPath(unittest.TestCase):
 
     def setUp(self):
         self.tmpdir = mkdtemp()
         self.old_environ = os.environ.copy()
-        self.old_xdg_config_home = xdg.BaseDirectory.xdg_config_home
-        self.old_xdg_config_dirs = xdg.BaseDirectory.xdg_config_dirs
         os.environ['HOME'] = self.tmpdir
         if config.BUGWARRIORRC in os.environ:
             del os.environ[config.BUGWARRIORRC]
-        xdg.BaseDirectory.xdg_config_home = os.path.join(self.tmpdir, '.config')
-        xdg.BaseDirectory.xdg_config_dirs = [xdg.BaseDirectory.xdg_config_home]
 
     def tearDown(self):
         rmtree(self.tmpdir)
         os.environ = self.old_environ
-        xdg.BaseDirectory.xdg_config_home = self.old_xdg_config_home
-        xdg.BaseDirectory.xdg_config_dirs = self.old_xdg_config_dirs
 
     def create(self, path):
         """
@@ -71,7 +62,7 @@ class TestGetConfigPath(unittest.TestCase):
             config.get_config_path(),
             os.path.join(self.tmpdir, '.config/bugwarrior/bugwarriorrc'))
 
-    def test_env(self):
+    def test_BUGWARRIORRC(self):
         """
         If $BUGWARRIORRC is set, it takes precedence over everything else (even
         if the file doesn't exist).
@@ -82,4 +73,11 @@ class TestGetConfigPath(unittest.TestCase):
         self.create('.config/bugwarrior/bugwarriorrc')
         self.assertEquals(config.get_config_path(), rc)
 
-
+    def test_BUGWARRIORRC_empty(self):
+        """
+        If $BUGWARRIORRC is set but emty, it is not used and the default file
+        is used instead.
+        """
+        os.environ['BUGWARRIORRC'] = ''
+        rc = self.create('.config/bugwarrior/bugwarriorrc')
+        self.assertEquals(config.get_config_path(), rc)

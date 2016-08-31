@@ -5,7 +5,6 @@ import subprocess
 import sys
 
 import six
-from xdg import BaseDirectory
 
 import logging
 log = logging.getLogger(__name__)
@@ -161,22 +160,25 @@ def get_config_path():
     precedence:
     - the value of $BUGWARRIORRC if set
     - $XDG_CONFIG_HOME/bugwarrior/bugwarriorc if exists
-    - <dir>/bugwarrior/bugwarriorc if exists, for dir in $XDG_CONFIG_DIRS
     - ~/.bugwarriorrc if exists
+    - <dir>/bugwarrior/bugwarriorc if exists, for dir in $XDG_CONFIG_DIRS
     - $XDG_CONFIG_HOME/bugwarrior/bugwarriorc otherwise
     """
-    if BUGWARRIORRC in os.environ:
+    if os.environ.get(BUGWARRIORRC):
         return os.environ[BUGWARRIORRC]
-    path = None
-    first_path = BaseDirectory.load_first_config('bugwarrior')
-    if first_path is not None:
-        path = os.path.join(first_path, 'bugwarriorrc')
+    xdg_config_home = (
+        os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'))
+    xdg_config_dirs = (
+        (os.environ.get('XDG_CONFIG_DIRS') or '/etc/xdg').split(':'))
+    paths = [
+        os.path.join(xdg_config_home, 'bugwarrior', 'bugwarriorrc'),
+        os.path.expanduser("~/.bugwarriorrc")]
+    paths += [
+        os.path.join(d, 'bugwarrior', 'bugwarriorrc') for d in xdg_config_dirs]
+    for path in paths:
         if os.path.exists(path):
             return path
-    old_path = os.path.expanduser("~/.bugwarriorrc")
-    if os.path.exists(old_path):
-        return old_path
-    return os.path.join(BaseDirectory.save_config_path('bugwarrior'), 'bugwarriorrc')
+    return paths[0]
 
 
 def load_config(main_section, interactive=False):
