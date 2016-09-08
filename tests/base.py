@@ -74,9 +74,10 @@ class ServiceTest(unittest.TestCase):
     def setUpClass(cls):
         cls.tempdir = tempfile.mkdtemp(prefix='bugwarrior')
         cls.taskrc = os.path.join(cls.tempdir, 'taskrc')
-        lists = os.mkdir(os.path.join(cls.tempdir, 'lists'))
+        lists_path = os.path.join(cls.tempdir, 'lists')
+        os.mkdir(lists_path)
         with open(cls.taskrc, 'w+') as fout:
-            fout.write('data.location=%s\n' % lists)
+            fout.write('data.location=%s\n' % lists_path)
 
         # Clear the environment of external settings.
         os.environ['TASKRC'] = cls.taskrc
