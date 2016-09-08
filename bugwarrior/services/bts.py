@@ -115,11 +115,16 @@ class BTSService(IssueService, ServiceClient):
                 asbool(config.get(target, 'bts.udd')) and
                 not config.has_option(target, 'bts.email')):
             die("[%s] has no 'bts.email' but UDD search was requested" %
-                target)
+                (target,))
 
         if (not config.has_option(target, 'bts.packages') and
                 not config.has_option(target, 'bts.email')):
-            die("[%s] has neither 'bts.email' or 'bts.packages'" % target)
+            die("[%s] has neither 'bts.email' or 'bts.packages'" % (target,))
+
+        if (config.has_option(target, 'bts.udd_ignore_sponsor') and
+            (not asbool(config.get(target, 'bts.udd')))):
+            die("[%s] defines settings for UDD search without enabling"
+                " UDD search" % (target,))
 
         IssueService.validate_config(config, target)
 
