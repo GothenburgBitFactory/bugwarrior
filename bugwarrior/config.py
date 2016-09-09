@@ -213,7 +213,9 @@ def get_data_path(config, main_section):
     # the `_` subcommands properly (`rc:` can't be used for them).
     line_prefix = 'data.location='
     tw_show = subprocess.Popen(
-        ('task', '_show'), stdout=subprocess.PIPE, env={'TASKRC': taskrc})
+        ('task', '_show'),
+        stdout=subprocess.PIPE,
+        env={'PATH': os.getenv('PATH'), 'TASKRC': taskrc})
     data_location = subprocess.check_output(
         ('grep', '-e', '^' + line_prefix), stdin=tw_show.stdout)
     tw_show.wait()
