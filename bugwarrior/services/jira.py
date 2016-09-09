@@ -140,7 +140,7 @@ class JiraIssue(Issue):
         context = self.record.copy()
         label_template = Template(self.origin['label_template'])
 
-        sprints = self.record.get('fields', {}).get(self.origin['sprint_field'], [])
+        sprints = self.record.get('fields', {}).get(self.origin['sprint_field']) or []
         for sprint in sprints:
             # Parse this big ugly string.
             sprint = _parse_sprint_string(sprint)
