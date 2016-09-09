@@ -134,7 +134,7 @@ class JiraIssue(Issue):
     def _get_tags_from_sprints(self):
         tags = []
 
-        if not self.origin['import_sprints']:
+        if not self.origin['import_sprints_as_tags']:
             return tags
 
         context = self.record.copy()
@@ -237,22 +237,22 @@ class JiraService(IssueService):
         self.import_labels_as_tags = self.config_get_default(
             'import_labels_as_tags', default=False, to_type=asbool
         )
-        self.import_sprints = self.config_get_default(
-            'import_sprints', default=False, to_type=asbool
+        self.import_sprints_as_tags = self.config_get_default(
+            'import_sprints_as_tags', default=False, to_type=asbool
         )
         self.label_template = self.config_get_default(
             'label_template', default='{{label}}', to_type=six.text_type
         )
 
-        if self.import_sprints:
+        if self.import_sprints_as_tags:
             sprint_fields = [field for field in self.jira.fields()
                              if field['name'] == 'Sprint']
             if len(sprint_fields) > 1:
                 log.warn("More than one sprint custom field found.  Ignoring sprints.")
-                self.import_sprints = False
+                self.import_sprints_as_tags = False
             elif len(sprint_fields) < 1:
                 log.warn("No sprint custom field found.  Ignoring sprints.")
-                self.import_sprints = False
+                self.import_sprints_as_tags = False
             else:
                 self.sprint_field = sprint_fields[0]['id']
 
@@ -266,7 +266,7 @@ class JiraService(IssueService):
         return {
             'url': self.url,
             'import_labels_as_tags': self.import_labels_as_tags,
-            'import_sprints': self.import_sprints,
+            'import_sprints_as_tags': self.import_sprints_as_tags,
             'sprint_field': self.sprint_field,
             'label_template': self.label_template,
         }

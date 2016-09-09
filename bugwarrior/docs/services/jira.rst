@@ -78,9 +78,9 @@ option::
     jira.import_labels_as_tags = True
 
 You can also import the names of any sprints associated with an issue as tags,
-by setting the ``jira.import_sprints`` option::
+by setting the ``jira.import_sprints_as_tags`` option::
 
-    jira.import_sprints = True
+    jira.import_sprints_as_tags = True
 
 If you would like to control how these labels are created, you can specify a
 template used for converting the Jira label into a Taskwarrior tag.
