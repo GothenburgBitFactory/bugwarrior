@@ -244,6 +244,7 @@ class JiraService(IssueService):
             'label_template', default='{{label}}', to_type=six.text_type
         )
 
+        self.sprint_field = None
         if self.import_sprints_as_tags:
             sprint_fields = [field for field in self.jira.fields()
                              if field['name'] == 'Sprint']
