@@ -10,6 +10,9 @@ from requests.cookies import RequestsCookieJar
 from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
 
+import logging
+log = logging.getLogger(__name__)
+
 # The below `ObliviousCookieJar` and `JIRA` classes are MIT Licensed.
 # They were taken from this wonderful commit by @GaretJax
 # https://github.com/GaretJax/lancet/commit/f175cb2ec9a2135fb78188cf0b9f621b51d88977
@@ -36,6 +39,16 @@ class JIRA(BaseJIRA):
     def close(self):
         self._session.close()
 
+def _parse_sprint_string(sprint):
+    """ Parse the big ugly sprint string stored by JIRA.
+
+    They look like:
+        com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapid
+        ViewId=1173,state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4
+        55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]
+    """
+    entries = sprint[sprint.index('[')+1:sprint.index(']')].split(',')
+    return dict([entry.split('=') for entry in entries])
 
 class JiraIssue(Issue):
     SUMMARY = 'jirasummary'
@@ -116,6 +129,28 @@ class JiraIssue(Issue):
         return timestamp.strftime('%Y%m%dT%H%M%S') + timezone
 
     def get_tags(self):
+        return self._get_tags_from_labels() + self._get_tags_from_sprints()
+
+    def _get_tags_from_sprints(self):
+        tags = []
+
+        if not self.origin['import_sprints']:
+            return tags
+
+        context = self.record.copy()
+        label_template = Template(self.origin['label_template'])
+
+        sprints = self.record.get('fields', {}).get(self.origin['sprint_field'], [])
+        for sprint in sprints:
+            # Parse this big ugly string.
+            sprint = _parse_sprint_string(sprint)
+            # Extract the name and render it into a label
+            context.update({'label': sprint['name']})
+            tags.append(label_template.render(context))
+
+        return tags
+
+    def _get_tags_from_labels(self):
         tags = []
 
         if not self.origin['import_labels_as_tags']:
@@ -125,12 +160,8 @@ class JiraIssue(Issue):
         label_template = Template(self.origin['label_template'])
 
         for label in self.record.get('fields', {}).get('labels', []):
-            context.update({
-                'label': label
-            })
-            tags.append(
-                label_template.render(context)
-            )
+            context.update({'label': label})
+            tags.append(label_template.render(context))
 
         return tags
 
@@ -206,9 +237,24 @@ class JiraService(IssueService):
         self.import_labels_as_tags = self.config_get_default(
             'import_labels_as_tags', default=False, to_type=asbool
         )
+        self.import_sprints = self.config_get_default(
+            'import_sprints', default=False, to_type=asbool
+        )
         self.label_template = self.config_get_default(
             'label_template', default='{{label}}', to_type=six.text_type
         )
+
+        if self.import_sprints:
+            sprint_fields = [field for field in self.jira.fields()
+                             if field['name'] == 'Sprint']
+            if len(sprint_fields) > 1:
+                log.warn("More than one sprint custom field found.  Ignoring sprints.")
+                self.import_sprints = False
+            elif len(sprint_fields) < 1:
+                log.warn("No sprint custom field found.  Ignoring sprints.")
+                self.import_sprints = False
+            else:
+                self.sprint_field = sprint_fields[0]['id']
 
     @classmethod
     def get_keyring_service(cls, config, section):
@@ -220,6 +266,8 @@ class JiraService(IssueService):
         return {
             'url': self.url,
             'import_labels_as_tags': self.import_labels_as_tags,
+            'import_sprints': self.import_sprints,
+            'sprint_field': self.sprint_field,
             'label_template': self.label_template,
         }
 

@@ -68,8 +68,8 @@ If your Jira instance is only available over HTTPS, and you're running into
 
     jira.verify_ssl = False
 
-Import Labels as Tags
-+++++++++++++++++++++
+Import Labels and Sprints as Tags
++++++++++++++++++++++++++++++++++
 
 The Jira issue tracker allows you to attach labels to issues; to
 use those labels as tags, you can use the ``jira.import_labels_as_tags``
@@ -77,9 +77,13 @@ option::
 
     jira.import_labels_as_tags = True
 
-Also, if you would like to control how these labels are created, you can
-specify a template used for converting the Jira label into a Taskwarrior
-tag.
+You can also import the names of any sprints associated with an issue as tags,
+by setting the ``jira.import_sprints`` option::
+
+    jira.import_sprints = True
+
+If you would like to control how these labels are created, you can specify a
+template used for converting the Jira label into a Taskwarrior tag.
 
 For example, to prefix all incoming labels with the string 'jira_' (perhaps
 to differentiate them from any existing tags you might have), you could
