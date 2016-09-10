@@ -1,11 +1,12 @@
 import mock
 import shutil
-import os
 import os.path
 import tempfile
 import unittest
 
 import responses
+
+from bugwarrior import config
 
 
 class AbstractServiceTest(object):
@@ -26,7 +27,44 @@ class AbstractServiceTest(object):
         raise NotImplementedError
 
 
-class ServiceTest(unittest.TestCase):
+def set_up_config(klass):
+    klass.old_environ = os.environ.copy()
+    klass.tempdir = tempfile.mkdtemp(prefix='bugwarrior')
+
+    # Create temporary config files.
+    taskrc = os.path.join(klass.tempdir, '.taskrc')
+    lists_path = os.path.join(klass.tempdir, 'lists')
+    os.mkdir(lists_path)
+    with open(taskrc, 'w+') as fout:
+        fout.write('data.location=%s\n' % lists_path)
+
+    # Configure environment.
+    os.environ['HOME'] = klass.tempdir
+    os.environ.pop(config.BUGWARRIORRC, None)
+    os.environ.pop('TASKRC', None)
+    os.environ.pop('XDG_CONFIG_HOME', None)
+    os.environ.pop('XDG_CONFIG_DIRS', None)
+
+
+def tear_down_config(klass):
+    shutil.rmtree(klass.tempdir, ignore_errors=True)
+    os.environ = klass.old_environ
+
+
+class ConfigTest(unittest.TestCase):
+    """
+    Creates config files, configures the environment, and cleans up afterwards.
+    """
+    @classmethod
+    def setUpClass(cls):
+        set_up_config(cls)
+
+    @classmethod
+    def tearDownClass(cls):
+        tear_down_config(cls)
+
+
+class ServiceTest(ConfigTest):
     GENERAL_CONFIG = {
         'annotation_length': 100,
         'description_length': 100,
@@ -42,8 +80,6 @@ class ServiceTest(unittest.TestCase):
             'general': self.GENERAL_CONFIG.copy(),
             section: self.SERVICE_CONFIG.copy(),
         }
-        options['general']['taskrc'] = self.taskrc
-
         if config_overrides:
             options[section].update(config_overrides)
         if general_overrides:
@@ -69,23 +105,6 @@ class ServiceTest(unittest.TestCase):
         service = service(config, 'general', section)
 
         return service
-
-    @classmethod
-    def setUpClass(cls):
-        cls.tempdir = tempfile.mkdtemp(prefix='bugwarrior')
-        cls.taskrc = os.path.join(cls.tempdir, 'taskrc')
-        lists_path = os.path.join(cls.tempdir, 'lists')
-        os.mkdir(lists_path)
-        with open(cls.taskrc, 'w+') as fout:
-            fout.write('data.location=%s\n' % lists_path)
-
-        # Clear the environment of external settings.
-        os.environ['TASKRC'] = cls.taskrc
-        os.environ.pop('TASKDATA', None)
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.tempdir, ignore_errors=True)
 
     @staticmethod
     def add_response(url, **kwargs):

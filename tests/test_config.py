@@ -2,30 +2,25 @@ from __future__ import unicode_literals
 
 import unittest
 import os
-from tempfile import mkdtemp
-from shutil import rmtree
 
 import bugwarrior.config as config
+
+from .base import set_up_config, tear_down_config
 
 
 class TestGetConfigPath(unittest.TestCase):
 
     def setUp(self):
-        self.tmpdir = mkdtemp()
-        self.old_environ = os.environ.copy()
-        os.environ['HOME'] = self.tmpdir
-        if config.BUGWARRIORRC in os.environ:
-            del os.environ[config.BUGWARRIORRC]
+        set_up_config(self)
 
     def tearDown(self):
-        rmtree(self.tmpdir)
-        os.environ = self.old_environ
+        tear_down_config(self)
 
     def create(self, path):
         """
         Create an empty file in the temporary directory, return the full path.
         """
-        fpath = os.path.join(self.tmpdir, path)
+        fpath = os.path.join(self.tempdir, path)
         if not os.path.exists(os.path.dirname(fpath)):
             os.makedirs(os.path.dirname(fpath))
         open(fpath, 'a').close()
@@ -60,14 +55,14 @@ class TestGetConfigPath(unittest.TestCase):
         """
         self.assertEquals(
             config.get_config_path(),
-            os.path.join(self.tmpdir, '.config/bugwarrior/bugwarriorrc'))
+            os.path.join(self.tempdir, '.config/bugwarrior/bugwarriorrc'))
 
     def test_BUGWARRIORRC(self):
         """
         If $BUGWARRIORRC is set, it takes precedence over everything else (even
         if the file doesn't exist).
         """
-        rc = os.path.join(self.tmpdir, 'my-bugwarriorc')
+        rc = os.path.join(self.tempdir, 'my-bugwarriorc')
         os.environ['BUGWARRIORRC'] = rc
         self.create('.bugwarriorrc')
         self.create('.config/bugwarrior/bugwarriorrc')
