@@ -15,6 +15,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestBitbucketIssue, self).setUp()
         self.service = self.get_mock_service(BitbucketService)
 
     def test_to_taskwarrior(self):

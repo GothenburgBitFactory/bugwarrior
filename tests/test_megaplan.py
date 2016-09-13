@@ -25,6 +25,7 @@ class TestMegaplanIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestMegaplanIssue, self).setUp()
         with mock.patch('megaplan.Client'):
             self.service = self.get_mock_service(MegaplanService)
 

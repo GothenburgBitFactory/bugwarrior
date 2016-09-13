@@ -20,6 +20,7 @@ class TestTrelloIssue(ServiceTest):
         }
 
     def setUp(self):
+        super(TestTrelloIssue, self).setUp()
         origin = dict(inline_links=True, description_length=31,
                       import_labels_as_tags=True)
         extra = {'boardname': 'Hyperspatial express route',

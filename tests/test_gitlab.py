@@ -103,6 +103,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestGitlabIssue, self).setUp()
         self.service = self.get_mock_service(GitlabService)
 
     def test_normalize_label_to_tag(self):

@@ -32,6 +32,7 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestBugzillaService, self).setUp()
         with mock.patch('bugzilla.Bugzilla'):
             self.service = self.get_mock_service(BugzillaService)
 

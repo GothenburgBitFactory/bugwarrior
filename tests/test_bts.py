@@ -36,6 +36,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestBTSService, self).setUp()
         self.service = self.get_mock_service(bts.BTSService)
 
     def test_to_taskwarrior(self):

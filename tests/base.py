@@ -27,41 +27,31 @@ class AbstractServiceTest(object):
         raise NotImplementedError
 
 
-def set_up_config(klass):
-    klass.old_environ = os.environ.copy()
-    klass.tempdir = tempfile.mkdtemp(prefix='bugwarrior')
-
-    # Create temporary config files.
-    taskrc = os.path.join(klass.tempdir, '.taskrc')
-    lists_path = os.path.join(klass.tempdir, 'lists')
-    os.mkdir(lists_path)
-    with open(taskrc, 'w+') as fout:
-        fout.write('data.location=%s\n' % lists_path)
-
-    # Configure environment.
-    os.environ['HOME'] = klass.tempdir
-    os.environ.pop(config.BUGWARRIORRC, None)
-    os.environ.pop('TASKRC', None)
-    os.environ.pop('XDG_CONFIG_HOME', None)
-    os.environ.pop('XDG_CONFIG_DIRS', None)
-
-
-def tear_down_config(klass):
-    shutil.rmtree(klass.tempdir, ignore_errors=True)
-    os.environ = klass.old_environ
-
-
 class ConfigTest(unittest.TestCase):
     """
     Creates config files, configures the environment, and cleans up afterwards.
     """
-    @classmethod
-    def setUpClass(cls):
-        set_up_config(cls)
+    def setUp(self):
+        self.old_environ = os.environ.copy()
+        self.tempdir = tempfile.mkdtemp(prefix='bugwarrior')
 
-    @classmethod
-    def tearDownClass(cls):
-        tear_down_config(cls)
+        # Create temporary config files.
+        taskrc = os.path.join(self.tempdir, '.taskrc')
+        lists_path = os.path.join(self.tempdir, 'lists')
+        os.mkdir(lists_path)
+        with open(taskrc, 'w+') as fout:
+            fout.write('data.location=%s\n' % lists_path)
+
+        # Configure environment.
+        os.environ['HOME'] = self.tempdir
+        os.environ.pop(config.BUGWARRIORRC, None)
+        os.environ.pop('TASKRC', None)
+        os.environ.pop('XDG_CONFIG_HOME', None)
+        os.environ.pop('XDG_CONFIG_DIRS', None)
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir, ignore_errors=True)
+        os.environ = self.old_environ
 
 
 class ServiceTest(ConfigTest):
@@ -73,7 +63,7 @@ class ServiceTest(ConfigTest):
     }
 
     def get_mock_service(
-        self, service, section='unspecified',
+        self, service_class, section='unspecified',
         config_overrides=None, general_overrides=None
     ):
         options = {
@@ -102,9 +92,9 @@ class ServiceTest(ConfigTest):
         config.get = mock.Mock(side_effect=get_option)
         config.getint = mock.Mock(side_effect=get_int)
 
-        service = service(config, 'general', section)
+        service_instance = service_class(config, 'general', section)
 
-        return service
+        return service_instance
 
     @staticmethod
     def add_response(url, **kwargs):

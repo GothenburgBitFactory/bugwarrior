@@ -1,20 +1,13 @@
 from __future__ import unicode_literals
 
-import unittest
 import os
 
 import bugwarrior.config as config
 
-from .base import set_up_config, tear_down_config
+from .base import ConfigTest
 
 
-class TestGetConfigPath(unittest.TestCase):
-
-    def setUp(self):
-        set_up_config(self)
-
-    def tearDown(self):
-        tear_down_config(self)
+class TestGetConfigPath(ConfigTest):
 
     def create(self, path):
         """

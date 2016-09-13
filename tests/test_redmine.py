@@ -46,6 +46,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestRedmineIssue, self).setUp()
         self.service = self.get_mock_service(RedMineService)
 
     def test_to_taskwarrior(self):

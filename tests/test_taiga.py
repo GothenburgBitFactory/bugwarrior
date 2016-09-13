@@ -21,6 +21,7 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestTaigaIssue, self).setUp()
         self.service = self.get_mock_service(TaigaService)
 
     def test_to_taskwarrior(self):
