@@ -12,25 +12,26 @@ class BugwarriorData(object):
         self.datafile = os.path.join(data_path, 'bugwarrior.data')
         self.lockfile = os.path.join(data_path, 'bugwarrior-data.lockfile')
 
+    def get_data(self):
+        with open(self.datafile, 'r') as jsondata:
+            return json.load(jsondata)
+
     def get(self, key):
         try:
-            with open(self.datafile, 'r') as jsondata:
-                try:
-                    data = json.load(jsondata)
-                except ValueError:  # File does not contain JSON.
-                    return None
-                else:
-                    return data[key]
+            return self.get_data()[key]
         except IOError:  # File does not exist.
             return None
 
     def set(self, key, value):
         with PIDLockFile(self.lockfile):
             try:
-                with open(self.datafile, 'r+') as jsondata:
-                    data = json.load(jsondata)
+                data = self.get_data()
+            except IOError:  # File does not exist.
+                with open(self.datafile, 'w') as jsondata:
+                    json.dump({key: value}, jsondata)
+            else:
+                with open(self.datafile, 'w') as jsondata:
                     data[key] = value
                     json.dump(data, jsondata)
-            except IOError:  # File does not exist.
-                with open(self.datafile, 'w+') as jsondata:
-                    json.dump({key: value}, jsondata)
+
+            os.chmod(self.datafile, 0600)
