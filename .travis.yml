@@ -23,8 +23,8 @@ install:
   - pip install .[jira,megaplan,activecollab,bts]
   - pip install coveralls
   - pip install coverage
-script: nosetests -w tests --with-coverage --cover-package=bugwarrior
 after_success: coveralls
+script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior
 notifications:
     email: true
     irc:
