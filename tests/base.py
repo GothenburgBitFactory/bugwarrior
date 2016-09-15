@@ -36,11 +36,11 @@ class ConfigTest(unittest.TestCase):
         self.tempdir = tempfile.mkdtemp(prefix='bugwarrior')
 
         # Create temporary config files.
-        taskrc = os.path.join(self.tempdir, '.taskrc')
-        lists_path = os.path.join(self.tempdir, 'lists')
-        os.mkdir(lists_path)
-        with open(taskrc, 'w+') as fout:
-            fout.write('data.location=%s\n' % lists_path)
+        self.taskrc = os.path.join(self.tempdir, '.taskrc')
+        self.lists_path = os.path.join(self.tempdir, 'lists')
+        os.mkdir(self.lists_path)
+        with open(self.taskrc, 'w+') as fout:
+            fout.write('data.location=%s\n' % self.lists_path)
 
         # Configure environment.
         os.environ['HOME'] = self.tempdir

@@ -212,10 +212,18 @@ def get_data_path(config, main_section):
     # We cannot use the taskw module here because it doesn't really support
     # the `_` subcommands properly (`rc:` can't be used for them).
     line_prefix = 'data.location='
+
+    env={
+        'PATH': os.getenv('PATH'),
+        'TASKRC': taskrc,
+    }
+    # If TASKDATA is set but empty, taskwarrior's data.location is empty.
+    taskdata = os.getenv('TASKDATA')
+    if taskdata:
+        env['TASKDATA'] = taskdata
+
     tw_show = subprocess.Popen(
-        ('task', '_show'),
-        stdout=subprocess.PIPE,
-        env={'PATH': os.getenv('PATH'), 'TASKRC': taskrc})
+        ('task', '_show'), stdout=subprocess.PIPE, env=env)
     data_location = subprocess.check_output(
         ('grep', '-e', '^' + line_prefix), stdin=tw_show.stdout)
     tw_show.wait()
