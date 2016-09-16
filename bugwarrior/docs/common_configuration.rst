@@ -122,14 +122,17 @@ You need not store your password in plain text in your `bugwarriorrc` file;
 you can enter the following values to control where to gather your password
 from:
 
-* ``password = @oracle:use_keyring``: Retrieve a password from a keyring.
-* ``password = @oracle:ask_password``: Ask for a password at runtime.
-* ``password = @oracle:eval:<command>`` Use the output of <command> as the
-  password.
+``password = @oracle:use_keyring``
+  Retrieve a password from the system keyring.
+  The ``bugwarrior-vault`` command line tool can be used to manage your
+  passwords as stored in your keyring (say to reset them or clear them).
+``password = @oracle:ask_password``
+  Ask for a password at runtime.
+``password = @oracle:eval:<command>``
+  Use the output of <command> as the password. For instance, to integrate
+  bugwarrior with the password manager `pass <https://www.passwordstore.org/>`_
+  you can use ``@oracle:eval:pass my/password``.
 
-If you use the ``use_keyring`` oracle, you may want to also check out the
-``bugwarrior-vault`` command line tool.  It can be used to manage your
-passwords as stored in your local keyring (say to reset them or clear them).
 
 Hooks
 -----
