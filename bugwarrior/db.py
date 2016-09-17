@@ -227,7 +227,6 @@ def merge_left(field, local_task, remote_issue, hamming=False):
     # If a remote does not appear in local, add it to the local task
     new_count = 0
     for remote in remote_field:
-        found = False
         for local in local_field:
             if (
                 # For annotations, they don't have to match *exactly*.
@@ -240,9 +239,8 @@ def merge_left(field, local_task, remote_issue, hamming=False):
                     remote == local
                 )
             ):
-                found = True
                 break
-        if not found:
+        else:
             log.debug("%s not found in %r" % (remote, local_field))
             local_task[field].append(remote)
             new_count += 1
