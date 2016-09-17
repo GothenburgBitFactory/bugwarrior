@@ -284,7 +284,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             'add to your taskrc file.'
         )
 
-    static_fields = static_fields_default = ['priority']
+    static_fields = ['priority']
     if conf.has_option(main_section, 'static_fields'):
         static_fields = conf.get(main_section, 'static_fields').split(',')
 

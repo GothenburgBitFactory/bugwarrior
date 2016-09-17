@@ -1,8 +1,10 @@
 import unittest
+import ConfigParser
 
 import taskw.task
 from bugwarrior import db
 
+from .base import ConfigTest
 
 
 class TestMergeLeft(unittest.TestCase):
@@ -36,3 +38,89 @@ class TestMergeLeft(unittest.TestCase):
         db.merge_left('annotations', self.issue_dict, remote, hamming=True)
         self.assertEqual(len(self.issue_dict['annotations']), 1)
 
+
+class TestSynchronize(ConfigTest):
+
+    def test_synchronize(self):
+
+        def get_tasks(tw):
+            tasks = tw.load_tasks()
+
+            # Remove non-deterministic keys.
+            del tasks['pending'][0]['modified']
+            del tasks['pending'][0]['entry']
+            del tasks['pending'][0]['uuid']
+
+            return tasks
+
+        config = ConfigParser.RawConfigParser()
+        config.add_section('general')
+        config.set('general', 'targets', 'my_service')
+        config.add_section('my_service')
+        config.set('my_service', 'service', 'github')
+
+        tw = taskw.TaskWarrior(self.taskrc)
+        self.assertEqual(tw.load_tasks(), {'completed': [], 'pending': []})
+
+        issue = {
+            'description': 'Blah blah blah.',
+            'githubtype': 'issue',
+            'githuburl': 'https://example.com',
+            'priority': 'M',
+        }
+
+        # TEST NEW ISSUE AND EXISTING ISSUE.
+        for _ in range(2):
+            db.synchronize(iter((issue,)), config, 'general')
+
+            self.assertEqual(get_tasks(tw), {
+                'completed': [],
+                'pending': [{
+                    u'priority': u'M',
+                    u'status': u'pending',
+                    u'description': u'Blah blah blah.',
+                    u'githuburl': u'https://example.com',
+                    u'githubtype': u'issue',
+                    u'id': 1,
+                    u'urgency': 3.9,
+                }]})
+
+        # TEST CHANGED ISSUE.
+        issue['description'] = 'Yada yada yada.'
+
+        db.synchronize(iter((issue,)), config, 'general')
+
+        self.assertEqual(get_tasks(tw), {
+            'completed': [],
+            'pending': [{
+                u'priority': u'M',
+                u'status': u'pending',
+                u'description': u'Yada yada yada.',
+                u'githuburl': u'https://example.com',
+                u'githubtype': u'issue',
+                u'id': 1,
+                u'urgency': 3.9,
+            }]})
+
+        # TEST CLOSED ISSUE.
+        db.synchronize(iter(()), config, 'general')
+
+        tasks = tw.load_tasks()
+
+        # Remove non-deterministic keys.
+        del tasks['completed'][0]['modified']
+        del tasks['completed'][0]['entry']
+        del tasks['completed'][0]['end']
+        del tasks['completed'][0]['uuid']
+
+        self.assertEqual(tasks, {
+            'completed': [{
+                u'description': u'Yada yada yada.',
+                u'githubtype': u'issue',
+                u'githuburl': u'https://example.com',
+                u'id': 0,
+                u'priority': u'M',
+                u'status': u'completed',
+                u'urgency': 3.9,
+            }],
+             'pending': []})
