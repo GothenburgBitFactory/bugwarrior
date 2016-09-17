@@ -56,10 +56,6 @@ class MultipleMatches(Exception):
     pass
 
 
-def normalize_description(issue_description):
-    return issue_description[:issue_description.index(' .. http')]
-
-
 def get_normalized_annotation(annotation):
     return re.sub(
         r'[\W_]',
