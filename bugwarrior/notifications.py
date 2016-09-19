@@ -107,6 +107,8 @@ def send_notification(issue, op, conf):
     elif notify_backend == 'gobject':
         _cache_logo()
 
+        import gi
+        gi.require_version('Notify', '0.7')
         from gi.repository import Notify
         Notify.init("bugwarrior")
 
