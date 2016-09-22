@@ -1,4 +1,6 @@
 from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 
 import copy
 import multiprocessing
@@ -32,7 +34,7 @@ LOCAL_TIMEZONE = 'LOCAL_TIMEZONE'
 def get_service(service_name):
     epoint = iter_entry_points(group='bugwarrior.service', name=service_name)
     try:
-        epoint = epoint.next()
+        epoint = next(epoint)
     except StopIteration:
         return None
 

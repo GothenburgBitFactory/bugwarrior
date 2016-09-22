@@ -1,4 +1,7 @@
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+import configparser
 import datetime
 from unittest import TestCase
 
@@ -13,7 +16,7 @@ from .base import ServiceTest, AbstractServiceTest
 class TestGitlabService(TestCase):
 
     def setUp(self):
-        self.config = ConfigParser.RawConfigParser()
+        self.config = configparser.RawConfigParser()
         self.config.add_section('general')
         self.config.add_section('myservice')
         self.config.set('myservice', 'gitlab.login', 'foobar')

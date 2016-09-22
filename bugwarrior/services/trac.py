@@ -1,8 +1,13 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import filter
+from builtins import map
+from builtins import range
 import offtrac
 import csv
-import cStringIO as StringIO
+import io as StringIO
 import requests
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from bugwarrior.config import die
 from bugwarrior.services import Issue, IssueService
@@ -90,7 +95,7 @@ class TracService(IssueService):
         if username:
             password = self.config_get_password('password', username)
 
-            auth = urllib.quote_plus('%s:%s' % (username, password)) + '@'
+            auth = urllib.parse.quote_plus('%s:%s' % (username, password)) + '@'
         else:
             auth = ''
         if self.config_get_default('no_xmlrpc', default=False):
@@ -137,7 +142,7 @@ class TracService(IssueService):
         base_url = "https://" + self.config.get(self.target, 'trac.base_uri')
         if self.trac:
             tickets = self.trac.query_tickets('status!=closed&max=0')
-            tickets = map(self.trac.get_ticket, tickets)
+            tickets = list(map(self.trac.get_ticket, tickets))
             issues = [(self.target, ticket[3]) for ticket in tickets]
             for i in range(len(issues)):
                 issues[i][1]['url'] = "%s/ticket/%i" % (base_url, tickets[i][0])
@@ -163,7 +168,7 @@ class TracService(IssueService):
 
         log.debug(" Found %i total.", len(issues))
 
-        issues = filter(self.include, issues)
+        issues = list(filter(self.include, issues))
         log.debug(" Pruned down to %i", len(issues))
 
         for project, issue in issues:

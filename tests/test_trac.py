@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import object
 from bugwarrior.services.trac import TracService
 
 from .base import ServiceTest, AbstractServiceTest

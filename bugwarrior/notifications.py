@@ -1,6 +1,8 @@
+from future import standard_library
+standard_library.install_aliases()
 import datetime
 import os
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from bugwarrior.config import asbool
 
@@ -18,7 +20,7 @@ def _cache_logo():
     if not os.path.isdir(cache_dir):
         os.makedirs(cache_dir)
 
-    urllib.urlretrieve(logo_url, logo_path)
+    urllib.request.urlretrieve(logo_url, logo_path)
 
 
 def _get_metadata(issue):

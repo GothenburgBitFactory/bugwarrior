@@ -1,3 +1,6 @@
+from builtins import next
+from builtins import str
+from builtins import object
 import mock
 
 from bugwarrior.services import bts

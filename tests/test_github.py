@@ -1,3 +1,4 @@
+from builtins import next
 import datetime
 
 import pytz
