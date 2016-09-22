@@ -208,7 +208,7 @@ class ActiveCollab2Service(IssueService):
         issue_generators = []
         projects = self.projects
         for project in projects:
-            for project_id, project_name in project.iteritems():
+            for project_id, project_name in project.items():
                 log.debug(
                     " Getting tasks for #" + project_id +
                     " " + project_name + '"')

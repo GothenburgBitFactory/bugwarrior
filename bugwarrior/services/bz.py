@@ -248,10 +248,9 @@ class BugzillaService(IssueService):
                 'annotations': self.annotations(tag, issue, issue_obj),
             }
 
-            needinfos = filter(lambda f: (    f['name'] == 'needinfo'
+            needinfos = [f for f in issue['flags'] if (    f['name'] == 'needinfo'
                                           and f['status'] == '?'
-                                          and f.get('requestee', self.username) == self.username),
-                               issue['flags'])
+                                          and f.get('requestee', self.username) == self.username)]
             if needinfos:
                 last_mod = needinfos[0]['modification_date']
                 # convert from RPC DateTime string to datetime.datetime object

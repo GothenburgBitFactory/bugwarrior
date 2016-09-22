@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import object
 from collections import namedtuple
 
 import mock

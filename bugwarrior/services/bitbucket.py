@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from builtins import filter
 
 import requests
 
@@ -199,20 +200,20 @@ class BitbucketService(IssueService, ServiceClient):
     def issues(self):
         user = self.config.get(self.target, 'bitbucket.username')
         response = self.get_collection('/repositories/' + user + '/')
-        repo_tags = filter(self.filter_repos, [
+        repo_tags = list(filter(self.filter_repos, [
             repo['full_name'] for repo in response
             if repo.get('has_issues')
-        ])
+        ]))
 
         issues = sum([self.fetch_issues(repo) for repo in repo_tags], [])
         log.debug(" Found %i total.", len(issues))
 
         closed = ['resolved', 'duplicate', 'wontfix', 'invalid', 'closed']
         try:
-            issues = filter(lambda tup: tup[1]['status'] not in closed, issues)
+            issues = [tup for tup in issues if tup[1]['status'] not in closed]
         except KeyError:  # Undocumented API change.
-            issues = filter(lambda tup: tup[1]['state'] not in closed, issues)
-        issues = filter(self.include, issues)
+            issues = [tup for tup in issues if tup[1]['state'] not in closed]
+        issues = list(filter(self.include, issues))
         log.debug(" Pruned down to %i", len(issues))
 
         for tag, issue in issues:
@@ -233,8 +234,8 @@ class BitbucketService(IssueService, ServiceClient):
 
             closed = ['rejected', 'fulfilled']
             not_resolved = lambda tup: tup[1]['state'] not in closed
-            pull_requests = filter(not_resolved, pull_requests)
-            pull_requests = filter(self.include, pull_requests)
+            pull_requests = list(filter(not_resolved, pull_requests))
+            pull_requests = list(filter(self.include, pull_requests))
             log.debug(" Pruned down to %i", len(pull_requests))
 
             for tag, issue in pull_requests:
