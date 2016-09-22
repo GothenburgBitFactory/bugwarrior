@@ -21,7 +21,9 @@ log = logging.getLogger(__name__)
 MARKUP = "(bw)"
 
 
-DOGPILE_CACHE_PATH = os.path.expanduser('~/.cache/dagd.dbm')
+DOGPILE_CACHE_PATH = os.path.expanduser(
+    os.getenv('XDG_CACHE_HOME', '~/.cache') + '/dagd.dbm')
+
 if not os.path.isdir(os.path.dirname(DOGPILE_CACHE_PATH)):
     os.makedirs(os.path.dirname(DOGPILE_CACHE_PATH))
 CACHE_REGION = dogpile.cache.make_region().configure(

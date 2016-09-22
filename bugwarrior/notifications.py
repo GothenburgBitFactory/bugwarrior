@@ -5,7 +5,7 @@ import urllib
 from bugwarrior.config import asbool
 
 
-cache_dir = os.path.expanduser("~/.cache/bugwarrior")
+cache_dir = os.path.expanduser(os.getenv('XDG_CACHE_HOME', "~/.cache") + "/bugwarrior")
 logo_path = cache_dir + "/logo.png"
 logo_url = "https://upload.wikimedia.org/wikipedia/" + \
     "en/5/59/Taskwarrior_logo.png"
