@@ -1,5 +1,7 @@
+from future import standard_library
+standard_library.install_aliases()
 import codecs
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import os
 import subprocess
 import sys
@@ -138,7 +140,7 @@ def validate_config(config, main_section):
         die("No targets= item in [%s] found." % main_section)
 
     targets = config.get(main_section, 'targets')
-    targets = filter(lambda t: len(t), [t.strip() for t in targets.split(",")])
+    targets = [t for t in [t.strip() for t in targets.split(",")] if len(t)]
 
     if not targets:
         die("Empty targets= item in [%s]." % main_section)

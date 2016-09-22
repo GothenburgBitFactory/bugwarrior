@@ -1,4 +1,7 @@
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+import configparser
 import datetime
 
 import pytz
@@ -13,7 +16,7 @@ class TestGitlabService(ConfigTest):
 
     def setUp(self):
         super(TestGitlabService, self).setUp()
-        self.config = ConfigParser.RawConfigParser()
+        self.config = configparser.RawConfigParser()
         self.config.add_section('general')
         self.config.add_section('myservice')
         self.config.set('myservice', 'gitlab.login', 'foobar')

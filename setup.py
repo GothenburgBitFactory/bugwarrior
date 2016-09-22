@@ -41,6 +41,7 @@ setup(name='bugwarrior',
           "lockfile>=0.9.1",
           "click",
           "functools32",
+          "future"
       ],
       extras_require=dict(
           jira=["jira>=0.22"],

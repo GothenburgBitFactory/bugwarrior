@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import object
 import mock
 from collections import namedtuple
 
@@ -11,7 +13,7 @@ class FakeBugzillaLib(object):
         self.record = record
 
     def query(self, query):
-        Record = namedtuple('Record', self.record.keys())
+        Record = namedtuple('Record', list(self.record.keys()))
         return [Record(**self.record)]
 
 

@@ -1,6 +1,9 @@
 from __future__ import unicode_literals, print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
 
-import ConfigParser
+import configparser
 from mock import patch
 import responses
 
@@ -60,7 +63,7 @@ class TestTrelloService(ConfigTest):
 
     def setUp(self):
         super(TestTrelloService, self).setUp()
-        self.config = ConfigParser.RawConfigParser()
+        self.config = configparser.RawConfigParser()
         self.config.add_section('general')
         self.config.add_section('mytrello')
         self.config.set('mytrello', 'trello.api_key', 'XXXX')

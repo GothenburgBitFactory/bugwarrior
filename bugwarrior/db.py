@@ -1,6 +1,10 @@
 from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import object
 
-from ConfigParser import NoOptionError, NoSectionError
+from configparser import NoOptionError, NoSectionError
 import os
 import re
 import subprocess
@@ -91,7 +95,7 @@ def hamdist(str1, str2):
 
 def get_managed_task_uuids(tw, key_list, legacy_matching):
     expected_task_ids = set([])
-    for keys in key_list.values():
+    for keys in list(key_list.values()):
         tasks = tw.filter_tasks({
             'and': [('%s.any' % key, None) for key in keys],
             'or': [

@@ -1,3 +1,4 @@
+from builtins import object
 import re
 
 import pypandoc
@@ -225,15 +226,15 @@ class ActiveCollabService(IssueService):
             labels[item['id']] = re.sub(r'\W+', '_', item['name'])
         task_count = 0
         issues = []
-        for key, record in data.iteritems():
-            for task_id, task in record['assignments'].iteritems():
+        for key, record in data.items():
+            for task_id, task in record['assignments'].items():
                 task_count = task_count + 1
                 # Add tasks
                 if task['assignee_id'] == self.user_id:
                     task['label'] = labels.get(task['label_id'])
                     issues.append(task)
                 if 'subtasks' in task:
-                    for subtask_id, subtask in task['subtasks'].iteritems():
+                    for subtask_id, subtask in task['subtasks'].items():
                         # Add subtasks
                         task_count = task_count + 1
                         if subtask['assignee_id'] is self.user_id:

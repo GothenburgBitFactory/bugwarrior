@@ -1,5 +1,10 @@
 # coding: utf-8
-from ConfigParser import NoOptionError
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import filter
+
+from configparser import NoOptionError
 import re
 import requests
 import six
@@ -223,8 +228,8 @@ class GitlabService(IssueService, ServiceClient):
         self.exclude_repos = self.config_get_default('exclude_repos', [], aslist)
         self.include_repos = self.config_get_default('include_repos', [], aslist)
 
-        self.include_repos = map(self.add_default_namespace, self.include_repos)
-        self.exclude_repos = map(self.add_default_namespace, self.exclude_repos)
+        self.include_repos = list(map(self.add_default_namespace, self.include_repos))
+        self.exclude_repos = list(map(self.add_default_namespace, self.exclude_repos))
 
         self.import_labels_as_tags = self.config_get_default(
             'import_labels_as_tags', default=False, to_type=asbool
@@ -394,7 +399,7 @@ class GitlabService(IssueService, ServiceClient):
     def issues(self):
         tmpl = '{scheme}://{host}/api/v3/projects'
         all_repos = self._fetch_paged(tmpl)
-        repos = filter(self.filter_repos, all_repos)
+        repos = list(filter(self.filter_repos, all_repos))
 
         repo_map = {}
         issues = {}
@@ -405,7 +410,7 @@ class GitlabService(IssueService, ServiceClient):
                 self.get_repo_issues(rid)
             )
         log.debug(" Found %i issues.", len(issues))
-        issues = filter(self.include, issues.values())
+        issues = list(filter(self.include, list(issues.values())))
         log.debug(" Pruned down to %i issues.", len(issues))
 
         for rid, issue in issues:
@@ -431,7 +436,7 @@ class GitlabService(IssueService, ServiceClient):
                     self.get_repo_merge_requests(rid)
                 )
             log.debug(" Found %i merge requests.", len(merge_requests))
-            merge_requests = filter(self.include, merge_requests.values())
+            merge_requests = list(filter(self.include, list(merge_requests.values())))
             log.debug(" Pruned down to %i merge requests.", len(merge_requests))
 
             for rid, issue in merge_requests:
@@ -453,7 +458,7 @@ class GitlabService(IssueService, ServiceClient):
             todos = self.get_todos()
             log.debug(" Found %i todo items.", len(todos))
             if not self.include_all_todos:
-                todos = filter(self.include_todo(repos), todos)
+                todos = list(filter(self.include_todo(repos), todos))
             log.debug(" Pruned down to %i todos.", len(todos))
 
             for project, todo in todos:
