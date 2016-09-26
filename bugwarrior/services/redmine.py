@@ -9,15 +9,18 @@ log = logging.getLogger(__name__)
 
 
 class RedMineClient(ServiceClient):
-    def __init__(self, url, key, auth):
+    def __init__(self, url, key, auth, issue_limit):
         self.url = url
         self.key = key
         self.auth = auth
+        self.issue_limit = issue_limit
 
-    def find_issues(self, user_id=None):
-        args = {"limit": 100}
+    def find_issues(self, user_id=None, issue_limit=25):
+        args = {}
         if user_id is not None:
             args["assigned_to_id"] = user_id
+        if issue_limit is not None:
+            args["limit"] = issue_limit
         return self.call_api("/issues.json", args)["issues"]
 
     def call_api(self, uri, params):
@@ -106,12 +109,13 @@ class RedMineService(IssueService):
         self.url = self.config_get('url').rstrip("/")
         self.key = self.config_get('key')
         self.user_id = self.config_get('user_id')
+        self.issue_limit = self.config_get('issue_limit')
 
         login = self.config_get_default('login')
         if login:
             password = self.config_get_password('password', login)
         auth = (login, password) if (login and password) else None
-        self.client = RedMineClient(self.url, self.key, auth)
+        self.client = RedMineClient(self.url, self.key, auth, self.issue_limit)
 
         self.project_name = self.config_get_default('project_name')
 
@@ -137,7 +141,7 @@ class RedMineService(IssueService):
         IssueService.validate_config(config, target)
 
     def issues(self):
-        issues = self.client.find_issues(self.user_id)
+        issues = self.client.find_issues(self.user_id, self.issue_limit)
         log.debug(" Found %i total.", len(issues))
 
         for issue in issues:

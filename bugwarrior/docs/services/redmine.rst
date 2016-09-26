@@ -17,10 +17,10 @@ Here's an example of a Redmine target::
     redmine.key = c0c4c014cafebabe
     redmine.user_id = 7
     redmine.project_name = redmine
+    redmine.issue_limit = 1000
 
-The above example is the minimum required to import issues from
-Redmine.  You can also feel free to use any of the
-configuration options described in :ref:`common_configuration_options`.
+You can also feel free to use any of the configuration options described in
+:ref:`common_configuration_options`.
 
 There are also `redmine.login`/`redmine.password` settings if your
 instance is behind basic auth.
