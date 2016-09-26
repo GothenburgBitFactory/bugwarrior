@@ -65,8 +65,12 @@ class RedMineIssue(Issue):
     }
 
     def to_taskwarrior(self):
+        duedate = self.record.get('due_date')
+        if duedate:
+            duedate = self.parse_date(duedate)
         return {
             'project': self.get_project_name(),
+            'due': duedate,
             'priority': self.get_priority(),
 
             self.URL: self.get_issue_url(),
