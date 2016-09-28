@@ -140,7 +140,11 @@ class JiraIssue(Issue):
         context = self.record.copy()
         label_template = Template(self.origin['label_template'])
 
-        sprints = self.record.get('fields', {}).get(self.origin['sprint_field']) or []
+        fields = self.record.get('fields', {})
+        sprints = sum([
+            fields.get(key) or []
+            for key in self.origin['sprint_field_names']
+        ], [])
         for sprint in sprints:
             # Parse this big ugly string.
             sprint = _parse_sprint_string(sprint)
@@ -244,18 +248,16 @@ class JiraService(IssueService):
             'label_template', default='{{label}}', to_type=six.text_type
         )
 
-        self.sprint_field = None
+        self.sprint_field_names = []
         if self.import_sprints_as_tags:
-            sprint_fields = [field for field in self.jira.fields()
-                             if field['name'] == 'Sprint']
-            if len(sprint_fields) > 1:
-                log.warn("More than one sprint custom field found.  Ignoring sprints.")
-                self.import_sprints_as_tags = False
-            elif len(sprint_fields) < 1:
+            field_names = [field for field in self.jira.fields()
+                           if field['name'] == 'Sprint']
+            if len(field_names) < 1:
                 log.warn("No sprint custom field found.  Ignoring sprints.")
                 self.import_sprints_as_tags = False
             else:
-                self.sprint_field = sprint_fields[0]['id']
+                log.info("Found %i distinct sprint fields." % len(field_names))
+                self.sprint_field_names = [field['id'] for field in field_names]
 
     @classmethod
     def get_keyring_service(cls, config, section):
@@ -268,7 +270,7 @@ class JiraService(IssueService):
             'url': self.url,
             'import_labels_as_tags': self.import_labels_as_tags,
             'import_sprints_as_tags': self.import_sprints_as_tags,
-            'sprint_field': self.sprint_field,
+            'sprint_field_names': self.sprint_field_names,
             'label_template': self.label_template,
         }
 
