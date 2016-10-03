@@ -39,6 +39,7 @@ class RedMineIssue(Issue):
     URL = 'redmineurl'
     SUBJECT = 'redminesubject'
     ID = 'redmineid'
+    DESCRIPTION = 'redminedescription'
 
     UDAS = {
         URL: {
@@ -50,8 +51,12 @@ class RedMineIssue(Issue):
             'label': 'Redmine Subject',
         },
         ID: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'Redmine ID',
+        },
+        DESCRIPTION: {
+            'type': 'string',
+            'label': 'Redmine Description',
         },
     }
     UNIQUE_KEY = (URL, )
@@ -76,6 +81,8 @@ class RedMineIssue(Issue):
             self.URL: self.get_issue_url(),
             self.SUBJECT: self.record['subject'],
             self.ID: self.record['id']
+            self.ID: self.record['id'],
+            self.DESCRIPTION: self.record['description'],
         }
 
     def get_priority(self):
