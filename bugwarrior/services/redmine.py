@@ -40,6 +40,15 @@ class RedMineIssue(Issue):
     SUBJECT = 'redminesubject'
     ID = 'redmineid'
     DESCRIPTION = 'redminedescription'
+    TRACKER = 'redminetracker'
+    STATUS = 'redminestatus'
+    AUTHOR = 'redmineauthor'
+    CATEGORY = 'redminecategory'
+    START_DATE = 'redminestartdate'
+    SPENT_HOURS = 'redminespenthours'
+    ESTIMATED_HOURS = 'redmineestimatedhours'
+    CREATED_ON = 'redminecreatedon'
+    UPDATED_ON = 'redmineupdatedon'
 
     UDAS = {
         URL: {
@@ -58,8 +67,45 @@ class RedMineIssue(Issue):
             'type': 'string',
             'label': 'Redmine Description',
         },
+        TRACKER: {
+            'type': 'string',
+            'label': 'Redmine Tracker',
+        },
+        STATUS: {
+            'type': 'string',
+            'label': 'Redmine Status',
+        },
+        AUTHOR: {
+            'type': 'string',
+            'label': 'Redmine Author',
+        },
+        CATEGORY: {
+            'type': 'string',
+            'label': 'Redmine Category',
+        },
+        START_DATE: {
+            'type': 'date',
+            'label': 'Redmine Start Date',
+        },
+        SPENT_HOURS: {
+            'type': 'duration',
+            'label': 'Redmine Spent Hours',
+        },
+        ESTIMATED_HOURS: {
+            'type': 'duration',
+            'label': 'Redmine Estimated Hours',
+        },
+        CREATED_ON: {
+            'type': 'date',
+            'label': 'Redmine Created On',
+        },
+        UPDATED_ON: {
+            'type': 'date',
+            'label': 'Redmine Updated On',
+        },
+
     }
-    UNIQUE_KEY = (URL, )
+    UNIQUE_KEY = (ID, )
 
     PRIORITY_MAP = {
         'Low': 'L',
@@ -73,16 +119,35 @@ class RedMineIssue(Issue):
         duedate = self.record.get('due_date')
         if duedate:
             duedate = self.parse_date(duedate)
+        spent_hours = self.record.get('spent_hours')
+        if spent_hours:
+            spent_hours = str(spent_hours) + ' hours'
+        estimated_hours = self.record.get('estimated_hours')
+        if estimated_hours:
+            estimated_hours = str(estimated_hours) + ' hours'
+        category = self.record.get('category')
+        if category:
+            category = category['name']
+
         return {
             'project': self.get_project_name(),
             'due': duedate,
+            'annotations': self.extra.get('annotations', []),
             'priority': self.get_priority(),
 
             self.URL: self.get_issue_url(),
             self.SUBJECT: self.record['subject'],
-            self.ID: self.record['id']
             self.ID: self.record['id'],
             self.DESCRIPTION: self.record['description'],
+            self.TRACKER: self.record['tracker']['name'],
+            self.STATUS: self.record['status']['name'],
+            self.AUTHOR: self.record['author']['name'],
+            self.CATEGORY: category,
+            self.START_DATE: self.record['start_date'],
+            self.CREATED_ON: self.record['created_on'],
+            self.UPDATED_ON: self.record['updated_on'],
+            self.ESTIMATED_HOURS: estimated_hours,
+            self.SPENT_HOURS: spent_hours,
         }
 
     def get_priority(self):
