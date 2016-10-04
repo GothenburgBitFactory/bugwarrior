@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import requests
 
-from bugwarrior import data
 from bugwarrior.services import IssueService, Issue, ServiceClient
 from bugwarrior.config import asbool, aslist, die
 
@@ -73,7 +72,7 @@ class BitbucketService(IssueService, ServiceClient):
         secret = self.config_get_default('secret')
         auth = {'oauth': (key, secret)}
 
-        refresh_token = data.get('bitbucket_refresh_token')
+        refresh_token = self.data.get('bitbucket_refresh_token')
 
         if not refresh_token:
             login = self.config_get('login')
@@ -95,7 +94,8 @@ class BitbucketService(IssueService, ServiceClient):
                           'password': password},
                     auth=auth['oauth']).json()
 
-                data.set('bitbucket_refresh_token', response['refresh_token'])
+                self.data.set('bitbucket_refresh_token',
+                              response['refresh_token'])
 
             auth['token'] = response['access_token']
 

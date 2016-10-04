@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 
+from functools32 import lru_cache
 import six
 
 import logging
@@ -204,9 +205,34 @@ def get_taskrc_path(conf, main_section):
     )
 
 
-def get_data_path():
-    return os.path.expanduser(os.getenv('TASKDATA', '~/.task'))
+@lru_cache()
+def get_data_path(config, main_section):
+    taskrc = get_taskrc_path(config, main_section)
 
+    # We cannot use the taskw module here because it doesn't really support
+    # the `_` subcommands properly (`rc:` can't be used for them).
+    line_prefix = 'data.location='
+
+    env={
+        'PATH': os.getenv('PATH'),
+        'TASKRC': taskrc,
+    }
+    # If TASKDATA is set but empty, taskwarrior's data.location is empty.
+    taskdata = os.getenv('TASKDATA')
+    if taskdata:
+        env['TASKDATA'] = taskdata
+
+    tw_show = subprocess.Popen(
+        ('task', '_show'), stdout=subprocess.PIPE, env=env)
+    data_location = subprocess.check_output(
+        ('grep', '-e', '^' + line_prefix), stdin=tw_show.stdout)
+    tw_show.wait()
+    data_path = data_location[len(line_prefix):].rstrip()
+
+    if not data_path:
+        raise RuntimeError('Unable to determine the data location.')
+
+    return os.path.normpath(os.path.expanduser(data_path))
 
 # This needs to be imported here and not above to avoid a circular-import.
 from bugwarrior.services import get_service

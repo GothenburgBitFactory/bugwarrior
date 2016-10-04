@@ -73,6 +73,7 @@ class TestActiveCollabIssues(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestActiveCollabIssues, self).setUp()
         self.maxDiff = None
         with mock.patch('pyac.library.activeCollab.call_api'):
             self.service = self.get_mock_service(ActiveCollabService)

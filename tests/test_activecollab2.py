@@ -43,6 +43,7 @@ class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestActiveCollab2Issue, self).setUp()
         self.service = self.get_mock_service(ActiveCollab2Service)
 
     def test_to_taskwarrior(self):

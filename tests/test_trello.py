@@ -1,12 +1,11 @@
 from __future__ import unicode_literals, print_function
 
 import ConfigParser
-from unittest import TestCase
 from mock import patch
 import responses
 
 from bugwarrior.services.trello import TrelloService, TrelloIssue
-from .base import ServiceTest
+from .base import ConfigTest, ServiceTest
 
 
 class TestTrelloIssue(ServiceTest):
@@ -21,6 +20,7 @@ class TestTrelloIssue(ServiceTest):
         }
 
     def setUp(self):
+        super(TestTrelloIssue, self).setUp()
         origin = dict(inline_links=True, description_length=31,
                       import_labels_as_tags=True)
         extra = {'boardname': 'Hyperspatial express route',
@@ -40,7 +40,7 @@ class TestTrelloIssue(ServiceTest):
                          self.issue.to_taskwarrior().get('project', None))
 
 
-class TestTrelloService(TestCase):
+class TestTrelloService(ConfigTest):
     BOARD = {'id': 'B04RD', 'name': 'My Board'}
     CARD1 = {'id': 'C4RD', 'name': 'Card 1', 'members': [{'username': 'tintin'}],
              'idShort': 1,
@@ -59,6 +59,7 @@ class TestTrelloService(TestCase):
                  "memberCreator": { "username": "mario" } }
 
     def setUp(self):
+        super(TestTrelloService, self).setUp()
         self.config = ConfigParser.RawConfigParser()
         self.config.add_section('general')
         self.config.add_section('mytrello')

@@ -42,6 +42,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestJiraIssue, self).setUp()
         with mock.patch('jira.client.JIRA._get_json'):
             self.service = self.get_mock_service(JiraService)
 

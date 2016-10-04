@@ -23,6 +23,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestGerritIssue, self).setUp()
         self.service = self.get_mock_service(GerritService)
 
     def test_to_taskwarrior(self):

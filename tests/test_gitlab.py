@@ -1,18 +1,18 @@
 import ConfigParser
 import datetime
-from unittest import TestCase
 
 import pytz
 import responses
 
 from bugwarrior.services.gitlab import GitlabService
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import ConfigTest, ServiceTest, AbstractServiceTest
 
 
-class TestGitlabService(TestCase):
+class TestGitlabService(ConfigTest):
 
     def setUp(self):
+        super(TestGitlabService, self).setUp()
         self.config = ConfigParser.RawConfigParser()
         self.config.add_section('general')
         self.config.add_section('myservice')
@@ -103,6 +103,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestGitlabIssue, self).setUp()
         self.service = self.get_mock_service(GitlabService)
 
     def test_normalize_label_to_tag(self):

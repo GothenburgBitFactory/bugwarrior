@@ -23,6 +23,7 @@ class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
+        super(TestTeamlabIssue, self).setUp()
         with mock.patch(
             'bugwarrior.services.teamlab.TeamLabClient.authenticate'
         ):
