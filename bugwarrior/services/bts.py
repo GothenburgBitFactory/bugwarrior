@@ -18,6 +18,7 @@ class BTSIssue(Issue):
     SOURCE = 'btssource'
     FORWARDED = 'btsforwarded'
     STATUS = 'btsstatus'
+    TAGS = 'btstags'
 
     UDAS = {
         SUBJECT: {
@@ -47,7 +48,11 @@ class BTSIssue(Issue):
         STATUS: {
             'type': 'string',
             'label': 'Debian BTS Status',
-        }
+        },
+        TAGS: {
+            'type': 'string',
+            'label': 'Debian BTS Tags',
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -72,6 +77,7 @@ class BTSIssue(Issue):
             self.SOURCE: self.record['source'],
             self.FORWARDED: self.record['forwarded'],
             self.STATUS: self.record['status'],
+            self.TAGS: self.record['tags'],
         }
 
     def get_default_description(self):
@@ -108,6 +114,9 @@ class BTSService(IssueService, ServiceClient):
         self.ignore_pending = self.config_get_default('ignore_pending',
                                                       default=True,
                                                       to_type=asbool)
+        self.ignore_wontfix = self.config_get_default('ignore_wontfix',
+                                                      default=False,
+                                                      to_type=asbool)
 
     @classmethod
     def validate_config(cls, config, target):
@@ -132,6 +141,7 @@ class BTSService(IssueService, ServiceClient):
                 'source': bug.source,
                 'forwarded': bug.forwarded,
                 'status': bug.pending,
+                'tags': ",".join(bug.tags),
                 }
 
     def _get_udd_bugs(self):
@@ -194,6 +204,11 @@ class BTSService(IssueService, ServiceClient):
             issues = [issue
                       for issue in issues
                       if not issue['status'] == 'pending-fixed']
+
+        if self.ignore_wontfix:
+            issues = [issue
+                      for issue in issues
+                      if not 'wontfix' in issue['tags'].split(',')]
 
         issues = [issue
                   for issue in issues

@@ -15,6 +15,7 @@ class FakeBTSBug(object):
     source = ""
     forwarded = ""
     pending = "pending"
+    tags = []
 
 
 class FakeBTSLib(object):
@@ -53,6 +54,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
             issue.SOURCE: FakeBTSBug.source,
             issue.FORWARDED: FakeBTSBug.forwarded,
             issue.STATUS: FakeBTSBug.pending,
+            issue.TAGS: ",".join(FakeBTSBug.tags),
         }
         actual_output = issue.to_taskwarrior()
 
@@ -77,6 +79,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
                             u'rg/810629'),
             'priority': 'L',
             'btsstatus': 'pending',
+            'btstags': '',
             u'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)

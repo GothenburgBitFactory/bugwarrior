@@ -62,15 +62,24 @@ Excluding bugs marked pending
 +++++++++++++++++++++++++++++
 
 Debian bugs are not considered closed until the fixed package is present in the
-Debian archive. Bugs do cease to be outstanding tasks however as soon as you have
-completed the work, and so it can be useful to exclude bugs that you have marked
-with the pending tag in the BTS.
+Debian archive. Bugs do cease to be outstanding tasks however as soon as you
+have completed the work, and so it can be useful to exclude bugs that you have
+marked with the pending tag in the BTS.
 
-This is the default behaviour, but if you feel you would like to include bugs that
-are marked as pending in the BTS, you can disable this by adding this line to your
-service configuration::
+This is the default behaviour, but if you feel you would like to include bugs
+that are marked as pending in the BTS, you can disable this by adding this line
+to your service configuration::
 
     bts.ignore_pending = False
+
+Excluding bugs marked wontfix
++++++++++++++++++++++++++++++
+
+You can ignore bugs that have been marked as wontfix. The default behaviour is
+to not ignore these, but if you feel you would like to, you can disable this by
+adding this line to your service configuration::
+
+    bts.ignore_wontfix = False
 
 Excluding sponsored and NMU'd packages
 ++++++++++++++++++++++++++++++++++++++
@@ -122,5 +131,7 @@ Provided UDA Fields
 | ``btsforwarded``    | Forwarded URL       | Text (string)       |
 +---------------------+---------------------+---------------------+
 | ``btsstatus``       | Status              | Text (string)       |
++---------------------+---------------------+---------------------+
+| ``btstags``         | Tags                | Text (string)       |
 +---------------------+---------------------+---------------------+
 
