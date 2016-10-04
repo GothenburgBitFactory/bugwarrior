@@ -1,4 +1,5 @@
-import datetime
+from __future__ import unicode_literals
+
 import os
 import urllib
 
@@ -72,7 +73,7 @@ def send_notification(issue, op, conf):
                 priority=1,
             )
             return
-        message = "%s task: %s" % (op, issue['description'].encode("utf-8"))
+        message = "%s task: %s" % (op, issue['description'])
         metadata = _get_metadata(issue)
         if metadata is not None:
             message += metadata
@@ -97,8 +98,7 @@ def send_notification(issue, op, conf):
             message = "Finished querying for new issues.\n%s" %\
                 issue['description']
         else:
-            message = "%s task: %s" % (
-                op, issue['description'].encode("utf-8"))
+            message = "%s task: %s" % (op, issue['description'])
             metadata = _get_metadata(issue)
             if metadata is not None:
                 message += metadata
@@ -107,6 +107,8 @@ def send_notification(issue, op, conf):
     elif notify_backend == 'gobject':
         _cache_logo()
 
+        import gi
+        gi.require_version('Notify', '0.7')
         from gi.repository import Notify
         Notify.init("bugwarrior")
 
@@ -114,10 +116,9 @@ def send_notification(issue, op, conf):
             message = "Finished querying for new issues.\n%s" %\
                 issue['description']
         else:
-            message = "%s task: %s" % (
-                op, issue['description'].encode("utf-8"))
+            message = "%s task: %s" % (op, issue['description'])
             metadata = _get_metadata(issue)
             if metadata is not None:
-                message += metadata.encode("utf-8")
+                message += metadata
 
         Notify.Notification.new("Bugwarrior", message, logo_path).show()
