@@ -15,12 +15,12 @@ class RedMineClient(ServiceClient):
         self.auth = auth
         self.issue_limit = issue_limit
 
-    def find_issues(self, user_id=None, issue_limit=25):
+    def find_issues(self, issue_limit=100):
         args = {}
-        if user_id is not None:
-            args["assigned_to_id"] = user_id
         if issue_limit is not None:
             args["limit"] = issue_limit
+
+        args["assigned_to_id"] = 'me'
         return self.call_api("/issues.json", args)["issues"]
 
     def call_api(self, uri, params):
@@ -49,6 +49,7 @@ class RedMineIssue(Issue):
     ESTIMATED_HOURS = 'redmineestimatedhours'
     CREATED_ON = 'redminecreatedon'
     UPDATED_ON = 'redmineupdatedon'
+    ASSIGNED_TO = 'redmineassignedto'
 
     UDAS = {
         URL: {
@@ -103,6 +104,10 @@ class RedMineIssue(Issue):
             'type': 'date',
             'label': 'Redmine Updated On',
         },
+        ASSIGNED_TO: {
+            'type': 'string',
+            'label': 'Redmine Assigned To',
+        },
 
     }
     UNIQUE_KEY = (ID, )
@@ -128,6 +133,9 @@ class RedMineIssue(Issue):
         category = self.record.get('category')
         if category:
             category = category['name']
+        assigned_to = self.record.get('assigned_to')
+        if assigned_to:
+            assigned_to = assigned_to['name']
 
         return {
             'project': self.get_project_name(),
@@ -142,6 +150,7 @@ class RedMineIssue(Issue):
             self.TRACKER: self.record['tracker']['name'],
             self.STATUS: self.record['status']['name'],
             self.AUTHOR: self.record['author']['name'],
+            self.ASSIGNED_TO: assigned_to,
             self.CATEGORY: category,
             self.START_DATE: self.record['start_date'],
             self.CREATED_ON: self.record['created_on'],
@@ -184,7 +193,6 @@ class RedMineService(IssueService):
 
         self.url = self.config_get('url').rstrip("/")
         self.key = self.config_get('key')
-        self.user_id = self.config_get('user_id')
         self.issue_limit = self.config_get('issue_limit')
 
         login = self.config_get_default('login')
@@ -205,20 +213,19 @@ class RedMineService(IssueService):
     def get_keyring_service(cls, config, section):
         url = config.get(section, cls._get_key('url'))
         login = config.get(section, cls._get_key('login'))
-        user_id = config.get(section, cls._get_key('user_id'))
-        return "redmine://%s@%s/%s" % (login, url, user_id)
+        return "redmine://%s@%s/%s" % (login, url)
 
     @classmethod
     def validate_config(cls, config, target):
-        for k in ('redmine.url', 'redmine.key', 'redmine.user_id'):
+        for k in ('redmine.url', 'redmine.key'):
             if not config.has_option(target, k):
                 die("[%s] has no '%s'" % (target, k))
 
         IssueService.validate_config(config, target)
 
     def issues(self):
-        issues = self.client.find_issues(self.user_id, self.issue_limit)
-        log.debug(" Found %i total.", len(issues))
 
+        issues = self.client.find_issues(self.issue_limit)
+        log.debug(" Found %i total.", len(issues))
         for issue in issues:
             yield self.get_issue_for_record(issue)

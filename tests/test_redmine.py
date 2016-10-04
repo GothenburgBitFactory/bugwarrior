@@ -11,7 +11,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'redmine.url': 'https://something',
         'redmine.key': 'something_else',
-        'redmine.user_id': '10834u0234',
+        'redmine.issue_limit': '100',
     }
     arbitrary_issue = {
         "assigned_to": {
