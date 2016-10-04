@@ -21,10 +21,10 @@ before_install:
   - cd $TRAVIS_BUILD_DIR
 install:
   - pip install .[jira,megaplan,activecollab,bts]
-  - pip install coveralls
+  - pip install codecov
   - pip install coverage
-script: nosetests -w tests --with-coverage --cover-package=bugwarrior
-after_success: coveralls
+script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior
+after_success: codecov
 notifications:
     email: true
     irc:
