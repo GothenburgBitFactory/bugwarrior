@@ -28,7 +28,7 @@ class GithubClient(ServiceClient):
         return user_repos + public_repos
 
     def get_involved_issues(self, username):
-        tmpl = "https://api.github.com/search/issues?q=involves%3A{username}&per_page=100"
+        tmpl = "https://api.github.com/search/issues?q=involves%3A{username}%20state%3Aopen&per_page=100"
         url = tmpl.format(username=username)
         return self._getter(url, subkey='items')
 
