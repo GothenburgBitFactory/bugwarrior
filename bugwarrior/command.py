@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 
@@ -112,9 +113,9 @@ def targets():
 @vault.command()
 def list():
     pws = lst(targets())
-    print "%i @oracle:use_keyring passwords in bugwarriorrc" % len(pws)
+    print("%i @oracle:use_keyring passwords in bugwarriorrc" % len(pws))
     for section in pws:
-        print "-", section
+        print("-", section)
 
 
 @vault.command()
@@ -127,9 +128,9 @@ def clear(target, username):
 
     if keyring.get_password(target, username):
         keyring.delete_password(target, username)
-        print "Password cleared for %s, %s" % (target, username)
+        print("Password cleared for %s, %s" % (target, username))
     else:
-        print "No password found for %s, %s" % (target, username)
+        print("No password found for %s, %s" % (target, username))
 
 
 @vault.command()
@@ -141,7 +142,7 @@ def set(target, username):
         raise ValueError("%s must be one of %r" % (target, target_list))
 
     keyring.set_password(target, username, getpass.getpass())
-    print "Password set for %s, %s" % (target, username)
+    print("Password set for %s, %s" % (target, username))
 
 
 @click.command()
@@ -149,7 +150,7 @@ def set(target, username):
 def uda(flavor):
     main_section = _get_section_name(flavor)
     conf = _try_load_config(main_section)
-    print "# Bugwarrior UDAs"
+    print("# Bugwarrior UDAs")
     for uda in get_defined_udas_as_strings(conf, main_section):
-        print uda
-    print "# END Bugwarrior UDAs"
+        print(uda)
+    print("# END Bugwarrior UDAs")

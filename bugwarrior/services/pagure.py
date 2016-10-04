@@ -1,3 +1,4 @@
+from builtins import filter
 import re
 import six
 import datetime
@@ -189,7 +190,7 @@ class PagureService(IssueService):
         else:
             all_repos = [self.repo]
 
-        repos = filter(self.filter_repos, all_repos)
+        repos = list(filter(self.filter_repos, all_repos))
 
         issues = []
         for repo in repos:
@@ -197,7 +198,7 @@ class PagureService(IssueService):
             issues.extend(self.get_issues(repo, ('pull-requests', 'requests')))
 
         log.debug(" Found %i issues.", len(issues))
-        issues = filter(self.include, issues)
+        issues = list(filter(self.include, issues))
         log.debug(" Pruned down to %i issues.", len(issues))
 
         for repo, issue in issues:

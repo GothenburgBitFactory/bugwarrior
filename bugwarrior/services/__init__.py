@@ -1,4 +1,6 @@
 from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 
 import copy
 import multiprocessing
@@ -32,7 +34,7 @@ LOCAL_TIMEZONE = 'LOCAL_TIMEZONE'
 def get_service(service_name):
     epoint = iter_entry_points(group='bugwarrior.service', name=service_name)
     try:
-        epoint = epoint.next()
+        epoint = next(epoint)
     except StopIteration:
         return None
 
@@ -257,6 +259,7 @@ class IssueService(object):
         raise NotImplementedError
 
 
+@six.python_2_unicode_compatible
 class Issue(object):
     # Set to a dictionary mapping UDA short names with type and long name.
     #
@@ -471,17 +474,14 @@ class Issue(object):
     def origin(self):
         return self._origin
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s: %s' % (
             self.origin['target'],
             self.get_taskwarrior_record()['description']
         )
 
-    def __str__(self):
-        return self.__unicode__().encode('ascii', 'replace')
-
     def __repr__(self):
-        return '<%s>' % self.__unicode__()
+        return '<%s>' % str(self)
 
 
 class ServiceClient(object):

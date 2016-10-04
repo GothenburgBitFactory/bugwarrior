@@ -143,7 +143,7 @@ class TeamLabService(IssueService):
         log.debug(" Remote has %i total issues.", len(issues))
 
         # Filter out closed tasks.
-        issues = filter(lambda i: i["status"] == 1, issues)
+        issues = [i for i in issues if i["status"] == 1]
         log.debug(" Remote has %i active issues.", len(issues))
 
         for issue in issues:

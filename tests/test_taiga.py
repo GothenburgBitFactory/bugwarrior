@@ -1,3 +1,4 @@
+from builtins import next
 import responses
 
 from bugwarrior.services.taiga import TaigaService

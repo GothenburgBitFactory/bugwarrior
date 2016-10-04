@@ -16,3 +16,5 @@ man/*
 .Python
 *.egg*
 *.idea
+.tox/*
+*.bak
