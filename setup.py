@@ -46,7 +46,7 @@ setup(name='bugwarrior',
           jira=["jira>=0.22"],
           megaplan=["megaplan>=1.4"],
           activecollab=["pypandoc", "pyac>=0.1.5"],
-          bts=["PySimpleSOAP","python-debianbts"],
+          bts=["PySimpleSOAP","python-debianbts>=2.6.1"],
       ),
       tests_require=[
           "Mock",
