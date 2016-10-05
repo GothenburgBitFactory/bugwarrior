@@ -46,7 +46,7 @@ setup(name='bugwarrior',
       extras_require=dict(
           jira=["jira>=0.22"],
           megaplan=["megaplan>=1.4"],
-          activecollab=["pypandoc", "pyac"],
+          activecollab=["pypandoc", "pyac>=0.1.5"],
           bts=["PySimpleSOAP","python-debianbts"],
       ),
       tests_require=[
