@@ -356,7 +356,7 @@ class GithubService(IssueService):
     def issues(self):
         all_repos = self.client.get_repos(self.username)
         assert(type(all_repos) == list)
-        repos = list(filter(self.filter_repos, all_repos))
+        repos = filter(self.filter_repos, all_repos)
 
         issues = {}
         if self.involved_issues:
@@ -376,7 +376,7 @@ class GithubService(IssueService):
                        self.get_directly_assigned_issues().items())
             )
         log.debug(" Found %i issues.", len(issues))
-        issues = list(filter(self.include, list(issues.values())))
+        issues = list(filter(self.include, issues.values()))
         log.debug(" Pruned down to %i issues.", len(issues))
 
         for tag, issue in issues:

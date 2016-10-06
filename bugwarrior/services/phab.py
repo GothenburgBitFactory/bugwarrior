@@ -84,16 +84,16 @@ class PhabricatorService(IssueService):
                 issues_owner = self.api.maniphest.query(status='status-open', ownerPHIDs=self.shown_user_phids)
                 issues_cc = self.api.maniphest.query(status='status-open', ccPHIDs=self.shown_user_phids)
                 issues_author = self.api.maniphest.query(status='status-open', authorPHIDs=self.shown_user_phids)
-                issues = list(list(issues_owner.items()) + list(issues_cc.items()) + list(issues_author.items()))
+                issues = list(issues_owner.items()) + list(issues_cc.items()) + list(issues_author.items())
                 # Delete duplicates
                 seen = set()
                 issues = [item for item in issues if str(item[1]) not in seen and not seen.add(str(item[1]))]
             if self.shown_project_phids is not None:
                 issues = self.api.maniphest.query(status='status-open', projectsPHIDs = self.shown_project_phids)
-                issues = list(issues.items())
+                issues = issues.items()
         else:
             issues = self.api.maniphest.query(status='status-open')
-            issues = list(issues.items())
+            issues = issues.items()
 
         log.info("Found %i issues" % len(issues))
 
@@ -140,7 +140,7 @@ class PhabricatorService(IssueService):
 
         log.info("Found %i differentials" % len(diffs))
 
-        for diff in list(diffs):
+        for diff in diffs:
 
             project = self.target  # a sensible default
             try:
