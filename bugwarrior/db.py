@@ -95,7 +95,7 @@ def hamdist(str1, str2):
 
 def get_managed_task_uuids(tw, key_list, legacy_matching):
     expected_task_ids = set([])
-    for keys in list(key_list.values()):
+    for keys in key_list.values():
         tasks = tw.filter_tasks({
             'and': [('%s.any' % key, None) for key in keys],
             'or': [
