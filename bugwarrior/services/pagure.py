@@ -190,7 +190,7 @@ class PagureService(IssueService):
         else:
             all_repos = [self.repo]
 
-        repos = list(filter(self.filter_repos, all_repos))
+        repos = filter(self.filter_repos, all_repos)
 
         issues = []
         for repo in repos:
