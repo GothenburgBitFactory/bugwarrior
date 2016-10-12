@@ -15,7 +15,7 @@ class RedMineClient(ServiceClient):
         self.auth = auth
 
     def find_issues(self, user_id=None):
-        args = {}
+        args = {"limit": 100}
         if user_id is not None:
             args["assigned_to_id"] = user_id
         return self.call_api("/issues.json", args)["issues"]

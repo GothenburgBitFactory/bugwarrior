@@ -4,6 +4,8 @@ Redmine
 You can import tasks from your Redmine instance using
 the ``redmine`` service name.
 
+Only first 100 issues are imported at the moment.
+
 Example Service
 ---------------
 
