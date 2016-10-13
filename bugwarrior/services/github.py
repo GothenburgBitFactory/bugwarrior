@@ -328,12 +328,15 @@ class GithubService(IssueService):
         if repo['owner']['login'] != self.username:
             return False
 
+        return self.filter_repo_name(repo['name'])
+
+    def filter_repo_name(self, name):
         if self.exclude_repos:
-            if repo['name'] in self.exclude_repos:
+            if name in self.exclude_repos:
                 return False
 
         if self.include_repos:
-            if repo['name'] in self.include_repos:
+            if name in self.include_repos:
                 return True
             else:
                 return False
