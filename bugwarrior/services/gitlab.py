@@ -454,6 +454,8 @@ class GitlabService(IssueService, ServiceClient):
             log.debug(" Found %i todo items.", len(todos))
             if not self.include_all_todos:
                 todos = filter(self.include_todo(repos), todos.values())
+            else:
+                todos = todos.values()
             log.debug(" Pruned down to %i todos.", len(todos))
 
             for project, todo in todos:
