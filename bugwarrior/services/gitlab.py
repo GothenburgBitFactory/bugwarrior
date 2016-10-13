@@ -120,7 +120,7 @@ class GitlabIssue(Issue):
             self.origin['default_priority'] if self.extra['type'] == 'issue'
             else 'H')
         title = (
-            'Todo from %s for %s' % (author, self.extra['project'])
+            'Todo from %s for %s' % (author['name'], self.extra['project'])
             if self.extra['type'] == 'todo' else self.record['title'])
         description = (
            self.record['body'] if self.extra['type'] == 'todo'
@@ -371,7 +371,7 @@ class GitlabService(IssueService, ServiceClient):
 
     def get_todos(self):
         tmpl = '{scheme}://{host}/api/v3/todos'
-        todos = {}
+        todos = []
         try:
             fetched_todos = self._fetch_paged(tmpl)
         except IOError:
@@ -380,7 +380,7 @@ class GitlabService(IssueService, ServiceClient):
         for todo in fetched_todos:
             if todo['state'] == 'done':
                 continue
-            todos[todo['id']] = (todo.get('project'), todo)
+            todos.append((todo.get('project'), todo))
         return todos
 
     def include_todo(self, repos):
@@ -453,9 +453,7 @@ class GitlabService(IssueService, ServiceClient):
             todos = self.get_todos()
             log.debug(" Found %i todo items.", len(todos))
             if not self.include_all_todos:
-                todos = filter(self.include_todo(repos), todos.values())
-            else:
-                todos = todos.values()
+                todos = filter(self.include_todo(repos), todos)
             log.debug(" Pruned down to %i todos.", len(todos))
 
             for project, todo in todos:
