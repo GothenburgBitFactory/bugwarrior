@@ -1,3 +1,4 @@
+import os
 import re
 import six
 
@@ -324,6 +325,10 @@ class GithubService(IssueService):
         if issue[1]['assignee']:
             return issue[1]['assignee']['login']
 
+    def filter_issues(self, issue):
+        _, (_, issue) = issue
+        return self.filter_repo_name(os.path.basename(issue['repository_url']))
+
     def filter_repos(self, repo):
         if repo['owner']['login'] != self.username:
             return False
@@ -356,7 +361,8 @@ class GithubService(IssueService):
         issues = {}
         if self.involved_issues:
             issues.update(
-                self.get_involved_issues(self.username)
+                filter(self.filter_issues,
+                       self.get_involved_issues(self.username).items())
             )
         else:
             for repo in repos:
