@@ -1,4 +1,3 @@
-import os
 import re
 import six
 
@@ -326,8 +325,8 @@ class GithubService(IssueService):
             return issue[1]['assignee']['login']
 
     def filter_issues(self, issue):
-        _, (_, issue) = issue
-        return self.filter_repo_name(os.path.basename(issue['repository_url']))
+        repo, _ = issue
+        return self.filter_repo_name(repo.split('/')[-3])
 
     def filter_repos(self, repo):
         if repo['owner']['login'] != self.username:
