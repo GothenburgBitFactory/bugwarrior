@@ -410,7 +410,7 @@ class GitlabService(IssueService, ServiceClient):
                 self.get_repo_issues(rid)
             )
         log.debug(" Found %i issues.", len(issues))
-        issues = list(filter(self.include, list(issues.values())))
+        issues = list(filter(self.include, issues.values()))
         log.debug(" Pruned down to %i issues.", len(issues))
 
         for rid, issue in issues:
@@ -436,7 +436,7 @@ class GitlabService(IssueService, ServiceClient):
                     self.get_repo_merge_requests(rid)
                 )
             log.debug(" Found %i merge requests.", len(merge_requests))
-            merge_requests = list(filter(self.include, list(merge_requests.values())))
+            merge_requests = list(filter(self.include, merge_requests.values()))
             log.debug(" Pruned down to %i merge requests.", len(merge_requests))
 
             for rid, issue in merge_requests:
@@ -458,7 +458,7 @@ class GitlabService(IssueService, ServiceClient):
             todos = self.get_todos()
             log.debug(" Found %i todo items.", len(todos))
             if not self.include_all_todos:
-                todos = list(filter(self.include_todo(repos), list(todos.values())))
+                todos = list(filter(self.include_todo(repos), todos.values()))
             log.debug(" Pruned down to %i todos.", len(todos))
 
             for project, todo in todos:

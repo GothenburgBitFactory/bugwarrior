@@ -84,7 +84,7 @@ class PhabricatorService(IssueService):
                 issues_owner = self.api.maniphest.query(status='status-open', ownerPHIDs=self.shown_user_phids)
                 issues_cc = self.api.maniphest.query(status='status-open', ccPHIDs=self.shown_user_phids)
                 issues_author = self.api.maniphest.query(status='status-open', authorPHIDs=self.shown_user_phids)
-                issues = list(list(issues_owner.items()) + list(issues_cc.items()) + list(issues_author.items()))
+                issues = list(issues_owner.items()) + list(issues_cc.items()) + list(issues_author.items())
                 # Delete duplicates
                 seen = set()
                 issues = [item for item in issues if str(item[1]) not in seen and not seen.add(str(item[1]))]

@@ -365,7 +365,7 @@ class GithubService(IssueService):
         if self.config_get_default('include_user_issues', True, asbool):
             issues.update(self.get_directly_assigned_issues())
         log.debug(" Found %i issues.", len(issues))
-        issues = list(filter(self.include, list(issues.values())))
+        issues = list(filter(self.include, issues.values()))
         log.debug(" Pruned down to %i issues.", len(issues))
 
         for tag, issue in issues:
