@@ -370,7 +370,10 @@ class GithubService(IssueService):
                         self.username + "/" + repo['name'])
                 )
         if self.config_get_default('include_user_issues', True, asbool):
-            issues.update(self.get_directly_assigned_issues())
+            issues.update(
+                filter(self.filter_issues,
+                       self.get_directly_assigned_issues().items())
+            )
         log.debug(" Found %i issues.", len(issues))
         issues = filter(self.include, issues.values())
         log.debug(" Pruned down to %i issues.", len(issues))
