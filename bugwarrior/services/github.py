@@ -324,16 +324,23 @@ class GithubService(IssueService):
         if issue[1]['assignee']:
             return issue[1]['assignee']['login']
 
+    def filter_issues(self, issue):
+        repo, _ = issue
+        return self.filter_repo_name(repo.split('/')[-3])
+
     def filter_repos(self, repo):
         if repo['owner']['login'] != self.username:
             return False
 
+        return self.filter_repo_name(repo['name'])
+
+    def filter_repo_name(self, name):
         if self.exclude_repos:
-            if repo['name'] in self.exclude_repos:
+            if name in self.exclude_repos:
                 return False
 
         if self.include_repos:
-            if repo['name'] in self.include_repos:
+            if name in self.include_repos:
                 return True
             else:
                 return False
@@ -353,7 +360,8 @@ class GithubService(IssueService):
         issues = {}
         if self.involved_issues:
             issues.update(
-                self.get_involved_issues(self.username)
+                filter(self.filter_issues,
+                       self.get_involved_issues(self.username).items())
             )
         else:
             for repo in repos:
@@ -362,7 +370,10 @@ class GithubService(IssueService):
                         self.username + "/" + repo['name'])
                 )
         if self.config_get_default('include_user_issues', True, asbool):
-            issues.update(self.get_directly_assigned_issues())
+            issues.update(
+                filter(self.filter_issues,
+                       self.get_directly_assigned_issues().items())
+            )
         log.debug(" Found %i issues.", len(issues))
         issues = filter(self.include, issues.values())
         log.debug(" Pruned down to %i issues.", len(issues))
