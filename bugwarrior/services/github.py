@@ -349,7 +349,7 @@ class GithubService(IssueService):
     def issues(self):
         all_repos = self.client.get_repos(self.username)
         assert(type(all_repos) == list)
-        repos = list(filter(self.filter_repos, all_repos))
+        repos = filter(self.filter_repos, all_repos)
 
         issues = {}
         if self.involved_issues:
