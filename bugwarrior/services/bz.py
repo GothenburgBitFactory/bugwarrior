@@ -5,6 +5,9 @@ import pytz
 import datetime
 import six
 
+from dateutil.parser import parse as parse_date
+from dateutil.tz import tzlocal
+
 from bugwarrior.config import die, asbool
 from bugwarrior.services import IssueService, Issue
 
@@ -18,6 +21,7 @@ class BugzillaIssue(Issue):
     BUG_ID = 'bugzillabugid'
     STATUS = 'bugzillastatus'
     NEEDINFO = 'bugzillaneedinfo'
+    ASSIGNED_ON = 'bugzillaassignedon'
 
     UDAS = {
         URL: {
@@ -39,6 +43,10 @@ class BugzillaIssue(Issue):
         NEEDINFO: {
             'type': 'date',
             'label': 'Bugzilla Needinfo',
+        },
+        ASSIGNED_ON: {
+            'type': 'date',
+            'label': 'Bugzilla Assigned On',
         },
     }
     UNIQUE_KEY = (URL, )
@@ -64,6 +72,14 @@ class BugzillaIssue(Issue):
         }
         if self.extra.get('needinfo_since', None) is not None:
             task[self.NEEDINFO] = self.extra.get('needinfo_since')
+
+        # iff field is defined, use it, converting None to empty string.
+        if 'assigned_on' in self.extra:
+            if self.extra['assigned_on']:
+                task[self.ASSIGNED_ON] = self.extra.get('assigned_on')
+            else:
+                task[self.ASSIGNED_ON] = ''
+
 
         return task
 
@@ -260,8 +276,35 @@ class BugzillaService(IssueService):
 
                 extra['needinfo_since'] = pytz.UTC.localize(mod_date)
 
+            if issue['status'] == 'ASSIGNED':
+                extra['assigned_on'] = self._get_assigned_date(issue)
+            else:
+                extra['assigned_on'] = None
+
             issue_obj.update_extra(extra)
             yield issue_obj
+
+    def _get_assigned_date(self, issue):
+        assigned_date = None
+
+        if issue['status'] != 'ASSIGNED':
+            return assigned_date
+
+        bug = self.bz.getbug(issue['id'])
+        history = bug.get_history()['bugs'][0]['history']
+
+        # this is already in chronological order, so the last change is the one we want
+        for h in history:
+            for change in h['changes']:
+                if change['field_name'] == 'status' and change['added'] == 'ASSIGNED':
+                  assigned_date = h['when']
+
+        # messy conversion :(
+        # TODO: create method that's used here and in needinfos time conv above
+        assigned_date_datetime = datetime.datetime.fromtimestamp(time.mktime(assigned_date.timetuple()))
+        assigned_date_str = pytz.UTC.localize(assigned_date_datetime).isoformat()
+
+        return assigned_date_str
 
 
 def _get_bug_attr(bug, attr):

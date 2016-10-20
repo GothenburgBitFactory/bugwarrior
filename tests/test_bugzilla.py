@@ -74,6 +74,7 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
 
         expected = {
             'annotations': [],
+            'bugzillaassignedon': '',
             'bugzillabugid': 1234567,
             'bugzillastatus': 'NEW',
             'bugzillasummary': 'This is the issue summary',
