@@ -90,10 +90,10 @@ class PhabricatorService(IssueService):
                 issues = [item for item in issues if str(item[1]) not in seen and not seen.add(str(item[1]))]
             if self.shown_project_phids is not None:
                 issues = self.api.maniphest.query(status='status-open', projectsPHIDs = self.shown_project_phids)
-                issues = list(issues.items())
+                issues = issues.items()
         else:
             issues = self.api.maniphest.query(status='status-open')
-            issues = list(issues.items())
+            issues = issues.items()
 
         log.info("Found %i issues" % len(issues))
 
@@ -140,7 +140,7 @@ class PhabricatorService(IssueService):
 
         log.info("Found %i differentials" % len(diffs))
 
-        for diff in list(diffs):
+        for diff in diffs:
 
             project = self.target  # a sensible default
             try:
