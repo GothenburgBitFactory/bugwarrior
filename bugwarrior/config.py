@@ -6,7 +6,6 @@ import os
 import subprocess
 import sys
 
-from functools32 import lru_cache
 import six
 
 import logging
@@ -207,7 +206,6 @@ def get_taskrc_path(conf, main_section):
     )
 
 
-@lru_cache()
 def get_data_path(config, main_section):
     taskrc = get_taskrc_path(config, main_section)
 
