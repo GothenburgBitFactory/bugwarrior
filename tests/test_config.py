@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 import os
-import ConfigParser
+import configparser
 
 import bugwarrior.config as config
 
@@ -76,7 +76,7 @@ class TestGetDataPath(ConfigTest):
 
     def setUp(self):
         super(TestGetDataPath, self).setUp()
-        self.config = ConfigParser.RawConfigParser()
+        self.config = configparser.RawConfigParser()
         self.config.add_section('general')
 
     def assertDataPath(self, expected_datapath):
