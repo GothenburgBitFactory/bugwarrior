@@ -1,8 +1,13 @@
 from builtins import next
 from builtins import object
 import mock
+import unittest
 
-from bugwarrior.services.mplan import MegaplanService
+try:
+    from bugwarrior.services.mplan import MegaplanService
+except SyntaxError:
+    raise unittest.SkipTest(
+        'Upstream python-megaplan does not support python3 yet.')
 
 from .base import ServiceTest, AbstractServiceTest
 
