@@ -227,7 +227,7 @@ def get_data_path(config, main_section):
     data_location = subprocess.check_output(
         ('grep', '-e', '^' + line_prefix), stdin=tw_show.stdout)
     tw_show.wait()
-    data_path = data_location[len(line_prefix):].rstrip()
+    data_path = data_location[len(line_prefix):].rstrip().decode('utf-8')
 
     if not data_path:
         raise RuntimeError('Unable to determine the data location.')

@@ -1,6 +1,6 @@
 import os
 import json
-import ConfigParser
+import configparser
 
 from bugwarrior import data
 
@@ -10,7 +10,7 @@ from .base import ConfigTest
 class TestData(ConfigTest):
     def setUp(self):
         super(TestData, self).setUp()
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.add_section('general')
         self.data = data.BugwarriorData(config, 'general')
 
