@@ -34,4 +34,4 @@ class BugwarriorData(object):
                     data[key] = value
                     json.dump(data, jsondata)
 
-            os.chmod(self.datafile, 0600)
+            os.chmod(self.datafile, 0o600)
