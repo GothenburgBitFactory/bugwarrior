@@ -35,6 +35,9 @@ Optional options include:
   annotations to your tasks at all.  Default: ``True``.
 * ``merge_tags``: If ``False``, bugwarrior won't bother with adding
   tags to your tasks at all.  Default: ``True``.
+* ``static_fields``: A comma separated list of attributes that shouldn't be
+  *updated* by bugwarrior.  Use for values that you want to tune manually.
+  Default: ``priority``.
 
 In addition to the ``[general]`` section, sections may be named
 ``[flavor.myflavor]`` and may be selected using the ``--flavor`` option to
