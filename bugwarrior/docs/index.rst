@@ -40,6 +40,7 @@ Contents
    services
    configuration
    contributing
+   faq
 
 
 Indices and tables
