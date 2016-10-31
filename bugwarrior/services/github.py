@@ -1,6 +1,7 @@
 from builtins import filter
 import re
 import six
+from urllib.parse import urlparse
 
 import requests
 from six.moves.urllib.parse import quote_plus
@@ -14,30 +15,38 @@ log = logging.getLogger(__name__)
 
 
 class GithubClient(ServiceClient):
-    def __init__(self, auth):
+    def __init__(self, host, auth):
+        self.host = host
         self.auth = auth
         self.session = requests.Session()
         if 'token' in self.auth:
             authorization = 'token ' + self.auth['token']
             self.session.headers['Authorization'] = authorization
 
+    def _api_url(self, path, **context):
+        """ Build the full url to the API endpoint """
+        if self.host == 'github.com':
+            baseurl = "https://api.github.com"
+        else:
+            baseurl = "https://{}/api/v3".format(self.host)
+        return baseurl + path.format(**context)
+
     def get_repos(self, username):
-        user_repos = self._getter(
-            "https://api.github.com/user/repos?per_page=100")
-        public_repos = self._getter(
-            "https://api.github.com/users/{username}/repos?per_page=100".format(
-                username=username))
+        user_repos = self._getter(self._api_url("/user/repos?per_page=100"))
+        public_repos = self._getter(self._api_url(
+            "/users/{username}/repos?per_page=100", username=username))
         return user_repos + public_repos
 
     def get_query(self, query):
         """Run a generic issue/PR query"""
-        tmpl = "https://api.github.com/search/issues?q={query}&per_page=100"
-        url = tmpl.format(query=quote_plus(query.encode('utf-8')))
+        url = self._api_url(
+            "/search/issues?q={query}&per_page=100", query=query)
         return self._getter(url, subkey='items')
 
     def get_issues(self, username, repo):
-        tmpl = "https://api.github.com/repos/{username}/{repo}/issues?per_page=100"
-        url = tmpl.format(username=username, repo=repo)
+        url = self._api_url(
+            "/repos/{username}/{repo}/issues?per_page=100",
+            username=username, repo=repo)
         return self._getter(url)
 
     def get_directly_assigned_issues(self):
@@ -47,18 +56,19 @@ class GithubClient(ServiceClient):
         regardless of whether the user owns the repositories in which the
         issues exist.
         """
-        url = "https://api.github.com/user/issues?per_page=100"
+        url = self._api_url("/user/issues?per_page=100")
         return self._getter(url)
 
     def get_comments(self, username, repo, number):
-        tmpl = "https://api.github.com/repos/{username}/{repo}/issues/" + \
-            "{number}/comments?per_page=100"
-        url = tmpl.format(username=username, repo=repo, number=number)
+        url = self._api_url(
+            "/repos/{username}/{repo}/issues/{number}/comments?per_page=100",
+            username=username, repo=repo, number=number)
         return self._getter(url)
 
     def get_pulls(self, username, repo):
-        tmpl = "https://api.github.com/repos/{username}/{repo}/pulls?per_page=100"
-        url = tmpl.format(username=username, repo=repo)
+        url = self._api_url(
+            "/repos/{username}/{repo}/pulls?per_page=100",
+            username=username, repo=repo)
         return self._getter(url)
 
     def _getter(self, url, subkey=None):
@@ -227,6 +237,7 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
+        self.host = self.config_get_default('host', 'github.com')
         self.login = self.config_get('login')
 
         auth = {}
@@ -238,7 +249,7 @@ class GithubService(IssueService):
             password = self.config_get_password('password', self.login)
             auth['basic'] = (self.login, password)
 
-        self.client = GithubClient(auth)
+        self.client = GithubClient(self.host, auth)
 
         self.exclude_repos = self.config_get_default('exclude_repos', [], aslist)
         self.include_repos = self.config_get_default('include_repos', [], aslist)
@@ -268,7 +279,11 @@ class GithubService(IssueService):
     def get_keyring_service(cls, config, section):
         login = config.get(section, cls._get_key('login'))
         username = config.get(section, cls._get_key('username'))
-        return "github://%s@github.com/%s" % (login, username)
+        host = (config.get(section, cls._get_key('host'))
+            if config.has_option(section, cls._get_key('host'))
+            else 'github.com')
+        return "github://{login}@{host}/{username}".format(
+            login=login, username=username, host=host)
 
     def get_service_metadata(self):
         return {
@@ -288,27 +303,35 @@ class GithubService(IssueService):
         issues = {}
         for issue in self.client.get_query(query):
             url = issue['html_url']
-            tag = re.match('.*github\\.com/(.*)/(issues|pull)/[^/]*$', url)
-            if tag is None:
-                log.critical(" Unrecognized issue URL: %s.", url)
-                continue
-            issues[url] = (tag.group(1), issue)
+            try:
+                repo = self.get_repository_from_issue(issue)
+            except ValueError as e:
+                log.critical(e)
+            else:
+                issues[url] = (repo, issue)
         return issues
 
     def get_directly_assigned_issues(self):
-        project_matcher = re.compile(
-            r'.*/repos/(?P<owner>[^/]+)/(?P<project>[^/]+)/.*'
-        )
         issues = {}
         for issue in self.client.get_directly_assigned_issues():
-            match_dict = project_matcher.match(issue['url']).groupdict()
-            issues[issue['url']] = (
-                '{owner}/{project}'.format(
-                    **match_dict
-                ),
-                issue
-            )
+            repos = self.get_repository_from_issue(issue)
+            issues[issue['url']] = (repos, issue)
         return issues
+
+    @classmethod
+    def get_repository_from_issue(cls, issue):
+        if 'repo' in issue:
+            return issue['repo']
+        if 'repos_url' in issue:
+            url = issue['repos_url']
+        elif 'repository_url' in issue:
+            url = issue['repository_url']
+        else:
+            raise ValueError("Issue has no repository url" + str(issue))
+        tag = re.match('.*/([^/]*/[^/]*)$', url)
+        if tag is None:
+            raise ValueError("Unrecognized URL: {}.".format(url))
+        return tag.group(1)
 
     def _comments(self, tag, number):
         user, repo = tag.split('/')

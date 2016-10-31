@@ -6,7 +6,7 @@ from configparser import RawConfigParser
 import pytz
 import responses
 
-from bugwarrior.services.github import GithubService
+from bugwarrior.services.github import GithubService, GithubClient
 
 from .base import ServiceTest, AbstractServiceTest
 
@@ -27,7 +27,7 @@ ARBITRARY_ISSUE = {
     'labels': [{'name': 'bugfix'}],
     'created_at': ARBITRARY_CREATED.isoformat(),
     'updated_at': ARBITRARY_UPDATED.isoformat(),
-    'repo': 'ralphbean/bugwarrior',
+    'repo': 'arbitrary_username/arbitrary_repo',
 }
 ARBITRARY_EXTRA = {
     'project': 'one',
@@ -191,16 +191,83 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
 
 class TestGithubService(TestCase):
 
+    def setUp(self):
+        self.config = RawConfigParser()
+        self.config.interactive = False
+        self.config.add_section('general')
+        self.config.add_section('mygithub')
+        self.config.set('mygithub', 'service', 'github')
+        self.config.set('mygithub', 'github.login', 'tintin')
+        self.config.set('mygithub', 'github.username', 'milou')
+        self.config.set('mygithub', 'github.password', 't0ps3cr3t')
+
     def test_token_authorization_header(self):
-        config = RawConfigParser()
-        config.interactive = False
-        config.add_section('general')
-        config.add_section('mygithub')
-        config.set('mygithub', 'service', 'github')
-        config.set('mygithub', 'github.login', 'tintin')
-        config.set('mygithub', 'github.username', 'tintin')
-        config.set('mygithub', 'github.token',
-                   '@oracle:eval:echo 1234567890ABCDEF')
-        service = GithubService(config, 'general', 'mygithub')
+        self.config.remove_option('mygithub', 'github.password')
+        self.config.set('mygithub', 'github.token',
+                        '@oracle:eval:echo 1234567890ABCDEF')
+        service = GithubService(self.config, 'general', 'mygithub')
         self.assertEqual(service.client.session.headers['Authorization'],
                          "token 1234567890ABCDEF")
+
+    def test_default_host(self):
+        """ Check that if github.host is not set, we default to github.com """
+        service = GithubService(self.config, 'general', 'mygithub')
+        self.assertEquals("github.com", service.host)
+
+    def test_overwrite_host(self):
+        """ Check that if github.host is set, we use its value as host """
+        self.config.set('mygithub', 'github.host', 'github.example.com')
+        service = GithubService(self.config, 'general', 'mygithub')
+        self.assertEquals("github.example.com", service.host)
+
+    def test_keyring_service(self):
+        """ Checks that the keyring service name """
+        keyring_service = (
+            GithubService.get_keyring_service(self.config, 'mygithub'))
+        self.assertEquals("github://tintin@github.com/milou", keyring_service)
+
+    def test_keyring_service_host(self):
+        """ Checks that the keyring key depends on the github host. """
+        self.config.set('mygithub', 'github.host', 'github.example.com')
+        keyring_service = (
+            GithubService.get_keyring_service(self.config, 'mygithub'))
+        self.assertEquals("github://tintin@github.example.com/milou", keyring_service)
+
+    def test_get_repository_from_issue_url__issue(self):
+        issue = dict(repos_url="https://github.com/foo/bar")
+        repository = GithubService.get_repository_from_issue(issue)
+        self.assertEquals("foo/bar", repository)
+
+    def test_get_repository_from_issue_url__pull_request(self):
+        issue = dict(repos_url="https://github.com/foo/bar")
+        repository = GithubService.get_repository_from_issue(issue)
+        self.assertEquals("foo/bar", repository)
+
+    def test_get_repository_from_issue__enterprise_github(self):
+        issue = dict(repos_url="https://github.acme.biz/foo/bar")
+        repository = GithubService.get_repository_from_issue(issue)
+        self.assertEquals("foo/bar", repository)
+
+
+class TestGithubClient(TestCase):
+
+    def test_api_url(self):
+        auth = {'token': 'xxxx'}
+        client = GithubClient('github.com', auth)
+        self.assertEquals(
+            client._api_url('/some/path'), 'https://api.github.com/some/path')
+
+    def test_api_url_with_context(self):
+        auth = {'token': 'xxxx'}
+        client = GithubClient('github.com', auth)
+        self.assertEquals(
+            client._api_url('/some/path/{foo}', foo='bar'),
+            'https://api.github.com/some/path/bar')
+
+    def test_api_url_with_custom_host(self):
+        """ Test generating an API URL with a custom host """
+        auth = {'token': 'xxxx'}
+        client = GithubClient('github.example.com', auth)
+        self.assertEquals(
+            client._api_url('/some/path'),
+            'https://github.example.com/api/v3/some/path')

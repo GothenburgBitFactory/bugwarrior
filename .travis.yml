@@ -29,7 +29,7 @@ install:
   - pip install .[jira,megaplan,activecollab,bts]
   - pip install codecov
   - pip install coverage
-script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior
+script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior -v
 after_success: codecov
 notifications:
     email: true
