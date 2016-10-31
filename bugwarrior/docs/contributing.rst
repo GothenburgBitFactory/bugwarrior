@@ -1,13 +1,14 @@
 How to Contribute
 =================
 
-.. highlight:: console
-
 Setting up your development environment
 ---------------------------------------
 
-You should install the `virtualenv <https://pypi.python.org/pypi/virtualenv>`_
-tool for python.  (I use a wrapper for it called `virtualenvwrapper
+First, make sure you have the necessary :ref:`requirements`.
+
+You should also install the `virtualenv
+<https://pypi.python.org/pypi/virtualenv>`_ tool for python.  (I use a wrapper
+for it called `virtualenvwrapper
 <https://pypi.python.org/pypi/virtualenvwrapper>`_ which is awesome but not
 required.)  Virtualenv will help isolate your dependencies from the rest of
 your system.
