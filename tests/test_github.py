@@ -27,6 +27,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
         'url': 'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/1',
         'number': 10,
         'body': 'Something',
+        'user': {'login': 'arbitrary_login'},
         'milestone': {'title': 'alpha'},
         'labels': [{'name': 'bugfix'}],
         'created_at': arbitrary_created.isoformat(),
@@ -72,6 +73,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             issue.CREATED_AT: self.arbitrary_created,
             issue.BODY: self.arbitrary_issue['body'],
             issue.MILESTONE: self.arbitrary_issue['milestone']['title'],
+            issue.USER: self.arbitrary_issue['user']['login'],
         }
         actual_output = issue.to_taskwarrior()
 
@@ -122,6 +124,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'githubtype': 'issue',
             'githubupdatedat': self.arbitrary_updated,
             'githuburl': u'http://whanot.com/',
+            'githubuser': u'arbitrary_login',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': []}

@@ -109,6 +109,7 @@ class GithubIssue(Issue):
     REPO = 'githubrepo'
     TYPE = 'githubtype'
     NUMBER = 'githubnumber'
+    USER = 'githubuser'
 
     UDAS = {
         TITLE: {
@@ -147,6 +148,10 @@ class GithubIssue(Issue):
             'type': 'numeric',
             'label': 'Github Issue/PR #',
         },
+        USER: {
+            'type': 'string',
+            'label': 'Github User',
+        },
     }
     UNIQUE_KEY = (URL, TYPE,)
 
@@ -176,6 +181,7 @@ class GithubIssue(Issue):
             self.URL: self.record['html_url'],
             self.REPO: self.record['repo'],
             self.TYPE: self.extra['type'],
+            self.USER: self.record['user']['login'],
             self.TITLE: self.record['title'],
             self.BODY: body,
             self.MILESTONE: milestone,
