@@ -1,8 +1,8 @@
 FAQ
 ===
 
-Can bugarrior support <some issue tracking system>?
----------------------------------------------------
+Can bugwarrior support <some issue tracking system>?
+----------------------------------------------------
 
 Sure! But our general rule here is that we won't write a backend for a service
 unless we use it personally, otherwise it's hard to be sure that it really
