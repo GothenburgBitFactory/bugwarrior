@@ -8,6 +8,7 @@ from configparser import NoOptionError, NoSectionError
 import os
 import re
 import subprocess
+import sys
 
 import requests
 import dogpile.cache
@@ -25,8 +26,9 @@ log = logging.getLogger(__name__)
 MARKUP = "(bw)"
 
 
-DOGPILE_CACHE_PATH = os.path.expanduser(
-    os.getenv('XDG_CACHE_HOME', '~/.cache') + '/dagd.dbm')
+PYVER = '%i.%i' % sys.version_info[:2]
+DOGPILE_CACHE_PATH = os.path.expanduser(''.join([
+    os.getenv('XDG_CACHE_HOME', '~/.cache'), '/dagd-py', PYVER, '.dbm']))
 
 if not os.path.isdir(os.path.dirname(DOGPILE_CACHE_PATH)):
     os.makedirs(os.path.dirname(DOGPILE_CACHE_PATH))
