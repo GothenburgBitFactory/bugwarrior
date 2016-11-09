@@ -130,3 +130,11 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)
+
+
+class TestGithubIssueToken(TestGithubIssue):
+    SERVICE_CONFIG = {
+        'github.login': 'arbitrary_login',
+        'github.token': '@oracle:eval:python -c "print(\'secret\')"',
+        'github.username': 'arbitrary_username',
+    }
