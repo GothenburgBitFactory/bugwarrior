@@ -89,7 +89,14 @@ class TaigaService(IssueService, ServiceClient):
     def issues(self):
         url = self.url + '/api/v1/users/me'
         me = self.session.get(url)
-        userid = me.json()['id']
+        data = me.json()
+
+        # Check for errors and bail if we failed.
+        if '_error_message' in data:
+            raise RuntimeError("{_error_type} {_error_message}".format(**data))
+
+        # Otherwise, proceed.
+        userid = data['id']
 
         url = self.url + '/api/v1/userstories'
         params = dict(assigned_to=userid, status__is_closed="false")
