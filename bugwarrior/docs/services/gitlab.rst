@@ -110,6 +110,13 @@ may set::
 
     gitlab.include_all_todos = False
 
+Include Only One Author
+++++++++++++++++++++++
+
+If you would like to only pull issues and MRs that you've authored, you may set::
+
+    gitlab.only_if_author = myusername
+
 Use HTTP
 ++++++++
 

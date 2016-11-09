@@ -220,9 +220,19 @@ class IssueService(object):
 
             return owner in include_owners
 
+        only_if_author = self.config_get_default(
+            'only_if_author', None)
+
+        if only_if_author:
+            return self.get_author(issue) == only_if_author
+
         return True
 
     def get_owner(self, issue):
+        """ Override this for filtering on tickets """
+        raise NotImplementedError()
+
+    def get_author(self, issue):
         """ Override this for filtering on tickets """
         raise NotImplementedError()
 

@@ -62,10 +62,6 @@ class MultipleMatches(Exception):
     pass
 
 
-def normalize_description(issue_description):
-    return issue_description[:issue_description.index(' .. http')]
-
-
 def get_normalized_annotation(annotation):
     return re.sub(
         r'[\W_]',
@@ -237,7 +233,6 @@ def merge_left(field, local_task, remote_issue, hamming=False):
     # If a remote does not appear in local, add it to the local task
     new_count = 0
     for remote in remote_field:
-        found = False
         for local in local_field:
             if (
                 # For annotations, they don't have to match *exactly*.
@@ -250,9 +245,8 @@ def merge_left(field, local_task, remote_issue, hamming=False):
                     remote == local
                 )
             ):
-                found = True
                 break
-        if not found:
+        else:
             log.debug("%s not found in %r" % (remote, local_field))
             local_task[field].append(remote)
             new_count += 1
@@ -296,7 +290,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             'add to your taskrc file.'
         )
 
-    static_fields = static_fields_default = ['priority']
+    static_fields = ['priority']
     if conf.has_option(main_section, 'static_fields'):
         static_fields = conf.get(main_section, 'static_fields').split(',')
 
