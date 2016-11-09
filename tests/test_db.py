@@ -1,5 +1,5 @@
 import unittest
-import ConfigParser
+import configparser as ConfigParser
 
 import taskw.task
 from bugwarrior import db
