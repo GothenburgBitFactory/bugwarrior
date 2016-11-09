@@ -150,7 +150,7 @@ class JiraIssue(Issue):
             # Parse this big ugly string.
             sprint = _parse_sprint_string(sprint)
             # Extract the name and render it into a label
-            context.update({'label': sprint['name']})
+            context.update({'label': sprint['name'].replace(' ', '')})
             tags.append(label_template.render(context))
 
         return tags
