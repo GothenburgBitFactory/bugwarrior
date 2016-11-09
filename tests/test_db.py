@@ -145,6 +145,8 @@ class TestUDAs(ConfigTest):
             u'uda.githubbody.label=Github Body',
             u'uda.githubrepo.type=string',
             u'uda.githubrepo.label=Github Repo Slug',
+            u'uda.githubuser.type=string',
+            u'uda.githubuser.label=Github User',
             u'uda.githuburl.type=string',
             u'uda.githuburl.label=Github URL',
             u'uda.githubupdatedat.type=date',
