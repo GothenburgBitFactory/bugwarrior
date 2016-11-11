@@ -25,7 +25,13 @@ log = logging.getLogger(__name__)
 
 MARKUP = "(bw)"
 
-
+# In Python 2.3 through 2.7, the stdlib dbm module include a berkeley db
+# interface, which was used by default by dogpile.cache.  In Python3, the
+# berkeley db module was removed which means that cache files created by
+# bugwarrior on python 2 will not be compatible with cache files as read by
+# bugwarrior on python 3.  Attempting to read them generates a traceback.
+# To work around this, we use different filenames for py2 and py3 here.
+# https://github.com/ralphbean/bugwarrior/pull/416
 PYVER = '%i.%i' % sys.version_info[:2]
 DOGPILE_CACHE_PATH = os.path.expanduser(''.join([
     os.getenv('XDG_CACHE_HOME', '~/.cache'), '/dagd-py', PYVER, '.dbm']))
