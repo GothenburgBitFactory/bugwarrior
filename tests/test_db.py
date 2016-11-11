@@ -1,5 +1,5 @@
 import unittest
-import ConfigParser
+import configparser as ConfigParser
 
 import taskw.task
 from bugwarrior import db
@@ -133,24 +133,26 @@ class TestUDAs(ConfigTest):
         config.add_section('my_service')
         config.set('my_service', 'service', 'github')
 
-        udas = list(db.get_defined_udas_as_strings(config, 'general'))
+        udas = sorted(list(db.get_defined_udas_as_strings(config, 'general')))
         self.assertEqual(udas, [
-            u'uda.githubcreatedon.type=date',
-            u'uda.githubcreatedon.label=Github Created',
-            u'uda.githubtitle.type=string',
-            u'uda.githubtitle.label=Github Title',
-            u'uda.githubnumber.type=numeric',
-            u'uda.githubnumber.label=Github Issue/PR #',
-            u'uda.githubbody.type=string',
             u'uda.githubbody.label=Github Body',
-            u'uda.githubrepo.type=string',
-            u'uda.githubrepo.label=Github Repo Slug',
-            u'uda.githuburl.type=string',
-            u'uda.githuburl.label=Github URL',
-            u'uda.githubupdatedat.type=date',
-            u'uda.githubupdatedat.label=Github Updated',
-            u'uda.githubtype.type=string',
-            u'uda.githubtype.label=Github Type',
-            u'uda.githubmilestone.type=string',
+            u'uda.githubbody.type=string',
+            u'uda.githubcreatedon.label=Github Created',
+            u'uda.githubcreatedon.type=date',
             u'uda.githubmilestone.label=Github Milestone',
+            u'uda.githubmilestone.type=string',
+            u'uda.githubnumber.label=Github Issue/PR #',
+            u'uda.githubnumber.type=numeric',
+            u'uda.githubrepo.label=Github Repo Slug',
+            u'uda.githubrepo.type=string',
+            u'uda.githubtitle.label=Github Title',
+            u'uda.githubtitle.type=string',
+            u'uda.githubtype.label=Github Type',
+            u'uda.githubtype.type=string',
+            u'uda.githubupdatedat.label=Github Updated',
+            u'uda.githubupdatedat.type=date',
+            u'uda.githuburl.label=Github URL',
+            u'uda.githuburl.type=string',
+            u'uda.githubuser.label=Github User',
+            u'uda.githubuser.type=string',
         ])
