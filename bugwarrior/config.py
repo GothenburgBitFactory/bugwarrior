@@ -81,7 +81,7 @@ def oracle_eval(command):
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.wait()
     if p.returncode == 0:
-        return p.stdout.readline().strip()
+        return p.stdout.readline().strip().decode('utf-8')
     else:
         die(
             "Error retrieving password: `{command}` returned '{error}'".format(

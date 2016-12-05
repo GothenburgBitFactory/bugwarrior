@@ -1,7 +1,9 @@
+# coding: utf-8
 from __future__ import unicode_literals
 
 import os
 import configparser
+from unittest import TestCase
 
 import bugwarrior.config as config
 
@@ -108,3 +110,9 @@ class TestGetDataPath(ConfigTest):
         os.environ['TASKDATA'] = ''
 
         self.assertDataPath(os.path.expanduser('~/.task'))
+
+
+class TestOracleEval(TestCase):
+
+    def test_echo(self):
+        self.assertEqual(config.oracle_eval("echo fööbår"), "fööbår")
