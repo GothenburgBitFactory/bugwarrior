@@ -11,6 +11,8 @@ import six
 import logging
 log = logging.getLogger(__name__)
 
+from bugwarrior.data import BugwarriorData
+
 
 # The name of the environment variable that can be used to ovewrite the path
 # to the bugwarriorrc file
@@ -193,6 +195,7 @@ def load_config(main_section, interactive=False):
     path = get_config_path()
     config.readfp(codecs.open(path, "r", "utf-8",))
     config.interactive = interactive
+    config.data = BugwarriorData(get_data_path(config, main_section))
     validate_config(config, main_section)
     return config
 

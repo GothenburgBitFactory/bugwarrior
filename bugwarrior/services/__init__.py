@@ -17,7 +17,6 @@ import six
 from taskw.task import Task
 
 from bugwarrior.config import asbool, die, get_service_password
-from bugwarrior.data import BugwarriorData
 from bugwarrior.db import MARKUP, URLShortener
 
 import logging
@@ -52,7 +51,6 @@ class IssueService(object):
     def __init__(self, config, main_section, target):
         self.config = config
         self.main_section = main_section
-        self.data = BugwarriorData(config, main_section)
         self.target = target
 
         self.desc_len = 35

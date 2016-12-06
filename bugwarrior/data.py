@@ -3,12 +3,9 @@ import json
 
 from lockfile.pidlockfile import PIDLockFile
 
-from bugwarrior.config import get_data_path
-
 
 class BugwarriorData(object):
-    def __init__(self, config, main_section):
-        data_path = get_data_path(config, main_section)
+    def __init__(self, data_path):
         self.datafile = os.path.join(data_path, 'bugwarrior.data')
         self.lockfile = os.path.join(data_path, 'bugwarrior-data.lockfile')
 

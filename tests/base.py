@@ -8,6 +8,7 @@ import unittest
 import responses
 
 from bugwarrior import config
+from bugwarrior.data import BugwarriorData
 
 
 class AbstractServiceTest(object):
@@ -92,6 +93,7 @@ class ServiceTest(ConfigTest):
         config.has_option = mock.Mock(side_effect=has_option)
         config.get = mock.Mock(side_effect=get_option)
         config.getint = mock.Mock(side_effect=get_int)
+        config.data = BugwarriorData(self.lists_path)
 
         service_instance = service_class(config, 'general', section)
 
