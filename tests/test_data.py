@@ -12,7 +12,7 @@ class TestData(ConfigTest):
         super(TestData, self).setUp()
         config = configparser.RawConfigParser()
         config.add_section('general')
-        self.data = data.BugwarriorData(config, 'general')
+        self.data = data.BugwarriorData(self.lists_path)
 
     def assert0600(self):
         permissions = oct(os.stat(self.data.datafile).st_mode & 0o777)

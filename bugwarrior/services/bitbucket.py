@@ -73,7 +73,7 @@ class BitbucketService(IssueService, ServiceClient):
         secret = self.config_get_default('secret')
         auth = {'oauth': (key, secret)}
 
-        refresh_token = self.data.get('bitbucket_refresh_token')
+        refresh_token = self.config.data.get('bitbucket_refresh_token')
 
         if not refresh_token:
             login = self.config_get('login')
@@ -95,8 +95,8 @@ class BitbucketService(IssueService, ServiceClient):
                           'password': password},
                     auth=auth['oauth']).json()
 
-                self.data.set('bitbucket_refresh_token',
-                              response['refresh_token'])
+                self.config.data.set('bitbucket_refresh_token',
+                                     response['refresh_token'])
 
             auth['token'] = response['access_token']
 

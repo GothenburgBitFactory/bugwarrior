@@ -1,5 +1,7 @@
 from builtins import next
 import datetime
+from unittest import TestCase
+from configparser import RawConfigParser
 
 import pytz
 import responses
@@ -130,3 +132,20 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)
+
+
+class TestGithubService(TestCase):
+
+    def test_token_authorization_header(self):
+        config = RawConfigParser()
+        config.interactive = False
+        config.add_section('general')
+        config.add_section('mygithub')
+        config.set('mygithub', 'service', 'github')
+        config.set('mygithub', 'github.login', 'tintin')
+        config.set('mygithub', 'github.username', 'tintin')
+        config.set('mygithub', 'github.token',
+                   '@oracle:eval:echo 1234567890ABCDEF')
+        service = GithubService(config, 'general', 'mygithub')
+        self.assertEqual(service.client.session.headers['Authorization'],
+                         "token 1234567890ABCDEF")
