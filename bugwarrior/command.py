@@ -6,10 +6,9 @@ from lockfile import LockTimeout
 from lockfile.pidlockfile import PIDLockFile
 
 import getpass
-import keyring
 import click
 
-from bugwarrior.config import get_data_path, load_config
+from bugwarrior.config import get_data_path, get_keyring, load_config
 from bugwarrior.services import aggregate_issues, get_service
 from bugwarrior.db import (
     get_defined_udas_as_strings,
@@ -127,6 +126,7 @@ def clear(target, username):
     if target not in target_list:
         raise ValueError("%s must be one of %r" % (target, target_list))
 
+    keyring = get_keyring()
     if keyring.get_password(target, username):
         keyring.delete_password(target, username)
         print("Password cleared for %s, %s" % (target, username))
@@ -142,6 +142,7 @@ def set(target, username):
     if target not in target_list:
         raise ValueError("%s must be one of %r" % (target, target_list))
 
+    keyring = get_keyring()
     keyring.set_password(target, username, getpass.getpass())
     print("Password set for %s, %s" % (target, username))
 
