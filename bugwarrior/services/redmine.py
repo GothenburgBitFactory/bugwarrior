@@ -17,6 +17,8 @@ class RedMineClient(ServiceClient):
 
     def find_issues(self, issue_limit=100):
         args = {}
+        # TODO: if issue_limit is greater than 100, implement pagination to return all issues.
+        # Leave the implementation of this to the unlucky soul with >100 issues assigned to them.
         if issue_limit is not None:
             args["limit"] = issue_limit
 
@@ -146,6 +148,7 @@ class RedMineIssue(Issue):
 
         return {
             'project': self.get_project_name(),
+            # TODO: Should this be set as a UDA to be consistent with other services?
             'due': due_date,
             'annotations': self.extra.get('annotations', []),
             'priority': self.get_priority(),
@@ -179,6 +182,7 @@ class RedMineIssue(Issue):
     def get_project_name(self):
         if self.origin['project_name']:
             return self.origin['project_name']
+        # TODO: Implement a fix that will remove whitespace, special chars, etc from the project name.
         return self.record["project"]["name"]
 
     def get_default_description(self):
