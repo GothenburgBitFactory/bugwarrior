@@ -121,7 +121,7 @@ class RedMineIssue(Issue):
     }
 
     def to_taskwarrior(self):
-        duedate = self.record.get('due_date')
+        due_date = self.record.get('due_date')
         updated_on = self.record_get('updated_on')
         created_on = self.record_get('created_on')
         spent_hours = self.record.get('spent_hours')
@@ -129,8 +129,8 @@ class RedMineIssue(Issue):
         category = self.record.get('category')
         assigned_to = self.record.get('assigned_to')
 
-        if duedate:
-            duedate = self.parse_date(duedate).replace(microsecond=0)
+        if due_date:
+            due_date = self.parse_date(due_date).replace(microsecond=0)
         if updated_on:
             updated_on = self.parse_date(updated_on).replace(microseconds=0)
         if created_on:
@@ -146,7 +146,7 @@ class RedMineIssue(Issue):
 
         return {
             'project': self.get_project_name(),
-            'due': duedate,
+            'due': due_date,
             'annotations': self.extra.get('annotations', []),
             'priority': self.get_priority(),
             self.URL: self.get_issue_url(),
