@@ -122,18 +122,25 @@ class RedMineIssue(Issue):
 
     def to_taskwarrior(self):
         duedate = self.record.get('due_date')
-        if duedate:
-            duedate = self.parse_date(duedate)
+        updated_on = self.record_get('updated_on')
+        created_on = self.record_get('created_on')
         spent_hours = self.record.get('spent_hours')
+        estimated_hours = self.record.get('estimated_hours')
+        category = self.record.get('category')
+        assigned_to = self.record.get('assigned_to')
+
+        if duedate:
+            duedate = self.parse_date(duedate).replace(microsecond=0)
+        if updated_on:
+            updated_on = self.parse_date(updated_on).replace(microseconds=0)
+        if created_on:
+            created_on = self.parse_date(created_on).replace(microseconds=0)
         if spent_hours:
             spent_hours = str(spent_hours) + ' hours'
-        estimated_hours = self.record.get('estimated_hours')
         if estimated_hours:
             estimated_hours = str(estimated_hours) + ' hours'
-        category = self.record.get('category')
         if category:
             category = category['name']
-        assigned_to = self.record.get('assigned_to')
         if assigned_to:
             assigned_to = assigned_to['name']
 
@@ -142,7 +149,6 @@ class RedMineIssue(Issue):
             'due': duedate,
             'annotations': self.extra.get('annotations', []),
             'priority': self.get_priority(),
-
             self.URL: self.get_issue_url(),
             self.SUBJECT: self.record['subject'],
             self.ID: self.record['id'],
@@ -153,8 +159,8 @@ class RedMineIssue(Issue):
             self.ASSIGNED_TO: assigned_to,
             self.CATEGORY: category,
             self.START_DATE: self.record['start_date'],
-            self.CREATED_ON: self.record['created_on'],
-            self.UPDATED_ON: self.record['updated_on'],
+            self.CREATED_ON: created_on,
+            self.UPDATED_ON: updated_on,
             self.ESTIMATED_HOURS: estimated_hours,
             self.SPENT_HOURS: spent_hours,
         }
