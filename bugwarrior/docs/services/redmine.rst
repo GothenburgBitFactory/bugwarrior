@@ -17,7 +17,7 @@ Here's an example of a Redmine target::
     redmine.key = c0c4c014cafebabe
     redmine.user_id = 7
     redmine.project_name = redmine
-    redmine.issue_limit = 1000
+    redmine.issue_limit = 100
 
 You can also feel free to use any of the configuration options described in
 :ref:`common_configuration_options`.
