@@ -3,6 +3,7 @@ import requests
 
 from bugwarrior.config import die
 from bugwarrior.services import Issue, IssueService, ServiceClient
+from taskw import TaskWarriorShellout
 
 import logging
 log = logging.getLogger(__name__)
@@ -124,8 +125,9 @@ class RedMineIssue(Issue):
 
     def to_taskwarrior(self):
         due_date = self.record.get('due_date')
-        updated_on = self.record_get('updated_on')
-        created_on = self.record_get('created_on')
+        start_date = self.record.get('start_date')
+        updated_on = self.record.get('updated_on')
+        created_on = self.record.get('created_on')
         spent_hours = self.record.get('spent_hours')
         estimated_hours = self.record.get('estimated_hours')
         category = self.record.get('category')
@@ -133,14 +135,17 @@ class RedMineIssue(Issue):
 
         if due_date:
             due_date = self.parse_date(due_date).replace(microsecond=0)
+        if start_date:
+            start_date = self.parse_date(start_date).replace(microsecond=0)
         if updated_on:
-            updated_on = self.parse_date(updated_on).replace(microseconds=0)
+            updated_on = self.parse_date(updated_on).replace(microsecond=0)
         if created_on:
-            created_on = self.parse_date(created_on).replace(microseconds=0)
+            created_on = self.parse_date(created_on).replace(microsecond=0)
         if spent_hours:
             spent_hours = str(spent_hours) + ' hours'
         if estimated_hours:
             estimated_hours = str(estimated_hours) + ' hours'
+            estimated_hours = self.get_converted_hours(estimated_hours)
         if category:
             category = category['name']
         if assigned_to:
@@ -161,7 +166,7 @@ class RedMineIssue(Issue):
             self.AUTHOR: self.record['author']['name'],
             self.ASSIGNED_TO: assigned_to,
             self.CATEGORY: category,
-            self.START_DATE: self.record['start_date'],
+            self.START_DATE: start_date,
             self.CREATED_ON: created_on,
             self.UPDATED_ON: updated_on,
             self.ESTIMATED_HOURS: estimated_hours,
@@ -177,6 +182,13 @@ class RedMineIssue(Issue):
     def get_issue_url(self):
         return (
             self.origin['url'] + "/issues/" + six.text_type(self.record["id"])
+        )
+
+    def get_converted_hours(self, estimated_hours):
+        tw = TaskWarriorShellout()
+        calc = tw._execute('calc', estimated_hours)
+        return (
+            calc[0].rstrip()
         )
 
     def get_project_name(self):
