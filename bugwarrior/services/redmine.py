@@ -143,6 +143,7 @@ class RedMineIssue(Issue):
             created_on = self.parse_date(created_on).replace(microsecond=0)
         if spent_hours:
             spent_hours = str(spent_hours) + ' hours'
+            spent_hours = self.get_converted_hours(spent_hours)
         if estimated_hours:
             estimated_hours = str(estimated_hours) + ' hours'
             estimated_hours = self.get_converted_hours(estimated_hours)
