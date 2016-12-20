@@ -1,5 +1,6 @@
 import six
 import requests
+import re
 
 from bugwarrior.config import die
 from bugwarrior.services import Issue, IssueService, ServiceClient
@@ -195,8 +196,11 @@ class RedMineIssue(Issue):
     def get_project_name(self):
         if self.origin['project_name']:
             return self.origin['project_name']
-        # TODO: Implement a fix that will remove whitespace, special chars, etc from the project name.
-        return self.record["project"]["name"]
+        # TODO: It would be nice to use the project slug (if the Redmine
+        # instance supports it), but this would require (1) an API call
+        # to get the list of projects, and then a look up between the
+        # project ID contained in self.record and the list of projects.
+        return re.sub(r'\W+', '', self.record["project"]["name"]).lower()
 
     def get_default_description(self):
         return self.build_default_description(
