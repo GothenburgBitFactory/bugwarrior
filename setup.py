@@ -83,5 +83,6 @@ setup(name='bugwarrior',
       taiga=bugwarrior.services.taiga:TaigaService
       gerrit=bugwarrior.services.gerrit:GerritService
       trello=bugwarrior.services.trello:TrelloService
+      youtrack=bugwarrior.services.youtrack:YoutrackService
       """,
       )

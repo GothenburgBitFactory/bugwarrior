@@ -23,6 +23,7 @@ It currently supports the following remote resources:
  - `phabricator <http://phabricator.org/>`_
  - `versionone <http://www.versionone.com/>`_
  - `trello <https://trello.com/>`_
+ - `youtrack <https://www.jetbrains.com/youtrack/>`_
 
 Documentation
 -------------
@@ -65,3 +66,4 @@ Contributors
 - Adam Coddington (anti-entropy crusader)
 - Iain R. Learmonth (contributed support for the Debian BTS and maintains the
   Debian package)
+- BinaryBabel (contributed support for YouTrack)
