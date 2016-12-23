@@ -111,7 +111,7 @@ may set::
     gitlab.include_all_todos = False
 
 Include Only One Author
-++++++++++++++++++++++
++++++++++++++++++++++++
 
 If you would like to only pull issues and MRs that you've authored, you may set::
 
@@ -127,7 +127,7 @@ If your Gitlab instance is only available over HTTP, set::
 Do Not Verify SSL Certificate
 +++++++++++++++++++++++++++++
 
-If want to ignore verifying the SSL certificate, set::
+If you want to ignore verifying the SSL certificate, set::
 
     gitlab.verify_ssl = False
 
