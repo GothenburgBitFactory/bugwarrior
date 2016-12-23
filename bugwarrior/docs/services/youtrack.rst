@@ -23,29 +23,28 @@ or described in `Service Features`_ below.
 Service Features
 ----------------
 
-Host Options
-+++++++++++++++++++++
+Customize the YouTrack Connection
++++++++++++++++++++++++++++++++++
 
 The ``youtrack.host`` field is used to construct a URL for
 the YouTrack server. It defaults to a secure connection scheme (HTTPS)
 on the standard port (443).
 
-Connecting on a different port::
+To connect on a different port, set::
 
     youtrack.port = 8443
 
-Allow server to use a self-signed SSL certificate::
-
-    youtrack.verify_ssl = False
-
-To use an insecure HTTP connection, and standard port 80::
+If your YouTrack instance is only available over HTTP, set::
 
     youtrack.use_https = False
 
-Query Options
-+++++++++++++++++++++
+If you want to ignore verifying the SSL certificate, set::
 
-The YouTrack service pulls issues based on the results of a customizable query.
+    youtrack.verify_ssl = False
+
+Specify the Query to Use for Gathering Issues
++++++++++++++++++++++++++++++++++++++++++++++
+
 The default option selects unresolved issues assigned to the login user::
 
     youtrack.query = for:me #Unresolved
@@ -58,12 +57,10 @@ Queries are capped at 100 max results by default, but may be adjusted to meet yo
 
     youtrack.query_limit = 100
 
-Import Tags
-+++++++++++++++++++++
+Import Issue Tags
++++++++++++++++++
 
-The YouTrack issue tracker allows you to tag issues. You may
-apply those tags in Taskwarrior by using the ``youtrack.import_tags``
-option::
+The YouTrack issue tracker allows you to tag issues. To apply these tags in Taskwarrior, set::
 
     youtrack.import_tags = True
 

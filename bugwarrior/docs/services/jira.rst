@@ -60,11 +60,10 @@ configuration option to your service configuration::
 
     jira.version = 4
 
-Disabling SSL Verification
-++++++++++++++++++++++++++
+Do Not Verify SSL Certificate
++++++++++++++++++++++++++++++
 
-If your Jira instance is only available over HTTPS, and you're running into
-``SSL: CERTIFICATE_VERIFY_FAILED``, it's possible to disable SSL verification::
+If you want to ignore verifying the SSL certificate, set::
 
     jira.verify_ssl = False
 
