@@ -200,7 +200,7 @@ class RedMineIssue(Issue):
         # instance supports it), but this would require (1) an API call
         # to get the list of projects, and then a look up between the
         # project ID contained in self.record and the list of projects.
-        return re.sub(r'\W+', '', self.record["project"]["name"]).lower()
+        return re.sub(r'[^a-zA-Z0-9]', '', self.record["project"]["name"]).lower()
 
     def get_default_description(self):
         return self.build_default_description(
