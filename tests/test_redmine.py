@@ -8,6 +8,7 @@ from .base import ServiceTest, AbstractServiceTest
 
 
 class TestRedmineIssue(AbstractServiceTest, ServiceTest):
+    maxDiff = None
     SERVICE_CONFIG = {
         'redmine.url': 'https://something',
         'redmine.key': 'something_else',
@@ -23,6 +24,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
             "name": "Adam Coddington"
         },
         "created_on": "2014-11-19T16:40:29Z",
+        "due_on": "2016-12-30T16:40:29Z",
         "description": "This is a test issue.",
         "done_ratio": 0,
         "id": 363901,
@@ -32,7 +34,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
         },
         "project": {
             "id": 27375,
-            "name": "Bugwarrior"
+            "name": "Boiled Cabbage - Yum"
         },
         "status": {
             "id": 1,
@@ -56,9 +58,11 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
         issue = self.service.get_issue_for_record(self.arbitrary_issue)
 
         expected_output = {
-            'project': self.arbitrary_issue['project']['name'],
+            'project': issue.get_project_name(),
             'priority': self.service.default_priority,
 
+            issue.ASSIGNED_TO: self.arbitrary_issue['assigned_to']['name'],
+            issue.AUTHOR: self.arbitrary_issue['author']['name'],
             issue.URL: arbitrary_url,
             issue.SUBJECT: self.arbitrary_issue['subject'],
             issue.ID: self.arbitrary_issue['id'],
@@ -84,9 +88,12 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
             'description':
                 u'(bw)Is#363901 - Biscuits .. https://something/issues/363901',
             'priority': 'M',
-            'project': u'Bugwarrior',
+            'project': u'boiledcabbageyum',
             'redmineid': 363901,
+            'redmineassignedto': 'Adam Coddington',
+            'redmineauthor': 'Adam Coddington',
             'redminesubject': u'Biscuits',
+            'redminetracker': u'Task',
             'redmineurl': u'https://something/issues/363901',
             'tags': []}
 
