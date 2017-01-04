@@ -126,9 +126,10 @@ you can enter the following values to control where to gather your password
 from:
 
 ``password = @oracle:use_keyring``
-  Retrieve a password from the system keyring.
-  The ``bugwarrior-vault`` command line tool can be used to manage your
-  passwords as stored in your keyring (say to reset them or clear them).
+  Retrieve a password from the system keyring.  The ``bugwarrior-vault``
+  command line tool can be used to manage your passwords as stored in your
+  keyring (say to reset them or clear them).  Extra dependencies must be
+  installed with `pip install bugwarrior[keyring]` to enable this feature.
 ``password = @oracle:ask_password``
   Ask for a password at runtime.
 ``password = @oracle:eval:<command>``

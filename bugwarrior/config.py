@@ -31,6 +31,17 @@ def aslist(value):
     return [item.strip() for item in value.strip().split(',')]
 
 
+def get_keyring():
+    """ Try to import and return optional keyring dependency. """
+    try:
+        import keyring
+    except ImportError:
+        raise ImportError(
+            "Extra dependencies must be installed to use the keyring feature. "
+            "Install them with `pip install bugwarrior[keyring]`.")
+    return keyring
+
+
 def get_service_password(service, username, oracle=None, interactive=False):
     """
     Retrieve the sensitive password for a service by:
@@ -52,10 +63,10 @@ def get_service_password(service, username, oracle=None, interactive=False):
         https://bitbucket.org/kang/python-keyring-lib
     """
     import getpass
-    import keyring
 
     password = None
     if not oracle or oracle == "@oracle:use_keyring":
+        keyring = get_keyring()
         password = keyring.get_password(service, username)
         if interactive and password is None:
             # -- LEARNING MODE: Password is not stored in keyring yet.
