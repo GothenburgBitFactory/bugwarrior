@@ -115,7 +115,7 @@ def send_notification(issue, op, conf):
                 issue['description']
         else:
             message = "%s task: %s" % (
-                op, issue['description'].encode("utf-8"))
+                op.encode("utf-8"), issue['description'].encode("utf-8"))
             metadata = _get_metadata(issue)
             if metadata is not None:
                 message += metadata.encode("utf-8")
