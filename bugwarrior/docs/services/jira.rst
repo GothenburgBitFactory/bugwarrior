@@ -98,6 +98,13 @@ to all fields on the Taskwarrior task if needed.
    See :ref:`field_templates` for more details regarding how templates
    are processed.
 
+Kerberos authentication
++++++++++++++++++++++++
+
+If the ``password`` is specified as ``@kerberos``, the service plugin will try
+to authenticate against server with kerberos. A ticket must be already present
+on the client (created by running ``kinit`` or any other method).
+
 Provided UDA Fields
 -------------------
 
