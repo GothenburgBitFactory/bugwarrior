@@ -97,7 +97,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         self.add_response(
-            'https://something/issues.json?assigned_to_id=me&limit=100',
+            'https://something/issues.json?limit=100',
             json={'issues': [self.arbitrary_issue]})
 
         issue = next(self.service.issues())

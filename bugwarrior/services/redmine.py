@@ -17,14 +17,15 @@ class RedMineClient(ServiceClient):
         self.auth = auth
         self.issue_limit = issue_limit
 
-    def find_issues(self, issue_limit=100):
+    def find_issues(self, issue_limit=100, only_if_assigned=False):
         args = {}
         # TODO: if issue_limit is greater than 100, implement pagination to return all issues.
         # Leave the implementation of this to the unlucky soul with >100 issues assigned to them.
         if issue_limit is not None:
             args["limit"] = issue_limit
 
-        args["assigned_to_id"] = 'me'
+        if only_if_assigned:
+            args["assigned_to_id"] = 'me'
         return self.call_api("/issues.json", args)["issues"]
 
     def call_api(self, uri, params):
@@ -251,8 +252,8 @@ class RedMineService(IssueService):
         IssueService.validate_config(config, target)
 
     def issues(self):
-
-        issues = self.client.find_issues(self.issue_limit)
+        only_if_assigned = self.config_get_default('only_if_assigned', False)
+        issues = self.client.find_issues(self.issue_limit, only_if_assigned)
         log.debug(" Found %i total.", len(issues))
         for issue in issues:
             yield self.get_issue_for_record(issue)
