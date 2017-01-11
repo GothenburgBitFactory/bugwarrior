@@ -54,6 +54,7 @@ class RedMineIssue(Issue):
     ESTIMATED_HOURS = 'redmineestimatedhours'
     CREATED_ON = 'redminecreatedon'
     UPDATED_ON = 'redmineupdatedon'
+    DUEDATE = 'redmineduedate'
     ASSIGNED_TO = 'redmineassignedto'
 
     UDAS = {
@@ -109,6 +110,10 @@ class RedMineIssue(Issue):
             'type': 'date',
             'label': 'Redmine Updated On',
         },
+        DUEDATE: {
+            'type': 'date',
+            'label': 'Redmine Due Date'
+        },
         ASSIGNED_TO: {
             'type': 'string',
             'label': 'Redmine Assigned To',
@@ -156,8 +161,6 @@ class RedMineIssue(Issue):
 
         return {
             'project': self.get_project_name(),
-            # TODO: Should this be set as a UDA to be consistent with other services?
-            'due': due_date,
             'annotations': self.extra.get('annotations', []),
             'priority': self.get_priority(),
             self.URL: self.get_issue_url(),
@@ -172,6 +175,7 @@ class RedMineIssue(Issue):
             self.START_DATE: start_date,
             self.CREATED_ON: created_on,
             self.UPDATED_ON: updated_on,
+            self.DUEDATE: due_date,
             self.ESTIMATED_HOURS: estimated_hours,
             self.SPENT_HOURS: spent_hours,
         }

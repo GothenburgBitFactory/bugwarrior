@@ -66,10 +66,9 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
 
         expected_output = {
             'annotations': [],
-            'due': None,
             'project': issue.get_project_name(),
             'priority': self.service.default_priority,
-
+            issue.DUEDATE: None,
             issue.ASSIGNED_TO: self.arbitrary_issue['assigned_to']['name'],
             issue.AUTHOR: self.arbitrary_issue['author']['name'],
             issue.CATEGORY: None,
@@ -104,7 +103,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'annotations': [],
-            'due': None,
+            issue.DUEDATE: None,
             'description':
                 u'(bw)Is#363901 - Biscuits .. https://something/issues/363901',
             'priority': 'M',
