@@ -530,7 +530,7 @@ def _aggregate_issues(conf, main_section, target, queue, service_name):
         log.critical(str(e))
         queue.put((SERVICE_FINISHED_ERROR, (target, e)))
     except BaseException as e:
-        if hasattr(e, 'request'):
+        if hasattr(e, 'request') and e.request:
             # Exceptions raised by requests library have the HTTP request
             # object stored as attribute. The request can have hooks attached
             # to it, and we need to remove them, as there can be unpickleable
