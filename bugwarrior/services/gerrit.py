@@ -13,6 +13,8 @@ class GerritIssue(Issue):
     SUMMARY = 'gerritsummary'
     URL = 'gerriturl'
     FOREIGN_ID = 'gerritid'
+    BRANCH = 'gerritbranch'
+    TOPIC = 'gerrittopic'
 
     UDAS = {
         SUMMARY: {
@@ -27,6 +29,14 @@ class GerritIssue(Issue):
             'type': 'numeric',
             'label': 'Gerrit Change ID'
         },
+        BRANCH: {
+            'type': 'string',
+            'label': 'Gerrit Branch',
+        },
+        TOPIC: {
+            'type': 'string',
+            'label': 'Gerrit Topic',
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -40,6 +50,8 @@ class GerritIssue(Issue):
             'tags': [],
             self.FOREIGN_ID: self.record['_number'],
             self.SUMMARY: self.record['subject'],
+            self.BRANCH: self.record['branch'],
+            self.TOPIC: self.record['topic'],
         }
 
     def get_default_description(self):

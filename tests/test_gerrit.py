@@ -17,6 +17,8 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
     record = {
         'project': 'nova',
         '_number': 1,
+        'branch': 'master',
+        'topic': 'test-topic',
         'subject': 'this is a title',
         'messages': [{'author': {'username': 'Iam Author'},
                       'message': 'this is a message',
@@ -44,6 +46,8 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'gerritid': 1,
             'gerritsummary': 'this is a title',
             'gerriturl': 'this is a url',
+            'gerritbranch': 'master',
+            'gerrittopic': 'test-topic',
             'tags': [],
         }
 
@@ -64,6 +68,8 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'gerritid': 1,
             'gerritsummary': u'this is a title',
             'gerriturl': 'https://one/#/c/1/',
+            'gerritbranch': 'master',
+            'gerrittopic': 'test-topic',
             'priority': 'M',
             'project': u'nova',
             'tags': []}
