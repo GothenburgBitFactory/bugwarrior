@@ -290,16 +290,13 @@ class JiraService(IssueService):
     def annotations(self, issue, issue_obj):
         comments = self.jira.comments(issue.key)
 
-        if not comments:
-            return []
-        else:
-            return self.build_annotations(
-                ((
-                    comment.author.name,
-                    comment.body
-                ) for comment in comments),
-                issue_obj.get_processed_url(issue_obj.get_url())
-            )
+        return self.build_annotations(
+            ((
+                comment.author.name,
+                comment.body
+            ) for comment in comments),
+            issue_obj.get_processed_url(issue_obj.get_url())
+        )
 
     def issues(self):
         cases = self.jira.search_issues(self.query, maxResults=-1)
