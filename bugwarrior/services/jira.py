@@ -288,8 +288,7 @@ class JiraService(IssueService):
         IssueService.validate_config(config, target)
 
     def annotations(self, issue, issue_obj):
-        comments = self.jira.comments(issue.key)
-
+        comments = self.jira.comments(issue.key) or []
         return self.build_annotations(
             ((
                 comment.author.name,
