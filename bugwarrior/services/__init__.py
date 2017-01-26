@@ -61,6 +61,10 @@ class IssueService(object):
         if config.has_option(self.main_section, 'annotation_length'):
             self.anno_len = self.config.getint(self.main_section, 'annotation_length')
 
+        self.limit_anno = True
+        if config.has_option(self.main_section, 'limit_annotation_length'):
+            self.limit_anno = asbool(config.get(self.main_section, 'limit_annotation_length'))
+
         self.inline_links = True
         if config.has_option(self.main_section, 'inline_links'):
             self.inline_links = asbool(config.get(self.main_section, 'inline_links'))
@@ -75,6 +79,12 @@ class IssueService(object):
         if config.has_option(self.main_section, 'annotation_comments'):
             self.annotation_comments = asbool(
                 config.get(self.main_section, 'annotation_comments')
+            )
+
+        self.description_annotation = False
+        if config.has_option(self.main_section, 'description_in_annotations'):
+            self.description_annotation = asbool(
+                config.get(self.main_section, 'description_in_annotations')
             )
 
         self.shorten = False
@@ -185,13 +195,21 @@ class IssueService(object):
                 if not message or not author:
                     continue
                 message = message.replace('\n', '').replace('\r', '')
-                final.append(
-                    '@%s - %s%s' % (
-                        author,
-                        message[0:self.anno_len],
-                        '...' if len(message) > self.anno_len else ''
+                if self.limit_anno:
+                    final.append(
+                        '@%s - %s%s' % (
+                            author,
+                            message[0:self.anno_len],
+                            '...' if len(message) > self.anno_len else ''
+                        )
                     )
-                )
+                else:
+                    final.append(
+                        '@%s - %s' % (
+                            author,
+                            message
+                        )
+                    )
         return final
 
     @classmethod

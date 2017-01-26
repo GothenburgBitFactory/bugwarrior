@@ -309,9 +309,11 @@ class GithubService(IssueService):
         url = issue['html_url']
         annotations = []
         if self.annotation_comments:
+            if self.description_annotation:
+                annotations = [(issue['user']['login'], issue['body'])]
             comments = self._comments(tag, issue['number'])
             log.debug(" got comments for %s", issue['html_url'])
-            annotations = ((
+            annotations += ((
                 c['user']['login'],
                 c['body'],
             ) for c in comments)
