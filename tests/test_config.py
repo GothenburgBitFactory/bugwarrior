@@ -116,3 +116,23 @@ class TestOracleEval(TestCase):
 
     def test_echo(self):
         self.assertEqual(config.oracle_eval("echo fööbår"), "fööbår")
+
+
+class TestBugwarriorConfigParser(TestCase):
+    def setUp(self):
+        self.config = config.BugwarriorConfigParser()
+        self.config.add_section('general')
+        self.config.set('general', 'someint', '4')
+        self.config.set('general', 'somenone', '')
+        self.config.set('general', 'somechar', 'somestring')
+
+
+    def test_getint(self):
+        self.assertEqual(self.config.getint('general', 'someint'), 4)
+
+    def test_getint_none(self):
+        self.assertEqual(self.config.getint('general', 'somenone'), None)
+
+    def test_getint_valueerror(self):
+        with self.assertRaises(ValueError):
+            self.config.getint('general', 'somechar')

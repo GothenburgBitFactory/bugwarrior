@@ -202,7 +202,7 @@ def get_config_path():
 
 
 def load_config(main_section, interactive=False):
-    config = ConfigParser({'log.level': "INFO", 'log.file': None})
+    config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None})
     path = get_config_path()
     config.readfp(codecs.open(path, "r", "utf-8",))
     config.interactive = interactive
@@ -247,6 +247,22 @@ def get_data_path(config, main_section):
         raise RuntimeError('Unable to determine the data location.')
 
     return os.path.normpath(os.path.expanduser(data_path))
+
+
+# ConfigParser is not a new-style class, so inherit from object to fix super().
+class BugwarriorConfigParser(ConfigParser, object):
+    def getint(self, section, option):
+        """ Accepts both integers and empty values. """
+        try:
+            return super(BugwarriorConfigParser, self).getint(section, option)
+        except ValueError:
+            if self.get(section, option) is u'':
+                return None
+            else:
+                raise ValueError(
+                    "{section}.{option} must be an integer or empty.".format(
+                        section=section, option=option))
+
 
 # This needs to be imported here and not above to avoid a circular-import.
 from bugwarrior.services import get_service
