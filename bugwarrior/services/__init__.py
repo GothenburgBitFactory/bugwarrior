@@ -185,13 +185,12 @@ class IssueService(object):
                 if not message or not author:
                     continue
                 message = message.replace('\n', '').replace('\r', '')
-                final.append(
-                    '@%s - %s%s' % (
-                        author,
-                        message[0:self.anno_len],
+                if self.anno_len:
+                    message = '%s%s' % (
+                        message[:self.anno_len],
                         '...' if len(message) > self.anno_len else ''
                     )
-                )
+                final.append('@%s - %s' % (author, message))
         return final
 
     @classmethod
@@ -393,11 +392,12 @@ class Issue(object):
         }
         url_separator = ' .. '
         url = url if self.origin['inline_links'] else ''
+        desc_len = self.origin['description_length']
         return u"%s%s#%s - %s%s%s" % (
             MARKUP,
             cls_markup[cls],
             number,
-            title[:self.origin['description_length']],
+            title[:desc_len] if desc_len else title,
             url_separator if url else '',
             url,
         )
