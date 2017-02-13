@@ -21,7 +21,11 @@ before_install:
   - pip install responses
   - pip install PySimpleSOAP
   - cd $TRAVIS_BUILD_DIR
+env:
+  - JIRAVERSION=1.0.7
+  - JIRAVERSION=1.0.10
 install:
+  - pip install jira==$JIRAVERSION
   - pip install .[jira,megaplan,activecollab,bts]
   - pip install codecov
   - pip install coverage
