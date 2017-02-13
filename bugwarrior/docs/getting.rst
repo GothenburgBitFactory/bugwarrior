@@ -11,7 +11,7 @@ setup script will automatically download and install missing python
 dependencies.
 
 Note that some of those dependencies have a C extension module (e.g. the
-``cryptography`` package).  If those packages are note yet present on your
+``cryptography`` package).  If those packages are not yet present on your
 system, the setup script will try to build them locally, for which you will
 need a C compiler (e.g. ``gcc``) and the necessary header files (python and,
 for the cryptography package, openssl).
