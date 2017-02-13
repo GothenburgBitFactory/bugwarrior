@@ -29,8 +29,8 @@ class ObliviousCookieJar(RequestsCookieJar):
 
 
 class JIRA(BaseJIRA):
-    def _create_http_basic_session(self, username, password):
-        super(JIRA, self)._create_http_basic_session(username, password)
+    def _create_http_basic_session(self, *args, **kwargs):
+        super(JIRA, self)._create_http_basic_session(*args, **kwargs)
 
         # XXX: JIRA logs the web user out if we send the session cookies we get
         # back from the first request in any subsequent requests. As we don't
