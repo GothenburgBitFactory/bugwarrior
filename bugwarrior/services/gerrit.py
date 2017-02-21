@@ -51,7 +51,7 @@ class GerritIssue(Issue):
             self.FOREIGN_ID: self.record['_number'],
             self.SUMMARY: self.record['subject'],
             self.BRANCH: self.record['branch'],
-            self.TOPIC: self.record['topic'],
+            self.TOPIC: self.record.get('topic', 'notopic'),
         }
 
     def get_default_description(self):
