@@ -2,10 +2,12 @@ from builtins import next
 from builtins import object
 import mock
 from collections import namedtuple
+import configparser
 
 from bugwarrior.services.bz import BugzillaService
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import ConfigTest, ServiceTest, AbstractServiceTest
+from bugwarrior.config import ServiceConfig
 
 
 class FakeBugzillaLib(object):
@@ -15,6 +17,40 @@ class FakeBugzillaLib(object):
     def query(self, query):
         Record = namedtuple('Record', list(self.record.keys()))
         return [Record(**self.record)]
+
+
+class TestBugzillaServiceConfig(ConfigTest):
+
+    def setUp(self):
+        super(TestBugzillaServiceConfig, self).setUp()
+        self.config = configparser.RawConfigParser()
+        self.config.add_section('general')
+        self.config.add_section('mybz')
+        self.service_config = ServiceConfig(
+            BugzillaService.CONFIG_PREFIX, self.config, 'mybz')
+
+    @mock.patch('bugwarrior.services.bz.die')
+    def test_validate_config_username_password(self, die):
+        self.config.set('mybz', 'bugzilla.base_uri', 'http://one.com/')
+        self.config.set('mybz', 'bugzilla.username', 'me')
+        self.config.set('mybz', 'bugzilla.password', 'mypas')
+        BugzillaService.validate_config(self.service_config, 'mybz')
+        die.assert_not_called()
+
+    @mock.patch('bugwarrior.services.bz.die')
+    def test_validate_config_api_key(self, die):
+        self.config.set('mybz', 'bugzilla.base_uri', 'http://one.com/')
+        self.config.set('mybz', 'bugzilla.username', 'me')
+        self.config.set('mybz', 'bugzilla.api_key', '123')
+        BugzillaService.validate_config(self.service_config, 'mybz')
+        die.assert_not_called()
+
+    @mock.patch('bugwarrior.services.bz.die')
+    def test_validate_config_api_key_no_username(self, die):
+        self.config.set('mybz', 'bugzilla.base_uri', 'http://one.com/')
+        self.config.set('mybz', 'bugzilla.api_key', '123')
+        BugzillaService.validate_config(self.service_config, 'mybz')
+        die.assert_called_with("[mybz] has no 'bugzilla.username'")
 
 
 class TestBugzillaService(AbstractServiceTest, ServiceTest):
@@ -43,6 +79,16 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             *args, **kwargs)
         service.bz = FakeBugzillaLib(self.arbitrary_record)
         return service
+
+    def test_api_key_supplied(self):
+        with mock.patch('bugzilla.Bugzilla'):
+            self.service = self.get_mock_service(
+                BugzillaService,
+                config_overrides={
+                    'bugzilla.base_uri': 'http://one.com/',
+                    'bugzilla.username': 'me',
+                    'bugzilla.api_key': '123',
+                })
 
     def test_to_taskwarrior(self):
         arbitrary_extra = {
