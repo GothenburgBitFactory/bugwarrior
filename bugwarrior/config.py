@@ -202,7 +202,7 @@ def get_config_path():
 
 
 def load_config(main_section, interactive=False):
-    config = ConfigParser({'log.level': "INFO", 'log.file': None}, allow_no_value=True)
+    config = ConfigParser({'log.level': "INFO", 'log.file': None})
     path = get_config_path()
     config.readfp(codecs.open(path, "r", "utf-8",))
     config.interactive = interactive
