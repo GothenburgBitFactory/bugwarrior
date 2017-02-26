@@ -256,7 +256,7 @@ class BugwarriorConfigParser(ConfigParser, object):
         try:
             return super(BugwarriorConfigParser, self).getint(section, option)
         except ValueError:
-            if self.get(section, option) is u'':
+            if self.get(section, option) == u'':
                 return None
             else:
                 raise ValueError(
