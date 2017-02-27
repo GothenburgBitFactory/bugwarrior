@@ -128,7 +128,7 @@ class TestSynchronize(ConfigTest):
         # TEST DUPLICATED NEW ISSUE.
 
         issue = {
-            'description': 'Twice!',
+            'description': 'Twice',
             'githubtype': 'issue',
             'githuburl': 'https://foo.bar',
             'priority': 'M',
@@ -160,7 +160,7 @@ class TestSynchronize(ConfigTest):
             'pending': [{
                 u'priority': u'M',
                 u'status': u'pending',
-                u'description': u'Twice!',
+                u'description': u'Twice',
                 u'githuburl': u'https://foo.bar',
                 u'githubtype': u'issue',
                 u'id': 1,
