@@ -125,6 +125,31 @@ class TestSynchronize(ConfigTest):
             }],
              'pending': []})
 
+        # TEST DUPLICATED NEW ISSUE.
+        db.synchronize(iter((issue, issue)), config, 'general')
+
+        self.assertEqual(get_tasks(tw), {
+            'completed': [{
+                u'description': u'Yada yada yada.',
+                u'githubtype': u'issue',
+                u'githuburl': u'https://example.com',
+                u'id': 0,
+                u'priority': u'M',
+                u'status': u'completed',
+                u'urgency': 3.9,
+            }],
+            'pending': [{
+                u'priority': u'M',
+                u'status': u'pending',
+                u'description': u'Blah blah blah.',
+                u'githuburl': u'https://example.com',
+                u'githubtype': u'issue',
+                u'id': 1,
+                u'urgency': 3.9,
+            }],
+        })
+
+
 class TestUDAs(ConfigTest):
     def test_udas(self):
         config = ConfigParser.RawConfigParser()
