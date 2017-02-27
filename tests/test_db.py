@@ -126,9 +126,28 @@ class TestSynchronize(ConfigTest):
              'pending': []})
 
         # TEST DUPLICATED NEW ISSUE.
+
+        issue = {
+            'description': 'Twice!',
+            'githubtype': 'issue',
+            'githuburl': 'https://foo.bar',
+            'priority': 'M',
+        }
+
         db.synchronize(iter((issue, issue)), config, 'general')
 
-        self.assertEqual(get_tasks(tw), {
+        tasks = tw.load_tasks()
+
+        # Remove non-deterministic keys.
+        del tasks['pending'][0]['modified']
+        del tasks['pending'][0]['entry']
+        del tasks['pending'][0]['uuid']
+        del tasks['completed'][0]['modified']
+        del tasks['completed'][0]['entry']
+        del tasks['completed'][0]['end']
+        del tasks['completed'][0]['uuid']
+
+        self.assertEqual(tasks, {
             'completed': [{
                 u'description': u'Yada yada yada.',
                 u'githubtype': u'issue',
@@ -141,8 +160,8 @@ class TestSynchronize(ConfigTest):
             'pending': [{
                 u'priority': u'M',
                 u'status': u'pending',
-                u'description': u'Blah blah blah.',
-                u'githuburl': u'https://example.com',
+                u'description': u'Twice!',
+                u'githuburl': u'https://foo.bar',
                 u'githubtype': u'issue',
                 u'id': 1,
                 u'urgency': 3.9,
