@@ -108,6 +108,7 @@ class GithubIssue(Issue):
     URL = 'githuburl'
     REPO = 'githubrepo'
     TYPE = 'githubtype'
+    SHORT_TYPE = 'githubshorttype'
     NUMBER = 'githubnumber'
     USER = 'githubuser'
 
@@ -144,6 +145,10 @@ class GithubIssue(Issue):
             'type': 'string',
             'label': 'Github Type',
         },
+        SHORT_TYPE: {
+            'type': 'string',
+            'label': 'Short Github Type (Is/PR)',
+        },
         NUMBER: {
             'type': 'numeric',
             'label': 'Github Issue/PR #',
@@ -167,7 +172,10 @@ class GithubIssue(Issue):
         if body:
             body = body.replace('\r\n', '\n')
 
+        short_type = 'Is'
+
         if self.extra['type'] == 'pull_request':
+            short_type = 'PR'
             priority = 'H'
         else:
             priority = self.origin['default_priority']
@@ -181,6 +189,7 @@ class GithubIssue(Issue):
             self.URL: self.record['html_url'],
             self.REPO: self.record['repo'],
             self.TYPE: self.extra['type'],
+            self.SHORT_TYPE: short_type,
             self.USER: self.record['user']['login'],
             self.TITLE: self.record['title'],
             self.BODY: body,
