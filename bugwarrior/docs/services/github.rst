@@ -11,22 +11,17 @@ Here's an example of a Github target::
 
     [my_issue_tracker]
     service = github
-    github.username = ralphbean
     github.login = ralphbean
     github.password = OMG_LULZ
+    github.username = ralphbean
 
 The above example is the minimum required to import issues from
 Github.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
-Note that both ``github.username`` and ``github.login`` are required and can be
-set to different values.  ``github.login`` is used to specify what account
-bugwarrior should use to login to github.  ``github.username`` indicates which
-repositories should be scraped.  For instance, I always have ``github.login``
-set to ralphbean (my account).  But I have some targets with
-``github.username`` pointed at organizations or other users to watch issues
-there.
+``github.login`` is used to specify what account bugwarrior should use to login
+to github, combined with ``github.password``.
 
 If two-factor authentication is used, ``github.token`` must be given rather
 than ``github.password``. To get a token, go to the "Personal access tokens" section of
@@ -35,6 +30,15 @@ to private repos can be gained with ``repo`` as well.
 
 Service Features
 ----------------
+
+Repo Owner
+++++++++++
+
+``github.username`` indicates which repositories should be scraped.  For
+instance, I always have ``github.login`` set to ralphbean (my account).  But I
+have some targets with ``github.username`` pointed at organizations or other
+users to watch issues there.  This parameter is required unless
+``github.query`` is provided.
 
 Include and Exclude Certain Repositories
 ++++++++++++++++++++++++++++++++++++++++
@@ -110,6 +114,20 @@ assignee, mentioned in, or has commented on.  To do so, add the following
 configuration option::
 
     github.involved_issues = True
+
+Queries
++++++++
+
+if you want to write your own github query, as described at https://help.github.com/articles/searching-issues/
+
+    github.query = assignee:octocat is:open
+
+Note that this search covers both issues and pull requests, which github treats
+as a special kind of issue.
+
+This will override all other filtering including
+:ref:`common_configuration_options`, ``github.username``,
+``github.involved_issues``, and ``github.filter_pull_requests``.
 
 Provided UDA Fields
 -------------------
