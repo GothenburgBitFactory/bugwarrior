@@ -243,23 +243,25 @@ class GithubService(IssueService):
         self.exclude_repos = self.config_get_default('exclude_repos', [], aslist)
         self.include_repos = self.config_get_default('include_repos', [], aslist)
 
-        self.query = self.config_get_default(
-            'query', default=None, to_type=six.text_type
+        self.username = self.config_get('username')
+        self.filter_pull_requests = self.config_get_default(
+            'filter_pull_requests', default=False, to_type=asbool
         )
-
-        if not self.query:
-            self.username = self.config_get('username')
-            self.filter_pull_requests = self.config_get_default(
-                'filter_pull_requests', default=False, to_type=asbool
-            )
-            self.involved_issues = self.config_get_default(
-                'involved_issues', default=False, to_type=asbool
-            )
+        self.involved_issues = self.config_get_default(
+            'involved_issues', default=False, to_type=asbool
+        )
         self.import_labels_as_tags = self.config_get_default(
             'import_labels_as_tags', default=False, to_type=asbool
         )
         self.label_template = self.config_get_default(
             'label_template', default='{{label}}', to_type=six.text_type
+        )
+
+        self.query = self.config_get_default(
+            'query',
+            default='involves: {user} state:open'.format(
+                user=self.username) if self.involved_issues else '',
+            to_type=six.text_type
         )
 
     @classmethod
@@ -292,10 +294,6 @@ class GithubService(IssueService):
                 continue
             issues[url] = (tag.group(1), issue)
         return issues
-
-    def get_involved_issues(self, user):
-        """ Grab all 'interesting' issues """
-        return self.get_query('involves:{user} state:open'.format(user=user))
 
     def get_directly_assigned_issues(self):
         project_matcher = re.compile(
@@ -370,42 +368,29 @@ class GithubService(IssueService):
             return True
         return super(GithubService, self).include(issue)
 
-    def _issues_by_query(self):
-        issues = self.get_query(self.query)
-        return issues.values()
+    def issues(self):
+        issues = {}
+        if self.query:
+            issues.update(self.get_query(self.query))
 
-    def _issues_by_filters(self):
         all_repos = self.client.get_repos(self.username)
         assert(type(all_repos) == list)
         repos = filter(self.filter_repos, all_repos)
 
-        issues = {}
-        if self.involved_issues:
+        for repo in repos:
             issues.update(
-                filter(self.filter_issues,
-                       self.get_involved_issues(self.username).items())
+                self.get_owned_repo_issues(
+                    self.username + "/" + repo['name'])
             )
-        else:
-            for repo in repos:
-                issues.update(
-                    self.get_owned_repo_issues(
-                        self.username + "/" + repo['name'])
-                )
         if self.config_get_default('include_user_issues', True, asbool):
             issues.update(
                 filter(self.filter_issues,
                        self.get_directly_assigned_issues().items())
             )
+
         log.debug(" Found %i issues.", len(issues))
         issues = list(filter(self.include, issues.values()))
         log.debug(" Pruned down to %i issues.", len(issues))
-        return issues
-
-    def issues(self):
-        if self.query:
-            issues = self._issues_by_query()
-        else:
-            issues = self._issues_by_filters()
 
         for tag, issue in issues:
             # Stuff this value into the upstream dict for:
@@ -430,7 +415,8 @@ class GithubService(IssueService):
            not config.has_option(target, 'github.password'):
             die("[%s] has no 'github.token' or 'github.password'" % target)
 
-        if not config.has_option(target, 'github.username'):
-            die("[%s] has no 'github.username'" % target)
+        if not (config.has_option(target, 'github.username') or
+                config.has_option(target, 'github.query')):
+            die("[%s] must have one of 'github.username' or 'github.query'" % target)
 
         super(GithubService, cls).validate_config(config, target)
