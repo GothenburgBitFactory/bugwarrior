@@ -373,15 +373,16 @@ class GithubService(IssueService):
         if self.query:
             issues.update(self.get_query(self.query))
 
-        all_repos = self.client.get_repos(self.username)
-        assert(type(all_repos) == list)
-        repos = filter(self.filter_repos, all_repos)
+        if self.config_get_default('include_user_repos', True, asbool):
+            all_repos = self.client.get_repos(self.username)
+            assert(type(all_repos) == list)
+            repos = filter(self.filter_repos, all_repos)
 
-        for repo in repos:
-            issues.update(
-                self.get_owned_repo_issues(
-                    self.username + "/" + repo['name'])
-            )
+            for repo in repos:
+                issues.update(
+                    self.get_owned_repo_issues(
+                        self.username + "/" + repo['name'])
+                )
         if self.config_get_default('include_user_issues', True, asbool):
             issues.update(
                 filter(self.filter_issues,
@@ -415,8 +416,7 @@ class GithubService(IssueService):
            not config.has_option(target, 'github.password'):
             die("[%s] has no 'github.token' or 'github.password'" % target)
 
-        if not (config.has_option(target, 'github.username') or
-                config.has_option(target, 'github.query')):
-            die("[%s] must have one of 'github.username' or 'github.query'" % target)
+        if not config.has_option(target, 'github.username'):
+            die("[%s] has no 'github.username'" % target)
 
         super(GithubService, cls).validate_config(config, target)

@@ -43,6 +43,11 @@ users to watch issues there.  This parameter is required unless
 Include and Exclude Certain Repositories
 ++++++++++++++++++++++++++++++++++++++++
 
+By default, issues from all repos belonging to ``github.username`` are
+included. To turn this off, set::
+
+    github.include_user_repos = False
+
 If you happen to be working with a large number of projects, you
 may want to pull issues from only a subset of your repositories.  To 
 do that, you can use the ``github.include_repos`` option.

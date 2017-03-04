@@ -143,6 +143,8 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
         'github.password': 'arbitrary_password',
         'github.username': 'arbitrary_username',
         'github.query': 'is:open reviewer:octocat',
+        'github.include_user_repos': 'False',
+        'github.include_user_issues': 'False',
     }
 
     def setUp(self):
