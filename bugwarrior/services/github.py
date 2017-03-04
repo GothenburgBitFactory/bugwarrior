@@ -3,7 +3,7 @@ import re
 import six
 
 import requests
-import urllib
+from six.moves.urllib.parse import quote_plus
 from jinja2 import Template
 
 from bugwarrior.config import asbool, aslist, die
@@ -32,7 +32,7 @@ class GithubClient(ServiceClient):
     def get_query(self, query):
         """Run a generic issue/PR query"""
         tmpl = "https://api.github.com/search/issues?q={query}&per_page=100"
-        url = tmpl.format(query=urllib.quote_plus(query.encode('utf-8')))
+        url = tmpl.format(query=quote_plus(query.encode('utf-8')))
         return self._getter(url, subkey='items')
 
     def get_issues(self, username, repo):
