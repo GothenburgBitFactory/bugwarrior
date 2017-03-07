@@ -111,7 +111,6 @@ assigned to the authenticated user.  To disable this behavior, use::
 
     github.include_user_issues = False
 
-
 Instead of fetching issues and pull requests based on ``{{username}}``'s owned
 repositories, you may instead get those that ``{{username}}`` is involved in.
 This includes all issues and pull requests where the user is the author, the
@@ -123,16 +122,18 @@ configuration option::
 Queries
 +++++++
 
-if you want to write your own github query, as described at https://help.github.com/articles/searching-issues/
+If you want to write your own github query, as described at https://help.github.com/articles/searching-issues/::
 
     github.query = assignee:octocat is:open
 
 Note that this search covers both issues and pull requests, which github treats
 as a special kind of issue.
 
-This will override all other filtering including
-:ref:`common_configuration_options`, ``github.username``,
-``github.involved_issues``, and ``github.filter_pull_requests``.
+To disable the pre-defined queries described above and synchronize only the
+issues matched by the query, set::
+
+    github.include_user_issues = False
+    github.include_user_repos = False
 
 Provided UDA Fields
 -------------------
