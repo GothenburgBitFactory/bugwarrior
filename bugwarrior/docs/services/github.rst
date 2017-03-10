@@ -11,22 +11,17 @@ Here's an example of a Github target::
 
     [my_issue_tracker]
     service = github
-    github.username = ralphbean
     github.login = ralphbean
     github.password = OMG_LULZ
+    github.username = ralphbean
 
 The above example is the minimum required to import issues from
 Github.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
-Note that both ``github.username`` and ``github.login`` are required and can be
-set to different values.  ``github.login`` is used to specify what account
-bugwarrior should use to login to github.  ``github.username`` indicates which
-repositories should be scraped.  For instance, I always have ``github.login``
-set to ralphbean (my account).  But I have some targets with
-``github.username`` pointed at organizations or other users to watch issues
-there.
+``github.login`` is used to specify what account bugwarrior should use to login
+to github, combined with ``github.password``.
 
 If two-factor authentication is used, ``github.token`` must be given rather
 than ``github.password``. To get a token, go to the "Personal access tokens" section of
@@ -36,8 +31,22 @@ to private repos can be gained with ``repo`` as well.
 Service Features
 ----------------
 
+Repo Owner
+++++++++++
+
+``github.username`` indicates which repositories should be scraped.  For
+instance, I always have ``github.login`` set to ralphbean (my account).  But I
+have some targets with ``github.username`` pointed at organizations or other
+users to watch issues there.  This parameter is required unless
+``github.query`` is provided.
+
 Include and Exclude Certain Repositories
 ++++++++++++++++++++++++++++++++++++++++
+
+By default, issues from all repos belonging to ``github.username`` are
+included. To turn this off, set::
+
+    github.include_user_repos = False
 
 If you happen to be working with a large number of projects, you
 may want to pull issues from only a subset of your repositories.  To 
@@ -102,7 +111,6 @@ assigned to the authenticated user.  To disable this behavior, use::
 
     github.include_user_issues = False
 
-
 Instead of fetching issues and pull requests based on ``{{username}}``'s owned
 repositories, you may instead get those that ``{{username}}`` is involved in.
 This includes all issues and pull requests where the user is the author, the
@@ -110,6 +118,22 @@ assignee, mentioned in, or has commented on.  To do so, add the following
 configuration option::
 
     github.involved_issues = True
+
+Queries
++++++++
+
+If you want to write your own github query, as described at https://help.github.com/articles/searching-issues/::
+
+    github.query = assignee:octocat is:open
+
+Note that this search covers both issues and pull requests, which github treats
+as a special kind of issue.
+
+To disable the pre-defined queries described above and synchronize only the
+issues matched by the query, set::
+
+    github.include_user_issues = False
+    github.include_user_repos = False
 
 Provided UDA Fields
 -------------------

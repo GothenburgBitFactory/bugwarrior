@@ -3,6 +3,7 @@ import re
 import six
 
 import requests
+from six.moves.urllib.parse import quote_plus
 from jinja2 import Template
 
 from bugwarrior.config import asbool, aslist, die
@@ -28,9 +29,10 @@ class GithubClient(ServiceClient):
                 username=username))
         return user_repos + public_repos
 
-    def get_involved_issues(self, username):
-        tmpl = "https://api.github.com/search/issues?q=involves%3A{username}%20state%3Aopen&per_page=100"
-        url = tmpl.format(username=username)
+    def get_query(self, query):
+        """Run a generic issue/PR query"""
+        tmpl = "https://api.github.com/search/issues?q={query}&per_page=100"
+        url = tmpl.format(query=quote_plus(query.encode('utf-8')))
         return self._getter(url, subkey='items')
 
     def get_issues(self, username, repo):
@@ -226,7 +228,6 @@ class GithubService(IssueService):
         super(GithubService, self).__init__(*args, **kw)
 
         self.login = self.config_get('login')
-        self.username = self.config_get('username')
 
         auth = {}
         token = self.config_get_default('token')
@@ -242,17 +243,25 @@ class GithubService(IssueService):
         self.exclude_repos = self.config_get_default('exclude_repos', [], aslist)
         self.include_repos = self.config_get_default('include_repos', [], aslist)
 
+        self.username = self.config_get('username')
+        self.filter_pull_requests = self.config_get_default(
+            'filter_pull_requests', default=False, to_type=asbool
+        )
+        self.involved_issues = self.config_get_default(
+            'involved_issues', default=False, to_type=asbool
+        )
         self.import_labels_as_tags = self.config_get_default(
             'import_labels_as_tags', default=False, to_type=asbool
         )
         self.label_template = self.config_get_default(
             'label_template', default='{{label}}', to_type=six.text_type
         )
-        self.filter_pull_requests = self.config_get_default(
-            'filter_pull_requests', default=False, to_type=asbool
-        )
-        self.involved_issues = self.config_get_default(
-            'involved_issues', default=False, to_type=asbool
+
+        self.query = self.config_get_default(
+            'query',
+            default='involves: {user} state:open'.format(
+                user=self.username) if self.involved_issues else '',
+            to_type=six.text_type
         )
 
     @classmethod
@@ -274,10 +283,10 @@ class GithubService(IssueService):
             issues[issue['url']] = (tag, issue)
         return issues
 
-    def get_involved_issues(self, user):
-        """ Grab all 'interesting' issues """
+    def get_query(self, query):
+        """ Grab all issues matching a github query """
         issues = {}
-        for issue in self.client.get_involved_issues(user):
+        for issue in self.client.get_query(query):
             url = issue['html_url']
             tag = re.match('.*github\\.com/(.*)/(issues|pull)/[^/]*$', url)
             if tag is None:
@@ -360,17 +369,15 @@ class GithubService(IssueService):
         return super(GithubService, self).include(issue)
 
     def issues(self):
-        all_repos = self.client.get_repos(self.username)
-        assert(type(all_repos) == list)
-        repos = filter(self.filter_repos, all_repos)
-
         issues = {}
-        if self.involved_issues:
-            issues.update(
-                filter(self.filter_issues,
-                       self.get_involved_issues(self.username).items())
-            )
-        else:
+        if self.query:
+            issues.update(self.get_query(self.query))
+
+        if self.config_get_default('include_user_repos', True, asbool):
+            all_repos = self.client.get_repos(self.username)
+            assert(type(all_repos) == list)
+            repos = filter(self.filter_repos, all_repos)
+
             for repo in repos:
                 issues.update(
                     self.get_owned_repo_issues(
@@ -381,6 +388,7 @@ class GithubService(IssueService):
                 filter(self.filter_issues,
                        self.get_directly_assigned_issues().items())
             )
+
         log.debug(" Found %i issues.", len(issues))
         issues = list(filter(self.include, issues.values()))
         log.debug(" Pruned down to %i issues.", len(issues))
