@@ -126,7 +126,6 @@ class TestBugwarriorConfigParser(TestCase):
         self.config.set('general', 'somenone', '')
         self.config.set('general', 'somechar', 'somestring')
 
-
     def test_getint(self):
         self.assertEqual(self.config.getint('general', 'someint'), 4)
 
@@ -136,3 +135,46 @@ class TestBugwarriorConfigParser(TestCase):
     def test_getint_valueerror(self):
         with self.assertRaises(ValueError):
             self.config.getint('general', 'somechar')
+
+
+class TestServiceConfig(TestCase):
+    def setUp(self):
+        self.target = 'someservice'
+
+        self.config = config.BugwarriorConfigParser()
+        self.config.add_section(self.target)
+        self.config.set(self.target, 'someprefix.someint', '4')
+        self.config.set(self.target, 'someprefix.somenone', '')
+        self.config.set(self.target, 'someprefix.somechar', 'somestring')
+        self.config.set(self.target, 'someprefix.somebool', 'true')
+
+        self.service_config = config.ServiceConfig(
+            'someprefix', self.config, self.target)
+
+    def test_configparser_proxy(self):
+        """
+        Methods not defined in ServiceConfig should be proxied to configparser.
+        """
+        self.assertTrue(
+            self.service_config.has_option(self.target, 'someprefix.someint'))
+
+    def test_has(self):
+        self.assertTrue(self.service_config.has('someint'))
+
+    def test_get(self):
+        self.assertEqual(self.service_config.get('someint'), '4')
+
+    def test_get_default(self):
+        self.assertEqual(
+            self.service_config.get('someoption', default='somedefault'),
+            'somedefault'
+        )
+
+    def test_get_default_none(self):
+        self.assertIsNone(self.service_config.get('someoption'))
+
+    def test_get_to_type(self):
+        self.assertIs(
+            self.service_config.get('somebool', to_type=config.asbool),
+            True
+        )
