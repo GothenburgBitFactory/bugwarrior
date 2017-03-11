@@ -9,7 +9,7 @@ import io as StringIO
 import requests
 import urllib.request, urllib.parse, urllib.error
 
-from bugwarrior.config import die
+from bugwarrior.config import die, asbool
 from bugwarrior.services import Issue, IssueService
 
 import logging
@@ -98,7 +98,7 @@ class TracService(IssueService):
             auth = urllib.parse.quote_plus('%s:%s' % (username, password)) + '@'
         else:
             auth = ''
-        if self.config_get_default('no_xmlrpc', default=False):
+        if self.config_get_default('no_xmlrpc', default=False, to_type=asbool):
             uri = '%s://%s%s/' % (scheme, auth, base_uri)
             self.uri = uri
             self.trac = None
