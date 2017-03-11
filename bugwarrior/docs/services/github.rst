@@ -135,6 +135,14 @@ issues matched by the query, set::
     github.include_user_issues = False
     github.include_user_repos = False
 
+GitHub Enterprise Instance
+++++++++++++++++++++++++++
+
+If you're using GitHub Enterprise, the on-premises version of GitHub, you can
+point bugwarrior to it with the ``github.host`` configuration option. E.g.::
+
+    github.host = github.acme.biz
+
 Provided UDA Fields
 -------------------
 
