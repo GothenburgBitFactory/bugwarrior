@@ -114,9 +114,7 @@ class TeamLabService(IssueService):
         self.client = TeamLabClient(self.hostname)
         self.client.authenticate(_login, _password)
 
-        self.project_name = self.config.get_default(
-            'project_name', self.hostname
-        )
+        self.project_name = self.config.get('project_name', self.hostname)
 
     @staticmethod
     def get_keyring_service(service_config):

@@ -72,7 +72,7 @@ class GerritService(IssueService, ServiceClient):
         self.url = self.config.get('base_uri').strip('/')
         self.username = self.config.get('username')
         self.password = self.get_password('password', self.username)
-        self.ssl_ca_path = self.config.get_default('ssl_ca_path', None)
+        self.ssl_ca_path = self.config.get('ssl_ca_path', None)
         self.session = requests.session()
         self.session.headers.update({
             'Accept': 'application/json',

@@ -227,13 +227,13 @@ class RedMineService(IssueService):
         self.key = self.config.get('key')
         self.issue_limit = self.config.get('issue_limit')
 
-        login = self.config.get_default('login')
+        login = self.config.get('login')
         if login:
             password = self.get_password('password', login)
         auth = (login, password) if (login and password) else None
         self.client = RedMineClient(self.url, self.key, auth, self.issue_limit)
 
-        self.project_name = self.config.get_default('project_name')
+        self.project_name = self.config.get('project_name')
 
     def get_service_metadata(self):
         return {
@@ -256,7 +256,7 @@ class RedMineService(IssueService):
         IssueService.validate_config(service_config, target)
 
     def issues(self):
-        only_if_assigned = self.config.get_default('only_if_assigned', False)
+        only_if_assigned = self.config.get('only_if_assigned', False)
         issues = self.client.find_issues(self.issue_limit, only_if_assigned)
         log.debug(" Found %i total.", len(issues))
         for issue in issues:

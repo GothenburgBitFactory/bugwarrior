@@ -132,7 +132,7 @@ class IssueService(object):
         return templates
 
     def get_password(self, key, login='nousername'):
-        password = self.config.get_default(key)
+        password = self.config.get(key)
         keyring_service = self.get_keyring_service(self.config)
         if not password or password.startswith("@oracle:"):
             password = get_service_password(
@@ -187,20 +187,18 @@ class IssueService(object):
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
-        only_if_assigned = self.config.get_default(
-            'only_if_assigned', None)
+        only_if_assigned = self.config.get('only_if_assigned', None)
 
         if only_if_assigned:
             owner = self.get_owner(issue)
             include_owners = [only_if_assigned]
 
-            if self.config.get_default('also_unassigned', None, asbool):
+            if self.config.get('also_unassigned', None, asbool):
                 include_owners.append(None)
 
             return owner in include_owners
 
-        only_if_author = self.config.get_default(
-            'only_if_author', None)
+        only_if_author = self.config.get('only_if_author', None)
 
         if only_if_author:
             return self.get_author(issue) == only_if_author

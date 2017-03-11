@@ -90,15 +90,15 @@ class TracService(IssueService):
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
         base_uri = self.config.get('base_uri')
-        scheme = self.config.get_default('scheme', default='https')
-        username = self.config.get_default('username', default=None)
+        scheme = self.config.get('scheme', default='https')
+        username = self.config.get('username', default=None)
         if username:
             password = self.get_password('password', username)
 
             auth = urllib.parse.quote_plus('%s:%s' % (username, password)) + '@'
         else:
             auth = ''
-        if self.config.get_default('no_xmlrpc', default=False, to_type=asbool):
+        if self.config.get('no_xmlrpc', default=False, to_type=asbool):
             uri = '%s://%s%s/' % (scheme, auth, base_uri)
             self.uri = uri
             self.trac = None

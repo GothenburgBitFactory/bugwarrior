@@ -108,12 +108,12 @@ class BugzillaService(IssueService):
         super(BugzillaService, self).__init__(*args, **kw)
         self.base_uri = self.config.get('base_uri')
         self.username = self.config.get('username')
-        self.ignore_cc = self.config.get_default('ignore_cc', default=False,
+        self.ignore_cc = self.config.get('ignore_cc', default=False,
                                                  to_type=lambda x: x == "True")
-        self.query_url = self.config.get_default('query_url', default=None)
-        self.include_needinfos = self.config.get_default(
+        self.query_url = self.config.get('query_url', default=None)
+        self.include_needinfos = self.config.get(
             'include_needinfos', False, to_type=lambda x: x == "True")
-        self.open_statuses = self.config.get_default(
+        self.open_statuses = self.config.get(
             'open_statuses', _open_statuses, to_type=lambda x: x.split(','))
         log.debug(" filtering on statuses: %r", self.open_statuses)
 
@@ -123,7 +123,7 @@ class BugzillaService(IssueService):
         # ...but older bugzilla's don't know anything about that argument.
         # Here we make it possible for the user to specify whether they want
         # to pass that argument or not.
-        self.advanced = asbool(self.config.get_default('advanced', 'no'))
+        self.advanced = asbool(self.config.get('advanced', 'no'))
 
         self.password = self.get_password('password', self.username)
 

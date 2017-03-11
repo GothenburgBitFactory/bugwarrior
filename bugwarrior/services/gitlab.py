@@ -210,40 +210,40 @@ class GitlabService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super(GitlabService, self).__init__(*args, **kw)
 
-        host = self.config.get_default(
+        host = self.config.get(
             'host', default='gitlab.com', to_type=six.text_type)
         self.login = self.config.get('login')
         token = self.get_password('token', self.login)
         self.auth = (host, token)
 
-        if self.config.get_default('use_https', default=True, to_type=asbool):
+        if self.config.get('use_https', default=True, to_type=asbool):
             self.scheme = 'https'
         else:
             self.scheme = 'http'
 
-        self.verify_ssl = self.config.get_default(
+        self.verify_ssl = self.config.get(
             'verify_ssl', default=True, to_type=asbool
         )
 
-        self.exclude_repos = self.config.get_default('exclude_repos', [], aslist)
-        self.include_repos = self.config.get_default('include_repos', [], aslist)
+        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
+        self.include_repos = self.config.get('include_repos', [], aslist)
 
         self.include_repos = list(map(self.add_default_namespace, self.include_repos))
         self.exclude_repos = list(map(self.add_default_namespace, self.exclude_repos))
 
-        self.import_labels_as_tags = self.config.get_default(
+        self.import_labels_as_tags = self.config.get(
             'import_labels_as_tags', default=False, to_type=asbool
         )
-        self.label_template = self.config.get_default(
+        self.label_template = self.config.get(
             'label_template', default='{{label}}', to_type=six.text_type
         )
-        self.filter_merge_requests = self.config.get_default(
+        self.filter_merge_requests = self.config.get(
             'filter_merge_requests', default=False, to_type=asbool
         )
-        self.include_todos = self.config.get_default(
+        self.include_todos = self.config.get(
             'include_todos', default=False, to_type=asbool
         )
-        self.include_all_todos = self.config.get_default(
+        self.include_all_todos = self.config.get(
             'include_all_todos', default=True, to_type=asbool
         )
 
@@ -262,7 +262,7 @@ class GitlabService(IssueService, ServiceClient):
     @staticmethod
     def get_keyring_service(service_config):
         login = service_config.get('login')
-        host = service_config.get_default('host', default='gitlab.com')
+        host = service_config.get('host', default='gitlab.com')
         return "gitlab://%s@%s" % (login, host)
 
     def get_service_metadata(self):
