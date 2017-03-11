@@ -75,7 +75,7 @@ class MegaplanService(IssueService):
 
         self.hostname = self.config.get('hostname')
         _login = self.config.get('login')
-        _password = self.config_get_password('password', _login)
+        _password = self.get_password('password', _login)
 
         self.client = megaplan.Client(self.hostname)
         self.client.authenticate(_login, _password)

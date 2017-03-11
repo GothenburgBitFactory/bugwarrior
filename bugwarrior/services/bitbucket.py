@@ -77,7 +77,7 @@ class BitbucketService(IssueService, ServiceClient):
 
         if not refresh_token:
             login = self.config.get('login')
-            password = self.config_get_password('password', login)
+            password = self.get_password('password', login)
             auth['basic'] = (login, password)
 
         if key and secret:

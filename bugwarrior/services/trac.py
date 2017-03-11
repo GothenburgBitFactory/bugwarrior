@@ -93,7 +93,7 @@ class TracService(IssueService):
         scheme = self.config.get_default('scheme', default='https')
         username = self.config.get_default('username', default=None)
         if username:
-            password = self.config_get_password('password', username)
+            password = self.get_password('password', username)
 
             auth = urllib.parse.quote_plus('%s:%s' % (username, password)) + '@'
         else:

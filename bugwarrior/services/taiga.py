@@ -57,7 +57,7 @@ class TaigaService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super(TaigaService, self).__init__(*args, **kw)
         self.url = self.config.get('base_uri')
-        self.auth_token = self.config_get_password('auth_token')
+        self.auth_token = self.get_password('auth_token')
         self.label_template = self.config.get_default(
             'label_template', default='{{label}}', to_type=six.text_type
         )

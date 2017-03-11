@@ -243,10 +243,10 @@ class GithubService(IssueService):
         auth = {}
         token = self.config.get_default('token')
         if self.config.has('token'):
-            token = self.config_get_password('token', self.login)
+            token = self.get_password('token', self.login)
             auth['token'] = token
         else:
-            password = self.config_get_password('password', self.login)
+            password = self.get_password('password', self.login)
             auth['basic'] = (self.login, password)
 
         self.client = GithubClient(self.host, auth)

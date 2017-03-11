@@ -213,7 +213,7 @@ class GitlabService(IssueService, ServiceClient):
         host = self.config.get_default(
             'host', default='gitlab.com', to_type=six.text_type)
         self.login = self.config.get('login')
-        token = self.config_get_password('token', self.login)
+        token = self.get_password('token', self.login)
         self.auth = (host, token)
 
         if self.config.get_default('use_https', default=True, to_type=asbool):

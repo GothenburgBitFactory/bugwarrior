@@ -138,7 +138,7 @@ class YoutrackService(IssueService, ServiceClient):
             self.session.verify = False
 
         login = self.config.get('login')
-        password = self.config_get_password('password', login)
+        password = self.get_password('password', login)
         if not self.config.get_default('anonymous', False):
             self._login(login, password)
 
