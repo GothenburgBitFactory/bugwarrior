@@ -106,14 +106,14 @@ class BugzillaService(IssueService):
 
     def __init__(self, *args, **kw):
         super(BugzillaService, self).__init__(*args, **kw)
-        self.base_uri = self.config_get('base_uri')
-        self.username = self.config_get('username')
-        self.ignore_cc = self.config_get_default('ignore_cc', default=False,
+        self.base_uri = self.config.get('base_uri')
+        self.username = self.config.get('username')
+        self.ignore_cc = self.config.get_default('ignore_cc', default=False,
                                                  to_type=lambda x: x == "True")
-        self.query_url = self.config_get_default('query_url', default=None)
-        self.include_needinfos = self.config_get_default(
+        self.query_url = self.config.get_default('query_url', default=None)
+        self.include_needinfos = self.config.get_default(
             'include_needinfos', False, to_type=lambda x: x == "True")
-        self.open_statuses = self.config_get_default(
+        self.open_statuses = self.config.get_default(
             'open_statuses', _open_statuses, to_type=lambda x: x.split(','))
         log.debug(" filtering on statuses: %r", self.open_statuses)
 
@@ -123,7 +123,7 @@ class BugzillaService(IssueService):
         # ...but older bugzilla's don't know anything about that argument.
         # Here we make it possible for the user to specify whether they want
         # to pass that argument or not.
-        self.advanced = asbool(self.config_get_default('advanced', 'no'))
+        self.advanced = asbool(self.config.get_default('advanced', 'no'))
 
         self.password = self.config_get_password('password', self.username)
 
@@ -131,20 +131,20 @@ class BugzillaService(IssueService):
         self.bz = bugzilla.Bugzilla(url=url)
         self.bz.login(self.username, self.password)
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        username = config.get(section, cls._get_key('username'))
-        base_uri = config.get(section, cls._get_key('base_uri'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        username = service_config.get('username')
+        base_uri = service_config.get('base_uri')
         return "bugzilla://%s@%s" % (username, base_uri)
 
     @classmethod
-    def validate_config(cls, config, target):
-        req = ['bugzilla.username', 'bugzilla.password', 'bugzilla.base_uri']
+    def validate_config(cls, service_config, target):
+        req = ['username', 'password', 'base_uri']
         for option in req:
-            if not config.has_option(target, option):
-                die("[%s] has no '%s'" % (target, option))
+            if not service_config.has(option):
+                die("[%s] has no 'bugzilla.%s'" % (target, option))
 
-        super(BugzillaService, cls).validate_config(config, target)
+        super(BugzillaService, cls).validate_config(service_config, target)
 
     def get_owner(self, issue):
         # NotImplemented, but we should never get called since .include() isn't

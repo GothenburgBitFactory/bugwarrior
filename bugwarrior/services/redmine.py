@@ -223,17 +223,17 @@ class RedMineService(IssueService):
     def __init__(self, *args, **kw):
         super(RedMineService, self).__init__(*args, **kw)
 
-        self.url = self.config_get('url').rstrip("/")
-        self.key = self.config_get('key')
-        self.issue_limit = self.config_get('issue_limit')
+        self.url = self.config.get('url').rstrip("/")
+        self.key = self.config.get('key')
+        self.issue_limit = self.config.get('issue_limit')
 
-        login = self.config_get_default('login')
+        login = self.config.get_default('login')
         if login:
             password = self.config_get_password('password', login)
         auth = (login, password) if (login and password) else None
         self.client = RedMineClient(self.url, self.key, auth, self.issue_limit)
 
-        self.project_name = self.config_get_default('project_name')
+        self.project_name = self.config.get_default('project_name')
 
     def get_service_metadata(self):
         return {
@@ -241,22 +241,22 @@ class RedMineService(IssueService):
             'url': self.url,
         }
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        url = config.get(section, cls._get_key('url'))
-        login = config.get(section, cls._get_key('login'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        url = service_config.get('url')
+        login = service_config.get('login')
         return "redmine://%s@%s/%s" % (login, url)
 
     @classmethod
-    def validate_config(cls, config, target):
-        for k in ('redmine.url', 'redmine.key'):
-            if not config.has_option(target, k):
-                die("[%s] has no '%s'" % (target, k))
+    def validate_config(cls, service_config, target):
+        for k in ('url', 'key'):
+            if not service_config.has(k):
+                die("[%s] has no 'redmine.%s'" % (target, k))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def issues(self):
-        only_if_assigned = self.config_get_default('only_if_assigned', False)
+        only_if_assigned = self.config.get_default('only_if_assigned', False)
         issues = self.client.find_issues(self.issue_limit, only_if_assigned)
         log.debug(" Found %i total.", len(issues))
         for issue in issues:

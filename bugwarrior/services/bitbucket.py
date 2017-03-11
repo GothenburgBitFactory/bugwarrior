@@ -69,14 +69,14 @@ class BitbucketService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
 
-        key = self.config_get_default('key')
-        secret = self.config_get_default('secret')
+        key = self.config.get_default('key')
+        secret = self.config.get_default('secret')
         auth = {'oauth': (key, secret)}
 
         refresh_token = self.config.data.get('bitbucket_refresh_token')
 
         if not refresh_token:
-            login = self.config_get('login')
+            login = self.config.get('login')
             password = self.config_get_password('password', login)
             auth['basic'] = (login, password)
 
@@ -107,17 +107,17 @@ class BitbucketService(IssueService, ServiceClient):
         elif 'basic' in auth:
             self.requests_kwargs['auth'] = auth['basic']
 
-        self.exclude_repos = self.config_get_default('exclude_repos', [], aslist)
-        self.include_repos = self.config_get_default('include_repos', [], aslist)
+        self.exclude_repos = self.config.get_default('exclude_repos', [], aslist)
+        self.include_repos = self.config.get_default('include_repos', [], aslist)
 
-        self.filter_merge_requests = self.config_get_default(
+        self.filter_merge_requests = self.config.get_default(
             'filter_merge_requests', default=False, to_type=asbool
         )
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        login = config.get(section, cls._get_key('login'))
-        username = config.get(section, cls._get_key('username'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        login = service_config.get('login')
+        username = service_config.get('username')
         return "bitbucket://%s@bitbucket.org/%s" % (login, username)
 
     def filter_repos(self, repo_tag):
@@ -151,13 +151,13 @@ class BitbucketService(IssueService, ServiceClient):
             url = response.get('next', None)
 
     @classmethod
-    def validate_config(cls, config, target):
-        if not config.has_option(target, 'bitbucket.username'):
+    def validate_config(cls, service_config, target):
+        if not service_config.has('username'):
             die("[%s] has no 'username'" % target)
-        if not config.has_option(target, 'bitbucket.login'):
+        if not service_config.has('login'):
             die("[%s] has no 'login'" % target)
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def fetch_issues(self, tag):
         response = self.get_collection('/repositories/%s/issues/' % (tag))
@@ -198,7 +198,7 @@ class BitbucketService(IssueService, ServiceClient):
             return assignee.get('username', None)
 
     def issues(self):
-        user = self.config.get(self.target, 'bitbucket.username')
+        user = self.config.get('username')
         response = self.get_collection('/repositories/' + user + '/')
         repo_tags = list(filter(self.filter_repos, [
             repo['full_name'] for repo in response

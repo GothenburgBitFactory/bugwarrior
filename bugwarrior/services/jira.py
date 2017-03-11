@@ -224,32 +224,32 @@ class JiraService(IssueService):
 
     def __init__(self, *args, **kw):
         super(JiraService, self).__init__(*args, **kw)
-        self.username = self.config_get('username')
-        self.url = self.config_get('base_uri')
+        self.username = self.config.get('username')
+        self.url = self.config.get('base_uri')
         password = self.config_get_password('password', self.username)
 
         default_query = 'assignee=' + self.username + \
             ' AND resolution is null'
-        self.query = self.config_get_default('query', default_query)
+        self.query = self.config.get_default('query', default_query)
         if password == '@kerberos':
             auth = dict(kerberos=True)
         else:
             auth = dict(basic_auth=(self.username, password))
         self.jira = JIRA(
             options={
-                'server': self.config_get('base_uri'),
+                'server': self.config.get('base_uri'),
                 'rest_api_version': 'latest',
-                'verify': self.config_get_default('verify_ssl', default=True, to_type=asbool),
+                'verify': self.config.get_default('verify_ssl', default=True, to_type=asbool),
             },
             **auth
         )
-        self.import_labels_as_tags = self.config_get_default(
+        self.import_labels_as_tags = self.config.get_default(
             'import_labels_as_tags', default=False, to_type=asbool
         )
-        self.import_sprints_as_tags = self.config_get_default(
+        self.import_sprints_as_tags = self.config.get_default(
             'import_sprints_as_tags', default=False, to_type=asbool
         )
-        self.label_template = self.config_get_default(
+        self.label_template = self.config.get_default(
             'label_template', default='{{label}}', to_type=six.text_type
         )
 
@@ -264,10 +264,10 @@ class JiraService(IssueService):
                 log.info("Found %i distinct sprint fields." % len(field_names))
                 self.sprint_field_names = [field['id'] for field in field_names]
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        username = config.get(section, cls._get_key('username'))
-        base_uri = config.get(section, cls._get_key('base_uri'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        username = service_config.get('username')
+        base_uri = service_config.get('base_uri')
         return "jira://%s@%s" % (username, base_uri)
 
     def get_service_metadata(self):
@@ -280,12 +280,12 @@ class JiraService(IssueService):
         }
 
     @classmethod
-    def validate_config(cls, config, target):
-        for option in ('jira.username', 'jira.password', 'jira.base_uri'):
-            if not config.has_option(target, option):
-                die("[%s] has no '%s'" % (target, option))
+    def validate_config(cls, service_config, target):
+        for option in ('username', 'password', 'base_uri'):
+            if not service_config.has(option):
+                die("[%s] has no 'jira.%s'" % (target, option))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def annotations(self, issue, issue_obj):
         comments = self.jira.comments(issue.key) or []

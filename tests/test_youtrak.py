@@ -4,6 +4,7 @@ from builtins import next
 import configparser
 import responses
 
+from bugwarrior.services import ServiceConfig
 from bugwarrior.services.youtrack import YoutrackService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -17,11 +18,12 @@ class TestYoutrackService(ConfigTest):
         self.config.add_section('myservice')
         self.config.set('myservice', 'youtrack.login', 'foobar')
         self.config.set('myservice', 'youtrack.password', 'XXXXXX')
-
     def test_get_keyring_service(self):
         self.config.set('myservice', 'youtrack.host', 'youtrack.example.com')
+        service_config = ServiceConfig(
+            YoutrackService.CONFIG_PREFIX, self.config, 'myservice')
         self.assertEqual(
-            YoutrackService.get_keyring_service(self.config, 'myservice'),
+            YoutrackService.get_keyring_service(service_config),
             'youtrack://foobar@youtrack.example.com')
 
 

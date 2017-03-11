@@ -16,7 +16,7 @@ import six
 
 from taskw.task import Task
 
-from bugwarrior.config import asbool, die, get_service_password
+from bugwarrior.config import asbool, die, get_service_password, ServiceConfig
 from bugwarrior.db import MARKUP, URLShortener
 
 import logging
@@ -48,51 +48,52 @@ class IssueService(object):
     # What prefix should we use for this service's configuration values
     CONFIG_PREFIX = ''
 
-    def __init__(self, config, main_section, target):
-        self.config = config
+    def __init__(self, main_config, main_section, target):
+        self.config = ServiceConfig(self.CONFIG_PREFIX, main_config, target)
         self.main_section = main_section
         self.target = target
 
         self.desc_len = 35
-        if config.has_option(self.main_section, 'description_length'):
-            self.desc_len = self.config.getint(self.main_section, 'description_length')
+        if main_config.has_option(self.main_section, 'description_length'):
+            self.desc_len = main_config.getint(
+                self.main_section, 'description_length')
 
         self.anno_len = 45
-        if config.has_option(self.main_section, 'annotation_length'):
-            self.anno_len = self.config.getint(self.main_section, 'annotation_length')
+        if main_config.has_option(self.main_section, 'annotation_length'):
+            self.anno_len = main_config.getint(
+                self.main_section, 'annotation_length')
 
         self.inline_links = True
-        if config.has_option(self.main_section, 'inline_links'):
-            self.inline_links = asbool(config.get(self.main_section, 'inline_links'))
+        if main_config.has_option(self.main_section, 'inline_links'):
+            self.inline_links = asbool(main_config.get(
+                self.main_section, 'inline_links'))
 
         self.annotation_links = not self.inline_links
-        if config.has_option(self.main_section, 'annotation_links'):
+        if main_config.has_option(self.main_section, 'annotation_links'):
             self.annotation_links = asbool(
-                config.get(self.main_section, 'annotation_links')
+                main_config.get(self.main_section, 'annotation_links')
             )
 
         self.annotation_comments = True
-        if config.has_option(self.main_section, 'annotation_comments'):
+        if main_config.has_option(self.main_section, 'annotation_comments'):
             self.annotation_comments = asbool(
-                config.get(self.main_section, 'annotation_comments')
+                main_config.get(self.main_section, 'annotation_comments')
             )
 
         self.shorten = False
-        if config.has_option(self.main_section, 'shorten'):
-            self.shorten = asbool(config.get(self.main_section, 'shorten'))
+        if main_config.has_option(self.main_section, 'shorten'):
+            self.shorten = asbool(main_config.get(self.main_section, 'shorten'))
 
         self.add_tags = []
-        if config.has_option(self.target, 'add_tags'):
-            for raw_option in self.config.get(
-                self.target, 'add_tags'
-            ).split(','):
+        if self.config.has('add_tags'):
+            for raw_option in self.config.get('add_tags').split(','):
                 option = raw_option.strip(' +;')
                 if option:
                     self.add_tags.append(option)
 
         self.default_priority = 'M'
-        if config.has_option(self.target, 'default_priority'):
-            self.default_priority = config.get(self.target, 'default_priority')
+        if self.config.has('default_priority'):
+            self.default_priority = self.config.get('default_priority')
 
         log.info("Working on [%s]", self.target)
 
@@ -127,36 +128,17 @@ class IssueService(object):
         for key in six.iterkeys(Task.FIELDS):
             template_key = '%s_template' % key
             if self.config.has_option(self.target, template_key):
-                templates[key] = self.config.get(self.target, template_key)
+                templates[key] = self.config.get(template_key)
         return templates
 
-    def config_has(self, key):
-        return self.config.has_option(self.target, self._get_key(key))
-
-    def config_get_default(self, key, default=None, to_type=None):
-        try:
-            return self.config_get(key, to_type=to_type)
-        except:
-            return default
-
-    def config_get(self, key=None, to_type=None):
-        value = self.config.get(self.target, self._get_key(key))
-        if to_type:
-            return to_type(value)
-        return value
-
     def config_get_password(self, key, login='nousername'):
-        password = self.config_get_default(key)
-        keyring_service = self.get_keyring_service(self.config, self.target)
+        password = self.config.get_default(key)
+        keyring_service = self.get_keyring_service(self.config)
         if not password or password.startswith("@oracle:"):
             password = get_service_password(
                 keyring_service, login, oracle=password,
                 interactive=self.config.interactive)
         return password
-
-    @classmethod
-    def _get_key(cls, key):
-        return '%s.%s' % (cls.CONFIG_PREFIX, key)
 
     def get_service_metadata(self):
         return {}
@@ -194,30 +176,30 @@ class IssueService(object):
         return final
 
     @classmethod
-    def validate_config(cls, config, target):
+    def validate_config(cls, service_config, target):
         """ Validate generic options for a particular target """
-        if config.has_option(target, 'only_if_assigned'):
+        if service_config.has_option(target, 'only_if_assigned'):
             die("[%s] has an 'only_if_assigned' option.  Should be "
                 "'%s.only_if_assigned'." % (target, cls.CONFIG_PREFIX))
-        if config.has_option(target, 'also_unassigned'):
+        if service_config.has_option(target, 'also_unassigned'):
             die("[%s] has an 'also_unassigned' option.  Should be "
                 "'%s.also_unassigned'." % (target, cls.CONFIG_PREFIX))
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
-        only_if_assigned = self.config_get_default(
+        only_if_assigned = self.config.get_default(
             'only_if_assigned', None)
 
         if only_if_assigned:
             owner = self.get_owner(issue)
             include_owners = [only_if_assigned]
 
-            if self.config_get_default('also_unassigned', None, asbool):
+            if self.config.get_default('also_unassigned', None, asbool):
                 include_owners.append(None)
 
             return owner in include_owners
 
-        only_if_author = self.config_get_default(
+        only_if_author = self.config.get_default(
             'only_if_author', None)
 
         if only_if_author:
@@ -262,8 +244,8 @@ class IssueService(object):
         """
         raise NotImplementedError()
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
+    @staticmethod
+    def get_keyring_service(service_config):
         """ Given the keyring service name for this service. """
         raise NotImplementedError
 

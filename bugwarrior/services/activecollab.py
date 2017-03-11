@@ -166,9 +166,9 @@ class ActiveCollabService(IssueService):
     def __init__(self, *args, **kw):
         super(ActiveCollabService, self).__init__(*args, **kw)
 
-        self.url = self.config_get('url').rstrip('/')
-        self.key = self.config_get('key')
-        self.user_id = int(self.config_get('user_id'))
+        self.url = self.config.get('url').rstrip('/')
+        self.key = self.config.get('key')
+        self.user_id = int(self.config.get('user_id'))
         self.client = ActiveCollabClient(
             self.url, self.key, self.user_id
         )
@@ -176,14 +176,12 @@ class ActiveCollabService(IssueService):
                                          user_id=self.user_id)
 
     @classmethod
-    def validate_config(cls, config, target):
-        for k in (
-            'activecollab.url', 'activecollab.key', 'activecollab.user_id'
-        ):
-            if not config.has_option(target, k):
-                die("[%s] has no '%s'" % (target, k))
+    def validate_config(cls, service_config, target):
+        for k in ('url', 'key', 'user_id'):
+            if not service_config.has(k):
+                die("[%s] has no 'activecollab.%s'" % (target, k))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def _comments(self, issue):
         comments = self.activecollab.get_comments(

@@ -119,36 +119,36 @@ class YoutrackService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super(YoutrackService, self).__init__(*args, **kw)
 
-        self.host = self.config_get('host')
-        if self.config_get_default('use_https', default=True, to_type=asbool):
+        self.host = self.config.get('host')
+        if self.config.get_default('use_https', default=True, to_type=asbool):
             self.scheme = 'https'
             self.port = '443'
         else:
             self.scheme = 'http'
             self.port = '80'
-        self.port = self.config_get_default('port', self.port)
+        self.port = self.config.get_default('port', self.port)
         self.base_url = '%s://%s:%s' % (self.scheme, self.host, self.port)
         self.rest_url = self.base_url + '/rest'
 
         self.session = requests.Session()
         self.session.headers['Accept'] = 'application/json'
-        self.verify_ssl = self.config_get_default('verify_ssl', default=True, to_type=asbool)
+        self.verify_ssl = self.config.get_default('verify_ssl', default=True, to_type=asbool)
         if not self.verify_ssl:
             requests.packages.urllib3.disable_warnings()
             self.session.verify = False
 
-        login = self.config_get('login')
+        login = self.config.get('login')
         password = self.config_get_password('password', login)
-        if not self.config_get_default('anonymous', False):
+        if not self.config.get_default('anonymous', False):
             self._login(login, password)
 
-        self.query = self.config_get_default('query', default='for:me #Unresolved')
-        self.query_limit = self.config_get_default('query_limit', default="100")
+        self.query = self.config.get_default('query', default='for:me #Unresolved')
+        self.query_limit = self.config.get_default('query_limit', default="100")
 
-        self.import_tags = self.config_get_default(
+        self.import_tags = self.config.get_default(
             'import_tags', default=True, to_type=asbool
         )
-        self.tag_template = self.config_get_default(
+        self.tag_template = self.config.get_default(
             'tag_template', default='{{tag|lower}}', to_type=six.text_type
         )
 
@@ -158,10 +158,10 @@ class YoutrackService(IssueService, ServiceClient):
             raise RuntimeError("YouTrack responded with %s" % resp)
         self.session.headers['Cookie'] = resp.headers['set-cookie']
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        host = config.get(section, cls._get_key('host'))
-        login = config.get(section, cls._get_key('login'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        host = service_config.get('host')
+        login = service_config.get('login')
         return "youtrack://%s@%s" % (login, host)
 
     def get_service_metadata(self):
@@ -172,12 +172,12 @@ class YoutrackService(IssueService, ServiceClient):
         }
 
     @classmethod
-    def validate_config(cls, config, target):
-        for k in ('youtrack.login', 'youtrack.password', 'youtrack.host'):
-            if not config.has_option(target, k):
-                die("[%s] has no '%s'" % (target, k))
+    def validate_config(cls, service_config, target):
+        for k in ('login', 'password', 'host'):
+            if not service_config.has(k):
+                die("[%s] has no 'youtrack.%s'" % (target, k))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def issues(self):
         resp = self.session.get(self.rest_url + '/issue', params={'filter': self.query, 'max': self.query_limit})

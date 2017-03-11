@@ -210,40 +210,40 @@ class GitlabService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super(GitlabService, self).__init__(*args, **kw)
 
-        host = self.config_get_default(
+        host = self.config.get_default(
             'host', default='gitlab.com', to_type=six.text_type)
-        self.login = self.config_get('login')
+        self.login = self.config.get('login')
         token = self.config_get_password('token', self.login)
         self.auth = (host, token)
 
-        if self.config_get_default('use_https', default=True, to_type=asbool):
+        if self.config.get_default('use_https', default=True, to_type=asbool):
             self.scheme = 'https'
         else:
             self.scheme = 'http'
 
-        self.verify_ssl = self.config_get_default(
+        self.verify_ssl = self.config.get_default(
             'verify_ssl', default=True, to_type=asbool
         )
 
-        self.exclude_repos = self.config_get_default('exclude_repos', [], aslist)
-        self.include_repos = self.config_get_default('include_repos', [], aslist)
+        self.exclude_repos = self.config.get_default('exclude_repos', [], aslist)
+        self.include_repos = self.config.get_default('include_repos', [], aslist)
 
         self.include_repos = list(map(self.add_default_namespace, self.include_repos))
         self.exclude_repos = list(map(self.add_default_namespace, self.exclude_repos))
 
-        self.import_labels_as_tags = self.config_get_default(
+        self.import_labels_as_tags = self.config.get_default(
             'import_labels_as_tags', default=False, to_type=asbool
         )
-        self.label_template = self.config_get_default(
+        self.label_template = self.config.get_default(
             'label_template', default='{{label}}', to_type=six.text_type
         )
-        self.filter_merge_requests = self.config_get_default(
+        self.filter_merge_requests = self.config.get_default(
             'filter_merge_requests', default=False, to_type=asbool
         )
-        self.include_todos = self.config_get_default(
+        self.include_todos = self.config.get_default(
             'include_todos', default=False, to_type=asbool
         )
-        self.include_all_todos = self.config_get_default(
+        self.include_all_todos = self.config.get_default(
             'include_all_todos', default=True, to_type=asbool
         )
 
@@ -259,13 +259,10 @@ class GitlabService(IssueService, ServiceClient):
         else:
             return repo
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        login = config.get(section, cls._get_key('login'))
-        try:
-            host = config.get(section, cls._get_key('host'))
-        except NoOptionError:
-            host = 'gitlab.com'
+    @staticmethod
+    def get_keyring_service(service_config):
+        login = service_config.get('login')
+        host = service_config.get_default('host', default='gitlab.com')
         return "gitlab://%s@%s" % (login, host)
 
     def get_service_metadata(self):
@@ -486,14 +483,14 @@ class GitlabService(IssueService, ServiceClient):
                 yield todo_obj
 
     @classmethod
-    def validate_config(cls, config, target):
-        if not config.has_option(target, 'gitlab.host'):
+    def validate_config(cls, service_config, target):
+        if not service_config.has('host'):
             die("[%s] has no 'gitlab.host'" % target)
 
-        if not config.has_option(target, 'gitlab.login'):
+        if not service_config.has('login'):
             die("[%s] has no 'gitlab.login'" % target)
 
-        if not config.has_option(target, 'gitlab.token'):
+        if not service_config.has('token'):
             die("[%s] has no 'gitlab.token'" % target)
 
-        super(GitlabService, cls).validate_config(config, target)
+        super(GitlabService, cls).validate_config(service_config, target)

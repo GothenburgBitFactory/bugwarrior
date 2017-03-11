@@ -56,9 +56,9 @@ class TaigaService(IssueService, ServiceClient):
 
     def __init__(self, *args, **kw):
         super(TaigaService, self).__init__(*args, **kw)
-        self.url = self.config_get('base_uri')
+        self.url = self.config.get('base_uri')
         self.auth_token = self.config_get_password('auth_token')
-        self.label_template = self.config_get_default(
+        self.label_template = self.config.get_default(
             'label_template', default='{{label}}', to_type=six.text_type
         )
         self.session = requests.session()
@@ -67,9 +67,9 @@ class TaigaService(IssueService, ServiceClient):
             'Authorization': 'Bearer %s' % self.auth_token,
         })
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        base_uri = config.get(section, cls._get_key('base_uri'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        base_uri = service_config.get('base_uri')
         return "taiga://%s" % base_uri
 
     def get_service_metadata(self):
@@ -79,12 +79,12 @@ class TaigaService(IssueService, ServiceClient):
         }
 
     @classmethod
-    def validate_config(cls, config, target):
-        for option in ('taiga.auth_token', 'taiga.base_uri'):
-            if not config.has_option(target, option):
-                die("[%s] has no '%s'" % (target, option))
+    def validate_config(cls, service_config, target):
+        for option in ('auth_token', 'base_uri'):
+            if not service_config.has(option):
+                die("[%s] has no 'taiga.%s'" % (target, option))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def issues(self):
         url = self.url + '/api/v1/users/me'

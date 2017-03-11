@@ -79,13 +79,12 @@ class TrelloService(IssueService, ServiceClient):
     CONFIG_PREFIX = 'trello'
 
     @classmethod
-    def validate_config(cls, config, target):
+    def validate_config(cls, service_config, target):
         def check_key(opt):
             """ Check that the given key exist in the configuration  """
-            key = cls._get_key(opt)
-            if not config.has_option(target, key):
-                die("[{}] has no '{}'".format(target, key))
-        super(TrelloService, cls).validate_config(config, target)
+            if not service_config.has(opt):
+                die("[{}] has no 'trello.{}'".format(target, opt))
+        super(TrelloService, cls).validate_config(service_config, target)
         check_key('token')
         check_key('api_key')
 
@@ -95,9 +94,9 @@ class TrelloService(IssueService, ServiceClient):
         """
         return {
             'import_labels_as_tags':
-            self.config_get_default('import_labels_as_tags', False, asbool),
+            self.config.get_default('import_labels_as_tags', False, asbool),
             'label_template':
-            self.config_get_default('label_template', DEFAULT_LABEL_TEMPLATE),
+            self.config.get_default('label_template', DEFAULT_LABEL_TEMPLATE),
             }
 
     def issues(self):
@@ -128,8 +127,8 @@ class TrelloService(IssueService, ServiceClient):
         trello.include_boards use that, otherwise ask the Trello API for the
         user's boards.
         """
-        if self.config_has('include_boards'):
-            for boardid in self.config_get('include_boards', aslist):
+        if self.config.has('include_boards'):
+            for boardid in self.config.get('include_boards', aslist):
                 # Get the board name
                 yield self.api_request(
                     "/1/boards/{id}".format(id=boardid), fields='name')
@@ -148,12 +147,12 @@ class TrelloService(IssueService, ServiceClient):
             "/1/boards/{board_id}/lists/open".format(board_id=board),
             fields='name')
         try:
-            include_lists = self.config_get('include_lists', aslist)
+            include_lists = self.config.get('include_lists', aslist)
             lists = [l for l in lists if l['name'] in include_lists]
         except NoOptionError:
             pass
         try:
-            exclude_lists = self.config_get('exclude_lists', aslist)
+            exclude_lists = self.config.get('exclude_lists', aslist)
             lists = [l for l in lists if l['name'] not in exclude_lists]
         except NoOptionError:
             pass
@@ -164,8 +163,8 @@ class TrelloService(IssueService, ServiceClient):
         according to configuration values of trello.only_if_assigned and
         trello.also_unassigned """
         params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels'}
-        member = self.config_get_default('only_if_assigned', None)
-        unassigned = self.config_get_default('also_unassigned', False, asbool)
+        member = self.config.get_default('only_if_assigned', None)
+        unassigned = self.config.get_default('also_unassigned', False, asbool)
         if member is not None:
             params['members'] = 'true'
             params['member_fields'] = 'username'
@@ -194,7 +193,7 @@ class TrelloService(IssueService, ServiceClient):
         and host) and a list of argumnets and return a GET request with the
         key and token from the configuration
         """
-        params['key'] = self.config_get('api_key'),
-        params['token'] = self.config_get('token'),
+        params['key'] = self.config.get('api_key'),
+        params['token'] = self.config.get('token'),
         url = "https://api.trello.com" + url
         return self.json_response(requests.get(url, params=params))
