@@ -186,7 +186,7 @@ class VersionOneService(IssueService):
         self.address = parsed_address.netloc
         self.instance = parsed_address.path.strip('/')
         self.username = self.config.get('username')
-        self.password = self.config_get_password('password', self.username)
+        self.password = self.get_password('password', self.username)
 
         self.timezone = self.config.get_default(
             'timezone',

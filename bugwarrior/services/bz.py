@@ -125,7 +125,7 @@ class BugzillaService(IssueService):
         # to pass that argument or not.
         self.advanced = asbool(self.config.get_default('advanced', 'no'))
 
-        self.password = self.config_get_password('password', self.username)
+        self.password = self.get_password('password', self.username)
 
         url = 'https://%s/xmlrpc.cgi' % self.base_uri
         self.bz = bugzilla.Bugzilla(url=url)

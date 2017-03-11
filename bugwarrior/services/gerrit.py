@@ -71,7 +71,7 @@ class GerritService(IssueService, ServiceClient):
         super(GerritService, self).__init__(*args, **kw)
         self.url = self.config.get('base_uri').strip('/')
         self.username = self.config.get('username')
-        self.password = self.config_get_password('password', self.username)
+        self.password = self.get_password('password', self.username)
         self.ssl_ca_path = self.config.get_default('ssl_ca_path', None)
         self.session = requests.session()
         self.session.headers.update({

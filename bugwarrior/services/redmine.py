@@ -229,7 +229,7 @@ class RedMineService(IssueService):
 
         login = self.config.get_default('login')
         if login:
-            password = self.config_get_password('password', login)
+            password = self.get_password('password', login)
         auth = (login, password) if (login and password) else None
         self.client = RedMineClient(self.url, self.key, auth, self.issue_limit)
 

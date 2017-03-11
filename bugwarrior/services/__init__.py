@@ -131,7 +131,7 @@ class IssueService(object):
                 templates[key] = self.config.get(template_key)
         return templates
 
-    def config_get_password(self, key, login='nousername'):
+    def get_password(self, key, login='nousername'):
         password = self.config.get_default(key)
         keyring_service = self.get_keyring_service(self.config)
         if not password or password.startswith("@oracle:"):
