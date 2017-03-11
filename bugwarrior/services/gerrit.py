@@ -69,10 +69,10 @@ class GerritService(IssueService, ServiceClient):
 
     def __init__(self, *args, **kw):
         super(GerritService, self).__init__(*args, **kw)
-        self.url = self.config_get('base_uri').strip('/')
-        self.username = self.config_get('username')
+        self.url = self.config.get('base_uri').strip('/')
+        self.username = self.config.get('username')
         self.password = self.config_get_password('password', self.username)
-        self.ssl_ca_path = self.config_get_default('ssl_ca_path', None)
+        self.ssl_ca_path = self.config.get_default('ssl_ca_path', None)
         self.session = requests.session()
         self.session.headers.update({
             'Accept': 'application/json',
@@ -85,9 +85,9 @@ class GerritService(IssueService, ServiceClient):
         if self.ssl_ca_path != None:
             self.session.verify = os.path.expanduser(self.ssl_ca_path)
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        base_uri = config.get(section, cls._get_key('base_uri'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        base_uri = service_config.get('base_uri')
         return "gerrit://%s" % base_uri
 
     def get_service_metadata(self):
@@ -96,12 +96,12 @@ class GerritService(IssueService, ServiceClient):
         }
 
     @classmethod
-    def validate_config(cls, config, target):
-        for option in ('gerrit.username', 'gerrit.password', 'gerrit.base_uri'):
-            if not config.has_option(target, option):
-                die("[%s] has no '%s'" % (target, option))
+    def validate_config(cls, service_config, target):
+        for option in ('username', 'password', 'base_uri'):
+            if not service_config.has(option):
+                die("[%s] has no 'gerrit.%s'" % (target, option))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def issues(self):
         # Construct the whole url by hand here, because otherwise requests will

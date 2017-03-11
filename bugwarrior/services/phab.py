@@ -68,10 +68,10 @@ class PhabricatorService(IssueService):
         self.api = phabricator.Phabricator()
 
         self.shown_user_phids = (
-            self.config_get_default("user_phids", None, aslist))
+            self.config.get_default("user_phids", None, aslist))
 
         self.shown_project_phids = (
-            self.config_get_default("project_phids", None, aslist))
+            self.config.get_default("project_phids", None, aslist))
 
     def issues(self):
 

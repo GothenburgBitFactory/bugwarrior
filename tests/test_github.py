@@ -6,6 +6,7 @@ from configparser import RawConfigParser
 import pytz
 import responses
 
+from bugwarrior.config import ServiceConfig
 from bugwarrior.services.github import GithubService, GithubClient
 
 from .base import ServiceTest, AbstractServiceTest
@@ -200,6 +201,8 @@ class TestGithubService(TestCase):
         self.config.set('mygithub', 'github.login', 'tintin')
         self.config.set('mygithub', 'github.username', 'milou')
         self.config.set('mygithub', 'github.password', 't0ps3cr3t')
+        self.service_config = ServiceConfig(
+            GithubService.CONFIG_PREFIX, self.config, 'mygithub')
 
     def test_token_authorization_header(self):
         self.config.remove_option('mygithub', 'github.password')
@@ -222,15 +225,13 @@ class TestGithubService(TestCase):
 
     def test_keyring_service(self):
         """ Checks that the keyring service name """
-        keyring_service = (
-            GithubService.get_keyring_service(self.config, 'mygithub'))
+        keyring_service = GithubService.get_keyring_service(self.service_config)
         self.assertEquals("github://tintin@github.com/milou", keyring_service)
 
     def test_keyring_service_host(self):
         """ Checks that the keyring key depends on the github host. """
         self.config.set('mygithub', 'github.host', 'github.example.com')
-        keyring_service = (
-            GithubService.get_keyring_service(self.config, 'mygithub'))
+        keyring_service = GithubService.get_keyring_service(self.service_config)
         self.assertEquals("github://tintin@github.example.com/milou", keyring_service)
 
     def test_get_repository_from_issue_url__issue(self):

@@ -89,16 +89,16 @@ class TracService(IssueService):
 
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
-        base_uri = self.config_get('base_uri')
-        scheme = self.config_get_default('scheme', default='https')
-        username = self.config_get_default('username', default=None)
+        base_uri = self.config.get('base_uri')
+        scheme = self.config.get_default('scheme', default='https')
+        username = self.config.get_default('username', default=None)
         if username:
             password = self.config_get_password('password', username)
 
             auth = urllib.parse.quote_plus('%s:%s' % (username, password)) + '@'
         else:
             auth = ''
-        if self.config_get_default('no_xmlrpc', default=False, to_type=asbool):
+        if self.config.get_default('no_xmlrpc', default=False, to_type=asbool):
             uri = '%s://%s%s/' % (scheme, auth, base_uri)
             self.uri = uri
             self.trac = None
@@ -106,20 +106,20 @@ class TracService(IssueService):
             uri = '%s://%s%s/login/xmlrpc' % (scheme, auth, base_uri)
             self.trac = offtrac.TracServer(uri)
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        username = config.get(section, cls._get_key('username'))
-        base_uri = config.get(section, cls._get_key('base_uri'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        username = service_config.get('username')
+        base_uri = service_config.get('base_uri')
         return "https://%s@%s/" % (username, base_uri)
 
     @classmethod
-    def validate_config(cls, config, target):
-        if not config.has_option(target, 'trac.base_uri'):
+    def validate_config(cls, service_config, target):
+        if not service_config.has('base_uri'):
             die("[%s] has no 'base_uri'" % target)
-        elif '://' in config.get(target, 'trac.base_uri'):
+        elif '://' in service_config.get('base_uri'):
             die("[%s] do not include scheme in 'base_uri'" % target)
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def annotations(self, tag, issue, issue_obj):
         annotations = []
@@ -139,7 +139,7 @@ class TracService(IssueService):
         return issue.get('owner', None) or None
 
     def issues(self):
-        base_url = "https://" + self.config.get(self.target, 'trac.base_uri')
+        base_url = "https://" + self.config.get('base_uri')
         if self.trac:
             tickets = self.trac.query_tickets('status!=closed&max=0')
             tickets = list(map(self.trac.get_ticket, tickets))

@@ -171,7 +171,9 @@ def validate_config(config, main_section):
             die("'%s' in [%s] is not a valid service." % (service, target))
 
         # Call the service-specific validator
-        get_service(service).validate_config(config, target)
+        service = get_service(service)
+        service_config = ServiceConfig(service.CONFIG_PREFIX, config, target)
+        service.validate_config(service_config, target)
 
 
 def get_config_path():
@@ -262,6 +264,37 @@ class BugwarriorConfigParser(ConfigParser, object):
                 raise ValueError(
                     "{section}.{option} must be an integer or empty.".format(
                         section=section, option=option))
+
+
+class ServiceConfig(object):
+    """ A service-aware wrapper for ConfigParser objects. """
+    def __init__(self, config_prefix, config_parser, service_target):
+        self.config_prefix = config_prefix
+        self.config_parser = config_parser
+        self.service_target = service_target
+
+    def __getattr__(self, name):
+        """ Proxy undefined attributes/methods to ConfigParser object. """
+        return getattr(self.config_parser, name)
+
+    def has(self, key):
+        return self.config_parser.has_option(
+            self.service_target, self._get_key(key))
+
+    def get_default(self, key, default=None, to_type=None):
+        try:
+            return self.get(key, to_type=to_type)
+        except:
+            return default
+
+    def get(self, key=None, to_type=None):
+        value = self.config_parser.get(self.service_target, self._get_key(key))
+        if to_type:
+            return to_type(value)
+        return value
+
+    def _get_key(self, key):
+        return '%s.%s' % (self.config_prefix, key)
 
 
 # This needs to be imported here and not above to avoid a circular-import.

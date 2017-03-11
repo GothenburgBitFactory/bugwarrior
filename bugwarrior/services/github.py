@@ -246,12 +246,12 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
-        self.host = self.config_get_default('host', 'github.com')
-        self.login = self.config_get('login')
+        self.host = self.config.get_default('host', 'github.com')
+        self.login = self.config.get('login')
 
         auth = {}
-        token = self.config_get_default('token')
-        if self.config_has('token'):
+        token = self.config.get_default('token')
+        if self.config.has('token'):
             token = self.config_get_password('token', self.login)
             auth['token'] = token
         else:
@@ -260,37 +260,35 @@ class GithubService(IssueService):
 
         self.client = GithubClient(self.host, auth)
 
-        self.exclude_repos = self.config_get_default('exclude_repos', [], aslist)
-        self.include_repos = self.config_get_default('include_repos', [], aslist)
+        self.exclude_repos = self.config.get_default('exclude_repos', [], aslist)
+        self.include_repos = self.config.get_default('include_repos', [], aslist)
 
-        self.username = self.config_get('username')
-        self.filter_pull_requests = self.config_get_default(
+        self.username = self.config.get('username')
+        self.filter_pull_requests = self.config.get_default(
             'filter_pull_requests', default=False, to_type=asbool
         )
-        self.involved_issues = self.config_get_default(
+        self.involved_issues = self.config.get_default(
             'involved_issues', default=False, to_type=asbool
         )
-        self.import_labels_as_tags = self.config_get_default(
+        self.import_labels_as_tags = self.config.get_default(
             'import_labels_as_tags', default=False, to_type=asbool
         )
-        self.label_template = self.config_get_default(
+        self.label_template = self.config.get_default(
             'label_template', default='{{label}}', to_type=six.text_type
         )
 
-        self.query = self.config_get_default(
+        self.query = self.config.get_default(
             'query',
             default='involves: {user} state:open'.format(
                 user=self.username) if self.involved_issues else '',
             to_type=six.text_type
         )
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        login = config.get(section, cls._get_key('login'))
-        username = config.get(section, cls._get_key('username'))
-        host = (config.get(section, cls._get_key('host'))
-            if config.has_option(section, cls._get_key('host'))
-            else 'github.com')
+    @staticmethod
+    def get_keyring_service(service_config):
+        login = service_config.get('login')
+        username = service_config.get('username')
+        host = service_config.get_default('host', default='github.com')
         return "github://{login}@{host}/{username}".format(
             login=login, username=username, host=host)
 
@@ -405,7 +403,7 @@ class GithubService(IssueService):
         if self.query:
             issues.update(self.get_query(self.query))
 
-        if self.config_get_default('include_user_repos', True, asbool):
+        if self.config.get_default('include_user_repos', True, asbool):
             all_repos = self.client.get_repos(self.username)
             assert(type(all_repos) == list)
             repos = filter(self.filter_repos, all_repos)
@@ -415,7 +413,7 @@ class GithubService(IssueService):
                     self.get_owned_repo_issues(
                         self.username + "/" + repo['name'])
                 )
-        if self.config_get_default('include_user_issues', True, asbool):
+        if self.config.get_default('include_user_issues', True, asbool):
             issues.update(
                 filter(self.filter_issues,
                        self.get_directly_assigned_issues().items())
@@ -440,15 +438,15 @@ class GithubService(IssueService):
             yield issue_obj
 
     @classmethod
-    def validate_config(cls, config, target):
-        if not config.has_option(target, 'github.login'):
+    def validate_config(cls, service_config, target):
+        if not service_config.has('login'):
             die("[%s] has no 'github.login'" % target)
 
-        if not config.has_option(target, 'github.token') and \
-           not config.has_option(target, 'github.password'):
+        if (not service_config.has('token') and
+                not service_config.has('password')):
             die("[%s] has no 'github.token' or 'github.password'" % target)
 
-        if not config.has_option(target, 'github.username'):
+        if not service_config.has('username'):
             die("[%s] has no 'github.username'" % target)
 
-        super(GithubService, cls).validate_config(config, target)
+        super(GithubService, cls).validate_config(service_config, target)

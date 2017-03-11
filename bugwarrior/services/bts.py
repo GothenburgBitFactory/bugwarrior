@@ -97,37 +97,37 @@ class BTSService(IssueService, ServiceClient):
 
     def __init__(self, *args, **kw):
         super(BTSService, self).__init__(*args, **kw)
-        self.email = self.config_get_default('email', default=None)
-        self.packages = self.config_get_default('packages', default=None)
-        self.udd = self.config_get_default('udd', default=False,
+        self.email = self.config.get_default('email', default=None)
+        self.packages = self.config.get_default('packages', default=None)
+        self.udd = self.config.get_default('udd', default=False,
                                            to_type=asbool)
-        self.udd_ignore_sponsor = self.config_get_default('udd_ignore_sponsor',
+        self.udd_ignore_sponsor = self.config.get_default('udd_ignore_sponsor',
                                                           default=True,
                                                           to_type=asbool)
-        self.ignore_pkg = self.config_get_default('ignore_pkg', default=None)
-        self.ignore_src = self.config_get_default('ignore_src', default=None)
-        self.ignore_pending = self.config_get_default('ignore_pending',
+        self.ignore_pkg = self.config.get_default('ignore_pkg', default=None)
+        self.ignore_src = self.config.get_default('ignore_src', default=None)
+        self.ignore_pending = self.config.get_default('ignore_pending',
                                                       default=True,
                                                       to_type=asbool)
 
     @classmethod
-    def validate_config(cls, config, target):
-        if (config.has_option(target, 'bts.udd') and
-                asbool(config.get(target, 'bts.udd')) and
-                not config.has_option(target, 'bts.email')):
+    def validate_config(cls, service_config, target):
+        if (service_config.has('udd') and
+                asbool(service_config.get('udd')) and
+                not service_config.has('email')):
             die("[%s] has no 'bts.email' but UDD search was requested" %
                 (target,))
 
-        if (not config.has_option(target, 'bts.packages') and
-                not config.has_option(target, 'bts.email')):
+        if (not service_config.has('packages') and
+                not service_config.has('email')):
             die("[%s] has neither 'bts.email' or 'bts.packages'" % (target,))
 
-        if (config.has_option(target, 'bts.udd_ignore_sponsor') and
-            (not asbool(config.get(target, 'bts.udd')))):
+        if (service_config.has('udd_ignore_sponsor') and
+            (not asbool(service_config.get('udd')))):
             die("[%s] defines settings for UDD search without enabling"
                 " UDD search" % (target,))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def _record_for_bug(self, bug):
         return {'number': bug.bug_num,

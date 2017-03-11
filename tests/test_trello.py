@@ -7,6 +7,7 @@ import configparser
 from mock import patch
 import responses
 
+from bugwarrior.config import ServiceConfig
 from bugwarrior.services.trello import TrelloService, TrelloIssue
 from .base import ConfigTest, ServiceTest
 
@@ -68,6 +69,8 @@ class TestTrelloService(ConfigTest):
         self.config.add_section('mytrello')
         self.config.set('mytrello', 'trello.api_key', 'XXXX')
         self.config.set('mytrello', 'trello.token', 'YYYY')
+        self.service_config = ServiceConfig(
+            TrelloService.CONFIG_PREFIX, self.config, 'mytrello')
         responses.add(responses.GET,
                       'https://api.trello.com/1/lists/L15T/cards/open',
                       json=[self.CARD1, self.CARD2, self.CARD3])
@@ -194,17 +197,17 @@ class TestTrelloService(ConfigTest):
 
     @patch('bugwarrior.services.trello.die')
     def test_validate_config(self, die):
-        TrelloService.validate_config(self.config, 'mytrello')
+        TrelloService.validate_config(self.service_config, 'mytrello')
         die.assert_not_called()
 
     @patch('bugwarrior.services.trello.die')
     def test_valid_config_no_access_token(self, die):
         self.config.remove_option('mytrello', 'trello.token')
-        TrelloService.validate_config(self.config, 'mytrello')
+        TrelloService.validate_config(self.service_config, 'mytrello')
         die.assert_called_with("[mytrello] has no 'trello.token'")
 
     @patch('bugwarrior.services.trello.die')
     def test_valid_config_no_api_key(self, die):
         self.config.remove_option('mytrello', 'trello.api_key')
-        TrelloService.validate_config(self.config, 'mytrello')
+        TrelloService.validate_config(self.service_config, 'mytrello')
         die.assert_called_with("[mytrello] has no 'trello.api_key'")

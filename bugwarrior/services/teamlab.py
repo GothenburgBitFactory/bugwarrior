@@ -107,21 +107,21 @@ class TeamLabService(IssueService):
     def __init__(self, *args, **kw):
         super(TeamLabService, self).__init__(*args, **kw)
 
-        self.hostname = self.config_get('hostname')
-        _login = self.config_get('login')
+        self.hostname = self.config.get('hostname')
+        _login = self.config.get('login')
         _password = self.config_get_password('password', _login)
 
         self.client = TeamLabClient(self.hostname)
         self.client.authenticate(_login, _password)
 
-        self.project_name = self.config_get_default(
+        self.project_name = self.config.get_default(
             'project_name', self.hostname
         )
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        login = config.get(section, cls._get_key('login'))
-        hostname = config.get(section, cls._get_key('hostname'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        login = service_config.get('login')
+        hostname = service_config.get('hostname')
         return "teamlab://%s@%s" % (login, hostname)
 
     def get_service_metadata(self):
@@ -131,12 +131,12 @@ class TeamLabService(IssueService):
         }
 
     @classmethod
-    def validate_config(cls, config, target):
-        for k in ('teamlab.login', 'teamlab.password', 'teamlab.hostname'):
-            if not config.has_option(target, k):
-                die("[%s] has no '%s'" % (target, k))
+    def validate_config(cls, service_config, target):
+        for k in ('login', 'password', 'hostname'):
+            if not service_config.has(k):
+                die("[%s] has no 'teamlab.%s'" % (target, k))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def issues(self):
         issues = self.client.get_task_list()

@@ -7,6 +7,7 @@ import datetime
 import pytz
 import responses
 
+from bugwarrior.config import ServiceConfig
 from bugwarrior.services.gitlab import GitlabService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -21,16 +22,18 @@ class TestGitlabService(ConfigTest):
         self.config.add_section('myservice')
         self.config.set('myservice', 'gitlab.login', 'foobar')
         self.config.set('myservice', 'gitlab.token', 'XXXXXX')
+        self.service_config = ServiceConfig(
+            GitlabService.CONFIG_PREFIX, self.config, 'myservice')
 
     def test_get_keyring_service_default_host(self):
         self.assertEqual(
-            GitlabService.get_keyring_service(self.config, 'myservice'),
+            GitlabService.get_keyring_service(self.service_config),
             'gitlab://foobar@gitlab.com')
 
     def test_get_keyring_service_custom_host(self):
         self.config.set('myservice', 'gitlab.host', 'gitlab.example.com')
         self.assertEqual(
-            GitlabService.get_keyring_service(self.config, 'myservice'),
+            GitlabService.get_keyring_service(self.service_config),
             'gitlab://foobar@gitlab.example.com')
 
     def test_add_default_namespace_to_included_repos(self):

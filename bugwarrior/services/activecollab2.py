@@ -171,10 +171,10 @@ class ActiveCollab2Service(IssueService):
     def __init__(self, *args, **kw):
         super(ActiveCollab2Service, self).__init__(*args, **kw)
 
-        self.url = self.config_get('url').rstrip('/')
-        self.key = self.config_get('key')
-        self.user_id = self.config_get('user_id')
-        projects_raw = self.config_get('projects')
+        self.url = self.config.get('url').rstrip('/')
+        self.key = self.config.get('key')
+        self.user_id = self.config.get('user_id')
+        projects_raw = self.config.get('projects')
 
         projects_list = projects_raw.split(',')
         projects = []
@@ -190,17 +190,17 @@ class ActiveCollab2Service(IssueService):
         )
 
     @classmethod
-    def validate_config(cls, config, target):
+    def validate_config(cls, service_config, target):
         for k in (
-            'activecollab2.url',
-            'activecollab2.key',
-            'activecollab2.projects',
-            'activecollab2.user_id'
+            'url',
+            'key',
+            'projects',
+            'user_id'
         ):
-            if not config.has_option(target, k):
-                die("[%s] has no '%s'" % (target, k))
+            if not service_config.has(k):
+                die("[%s] has no 'activecollab2.%s'" % (target, k))
 
-        super(ActiveCollab2Service, cls).validate_config(config, target)
+        super(ActiveCollab2Service, cls).validate_config(service_config, target)
 
     def issues(self):
         # Loop through each project

@@ -108,17 +108,17 @@ class PagureService(IssueService):
 
         self.session = requests.Session()
 
-        self.tag = self.config_get_default('tag')
-        self.repo = self.config_get_default('repo')
-        self.base_url = self.config_get_default('base_url')
+        self.tag = self.config.get_default('tag')
+        self.repo = self.config.get_default('repo')
+        self.base_url = self.config.get_default('base_url')
 
-        self.exclude_repos = self.config_get_default('exclude_repos', [], aslist)
-        self.include_repos = self.config_get_default('include_repos', [], aslist)
+        self.exclude_repos = self.config.get_default('exclude_repos', [], aslist)
+        self.include_repos = self.config.get_default('include_repos', [], aslist)
 
-        self.import_tags = self.config_get_default(
+        self.import_tags = self.config.get_default(
             'import_tags', default=False, to_type=asbool
         )
-        self.tag_template = self.config_get_default(
+        self.tag_template = self.config.get_default(
             'tag_template', default='{{label}}', to_type=six.text_type
         )
 
@@ -216,12 +216,11 @@ class PagureService(IssueService):
             yield issue_obj
 
     @classmethod
-    def validate_config(cls, config, target):
-        if not config.has_option(target, 'pagure.tag') and \
-           not config.has_option(target, 'pagure.repo'):
+    def validate_config(cls, service_config, target):
+        if not service_config.has('tag') and not service_config.has('repo'):
             die("[%s] has no 'pagure.tag' or 'pagure.repo'" % target)
 
-        if not config.has_option(target, 'pagure.base_url'):
+        if not service_config.option('base_url'):
             die("[%s] has no 'pagure.base_url'" % target)
 
-        super(PagureService, cls).validate_config(config, target)
+        super(PagureService, cls).validate_config(service_config, target)
