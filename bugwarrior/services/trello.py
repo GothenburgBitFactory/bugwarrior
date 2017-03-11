@@ -94,9 +94,9 @@ class TrelloService(IssueService, ServiceClient):
         """
         return {
             'import_labels_as_tags':
-            self.config.get_default('import_labels_as_tags', False, asbool),
+            self.config.get('import_labels_as_tags', False, asbool),
             'label_template':
-            self.config.get_default('label_template', DEFAULT_LABEL_TEMPLATE),
+            self.config.get('label_template', DEFAULT_LABEL_TEMPLATE),
             }
 
     def issues(self):
@@ -128,7 +128,7 @@ class TrelloService(IssueService, ServiceClient):
         user's boards.
         """
         if self.config.has('include_boards'):
-            for boardid in self.config.get('include_boards', aslist):
+            for boardid in self.config.get('include_boards', to_type=aslist):
                 # Get the board name
                 yield self.api_request(
                     "/1/boards/{id}".format(id=boardid), fields='name')
@@ -146,16 +146,15 @@ class TrelloService(IssueService, ServiceClient):
         lists = self.api_request(
             "/1/boards/{board_id}/lists/open".format(board_id=board),
             fields='name')
-        try:
-            include_lists = self.config.get('include_lists', aslist)
+
+        include_lists = self.config.get('include_lists', to_type=aslist)
+        if include_lists:
             lists = [l for l in lists if l['name'] in include_lists]
-        except NoOptionError:
-            pass
-        try:
-            exclude_lists = self.config.get('exclude_lists', aslist)
+
+        exclude_lists = self.config.get('exclude_lists', to_type=aslist)
+        if exclude_lists:
             lists = [l for l in lists if l['name'] not in exclude_lists]
-        except NoOptionError:
-            pass
+
         return lists
 
     def get_cards(self, list_id):
@@ -163,8 +162,8 @@ class TrelloService(IssueService, ServiceClient):
         according to configuration values of trello.only_if_assigned and
         trello.also_unassigned """
         params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels'}
-        member = self.config.get_default('only_if_assigned', None)
-        unassigned = self.config.get_default('also_unassigned', False, asbool)
+        member = self.config.get('only_if_assigned', None)
+        unassigned = self.config.get('also_unassigned', False, asbool)
         if member is not None:
             params['members'] = 'true'
             params['member_fields'] = 'username'

@@ -69,8 +69,8 @@ class BitbucketService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
 
-        key = self.config.get_default('key')
-        secret = self.config.get_default('secret')
+        key = self.config.get('key')
+        secret = self.config.get('secret')
         auth = {'oauth': (key, secret)}
 
         refresh_token = self.config.data.get('bitbucket_refresh_token')
@@ -107,10 +107,10 @@ class BitbucketService(IssueService, ServiceClient):
         elif 'basic' in auth:
             self.requests_kwargs['auth'] = auth['basic']
 
-        self.exclude_repos = self.config.get_default('exclude_repos', [], aslist)
-        self.include_repos = self.config.get_default('include_repos', [], aslist)
+        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
+        self.include_repos = self.config.get('include_repos', [], aslist)
 
-        self.filter_merge_requests = self.config.get_default(
+        self.filter_merge_requests = self.config.get(
             'filter_merge_requests', default=False, to_type=asbool
         )
 

@@ -281,17 +281,14 @@ class ServiceConfig(object):
         return self.config_parser.has_option(
             self.service_target, self._get_key(key))
 
-    def get_default(self, key, default=None, to_type=None):
+    def get(self, key, default=None, to_type=None):
         try:
-            return self.get(key, to_type=to_type)
+            value = self.config_parser.get(self.service_target, self._get_key(key))
+            if to_type:
+                return to_type(value)
+            return value
         except:
             return default
-
-    def get(self, key=None, to_type=None):
-        value = self.config_parser.get(self.service_target, self._get_key(key))
-        if to_type:
-            return to_type(value)
-        return value
 
     def _get_key(self, key):
         return '%s.%s' % (self.config_prefix, key)

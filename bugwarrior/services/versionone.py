@@ -188,12 +188,9 @@ class VersionOneService(IssueService):
         self.username = self.config.get('username')
         self.password = self.get_password('password', self.username)
 
-        self.timezone = self.config.get_default(
-            'timezone',
-            default=LOCAL_TIMEZONE
-        )
-        self.project = self.config.get_default('project_name', default='')
-        self.timebox_name = self.config.get_default('timebox_name')
+        self.timezone = self.config.get('timezone', default=LOCAL_TIMEZONE)
+        self.project = self.config.get('project_name', default='')
+        self.timebox_name = self.config.get('timebox_name')
 
     @staticmethod
     def get_keyring_service(service_config):

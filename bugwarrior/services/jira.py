@@ -230,7 +230,7 @@ class JiraService(IssueService):
 
         default_query = 'assignee=' + self.username + \
             ' AND resolution is null'
-        self.query = self.config.get_default('query', default_query)
+        self.query = self.config.get('query', default_query)
         if password == '@kerberos':
             auth = dict(kerberos=True)
         else:
@@ -239,17 +239,17 @@ class JiraService(IssueService):
             options={
                 'server': self.config.get('base_uri'),
                 'rest_api_version': 'latest',
-                'verify': self.config.get_default('verify_ssl', default=True, to_type=asbool),
+                'verify': self.config.get('verify_ssl', default=True, to_type=asbool),
             },
             **auth
         )
-        self.import_labels_as_tags = self.config.get_default(
+        self.import_labels_as_tags = self.config.get(
             'import_labels_as_tags', default=False, to_type=asbool
         )
-        self.import_sprints_as_tags = self.config.get_default(
+        self.import_sprints_as_tags = self.config.get(
             'import_sprints_as_tags', default=False, to_type=asbool
         )
-        self.label_template = self.config.get_default(
+        self.label_template = self.config.get(
             'label_template', default='{{label}}', to_type=six.text_type
         )
 

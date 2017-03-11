@@ -97,18 +97,16 @@ class BTSService(IssueService, ServiceClient):
 
     def __init__(self, *args, **kw):
         super(BTSService, self).__init__(*args, **kw)
-        self.email = self.config.get_default('email', default=None)
-        self.packages = self.config.get_default('packages', default=None)
-        self.udd = self.config.get_default('udd', default=False,
-                                           to_type=asbool)
-        self.udd_ignore_sponsor = self.config.get_default('udd_ignore_sponsor',
-                                                          default=True,
-                                                          to_type=asbool)
-        self.ignore_pkg = self.config.get_default('ignore_pkg', default=None)
-        self.ignore_src = self.config.get_default('ignore_src', default=None)
-        self.ignore_pending = self.config.get_default('ignore_pending',
-                                                      default=True,
-                                                      to_type=asbool)
+        self.email = self.config.get('email', default=None)
+        self.packages = self.config.get('packages', default=None)
+        self.udd = self.config.get(
+            'udd', default=False, to_type=asbool)
+        self.udd_ignore_sponsor = self.config.get(
+            'udd_ignore_sponsor', default=True, to_type=asbool)
+        self.ignore_pkg = self.config.get('ignore_pkg', default=None)
+        self.ignore_src = self.config.get('ignore_src', default=None)
+        self.ignore_pending = self.config.get(
+            'ignore_pending', default=True, to_type=asbool)
 
     @classmethod
     def validate_config(cls, service_config, target):

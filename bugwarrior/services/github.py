@@ -246,11 +246,11 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
-        self.host = self.config.get_default('host', 'github.com')
+        self.host = self.config.get('host', 'github.com')
         self.login = self.config.get('login')
 
         auth = {}
-        token = self.config.get_default('token')
+        token = self.config.get('token')
         if self.config.has('token'):
             token = self.get_password('token', self.login)
             auth['token'] = token
@@ -260,24 +260,24 @@ class GithubService(IssueService):
 
         self.client = GithubClient(self.host, auth)
 
-        self.exclude_repos = self.config.get_default('exclude_repos', [], aslist)
-        self.include_repos = self.config.get_default('include_repos', [], aslist)
+        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
+        self.include_repos = self.config.get('include_repos', [], aslist)
 
         self.username = self.config.get('username')
-        self.filter_pull_requests = self.config.get_default(
+        self.filter_pull_requests = self.config.get(
             'filter_pull_requests', default=False, to_type=asbool
         )
-        self.involved_issues = self.config.get_default(
+        self.involved_issues = self.config.get(
             'involved_issues', default=False, to_type=asbool
         )
-        self.import_labels_as_tags = self.config.get_default(
+        self.import_labels_as_tags = self.config.get(
             'import_labels_as_tags', default=False, to_type=asbool
         )
-        self.label_template = self.config.get_default(
+        self.label_template = self.config.get(
             'label_template', default='{{label}}', to_type=six.text_type
         )
 
-        self.query = self.config.get_default(
+        self.query = self.config.get(
             'query',
             default='involves: {user} state:open'.format(
                 user=self.username) if self.involved_issues else '',
@@ -288,7 +288,7 @@ class GithubService(IssueService):
     def get_keyring_service(service_config):
         login = service_config.get('login')
         username = service_config.get('username')
-        host = service_config.get_default('host', default='github.com')
+        host = service_config.get('host', default='github.com')
         return "github://{login}@{host}/{username}".format(
             login=login, username=username, host=host)
 
@@ -403,7 +403,7 @@ class GithubService(IssueService):
         if self.query:
             issues.update(self.get_query(self.query))
 
-        if self.config.get_default('include_user_repos', True, asbool):
+        if self.config.get('include_user_repos', True, asbool):
             all_repos = self.client.get_repos(self.username)
             assert(type(all_repos) == list)
             repos = filter(self.filter_repos, all_repos)
@@ -413,7 +413,7 @@ class GithubService(IssueService):
                     self.get_owned_repo_issues(
                         self.username + "/" + repo['name'])
                 )
-        if self.config.get_default('include_user_issues', True, asbool):
+        if self.config.get('include_user_issues', True, asbool):
             issues.update(
                 filter(self.filter_issues,
                        self.get_directly_assigned_issues().items())

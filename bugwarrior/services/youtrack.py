@@ -120,35 +120,35 @@ class YoutrackService(IssueService, ServiceClient):
         super(YoutrackService, self).__init__(*args, **kw)
 
         self.host = self.config.get('host')
-        if self.config.get_default('use_https', default=True, to_type=asbool):
+        if self.config.get('use_https', default=True, to_type=asbool):
             self.scheme = 'https'
             self.port = '443'
         else:
             self.scheme = 'http'
             self.port = '80'
-        self.port = self.config.get_default('port', self.port)
+        self.port = self.config.get('port', self.port)
         self.base_url = '%s://%s:%s' % (self.scheme, self.host, self.port)
         self.rest_url = self.base_url + '/rest'
 
         self.session = requests.Session()
         self.session.headers['Accept'] = 'application/json'
-        self.verify_ssl = self.config.get_default('verify_ssl', default=True, to_type=asbool)
+        self.verify_ssl = self.config.get('verify_ssl', default=True, to_type=asbool)
         if not self.verify_ssl:
             requests.packages.urllib3.disable_warnings()
             self.session.verify = False
 
         login = self.config.get('login')
         password = self.get_password('password', login)
-        if not self.config.get_default('anonymous', False):
+        if not self.config.get('anonymous', False):
             self._login(login, password)
 
-        self.query = self.config.get_default('query', default='for:me #Unresolved')
-        self.query_limit = self.config.get_default('query_limit', default="100")
+        self.query = self.config.get('query', default='for:me #Unresolved')
+        self.query_limit = self.config.get('query_limit', default="100")
 
-        self.import_tags = self.config.get_default(
+        self.import_tags = self.config.get(
             'import_tags', default=True, to_type=asbool
         )
-        self.tag_template = self.config.get_default(
+        self.tag_template = self.config.get(
             'tag_template', default='{{tag|lower}}', to_type=six.text_type
         )
 

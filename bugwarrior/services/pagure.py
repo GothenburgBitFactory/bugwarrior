@@ -108,17 +108,17 @@ class PagureService(IssueService):
 
         self.session = requests.Session()
 
-        self.tag = self.config.get_default('tag')
-        self.repo = self.config.get_default('repo')
-        self.base_url = self.config.get_default('base_url')
+        self.tag = self.config.get('tag')
+        self.repo = self.config.get('repo')
+        self.base_url = self.config.get('base_url')
 
-        self.exclude_repos = self.config.get_default('exclude_repos', [], aslist)
-        self.include_repos = self.config.get_default('include_repos', [], aslist)
+        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
+        self.include_repos = self.config.get('include_repos', [], aslist)
 
-        self.import_tags = self.config.get_default(
+        self.import_tags = self.config.get(
             'import_tags', default=False, to_type=asbool
         )
-        self.tag_template = self.config.get_default(
+        self.tag_template = self.config.get(
             'tag_template', default='{{label}}', to_type=six.text_type
         )
 
