@@ -366,6 +366,20 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     # Add new issues
     log.info("Adding %i tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
+        # Check for duplicated new issues
+        try:
+            existing_uuid = find_local_uuid(
+                tw, key_list, issue, legacy_matching=legacy_matching
+            )
+        except NotFound:
+            pass
+        except MultipleMatches:
+            pass
+        else:
+            log.info("Task %s was already adedd, skipping",
+                     issue['description'])
+            continue
+
         log.info("Adding task %s%s",
             issue['description'], notreally)
         if dry_run:
