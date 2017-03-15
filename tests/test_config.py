@@ -158,8 +158,8 @@ class TestServiceConfig(TestCase):
         self.assertTrue(
             self.service_config.has_option(self.target, 'someprefix.someint'))
 
-    def test_has(self):
-        self.assertTrue(self.service_config.has('someint'))
+    def test__contains__(self):
+        self.assertTrue('someint' in self.service_config)
 
     def test_get(self):
         self.assertEqual(self.service_config.get('someint'), '4')

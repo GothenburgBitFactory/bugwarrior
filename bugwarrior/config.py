@@ -277,7 +277,8 @@ class ServiceConfig(object):
         """ Proxy undefined attributes/methods to ConfigParser object. """
         return getattr(self.config_parser, name)
 
-    def has(self, key):
+    def __contains__(self, key):
+        """ Does service section specify this option? """
         return self.config_parser.has_option(
             self.service_target, self._get_key(key))
 

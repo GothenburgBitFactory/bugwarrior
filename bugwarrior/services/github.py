@@ -242,7 +242,7 @@ class GithubService(IssueService):
 
         auth = {}
         token = self.config.get('token')
-        if self.config.has('token'):
+        if 'token' in self.config:
             token = self.get_password('token', self.login)
             auth['token'] = token
         else:
@@ -430,14 +430,13 @@ class GithubService(IssueService):
 
     @classmethod
     def validate_config(cls, service_config, target):
-        if not service_config.has('login'):
+        if 'login' not in service_config:
             die("[%s] has no 'github.login'" % target)
 
-        if (not service_config.has('token') and
-                not service_config.has('password')):
+        if 'token' not in service_config and 'password' not in service_config:
             die("[%s] has no 'github.token' or 'github.password'" % target)
 
-        if not service_config.has('username'):
+        if 'username' not in service_config:
             die("[%s] has no 'github.username'" % target)
 
         super(GithubService, cls).validate_config(service_config, target)

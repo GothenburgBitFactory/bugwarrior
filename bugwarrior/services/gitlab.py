@@ -484,13 +484,13 @@ class GitlabService(IssueService, ServiceClient):
 
     @classmethod
     def validate_config(cls, service_config, target):
-        if not service_config.has('host'):
+        if 'host' not in service_config:
             die("[%s] has no 'gitlab.host'" % target)
 
-        if not service_config.has('login'):
+        if 'login' not in service_config:
             die("[%s] has no 'gitlab.login'" % target)
 
-        if not service_config.has('token'):
+        if 'token' not in service_config:
             die("[%s] has no 'gitlab.token'" % target)
 
         super(GitlabService, cls).validate_config(service_config, target)

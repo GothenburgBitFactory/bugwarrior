@@ -81,7 +81,7 @@ class TaigaService(IssueService, ServiceClient):
     @classmethod
     def validate_config(cls, service_config, target):
         for option in ('auth_token', 'base_uri'):
-            if not service_config.has(option):
+            if option not in service_config:
                 die("[%s] has no 'taiga.%s'" % (target, option))
 
         IssueService.validate_config(service_config, target)

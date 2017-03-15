@@ -282,7 +282,7 @@ class JiraService(IssueService):
     @classmethod
     def validate_config(cls, service_config, target):
         for option in ('username', 'password', 'base_uri'):
-            if not service_config.has(option):
+            if option not in service_config:
                 die("[%s] has no 'jira.%s'" % (target, option))
 
         IssueService.validate_config(service_config, target)

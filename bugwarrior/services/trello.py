@@ -82,7 +82,7 @@ class TrelloService(IssueService, ServiceClient):
     def validate_config(cls, service_config, target):
         def check_key(opt):
             """ Check that the given key exist in the configuration  """
-            if not service_config.has(opt):
+            if opt not in service_config:
                 die("[{}] has no 'trello.{}'".format(target, opt))
         super(TrelloService, cls).validate_config(service_config, target)
         check_key('token')
@@ -127,7 +127,7 @@ class TrelloService(IssueService, ServiceClient):
         trello.include_boards use that, otherwise ask the Trello API for the
         user's boards.
         """
-        if self.config.has('include_boards'):
+        if 'include_boards' in self.config:
             for boardid in self.config.get('include_boards', to_type=aslist):
                 # Get the board name
                 yield self.api_request(
