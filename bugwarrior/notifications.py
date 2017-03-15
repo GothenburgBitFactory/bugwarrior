@@ -56,6 +56,7 @@ def send_notification(issue, op, conf):
     if notify_backend == 'pynotify':
         warnings.warn("pynotify is deprecated.  Use backend=gobject.  "
                       "See https://github.com/ralphbean/bugwarrior/issues/336")
+        notify_backend = 'gobject'
 
     # Notifications for growlnotify on Mac OS X
     if notify_backend == 'growlnotify':
@@ -94,7 +95,7 @@ def send_notification(issue, op, conf):
             priority=1,
         )
         return
-    elif notify_backend == 'gobject' or notify_backend == 'pynotify':
+    elif notify_backend == 'gobject':
         _cache_logo()
 
         import gi
