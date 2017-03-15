@@ -67,11 +67,10 @@ Example Configuration
     #
     #  - growlnotify (v2)   Mac OS X   "gntp" must be installed
     #  - gobject            Linux      python gobject must be installed
-    #  - pynotify           Linux      "pynotify" must be installed
     #
-    # To configure, adjust the settings below.  Note that neither of the
-    # "sticky" options have any effect on Linux with pynotify.  They only work
-    # for growlnotify.
+    # To configure, adjust the settings below.  Note that neither of the #
+    # "sticky" options have any effect on Linux.  They only work for
+    # growlnotify.
     #[notifications]
     # notifications = True
     # backend = growlnotify

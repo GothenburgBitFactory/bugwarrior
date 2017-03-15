@@ -3,6 +3,7 @@ standard_library.install_aliases()
 import datetime
 import os
 import urllib.request, urllib.parse, urllib.error
+import warnings
 
 from bugwarrior.config import asbool
 
@@ -52,6 +53,10 @@ def _get_metadata(issue):
 def send_notification(issue, op, conf):
     notify_backend = conf.get('notifications', 'backend')
 
+    if notify_backend == 'pynotify':
+        warnings.warn("pynotify is deprecated.  Use backend=gobject.  "
+                      "See https://github.com/ralphbean/bugwarrior/issues/336")
+
     # Notifications for growlnotify on Mac OS X
     if notify_backend == 'growlnotify':
         import gntp.notifier
@@ -89,23 +94,7 @@ def send_notification(issue, op, conf):
             priority=1,
         )
         return
-    elif notify_backend == 'pynotify':
-        _cache_logo()
-
-        import pynotify
-        pynotify.init("bugwarrior")
-
-        if op == 'bw finished':
-            message = "Finished querying for new issues.\n%s" %\
-                issue['description']
-        else:
-            message = "%s task: %s" % (op, issue['description'])
-            metadata = _get_metadata(issue)
-            if metadata is not None:
-                message += metadata
-
-        pynotify.Notification("Bugwarrior", message, logo_path).show()
-    elif notify_backend == 'gobject':
+    elif notify_backend == 'gobject' or notify_backend == 'pynotify':
         _cache_logo()
 
         import gi
