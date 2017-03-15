@@ -110,17 +110,16 @@ class BTSService(IssueService, ServiceClient):
 
     @classmethod
     def validate_config(cls, service_config, target):
-        if (service_config.has('udd') and
+        if ('udd' in service_config and
                 asbool(service_config.get('udd')) and
-                not service_config.has('email')):
+                'email' not in service_config):
             die("[%s] has no 'bts.email' but UDD search was requested" %
                 (target,))
 
-        if (not service_config.has('packages') and
-                not service_config.has('email')):
+        if 'packages' not in service_config and 'email' not in service_config:
             die("[%s] has neither 'bts.email' or 'bts.packages'" % (target,))
 
-        if (service_config.has('udd_ignore_sponsor') and
+        if ('udd_ignore_sponsor' in service_config and
             (not asbool(service_config.get('udd')))):
             die("[%s] defines settings for UDD search without enabling"
                 " UDD search" % (target,))

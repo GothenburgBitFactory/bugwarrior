@@ -217,10 +217,10 @@ class PagureService(IssueService):
 
     @classmethod
     def validate_config(cls, service_config, target):
-        if not service_config.has('tag') and not service_config.has('repo'):
+        if 'tag' not in service_config and 'repo' not in service_config:
             die("[%s] has no 'pagure.tag' or 'pagure.repo'" % target)
 
-        if not service_config.option('base_url'):
+        if 'base_url' not in service_config:
             die("[%s] has no 'pagure.base_url'" % target)
 
         super(PagureService, cls).validate_config(service_config, target)

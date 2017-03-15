@@ -214,7 +214,7 @@ class VersionOneService(IssueService):
             'username',
         )
         for option in options:
-            if not service_config.has(option):
+            if option not in service_config:
                 die("[%s] has no 'versionone.%s'" % (target, option))
 
         IssueService.validate_config(service_config, target)

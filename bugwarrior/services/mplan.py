@@ -97,7 +97,7 @@ class MegaplanService(IssueService):
     @classmethod
     def validate_config(cls, service_config, target):
         for k in ('login', 'password', 'hostname'):
-            if not service_config.has(k):
+            if k not in service_config:
                 die("[%s] has no 'mplan.%s'" % (target, k))
 
         IssueService.validate_config(service_config, target)

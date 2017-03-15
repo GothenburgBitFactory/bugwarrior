@@ -250,7 +250,7 @@ class RedMineService(IssueService):
     @classmethod
     def validate_config(cls, service_config, target):
         for k in ('url', 'key'):
-            if not service_config.has(k):
+            if k not in service_config:
                 die("[%s] has no 'redmine.%s'" % (target, k))
 
         IssueService.validate_config(service_config, target)

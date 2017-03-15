@@ -152,9 +152,9 @@ class BitbucketService(IssueService, ServiceClient):
 
     @classmethod
     def validate_config(cls, service_config, target):
-        if not service_config.has('username'):
+        if 'username' not in service_config:
             die("[%s] has no 'username'" % target)
-        if not service_config.has('login'):
+        if 'login' not in service_config:
             die("[%s] has no 'login'" % target)
 
         IssueService.validate_config(service_config, target)

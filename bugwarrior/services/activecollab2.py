@@ -197,7 +197,7 @@ class ActiveCollab2Service(IssueService):
             'projects',
             'user_id'
         ):
-            if not service_config.has(k):
+            if k not in service_config:
                 die("[%s] has no 'activecollab2.%s'" % (target, k))
 
         super(ActiveCollab2Service, cls).validate_config(service_config, target)

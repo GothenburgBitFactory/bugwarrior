@@ -114,7 +114,7 @@ class TracService(IssueService):
 
     @classmethod
     def validate_config(cls, service_config, target):
-        if not service_config.has('base_uri'):
+        if 'base_uri' not in service_config:
             die("[%s] has no 'base_uri'" % target)
         elif '://' in service_config.get('base_uri'):
             die("[%s] do not include scheme in 'base_uri'" % target)

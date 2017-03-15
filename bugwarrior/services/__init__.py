@@ -85,14 +85,14 @@ class IssueService(object):
             self.shorten = asbool(main_config.get(self.main_section, 'shorten'))
 
         self.add_tags = []
-        if self.config.has('add_tags'):
+        if 'add_tags' in self.config:
             for raw_option in self.config.get('add_tags').split(','):
                 option = raw_option.strip(' +;')
                 if option:
                     self.add_tags.append(option)
 
         self.default_priority = 'M'
-        if self.config.has('default_priority'):
+        if 'default_priority' in self.config:
             self.default_priority = self.config.get('default_priority')
 
         log.info("Working on [%s]", self.target)

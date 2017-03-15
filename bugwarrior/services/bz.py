@@ -141,7 +141,7 @@ class BugzillaService(IssueService):
     def validate_config(cls, service_config, target):
         req = ['username', 'password', 'base_uri']
         for option in req:
-            if not service_config.has(option):
+            if option not in service_config:
                 die("[%s] has no 'bugzilla.%s'" % (target, option))
 
         super(BugzillaService, cls).validate_config(service_config, target)
