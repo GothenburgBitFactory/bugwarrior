@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import unittest
 import configparser as ConfigParser
 
@@ -63,7 +65,7 @@ class TestSynchronize(ConfigTest):
         self.assertEqual(tw.load_tasks(), {'completed': [], 'pending': []})
 
         issue = {
-            'description': 'Blah blah blah.',
+            'description': 'Blah blah blah. ☃',
             'githubtype': 'issue',
             'githuburl': 'https://example.com',
             'priority': 'M',
@@ -78,7 +80,7 @@ class TestSynchronize(ConfigTest):
                 'pending': [{
                     u'priority': u'M',
                     u'status': u'pending',
-                    u'description': u'Blah blah blah.',
+                    u'description': u'Blah blah blah. ☃',
                     u'githuburl': u'https://example.com',
                     u'githubtype': u'issue',
                     u'id': 1,
