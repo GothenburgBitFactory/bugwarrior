@@ -366,8 +366,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     # Add new issues
     log.info("Adding %i tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
-        log.info("Adding task %s%s",
-            issue['description'], notreally)
+        log.info(u"Adding task %s%s", issue['description'], notreally)
         if dry_run:
             continue
         if notify:
