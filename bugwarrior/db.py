@@ -325,6 +325,20 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     }
 
     for issue in issue_generator:
+
+        # We received this issue from The Internet, but we're not sure what
+        # kind of encoding the service providers may have handed us. Let's try
+        # and decode all byte strings from UTF8 off the bat.  If we encounter
+        # other encodings in the wild in the future, we can revise the handling
+        # here. https://github.com/ralphbean/bugwarrior/issues/350
+        for key in issue.keys():
+            if isinstance(issue[key], six.binary_type):
+                try:
+                    issue[key] = issue[key].decode('utf-8')
+                except UnicodeDecodeError:
+                    log.warn("Failed to interpret %r as utf-8" % key)
+
+
         try:
             existing_uuid = find_local_uuid(
                 tw, key_list, issue, legacy_matching=legacy_matching
