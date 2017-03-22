@@ -83,6 +83,15 @@ class GithubClient(ServiceClient):
 
         while 'next' in link:
             response = self.session.get(link['next'], **kwargs)
+
+            # Warn about the mis-leading 404 error code.  See:
+            # https://github.com/ralphbean/bugwarrior/issues/374
+            if response.status_code == 404 and 'token' in self.auth:
+                log.warn("A '404' from github may indicate an auth "
+                         "failure. Make sure both that your token is correct "
+                         "and that it has 'public_repo' and not 'public "
+                         "access' rights.")
+
             json_res = self.json_response(response)
 
             if subkey is not None:
