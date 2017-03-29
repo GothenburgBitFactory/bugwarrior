@@ -26,7 +26,7 @@ env:
   - JIRAVERSION=1.0.10
 install:
   - pip install jira==$JIRAVERSION
-  - pip install .[jira,megaplan,activecollab,bts]
+  - pip install .[jira,megaplan,activecollab,bts,bugzilla,trac]
   - pip install codecov
   - pip install coverage
 script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior -v

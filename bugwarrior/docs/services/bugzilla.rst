@@ -4,6 +4,13 @@ Bugzilla
 You can import tasks from your Bz instance using
 the ``bugzilla`` service name.
 
+Additional Dependencies
+-----------------------
+
+Install packages needed for Bugzilla support with::
+
+    pip install bugwarrior[bugzilla]
+
 Example Service
 ---------------
 

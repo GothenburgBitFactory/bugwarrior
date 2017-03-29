@@ -4,6 +4,13 @@ Trac
 You can import tasks from your Trac instance using
 the ``trac`` service name.
 
+Additional Dependencies
+-----------------------
+
+Install packages needed for Trac support with::
+
+    pip install bugwarrior[trac]
+
 Example Service
 ---------------
 
