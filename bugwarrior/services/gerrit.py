@@ -79,11 +79,18 @@ class GerritService(IssueService, ServiceClient):
             'Accept-Encoding': 'gzip',
         })
 
-        self.session.auth = requests.auth.HTTPDigestAuth(
-            self.username, self.password)
-
-        if self.ssl_ca_path != None:
+        if self.ssl_ca_path:
             self.session.verify = os.path.expanduser(self.ssl_ca_path)
+
+        # uses digest authentication if supported by the server, fallback to basic
+        # gerrithub.io supports only basic
+        response = self.session.head(self.url + '/a/')
+        if 'digest' in response.headers.get('www-authenticate', '').lower():
+            self.session.auth = requests.auth.HTTPDigestAuth(
+                self.username, self.password)
+        else:
+            self.session.auth = requests.auth.HTTPBasicAuth(
+                self.username, self.password)
 
     @staticmethod
     def get_keyring_service(service_config):
@@ -110,6 +117,7 @@ class GerritService(IssueService, ServiceClient):
             '?q=is:open+is:reviewer' + \
             '&o=MESSAGES&o=DETAILED_ACCOUNTS'
         response = self.session.get(url)
+        response.raise_for_status()
         # The response has some ")]}'" garbage prefixed.
         body = response.text[4:]
         changes = json.loads(body)
