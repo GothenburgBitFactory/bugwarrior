@@ -156,7 +156,7 @@ class PhabricatorService(IssueService):
             if self.shown_user_phids is not None:
                 # Checking whether authorPHID, ccPHIDs, ownerPHID
                 # are intersecting with self.shown_user_phids
-                diff_relevant_to = set(diff['reviewers'] + [diff['authorPHID']])
+                diff_relevant_to = set(list(diff['reviewers']) + [diff['authorPHID']])
                 if len(diff_relevant_to.intersection(self.shown_user_phids)) > 0:
                     this_diff_matches = True
 
