@@ -18,6 +18,8 @@ class BugzillaIssue(Issue):
     BUG_ID = 'bugzillabugid'
     STATUS = 'bugzillastatus'
     NEEDINFO = 'bugzillaneedinfo'
+    PRODUCT = 'bugzillaproduct'
+    COMPONENT = 'bugzillacomponent'
 
     UDAS = {
         URL: {
@@ -40,6 +42,14 @@ class BugzillaIssue(Issue):
             'type': 'date',
             'label': 'Bugzilla Needinfo',
         },
+        PRODUCT: {
+            'type': 'string',
+            'label': 'Bugzilla Product',
+        },
+        COMPONENT: {
+            'type': 'string',
+            'label': 'Bugzilla Component',
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -61,6 +71,8 @@ class BugzillaIssue(Issue):
             self.SUMMARY: self.record['summary'],
             self.BUG_ID: self.record['id'],
             self.STATUS: self.record['status'],
+            self.PRODUCT: self.record['product'],
+            self.COMPONENT: self.record['component'],
         }
         if self.extra.get('needinfo_since', None) is not None:
             task[self.NEEDINFO] = self.extra.get('needinfo_since')
@@ -99,6 +111,7 @@ class BugzillaService(IssueService):
         'status',
         'summary',
         'priority',
+        'product',
         'component',
         'flags',
         'longdescs',
