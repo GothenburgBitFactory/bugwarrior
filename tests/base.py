@@ -64,6 +64,10 @@ class ServiceTest(ConfigTest):
     SERVICE_CONFIG = {
     }
 
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+
     def get_mock_service(
         self, service_class, section='unspecified',
         config_overrides=None, general_overrides=None
