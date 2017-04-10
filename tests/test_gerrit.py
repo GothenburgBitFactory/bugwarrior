@@ -9,7 +9,7 @@ from .base import ServiceTest, AbstractServiceTest
 
 class TestGerritIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
-        'gerrit.base_uri': 'https://one',
+        'gerrit.base_uri': 'https://one.com',
         'gerrit.username': 'two',
         'gerrit.password': 'three',
     }
@@ -27,6 +27,11 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
 
     def setUp(self):
         super(TestGerritIssue, self).setUp()
+
+        responses.add(
+            responses.HEAD,
+            self.SERVICE_CONFIG['gerrit.base_uri'] + '/a/',
+            adding_headers={'www-authenticate': 'digest'})
         self.service = self.get_mock_service(GerritService)
 
     def test_to_taskwarrior(self):
@@ -56,7 +61,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         self.add_response(
-            'https://one/a/changes/?q=is:open+is:reviewer&o=MESSAGES&o=DETAILED_ACCOUNTS',
+            'https://one.com/a/changes/?q=is:open+is:reviewer&o=MESSAGES&o=DETAILED_ACCOUNTS',
             # The response has some ")]}'" garbage prefixed.
             body=")]}'" + json.dumps([self.record]))
 
@@ -64,10 +69,10 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'annotations': [u'@Iam Author - is is a message'],
-            'description': u'(bw)PR#1 - this is a title .. https://one/#/c/1/',
+            'description': u'(bw)PR#1 - this is a title .. https://one.com/#/c/1/',
             'gerritid': 1,
             'gerritsummary': u'this is a title',
-            'gerriturl': 'https://one/#/c/1/',
+            'gerriturl': 'https://one.com/#/c/1/',
             'gerritbranch': 'master',
             'gerrittopic': 'test-topic',
             'priority': 'M',
