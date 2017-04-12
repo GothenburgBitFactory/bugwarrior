@@ -127,7 +127,7 @@ class IssueService(object):
         templates = {}
         for key in six.iterkeys(Task.FIELDS):
             template_key = '%s_template' % key
-            if self.config.has_option(self.target, template_key):
+            if template_key in self.config:
                 templates[key] = self.config.get(template_key)
         return templates
 
