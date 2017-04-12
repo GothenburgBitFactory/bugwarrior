@@ -20,7 +20,7 @@ Here's an example of a Trac target::
     service = trac
     trac.base_uri = fedorahosted.org/moksha
     trac.scheme = https
-    project_template = moksha.{{traccomponent|lower}}
+    trac.project_template = moksha.{{traccomponent|lower}}
 
 By default, this service uses the XML-RPC Trac plugin, which must be installed
 on the Trac instance.  If this is not available, the service can use Trac's

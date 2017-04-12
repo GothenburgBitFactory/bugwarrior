@@ -63,8 +63,6 @@ service example:
   that are not assigned to anybody.
 * ``default_priority``: Assign this priority ('L', 'M', or 'H') to
   newly-imported issues.
-* ``<fieldname>_template``: Generate the value of a field using a template.
-  See `Field Templates`_ for more details.
 * ``add_tags``: A comma-separated list of tags to add to an issue.  In most
   cases, this will just be a series of strings, but you can also make
   tags by defining one of your tags following the example set in
@@ -84,8 +82,8 @@ but depending upon your workflow, the information presented may not be
 useful to you.
 
 To help users build descriptions that suit their needs, all services allow
-one to specify a ``description_template`` configuration option, in which
-one can enter a one-line Jinja template.  The context available includes
+one to specify a ``SERVICE.description_template`` configuration option, in
+which one can enter a one-line Jinja template.  The context available includes
 all Taskwarrior fields and all UDAs (see section named 'Provided UDA Fields'
 for each service) defined for the relevant service.
 
@@ -103,20 +101,20 @@ create a service entry like this::
     [ralphs_github_account]
     service = github
     github.username = ralphbean
-    description_template = {{githubnumber}}: {{githubtitle}}
+    github.description_template = {{githubnumber}}: {{githubtitle}}
 
 You can also use this tool for altering the generated value of any other
 Taskwarrior record field by using the same kind of template.
 
 Uppercasing the project name for imported issues::
 
-    project_template = {{project|upper}}
+    SERVICE.project_template = {{project|upper}}
 
 You can also use this feature to override the generated value of any field.
 This example causes imported issues to be assigned to the 'Office' project
 regardless of what project was assigned by the service itself::
 
-    project_template = Office
+    SERVICE.project_template = Office
 
 Password Management
 -------------------
