@@ -61,6 +61,7 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
     }
 
     arbitrary_record = {
+        'product': 'Product',
         'component': 'Something',
         'priority': 'urgent',
         'status': 'NEW',
@@ -111,7 +112,9 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             issue.STATUS: self.arbitrary_record['status'],
             issue.URL: arbitrary_extra['url'],
             issue.SUMMARY: self.arbitrary_record['summary'],
-            issue.BUG_ID: self.arbitrary_record['id']
+            issue.BUG_ID: self.arbitrary_record['id'],
+            issue.PRODUCT: self.arbitrary_record['product'],
+            issue.COMPONENT: self.arbitrary_record['component'],
         }
         actual_output = issue.to_taskwarrior()
 
@@ -126,6 +129,8 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             'bugzillastatus': 'NEW',
             'bugzillasummary': 'This is the issue summary',
             'bugzillaurl': u'https://http://one.com//show_bug.cgi?id=1234567',
+            'bugzillaproduct': 'Product',
+            'bugzillacomponent': 'Something',
             'description': u'(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',
             'priority': 'H',
             'project': 'Something',
