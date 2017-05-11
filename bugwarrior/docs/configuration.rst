@@ -188,3 +188,15 @@ Example Configuration
     activecollab2.key = your-api-key
     activecollab2.user_id = 15
     activecollab2.projects = 1:first_project, 5:another_project
+
+    [my_gmail]
+    service = gmail
+    gmail.query = label:action OR label:readme
+    # You need a get a client_secret.json. Follow the instructions on: https://developers.google.com/gmail/api/quickstart/python
+    gmail.client_secret_path = ~/.config/bugwarrior/client_secret.json
+    # This file will be created when you authenticate.
+    gmail.credentials_path = ~/.config/bugwarrior/credentials.json
+    # Restrict to a particular e-mail address. This is optional and will cause the pull to fail if the credentials don't match
+    # the specified user. When working with multiple accounts it's a bit a tricky to make sure you always authorise the correct
+    # account.
+    gmail.login_name = name@example.com
