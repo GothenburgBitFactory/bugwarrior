@@ -48,6 +48,7 @@ setup(name='bugwarrior',
           bts=["PySimpleSOAP","python-debianbts>=2.6.1"],
           trac=["offtrac"],
           bugzilla=["python-bugzilla"],
+          gmail=["google-api-python-client", "oauth2client<4.0.0"],
       ),
       tests_require=[
           "Mock",
@@ -57,6 +58,7 @@ setup(name='bugwarrior',
           "bugwarrior[megaplan]",
           "bugwarrior[activecollab]",
           "bugwarrior[bts]",
+          "bugwarrior[gmail]",
           "bugwarrior[trac]",
           "bugwarrior[bugzilla]",
       ],
@@ -86,5 +88,6 @@ setup(name='bugwarrior',
       gerrit=bugwarrior.services.gerrit:GerritService
       trello=bugwarrior.services.trello:TrelloService
       youtrack=bugwarrior.services.youtrack:YoutrackService
+      gmail=bugwarrior.services.gmail:GmailService
       """,
       )
