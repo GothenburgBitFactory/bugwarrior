@@ -3,6 +3,7 @@ from builtins import object
 from collections import namedtuple
 
 import mock
+from dateutil.tz import tzoffset, datetime
 
 from bugwarrior.services.jira import JiraService
 from .base import ServiceTest, AbstractServiceTest
@@ -71,7 +72,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             ),
             'annotations': arbitrary_extra['annotations'],
             'tags': [],
-            'entry': '20160606T060708-0700',
+            'entry': datetime.datetime(2016, 6, 6, 6, 7, 8, 123000, tzinfo=tzoffset(None, -25200)),
             'jirafixversion': '1.2.3',
 
             issue.URL: arbitrary_url,
@@ -95,7 +96,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         expected = {
             'annotations': [],
             'description': '(bw)Is#10 - lkjaldsfjaldf .. two/browse/DONUT-10',
-            'entry': '20160606T060708-0700',
+            'entry': datetime.datetime(2016, 6, 6, 6, 7, 8, 123000, tzinfo=tzoffset(None, -25200)),
             'jiradescription': None,
             'jiraestimate': 1,
             'jirafixversion': '1.2.3',
