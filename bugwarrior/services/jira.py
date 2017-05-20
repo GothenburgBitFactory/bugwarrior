@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 from builtins import str
 
-from datetime import datetime
 
 import six
 from jinja2 import Template
