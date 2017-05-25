@@ -1,3 +1,4 @@
+from __future__ import print_function
 import inspect
 import os
 import sys
@@ -5,6 +6,7 @@ import sys
 from jinja2 import Template
 
 from bugwarrior.services import Issue
+from functools import reduce
 
 
 def make_table(grid):
@@ -97,4 +99,4 @@ if __name__ == '__main__':
             'uda_table': make_table(rows)
         })
 
-    print rendered
+    print(rendered)

@@ -1,3 +1,7 @@
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
+
 import copy
 import multiprocessing
 import time
@@ -9,12 +13,14 @@ from dateutil.tz import tzlocal
 from jinja2 import Template
 import pytz
 import six
-from twiggy import log
 
 from taskw.task import Task
 
-from bugwarrior.config import asbool, get_service_password
+from bugwarrior.config import asbool, die, get_service_password, ServiceConfig
 from bugwarrior.db import MARKUP, URLShortener
+
+import logging
+log = logging.getLogger(__name__)
 
 
 # Sentinels for process completion status
@@ -28,7 +34,7 @@ LOCAL_TIMEZONE = 'LOCAL_TIMEZONE'
 def get_service(service_name):
     epoint = iter_entry_points(group='bugwarrior.service', name=service_name)
     try:
-        epoint = epoint.next()
+        epoint = next(epoint)
     except StopIteration:
         return None
 
@@ -42,53 +48,54 @@ class IssueService(object):
     # What prefix should we use for this service's configuration values
     CONFIG_PREFIX = ''
 
-    def __init__(self, config, main_section, target):
-        self.config = config
+    def __init__(self, main_config, main_section, target):
+        self.config = ServiceConfig(self.CONFIG_PREFIX, main_config, target)
         self.main_section = main_section
         self.target = target
 
         self.desc_len = 35
-        if config.has_option(self.main_section, 'description_length'):
-            self.desc_len = self.config.getint(self.main_section, 'description_length')
+        if main_config.has_option(self.main_section, 'description_length'):
+            self.desc_len = main_config.getint(
+                self.main_section, 'description_length')
 
         self.anno_len = 45
-        if config.has_option(self.main_section, 'annotation_length'):
-            self.anno_len = self.config.getint(self.main_section, 'annotation_length')
+        if main_config.has_option(self.main_section, 'annotation_length'):
+            self.anno_len = main_config.getint(
+                self.main_section, 'annotation_length')
 
         self.inline_links = True
-        if config.has_option(self.main_section, 'inline_links'):
-            self.inline_links = asbool(config.get(self.main_section, 'inline_links'))
+        if main_config.has_option(self.main_section, 'inline_links'):
+            self.inline_links = asbool(main_config.get(
+                self.main_section, 'inline_links'))
 
         self.annotation_links = not self.inline_links
-        if config.has_option(self.main_section, 'annotation_links'):
+        if main_config.has_option(self.main_section, 'annotation_links'):
             self.annotation_links = asbool(
-                config.get(self.main_section, 'annotation_links')
+                main_config.get(self.main_section, 'annotation_links')
             )
 
         self.annotation_comments = True
-        if config.has_option(self.main_section, 'annotation_comments'):
+        if main_config.has_option(self.main_section, 'annotation_comments'):
             self.annotation_comments = asbool(
-                config.get(self.main_section, 'annotation_comments')
+                main_config.get(self.main_section, 'annotation_comments')
             )
 
         self.shorten = False
-        if config.has_option(self.main_section, 'shorten'):
-            self.shorten = asbool(config.get(self.main_section, 'shorten'))
+        if main_config.has_option(self.main_section, 'shorten'):
+            self.shorten = asbool(main_config.get(self.main_section, 'shorten'))
 
         self.add_tags = []
-        if config.has_option(self.target, 'add_tags'):
-            for raw_option in self.config.get(
-                self.target, 'add_tags'
-            ).split(','):
+        if 'add_tags' in self.config:
+            for raw_option in self.config.get('add_tags').split(','):
                 option = raw_option.strip(' +;')
                 if option:
                     self.add_tags.append(option)
 
         self.default_priority = 'M'
-        if config.has_option(self.target, 'default_priority'):
-            self.default_priority = config.get(self.target, 'default_priority')
+        if 'default_priority' in self.config:
+            self.default_priority = self.config.get('default_priority')
 
-        log.name(target).info("Working on [{0}]", self.target)
+        log.info("Working on [%s]", self.target)
 
     def get_templates(self):
         """ Get any defined templates for configuration values.
@@ -120,37 +127,18 @@ class IssueService(object):
         templates = {}
         for key in six.iterkeys(Task.FIELDS):
             template_key = '%s_template' % key
-            if self.config.has_option(self.target, template_key):
-                templates[key] = self.config.get(self.target, template_key)
+            if template_key in self.config:
+                templates[key] = self.config.get(template_key)
         return templates
 
-    def config_has(self, key):
-        return self.config.has_option(self.target, self._get_key(key))
-
-    def config_get_default(self, key, default=None, to_type=None):
-        try:
-            return self.config_get(key, to_type=to_type)
-        except:
-            return default
-
-    def config_get(self, key=None, to_type=None):
-        value = self.config.get(self.target, self._get_key(key))
-        if to_type:
-            return to_type(value)
-        return value
-
-    def config_get_password(self, key, login):
-        password = self.config_get_default(key)
-        keyring_service = self.get_keyring_service(self.config, self.target),
+    def get_password(self, key, login='nousername'):
+        password = self.config.get(key)
+        keyring_service = self.get_keyring_service(self.config)
         if not password or password.startswith("@oracle:"):
             password = get_service_password(
                 keyring_service, login, oracle=password,
                 interactive=self.config.interactive)
         return password
-
-    @classmethod
-    def _get_key(cls, key):
-        return '%s.%s' % (cls.CONFIG_PREFIX, key)
 
     def get_service_metadata(self):
         return {}
@@ -179,51 +167,49 @@ class IssueService(object):
                 if not message or not author:
                     continue
                 message = message.replace('\n', '').replace('\r', '')
-                final.append(
-                    '@%s - %s%s' % (
-                        author,
-                        message[0:self.anno_len],
+                if self.anno_len:
+                    message = '%s%s' % (
+                        message[:self.anno_len],
                         '...' if len(message) > self.anno_len else ''
                     )
-                )
+                final.append('@%s - %s' % (author, message))
         return final
 
     @classmethod
-    def validate_config(cls, config, target):
+    def validate_config(cls, service_config, target):
         """ Validate generic options for a particular target """
-        pass
+        if service_config.has_option(target, 'only_if_assigned'):
+            die("[%s] has an 'only_if_assigned' option.  Should be "
+                "'%s.only_if_assigned'." % (target, cls.CONFIG_PREFIX))
+        if service_config.has_option(target, 'also_unassigned'):
+            die("[%s] has an 'also_unassigned' option.  Should be "
+                "'%s.also_unassigned'." % (target, cls.CONFIG_PREFIX))
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
+        only_if_assigned = self.config.get('only_if_assigned', None)
 
-        # TODO -- evaluate cleaning this up.  It's the ugliest stretch of code
-        # in here.
+        if only_if_assigned:
+            owner = self.get_owner(issue)
+            include_owners = [only_if_assigned]
 
-        only_if_assigned, also_unassigned = None, None
-        try:
-            only_if_assigned = self.config.get(
-                self.target, 'only_if_assigned')
-        except Exception:
-            pass
+            if self.config.get('also_unassigned', None, asbool):
+                include_owners.append(None)
 
-        try:
-            also_unassigned = self.config.getboolean(
-                self.target, 'also_unassigned')
-        except Exception:
-            pass
+            return owner in include_owners
 
-        if only_if_assigned and also_unassigned:
-            return self.get_owner(issue) in [only_if_assigned, None]
-        elif only_if_assigned and not also_unassigned:
-            return self.get_owner(issue) in [only_if_assigned]
-        elif not only_if_assigned and also_unassigned:
-            return True
-        elif not only_if_assigned and not also_unassigned:
-            return True
-        else:
-            pass  # Impossible to get here.
+        only_if_author = self.config.get('only_if_author', None)
+
+        if only_if_author:
+            return self.get_author(issue) == only_if_author
+
+        return True
 
     def get_owner(self, issue):
+        """ Override this for filtering on tickets """
+        raise NotImplementedError()
+
+    def get_author(self, issue):
         """ Override this for filtering on tickets """
         raise NotImplementedError()
 
@@ -256,12 +242,13 @@ class IssueService(object):
         """
         raise NotImplementedError()
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
+    @staticmethod
+    def get_keyring_service(service_config):
         """ Given the keyring service name for this service. """
         raise NotImplementedError
 
 
+@six.python_2_unicode_compatible
 class Issue(object):
     # Set to a dictionary mapping UDA short names with type and long name.
     #
@@ -379,16 +366,18 @@ class Issue(object):
             'issue': 'Is',
             'pull_request': 'PR',
             'merge_request': 'MR',
+            'todo': '',
             'task': '',
             'subtask': 'Subtask #',
         }
         url_separator = ' .. '
         url = url if self.origin['inline_links'] else ''
-        return "%s%s#%s - %s%s%s" % (
+        desc_len = self.origin['description_length']
+        return u"%s%s#%s - %s%s%s" % (
             MARKUP,
             cls_markup[cls],
             number,
-            title[:self.origin['description_length']],
+            title[:desc_len] if desc_len else title,
             url_separator if url else '',
             url,
         )
@@ -475,17 +464,32 @@ class Issue(object):
     def origin(self):
         return self._origin
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s: %s' % (
             self.origin['target'],
             self.get_taskwarrior_record()['description']
         )
 
-    def __str__(self):
-        return self.__unicode__().encode('ascii', 'replace')
-
     def __repr__(self):
-        return '<%s>' % self.__unicode__()
+        return '<%s>' % str(self)
+
+
+class ServiceClient(object):
+    """ Abstract class responsible for making requests to service API's. """
+    @staticmethod
+    def json_response(response):
+        # If we didn't get good results, just bail.
+        if response.status_code != 200:
+            raise IOError(
+                "Non-200 status code %r; %r; %r" % (
+                    response.status_code, response.url, response.text,
+                ))
+        if callable(response.json):
+            # Newer python-requests
+            return response.json()
+        else:
+            # Older python-requests
+            return response.json
 
 
 def _aggregate_issues(conf, main_section, target, queue, service_name):
@@ -503,40 +507,37 @@ def _aggregate_issues(conf, main_section, target, queue, service_name):
             queue.put(issue)
             issue_count += 1
     except SystemExit as e:
-        log.name(target).critical(str(e))
+        log.critical(str(e))
         queue.put((SERVICE_FINISHED_ERROR, (target, e)))
     except BaseException as e:
-        log.name(target).trace('error').critical(
-            "Worker for [%s] failed: %s" % (target, e)
-        )
-        queue.put(
-            (SERVICE_FINISHED_ERROR, (target, e))
-        )
+        if hasattr(e, 'request') and e.request:
+            # Exceptions raised by requests library have the HTTP request
+            # object stored as attribute. The request can have hooks attached
+            # to it, and we need to remove them, as there can be unpickleable
+            # methods. There is no one left to call these hooks anyway.
+            e.request.hooks = {}
+        log.exception("Worker for [%s] failed: %s" % (target, e))
+        queue.put((SERVICE_FINISHED_ERROR, (target, e)))
     else:
-        queue.put(
-            (SERVICE_FINISHED_OK, (target, issue_count, ))
-        )
+        queue.put((SERVICE_FINISHED_OK, (target, issue_count, )))
     finally:
         duration = time.time() - start
-        log.name(target).info("Done with [%s] in %fs" % (target, duration))
+        log.info("Done with [%s] in %fs" % (target, duration))
 
 
-def aggregate_issues(conf, main_section):
+def aggregate_issues(conf, main_section, debug):
     """ Return all issues from every target. """
-    log.name('bugwarrior').info("Starting to aggregate remote issues.")
+    log.info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
     targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
 
     queue = multiprocessing.Queue()
 
-    log.name('bugwarrior').info("Spawning %i workers." % len(targets))
+    log.info("Spawning %i workers." % len(targets))
     processes = []
 
-    if (
-        conf.has_option(main_section, 'development')
-        and asbool(conf.get(main_section, 'development'))
-    ):
+    if debug:
         for target in targets:
             _aggregate_issues(
                 conf,
@@ -567,7 +568,7 @@ def aggregate_issues(conf, main_section):
             completion_type, args = issue
             if completion_type == SERVICE_FINISHED_ERROR:
                 target, e = args
-                log.name('bugwarrior').info("Terminating workers")
+                log.info("Terminating workers")
                 for process in processes:
                     process.terminate()
                 raise RuntimeError(
@@ -576,4 +577,4 @@ def aggregate_issues(conf, main_section):
             continue
         yield issue
 
-    log.name('bugwarrior').info("Done aggregating remote issues.")
+    log.info("Done aggregating remote issues.")

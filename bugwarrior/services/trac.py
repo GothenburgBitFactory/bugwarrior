@@ -1,18 +1,26 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import filter
+from builtins import map
+from builtins import range
 import offtrac
 import csv
-import cStringIO as StringIO
+import io as StringIO
 import requests
-from twiggy import log
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
-from bugwarrior.config import die
+from bugwarrior.config import die, asbool
 from bugwarrior.services import Issue, IssueService
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class TracIssue(Issue):
     SUMMARY = 'tracsummary'
     URL = 'tracurl'
     NUMBER = 'tracnumber'
+    COMPONENT = 'traccomponent'
 
     UDAS = {
         SUMMARY: {
@@ -26,6 +34,10 @@ class TracIssue(Issue):
         NUMBER: {
             'type': 'numeric',
             'label': 'Trac Number',
+        },
+        COMPONENT: {
+            'type': 'string',
+            'label': 'Trac Component',
         },
     }
     UNIQUE_KEY = (URL, )
@@ -47,6 +59,7 @@ class TracIssue(Issue):
             self.URL: self.record['url'],
             self.SUMMARY: self.record['summary'],
             self.NUMBER: self.record['number'],
+            self.COMPONENT: self.record['component'],
         }
 
     def get_default_description(self):
@@ -76,16 +89,16 @@ class TracService(IssueService):
 
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
-        base_uri = self.config_get('base_uri')
-        scheme = self.config_get_default('scheme', default='https')
-        username = self.config_get_default('username', default=None)
+        base_uri = self.config.get('base_uri')
+        scheme = self.config.get('scheme', default='https')
+        username = self.config.get('username', default=None)
         if username:
-            password = self.config_get_password('password', username)
+            password = self.get_password('password', username)
 
-            auth = urllib.quote_plus('%s:%s' % (username, password)) + '@'
+            auth = urllib.parse.quote_plus('%s:%s' % (username, password)) + '@'
         else:
             auth = ''
-        if self.config_get_default('no_xmlrpc', default=False):
+        if self.config.get('no_xmlrpc', default=False, to_type=asbool):
             uri = '%s://%s%s/' % (scheme, auth, base_uri)
             self.uri = uri
             self.trac = None
@@ -93,20 +106,20 @@ class TracService(IssueService):
             uri = '%s://%s%s/login/xmlrpc' % (scheme, auth, base_uri)
             self.trac = offtrac.TracServer(uri)
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        username = config.get(section, cls._get_key('username'))
-        base_uri = config.get(section, cls._get_key('base_uri'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        username = service_config.get('username')
+        base_uri = service_config.get('base_uri')
         return "https://%s@%s/" % (username, base_uri)
 
     @classmethod
-    def validate_config(cls, config, target):
-        if not config.has_option(target, 'trac.base_uri'):
+    def validate_config(cls, service_config, target):
+        if 'base_uri' not in service_config:
             die("[%s] has no 'base_uri'" % target)
-        elif '://' in config.get(target, 'trac.base_uri'):
+        elif '://' in service_config.get('base_uri'):
             die("[%s] do not include scheme in 'base_uri'" % target)
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def annotations(self, tag, issue, issue_obj):
         annotations = []
@@ -126,10 +139,10 @@ class TracService(IssueService):
         return issue.get('owner', None) or None
 
     def issues(self):
-        base_url = "https://" + self.config.get(self.target, 'trac.base_uri')
+        base_url = "https://" + self.config.get('base_uri')
         if self.trac:
             tickets = self.trac.query_tickets('status!=closed&max=0')
-            tickets = map(self.trac.get_ticket, tickets)
+            tickets = list(map(self.trac.get_ticket, tickets))
             issues = [(self.target, ticket[3]) for ticket in tickets]
             for i in range(len(issues)):
                 issues[i][1]['url'] = "%s/ticket/%i" % (base_url, tickets[i][0])
@@ -141,7 +154,7 @@ class TracService(IssueService):
                     'status': '!closed',
                     'max': '0',
                     'format': 'csv',
-                    'col': ['id', 'summary', 'owner', 'priority'],
+                    'col': ['id', 'summary', 'owner', 'priority', 'component'],
                 })
             if resp.status_code != 200:
                 raise RuntimeError("Trac responded with %s" % resp)
@@ -153,10 +166,10 @@ class TracService(IssueService):
                 issues[i][1]['url'] = "%s/ticket/%s" % (base_url, tickets[i]['id'])
                 issues[i][1]['number'] = int(tickets[i]['id'])
 
-        log.name(self.target).debug(" Found {0} total.", len(issues))
+        log.debug(" Found %i total.", len(issues))
 
-        issues = filter(self.include, issues)
-        log.name(self.target).debug(" Pruned down to {0}", len(issues))
+        issues = list(filter(self.include, issues))
+        log.debug(" Pruned down to %i", len(issues))
 
         for project, issue in issues:
             issue_obj = self.get_issue_for_record(issue)

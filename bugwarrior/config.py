@@ -1,14 +1,22 @@
+from future import standard_library
+standard_library.install_aliases()
 import codecs
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 import os
 import subprocess
 import sys
 
 import six
-import twiggy
-from twiggy import log
-from twiggy.levels import name2level
-from xdg import BaseDirectory
+
+import logging
+log = logging.getLogger(__name__)
+
+from bugwarrior.data import BugwarriorData
+
+
+# The name of the environment variable that can be used to ovewrite the path
+# to the bugwarriorrc file
+BUGWARRIORRC = "BUGWARRIORRC"
 
 
 def asbool(some_value):
@@ -16,6 +24,22 @@ def asbool(some_value):
     return six.text_type(some_value).lower() in [
         'y', 'yes', 't', 'true', '1', 'on'
     ]
+
+
+def aslist(value):
+    """ Cast config values to lists of strings """
+    return [item.strip() for item in value.strip().split(',')]
+
+
+def get_keyring():
+    """ Try to import and return optional keyring dependency. """
+    try:
+        import keyring
+    except ImportError:
+        raise ImportError(
+            "Extra dependencies must be installed to use the keyring feature. "
+            "Install them with `pip install bugwarrior[keyring]`.")
+    return keyring
 
 
 def get_service_password(service, username, oracle=None, interactive=False):
@@ -39,10 +63,10 @@ def get_service_password(service, username, oracle=None, interactive=False):
         https://bitbucket.org/kang/python-keyring-lib
     """
     import getpass
-    import keyring
 
     password = None
     if not oracle or oracle == "@oracle:use_keyring":
+        keyring = get_keyring()
         password = keyring.get_password(service, username)
         if interactive and password is None:
             # -- LEARNING MODE: Password is not stored in keyring yet.
@@ -70,7 +94,7 @@ def oracle_eval(command):
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.wait()
     if p.returncode == 0:
-        return p.stdout.readline().strip()
+        return p.stdout.readline().strip().decode('utf-8')
     else:
         die(
             "Error retrieving password: `{command}` returned '{error}'".format(
@@ -90,18 +114,17 @@ def load_example_rc():
 error_template = """
 *************************************************
 * There was a problem with your bugwarriorrc    *
-*   {msg}
+*   {error_msg}
 * Here's an example template to help:           *
 *************************************************
 {example}"""
 
 
-def die(msg):
-    log.options(suppress_newlines=False).critical(
-        error_template,
-        msg=msg,
+def die(error_msg):
+    log.critical(error_template.format(
+        error_msg=error_msg,
         example=load_example_rc(),
-    )
+    ))
     sys.exit(1)
 
 
@@ -109,16 +132,27 @@ def validate_config(config, main_section):
     if not config.has_section(main_section):
         die("No [%s] section found." % main_section)
 
-    twiggy.quickSetup(
-        name2level(config.get(main_section, 'log.level')),
-        config.get(main_section, 'log.file')
+    logging.basicConfig(
+        level=getattr(logging, config.get(main_section, 'log.level')),
+        filename=config.get(main_section, 'log.file'),
     )
+
+    # In general, its nice to log "everything", but some of the loggers from
+    # our dependencies are very very spammy.  Here, we silence most of their
+    # noise:
+    spammers = [
+        'bugzilla.base',
+        'bugzilla.bug',
+        'requests.packages.urllib3.connectionpool',
+    ]
+    for spammer in spammers:
+        logging.getLogger(spammer).setLevel(logging.WARN)
 
     if not config.has_option(main_section, 'targets'):
         die("No targets= item in [%s] found." % main_section)
 
     targets = config.get(main_section, 'targets')
-    targets = filter(lambda t: len(t), [t.strip() for t in targets.split(",")])
+    targets = [t for t in [t.strip() for t in targets.split(",")] if len(t)]
 
     if not targets:
         die("Empty targets= item in [%s]." % main_section)
@@ -137,31 +171,45 @@ def validate_config(config, main_section):
             die("'%s' in [%s] is not a valid service." % (service, target))
 
         # Call the service-specific validator
-        get_service(service).validate_config(config, target)
+        service = get_service(service)
+        service_config = ServiceConfig(service.CONFIG_PREFIX, config, target)
+        service.validate_config(service_config, target)
+
+
+def get_config_path():
+    """
+    Determine the path to the config file. This will return, in this order of
+    precedence:
+    - the value of $BUGWARRIORRC if set
+    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorc if exists
+    - ~/.bugwarriorrc if exists
+    - <dir>/bugwarrior/bugwarriorc if exists, for dir in $XDG_CONFIG_DIRS
+    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorc otherwise
+    """
+    if os.environ.get(BUGWARRIORRC):
+        return os.environ[BUGWARRIORRC]
+    xdg_config_home = (
+        os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config'))
+    xdg_config_dirs = (
+        (os.environ.get('XDG_CONFIG_DIRS') or '/etc/xdg').split(':'))
+    paths = [
+        os.path.join(xdg_config_home, 'bugwarrior', 'bugwarriorrc'),
+        os.path.expanduser("~/.bugwarriorrc")]
+    paths += [
+        os.path.join(d, 'bugwarrior', 'bugwarriorrc') for d in xdg_config_dirs]
+    for path in paths:
+        if os.path.exists(path):
+            return path
+    return paths[0]
 
 
 def load_config(main_section, interactive=False):
-    config = ConfigParser({'log.level': "DEBUG", 'log.file': None})
-    path = None
-    first_path = BaseDirectory.load_first_config('bugwarrior')
-    if first_path is not None:
-        path = os.path.join(first_path, 'bugwarriorrc')
-    old_path = os.path.expanduser("~/.bugwarriorrc")
-    if path is None or not os.path.exists(path):
-        if os.path.exists(old_path):
-            path = old_path
-        else:
-            path = os.path.join(BaseDirectory.save_config_path('bugwarrior'), 'bugwarriorrc')
-    config.readfp(
-        codecs.open(
-            path,
-            "r",
-            "utf-8",
-        )
-    )
+    config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None})
+    path = get_config_path()
+    config.readfp(codecs.open(path, "r", "utf-8",))
     config.interactive = interactive
+    config.data = BugwarriorData(get_data_path(config, main_section))
     validate_config(config, main_section)
-
     return config
 
 
@@ -174,8 +222,77 @@ def get_taskrc_path(conf, main_section):
     )
 
 
-def get_data_path():
-    return os.path.expanduser(os.getenv('TASKDATA', '~/.task'))
+def get_data_path(config, main_section):
+    taskrc = get_taskrc_path(config, main_section)
+
+    # We cannot use the taskw module here because it doesn't really support
+    # the `_` subcommands properly (`rc:` can't be used for them).
+    line_prefix = 'data.location='
+
+    env={
+        'PATH': os.getenv('PATH'),
+        'TASKRC': taskrc,
+    }
+    # If TASKDATA is set but empty, taskwarrior's data.location is empty.
+    taskdata = os.getenv('TASKDATA')
+    if taskdata:
+        env['TASKDATA'] = taskdata
+
+    tw_show = subprocess.Popen(
+        ('task', '_show'), stdout=subprocess.PIPE, env=env)
+    data_location = subprocess.check_output(
+        ('grep', '-e', '^' + line_prefix), stdin=tw_show.stdout)
+    tw_show.wait()
+    data_path = data_location[len(line_prefix):].rstrip().decode('utf-8')
+
+    if not data_path:
+        raise RuntimeError('Unable to determine the data location.')
+
+    return os.path.normpath(os.path.expanduser(data_path))
+
+
+# ConfigParser is not a new-style class, so inherit from object to fix super().
+class BugwarriorConfigParser(ConfigParser, object):
+    def getint(self, section, option):
+        """ Accepts both integers and empty values. """
+        try:
+            return super(BugwarriorConfigParser, self).getint(section, option)
+        except ValueError:
+            if self.get(section, option) == u'':
+                return None
+            else:
+                raise ValueError(
+                    "{section}.{option} must be an integer or empty.".format(
+                        section=section, option=option))
+
+
+class ServiceConfig(object):
+    """ A service-aware wrapper for ConfigParser objects. """
+    def __init__(self, config_prefix, config_parser, service_target):
+        self.config_prefix = config_prefix
+        self.config_parser = config_parser
+        self.service_target = service_target
+
+    def __getattr__(self, name):
+        """ Proxy undefined attributes/methods to ConfigParser object. """
+        return getattr(self.config_parser, name)
+
+    def __contains__(self, key):
+        """ Does service section specify this option? """
+        return self.config_parser.has_option(
+            self.service_target, self._get_key(key))
+
+    def get(self, key, default=None, to_type=None):
+        try:
+            value = self.config_parser.get(self.service_target, self._get_key(key))
+            if to_type:
+                return to_type(value)
+            return value
+        except:
+            return default
+
+    def _get_key(self, key):
+        return '%s.%s' % (self.config_prefix, key)
 
 
 # This needs to be imported here and not above to avoid a circular-import.

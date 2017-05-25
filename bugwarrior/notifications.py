@@ -1,11 +1,14 @@
+from future import standard_library
+standard_library.install_aliases()
 import datetime
 import os
-import urllib
+import urllib.request, urllib.parse, urllib.error
+import warnings
 
 from bugwarrior.config import asbool
 
 
-cache_dir = os.path.expanduser("~/.cache/bugwarrior")
+cache_dir = os.path.expanduser(os.getenv('XDG_CACHE_HOME', "~/.cache") + "/bugwarrior")
 logo_path = cache_dir + "/logo.png"
 logo_url = "https://upload.wikimedia.org/wikipedia/" + \
     "en/5/59/Taskwarrior_logo.png"
@@ -18,7 +21,7 @@ def _cache_logo():
     if not os.path.isdir(cache_dir):
         os.makedirs(cache_dir)
 
-    urllib.urlretrieve(logo_url, logo_path)
+    urllib.request.urlretrieve(logo_url, logo_path)
 
 
 def _get_metadata(issue):
@@ -50,6 +53,11 @@ def _get_metadata(issue):
 def send_notification(issue, op, conf):
     notify_backend = conf.get('notifications', 'backend')
 
+    if notify_backend == 'pynotify':
+        warnings.warn("pynotify is deprecated.  Use backend=gobject.  "
+                      "See https://github.com/ralphbean/bugwarrior/issues/336")
+        notify_backend = 'gobject'
+
     # Notifications for growlnotify on Mac OS X
     if notify_backend == 'growlnotify':
         import gntp.notifier
@@ -72,7 +80,7 @@ def send_notification(issue, op, conf):
                 priority=1,
             )
             return
-        message = "%s task: %s" % (op, issue['description'].encode("utf-8"))
+        message = "%s task: %s" % (op, issue['description'])
         metadata = _get_metadata(issue)
         if metadata is not None:
             message += metadata
@@ -87,26 +95,11 @@ def send_notification(issue, op, conf):
             priority=1,
         )
         return
-    elif notify_backend == 'pynotify':
-        _cache_logo()
-
-        import pynotify
-        pynotify.init("bugwarrior")
-
-        if op == 'bw finished':
-            message = "Finished querying for new issues.\n%s" %\
-                issue['description']
-        else:
-            message = "%s task: %s" % (
-                op, issue['description'].encode("utf-8"))
-            metadata = _get_metadata(issue)
-            if metadata is not None:
-                message += metadata
-
-        pynotify.Notification("Bugwarrior", message, logo_path).show()
     elif notify_backend == 'gobject':
         _cache_logo()
 
+        import gi
+        gi.require_version('Notify', '0.7')
         from gi.repository import Notify
         Notify.init("bugwarrior")
 
@@ -114,10 +107,9 @@ def send_notification(issue, op, conf):
             message = "Finished querying for new issues.\n%s" %\
                 issue['description']
         else:
-            message = "%s task: %s" % (
-                op, issue['description'].encode("utf-8"))
+            message = "%s task: %s" % (op, issue['description'])
             metadata = _get_metadata(issue)
             if metadata is not None:
-                message += metadata.encode("utf-8")
+                message += metadata
 
         Notify.Notification.new("Bugwarrior", message, logo_path).show()

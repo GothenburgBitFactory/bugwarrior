@@ -1,13 +1,123 @@
+from builtins import filter
 import re
 import six
+from urllib.parse import urlparse
 
+import requests
+from six.moves.urllib.parse import quote_plus
 from jinja2 import Template
-from twiggy import log
 
-from bugwarrior.config import asbool, die
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.config import asbool, aslist, die
+from bugwarrior.services import IssueService, Issue, ServiceClient
 
-from . import githubutils
+import logging
+log = logging.getLogger(__name__)
+
+
+class GithubClient(ServiceClient):
+    def __init__(self, host, auth):
+        self.host = host
+        self.auth = auth
+        self.session = requests.Session()
+        if 'token' in self.auth:
+            authorization = 'token ' + self.auth['token']
+            self.session.headers['Authorization'] = authorization
+
+    def _api_url(self, path, **context):
+        """ Build the full url to the API endpoint """
+        if self.host == 'github.com':
+            baseurl = "https://api.github.com"
+        else:
+            baseurl = "https://{}/api/v3".format(self.host)
+        return baseurl + path.format(**context)
+
+    def get_repos(self, username):
+        user_repos = self._getter(self._api_url("/user/repos?per_page=100"))
+        public_repos = self._getter(self._api_url(
+            "/users/{username}/repos?per_page=100", username=username))
+        return user_repos + public_repos
+
+    def get_query(self, query):
+        """Run a generic issue/PR query"""
+        url = self._api_url(
+            "/search/issues?q={query}&per_page=100", query=query)
+        return self._getter(url, subkey='items')
+
+    def get_issues(self, username, repo):
+        url = self._api_url(
+            "/repos/{username}/{repo}/issues?per_page=100",
+            username=username, repo=repo)
+        return self._getter(url)
+
+    def get_directly_assigned_issues(self):
+        """ Returns all issues assigned to authenticated user.
+
+        This will return all issues assigned to the authenticated user
+        regardless of whether the user owns the repositories in which the
+        issues exist.
+        """
+        url = self._api_url("/user/issues?per_page=100")
+        return self._getter(url)
+
+    def get_comments(self, username, repo, number):
+        url = self._api_url(
+            "/repos/{username}/{repo}/issues/{number}/comments?per_page=100",
+            username=username, repo=repo, number=number)
+        return self._getter(url)
+
+    def get_pulls(self, username, repo):
+        url = self._api_url(
+            "/repos/{username}/{repo}/pulls?per_page=100",
+            username=username, repo=repo)
+        return self._getter(url)
+
+    def _getter(self, url, subkey=None):
+        """ Pagination utility.  Obnoxious. """
+
+        kwargs = {}
+        if 'basic' in self.auth:
+            kwargs['auth'] = self.auth['basic']
+
+        results = []
+        link = dict(next=url)
+
+        while 'next' in link:
+            response = self.session.get(link['next'], **kwargs)
+
+            # Warn about the mis-leading 404 error code.  See:
+            # https://github.com/ralphbean/bugwarrior/issues/374
+            if response.status_code == 404 and 'token' in self.auth:
+                log.warn("A '404' from github may indicate an auth "
+                         "failure. Make sure both that your token is correct "
+                         "and that it has 'public_repo' and not 'public "
+                         "access' rights.")
+
+            json_res = self.json_response(response)
+
+            if subkey is not None:
+                json_res = json_res[subkey]
+
+            results += json_res
+
+            link = self._link_field_to_dict(response.headers.get('link', None))
+
+        return results
+
+    @staticmethod
+    def _link_field_to_dict(field):
+        """ Utility for ripping apart github's Link header field.
+        It's kind of ugly.
+        """
+
+        if not field:
+            return dict()
+
+        return dict([
+            (
+                part.split('; ')[1][5:-1],
+                part.split('; ')[0][1:-1],
+            ) for part in field.split(', ')
+        ])
 
 
 class GithubIssue(Issue):
@@ -20,6 +130,7 @@ class GithubIssue(Issue):
     REPO = 'githubrepo'
     TYPE = 'githubtype'
     NUMBER = 'githubnumber'
+    USER = 'githubuser'
 
     UDAS = {
         TITLE: {
@@ -39,7 +150,7 @@ class GithubIssue(Issue):
             'label': 'Github Updated',
         },
         MILESTONE: {
-            'type': 'numeric',
+            'type': 'string',
             'label': 'Github Milestone',
         },
         REPO: {
@@ -58,6 +169,10 @@ class GithubIssue(Issue):
             'type': 'numeric',
             'label': 'Github Issue/PR #',
         },
+        USER: {
+            'type': 'string',
+            'label': 'Github User',
+        },
     }
     UNIQUE_KEY = (URL, TYPE,)
 
@@ -67,7 +182,7 @@ class GithubIssue(Issue):
     def to_taskwarrior(self):
         milestone = self.record['milestone']
         if milestone:
-            milestone = milestone['id']
+            milestone = milestone['title']
 
         body = self.record['body']
         if body:
@@ -87,6 +202,7 @@ class GithubIssue(Issue):
             self.URL: self.record['html_url'],
             self.REPO: self.record['repo'],
             self.TYPE: self.extra['type'],
+            self.USER: self.record['user']['login'],
             self.TITLE: self.record['title'],
             self.BODY: body,
             self.MILESTONE: milestone,
@@ -130,49 +246,51 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
-        self.auth = {}
+        self.host = self.config.get('host', 'github.com')
+        self.login = self.config.get('login')
 
-        login = self.config_get('login')
-        token = self.config_get_default('token')
-        if self.config_has('token'):
-            token = self.config_get_password('token', login)
-            self.auth['token'] = token
+        auth = {}
+        token = self.config.get('token')
+        if 'token' in self.config:
+            token = self.get_password('token', self.login)
+            auth['token'] = token
         else:
-            password = self.config_get_password('password', login)
-            self.auth['basic'] = (login, password)
+            password = self.get_password('password', self.login)
+            auth['basic'] = (self.login, password)
 
-        self.exclude_repos = []
-        if self.config_get_default('exclude_repos', None):
-            self.exclude_repos = [
-                item.strip() for item in
-                self.config_get('exclude_repos').strip().split(',')
-            ]
+        self.client = GithubClient(self.host, auth)
 
-        self.include_repos = []
-        if self.config_get_default('include_repos', None):
-            self.include_repos = [
-                item.strip() for item in
-                self.config_get('include_repos').strip().split(',')
-            ]
+        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
+        self.include_repos = self.config.get('include_repos', [], aslist)
 
-        self.import_labels_as_tags = self.config_get_default(
-            'import_labels_as_tags', default=False, to_type=asbool
-        )
-        self.label_template = self.config_get_default(
-            'label_template', default='{{label}}', to_type=six.text_type
-        )
-        self.filter_pull_requests = self.config_get_default(
+        self.username = self.config.get('username')
+        self.filter_pull_requests = self.config.get(
             'filter_pull_requests', default=False, to_type=asbool
         )
-        self.involved_issues = self.config_get_default(
+        self.involved_issues = self.config.get(
             'involved_issues', default=False, to_type=asbool
         )
+        self.import_labels_as_tags = self.config.get(
+            'import_labels_as_tags', default=False, to_type=asbool
+        )
+        self.label_template = self.config.get(
+            'label_template', default='{{label}}', to_type=six.text_type
+        )
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        login = config.get(section, cls._get_key('login'))
-        username = config.get(section, cls._get_key('username'))
-        return "github://%s@github.com/%s" % (login, username)
+        self.query = self.config.get(
+            'query',
+            default='involves: {user} state:open'.format(
+                user=self.username) if self.involved_issues else '',
+            to_type=six.text_type
+        )
+
+    @staticmethod
+    def get_keyring_service(service_config):
+        login = service_config.get('login')
+        username = service_config.get('username')
+        host = service_config.get('host', default='github.com')
+        return "github://{login}@{host}/{username}".format(
+            login=login, username=username, host=host)
 
     def get_service_metadata(self):
         return {
@@ -183,49 +301,61 @@ class GithubService(IssueService):
     def get_owned_repo_issues(self, tag):
         """ Grab all the issues """
         issues = {}
-        for issue in githubutils.get_issues(*tag.split('/'), auth=self.auth):
+        for issue in self.client.get_issues(*tag.split('/')):
             issues[issue['url']] = (tag, issue)
         return issues
 
-    def get_involved_issues(self, user):
-        """ Grab all 'interesting' issues """
+    def get_query(self, query):
+        """ Grab all issues matching a github query """
         issues = {}
-        for issue in githubutils.get_involved_issues(user, auth=self.auth):
+        for issue in self.client.get_query(query):
             url = issue['html_url']
-            tag = re.match('.*github\\.com/(.*)/(issues|pull)/[^/]*$', url)
-            if tag is None:
-                log.name(self.target).critical(" Unrecognized issue URL: {0}.", url)
-                continue
-            issues[url] = (tag.group(1), issue)
+            try:
+                repo = self.get_repository_from_issue(issue)
+            except ValueError as e:
+                log.critical(e)
+            else:
+                issues[url] = (repo, issue)
         return issues
 
     def get_directly_assigned_issues(self):
-        project_matcher = re.compile(
-            r'.*/repos/(?P<owner>[^/]+)/(?P<project>[^/]+)/.*'
-        )
         issues = {}
-        for issue in githubutils.get_directly_assigned_issues(auth=self.auth):
-            match_dict = project_matcher.match(issue['url']).groupdict()
-            issues[issue['url']] = (
-                '{owner}/{project}'.format(
-                    **match_dict
-                ),
-                issue
-            )
+        for issue in self.client.get_directly_assigned_issues():
+            repos = self.get_repository_from_issue(issue)
+            issues[issue['url']] = (repos, issue)
         return issues
+
+    @classmethod
+    def get_repository_from_issue(cls, issue):
+        if 'repo' in issue:
+            return issue['repo']
+        if 'repos_url' in issue:
+            url = issue['repos_url']
+        elif 'repository_url' in issue:
+            url = issue['repository_url']
+        else:
+            raise ValueError("Issue has no repository url" + str(issue))
+        tag = re.match('.*/([^/]*/[^/]*)$', url)
+        if tag is None:
+            raise ValueError("Unrecognized URL: {}.".format(url))
+        return tag.group(1)
 
     def _comments(self, tag, number):
         user, repo = tag.split('/')
-        return githubutils.get_comments(user, repo, number, auth=self.auth)
+        return self.client.get_comments(user, repo, number)
 
     def annotations(self, tag, issue, issue_obj):
         url = issue['html_url']
-        comments = self._comments(tag, issue['number'])
-        return self.build_annotations(
-            ((
+        annotations = []
+        if self.annotation_comments:
+            comments = self._comments(tag, issue['number'])
+            log.debug(" got comments for %s", issue['html_url'])
+            annotations = ((
                 c['user']['login'],
                 c['body'],
-            ) for c in comments),
+            ) for c in comments)
+        return self.build_annotations(
+            annotations,
             issue_obj.get_processed_url(url)
         )
 
@@ -233,20 +363,30 @@ class GithubService(IssueService):
         """ Grab all the pull requests """
         return [
             (tag, i) for i in
-            githubutils.get_pulls(*tag.split('/'), auth=self.auth)
+            self.client.get_pulls(*tag.split('/'))
         ]
 
     def get_owner(self, issue):
         if issue[1]['assignee']:
             return issue[1]['assignee']['login']
 
+    def filter_issues(self, issue):
+        repo, _ = issue
+        return self.filter_repo_name(repo.split('/')[-3])
+
     def filter_repos(self, repo):
+        if repo['owner']['login'] != self.username:
+            return False
+
+        return self.filter_repo_name(repo['name'])
+
+    def filter_repo_name(self, name):
         if self.exclude_repos:
-            if repo['name'] in self.exclude_repos:
+            if name in self.exclude_repos:
                 return False
 
         if self.include_repos:
-            if repo['name'] in self.include_repos:
+            if name in self.include_repos:
                 return True
             else:
                 return False
@@ -259,26 +399,29 @@ class GithubService(IssueService):
         return super(GithubService, self).include(issue)
 
     def issues(self):
-        user = self.config.get(self.target, 'github.username')
-
-        all_repos = githubutils.get_repos(username=user, auth=self.auth)
-        assert(type(all_repos) == list)
-        repos = filter(self.filter_repos, all_repos)
-
         issues = {}
-        if self.involved_issues:
-            issues.update(
-                self.get_involved_issues(user)
-            )
-        else:
+        if self.query:
+            issues.update(self.get_query(self.query))
+
+        if self.config.get('include_user_repos', True, asbool):
+            all_repos = self.client.get_repos(self.username)
+            assert(type(all_repos) == list)
+            repos = filter(self.filter_repos, all_repos)
+
             for repo in repos:
                 issues.update(
-                    self.get_owned_repo_issues(user + "/" + repo['name'])
+                    self.get_owned_repo_issues(
+                        self.username + "/" + repo['name'])
                 )
-        issues.update(self.get_directly_assigned_issues())
-        log.name(self.target).debug(" Found {0} issues.", len(issues))
-        issues = filter(self.include, issues.values())
-        log.name(self.target).debug(" Pruned down to {0} issues.", len(issues))
+        if self.config.get('include_user_issues', True, asbool):
+            issues.update(
+                filter(self.filter_issues,
+                       self.get_directly_assigned_issues().items())
+            )
+
+        log.debug(" Found %i issues.", len(issues))
+        issues = list(filter(self.include, issues.values()))
+        log.debug(" Pruned down to %i issues.", len(issues))
 
         for tag, issue in issues:
             # Stuff this value into the upstream dict for:
@@ -295,15 +438,14 @@ class GithubService(IssueService):
             yield issue_obj
 
     @classmethod
-    def validate_config(cls, config, target):
-        if not config.has_option(target, 'github.login'):
+    def validate_config(cls, service_config, target):
+        if 'login' not in service_config:
             die("[%s] has no 'github.login'" % target)
 
-        if not config.has_option(target, 'github.token') and \
-           not config.has_option(target, 'github.password'):
+        if 'token' not in service_config and 'password' not in service_config:
             die("[%s] has no 'github.token' or 'github.password'" % target)
 
-        if not config.has_option(target, 'github.username'):
+        if 'username' not in service_config:
             die("[%s] has no 'github.username'" % target)
 
-        super(GithubService, cls).validate_config(config, target)
+        super(GithubService, cls).validate_config(service_config, target)

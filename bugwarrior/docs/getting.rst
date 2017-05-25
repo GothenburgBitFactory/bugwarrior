@@ -1,8 +1,29 @@
 Getting bugwarrior
 ==================
 
+.. _requirements:
+
+Requirements
+------------
+
+To use bugwarrior, you need python 2.7 and taskwarrior. Upon installation, the
+setup script will automatically download and install missing python
+dependencies.
+
+Note that some of those dependencies have a C extension module (e.g. the
+``cryptography`` package).  If those packages are not yet present on your
+system, the setup script will try to build them locally, for which you will
+need a C compiler (e.g. ``gcc``) and the necessary header files (python and,
+for the cryptography package, openssl).
+A convenient way to install those is to use your usual package manager
+(``dnf``, ``yum``, ``apt``, etc).
+Header files are installed from development packages (e.g.  ``python-devel``
+and ``openssl-devel`` on Fedora or ``python-dev`` ``libssl-dev`` on Debian).
+
 Installing from the Python Package Index
 ----------------------------------------
+
+.. highlight:: console
 
 Installing it from http://pypi.python.org/pypi/bugwarrior is easy with
 :command:`pip`::
@@ -20,7 +41,7 @@ and Active Collab but those require extra dependencies that are installed by
 specifying ``bugwarrior[service]`` in the commands above. For example, if you
 want to use bugwarrior with Jira::
 
-    $ pip install bugwarrior[jira]
+    $ pip install "bugwarrior[jira]"
 
 
 Installing from Source

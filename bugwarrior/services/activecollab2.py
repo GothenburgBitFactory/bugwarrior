@@ -1,21 +1,23 @@
 import itertools
-import json
 import time
-import urllib2
 
 import six
-from twiggy import log
+import requests
 
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import IssueService, Issue, ServiceClient
 from bugwarrior.config import die
 
+import logging
+log = logging.getLogger(__name__)
 
-class ActiveCollab2Client(object):
-    def __init__(self, url, key, user_id, projects):
+
+class ActiveCollab2Client(ServiceClient):
+    def __init__(self, url, key, user_id, projects, target):
         self.url = url
         self.key = key
         self.user_id = user_id
         self.projects = projects
+        self.target = target
 
     def get_task_dict(self, project, key, task):
         assigned_task = {
@@ -29,10 +31,10 @@ class ActiveCollab2Client(object):
                 "/tickets/" + six.text_type(task[u'ticket_id']))
             assignees = ticket_data[u'assignees']
 
-            for k, v in enumerate(assignees):
+            for assignee in assignees:
                 if (
-                    (v[u'is_owner'] is True)
-                    and (v[u'user_id'] == int(self.user_id))
+                    (assignee[u'is_owner'] is True)
+                    and (assignee[u'user_id'] == int(self.user_id))
                 ):
                     assigned_task.update(ticket_data)
                     return assigned_task
@@ -60,18 +62,19 @@ class ActiveCollab2Client(object):
             assigned_task = self.get_task_dict(project_id, key, task)
 
             if assigned_task:
-                log.name(self.target).debug(
+                log.debug(
                     " Adding '" + assigned_task['description'] +
                     "' to task list.")
                 yield assigned_task
 
-    def call_api(self, uri, get=None):
-        url = self.url.rstrip("/") + "?token=" + self.key + \
-            "&path_info=" + uri + "&format=json"
-        req = urllib2.Request(url)
-        res = urllib2.urlopen(req)
+    def call_api(self, uri):
+        url = self.url.rstrip("/")
+        params = {
+            'token': self.key,
+            'path_info': uri,
+            'format': 'json'}
 
-        return json.loads(res.read())
+        return self.json_response(requests.get(url, params=params))
 
 
 class ActiveCollab2Issue(Issue):
@@ -146,6 +149,9 @@ class ActiveCollab2Issue(Issue):
         return record
 
     def get_default_description(self):
+        record_type = self.record['type'].lower()
+        record_type = 'issue' if record_type == 'ticket' else record_type
+
         return self.build_default_description(
             title=(
                 self.record['name']
@@ -154,7 +160,7 @@ class ActiveCollab2Issue(Issue):
             ),
             url=self.get_processed_url(self.record['permalink']),
             number=self.record['ticket_id'],
-            cls=self.record['type'].lower(),
+            cls=record_type,
         )
 
 
@@ -165,10 +171,10 @@ class ActiveCollab2Service(IssueService):
     def __init__(self, *args, **kw):
         super(ActiveCollab2Service, self).__init__(*args, **kw)
 
-        self.url = self.config_get('url').rstrip('/')
-        self.key = self.config_get('key')
-        self.user_id = self.config_get('user_id')
-        projects_raw = self.config_get('projects')
+        self.url = self.config.get('url').rstrip('/')
+        self.key = self.config.get('key')
+        self.user_id = self.config.get('user_id')
+        projects_raw = self.config.get('projects')
 
         projects_list = projects_raw.split(',')
         projects = []
@@ -180,21 +186,21 @@ class ActiveCollab2Service(IssueService):
         self.projects = projects
 
         self.client = ActiveCollab2Client(
-            self.url, self.key, self.user_id, self.projects
+            self.url, self.key, self.user_id, self.projects, self.target
         )
 
     @classmethod
-    def validate_config(cls, config, target):
+    def validate_config(cls, service_config, target):
         for k in (
-            'activecollab2.url',
-            'activecollab2.key',
-            'activecollab2.projects',
-            'activecollab2.user_id'
+            'url',
+            'key',
+            'projects',
+            'user_id'
         ):
-            if not config.has_option(target, k):
-                die("[%s] has no '%s'" % (target, k))
+            if k not in service_config:
+                die("[%s] has no 'activecollab2.%s'" % (target, k))
 
-        super(ActiveCollab2Service, cls).validate_config(config, target)
+        super(ActiveCollab2Service, cls).validate_config(service_config, target)
 
     def issues(self):
         # Loop through each project
@@ -202,8 +208,8 @@ class ActiveCollab2Service(IssueService):
         issue_generators = []
         projects = self.projects
         for project in projects:
-            for project_id, project_name in project.iteritems():
-                log.name(self.target).debug(
+            for project_id, project_name in project.items():
+                log.debug(
                     " Getting tasks for #" + project_id +
                     " " + project_name + '"')
                 issue_generators.append(
@@ -212,8 +218,7 @@ class ActiveCollab2Service(IssueService):
                     )
                 )
 
-        log.name(self.target).debug(
-            " Elapsed Time: %s" % (time.time() - start))
+        log.debug(" Elapsed Time: %s" % (time.time() - start))
 
         for record in itertools.chain(*issue_generators):
             yield self.get_issue_for_record(record)

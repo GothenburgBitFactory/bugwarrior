@@ -1,5 +1,3 @@
-import mock
-
 from bugwarrior.services import Issue
 
 from .base import ServiceTest
@@ -7,6 +5,7 @@ from .base import ServiceTest
 
 class TestTemplates(ServiceTest):
     def setUp(self):
+        super(TestTemplates, self).setUp()
         self.arbitrary_default_description = 'Construct Library on Terminus'
         self.arbitrary_issue = {
             'project': 'end_of_empire',

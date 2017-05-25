@@ -1,10 +1,13 @@
+from __future__ import unicode_literals
+from builtins import filter
+
 import requests
-from twiggy import log
 
-from bugwarrior import data
-from bugwarrior.services import IssueService, Issue
-from bugwarrior.config import asbool, die
+from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.config import asbool, aslist, die
 
+import logging
+log = logging.getLogger(__name__)
 
 class BitbucketIssue(Issue):
     TITLE = 'bitbuckettitle'
@@ -21,7 +24,7 @@ class BitbucketIssue(Issue):
             'label': 'Bitbucket URL',
         },
         FOREIGN_ID: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'Bitbucket Issue ID',
         }
     }
@@ -55,7 +58,7 @@ class BitbucketIssue(Issue):
         )
 
 
-class BitbucketService(IssueService):
+class BitbucketService(IssueService, ServiceClient):
     ISSUE_CLASS = BitbucketIssue
     CONFIG_PREFIX = 'bitbucket'
 
@@ -66,17 +69,16 @@ class BitbucketService(IssueService):
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
 
+        key = self.config.get('key')
+        secret = self.config.get('secret')
+        auth = {'oauth': (key, secret)}
 
-        key = self.config_get_default('key')
-        secret = self.config_get_default('secret')
-        self.auth = {'oauth': (key, secret)}
-
-        refresh_token = data.get('bitbucket_refresh_token')
+        refresh_token = self.config.data.get('bitbucket_refresh_token')
 
         if not refresh_token:
-            login = self.config_get('login')
-            password = self.config_get_password('password', login)
-            self.auth['basic'] = (login, password)
+            login = self.config.get('login')
+            password = self.get_password('password', login)
+            auth['basic'] = (login, password)
 
         if key and secret:
             if refresh_token:
@@ -84,41 +86,38 @@ class BitbucketService(IssueService):
                     self.BASE_URL + 'site/oauth2/access_token',
                     data={'grant_type': 'refresh_token',
                           'refresh_token': refresh_token},
-                    auth=self.auth['oauth']).json()
+                    auth=auth['oauth']).json()
             else:
                 response = requests.post(
                     self.BASE_URL + 'site/oauth2/access_token',
                     data={'grant_type': 'password',
                           'username': login,
                           'password': password},
-                    auth=self.auth['oauth']).json()
+                    auth=auth['oauth']).json()
 
-                data.set('bitbucket_refresh_token', response['refresh_token'])
+                self.config.data.set('bitbucket_refresh_token',
+                                     response['refresh_token'])
 
-            self.auth['token'] = response['access_token']
+            auth['token'] = response['access_token']
 
-        self.exclude_repos = []
-        if self.config_get_default('exclude_repos', None):
-            self.exclude_repos = [
-                item.strip() for item in
-                self.config_get('exclude_repos').strip().split(',')
-            ]
+        self.requests_kwargs = {}
+        if 'token' in auth:
+            self.requests_kwargs['headers'] = {
+                'Authorization': 'Bearer ' + auth['token']}
+        elif 'basic' in auth:
+            self.requests_kwargs['auth'] = auth['basic']
 
-        self.include_repos = []
-        if self.config_get_default('include_repos', None):
-            self.include_repos = [
-                item.strip() for item in
-                self.config_get('include_repos').strip().split(',')
-            ]
+        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
+        self.include_repos = self.config.get('include_repos', [], aslist)
 
-        self.filter_merge_requests = self.config_get_default(
+        self.filter_merge_requests = self.config.get(
             'filter_merge_requests', default=False, to_type=asbool
         )
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        login = config.get(section, cls._get_key('login'))
-        username = config.get(section, cls._get_key('username'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        login = service_config.get('login')
+        username = service_config.get('username')
         return "bitbucket://%s@bitbucket.org/%s" % (login, username)
 
     def filter_repos(self, repo_tag):
@@ -136,53 +135,42 @@ class BitbucketService(IssueService):
 
         return True
 
-    def get_data(self, url, **kwargs):
-        api = kwargs.get('api', self.BASE_API2)
+    def get_data(self, url):
+        """ Perform a request to the fully qualified url and return json. """
+        return self.json_response(requests.get(url, **self.requests_kwargs))
 
-        kwargs = {}
-        if 'token' in self.auth:
-            kwargs['headers'] = {
-                'Authorization': 'Bearer ' + self.auth['token']}
-        elif 'basic' in self.auth:
-            kwargs['auth'] = self.auth['basic']
-
-        response = requests.get(api + url, **kwargs)
-
-        # And.. if we didn't get good results, just bail.
-        if response.status_code != 200:
-            raise IOError(
-                "Non-200 status code %r; %r; %r" % (
-                    response.status_code, url, response.text,
-                )
-            )
-        if callable(response.json):
-            # Newer python-requests
-            return response.json()
-        else:
-            # Older python-requests
-            return response.json
+    def get_collection(self, url):
+        """ Pages through an object collection from the bitbucket API.
+        Returns an iterator that lazily goes through all the 'values'
+        of all the pages in the collection. """
+        url = self.BASE_API2 + url
+        while url is not None:
+            response = self.get_data(url)
+            for value in response['values']:
+                yield value
+            url = response.get('next', None)
 
     @classmethod
-    def validate_config(cls, config, target):
-        if not config.has_option(target, 'bitbucket.username'):
+    def validate_config(cls, service_config, target):
+        if 'username' not in service_config:
             die("[%s] has no 'username'" % target)
-        if not config.has_option(target, 'bitbucket.login'):
+        if 'login' not in service_config:
             die("[%s] has no 'login'" % target)
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def fetch_issues(self, tag):
-        response = self.get_data('/repositories/%s/issues/' % (tag))
-        return [(tag, issue) for issue in response['values']]
+        response = self.get_collection('/repositories/%s/issues/' % (tag))
+        return [(tag, issue) for issue in response]
 
     def fetch_pull_requests(self, tag):
-        response = self.get_data('/repositories/%s/pullrequests/' % tag)
-        return [(tag, issue) for issue in response['values']]
+        response = self.get_collection('/repositories/%s/pullrequests/' % tag)
+        return [(tag, issue) for issue in response]
 
     def get_annotations(self, tag, issue, issue_obj, url):
         response = self.get_data(
-            '/repositories/%s/issues/%i/comments' % (tag, issue['id']),
-            api=self.BASE_API)
+            self.BASE_API +
+            '/repositories/%s/issues/%i/comments' % (tag, issue['id']))
         return self.build_annotations(
             ((
                 comment['author_info']['username'],
@@ -192,39 +180,41 @@ class BitbucketService(IssueService):
         )
 
     def get_annotations2(self, tag, issue, issue_obj, url):
-        response = self.get_data(
+        response = self.get_collection(
             '/repositories/%s/pullrequests/%i/comments' % (tag, issue['id'])
         )
         return self.build_annotations(
             ((
                 comment['user']['username'],
                 comment['content']['raw'],
-            ) for comment in response['values']),
+            ) for comment in response),
             issue_obj.get_processed_url(url)
         )
 
     def get_owner(self, issue):
-        tag, issue = issue
-        return issue.get('responsible', {}).get('username', None)
+        _, issue = issue
+        assignee = issue.get('assignee', None)
+        if assignee is not None:
+            return assignee.get('username', None)
 
     def issues(self):
-        user = self.config.get(self.target, 'bitbucket.username')
-        response = self.get_data('/repositories/' + user + '/')
-        repo_tags = filter(self.filter_repos, [
-            repo['full_name'] for repo in response.get('values')
+        user = self.config.get('username')
+        response = self.get_collection('/repositories/' + user + '/')
+        repo_tags = list(filter(self.filter_repos, [
+            repo['full_name'] for repo in response
             if repo.get('has_issues')
-        ])
+        ]))
 
         issues = sum([self.fetch_issues(repo) for repo in repo_tags], [])
-        log.name(self.target).debug(" Found {0} total.", len(issues))
+        log.debug(" Found %i total.", len(issues))
 
         closed = ['resolved', 'duplicate', 'wontfix', 'invalid', 'closed']
         try:
-            issues = filter(lambda tup: tup[1]['status'] not in closed, issues)
+            issues = [tup for tup in issues if tup[1]['status'] not in closed]
         except KeyError:  # Undocumented API change.
-            issues = filter(lambda tup: tup[1]['state'] not in closed, issues)
-        issues = filter(self.include, issues)
-        log.name(self.target).debug(" Pruned down to {0}", len(issues))
+            issues = [tup for tup in issues if tup[1]['state'] not in closed]
+        issues = list(filter(self.include, issues))
+        log.debug(" Pruned down to %i", len(issues))
 
         for tag, issue in issues:
             issue_obj = self.get_issue_for_record(issue)
@@ -240,13 +230,13 @@ class BitbucketService(IssueService):
         if not self.filter_merge_requests:
             pull_requests = sum(
                 [self.fetch_pull_requests(repo) for repo in repo_tags], [])
-            log.name(self.target).debug(" Found {0} total.", len(pull_requests))
+            log.debug(" Found %i total.", len(pull_requests))
 
             closed = ['rejected', 'fulfilled']
             not_resolved = lambda tup: tup[1]['state'] not in closed
-            pull_requests = filter(not_resolved, pull_requests)
-            pull_requests = filter(self.include, pull_requests)
-            log.name(self.target).debug(" Pruned down to {0}", len(pull_requests))
+            pull_requests = list(filter(not_resolved, pull_requests))
+            pull_requests = list(filter(self.include, pull_requests))
+            log.debug(" Pruned down to %i", len(pull_requests))
 
             for tag, issue in pull_requests:
                 issue_obj = self.get_issue_for_record(issue)

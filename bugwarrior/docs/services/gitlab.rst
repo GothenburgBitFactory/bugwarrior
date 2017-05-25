@@ -33,19 +33,32 @@ may want to pull issues from only a subset of your repositories.  To
 do that, you can use the ``gitlab.include_repos`` option.
 
 For example, if you would like to only pull-in issues from
-your ``project_foo`` and ``project_fox`` repositories, you could add
-this line to your service configuration::
+your own ``project_foo`` and team ``bar``'s ``project_fox`` repositories, you
+could add this line to your service configuration (replacing ``me`` by your own
+login)::
 
-    gitlab.include_repos = project_foo,project_fox
+    gitlab.include_repos = me/project_foo, bar/project_fox
 
 Alternatively, if you have a particularly noisy repository, you can
 instead choose to import all issues excepting it using the
 ``gitlab.exclude_repos`` configuration option.
 
-In this example, ``noisy_repository`` is the repository you would
+In this example, ``noisy/repository`` is the repository you would
 *not* like issues created for::
 
-    gitlab.exclude_repos = noisy_repository
+    gitlab.exclude_repos = noisy/repository
+
+.. hint::
+   If you omit the repository's namespace, bugwarrior will automatically add
+   your login as namespace. E.g. the following are equivalent::
+
+       gitlab.login = foo
+       gitlab.include_repos = bar
+
+   and::
+
+       gitlab.login = foo
+       gitlab.include_repos = foo/bar
 
 Import Labels as Tags
 +++++++++++++++++++++
@@ -83,6 +96,27 @@ by adding the following configuration option::
 
     gitlab.filter_merge_requests = True
 
+Include Todo Items
+++++++++++++++++++
+
+By default todo items are not included.  You may include them by adding the
+following configuration option::
+
+    gitlab.include_todos = True
+
+If todo items are included, by default, todo items for all projects are
+included.  To only fetch todo items for projects which are being fetched, you
+may set::
+
+    gitlab.include_all_todos = False
+
+Include Only One Author
++++++++++++++++++++++++
+
+If you would like to only pull issues and MRs that you've authored, you may set::
+
+    gitlab.only_if_author = myusername
+
 Use HTTP
 ++++++++
 
@@ -93,7 +127,7 @@ If your Gitlab instance is only available over HTTP, set::
 Do Not Verify SSL Certificate
 +++++++++++++++++++++++++++++
 
-If want to ignore verifying the SSL certificate, set::
+If you want to ignore verifying the SSL certificate, set::
 
     gitlab.verify_ssl = False
 
@@ -117,6 +151,8 @@ Provided UDA Fields
 | ``gitlabtype``        | Type                  | Text (string)       |
 +-----------------------+-----------------------+---------------------+
 | ``gitlabupdatedat``   | Updated               | Date & Time         |
++-----------------------+-----------------------+---------------------+
+| ``gitlabduedate``     | Due Date              | Date                |
 +-----------------------+-----------------------+---------------------+
 | ``gitlaburl``         | URL                   | Text (string)       |
 +-----------------------+-----------------------+---------------------+

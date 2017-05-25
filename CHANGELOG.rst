@@ -1,4 +1,703 @@
 
+1.5.0
+-----
+
+Pull Requests
+
+-                   #292, Merge pull request #292 from ryneeverett/debug-flag
+  https://github.com/ralphbean/bugwarrior/pull/292
+-                   #293, Merge pull request #293 from ryneeverett/purge-unittest2
+  https://github.com/ralphbean/bugwarrior/pull/293
+-                   #298, Merge pull request #298 from ryneeverett/redmine-auth
+  https://github.com/ralphbean/bugwarrior/pull/298
+-                   #299, Merge pull request #299 from ryneeverett/purge-urllib2
+  https://github.com/ralphbean/bugwarrior/pull/299
+-                   #301, Merge pull request #301 from ralphbean/feature/taiga
+  https://github.com/ralphbean/bugwarrior/pull/301
+-                   #300, Merge pull request #300 from ryneeverett/service-client-base
+  https://github.com/ralphbean/bugwarrior/pull/300
+-                   #302, Merge pull request #302 from ryneeverett/cleanup-include
+  https://github.com/ralphbean/bugwarrior/pull/302
+-                   #303, Merge pull request #303 from ryansb/performance/fetch-comments
+  https://github.com/ralphbean/bugwarrior/pull/303
+-                   #306, Merge pull request #306 from ralphbean/feature/bugfixes
+  https://github.com/ralphbean/bugwarrior/pull/306
+-                   #305, Merge pull request #305 from ralphbean/feature/gerrit
+  https://github.com/ralphbean/bugwarrior/pull/305
+-                   #307, Merge pull request #307 from ralphbean/feature/include-bugfixes
+  https://github.com/ralphbean/bugwarrior/pull/307
+-                   #294, Merge pull request #294 from ryneeverett/responses-tests
+  https://github.com/ralphbean/bugwarrior/pull/294
+-                   #308, Merge pull request #308 from ryneeverett/simplify_json_response
+  https://github.com/ralphbean/bugwarrior/pull/308
+-                   #309, Merge pull request #309 from ryneeverett/refactor-gihubutils-serviceclient
+  https://github.com/ralphbean/bugwarrior/pull/309
+-                   #312, Merge pull request #312 from ryneeverett/docs-contributing-pull-request
+  https://github.com/ralphbean/bugwarrior/pull/312
+-                   #313, Merge pull request #313 from gdetrez/bitbucket-fixes
+  https://github.com/ralphbean/bugwarrior/pull/313
+-                   #318, Merge pull request #318 from gdetrez/typo
+  https://github.com/ralphbean/bugwarrior/pull/318
+-                   #317, Merge pull request #317 from ryneeverett/more-contributing-docs
+  https://github.com/ralphbean/bugwarrior/pull/317
+-                   #316, Merge pull request #316 from ryneeverett/bitbucket-refactor
+  https://github.com/ralphbean/bugwarrior/pull/316
+-                   #321, Merge pull request #321 from ryneeverett/readthedocs.io
+  https://github.com/ralphbean/bugwarrior/pull/321
+-                   #320, Merge pull request #320 from gdetrez/issue314
+  https://github.com/ralphbean/bugwarrior/pull/320
+-                   #322, Merge pull request #322 from relrod/patch-1
+  https://github.com/ralphbean/bugwarrior/pull/322
+-                   #324, Merge pull request #324 from ryneeverett/fix-github-private-repos
+  https://github.com/ralphbean/bugwarrior/pull/324
+-                   #325, Merge pull request #325 from joshainglis/improve-jira-integration
+  https://github.com/ralphbean/bugwarrior/pull/325
+-                   #328, Merge pull request #328 from jwilk/spelling
+  https://github.com/ralphbean/bugwarrior/pull/328
+-                   #329, Merge pull request #329 from jwilk/missing-import
+  https://github.com/ralphbean/bugwarrior/pull/329
+-                   #332, Merge pull request #332 from ralphbean/feature/http-sessions
+  https://github.com/ralphbean/bugwarrior/pull/332
+-                   #331, Merge pull request #331 from ralphbean/feature/kill-twiggy
+  https://github.com/ralphbean/bugwarrior/pull/331
+-                   #337, Merge pull request #337 from ralphbean/feature/fix-die
+  https://github.com/ralphbean/bugwarrior/pull/337
+-                   #338, Merge pull request #338 from irl/feature/trac/store-component
+  https://github.com/ralphbean/bugwarrior/pull/338
+-                   #340, Merge pull request #340 from irl/feature/trac/store-component
+  https://github.com/ralphbean/bugwarrior/pull/340
+-                   #341, Merge pull request #341 from irl/feature/trac/store-component
+  https://github.com/ralphbean/bugwarrior/pull/341
+-                   #346, Merge pull request #346 from ralphbean/feature/user-agent
+  https://github.com/ralphbean/bugwarrior/pull/346
+-                   #344, Merge pull request #344 from ralphbean/feature/docs-authors
+  https://github.com/ralphbean/bugwarrior/pull/344
+-                   #1, Merge pull request #1 from ryneeverett/debianbts-mock
+  https://github.com/ralphbean/bugwarrior/pull/1
+-                   #2, Merge pull request #2 from ryneeverett/ioerror-no-config-ryne
+  https://github.com/ralphbean/bugwarrior/pull/2
+-                   #348, Merge pull request #348 from irl/feature/debianbts
+  https://github.com/ralphbean/bugwarrior/pull/348
+-                   #359, Merge pull request #359 from jwilk/spelling
+  https://github.com/ralphbean/bugwarrior/pull/359
+-                   #3, Merge pull request #3 from ryneeverett/ioerror-no-config-ryne
+  https://github.com/ralphbean/bugwarrior/pull/3
+-                   #373, Merge pull request #373 from gdetrez/unicode-fix
+  https://github.com/ralphbean/bugwarrior/pull/373
+-                   #372, Merge pull request #372 from gdetrez/github-milestone
+  https://github.com/ralphbean/bugwarrior/pull/372
+-                   #371, Merge pull request #371 from gdetrez/gitlab-repos
+  https://github.com/ralphbean/bugwarrior/pull/371
+-                   #357, Merge pull request #357 from irl/fix/ioerror-no-config
+  https://github.com/ralphbean/bugwarrior/pull/357
+-                   #362, Merge pull request #362 from mathstuf/gitlab-todos
+  https://github.com/ralphbean/bugwarrior/pull/362
+-                   #370, Merge pull request #370 from gdetrez/bugwarriorrc
+  https://github.com/ralphbean/bugwarrior/pull/370
+-                   #319, Merge pull request #319 from gdetrez/trello
+  https://github.com/ralphbean/bugwarrior/pull/319
+-                   #378, Merge pull request #378 from irl/task/reject-config-udd
+  https://github.com/ralphbean/bugwarrior/pull/378
+-                   #381, Merge pull request #381 from ralphbean/feature/jira-sprints
+  https://github.com/ralphbean/bugwarrior/pull/381
+-                   #389, Merge pull request #389 from beav/377
+  https://github.com/ralphbean/bugwarrior/pull/389
+-                   #382, Merge pull request #382 from ryneeverett/improve-travis-coverage
+  https://github.com/ralphbean/bugwarrior/pull/382
+-                   #383, Merge pull request #383 from gdetrez/doc-pass
+  https://github.com/ralphbean/bugwarrior/pull/383
+-                   #386, Merge pull request #386 from gdetrez/issue/376
+  https://github.com/ralphbean/bugwarrior/pull/386
+-                   #364, Merge pull request #364 from ryneeverett/taskdata-dir-ryne
+  https://github.com/ralphbean/bugwarrior/pull/364
+-                   #397, Merge pull request #397 from mathstuf/gitlab-all-todos
+  https://github.com/ralphbean/bugwarrior/pull/397
+-                   #399, Merge pull request #399 from mathstuf/filter-involved-issues
+  https://github.com/ralphbean/bugwarrior/pull/399
+-                   #408, Merge pull request #408 from bowlofeggs/docs-systemd_timer
+  https://github.com/ralphbean/bugwarrior/pull/408
+-                   #384, Merge pull request #384 from ryneeverett/test-db-module
+  https://github.com/ralphbean/bugwarrior/pull/384
+-                   #401, Merge pull request #401 from stbenjam/githubuser-uda
+  https://github.com/ralphbean/bugwarrior/pull/401
+-                   #403, Merge pull request #403 from beav/only_if_author
+  https://github.com/ralphbean/bugwarrior/pull/403
+-                   #416, Merge pull request #416 from ralphbean/feature/unhappy-future
+  https://github.com/ralphbean/bugwarrior/pull/416
+-                   #421, Merge pull request #421 from gdetrez/github-token-oracle
+  https://github.com/ralphbean/bugwarrior/pull/421
+-                   #424, Merge pull request #424 from ryneeverett/keyring-optional
+  https://github.com/ralphbean/bugwarrior/pull/424
+-                   #428, Merge pull request #428 from lubomir/jira-kerberos
+  https://github.com/ralphbean/bugwarrior/pull/428
+-                   #430, Merge pull request #430 from ralphbean/feature/secure-by-default
+  https://github.com/ralphbean/bugwarrior/pull/430
+-                   #431, Merge pull request #431 from lubomir/pickle-error
+  https://github.com/ralphbean/bugwarrior/pull/431
+-                   #434, Merge pull request #434 from lyarwood/develop
+  https://github.com/ralphbean/bugwarrior/pull/434
+-                   #435, Merge pull request #435 from ralphbean/feature/jira-urls
+  https://github.com/ralphbean/bugwarrior/pull/435
+-                   #395, Merge pull request #395 from kostajh/redmine-improvements
+  https://github.com/ralphbean/bugwarrior/pull/395
+-                   #439, Merge pull request #439 from wookietreiber/develop
+  https://github.com/ralphbean/bugwarrior/pull/439
+-                   #440, Merge pull request #440 from ralphbean/pesky-jira
+  https://github.com/ralphbean/bugwarrior/pull/440
+-                   #452, Merge pull request #452 from djmitche/issue423
+  https://github.com/ralphbean/bugwarrior/pull/452
+-                   #422, Merge pull request #422 from gdetrez/360-enterprize-github-support
+  https://github.com/ralphbean/bugwarrior/pull/422
+-                   #437, Merge pull request #437 from ryneeverett/getint-None
+  https://github.com/ralphbean/bugwarrior/pull/437
+-                   #456, Merge pull request #456 from ralphbean/feature/remove-pynotify
+  https://github.com/ralphbean/bugwarrior/pull/456
+-                   #464, Merge pull request #464 from ssbarnea/develop
+  https://github.com/ralphbean/bugwarrior/pull/464
+-                   #468, Merge pull request #468 from nblock/dev/bugzilla-uda
+  https://github.com/ralphbean/bugwarrior/pull/468
+-                   #476, Merge pull request #476 from Fongshway/issue/450
+  https://github.com/ralphbean/bugwarrior/pull/476
+
+Commits
+
+- 69bd63659 Replace development config with --debug flag.
+  https://github.com/ralphbean/bugwarrior/commit/69bd63659
+- e0931eafc Purge unittest2 now that we only test in 2.7+.
+  https://github.com/ralphbean/bugwarrior/commit/e0931eafc
+- e55371e39 #295: Proof of concept.
+  https://github.com/ralphbean/bugwarrior/commit/e55371e39
+- 18baef532 Fix get_keyring_service, add docs, and style.
+  https://github.com/ralphbean/bugwarrior/commit/18baef532
+- 5969ed2fb Replace remaining urrlib2 usage with requests.
+  https://github.com/ralphbean/bugwarrior/commit/5969ed2fb
+- 4150569ae Switch redmine from urllib2 to requests.
+  https://github.com/ralphbean/bugwarrior/commit/4150569ae
+- fd66b5d8b A service for pulling issues from a taiga instance.
+  https://github.com/ralphbean/bugwarrior/commit/fd66b5d8b
+- 76409b411 Clean up IssueService.include
+  https://github.com/ralphbean/bugwarrior/commit/76409b411
+- 28a6e2bab Give config_get_password a default argument for login.
+  https://github.com/ralphbean/bugwarrior/commit/28a6e2bab
+- 0febb90b4 Simplify taiga headers.
+  https://github.com/ralphbean/bugwarrior/commit/0febb90b4
+- 567bf72b2 This is actually numeric.
+  https://github.com/ralphbean/bugwarrior/commit/567bf72b2
+- 3e4cbf716 Add a test_to_taskwarrior test case for taiga.
+  https://github.com/ralphbean/bugwarrior/commit/3e4cbf716
+- 4a42012bd Add ServiceClient base class.
+  https://github.com/ralphbean/bugwarrior/commit/4a42012bd
+- 8b663eb33 Fetch github comments only when they will be used
+  https://github.com/ralphbean/bugwarrior/commit/8b663eb33
+- ece326830 Fix a bug from #303.
+  https://github.com/ralphbean/bugwarrior/commit/ece326830
+- 81e8d74d0 Fix a bug from #302, when values are absent from the config.
+  https://github.com/ralphbean/bugwarrior/commit/81e8d74d0
+- 3d3fcf2bb A gerrit service.. and only a gerrit service.
+  https://github.com/ralphbean/bugwarrior/commit/3d3fcf2bb
+- ea7f08f98 Explain this slice.
+  https://github.com/ralphbean/bugwarrior/commit/ea7f08f98
+- 41f88170c Add an explanatory comment.
+  https://github.com/ralphbean/bugwarrior/commit/41f88170c
+- 82b75f52d This is not a bool.
+  https://github.com/ralphbean/bugwarrior/commit/82b75f52d
+- f99909433 Complain when users specify old config values.
+  https://github.com/ralphbean/bugwarrior/commit/f99909433
+- 6b3a8109f Add responses and test Bitbucket issues.
+  https://github.com/ralphbean/bugwarrior/commit/6b3a8109f
+- 6c487d742 Test github issues.
+  https://github.com/ralphbean/bugwarrior/commit/6c487d742
+- 399597c3a Test gitlab issues.
+  https://github.com/ralphbean/bugwarrior/commit/399597c3a
+- ff6b06056 Test jira issues.
+  https://github.com/ralphbean/bugwarrior/commit/ff6b06056
+- 355f3365c Test activecollab issues.
+  https://github.com/ralphbean/bugwarrior/commit/355f3365c
+- 4084ab965 Test activecollab2 issues and fix bugs.
+  https://github.com/ralphbean/bugwarrior/commit/4084ab965
+- b222c991f Test bugzilla issues.
+  https://github.com/ralphbean/bugwarrior/commit/b222c991f
+- d375a2aba Test gerrit issues.
+  https://github.com/ralphbean/bugwarrior/commit/d375a2aba
+- 228febfb2 Run assertEqual against record dict.
+  https://github.com/ralphbean/bugwarrior/commit/228febfb2
+- 0ee936712 Test megaplan issues.
+  https://github.com/ralphbean/bugwarrior/commit/0ee936712
+- 52c3ca2e5 Test redmine issues.
+  https://github.com/ralphbean/bugwarrior/commit/52c3ca2e5
+- 85ebb829c Fix taiga ServiceClient.json_response TypeError.
+  https://github.com/ralphbean/bugwarrior/commit/85ebb829c
+- 6dfb913f9 Test taiga issues.
+  https://github.com/ralphbean/bugwarrior/commit/6dfb913f9
+- 6953f96be Test teamlab issues.
+  https://github.com/ralphbean/bugwarrior/commit/6953f96be
+- 9a87148ab Test trac issues.
+  https://github.com/ralphbean/bugwarrior/commit/9a87148ab
+- 2b75ce4a7 Add AbstractServiceTest base class.
+  https://github.com/ralphbean/bugwarrior/commit/2b75ce4a7
+- 5cad26267 Add ServiceTest.add_response method.
+  https://github.com/ralphbean/bugwarrior/commit/5cad26267
+- 38a79c8ac Simplify SerivceClient.json_response interface.
+  https://github.com/ralphbean/bugwarrior/commit/38a79c8ac
+- bd7d866ab Refactor githubutils into a ServiceClient.
+  https://github.com/ralphbean/bugwarrior/commit/bd7d866ab
+- 4ca49a7df Add a docstring to ServiceClient.
+  https://github.com/ralphbean/bugwarrior/commit/4ca49a7df
+- acda8d3e4 Move GithubClient to github.py.
+  https://github.com/ralphbean/bugwarrior/commit/acda8d3e4
+- ecad1b175 Add pull request documentation.
+  https://github.com/ralphbean/bugwarrior/commit/ecad1b175
+- c6704f4e9 Bitbucket: Paginate through object collection returned by API call
+  https://github.com/ralphbean/bugwarrior/commit/c6704f4e9
+- b32bb03ad Bitbucket: Fix `only_if_assigned` with API 2.0
+  https://github.com/ralphbean/bugwarrior/commit/b32bb03ad
+- d796bc83c Bitbucket: add tests for the pagination and assignee
+  https://github.com/ralphbean/bugwarrior/commit/d796bc83c
+- 7253b61b7 Return a list instead of an iterator in `fetch_issues`
+  https://github.com/ralphbean/bugwarrior/commit/7253b61b7
+- e8a1fad91 Generate bitbucket's requests kwargs in __init__.
+  https://github.com/ralphbean/bugwarrior/commit/e8a1fad91
+- 2dc28f9de Eliminate one of the data fetching methods.
+  https://github.com/ralphbean/bugwarrior/commit/2dc28f9de
+- 231333190 Encourage work in progress PR's.
+  https://github.com/ralphbean/bugwarrior/commit/231333190
+- af6b7f05a Point to CONTRIBUTING.md to constributing docs.
+  https://github.com/ralphbean/bugwarrior/commit/af6b7f05a
+- 542a7fc2a Fix typo in option name 'inline_links' in docs
+  https://github.com/ralphbean/bugwarrior/commit/542a7fc2a
+- 032ee5128 Enable syntax coloring for configuration examples
+  https://github.com/ralphbean/bugwarrior/commit/032ee5128
+- cc88528e8 Revert "Point to CONTRIBUTING.md to constributing docs."
+  https://github.com/ralphbean/bugwarrior/commit/cc88528e8
+- 1810f05f2 Github: add an option to skip user issues
+  https://github.com/ralphbean/bugwarrior/commit/1810f05f2
+- b6dbd9671 Update docs link to readthedocs.io.
+  https://github.com/ralphbean/bugwarrior/commit/b6dbd9671
+- cdef5e7b8 Use https for da.gd :)
+  https://github.com/ralphbean/bugwarrior/commit/cdef5e7b8
+- b0cee49d5 Include github private repos (take 2). Fix #282.
+  https://github.com/ralphbean/bugwarrior/commit/b0cee49d5
+- 10cc232c7 Improve JIRA integration
+  https://github.com/ralphbean/bugwarrior/commit/10cc232c7
+- 68ec0798a Fix typos.
+  https://github.com/ralphbean/bugwarrior/commit/68ec0798a
+- 2b936e01a Add missing import.
+  https://github.com/ralphbean/bugwarrior/commit/2b936e01a
+- 2e1419dc2 Kill twiggy.
+  https://github.com/ralphbean/bugwarrior/commit/2e1419dc2
+- 24f1de44c Use requests "sessions".
+  https://github.com/ralphbean/bugwarrior/commit/24f1de44c
+- 48bcea1db Fix messed up logging in die().
+  https://github.com/ralphbean/bugwarrior/commit/48bcea1db
+- f393d2f4c Store Trac component in UDA for Trac service
+  https://github.com/ralphbean/bugwarrior/commit/f393d2f4c
+- 511b1f534 Update Sphinx docs to reflect new traccomponent UDA
+  https://github.com/ralphbean/bugwarrior/commit/511b1f534
+- fae7e710e Update Trac tests to include component UDA
+  https://github.com/ralphbean/bugwarrior/commit/fae7e710e
+- 2d3f7f6ef Add full docs authors list to the man page.
+  https://github.com/ralphbean/bugwarrior/commit/2d3f7f6ef
+- 7439ad815 Modify headers instead of overwriting.
+  https://github.com/ralphbean/bugwarrior/commit/7439ad815
+- 5cdb0d137 Make Jira installation example in docs ZSH compatible (#349)
+  https://github.com/ralphbean/bugwarrior/commit/5cdb0d137
+- d116513c4 Skip activecollab tests if pandoc is not installed (#351)
+  https://github.com/ralphbean/bugwarrior/commit/d116513c4
+- 037673212 Add help text to bugwarrior-pull's --debug flag. (#352)
+  https://github.com/ralphbean/bugwarrior/commit/037673212
+- 5be94b753 Make bitbucketid numeric. (#353)
+  https://github.com/ralphbean/bugwarrior/commit/5be94b753
+- f4f1fc193 Initial Debian BTS support
+  https://github.com/ralphbean/bugwarrior/commit/f4f1fc193
+- 162f7fe8d Use requests not urllib{,2}
+  https://github.com/ralphbean/bugwarrior/commit/162f7fe8d
+- 80e757382 Use asbool in place of local bool parsing
+  https://github.com/ralphbean/bugwarrior/commit/80e757382
+- dff2e7772 Add debianbts as a dependency for the bts service
+  https://github.com/ralphbean/bugwarrior/commit/dff2e7772
+- df71ee28e Add tests for BTS service
+  https://github.com/ralphbean/bugwarrior/commit/df71ee28e
+- 539d70918 travis: pip install PySimpleSOAP before installing everything else.
+  https://github.com/ralphbean/bugwarrior/commit/539d70918
+- c0427c9fb Updates to the docs for BTS service
+  https://github.com/ralphbean/bugwarrior/commit/c0427c9fb
+- 3a82edb9d Adds Iain R. Learmonth to the contributors list in the README
+  https://github.com/ralphbean/bugwarrior/commit/3a82edb9d
+- 34f998b21 Removes debianbts library as an attribute from the BTS service class
+  https://github.com/ralphbean/bugwarrior/commit/34f998b21
+- e81ac423a Fixes documentation for BTS module, email -> bts.email
+  https://github.com/ralphbean/bugwarrior/commit/e81ac423a
+- 00fc7f508 Adds useful validation of the configuration for the BTS service
+  https://github.com/ralphbean/bugwarrior/commit/00fc7f508
+- 87dbd3aa6 Allow to ignore tasks marked as pending in the BTS
+  https://github.com/ralphbean/bugwarrior/commit/87dbd3aa6
+- 1f15f947f PEP8 fixes for new BTS service
+  https://github.com/ralphbean/bugwarrior/commit/1f15f947f
+- 5cc1e64f6 Use mock for monkeypatching.
+  https://github.com/ralphbean/bugwarrior/commit/5cc1e64f6
+- a3c67890b Catch IOError when loading config, useful message
+  https://github.com/ralphbean/bugwarrior/commit/a3c67890b
+- 8d2783bee Don't ignore exit return code when thrown in pull
+  https://github.com/ralphbean/bugwarrior/commit/8d2783bee
+- 088a0d5fd DRY up ioerror exception handling.
+  https://github.com/ralphbean/bugwarrior/commit/088a0d5fd
+- 0eee37341 Eliminate unnecessary exception handling.
+  https://github.com/ralphbean/bugwarrior/commit/0eee37341
+- 2f76cf9da Set up logging in _try_load_config.
+  https://github.com/ralphbean/bugwarrior/commit/2f76cf9da
+- 112d63045 Fix typos
+  https://github.com/ralphbean/bugwarrior/commit/112d63045
+- 5c42553db Fix bugwarrior-uda TypeError.
+  https://github.com/ralphbean/bugwarrior/commit/5c42553db
+- 8e8dec87f Log exception type and reason but not traceback.
+  https://github.com/ralphbean/bugwarrior/commit/8e8dec87f
+- 6405e1ad3 gitlab: expose duedates
+  https://github.com/ralphbean/bugwarrior/commit/6405e1ad3
+- f065c3a2c gitlab: update up and downvotes for issues
+  https://github.com/ralphbean/bugwarrior/commit/f065c3a2c
+- a68d11a69 bitbucket: update docs
+  https://github.com/ralphbean/bugwarrior/commit/a68d11a69
+- 9486d7daa gitlab: return {} for API failures
+  https://github.com/ralphbean/bugwarrior/commit/9486d7daa
+- bcdb48c22 gitlab: implement support for todo items
+  https://github.com/ralphbean/bugwarrior/commit/bcdb48c22
+- 98118d837 gitlab: catch HTTP errors more accurately
+  https://github.com/ralphbean/bugwarrior/commit/98118d837
+- 912a579f2 Only filter todos if "include_all_todos" is False.
+  https://github.com/ralphbean/bugwarrior/commit/912a579f2
+- 2d283e3f2 Minimize duplication in to_taskwarrior.
+  https://github.com/ralphbean/bugwarrior/commit/2d283e3f2
+- 28335a203 Starting on a trello backend
+  https://github.com/ralphbean/bugwarrior/commit/28335a203
+- 5cc12e275 Add TrelloIssue and TrelloService class
+  https://github.com/ralphbean/bugwarrior/commit/5cc12e275
+- 6695b04d0 Add option to import trello labels as tags
+  https://github.com/ralphbean/bugwarrior/commit/6695b04d0
+- 4307026ee Update documentation
+  https://github.com/ralphbean/bugwarrior/commit/4307026ee
+- a5eddd696 Clean the code a bit
+  https://github.com/ralphbean/bugwarrior/commit/a5eddd696
+- 6b34822b1 Trello: Refactor service to add card filtering
+  https://github.com/ralphbean/bugwarrior/commit/6b34822b1
+- d386e13ef Trello: Don't change label case by default
+  https://github.com/ralphbean/bugwarrior/commit/d386e13ef
+- bcde60297 Trello: Add URL screenshot to the doc
+  https://github.com/ralphbean/bugwarrior/commit/bcde60297
+- e07c025b5 Fix some unicode problems
+  https://github.com/ralphbean/bugwarrior/commit/e07c025b5
+- c202739f0 Trello: Use json_response
+  https://github.com/ralphbean/bugwarrior/commit/c202739f0
+- 766c3cc3a Trello: Replace config_get_list by a function aslist
+  https://github.com/ralphbean/bugwarrior/commit/766c3cc3a
+- 01ca30418 Use the new 'aslist' function in other service
+  https://github.com/ralphbean/bugwarrior/commit/01ca30418
+- 7ab59b3e5 Trello: Allow multiple boards in a block
+  https://github.com/ralphbean/bugwarrior/commit/7ab59b3e5
+- 6a9bb00da Trello: Add test for method issues()
+  https://github.com/ralphbean/bugwarrior/commit/6a9bb00da
+- 2cf320d93 Trello: Update and extend documentation
+  https://github.com/ralphbean/bugwarrior/commit/2cf320d93
+- a35343879 Trello: Change option name to only_if_assigned
+  https://github.com/ralphbean/bugwarrior/commit/a35343879
+- ac2996dfa Remove documetation for trello.only_if_assigned
+  https://github.com/ralphbean/bugwarrior/commit/ac2996dfa
+- 90802d0c8 Trello: Implement common option "also_unassigned"
+  https://github.com/ralphbean/bugwarrior/commit/90802d0c8
+- a5adcbc71 Use ServiceClient in trello service
+  https://github.com/ralphbean/bugwarrior/commit/a5adcbc71
+- cd7125fb0 Add support for environment variable $BUGWARRIORRC
+  https://github.com/ralphbean/bugwarrior/commit/cd7125fb0
+- f1eb43bf2 Add comment fetching to trello service
+  https://github.com/ralphbean/bugwarrior/commit/f1eb43bf2
+- 3e47a474c Saving and restoring environment in tests
+  https://github.com/ralphbean/bugwarrior/commit/3e47a474c
+- 28def751a Fix gitlab include/exclude repos
+  https://github.com/ralphbean/bugwarrior/commit/28def751a
+- 321f79f8f Use milestone title instead of id for githubmilestone
+  https://github.com/ralphbean/bugwarrior/commit/321f79f8f
+- 6872ab8c3 Fix some problems with unicode
+  https://github.com/ralphbean/bugwarrior/commit/6872ab8c3
+- 6816ebb3c Fix typos
+  https://github.com/ralphbean/bugwarrior/commit/6816ebb3c
+- 4e12ad597 Change RC file priorities
+  https://github.com/ralphbean/bugwarrior/commit/4e12ad597
+- c4da18737 Add documentation about config file
+  https://github.com/ralphbean/bugwarrior/commit/c4da18737
+- 4a7da3d6a Add trello to the README
+  https://github.com/ralphbean/bugwarrior/commit/4a7da3d6a
+- 1c8fa7c6a bts: Reject configuration if UDD options specified but UDD not used
+  https://github.com/ralphbean/bugwarrior/commit/1c8fa7c6a
+- 9199e9aae Get data location from taskwarrior.
+  https://github.com/ralphbean/bugwarrior/commit/9199e9aae
+- 122a694ce docs: refer to taskrc as a file, not a path
+  https://github.com/ralphbean/bugwarrior/commit/122a694ce
+- f0fcbcb4a Anchor data location search pattern.
+  https://github.com/ralphbean/bugwarrior/commit/f0fcbcb4a
+- 34ccf04f4 If data location cannot be found, raise exception.
+  https://github.com/ralphbean/bugwarrior/commit/34ccf04f4
+- 6c1f9c259 Set up a taskrc and data directory for tests.
+  https://github.com/ralphbean/bugwarrior/commit/6c1f9c259
+- a1815929b os.mkdir does not return the path.
+  https://github.com/ralphbean/bugwarrior/commit/a1815929b
+- 5ba5c88a0 Upgrade taskwarrior 2.3.0 -> 2.4.4.
+  https://github.com/ralphbean/bugwarrior/commit/5ba5c88a0
+- 088f68b97 Import JIRA sprint names as labels.
+  https://github.com/ralphbean/bugwarrior/commit/088f68b97
+- 74fbce77a Guard against non-iterable NoneType here.
+  https://github.com/ralphbean/bugwarrior/commit/74fbce77a
+- de3f13a71 Make the option name more similar to another nearby, similar option.
+  https://github.com/ralphbean/bugwarrior/commit/de3f13a71
+- a21a62189 Make sure to initialize this.
+  https://github.com/ralphbean/bugwarrior/commit/a21a62189
+- fba32cfa2 Add PATH to environment.
+  https://github.com/ralphbean/bugwarrior/commit/fba32cfa2
+- bcec847c8 Reuse config setup/teardown.
+  https://github.com/ralphbean/bugwarrior/commit/bcec847c8
+- 50ffaa0f2 Fresh config for every test unit.
+  https://github.com/ralphbean/bugwarrior/commit/50ffaa0f2
+- 201750e7e Set data file mode to 0600 and test BugwarriorData.
+  https://github.com/ralphbean/bugwarrior/commit/201750e7e
+- 67e8f3642 Switch from statement coverage to branch coverage.
+  https://github.com/ralphbean/bugwarrior/commit/67e8f3642
+- f2982ee24 Improve @oracle documentation
+  https://github.com/ralphbean/bugwarrior/commit/f2982ee24
+- 76f7f616b Switch from coveralls -> codecov.
+  https://github.com/ralphbean/bugwarrior/commit/76f7f616b
+- 109499264 Fix unicode issues in notifications
+  https://github.com/ralphbean/bugwarrior/commit/109499264
+- a266278b9 Supress warning when using gobject notifications
+  https://github.com/ralphbean/bugwarrior/commit/a266278b9
+- b2ca93d8e Handle multiple kinds of sprint fields.
+  https://github.com/ralphbean/bugwarrior/commit/b2ca93d8e
+- 9997f188d Only query for open github PRs (#377)
+  https://github.com/ralphbean/bugwarrior/commit/9997f188d
+- d5b3e07fa Test config.get_data_path.
+  https://github.com/ralphbean/bugwarrior/commit/d5b3e07fa
+- f8c8c0342 Remove unused function.
+  https://github.com/ralphbean/bugwarrior/commit/f8c8c0342
+- 6a3b34b2f More tests for db.merge_left.
+  https://github.com/ralphbean/bugwarrior/commit/6a3b34b2f
+- f7a1cbb4d Don't re-implement for/else control flow.
+  https://github.com/ralphbean/bugwarrior/commit/f7a1cbb4d
+- 6a1ff739e Test db.synchronize.
+  https://github.com/ralphbean/bugwarrior/commit/6a1ff739e
+- d74946ded Test db.get_defined_udas_as_strings.
+  https://github.com/ralphbean/bugwarrior/commit/d74946ded
+- 431c958af redmine: import first 100 issues instead 25
+  https://github.com/ralphbean/bugwarrior/commit/431c958af
+- 643b318dc Fix redmine test.
+  https://github.com/ralphbean/bugwarrior/commit/643b318dc
+- fb41c63cf gitlab: match types when including all todo items
+  https://github.com/ralphbean/bugwarrior/commit/fb41c63cf
+- b11bc154f gitlab: ignore the id
+  https://github.com/ralphbean/bugwarrior/commit/b11bc154f
+- 757de15e6 github: refactor filtering based on the repo name
+  https://github.com/ralphbean/bugwarrior/commit/757de15e6
+- 08378614b github: filter out involved issues by repo
+  https://github.com/ralphbean/bugwarrior/commit/08378614b
+- 14ee268a8 github: simpler repo name parsing
+  https://github.com/ralphbean/bugwarrior/commit/14ee268a8
+- df374f120 github: also filter assigned issues
+  https://github.com/ralphbean/bugwarrior/commit/df374f120
+- ecd8309c0 Add a github UDA for user field
+  https://github.com/ralphbean/bugwarrior/commit/ecd8309c0
+- f78b9e5fb Filter gitlab requests by author
+  https://github.com/ralphbean/bugwarrior/commit/f78b9e5fb
+- f766dda0f Document how to use systemd timers to run bugwarrior-pull.
+  https://github.com/ralphbean/bugwarrior/commit/f766dda0f
+- cff7427b6 Add documentation for static_fields config (#407)
+  https://github.com/ralphbean/bugwarrior/commit/cff7427b6
+- 267f0129e add tox support to test both py27 and py34
+  https://github.com/ralphbean/bugwarrior/commit/267f0129e
+- 2f7ca55f9 use XDG_CACHE_HOME if available
+  https://github.com/ralphbean/bugwarrior/commit/2f7ca55f9
+- 88808e49b futurize bugwarrior: add support for python3
+  https://github.com/ralphbean/bugwarrior/commit/88808e49b
+- 8e52e136e fixes a compatibility problem in Issue.__str__ and friends
+  https://github.com/ralphbean/bugwarrior/commit/8e52e136e
+- f84d83afb depends on pyac>=0.1.5 for python3 support
+  https://github.com/ralphbean/bugwarrior/commit/f84d83afb
+- 9bb049b2f depends on python-debianbts>=2.6.1 for improved ssl support on py34
+  https://github.com/ralphbean/bugwarrior/commit/9bb049b2f
+- 3abe0720a Remove unrequired list coercion.
+  https://github.com/ralphbean/bugwarrior/commit/3abe0720a
+- 36cd992af Remove functools32 and lru_cache usage.
+  https://github.com/ralphbean/bugwarrior/commit/36cd992af
+- 9d909affb In python3, octals must begin with "0o".
+  https://github.com/ralphbean/bugwarrior/commit/9d909affb
+- 3f0f36923 In python3, query param order is unpredictable.
+  https://github.com/ralphbean/bugwarrior/commit/3f0f36923
+- 16f34794d Python3 compatibility for recent code additions.
+  https://github.com/ralphbean/bugwarrior/commit/16f34794d
+- 67f0458a6 Skip megaplan tests in python3.
+  https://github.com/ralphbean/bugwarrior/commit/67f0458a6
+- fc48a15a4 Add python3 to travis matrix.
+  https://github.com/ralphbean/bugwarrior/commit/fc48a15a4
+- 9d3d689f8 Add python3 to classifiers.
+  https://github.com/ralphbean/bugwarrior/commit/9d3d689f8
+- 8132b9658 Add requirement section in the documentation
+  https://github.com/ralphbean/bugwarrior/commit/8132b9658
+- f52e7788c Set highlight to console in contributing docs
+  https://github.com/ralphbean/bugwarrior/commit/f52e7788c
+- 371fb0b4c Add an FAQ
+  https://github.com/ralphbean/bugwarrior/commit/371fb0b4c
+- 877bbdd7a Taskwarrior expects tags to not have spaces, otherwise you cannot query with them.
+  https://github.com/ralphbean/bugwarrior/commit/877bbdd7a
+- 4e4fea19c Merge branch 'feature/jira-sprints' into develop
+  https://github.com/ralphbean/bugwarrior/commit/4e4fea19c
+- 2e3beeb16 Merge branch 'develop' of github.com:ralphbean/bugwarrior into develop
+  https://github.com/ralphbean/bugwarrior/commit/2e3beeb16
+- 9d8eb35b4 Typofix.
+  https://github.com/ralphbean/bugwarrior/commit/9d8eb35b4
+- 83c13b0e8 Trailing comma.
+  https://github.com/ralphbean/bugwarrior/commit/83c13b0e8
+- 16c4cae28 Avoid installing a version of future.
+  https://github.com/ralphbean/bugwarrior/commit/16c4cae28
+- 48d91a76b Update our required version of `six`.
+  https://github.com/ralphbean/bugwarrior/commit/48d91a76b
+- 9e49220f0 With future, we are expected to use py3 import aliases.
+  https://github.com/ralphbean/bugwarrior/commit/9e49220f0
+- 10d391889 Update the db test with a change from another PR.
+  https://github.com/ralphbean/bugwarrior/commit/10d391889
+- 66357380b Use a dependable sorting order when comparing.
+  https://github.com/ralphbean/bugwarrior/commit/66357380b
+- a0b923bf9 Use a different dbm cache file for different python versions.
+  https://github.com/ralphbean/bugwarrior/commit/a0b923bf9
+- ff9b56319 Test py35 with tox as well.
+  https://github.com/ralphbean/bugwarrior/commit/ff9b56319
+- 9a806e23f Exposition.
+  https://github.com/ralphbean/bugwarrior/commit/9a806e23f
+- 43ea5ba0d Check for errors from the taiga API and surface them.
+  https://github.com/ralphbean/bugwarrior/commit/43ea5ba0d
+- 122e1a3ac Fix @oracle:eval with Github and python 3
+  https://github.com/ralphbean/bugwarrior/commit/122e1a3ac
+- 01ae4f580 Put the BugwarriorData instance in the config object
+  https://github.com/ralphbean/bugwarrior/commit/01ae4f580
+- efec9fcf0 Support passing issue_limit in the config
+  https://github.com/ralphbean/bugwarrior/commit/efec9fcf0
+- fa6fe1240 Map due_date
+  https://github.com/ralphbean/bugwarrior/commit/fa6fe1240
+- 2fbc89c13 Add description field, convert ID to numeric
+  https://github.com/ralphbean/bugwarrior/commit/2fbc89c13
+- cd4eae1c8 Add more core fields
+  https://github.com/ralphbean/bugwarrior/commit/cd4eae1c8
+- f033927b7 Remove unneeded user_id, add Assigned To field
+  https://github.com/ralphbean/bugwarrior/commit/f033927b7
+- 52e38dd99 Make keyring dependency optional. Resolve #343.
+  https://github.com/ralphbean/bugwarrior/commit/52e38dd99
+- ca03f8db4 Better date/time handling for created, updated, due
+  https://github.com/ralphbean/bugwarrior/commit/ca03f8db4
+- 47837358f Adjust variable name for consistency
+  https://github.com/ralphbean/bugwarrior/commit/47837358f
+- 7968a93c1 Add some TODOs
+  https://github.com/ralphbean/bugwarrior/commit/7968a93c1
+- ab0929644 More date handling fixes, use task calc for estimated hours
+  https://github.com/ralphbean/bugwarrior/commit/ab0929644
+- 959f998a4 Specify a more realistic limit in the docs
+  https://github.com/ralphbean/bugwarrior/commit/959f998a4
+- b899e8349 Also use task calc on spent_hours
+  https://github.com/ralphbean/bugwarrior/commit/b899e8349
+- 1581ed709 Make project name alphanumeric and lowercase
+  https://github.com/ralphbean/bugwarrior/commit/1581ed709
+- 574542563 Add support for YouTrack issue tracker.
+  https://github.com/ralphbean/bugwarrior/commit/574542563
+- 3325a0460 Standardize docs for `.verify_ssl` service option in supported issue trackers.
+  https://github.com/ralphbean/bugwarrior/commit/3325a0460
+- fc3693ee3 Work on tests
+  https://github.com/ralphbean/bugwarrior/commit/fc3693ee3
+- 516961b05 Improved formatting of project names
+  https://github.com/ralphbean/bugwarrior/commit/516961b05
+- 71e2f1fda Add kerberos authentication to JiraService
+  https://github.com/ralphbean/bugwarrior/commit/71e2f1fda
+- 69e63154e Update redmine tests.
+  https://github.com/ralphbean/bugwarrior/commit/69e63154e
+- c9e07229f redmine: Respect only_if_assigned configuration.          self.issue_limit = issue_limit
+  https://github.com/ralphbean/bugwarrior/commit/c9e07229f
+- 7ba172536 redmine: Create redmineduedate UDA.
+  https://github.com/ralphbean/bugwarrior/commit/7ba172536
+- 580db8712 We should verify by default here.
+  https://github.com/ralphbean/bugwarrior/commit/580db8712
+- 7c1fae2d9 Remove unpickleable attributes from exception
+  https://github.com/ralphbean/bugwarrior/commit/7c1fae2d9
+- 517e7021b Make sure e.request is not None before removing hooks (#433)
+  https://github.com/ralphbean/bugwarrior/commit/517e7021b
+- 7e0cf8e28 Include the issue url for jira tasks even if there are no annotations.
+  https://github.com/ralphbean/bugwarrior/commit/7e0cf8e28
+- fb10cf294 gerrit: Track the branch and topic used by each change
+  https://github.com/ralphbean/bugwarrior/commit/fb10cf294
+- 6acb4695a Pesky None.
+  https://github.com/ralphbean/bugwarrior/commit/6acb4695a
+- 834d56844 Allow unlimited description and annotation lengths
+  https://github.com/ralphbean/bugwarrior/commit/834d56844
+- 1498ea1cf fixes typo in documentation
+  https://github.com/ralphbean/bugwarrior/commit/1498ea1cf
+- 87e679a81 Test against different python-jira versions.
+  https://github.com/ralphbean/bugwarrior/commit/87e679a81
+- 135c840e1 Fix JIRA test failure on the latest python-jira.
+  https://github.com/ralphbean/bugwarrior/commit/135c840e1
+- f71ebba55 Pesky gerrit.
+  https://github.com/ralphbean/bugwarrior/commit/f71ebba55
+- c822ec1be Test annotation and description builders.
+  https://github.com/ralphbean/bugwarrior/commit/c822ec1be
+- 9e190c646 Implement `github.query` for the github service
+  https://github.com/ralphbean/bugwarrior/commit/9e190c646
+- 087bb7f3e py3 compatibility
+  https://github.com/ralphbean/bugwarrior/commit/087bb7f3e
+- 0f2cae217 Implement involved_issues as default query.
+  https://github.com/ralphbean/bugwarrior/commit/0f2cae217
+- 94492b9c8 Add github.include_user_repos config option.
+  https://github.com/ralphbean/bugwarrior/commit/94492b9c8
+- 37465a53f update README to suggest how to disable pre-defined queries
+  https://github.com/ralphbean/bugwarrior/commit/37465a53f
+- 75884833b Support enterprize github
+  https://github.com/ralphbean/bugwarrior/commit/75884833b
+- d634d2ef4 Interpret trac.no_xmlrpc as a bool.
+  https://github.com/ralphbean/bugwarrior/commit/d634d2ef4
+- b1470e71d Remove pynotify notifications.
+  https://github.com/ralphbean/bugwarrior/commit/b1470e71d
+- 3ad97f445 Simplify, as per review.
+  https://github.com/ralphbean/bugwarrior/commit/3ad97f445
+- a5653d308 Warn about the misleading 404 error code from github.
+  https://github.com/ralphbean/bugwarrior/commit/a5653d308
+- 95abdc644 Modify tests to reproduce #350.
+  https://github.com/ralphbean/bugwarrior/commit/95abdc644
+- 8aeda4593 Cosmetic formatting.
+  https://github.com/ralphbean/bugwarrior/commit/8aeda4593
+- 0517a4a88 Decode all byte strings from utf8 before any db actions.
+  https://github.com/ralphbean/bugwarrior/commit/0517a4a88
+- f07b53983 Break out ServiceConfig from IssueService.
+  https://github.com/ralphbean/bugwarrior/commit/f07b53983
+- 9a7bba3c9 Rename config_get_password -> get_password.
+  https://github.com/ralphbean/bugwarrior/commit/9a7bba3c9
+- fb8d3ae27 Roll service_config.get_default into .get method.
+  https://github.com/ralphbean/bugwarrior/commit/fb8d3ae27
+- 44c01a507 Test ServiceConfig.
+  https://github.com/ralphbean/bugwarrior/commit/44c01a507
+- 57e755fc3 ServiceConfig.has -> ServiceConfig.__contains__
+  https://github.com/ralphbean/bugwarrior/commit/57e755fc3
+- 351fee08a Fix bug introduced in #458.
+  https://github.com/ralphbean/bugwarrior/commit/351fee08a
+- c06280ad6 Make trac and bugzilla packages optional. Fix #460
+  https://github.com/ralphbean/bugwarrior/commit/c06280ad6
+- 0c937969c Added authentication method detection to gerrit
+  https://github.com/ralphbean/bugwarrior/commit/0c937969c
+- 21f46eabf add support for api keys
+  https://github.com/ralphbean/bugwarrior/commit/21f46eabf
+- 318db0161 The required version for python-bugzilla is 2.1.0
+  https://github.com/ralphbean/bugwarrior/commit/318db0161
+- faf9d4c57 Fix gerrit tests.
+  https://github.com/ralphbean/bugwarrior/commit/faf9d4c57
+- 2170254d4 Force list to get keys of differential reviewers
+  https://github.com/ralphbean/bugwarrior/commit/2170254d4
+- 83bf9539e Use service prefix for field templates
+  https://github.com/ralphbean/bugwarrior/commit/83bf9539e
+- 571092542 Add product and component as UDA for bugzilla
+  https://github.com/ralphbean/bugwarrior/commit/571092542
+- 7b1a9502d Issue #450 fix for JIRA entry datetime comparison
+  https://github.com/ralphbean/bugwarrior/commit/7b1a9502d
+- 4fc43422e Remove unused import
+  https://github.com/ralphbean/bugwarrior/commit/4fc43422e
+
 1.4.0
 -----
 
@@ -103,9 +802,9 @@ Commits
   https://github.com/ralphbean/bugwarrior/commit/4903451aa
 - bf6b3ad7f Fix hang when a service die
   https://github.com/ralphbean/bugwarrior/commit/bf6b3ad7f
-- ca19b58c8 Supress stack trace for SystemExit and RuntimeError
+- ca19b58c8 Suppress stack trace for SystemExit and RuntimeError
   https://github.com/ralphbean/bugwarrior/commit/ca19b58c8
-- bd4e33434 If self.shown_user_phids or self.shown_project_phids is set, retrict API calls to user_phids or project_phids to avoid time out with Phabricator installations with huge userbase.
+- bd4e33434 If self.shown_user_phids or self.shown_project_phids is set, restrict API calls to user_phids or project_phids to avoid time out with Phabricator installations with huge userbase.
   https://github.com/ralphbean/bugwarrior/commit/bd4e33434
 - a48f01cf3 Fix bitbucket test
   https://github.com/ralphbean/bugwarrior/commit/a48f01cf3
@@ -123,7 +822,7 @@ Commits
   https://github.com/ralphbean/bugwarrior/commit/0e6a153ad
 - 4c04c0c1a Remove unused dependency pycurl
   https://github.com/ralphbean/bugwarrior/commit/4c04c0c1a
-- ef1935c03 Clearified documentation for Phabricator.
+- ef1935c03 Clarified documentation for Phabricator.
   https://github.com/ralphbean/bugwarrior/commit/ef1935c03
 - d02d507fd Fix bitbucket undocumented API change.
   https://github.com/ralphbean/bugwarrior/commit/d02d507fd
@@ -731,7 +1430,7 @@ Lots of updates from various contributors:
 - Fix due dates and priority `3fb653258 <https://github.com/ralphbean/bugwarrior/commit/3fb653258fe2e35590ed818369dfd6b33f8dccdf>`_
 - Add debug statements `30496b785 <https://github.com/ralphbean/bugwarrior/commit/30496b7850c98dc731db9447e4862050350139e1>`_
 - More debug statements `38b2c832f <https://github.com/ralphbean/bugwarrior/commit/38b2c832f04f626628edeee842d6ab5008467fa7>`_
-- Check if priority is set before assinging to issue `7d566463f <https://github.com/ralphbean/bugwarrior/commit/7d566463fd2e598090ea56c94e68a906fdaf92b5>`_
+- Check if priority is set before assigning to issue `7d566463f <https://github.com/ralphbean/bugwarrior/commit/7d566463fd2e598090ea56c94e68a906fdaf92b5>`_
 - Add due info only if it is present in the issue `382e8ec29 <https://github.com/ralphbean/bugwarrior/commit/382e8ec2903487471bc086b3c6956153cd1f3fec>`_
 - Merge pull request #44 from kostajh/priority-and-due-activecollab `22ce01be1 <https://github.com/ralphbean/bugwarrior/commit/22ce01be1ae6a8830d22ff4a6b2c3553392cf56e>`_
 - User defined JQL queries for Jira services `24b996753 <https://github.com/ralphbean/bugwarrior/commit/24b99675391ee82d02307f6c4cf6fdee26796f77>`_
@@ -752,7 +1451,7 @@ Lots of updates from various contributors:
 - Reformat task description, add code for stripping html `b152c3eba <https://github.com/ralphbean/bugwarrior/commit/b152c3ebae2235b91855e8462415ff7635b73c1a>`_
 - Only add permalink as annotation. Comments are not useful. `78ce70cb9 <https://github.com/ralphbean/bugwarrior/commit/78ce70cb958a9a10e2a81ae1dfaf61f04707e037>`_
 - Cleanup formatting. `d117667ab <https://github.com/ralphbean/bugwarrior/commit/d117667abbe144450c5ccca5ec19f7697f7f0bf2>`_
-- Handle cases where user tasks data isnt returned `18494dc1e <https://github.com/ralphbean/bugwarrior/commit/18494dc1ebabacff75eff893123de993d3900680>`_
+- Handle cases where user tasks data isn't returned `18494dc1e <https://github.com/ralphbean/bugwarrior/commit/18494dc1ebabacff75eff893123de993d3900680>`_
 - Log task count for debugging `ae0396b8c <https://github.com/ralphbean/bugwarrior/commit/ae0396b8ceef891a73ecaa752699471c5c712454>`_
 - Debug formatting. `5e2a34716 <https://github.com/ralphbean/bugwarrior/commit/5e2a34716afd9ab20586b2093ecc5d349ca7d58b>`_
 - Add notes to README `06b8d0cad <https://github.com/ralphbean/bugwarrior/commit/06b8d0cadf8f92caa3124852b3532a68b877a7c8>`_

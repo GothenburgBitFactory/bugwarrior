@@ -4,6 +4,13 @@ Bugzilla
 You can import tasks from your Bz instance using
 the ``bugzilla`` service name.
 
+Additional Dependencies
+-----------------------
+
+Install packages needed for Bugzilla support with::
+
+    pip install bugwarrior[bugzilla]
+
 Example Service
 ---------------
 
@@ -25,6 +32,14 @@ make bugwarrior support more robust!
     bugzilla.base_uri = bugzilla.redhat.com
     bugzilla.username = rbean@redhat.com
     bugzilla.password = OMG_LULZ
+
+Alternately, if you are using a version of python-bugzilla newer than 2.1.0,
+you can specify an API key instead of a password. Note that the username is
+still required in this case, in order to identify bugs belonging to you.
+
+::
+
+    bugzilla.api_key = 4f4d475f4c554c5a4f4d475f4c554c5a
 
 The above example is the minimum required to import issues from
 Bugzilla.  You can also feel free to use any of the

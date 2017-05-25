@@ -1,10 +1,12 @@
 from __future__ import absolute_import
 
 import megaplan
-from twiggy import log
 
 from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class MegaplanIssue(Issue):
@@ -71,21 +73,19 @@ class MegaplanService(IssueService):
     def __init__(self, *args, **kw):
         super(MegaplanService, self).__init__(*args, **kw)
 
-        self.hostname = self.config_get('hostname')
-        _login = self.config_get('login')
-        _password = self.config_get_password('password', _login)
+        self.hostname = self.config.get('hostname')
+        _login = self.config.get('login')
+        _password = self.get_password('password', _login)
 
         self.client = megaplan.Client(self.hostname)
         self.client.authenticate(_login, _password)
 
-        self.project_name = self.config_get_default(
-            'project_name', self.hostname
-        )
+        self.project_name = self.config.get('project_name', self.hostname)
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        login = config.get(section, cls._get_key('login'))
-        hostname = config.get(section, cls._get_key('hostname'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        login = service_config.get('login')
+        hostname = service_config.get('hostname')
         return "megaplan://%s@%s" % (login, hostname)
 
     def get_service_metadata(self):
@@ -95,16 +95,16 @@ class MegaplanService(IssueService):
         }
 
     @classmethod
-    def validate_config(cls, config, target):
-        for k in ('megaplan.login', 'megaplan.password', 'megaplan.hostname'):
-            if not config.has_option(target, k):
-                die("[%s] has no '%s'" % (target, k))
+    def validate_config(cls, service_config, target):
+        for k in ('login', 'password', 'hostname'):
+            if k not in service_config:
+                die("[%s] has no 'mplan.%s'" % (target, k))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def issues(self):
         issues = self.client.get_actual_tasks()
-        log.name(self.target).debug(" Found {0} total.", len(issues))
+        log.debug(" Found %i total.", len(issues))
 
         for issue in issues:
             yield self.get_issue_for_record(issue)

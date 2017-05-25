@@ -1,5 +1,4 @@
 import bugzilla
-from twiggy import log
 
 import time
 import pytz
@@ -9,6 +8,9 @@ import six
 from bugwarrior.config import die, asbool
 from bugwarrior.services import IssueService, Issue
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class BugzillaIssue(Issue):
     URL = 'bugzillaurl'
@@ -16,6 +18,8 @@ class BugzillaIssue(Issue):
     BUG_ID = 'bugzillabugid'
     STATUS = 'bugzillastatus'
     NEEDINFO = 'bugzillaneedinfo'
+    PRODUCT = 'bugzillaproduct'
+    COMPONENT = 'bugzillacomponent'
 
     UDAS = {
         URL: {
@@ -38,6 +42,14 @@ class BugzillaIssue(Issue):
             'type': 'date',
             'label': 'Bugzilla Needinfo',
         },
+        PRODUCT: {
+            'type': 'string',
+            'label': 'Bugzilla Product',
+        },
+        COMPONENT: {
+            'type': 'string',
+            'label': 'Bugzilla Component',
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -59,6 +71,8 @@ class BugzillaIssue(Issue):
             self.SUMMARY: self.record['summary'],
             self.BUG_ID: self.record['id'],
             self.STATUS: self.record['status'],
+            self.PRODUCT: self.record['product'],
+            self.COMPONENT: self.record['component'],
         }
         if self.extra.get('needinfo_since', None) is not None:
             task[self.NEEDINFO] = self.extra.get('needinfo_since')
@@ -97,6 +111,7 @@ class BugzillaService(IssueService):
         'status',
         'summary',
         'priority',
+        'product',
         'component',
         'flags',
         'longdescs',
@@ -104,16 +119,16 @@ class BugzillaService(IssueService):
 
     def __init__(self, *args, **kw):
         super(BugzillaService, self).__init__(*args, **kw)
-        self.base_uri = self.config_get('base_uri')
-        self.username = self.config_get('username')
-        self.ignore_cc = self.config_get_default('ignore_cc', default=False,
+        self.base_uri = self.config.get('base_uri')
+        self.username = self.config.get('username')
+        self.ignore_cc = self.config.get('ignore_cc', default=False,
                                                  to_type=lambda x: x == "True")
-        self.query_url = self.config_get_default('query_url', default=None)
-        self.include_needinfos = self.config_get_default(
+        self.query_url = self.config.get('query_url', default=None)
+        self.include_needinfos = self.config.get(
             'include_needinfos', False, to_type=lambda x: x == "True")
-        self.open_statuses = self.config_get_default(
+        self.open_statuses = self.config.get(
             'open_statuses', _open_statuses, to_type=lambda x: x.split(','))
-        log.name(self.target).debug(" filtering on statuses: {0}", self.open_statuses)
+        log.debug(" filtering on statuses: %r", self.open_statuses)
 
         # So more modern bugzilla's require that we specify
         # query_format=advanced along with the xmlrpc request.
@@ -121,28 +136,36 @@ class BugzillaService(IssueService):
         # ...but older bugzilla's don't know anything about that argument.
         # Here we make it possible for the user to specify whether they want
         # to pass that argument or not.
-        self.advanced = asbool(self.config_get_default('advanced', 'no'))
-
-        self.password = self.config_get_password('password', self.username)
+        self.advanced = asbool(self.config.get('advanced', 'no'))
 
         url = 'https://%s/xmlrpc.cgi' % self.base_uri
-        self.bz = bugzilla.Bugzilla(url=url)
-        self.bz.login(self.username, self.password)
+        api_key = self.config.get('api_key', default=None)
+        if api_key:
+            try:
+                self.bz = bugzilla.Bugzilla(url=url, api_key=api_key)
+            except TypeError:
+                raise Exception("Bugzilla API keys require python-bugzilla>=2.1.0")
+        else:
+            password = self.get_password('password', self.username)
+            self.bz = bugzilla.Bugzilla(url=url)
+            self.bz.login(self.username, password)
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        username = config.get(section, cls._get_key('username'))
-        base_uri = config.get(section, cls._get_key('base_uri'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        username = service_config.get('username')
+        base_uri = service_config.get('base_uri')
         return "bugzilla://%s@%s" % (username, base_uri)
 
     @classmethod
-    def validate_config(cls, config, target):
-        req = ['bugzilla.username', 'bugzilla.password', 'bugzilla.base_uri']
+    def validate_config(cls, service_config, target):
+        req = ['username', 'base_uri']
         for option in req:
-            if not config.has_option(target, option):
-                die("[%s] has no '%s'" % (target, option))
+            if option not in service_config:
+                die("[%s] has no 'bugzilla.%s'" % (target, option))
+        if 'password' not in service_config and 'api_key' not in service_config:
+            die("[%s] has neither 'bugzilla.password' nor 'bugzilla.api_key'" % (target,))
 
-        super(BugzillaService, cls).validate_config(config, target)
+        super(BugzillaService, cls).validate_config(service_config, target)
 
     def get_owner(self, issue):
         # NotImplemented, but we should never get called since .include() isn't
@@ -235,7 +258,7 @@ class BugzillaService(IssueService):
         ]
 
         issues = [(self.target, bug) for bug in bugs]
-        log.name(self.target).debug(" Found {0} total.", len(issues))
+        log.debug(" Found %i total.", len(issues))
 
         # Build a url for each issue
         base_url = "https://%s/show_bug.cgi?id=" % (self.base_uri)
@@ -246,10 +269,9 @@ class BugzillaService(IssueService):
                 'annotations': self.annotations(tag, issue, issue_obj),
             }
 
-            needinfos = filter(lambda f: (    f['name'] == 'needinfo'
+            needinfos = [f for f in issue['flags'] if (    f['name'] == 'needinfo'
                                           and f['status'] == '?'
-                                          and f.get('requestee', self.username) == self.username),
-                               issue['flags'])
+                                          and f.get('requestee', self.username) == self.username)]
             if needinfos:
                 last_mod = needinfos[0]['modification_date']
                 # convert from RPC DateTime string to datetime.datetime object

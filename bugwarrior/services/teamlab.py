@@ -1,15 +1,14 @@
-import json
-import urllib
-import urllib2
-
 import six
-from twiggy import log
+import requests
 
 from bugwarrior.config import die
-from bugwarrior.services import Issue, IssueService
+from bugwarrior.services import Issue, IssueService, ServiceClient
+
+import logging
+log = logging.getLogger(__name__)
 
 
-class TeamLabClient(object):
+class TeamLabClient(ServiceClient):
     def __init__(self, hostname, verbose=False):
         self.hostname = hostname
         self.verbose = verbose
@@ -27,29 +26,17 @@ class TeamLabClient(object):
         resp = self.call_api("/api/1.0/project/task/@self.json")
         return resp
 
-    def call_api(self, uri, post=None, get=None):
+    def call_api(self, uri, post=None, params=None):
         uri = "http://" + self.hostname + uri
+        kwargs = {'params': params}
 
-        if post is None:
-            data = None
-        else:
-            data = urllib.urlencode(post)
+        if self.token:
+            kwargs['headers'] = {'Authorization': self.token}
 
-        if get is not None:
-            uri += "?" + urllib.urlencode(get)
+        response = (requests.post(uri, data=post, **kwargs) if post
+                    else requests.get(uri, **kwargs))
 
-        req = urllib2.Request(uri, data)
-        if self.token is not None:
-            req.add_header("Authorization", self.token)
-        req.add_header("Accept", "application/json")
-
-        res = urllib2.urlopen(req)
-        if res.getcode() >= 400:
-            raise Exception("Error accessing the API: %s" % res.read())
-
-        response = res.read()
-
-        return json.loads(response)["response"]
+        return self.json_response(response)
 
 
 class TeamLabIssue(Issue):
@@ -120,21 +107,19 @@ class TeamLabService(IssueService):
     def __init__(self, *args, **kw):
         super(TeamLabService, self).__init__(*args, **kw)
 
-        self.hostname = self.config_get('hostname')
-        _login = self.config_get('login')
-        _password = self.config_get_password('password', _login)
+        self.hostname = self.config.get('hostname')
+        _login = self.config.get('login')
+        _password = self.get_password('password', _login)
 
         self.client = TeamLabClient(self.hostname)
         self.client.authenticate(_login, _password)
 
-        self.project_name = self.config_get_default(
-            'project_name', self.hostname
-        )
+        self.project_name = self.config.get('project_name', self.hostname)
 
-    @classmethod
-    def get_keyring_service(cls, config, section):
-        login = config.get(section, cls._get_key('login'))
-        hostname = config.get(section, cls._get_key('hostname'))
+    @staticmethod
+    def get_keyring_service(service_config):
+        login = service_config.get('login')
+        hostname = service_config.get('hostname')
         return "teamlab://%s@%s" % (login, hostname)
 
     def get_service_metadata(self):
@@ -144,22 +129,20 @@ class TeamLabService(IssueService):
         }
 
     @classmethod
-    def validate_config(cls, config, target):
-        for k in ('teamlab.login', 'teamlab.password', 'teamlab.hostname'):
-            if not config.has_option(target, k):
-                die("[%s] has no '%s'" % (target, k))
+    def validate_config(cls, service_config, target):
+        for k in ('login', 'password', 'hostname'):
+            if k not in service_config:
+                die("[%s] has no 'teamlab.%s'" % (target, k))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def issues(self):
         issues = self.client.get_task_list()
-        log.name(self.target).debug(
-            " Remote has {0} total issues.", len(issues))
+        log.debug(" Remote has %i total issues.", len(issues))
 
         # Filter out closed tasks.
-        issues = filter(lambda i: i["status"] == 1, issues)
-        log.name(self.target).debug(
-            " Remote has {0} active issues.", len(issues))
+        issues = [i for i in issues if i["status"] == 1]
+        log.debug(" Remote has %i active issues.", len(issues))
 
         for issue in issues:
             yield self.get_issue_for_record(issue)

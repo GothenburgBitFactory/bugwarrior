@@ -4,15 +4,23 @@ Trac
 You can import tasks from your Trac instance using
 the ``trac`` service name.
 
+Additional Dependencies
+-----------------------
+
+Install packages needed for Trac support with::
+
+    pip install bugwarrior[trac]
+
 Example Service
 ---------------
 
-Here's an example of an Trac target::
+Here's an example of a Trac target::
 
     [my_issue_tracker]
     service = trac
     trac.base_uri = fedorahosted.org/moksha
     trac.scheme = https
+    trac.project_template = moksha.{{traccomponent|lower}}
 
 By default, this service uses the XML-RPC Trac plugin, which must be installed
 on the Trac instance.  If this is not available, the service can use Trac's
@@ -34,12 +42,14 @@ Service Features
 Provided UDA Fields
 -------------------
 
-+-----------------+-----------------+-----------------+
-| Field Name      | Description     | Type            |
-+=================+=================+=================+
-| ``tracnumber``  | Number          | Text (string)   |
-+-----------------+-----------------+-----------------+
-| ``tracsummary`` | Summary         | Text (string)   |
-+-----------------+-----------------+-----------------+
-| ``tracurl``     | URL             | Text (string)   |
-+-----------------+-----------------+-----------------+
++-------------------+-----------------+-----------------+
+| Field Name        | Description     | Type            |
++===================+=================+=================+
+| ``tracnumber``    | Number          | Text (string)   |
++-------------------+-----------------+-----------------+
+| ``tracsummary``   | Summary         | Text (string)   |
++-------------------+-----------------+-----------------+
+| ``tracurl``       | URL             | Text (string)   |
++-------------------+-----------------+-----------------+
+| ``traccomponent`` | Component       | Text (string)   |
++-------------------+-----------------+-----------------+

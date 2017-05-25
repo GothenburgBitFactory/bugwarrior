@@ -1,23 +1,41 @@
-from ConfigParser import NoOptionError, NoSectionError
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import object
+
+from configparser import NoOptionError, NoSectionError
 import os
 import re
 import subprocess
+import sys
 
 import requests
 import dogpile.cache
 import six
-from twiggy import log
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
 from bugwarrior.config import asbool, get_taskrc_path
 from bugwarrior.notifications import send_notification
 
+import logging
+log = logging.getLogger(__name__)
+
 
 MARKUP = "(bw)"
 
+# In Python 2.3 through 2.7, the stdlib dbm module include a berkeley db
+# interface, which was used by default by dogpile.cache.  In Python3, the
+# berkeley db module was removed which means that cache files created by
+# bugwarrior on python 2 will not be compatible with cache files as read by
+# bugwarrior on python 3.  Attempting to read them generates a traceback.
+# To work around this, we use different filenames for py2 and py3 here.
+# https://github.com/ralphbean/bugwarrior/pull/416
+PYVER = '%i.%i' % sys.version_info[:2]
+DOGPILE_CACHE_PATH = os.path.expanduser(''.join([
+    os.getenv('XDG_CACHE_HOME', '~/.cache'), '/dagd-py', PYVER, '.dbm']))
 
-DOGPILE_CACHE_PATH = os.path.expanduser('~/.cache/dagd.dbm')
 if not os.path.isdir(os.path.dirname(DOGPILE_CACHE_PATH)):
     os.makedirs(os.path.dirname(DOGPILE_CACHE_PATH))
 CACHE_REGION = dogpile.cache.make_region().configure(
@@ -40,7 +58,7 @@ class URLShortener(object):
     def shorten(self, url):
         if not url:
             return ''
-        base = 'http://da.gd/s'
+        base = 'https://da.gd/s'
         return requests.get(base, params=dict(url=url)).text.strip()
 
 
@@ -52,27 +70,12 @@ class MultipleMatches(Exception):
     pass
 
 
-def normalize_description(issue_description):
-    return issue_description[:issue_description.index(' .. http')]
-
-
 def get_normalized_annotation(annotation):
     return re.sub(
         r'[\W_]',
         '',
         six.text_type(annotation)
     )
-
-
-def sanitize(string):
-    """ Sanitize a string for logging with twiggy.
-
-    It is obnoxious that we have to do this ourselves, but twiggy doesn't like
-    strings with non-ascii characters or with curly braces in them.
-    """
-    if not isinstance(string, six.string_types):
-        return string
-    return six.text_type(string.replace('{', '{{').replace('}', '}}'))
 
 
 def get_annotation_hamming_distance(left, right):
@@ -145,7 +148,7 @@ def find_local_uuid(tw, keys, issue, legacy_matching=False):
             ['serviceBproject', 'serviceBnumber'],
         ]
 
-    * `issue`: A instance of a subclass of `bugwarrior.services.Issue`.
+    * `issue`: An instance of a subclass of `bugwarrior.services.Issue`.
     * `legacy_matching`: By default, this is disabled, and it allows
       the matching algorithm to -- in addition to searching by stored
       issue keys -- search using the task's description for a match.
@@ -238,7 +241,6 @@ def merge_left(field, local_task, remote_issue, hamming=False):
     # If a remote does not appear in local, add it to the local task
     new_count = 0
     for remote in remote_field:
-        found = False
         for local in local_field:
             if (
                 # For annotations, they don't have to match *exactly*.
@@ -251,22 +253,14 @@ def merge_left(field, local_task, remote_issue, hamming=False):
                     remote == local
                 )
             ):
-                found = True
                 break
-        if not found:
-            log.name('db').debug(
-                "%s not found in %r" % (remote, local_field)
-            )
+        else:
+            log.debug("%s not found in %r" % (remote, local_field))
             local_task[field].append(remote)
             new_count += 1
     if new_count > 0:
-        log.name('db').debug(
-            'Added %s new values to %s (total: %s)' % (
-                new_count,
-                field,
-                len(local_task[field]),
-            )
-        )
+        log.debug('Added %s new values to %s (total: %s)' % (
+            new_count, field, len(local_task[field]),))
 
 
 def run_hooks(conf, name):
@@ -281,7 +275,7 @@ def run_hooks(conf, name):
                     msg = 'Non-zero exit code %d on hook %s' % (
                         exit_code, hook
                     )
-                    log.name('hooks:%s' % name).error(msg)
+                    log.error(msg)
                     raise RuntimeError(msg)
 
 
@@ -298,13 +292,13 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     uda_list = build_uda_config_overrides(services)
 
     if uda_list:
-        log.name('bugwarrior').info(
+        log.info(
             'Service-defined UDAs exist: you can optionally use the '
             '`bugwarrior-uda` command to export a list of UDAs you can '
-            'add to your ~/.taskrc file.'
+            'add to your taskrc file.'
         )
 
-    static_fields = static_fields_default = ['priority']
+    static_fields = ['priority']
     if conf.has_option(main_section, 'static_fields'):
         static_fields = conf.get(main_section, 'static_fields').split(',')
 
@@ -331,11 +325,24 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     }
 
     for issue in issue_generator:
+
         try:
+            issue_dict = dict(issue)
+            # We received this issue from The Internet, but we're not sure what
+            # kind of encoding the service providers may have handed us. Let's try
+            # and decode all byte strings from UTF8 off the bat.  If we encounter
+            # other encodings in the wild in the future, we can revise the handling
+            # here. https://github.com/ralphbean/bugwarrior/issues/350
+            for key in issue_dict.keys():
+                if isinstance(issue_dict[key], six.binary_type):
+                    try:
+                        issue_dict[key] = issue_dict[key].decode('utf-8')
+                    except UnicodeDecodeError:
+                        log.warn("Failed to interpret %r as utf-8" % key)
+
             existing_uuid = find_local_uuid(
                 tw, key_list, issue, legacy_matching=legacy_matching
             )
-            issue_dict = dict(issue)
             _, task = tw.get_task(uuid=existing_uuid)
 
             # Drop static fields from the upstream issue.  We don't want to
@@ -364,20 +371,15 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 issue_updates['closed'].remove(existing_uuid)
 
         except MultipleMatches as e:
-            log.name('db').error("Multiple matches: {0}", six.text_type(e))
-            log.name('db').trace(e)
+            log.exception("Multiple matches: %s", six.text_type(e))
         except NotFound:
-            issue_updates['new'].append(dict(issue))
+            issue_updates['new'].append(issue_dict)
 
     notreally = ' (not really)' if dry_run else ''
     # Add new issues
-    log.name('db').info("Adding {0} tasks", len(issue_updates['new']))
+    log.info("Adding %i tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
-        log.name('db').info(
-            "Adding task {0}{1}",
-            issue['description'].encode("utf-8"),
-            notreally
-        )
+        log.info(u"Adding task %s%s", issue['description'], notreally)
         if dry_run:
             continue
         if notify:
@@ -386,10 +388,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         try:
             tw.task_add(**issue)
         except TaskwarriorError as e:
-            log.name('db').error("Unable to add task: %s" % e.stderr)
-            log.name('db').trace(e)
+            log.exception("Unable to add task: %s" % e.stderr)
 
-    log.name('db').info("Updating {0} tasks", len(issue_updates['changed']))
+    log.info("Updating %i tasks", len(issue_updates['changed']))
     for issue in issue_updates['changed']:
         changes = '; '.join([
             '{field}: {f} -> {t}'.format(
@@ -399,10 +400,10 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             )
             for field, ch in six.iteritems(issue.get_changes(keep=True))
         ])
-        log.name('db').info(
-            "Updating task {0}, {1}; {2}{3}",
-            six.text_type(issue['uuid']).encode("utf-8"),
-            issue['description'].encode("utf-8"),
+        log.info(
+            "Updating task %s, %s; %s%s",
+            six.text_type(issue['uuid']),
+            issue['description'],
             changes,
             notreally
         )
@@ -412,16 +413,15 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         try:
             tw.task_update(issue)
         except TaskwarriorError as e:
-            log.name('db').error("Unable to modify task: %s" % e.stderr)
-            log.name('db').trace(e)
+            log.exception("Unable to modify task: %s" % e.stderr)
 
-    log.name('db').info("Closing {0} tasks", len(issue_updates['closed']))
+    log.info("Closing %i tasks", len(issue_updates['closed']))
     for issue in issue_updates['closed']:
         _, task_info = tw.get_task(uuid=issue)
-        log.name('db').info(
-            "Completing task {0} {1}{2}",
+        log.info(
+            "Completing task %s %s%s",
             issue,
-            task_info.get('description', '').encode('utf-8'),
+            task_info.get('description', ''),
             notreally
         )
         if dry_run:
@@ -433,8 +433,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         try:
             tw.task_done(uuid=issue)
         except TaskwarriorError as e:
-            log.name('db').error("Unable to close task: %s" % e.stderr)
-            log.name('db').trace(e)
+            log.exception("Unable to close task: %s" % e.stderr)
 
     # Send notifications
     if notify:

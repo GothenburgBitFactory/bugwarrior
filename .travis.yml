@@ -1,13 +1,15 @@
 language: python
 python:
  - "2.7"
+ - "3.4"
+ - "3.5"
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install uuid-dev
-  - wget http://taskwarrior.org/download/task-2.3.0.tar.gz
-  - gunzip task-2.3.0.tar.gz
-  - tar xf task-2.3.0.tar
-  - cd task-2.3.0
+  - wget http://taskwarrior.org/download/task-2.4.4.tar.gz
+  - gunzip task-2.4.4.tar.gz
+  - tar xf task-2.4.4.tar
+  - cd task-2.4.4
   - cmake .
   - make
   - sudo make install
@@ -16,14 +18,19 @@ before_install:
   - pip install --upgrade pip
   - pip install taskw
   - pip install mock
-  - pip install unittest2
+  - pip install responses
+  - pip install PySimpleSOAP
   - cd $TRAVIS_BUILD_DIR
+env:
+  - JIRAVERSION=1.0.7
+  - JIRAVERSION=1.0.10
 install:
-  - pip install .[jira,megaplan,activecollab]
-  - pip install coveralls
+  - pip install jira==$JIRAVERSION
+  - pip install .[jira,megaplan,activecollab,bts,bugzilla,trac]
+  - pip install codecov
   - pip install coverage
-script: nosetests -w tests --with-coverage --cover-package=bugwarrior
-after_success: coveralls
+script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior -v
+after_success: codecov
 notifications:
     email: true
     irc:

@@ -17,15 +17,19 @@ It currently supports the following remote resources:
  - `teamlab <https://www.teamlab.com/>`_
  - `redmine <https://www.redmine.org/>`_
  - `jira <https://www.atlassian.com/software/jira/overview>`_
+ - `taiga <https://taiga.io>`_
+ - `gerrit <https://www.gerritcodereview.com/>`_
  - `activecollab <https://www.activecollab.com>`_ (2.x and 4.x)
  - `phabricator <http://phabricator.org/>`_
  - `versionone <http://www.versionone.com/>`_
+ - `trello <https://trello.com/>`_
+ - `youtrack <https://www.jetbrains.com/youtrack/>`_
 
 Documentation
 -------------
 
 For information on how to install and use bugwarrior, read `the docs
-<https://bugwarrior.readthedocs.org>`_ on RTFD.
+<https://bugwarrior.readthedocs.io>`_ on RTFD.
 
 Build Status
 ------------
@@ -51,7 +55,7 @@ Contributors
 ------------
 
 - Ralph Bean (primary author)
-- Ben Boeckel(contributed support for Gitlab)
+- Ben Boeckel (contributed support for Gitlab)
 - Justin Forest (contributed support for RedMine, TeamLab, and MegaPlan, as
   well as some unicode help)
 - Tycho Garen (contributed support for Jira)
@@ -60,3 +64,6 @@ Contributors
 - Luke Macken (contributed some code cleaning)
 - James Rowe (contributed to the docs)
 - Adam Coddington (anti-entropy crusader)
+- Iain R. Learmonth (contributed support for the Debian BTS and maintains the
+  Debian package)
+- BinaryBabel (contributed support for YouTrack)

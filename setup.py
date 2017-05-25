@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '1.4.0'
+version = '1.5.0'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -16,6 +16,7 @@ setup(name='bugwarrior',
           "Intended Audience :: Developers",
           "License :: OSI Approved :: GNU General Public License (GPL)",
           "Programming Language :: Python :: 2",
+          "Programming Language :: Python :: 3",
           "Topic :: Software Development :: Bug Tracking",
           "Topic :: Utilities",
       ],
@@ -28,34 +29,36 @@ setup(name='bugwarrior',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-          "twiggy",
           "requests",
-          "offtrac",
-          "python-bugzilla",
-          #"jira-python",
           "taskw >= 0.8",
           "python-dateutil",
           "pytz",
-          "keyring",
-          "six",
+          "six>=1.9.0",
           "jinja2>=2.7.2",
           "dogpile.cache>=0.5.3",
           "lockfile>=0.9.1",
           "click",
-          "pyxdg",
+          "future!=0.16.0",
       ],
       extras_require=dict(
+          keyring=["keyring", "dbus-python"],
           jira=["jira>=0.22"],
           megaplan=["megaplan>=1.4"],
-          activecollab=["pypandoc", "pyac"]
+          activecollab=["pypandoc", "pyac>=0.1.5"],
+          bts=["PySimpleSOAP","python-debianbts>=2.6.1"],
+          trac=["offtrac"],
+          bugzilla=["python-bugzilla"],
       ),
       tests_require=[
           "Mock",
-          "unittest2",
           "nose",
+          "responses",
           "bugwarrior[jira]",
           "bugwarrior[megaplan]",
           "bugwarrior[activecollab]",
+          "bugwarrior[bts]",
+          "bugwarrior[trac]",
+          "bugwarrior[bugzilla]",
       ],
       test_suite='nose.collector',
       entry_points="""
@@ -68,6 +71,7 @@ setup(name='bugwarrior',
       gitlab=bugwarrior.services.gitlab:GitlabService
       bitbucket=bugwarrior.services.bitbucket:BitbucketService
       trac=bugwarrior.services.trac:TracService
+      bts=bugwarrior.services.bts:BTSService
       bugzilla=bugwarrior.services.bz:BugzillaService
       teamlab=bugwarrior.services.teamlab:TeamLabService
       redmine=bugwarrior.services.redmine:RedMineService
@@ -78,5 +82,9 @@ setup(name='bugwarrior',
       phabricator=bugwarrior.services.phab:PhabricatorService
       versionone=bugwarrior.services.versionone:VersionOneService
       pagure=bugwarrior.services.pagure:PagureService
+      taiga=bugwarrior.services.taiga:TaigaService
+      gerrit=bugwarrior.services.gerrit:GerritService
+      trello=bugwarrior.services.trello:TrelloService
+      youtrack=bugwarrior.services.youtrack:YoutrackService
       """,
       )

@@ -1,3 +1,4 @@
+from builtins import filter
 import re
 import six
 import datetime
@@ -6,10 +7,13 @@ import pytz
 import requests
 
 from jinja2 import Template
-from twiggy import log
 
-from bugwarrior.config import asbool, die
+from bugwarrior.config import asbool, aslist, die
 from bugwarrior.services import IssueService, Issue
+
+import logging
+log = logging.getLogger(__name__)
+
 
 class PagureIssue(Issue):
     TITLE = 'paguretitle'
@@ -102,30 +106,19 @@ class PagureService(IssueService):
     def __init__(self, *args, **kw):
         super(PagureService, self).__init__(*args, **kw)
 
-        self.auth = {}
+        self.session = requests.Session()
 
-        self.tag = self.config_get_default('tag')
-        self.repo = self.config_get_default('repo')
-        self.base_url = self.config_get_default('base_url')
+        self.tag = self.config.get('tag')
+        self.repo = self.config.get('repo')
+        self.base_url = self.config.get('base_url')
 
-        self.exclude_repos = []
-        if self.config_get_default('exclude_repos', None):
-            self.exclude_repos = [
-                item.strip() for item in
-                self.config_get('exclude_repos').strip().split(',')
-            ]
+        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
+        self.include_repos = self.config.get('include_repos', [], aslist)
 
-        self.include_repos = []
-        if self.config_get_default('include_repos', None):
-            self.include_repos = [
-                item.strip() for item in
-                self.config_get('include_repos').strip().split(',')
-            ]
-
-        self.import_tags = self.config_get_default(
+        self.import_tags = self.config.get(
             'import_tags', default=False, to_type=asbool
         )
-        self.tag_template = self.config_get_default(
+        self.tag_template = self.config.get(
             'tag_template', default='{{label}}', to_type=six.text_type
         )
 
@@ -141,7 +134,7 @@ class PagureService(IssueService):
         key3 = key1[:-1]  # Just the singular form of key1
 
         url = self.base_url + "/api/0/" + repo + "/" + key1
-        response = requests.get(url)
+        response = self.session.get(url)
 
         if not bool(response):
             error = response.json()
@@ -189,7 +182,7 @@ class PagureService(IssueService):
     def issues(self):
         if self.tag:
             url = self.base_url + "/api/0/projects?tags=" + self.tag
-            response = requests.get(url)
+            response = self.session.get(url)
             if not bool(response):
                 raise IOError('Failed to talk to %r %r' % (url, response))
 
@@ -204,9 +197,9 @@ class PagureService(IssueService):
             issues.extend(self.get_issues(repo, ('issues', 'issues')))
             issues.extend(self.get_issues(repo, ('pull-requests', 'requests')))
 
-        log.name(self.target).debug(" Found {0} issues.", len(issues))
-        issues = filter(self.include, issues)
-        log.name(self.target).debug(" Pruned down to {0} issues.", len(issues))
+        log.debug(" Found %i issues.", len(issues))
+        issues = list(filter(self.include, issues))
+        log.debug(" Pruned down to %i issues.", len(issues))
 
         for repo, issue in issues:
             # Stuff this value into the upstream dict for:
@@ -223,12 +216,11 @@ class PagureService(IssueService):
             yield issue_obj
 
     @classmethod
-    def validate_config(cls, config, target):
-        if not config.has_option(target, 'pagure.tag') and \
-           not config.has_option(target, 'pagure.repo'):
+    def validate_config(cls, service_config, target):
+        if 'tag' not in service_config and 'repo' not in service_config:
             die("[%s] has no 'pagure.tag' or 'pagure.repo'" % target)
 
-        if not config.has_option(target, 'pagure.base_url'):
+        if 'base_url' not in service_config:
             die("[%s] has no 'pagure.base_url'" % target)
 
-        super(PagureService, cls).validate_config(config, target)
+        super(PagureService, cls).validate_config(service_config, target)

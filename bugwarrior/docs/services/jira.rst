@@ -60,16 +60,15 @@ configuration option to your service configuration::
 
     jira.version = 4
 
-Disabling SSL Verification
-++++++++++++++++++++++++++
+Do Not Verify SSL Certificate
++++++++++++++++++++++++++++++
 
-If your Jira instance is only available over HTTPS, and you're running into
-``SSL: CERTIFICATE_VERIFY_FAILED``, it's possible to disable SSL verification::
+If you want to ignore verifying the SSL certificate, set::
 
     jira.verify_ssl = False
 
-Import Labels as Tags
-+++++++++++++++++++++
+Import Labels and Sprints as Tags
++++++++++++++++++++++++++++++++++
 
 The Jira issue tracker allows you to attach labels to issues; to
 use those labels as tags, you can use the ``jira.import_labels_as_tags``
@@ -77,9 +76,13 @@ option::
 
     jira.import_labels_as_tags = True
 
-Also, if you would like to control how these labels are created, you can
-specify a template used for converting the Jira label into a Taskwarrior
-tag.
+You can also import the names of any sprints associated with an issue as tags,
+by setting the ``jira.import_sprints_as_tags`` option::
+
+    jira.import_sprints_as_tags = True
+
+If you would like to control how these labels are created, you can specify a
+template used for converting the Jira label into a Taskwarrior tag.
 
 For example, to prefix all incoming labels with the string 'jira_' (perhaps
 to differentiate them from any existing tags you might have), you could
@@ -94,6 +97,13 @@ to all fields on the Taskwarrior task if needed.
 
    See :ref:`field_templates` for more details regarding how templates
    are processed.
+
+Kerberos authentication
++++++++++++++++++++++++
+
+If the ``password`` is specified as ``@kerberos``, the service plugin will try
+to authenticate against server with kerberos. A ticket must be already present
+on the client (created by running ``kinit`` or any other method).
 
 Provided UDA Fields
 -------------------

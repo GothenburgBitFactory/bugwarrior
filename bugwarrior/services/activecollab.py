@@ -1,10 +1,13 @@
+from builtins import object
 import re
 
 import pypandoc
-from twiggy import log
 from pyac.library import activeCollab
 from bugwarrior.services import IssueService, Issue
 from bugwarrior.config import die
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class ActiveCollabClient(object):
@@ -163,9 +166,9 @@ class ActiveCollabService(IssueService):
     def __init__(self, *args, **kw):
         super(ActiveCollabService, self).__init__(*args, **kw)
 
-        self.url = self.config_get('url').rstrip('/')
-        self.key = self.config_get('key')
-        self.user_id = int(self.config_get('user_id'))
+        self.url = self.config.get('url').rstrip('/')
+        self.key = self.config.get('key')
+        self.user_id = int(self.config.get('user_id'))
         self.client = ActiveCollabClient(
             self.url, self.key, self.user_id
         )
@@ -173,14 +176,12 @@ class ActiveCollabService(IssueService):
                                          user_id=self.user_id)
 
     @classmethod
-    def validate_config(cls, config, target):
-        for k in (
-            'activecollab.url', 'activecollab.key', 'activecollab.user_id'
-        ):
-            if not config.has_option(target, k):
-                die("[%s] has no '%s'" % (target, k))
+    def validate_config(cls, service_config, target):
+        for k in ('url', 'key', 'user_id'):
+            if k not in service_config:
+                die("[%s] has no 'activecollab.%s'" % (target, k))
 
-        IssueService.validate_config(config, target)
+        IssueService.validate_config(service_config, target)
 
     def _comments(self, issue):
         comments = self.activecollab.get_comments(
@@ -223,15 +224,15 @@ class ActiveCollabService(IssueService):
             labels[item['id']] = re.sub(r'\W+', '_', item['name'])
         task_count = 0
         issues = []
-        for key, record in data.iteritems():
-            for task_id, task in record['assignments'].iteritems():
+        for key, record in data.items():
+            for task_id, task in record['assignments'].items():
                 task_count = task_count + 1
                 # Add tasks
                 if task['assignee_id'] == self.user_id:
                     task['label'] = labels.get(task['label_id'])
                     issues.append(task)
                 if 'subtasks' in task:
-                    for subtask_id, subtask in task['subtasks'].iteritems():
+                    for subtask_id, subtask in task['subtasks'].items():
                         # Add subtasks
                         task_count = task_count + 1
                         if subtask['assignee_id'] is self.user_id:
@@ -242,8 +243,8 @@ class ActiveCollabService(IssueService):
                             subtask['task_id'] = task['task_id']
                             subtask['milestone'] = task['milestone']
                             issues.append(subtask)
-        log.name(self.target).debug(" Found {0} total", task_count)
-        log.name(self.target).debug(" Pruned down to {0}", len(issues))
+        log.debug(" Found %i total", task_count)
+        log.debug(" Pruned down to %i", len(issues))
         for issue in issues:
             issue_obj = self.get_issue_for_record(issue)
             extra = {

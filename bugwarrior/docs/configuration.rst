@@ -39,7 +39,7 @@ Example Configuration
     # fields defined (which is smarter, better, newer, etc..)
     legacy_matching = False
 
-    # log.level specifices the verbosity.  The default is DEBUG.
+    # log.level specifies the verbosity.  The default is DEBUG.
     # log.level can be one of DEBUG, INFO, WARNING, ERROR, CRITICAL, DISABLED
     #log.level = DEBUG
 
@@ -63,15 +63,14 @@ Example Configuration
 
     # This section is for configuring notifications when bugwarrior-pull runs,
     # and when issues are created, updated, or deleted by bugwarrior-pull.
-    # Three backend are currently suported:
+    # Three backends are currently supported:
     #
     #  - growlnotify (v2)   Mac OS X   "gntp" must be installed
     #  - gobject            Linux      python gobject must be installed
-    #  - pynotify           Linux      "pynotify" must be installed
     #
-    # To configure, adjust the settings below.  Note that neither of the
-    # "sticky" options have any effect on Linux with pynotify.  They only work
-    # for growlnotify.
+    # To configure, adjust the settings below.  Note that neither of the #
+    # "sticky" options have any effect on Linux.  They only work for
+    # growlnotify.
     #[notifications]
     # notifications = True
     # backend = growlnotify

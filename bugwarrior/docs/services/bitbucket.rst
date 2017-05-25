@@ -7,7 +7,7 @@ the ``bitbucket`` service name.
 Example Service
 ---------------
 
-Here's an example of an Bitbucket target::
+Here's an example of a Bitbucket target::
 
     [my_issue_tracker]
     service = bitbucket
@@ -63,14 +63,14 @@ In this example, ``noisy_repository`` is the repository you would
 Please note that the API returns all lowercase names regardless of
 the case of the repository in the web interface.
 
-Filter Pull Requests
-++++++++++++++++++++
+Filter Merge Requests
++++++++++++++++++++++
 
 Although you can filter issues using :ref:`common_configuration_options`,
 pull requests are not filtered by default.  You can filter pull requests
 by adding the following configuration option::
 
-    bitbucket.filter_pull_requests = True
+    bitbucket.filter_merge_requests = True
 
 Provided UDA Fields
 -------------------
