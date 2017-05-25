@@ -1,4 +1,9 @@
 
+1.5.1
+-----
+
+Resolve merge inconsistency with master branch.
+
 1.5.0
 -----
 
