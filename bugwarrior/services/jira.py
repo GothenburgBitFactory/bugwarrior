@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 from builtins import str
 
-from datetime import datetime
 
 import six
 from jinja2 import Template
@@ -123,11 +122,9 @@ class JiraIssue(Issue):
 
     def get_entry(self):
         created_at = self.record['fields']['created']
-
-        # strip off the timezone offset
-        timestamp, timezone = created_at[:-5], created_at[-5:]
-        timestamp = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f')
-        return timestamp.strftime('%Y%m%dT%H%M%S') + timezone
+        # Convert timestamp to an offset-aware datetime
+        date = self.parse_date(created_at)
+        return date
 
     def get_tags(self):
         return self._get_tags_from_labels() + self._get_tags_from_sprints()
