@@ -36,3 +36,6 @@ class TestData(ConfigTest):
 
         self.assertEqual(self.data.get('key'), 'value')
         self.assert0600()
+
+    def test_path_attribute(self):
+        self.assertEqual(self.data.path, self.lists_path)
