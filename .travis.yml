@@ -20,6 +20,7 @@ before_install:
   - pip install mock
   - pip install responses
   - pip install PySimpleSOAP
+  - pip install future
   - cd $TRAVIS_BUILD_DIR
 env:
   - JIRAVERSION=1.0.7
