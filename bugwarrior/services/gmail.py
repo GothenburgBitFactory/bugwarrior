@@ -2,6 +2,7 @@ import httplib2
 import os
 import email
 import re
+import multiprocessing
 
 import googleapiclient.discovery
 import oauth2client.client
@@ -85,6 +86,7 @@ class GmailService(IssueService):
 
     ISSUE_CLASS = GmailIssue
     CONFIG_PREFIX = 'gmail'
+    AUTHENTICATION_LOCK = multiprocessing.Lock()
 
     def __init__(self, *args, **kw):
         super(GmailService, self).__init__(*args, **kw)
@@ -118,16 +120,18 @@ class GmailService(IssueService):
         Returns:
             Credentials, the obtained credential.
         """
-        store = oauth2client.file.Storage(self.credentials_path)
-        credentials = store.get()
-        if not credentials or credentials.invalid:
-            log.info("No valid login. Starting OAUTH flow.")
-            flow = oauth2client.client.flow_from_clientsecrets(self.client_secret_path, self.SCOPES)
-            flow.user_agent = self.APPLICATION_NAME
-            flags = oauth2client.tools.argparser.parse_args()
-            credentials = oauth2client.tools.run_flow(flow, store, flags)
-            log.info('Storing credentials to %r', self.credentials_path)
-        return credentials
+        with self.AUTHENTICATION_LOCK:
+            log.info('Starting authentication for %s', self.target)
+            store = oauth2client.file.Storage(self.credentials_path)
+            credentials = store.get()
+            if not credentials or credentials.invalid:
+                log.info("No valid login. Starting OAUTH flow.")
+                flow = oauth2client.client.flow_from_clientsecrets(self.client_secret_path, self.SCOPES)
+                flow.user_agent = self.APPLICATION_NAME
+                flags = oauth2client.tools.argparser.parse_args()
+                credentials = oauth2client.tools.run_flow(flow, store, flags)
+                log.info('Storing credentials to %r', self.credentials_path)
+            return credentials
 
     def get_labels(self):
         result = self.gmail_api.users().labels().list(userId=self.login_name).execute()
