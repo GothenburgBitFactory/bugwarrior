@@ -134,7 +134,7 @@ class PagureService(IssueService):
         key3 = key1[:-1]  # Just the singular form of key1
 
         url = self.base_url + "/api/0/" + repo + "/" + key1
-        response = self.session.get(url)
+        response = self.session.get(url, params=dict(status='Open'))
 
         if not bool(response):
             error = response.json()
