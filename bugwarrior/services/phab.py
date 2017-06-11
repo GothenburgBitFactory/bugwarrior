@@ -74,13 +74,30 @@ class PhabricatorIssue(Issue):
 
         template = Template(self.origin['tag_template'])
         for p in projects:
+            slug = p['fields']['slug']
+            slug = self.apply_tag_substitutions(slug)
             context = self.record.copy()
             context.update({
-                'project_slug': self._normalize_to_tag(p['fields']['slug'])
+                'project_slug': self._normalize_to_tag(slug),
             })
             rendered = template.render(context)
             tags.append(rendered)
         return tags
+
+    def apply_tag_substitutions(self, tag):
+        """Applies a user's regexes and replacement strings to a tag
+
+        :self: Gets from self a list of substitutions with form ['find#replace', 'findme#replacewithme', ...]
+        :returns: A function that takes a tag and returns another tag
+        """
+        exprs = self.origin['tag_substitutions']
+        if len(exprs) == 0:
+            return tag
+        exprs = [e.split('#', 1) for e in exprs]
+        def reducer(acc, upd):
+            [pattern, sub] = upd
+            return re.sub(pattern, sub, acc)
+        return reduce(reducer, exprs, tag)
 
 
 class PhabricatorService(IssueService):
@@ -101,6 +118,9 @@ class PhabricatorService(IssueService):
         self.should_set_tags = self.config.get(
             'should_set_tags', default=False, to_type=asbool
         )
+        self.tag_substitutions = self.config.get(
+            'tag_substitutions', default=[], to_type=aslist
+        )
         self.tag_template = self.config.get(
             'tag_template', default='{{project_slug}}', to_type=six.text_type
         )
@@ -109,6 +129,7 @@ class PhabricatorService(IssueService):
         return {
             'should_set_tags': self.should_set_tags,
             'tag_template': self.tag_template,
+            'tag_substitutions': self.tag_substitutions,
         }
 
     def issues(self):

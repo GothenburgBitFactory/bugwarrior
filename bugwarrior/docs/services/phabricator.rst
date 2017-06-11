@@ -70,9 +70,20 @@ tags, you can use the ``phabricator.should_set_tags`` option::
 
     phabricator.should_set_tags = True
 
-Also, if you would like to control how these tags are created, you can
-specify a template used for converting the project slug into a Taskwarrior
-tag.
+If you are unhappy with the Phabricator slugs, you can supply a series
+of substitutions to apply to them. You can do this using a list of
+regexes and replacement strings. A '#' character separates the regex and
+the replacement string, and you may supply as many of these modifiers as
+you like by separating them with commas. They are applied in order. Use
+the ``phabricator.tag_substitutions`` option::
+
+    phabricator.tag_substitutions = infrastructure#infra,platform_mobile_apps#m
+
+Here you can see that I replace 'infrastructure' with 'infra', and the
+overly long 'platform_mobile_apps' slug with 'm'.
+
+You can also specify a template used for converting the project slug
+into a Taskwarrior tag. Templating happens after any substitutions.
 
 For example, to prefix all incoming labels with the string 'phab_' (perhaps
 to differentiate them from any existing tags you might have), you could
@@ -82,6 +93,10 @@ add the following configuration option::
 
 In addition to the context variable ``{{project_slug}}``, you also have
 access to all fields on the Taskwarrior task if needed.
+
+After all other processing, tags are normalized to ensure they work with
+TaskWarrior. Any non-latin, non-alphanumeric character is turned into
+underscore.
 
 .. note::
 
