@@ -85,7 +85,7 @@ overly long 'platform_mobile_apps' slug with 'm'.
 You can also specify a template used for converting the project slug
 into a Taskwarrior tag. Templating happens after any substitutions.
 
-For example, to prefix all incoming labels with the string 'phab_' (perhaps
+For example, to prefix all incoming tags with the string 'phab_' (perhaps
 to differentiate them from any existing tags you might have), you could
 add the following configuration option::
 

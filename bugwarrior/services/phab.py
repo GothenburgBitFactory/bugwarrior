@@ -94,9 +94,11 @@ class PhabricatorIssue(Issue):
         if len(exprs) == 0:
             return tag
         exprs = [e.split('#', 1) for e in exprs]
+
         def reducer(acc, upd):
             [pattern, sub] = upd
             return re.sub(pattern, sub, acc)
+
         return reduce(reducer, exprs, tag)
 
 
@@ -146,7 +148,7 @@ class PhabricatorService(IssueService):
                 seen = set()
                 issues = [item for item in issues if str(item[1]) not in seen and not seen.add(str(item[1]))]
             if self.shown_project_phids is not None:
-                issues = self.api.maniphest.query(status='status-open', projectsPHIDs = self.shown_project_phids)
+                issues = self.api.maniphest.query(status='status-open', projectsPHIDs=self.shown_project_phids)
                 issues = issues.items()
         else:
             issues = self.api.maniphest.query(status='status-open')
@@ -188,7 +190,7 @@ class PhabricatorService(IssueService):
                 'project': project,
                 'projects': get_projects_of_issue(issue, projects),
                 'type': 'issue',
-                #'annotations': self.annotations(phid, issue)
+                # 'annotations': self.annotations(phid, issue),
             }
 
             yield self.get_issue_for_record(issue, extra)
@@ -244,9 +246,10 @@ class PhabricatorService(IssueService):
                 'project': project,
                 'projects': [diff_metadata['projects'][p_phid] for p_phid in projects_from_repo],
                 'type': 'pull_request',
-                #'annotations': self.annotations(phid, issue)
+                # 'annotations': self.annotations(phid, issue),
             }
             yield self.get_issue_for_record(diff, extra)
+
 
 def fetch_issue_metadata(api, issues):
     """Get projects related to a list of issues from Phab
@@ -258,6 +261,7 @@ def fetch_issue_metadata(api, issues):
     proj_phid_lists = [i[1]['projectPHIDs'] for i in issues]
     return fetch_all_related_projects(api, proj_phid_lists)
 
+
 def fetch_diff_metadata(api, diffs):
     """Get repo and projects related to a list of issues from Phab
 
@@ -265,11 +269,11 @@ def fetch_diff_metadata(api, diffs):
     :diffs: A list of phab diffs
     :returns: A dictionary with form {
         'repo_binds': {repo_phid: [project_phid, ...]},
-        'projects': {project_phid: project_data}
+        'projects': {project_phid: project_data},
     }
     """
     repo_phids = [d['repositoryPHID'] for d in diffs]
-    repo_phids = [p for p in set(repo_phids)] # make unique
+    repo_phids = [p for p in set(repo_phids)]  # make unique
 
     # We could try to also use the diff['auxiliary']['phabricator:projects']
     # here, which the diff relevancy filtering code tries to do,
@@ -278,7 +282,7 @@ def fetch_diff_metadata(api, diffs):
 
     repos = api.diffusion.repository.search(
         constraints={'phids': repo_phids},
-        attachments={'projects': True}
+        attachments={'projects': True},
     )
 
     repo_proj_phid = {}
@@ -301,6 +305,7 @@ def fetch_diff_metadata(api, diffs):
         'projects': projects
     }
 
+
 def fetch_all_related_projects(api, proj_phid_lists):
     phids = set()
     for pl in proj_phid_lists:
@@ -309,13 +314,14 @@ def fetch_all_related_projects(api, proj_phid_lists):
         for phid in pl:
             phids.add(phid)
 
-    phids = [p for p in phids] # set to list
+    phids = [p for p in phids]  # set to list
     projs = api.project.search(constraints={'phids': phids})
 
     resdict = {}
     for p in projs.data:
         resdict[p['phid']] = p
     return resdict
+
 
 def get_projects_of_issue(issue, projects):
     """Get projects related to an issue from a dict of Phab projects
