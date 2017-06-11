@@ -60,6 +60,34 @@ you can find it out by querying Phabricator Conduit
 the methods which return the needed info are ``user.query``, ``project.query``
 and ``repository.query`` respectively.
 
+Import Projects as Tags
++++++++++++++++++++++++
+
+Phabricator tasks may belong to multiple projects, and differentials (PRs)
+belong to a diffusion repository which may belong to multiple projects; to
+use those projects' slugs (short identifying, human readable strings) as
+tags, you can use the ``phabricator.should_set_tags`` option::
+
+    phabricator.should_set_tags = True
+
+Also, if you would like to control how these tags are created, you can
+specify a template used for converting the project slug into a Taskwarrior
+tag.
+
+For example, to prefix all incoming labels with the string 'phab_' (perhaps
+to differentiate them from any existing tags you might have), you could
+add the following configuration option::
+
+    phabricator.tag_template = phab_{{project_slug}}
+
+In addition to the context variable ``{{project_slug}}``, you also have
+access to all fields on the Taskwarrior task if needed.
+
+.. note::
+
+   See :ref:`field_templates` for more details regarding how templates
+   are processed.
+
 
 Provided UDA Fields
 -------------------
