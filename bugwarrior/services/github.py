@@ -282,7 +282,7 @@ class GithubService(IssueService):
 
         self.query = self.config.get(
             'query',
-            default='involves: {user} state:open'.format(
+            default='involves:{user} state:open'.format(
                 user=self.username) if self.involved_issues else '',
             to_type=six.text_type
         )
