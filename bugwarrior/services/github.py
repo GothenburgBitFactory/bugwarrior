@@ -276,6 +276,9 @@ class GithubService(IssueService):
         self.label_template = self.config.get(
             'label_template', default='{{label}}', to_type=six.text_type
         )
+        self.project_owner_prefix = self.config.get(
+            'project_owner_prefix', default=False, to_type=asbool
+        )
 
         self.query = self.config.get(
             'query',
@@ -429,8 +432,12 @@ class GithubService(IssueService):
             issue['repo'] = tag
 
             issue_obj = self.get_issue_for_record(issue)
+            tagParts = tag.split('/')
+            projectName = tagParts[1]
+            if self.project_owner_prefix:
+                projectName = tagParts[0]+"."+projectName
             extra = {
-                'project': tag.split('/')[1],
+                'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',
                 'annotations': self.annotations(tag, issue, issue_obj)
             }
