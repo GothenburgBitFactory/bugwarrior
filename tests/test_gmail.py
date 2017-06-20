@@ -49,7 +49,7 @@ TEST_LABELS = [
 
 class TestGmailIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
-        'gmail.add_tags': 'added',
+        'add_tags': 'added',
         'gmail.login_name': 'test@example.com',
     }
 
