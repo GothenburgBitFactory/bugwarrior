@@ -128,7 +128,7 @@ class GmailService(IssueService):
                 log.info("No valid login. Starting OAUTH flow.")
                 flow = oauth2client.client.flow_from_clientsecrets(self.client_secret_path, self.SCOPES)
                 flow.user_agent = self.APPLICATION_NAME
-                flags = oauth2client.tools.argparser.parse_args()
+                flags = oauth2client.tools.argparser.parse_args([])
                 credentials = oauth2client.tools.run_flow(flow, store, flags)
                 log.info('Storing credentials to %r', self.credentials_path)
             return credentials
