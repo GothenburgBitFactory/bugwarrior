@@ -84,8 +84,8 @@ Example Configuration
     # or not."
     [my_github]
     service = github
-    default_priority = H
-    add_tags = open_source
+    github.default_priority = H
+    github.add_tags = open_source
 
     # This specifies that we should pull issues from repositories belonging
     # to the 'ralphbean' github account.  See the note below about
@@ -120,10 +120,10 @@ Example Configuration
     trac.username = ralph
     trac.password = OMG_LULZ
 
-    only_if_assigned = ralph
-    also_unassigned = True
-    default_priority = H
-    add_tags = work
+    trac.only_if_assigned = ralph
+    trac.also_unassigned = True
+    trac.default_priority = H
+    trac.add_tags = work
 
     # Here's an example of a megaplan target.
     [my_megaplan]
@@ -150,7 +150,7 @@ Example Configuration
     # 4 and 5(the default). You can find your particular version in the footer at
     # the dashboard.
     jira.version = 5
-    add_tags = enterprisey work
+    jira.add_tags = enterprisey work
 
     # Here's an example of a phabricator target
     [my_phabricator]
@@ -173,14 +173,14 @@ Example Configuration
     redmine.key = c0c4c014cafebabe
     redmine.user_id = 7
     redmine.project_name = redmine
-    add_tags = chiliproject
+    redmine.add_tags = chiliproject
 
     [activecollab]
     service = activecollab
     activecollab.url = https://ac.example.org/api.php
     activecollab.key = your-api-key
     activecollab.user_id = 15
-    add_tags = php
+    activecollab.add_tags = php
 
     [activecollab2]
     service = activecollab2
