@@ -184,6 +184,12 @@ class IssueService(object):
         if service_config.has_option(target, 'also_unassigned'):
             die("[%s] has an 'also_unassigned' option.  Should be "
                 "'%s.also_unassigned'." % (target, cls.CONFIG_PREFIX))
+        if service_config.has_option(target, 'default_priority'):
+            die("[%s] has a 'default_priority' option.  Should be "
+                "'%s.default_priority'." % (target, cls.CONFIG_PREFIX))
+        if service_config.has_option(target, 'add_tags'):
+            die("[%s] has an 'add_tags' option.  Should be "
+                "'%s.add_tags'." % (target, cls.CONFIG_PREFIX))
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
