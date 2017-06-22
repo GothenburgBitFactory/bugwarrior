@@ -51,38 +51,23 @@ class IssueService(object):
     def __init__(self, main_config, main_section, target):
         self.config = ServiceConfig(self.CONFIG_PREFIX, main_config, target)
         self.main_section = main_section
+        self.main_config = main_config
         self.target = target
 
-        self.desc_len = 35
-        if main_config.has_option(self.main_section, 'description_length'):
-            self.desc_len = main_config.getint(
-                self.main_section, 'description_length')
+        # Our configuration allows integers to also be 'None'. For example, for
+        # unlimited annotation length. Our private 'asint' function respects this.
+        def asint(x):
+            if x == '':
+                return None
+            return int(x)
 
-        self.anno_len = 45
-        if main_config.has_option(self.main_section, 'annotation_length'):
-            self.anno_len = main_config.getint(
-                self.main_section, 'annotation_length')
-
-        self.inline_links = True
-        if main_config.has_option(self.main_section, 'inline_links'):
-            self.inline_links = asbool(main_config.get(
-                self.main_section, 'inline_links'))
-
-        self.annotation_links = not self.inline_links
-        if main_config.has_option(self.main_section, 'annotation_links'):
-            self.annotation_links = asbool(
-                main_config.get(self.main_section, 'annotation_links')
-            )
-
-        self.annotation_comments = True
-        if main_config.has_option(self.main_section, 'annotation_comments'):
-            self.annotation_comments = asbool(
-                main_config.get(self.main_section, 'annotation_comments')
-            )
-
-        self.shorten = False
-        if main_config.has_option(self.main_section, 'shorten'):
-            self.shorten = asbool(main_config.get(self.main_section, 'shorten'))
+        self.desc_len = self._get_config_or_default('description_length', 35, asint);
+        self.anno_len = self._get_config_or_default('annotation_length', 45, asint);
+        self.inline_links = self._get_config_or_default('inline_links', True, asbool);
+        self.annotation_links = self._get_config_or_default('annotation_links', not self.inline_links, asbool)
+        self.annotation_comments = self._get_config_or_default('annotation_comments', True, asbool)
+        self.shorten = self._get_config_or_default('shorten', False, asbool)
+        self.default_priority = self._get_config_or_default('default_priority','M', lambda x: x)
 
         self.add_tags = []
         if 'add_tags' in self.config:
@@ -91,11 +76,16 @@ class IssueService(object):
                 if option:
                     self.add_tags.append(option)
 
-        self.default_priority = 'M'
-        if 'default_priority' in self.config:
-            self.default_priority = self.config.get('default_priority')
-
         log.info("Working on [%s]", self.target)
+
+
+    def _get_config_or_default(self, key, default, as_type):
+        """Return a main config value, or default if it does not exist."""
+
+        if self.main_config.has_option(self.main_section, key):
+            return as_type(self.main_config.get(self.main_section, key))
+        return default
+
 
     def get_templates(self):
         """ Get any defined templates for configuration values.
