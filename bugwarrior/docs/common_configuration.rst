@@ -68,6 +68,9 @@ service example:
   tags by defining one of your tags following the example set in
   `Field Templates`_.
 
+These configuration options should be prefixed with the service name, e.g.
+`github.add_tags`.
+
 .. _field_templates:
 
 Field Templates
