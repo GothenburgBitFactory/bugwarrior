@@ -31,6 +31,13 @@ def aslist(value):
     return [item.strip() for item in value.strip().split(',')]
 
 
+def asint(value):
+    """ Cast config values to int, or None for empty strings."""
+    if value == '':
+        return None
+    return int(value)
+
+
 def get_keyring():
     """ Try to import and return optional keyring dependency. """
     try:

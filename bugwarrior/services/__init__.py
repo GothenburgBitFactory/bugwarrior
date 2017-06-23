@@ -16,7 +16,7 @@ import six
 
 from taskw.task import Task
 
-from bugwarrior.config import asbool, die, get_service_password, ServiceConfig
+from bugwarrior.config import asbool, asint, die, get_service_password, ServiceConfig
 from bugwarrior.db import MARKUP, URLShortener
 
 import logging
@@ -53,13 +53,6 @@ class IssueService(object):
         self.main_section = main_section
         self.main_config = main_config
         self.target = target
-
-        # Our configuration allows integers to also be 'None'. For example, for
-        # unlimited annotation length. Our private 'asint' function respects this.
-        def asint(x):
-            if x == '':
-                return None
-            return int(x)
 
         self.desc_len = self._get_config_or_default('description_length', 35, asint);
         self.anno_len = self._get_config_or_default('annotation_length', 45, asint);
