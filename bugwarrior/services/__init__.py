@@ -60,7 +60,7 @@ class IssueService(object):
         self.annotation_links = self._get_config_or_default('annotation_links', not self.inline_links, asbool)
         self.annotation_comments = self._get_config_or_default('annotation_comments', True, asbool)
         self.shorten = self._get_config_or_default('shorten', False, asbool)
-        self.default_priority = self._get_config_or_default('default_priority','M', lambda x: x)
+        self.default_priority = self._get_config_or_default('default_priority','M')
 
         self.add_tags = []
         if 'add_tags' in self.config:
@@ -72,7 +72,7 @@ class IssueService(object):
         log.info("Working on [%s]", self.target)
 
 
-    def _get_config_or_default(self, key, default, as_type):
+    def _get_config_or_default(self, key, default, as_type=lambda x: x):
         """Return a main config value, or default if it does not exist."""
 
         if self.main_config.has_option(self.main_section, key):
