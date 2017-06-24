@@ -58,6 +58,7 @@ class TestSynchronize(ConfigTest):
         config = ConfigParser.RawConfigParser()
         config.add_section('general')
         config.set('general', 'targets', 'my_service')
+        config.set('general', 'static_fields', 'project, priority')
         config.add_section('my_service')
         config.set('my_service', 'service', 'github')
 
@@ -66,6 +67,7 @@ class TestSynchronize(ConfigTest):
 
         issue = {
             'description': 'Blah blah blah. ☃',
+            'project': 'sample_project',
             'githubtype': 'issue',
             'githuburl': 'https://example.com',
             'priority': 'M',
@@ -78,17 +80,21 @@ class TestSynchronize(ConfigTest):
             self.assertEqual(get_tasks(tw), {
                 'completed': [],
                 'pending': [{
+                    u'project': u'sample_project',
                     u'priority': u'M',
                     u'status': u'pending',
                     u'description': u'Blah blah blah. ☃',
                     u'githuburl': u'https://example.com',
                     u'githubtype': u'issue',
                     u'id': 1,
-                    u'urgency': 3.9,
+                    u'urgency': 4.9,
                 }]})
 
         # TEST CHANGED ISSUE.
         issue['description'] = 'Yada yada yada.'
+
+        # Change static field
+        issue['project'] = 'other_project'
 
         db.synchronize(iter((issue,)), config, 'general')
 
@@ -96,12 +102,13 @@ class TestSynchronize(ConfigTest):
             'completed': [],
             'pending': [{
                 u'priority': u'M',
+                u'project': u'sample_project',
                 u'status': u'pending',
                 u'description': u'Yada yada yada.',
                 u'githuburl': u'https://example.com',
                 u'githubtype': u'issue',
                 u'id': 1,
-                u'urgency': 3.9,
+                u'urgency': 4.9,
             }]})
 
         # TEST CLOSED ISSUE.
@@ -117,13 +124,14 @@ class TestSynchronize(ConfigTest):
 
         self.assertEqual(tasks, {
             'completed': [{
+                u'project': u'sample_project',
                 u'description': u'Yada yada yada.',
                 u'githubtype': u'issue',
                 u'githuburl': u'https://example.com',
                 u'id': 0,
                 u'priority': u'M',
                 u'status': u'completed',
-                u'urgency': 3.9,
+                u'urgency': 4.9,
             }],
              'pending': []})
 
