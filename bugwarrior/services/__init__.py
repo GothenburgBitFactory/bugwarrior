@@ -16,7 +16,7 @@ import six
 
 from taskw.task import Task
 
-from bugwarrior.config import asbool, asint, die, get_service_password, ServiceConfig
+from bugwarrior.config import asbool, asint, aslist, die, get_service_password, ServiceConfig
 from bugwarrior.db import MARKUP, URLShortener
 
 import logging
@@ -64,7 +64,7 @@ class IssueService(object):
 
         self.add_tags = []
         if 'add_tags' in self.config:
-            for raw_option in self.config.get('add_tags').split(','):
+            for raw_option in aslist(self.config.get('add_tags')):
                 option = raw_option.strip(' +;')
                 if option:
                     self.add_tags.append(option)
@@ -519,7 +519,7 @@ def aggregate_issues(conf, main_section, debug):
     log.info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
-    targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
+    targets = aslist(conf.get(main_section, 'targets'))
 
     queue = multiprocessing.Queue()
 

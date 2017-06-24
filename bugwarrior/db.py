@@ -16,7 +16,7 @@ import six
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
-from bugwarrior.config import asbool, get_taskrc_path
+from bugwarrior.config import asbool, get_taskrc_path, aslist
 from bugwarrior.notifications import send_notification
 
 import logging
@@ -265,9 +265,7 @@ def merge_left(field, local_task, remote_issue, hamming=False):
 
 def run_hooks(conf, name):
     if conf.has_option('hooks', name):
-        pre_import = [
-            t.strip() for t in conf.get('hooks', name).split(',')
-        ]
+        pre_import = aslist(conf.get('hooks', name))
         if pre_import is not None:
             for hook in pre_import:
                 exit_code = subprocess.call(hook, shell=True)
@@ -286,7 +284,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         except (NoSectionError, NoOptionError):
             return default
 
-    targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
+    targets = aslist(conf.get(main_section, 'targets'))
     services = set([conf.get(target, 'service') for target in targets])
     key_list = build_key_list(services)
     uda_list = build_uda_config_overrides(services)
@@ -300,7 +298,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
     static_fields = ['priority']
     if conf.has_option(main_section, 'static_fields'):
-        static_fields = conf.get(main_section, 'static_fields').split(',')
+        static_fields = aslist(conf.get(main_section, 'static_fields'))
 
     # Before running CRUD operations, call the pre_import hook(s).
     run_hooks(conf, 'pre_import')
@@ -462,7 +460,7 @@ def build_key_list(targets):
 
 
 def get_defined_udas_as_strings(conf, main_section):
-    targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
+    targets = aslist(conf.get(main_section, 'targets'))
     services = set([conf.get(target, 'service') for target in targets])
     uda_list = build_uda_config_overrides(services)
 
