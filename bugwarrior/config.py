@@ -158,8 +158,8 @@ def validate_config(config, main_section):
     if not config.has_option(main_section, 'targets'):
         die("No targets= item in [%s] found." % main_section)
 
-    targets = config.get(main_section, 'targets')
-    targets = [t for t in [t.strip() for t in targets.split(",")] if len(t)]
+    targets = aslist(config.get(main_section, 'targets'))
+    targets = [t for t in targets if len(t)]
 
     if not targets:
         die("Empty targets= item in [%s]." % main_section)
