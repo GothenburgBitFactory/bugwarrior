@@ -1,15 +1,6 @@
-import httplib2
-import os
 import email
-import re
-import multiprocessing
-
-import googleapiclient.discovery
-import oauth2client.client
-import oauth2client.tools
-import oauth2client.file
-
-from bugwarrior.services import IssueService, Issue
+from .google import GoogleService
+from bugwarrior.services import Issue
 
 import logging
 log = logging.getLogger(__name__)
@@ -79,66 +70,24 @@ class GmailIssue(Issue):
             cls='issue',
         )
 
-class GmailService(IssueService):
+class GmailService(GoogleService):
     APPLICATION_NAME = 'Bugwarrior Gmail Service'
     SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
-    DEFAULT_CLIENT_SECRET_PATH = '~/.gmail_client_secret.json'
 
     ISSUE_CLASS = GmailIssue
     CONFIG_PREFIX = 'gmail'
-    AUTHENTICATION_LOCK = multiprocessing.Lock()
+    RESOURCE = 'gmail'
 
     def __init__(self, *args, **kw):
         super(GmailService, self).__init__(*args, **kw)
-
         self.query = self.config.get('query', 'label:Starred')
-        self.login_name = self.config.get('login_name', 'me')
-        self.client_secret_path = self.get_config_path(
-                'client_secret_path',
-                self.DEFAULT_CLIENT_SECRET_PATH)
-        credentials_name = clean_filename(self.login_name
-                if self.login_name != 'me' else self.target)
-        self.credentials_path = os.path.join(
-                self.config.data.path,
-                'gmail_credentials_%s.json' % (credentials_name,))
-        self.gmail_api = self.build_api()
-
-    def get_config_path(self, varname, default_path=None):
-        return os.path.expanduser(self.config.get(varname, default_path))
-
-    def build_api(self):
-        credentials = self.get_credentials()
-        http = credentials.authorize(httplib2.Http())
-        return googleapiclient.discovery.build('gmail', 'v1', http=http)
-
-    def get_credentials(self):
-        """Gets valid user credentials from storage.
-
-        If nothing has been stored, or if the stored credentials are invalid,
-        the OAuth2 flow is completed to obtain the new credentials.
-
-        Returns:
-            Credentials, the obtained credential.
-        """
-        with self.AUTHENTICATION_LOCK:
-            log.info('Starting authentication for %s', self.target)
-            store = oauth2client.file.Storage(self.credentials_path)
-            credentials = store.get()
-            if not credentials or credentials.invalid:
-                log.info("No valid login. Starting OAUTH flow.")
-                flow = oauth2client.client.flow_from_clientsecrets(self.client_secret_path, self.SCOPES)
-                flow.user_agent = self.APPLICATION_NAME
-                flags = oauth2client.tools.argparser.parse_args([])
-                credentials = oauth2client.tools.run_flow(flow, store, flags)
-                log.info('Storing credentials to %r', self.credentials_path)
-            return credentials
 
     def get_labels(self):
-        result = self.gmail_api.users().labels().list(userId=self.login_name).execute()
+        result = self.api.users().labels().list(userId=self.login_name).execute()
         return {label['id']: label['name'] for label in result['labels']}
 
     def get_threads(self):
-        thread_service = self.gmail_api.users().threads()
+        thread_service = self.api.users().threads()
 
         result = thread_service.list(userId=self.login_name, q=self.query).execute()
         return [
@@ -179,6 +128,3 @@ def message_header(message, header_name):
     for item in message['payload']['headers']:
         if item['name'] == header_name:
             return item['value']
-
-def clean_filename(name):
-    return re.sub(r'[^A-Za-z0-9_]+', '_', name)
