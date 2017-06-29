@@ -193,3 +193,8 @@ Example Configuration
     service = gmail
     gmail.query = label:action OR label:readme
     gmail.login_name = you@example.com
+
+    [my_gtask]
+    service = gtask
+    gtask.lists = task list 1, task lisk 2
+    gtask.login_name = you@example.com
