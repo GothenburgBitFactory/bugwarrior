@@ -107,10 +107,24 @@ class TaigaService(IssueService, ServiceClient):
             project = self.get_project(story['project'])
             extra = {
                 'project': project['slug'],
-                'annotations': self.annotations(story, project),
+                'annotations': self.annotations_stories(story, project),
                 'url': self.build_url(story, project),
             }
             yield self.get_issue_for_record(story, extra)
+
+        url = self.url + '/api/v1/tasks'
+        params = dict(assigned_to=userid, status__is_closed="false")
+        response = self.session.get(url, params=params)
+        tasks = response.json()
+
+        for task in tasks:
+            project = self.get_project(task['project'])
+            extra = {
+                'project': project['slug'],
+                'annotations': self.annotations_tasks(task, project),
+                'url': self.build_url_tasks(task, project),
+            }
+            yield self.get_issue_for_record(task, extra)
 
     @cache.cache_on_arguments()
     def get_project(self, project_id):
@@ -120,7 +134,10 @@ class TaigaService(IssueService, ServiceClient):
     def build_url(self, story, project):
         return '%s/project/%s/us/%i' % (self.url, project['slug'], story['ref'])
 
-    def annotations(self, story, project):
+    def build_url_tasks(self, task, project):
+        return '%s/project/%s/task/%i' % (self.url, project['slug'], task['ref'])
+
+    def annotations_stories(self, story, project):
         url = '%s/api/v1/history/userstory/%i' % (self.url, story['id'])
         response = self.session.get(url)
         history = response.json()
@@ -130,4 +147,16 @@ class TaigaService(IssueService, ServiceClient):
                 item['comment'],
             ) for item in history if item['comment']),
             self.build_url(story, project)
+        )
+
+    def annotations_tasks(self, task, project):
+        url = '%s/api/v1/history/task/%i' % (self.url, task['id'])
+        response = self.session.get(url)
+        history = response.json()
+        return self.build_annotations(
+            ((
+                item['user']['username'],
+                item['comment'],
+            ) for item in history if item['comment']),
+            self.build_url_tasks(task, project)
         )
