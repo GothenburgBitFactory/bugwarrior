@@ -17,6 +17,12 @@ The above example is the minimum required to import issues from Taiga.  You can
 also feel free to use any of the configuration options described in
 :ref:`common_configuration_options`.
 
+Service Features
+----------------
+By default, userstories from taiga are added in taskwarrior. If you like to include taiga tasks as well, set the config option::
+
+    taiga.include_tasks = True
+
 Provided UDA Fields
 -------------------
 
