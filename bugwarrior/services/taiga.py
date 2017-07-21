@@ -57,6 +57,7 @@ class TaigaService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super(TaigaService, self).__init__(*args, **kw)
         self.url = self.config.get('base_uri')
+        self.include_tasks = self.config.get('include_tasks', default=False)
         self.auth_token = self.get_password('auth_token')
         self.label_template = self.config.get(
             'label_template', default='{{label}}', to_type=six.text_type
@@ -112,19 +113,20 @@ class TaigaService(IssueService, ServiceClient):
             }
             yield self.get_issue_for_record(story, extra)
 
-        url = self.url + '/api/v1/tasks'
-        params = dict(assigned_to=userid, status__is_closed="false")
-        response = self.session.get(url, params=params)
-        tasks = response.json()
+        if self.include_tasks:
+            url = self.url + '/api/v1/tasks'
+            params = dict(assigned_to=userid, status__is_closed="false")
+            response = self.session.get(url, params=params)
+            tasks = response.json()
 
-        for task in tasks:
-            project = self.get_project(task['project'])
-            extra = {
-                'project': project['slug'],
-                'annotations': self.annotations_tasks(task, project),
-                'url': self.build_url_tasks(task, project),
-            }
-            yield self.get_issue_for_record(task, extra)
+            for task in tasks:
+                project = self.get_project(task['project'])
+                extra = {
+                    'project': project['slug'],
+                    'annotations': self.annotations_tasks(task, project),
+                    'url': self.build_url_tasks(task, project),
+                }
+                yield self.get_issue_for_record(task, extra)
 
     @cache.cache_on_arguments()
     def get_project(self, project_id):
