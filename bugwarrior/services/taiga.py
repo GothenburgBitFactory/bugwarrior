@@ -123,7 +123,7 @@ class TaigaService(IssueService, ServiceClient):
             yield issue
 
         if self.include_tasks:
-            for issue in  self._issues(userid, 'task', 'tasks', 'task'):
+            for issue in self._issues(userid, 'task', 'tasks', 'task'):
                 yield issue
 
     @cache.cache_on_arguments()
