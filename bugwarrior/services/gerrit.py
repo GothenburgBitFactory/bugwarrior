@@ -135,7 +135,12 @@ class GerritService(IssueService, ServiceClient):
     def annotations(self, change):
         entries = []
         for item in change['messages']:
-            username = item['author']['username']
+            for key in ['name', 'username', 'email']:
+                if key in item['author']:
+                    username = item['author'][key]
+                    break
+            else:
+                username = item['author']['_account_id']
             # Gerrit messages are really messy
             message = item['message']\
                 .lstrip('Patch Set ')\
