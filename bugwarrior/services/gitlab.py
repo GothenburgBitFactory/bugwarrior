@@ -35,6 +35,7 @@ class GitlabIssue(Issue):
     WORK_IN_PROGRESS = 'gitlabwip'
     AUTHOR = 'gitlabauthor'
     ASSIGNEE = 'gitlabassignee'
+    NAMESPACE = 'gitlabnamespace'
 
     UDAS = {
         TITLE: {
@@ -100,6 +101,10 @@ class GitlabIssue(Issue):
         ASSIGNEE: {
             'type': 'string',
             'label': 'Gitlab Assignee',
+        },
+        NAMESPACE: {
+            'type': 'string',
+            'label': 'Gitlab Namespace',
         },
     }
     UNIQUE_KEY = (REPO, TYPE, NUMBER,)
@@ -173,6 +178,7 @@ class GitlabIssue(Issue):
             self.WORK_IN_PROGRESS: work_in_progress,
             self.AUTHOR: author,
             self.ASSIGNEE: assignee,
+            self.NAMESPACE: self.extra['namespace'],
         }
 
     def get_tags(self):
@@ -423,6 +429,7 @@ class GitlabService(IssueService, ServiceClient):
             extra = {
                 'issue_url': issue_url,
                 'project': repo['path'],
+                'namespace': repo['namespace']['full_path'],
                 'type': 'issue',
                 'annotations': self.annotations(repo, issue_url, 'issues', issue, issue_obj)
             }
@@ -449,6 +456,7 @@ class GitlabService(IssueService, ServiceClient):
                 extra = {
                     'issue_url': issue_url,
                     'project': repo['path'],
+                    'namespace': repo['namespace']['full_path'],
                     'type': 'merge_request',
                     'annotations': self.annotations(repo, issue_url, 'merge_requests', issue, issue_obj)
                 }
@@ -476,6 +484,7 @@ class GitlabService(IssueService, ServiceClient):
                 extra = {
                     'issue_url': todo_url,
                     'project': repo['path'],
+                    'namespace': "todo",
                     'type': 'todo',
                     'annotations': [],
                 }
