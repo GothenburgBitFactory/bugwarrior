@@ -104,6 +104,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     arbitrary_extra = {
         'issue_url': 'https://gitlab.example.com/arbitrary_username/project/issues/3',
         'project': 'project',
+        'namespace': 'arbitrary_namespace',
         'type': 'issue',
         'annotations': [],
     }
@@ -148,6 +149,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             issue.WORK_IN_PROGRESS: 0,
             issue.AUTHOR: 'john_smith',
             issue.ASSIGNEE: 'jack_smith',
+            issue.NAMESPACE: 'arbitrary_namespace',
         }
         actual_output = issue.to_taskwarrior()
 
@@ -160,7 +162,10 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             json=[{
                 'id': 1,
                 'path': 'arbitrary_username/project',
-                'web_url': 'example.com'
+                'web_url': 'example.com',
+                "namespace": {
+                    "full_path": "arbitrary_username"
+                }
             }])
 
         self.add_response(
@@ -186,6 +191,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'gitlabdescription': u'',
             'gitlabdownvotes': 0,
             'gitlabmilestone': u'v1.0',
+            'gitlabnamespace': u'arbitrary_username',
             'gitlabnumber': 3,
             'gitlabrepo': u'arbitrary_username/project',
             'gitlabstate': u'opened',
