@@ -34,6 +34,7 @@ ARBITRARY_EXTRA = {
     'project': 'one',
     'type': 'issue',
     'annotations': [],
+    'namespace': 'arbitrary_username',
 }
 
 
@@ -80,6 +81,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             issue.BODY: ARBITRARY_ISSUE['body'],
             issue.MILESTONE: ARBITRARY_ISSUE['milestone']['title'],
             issue.USER: ARBITRARY_ISSUE['user']['login'],
+            issue.NAMESPACE: 'arbitrary_username',
         }
         actual_output = issue.to_taskwarrior()
 
@@ -125,6 +127,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'githubbody': u'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubmilestone': u'alpha',
+            'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
             'githubrepo': 'arbitrary_username/arbitrary_repo',
             'githubtitle': u'Hallo',
@@ -179,6 +182,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
             'githubbody': u'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubmilestone': u'alpha',
+            'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
             'githubrepo': 'arbitrary_username/arbitrary_repo',
             'githubtitle': u'Hallo',

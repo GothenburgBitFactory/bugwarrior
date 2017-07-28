@@ -151,6 +151,8 @@ class TestUDAs(ConfigTest):
             u'uda.githubcreatedon.type=date',
             u'uda.githubmilestone.label=Github Milestone',
             u'uda.githubmilestone.type=string',
+            u'uda.githubnamespace.label=Github Namespace',
+            u'uda.githubnamespace.type=string',
             u'uda.githubnumber.label=Github Issue/PR #',
             u'uda.githubnumber.type=numeric',
             u'uda.githubrepo.label=Github Repo Slug',

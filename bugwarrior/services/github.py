@@ -131,6 +131,7 @@ class GithubIssue(Issue):
     TYPE = 'githubtype'
     NUMBER = 'githubnumber'
     USER = 'githubuser'
+    NAMESPACE = 'githubnamespace'
 
     UDAS = {
         TITLE: {
@@ -173,6 +174,10 @@ class GithubIssue(Issue):
             'type': 'string',
             'label': 'Github User',
         },
+        NAMESPACE: {
+            'type': 'string',
+            'label': 'Github Namespace',
+        },
     }
     UNIQUE_KEY = (URL, TYPE,)
 
@@ -213,7 +218,8 @@ class GithubIssue(Issue):
             self.MILESTONE: milestone,
             self.NUMBER: self.record['number'],
             self.CREATED_AT: created,
-            self.UPDATED_AT: self.parse_date(self.record['updated_at'])
+            self.UPDATED_AT: self.parse_date(self.record['updated_at']),
+            self.NAMESPACE: self.extra['namespace'],
         }
 
     def get_tags(self):
@@ -444,7 +450,8 @@ class GithubService(IssueService):
             extra = {
                 'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',
-                'annotations': self.annotations(tag, issue, issue_obj)
+                'annotations': self.annotations(tag, issue, issue_obj),
+                'namespace': self.username,
             }
             issue_obj.update_extra(extra)
             yield issue_obj
