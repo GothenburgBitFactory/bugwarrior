@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import unittest
 
 import responses
 
@@ -130,6 +131,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
         }
         self.assertIsNone(self.service.get_owner(('foo', issue)))
 
+    @unittest.skip('https://github.com/getsentry/responses/issues/156')
     @responses.activate
     def test_fetch_issues_pagination(self):
         self.add_response(

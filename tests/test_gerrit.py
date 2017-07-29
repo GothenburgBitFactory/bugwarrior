@@ -31,7 +31,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
         responses.add(
             responses.HEAD,
             self.SERVICE_CONFIG['gerrit.base_uri'] + '/a/',
-            adding_headers={'www-authenticate': 'digest'})
+            headers={'www-authenticate': 'digest'})
         self.service = self.get_mock_service(GerritService)
 
     def test_to_taskwarrior(self):
