@@ -233,9 +233,13 @@ class GitlabService(IssueService, ServiceClient):
 
         self.exclude_repos = self.config.get('exclude_repos', [], aslist)
         self.include_repos = self.config.get('include_repos', [], aslist)
+        self.exclude_regex = self.config.get('exclude_regex', None)
+        self.include_regex = self.config.get('include_regex', None)
 
         self.include_repos = list(map(self.add_default_namespace, self.include_repos))
         self.exclude_repos = list(map(self.add_default_namespace, self.exclude_repos))
+        self.include_regex = re.compile(self.include_regex) if self.include_regex else None
+        self.exclude_regex = re.compile(self.exclude_regex) if self.exclude_regex else None
 
         self.import_labels_as_tags = self.config.get(
             'import_labels_as_tags', default=False, to_type=asbool
@@ -291,13 +295,26 @@ class GitlabService(IssueService, ServiceClient):
             if repo['path_with_namespace'] in self.exclude_repos:
                 return False
 
+        if self.exclude_regex:
+            if self.exclude_regex.match(repo['path_with_namespace']):
+                return False
+
+        # fallback if no filter is set
+        is_included = True
+
         if self.include_repos:
             if repo['path_with_namespace'] in self.include_repos:
                 return True
             else:
-                return False
+                is_included = False
 
-        return True
+        if self.include_regex:
+            if self.include_regex.match(repo['path_with_namespace']):
+                return True
+            else:
+                is_included = False
+
+        return is_included
 
     def _get_notes(self, rid, issue_type, issueid):
         tmpl = '{scheme}://{host}/api/v3/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
