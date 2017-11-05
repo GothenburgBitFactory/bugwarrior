@@ -346,7 +346,8 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             # Drop static fields from the upstream issue.  We don't want to
             # overwrite local changes to fields we declare static.
             for field in static_fields:
-                del issue_dict[field]
+                if field in issue_dict:
+                    del issue_dict[field]
 
             # Merge annotations & tags from online into our task object
             if merge_annotations:
