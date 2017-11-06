@@ -102,6 +102,8 @@ class GmailService(IssueService):
         self.client_secret_path = self.get_config_path(
                 'client_secret_path',
                 self.DEFAULT_CLIENT_SECRET_PATH)
+        self.use_inbox_url = self.config.get('use_inbox_url', False)
+
         credentials_name = clean_filename(self.login_name
                 if self.login_name != 'me' else self.target)
         self.credentials_path = os.path.join(
@@ -154,9 +156,9 @@ class GmailService(IssueService):
     def issues(self):
         labels = self.get_labels()
         for thread in self.get_threads():
-            yield self.get_issue_for_record(thread, thread_extras(thread, labels))
+            yield self.get_issue_for_record(thread, thread_extras(thread, labels, self.use_inbox_url))
 
-def thread_extras(thread, labels):
+def thread_extras(thread, labels, use_inbox_url):
     (name, address) = thread_last_sender(thread)
     return {
         'labels': [labels[label_id] for label_id in thread_labels(thread)],
@@ -164,7 +166,7 @@ def thread_extras(thread, labels):
         'last_sender_name': name,
         'snippet': thread_snippet(thread),
         'subject': thread_subject(thread),
-        'url': thread_url(thread),
+        'url': thread_url(thread, use_inbox_url),
     }
 
 def thread_labels(thread):
@@ -184,7 +186,9 @@ def thread_last_message(thread):
 def thread_snippet(thread):
     return thread['messages'][-1]['snippet']
 
-def thread_url(thread):
+def thread_url(thread, use_inbox_url):
+    if use_inbox_url:
+        return "https://inbox.google.com/search/rfc822msgid%3A" + re.sub('@', "%40", thread_last_message(thread))
     return "https://mail.google.com/mail/u/0/#all/%s" % (thread['id'],)
 
 def message_header(message, header_name):
