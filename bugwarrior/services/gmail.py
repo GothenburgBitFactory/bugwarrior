@@ -178,6 +178,9 @@ def thread_last_sender(thread):
     (name, address) = email.utils.parseaddr(from_header)
     return (name if name else address, address)
 
+def thread_last_message(thread):
+    return message_header(thread['messages'][-1], 'Message-ID')
+
 def thread_snippet(thread):
     return thread['messages'][-1]['snippet']
 
