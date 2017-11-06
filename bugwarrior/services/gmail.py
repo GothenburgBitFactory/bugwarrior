@@ -160,11 +160,11 @@ def thread_extras(thread, labels):
     (name, address) = thread_last_sender(thread)
     return {
         'labels': [labels[label_id] for label_id in thread_labels(thread)],
-        'subject': message_header(thread['messages'][0], 'Subject'),
-        'url': "https://mail.google.com/mail/u/0/#all/%s" % (thread['id'],),
-        'last_sender_name': name,
         'last_sender_address': address,
+        'last_sender_name': name,
         'snippet': thread_snippet(thread),
+        'subject': thread_subject(thread),
+        'url': thread_url(thread),
     }
 
 def thread_labels(thread):
@@ -183,6 +183,9 @@ def thread_last_message(thread):
 
 def thread_snippet(thread):
     return thread['messages'][-1]['snippet']
+
+def thread_url(thread):
+    return "https://mail.google.com/mail/u/0/#all/%s" % (thread['id'],)
 
 def message_header(message, header_name):
     for item in message['payload']['headers']:
