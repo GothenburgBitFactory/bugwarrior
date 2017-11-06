@@ -1,18 +1,20 @@
-import httplib2
-import os
 import email
-import re
+import logging
 import multiprocessing
+import os
+import re
+import time
 
 import googleapiclient.discovery
+import httplib2
 import oauth2client.client
-import oauth2client.tools
 import oauth2client.file
+import oauth2client.tools
 
 from bugwarrior.services import IssueService, Issue
 
-import logging
 log = logging.getLogger(__name__)
+
 
 class GmailIssue(Issue):
     THREAD_ID = 'gmailthreadid'
@@ -64,9 +66,9 @@ class GmailIssue(Issue):
 
     def to_taskwarrior(self):
         return {
-            'tags': [label
-                for label in self.extra['labels']
-                if label not in self.EXCLUDE_LABELS],
+            'annotations': self.get_annotations(),
+            'entry': self.get_entry(),
+            'tags': [label for label in self.extra['labels'] if label not in self.EXCLUDE_LABELS],
             'priority': self.origin['default_priority'],
             self.THREAD_ID: self.record['id'],
             self.SUBJECT: self.extra['subject'],
@@ -85,6 +87,14 @@ class GmailIssue(Issue):
             cls='issue',
         )
 
+    def get_annotations(self):
+        return self.extra.get('annotations', [])
+
+    def get_entry(self):
+        date_string = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(self.extra['internal_date']) / 1000))
+        return self.parse_date(date_string, 'LOCAL_TIMEZONE')
+
+
 class GmailService(IssueService):
     APPLICATION_NAME = 'Bugwarrior Gmail Service'
     SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
@@ -100,13 +110,13 @@ class GmailService(IssueService):
         self.query = self.config.get('query', 'label:Starred')
         self.login_name = self.config.get('login_name', 'me')
         self.client_secret_path = self.get_config_path(
-                'client_secret_path',
-                self.DEFAULT_CLIENT_SECRET_PATH)
-        credentials_name = clean_filename(self.login_name
-                if self.login_name != 'me' else self.target)
+            'client_secret_path',
+            self.DEFAULT_CLIENT_SECRET_PATH)
+
+        credentials_name = clean_filename(self.login_name if self.login_name != 'me' else self.target)
         self.credentials_path = os.path.join(
-                self.config.data.path,
-                'gmail_credentials_%s.json' % (credentials_name,))
+            self.config.data.path,
+            'gmail_credentials_%s.json' % (credentials_name,))
         self.gmail_api = self.build_api()
 
     def get_config_path(self, varname, default_path=None):
@@ -151,40 +161,67 @@ class GmailService(IssueService):
             thread_service.get(userId='me', id=thread['id']).execute()
             for thread in result.get('threads', [])]
 
+    def annotations(self, issue):
+        sender = issue.extra['last_sender_name']
+        subj = issue.extra['subject']
+        issue_url = issue.get_processed_url(issue.extra['url'])
+        return self.build_annotations([(sender, subj)], issue_url)
+
     def issues(self):
         labels = self.get_labels()
         for thread in self.get_threads():
-            yield self.get_issue_for_record(thread, thread_extras(thread, labels))
+            issue = self.get_issue_for_record(thread, thread_extras(thread, labels))
+            extra = {
+                'annotations': self.annotations(issue),
+            }
+            issue.update_extra(extra)
+            yield issue
+
 
 def thread_extras(thread, labels):
-    (name, address) = thread_last_sender(thread)
+    name, address = thread_last_sender(thread)
     return {
+        'internal_date': thread_timestamp(thread),
         'labels': [labels[label_id] for label_id in thread_labels(thread)],
-        'subject': message_header(thread['messages'][0], 'Subject'),
-        'url': "https://mail.google.com/mail/u/0/#all/%s" % (thread['id'],),
-        'last_sender_name': name,
         'last_sender_address': address,
+        'last_sender_name': name,
         'snippet': thread_snippet(thread),
+        'subject': thread_subject(thread),
+        'url': thread_url(thread),
     }
+
 
 def thread_labels(thread):
     return {label for message in thread['messages'] for label in message['labelIds']}
 
+
 def thread_subject(thread):
     return message_header(thread['messages'][0], 'Subject')
 
+
 def thread_last_sender(thread):
     from_header = message_header(thread['messages'][-1], 'From')
-    (name, address) = email.utils.parseaddr(from_header)
-    return (name if name else address, address)
+    name, address = email.utils.parseaddr(from_header)
+    return name if name else address, address
+
+
+def thread_timestamp(thread):
+    return thread['messages'][-1]['internalDate']
+
 
 def thread_snippet(thread):
     return thread['messages'][-1]['snippet']
+
+
+def thread_url(thread):
+    return "https://mail.google.com/mail/u/0/#all/%s" % (thread['id'],)
+
 
 def message_header(message, header_name):
     for item in message['payload']['headers']:
         if item['name'] == header_name:
             return item['value']
+
 
 def clean_filename(name):
     return re.sub(r'[^A-Za-z0-9_]+', '_', name)

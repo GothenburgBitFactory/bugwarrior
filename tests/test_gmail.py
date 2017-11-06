@@ -1,7 +1,11 @@
-import mock
 import os.path
-from .base import ServiceTest, AbstractServiceTest
+from datetime import datetime
+
+import mock
+from dateutil.tz import tzlocal
+
 import bugwarrior.services.gmail as gmail
+from .base import ServiceTest, AbstractServiceTest
 
 TEST_THREAD = {
         "messages": [
@@ -27,6 +31,7 @@ TEST_THREAD = {
                     ]
                 },
                 "snippet": "Bugwarrior is great",
+                "internalDate": 1546722467000,
                 "threadId": "1234",
                 "labelIds": [
                     "IMPORTANT",
@@ -46,6 +51,7 @@ TEST_LABELS = [
         {'id': 'Label_1', 'name': 'sticky'},
         {'id': 'Label_43', 'name': 'postit'},
 ]
+
 
 class TestGmailIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
@@ -75,10 +81,12 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
                 thread,
                 gmail.thread_extras(thread, self.service.get_labels()))
         expected = {
+            'annotations': [],
+            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=tzlocal()),
             'gmailthreadid': '1234',
             'gmailsnippet': 'Bugwarrior is great',
             'gmaillastsender': 'Foo Bar',
-            'tags': set(['sticky', 'postit']),
+            'tags': {'postit', 'sticky'},
             'gmailsubject': 'Regarding Bugwarrior',
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
             'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
@@ -93,12 +101,14 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         issue = next(self.service.issues())
         expected = {
+            'annotations': ['@Foo Bar - Regarding Bugwarrior'],
+            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=tzlocal()),
             'gmailthreadid': '1234',
             'gmailsnippet': 'Bugwarrior is great',
             'gmaillastsender': 'Foo Bar',
             'description': u'(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234',
             'priority': 'M',
-            'tags': set(['sticky', 'postit', 'added']),
+            'tags': {'added', 'postit', 'sticky'},
             'gmailsubject': 'Regarding Bugwarrior',
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
             'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
