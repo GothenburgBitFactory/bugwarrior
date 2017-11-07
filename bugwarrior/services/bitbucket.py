@@ -114,6 +114,10 @@ class BitbucketService(IssueService, ServiceClient):
             'filter_merge_requests', default=False, to_type=asbool
         )
 
+        self.project_owner_prefix = self.config.get(
+            'project_owner_prefix', default=False, to_type=asbool
+        )
+
     @staticmethod
     def get_keyring_service(service_config):
         login = service_config.get('login')
@@ -218,9 +222,13 @@ class BitbucketService(IssueService, ServiceClient):
 
         for tag, issue in issues:
             issue_obj = self.get_issue_for_record(issue)
+            tagParts = tag.split('/')
+            projectName = tagParts[1]
+            if self.project_owner_prefix:
+                projectName = tagParts[0] + "." + projectName
             url = issue['links']['html']['href']
             extras = {
-                'project': tag.split('/')[1],
+                'project': projectName,
                 'url': url,
                 'annotations': self.get_annotations(tag, issue, issue_obj, url)
             }
@@ -240,11 +248,15 @@ class BitbucketService(IssueService, ServiceClient):
 
             for tag, issue in pull_requests:
                 issue_obj = self.get_issue_for_record(issue)
+                tagParts = tag.split('/')
+                projectName = tagParts[1]
+                if self.project_owner_prefix:
+                    projectName = tagParts[0] + "." + projectName
                 url = self.BASE_URL + '/'.join(
                     issue['links']['html']['href'].split('/')[3:]
                 ).replace('pullrequests', 'pullrequest')
                 extras = {
-                    'project': tag.split('/')[1],
+                    'project': projectName,
                     'url': url,
                     'annotations': self.get_annotations2(tag, issue, issue_obj, url)
                 }
