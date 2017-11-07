@@ -133,8 +133,8 @@ class GitlabIssue(Issue):
             'Todo from %s for %s' % (author['name'], self.extra['project'])
             if self.extra['type'] == 'todo' else self.record['title'])
         description = (
-           self.record['body'] if self.extra['type'] == 'todo'
-           else self.record['description'])
+            self.record['body'] if self.extra['type'] == 'todo'
+            else self.record['description'])
 
         if milestone and (
                 self.extra['type'] == 'issue' or
@@ -255,6 +255,9 @@ class GitlabService(IssueService, ServiceClient):
         )
         self.include_all_todos = self.config.get(
             'include_all_todos', default=True, to_type=asbool
+        )
+        self.project_owner_prefix = self.config.get(
+            'project_owner_prefix', default=False, to_type=asbool
         )
 
     def add_default_namespace(self, repo):
@@ -440,12 +443,14 @@ class GitlabService(IssueService, ServiceClient):
         for rid, issue in issues:
             repo = repo_map[rid]
             issue['repo'] = repo['path']
-
+            projectName = repo['path']
+            if self.project_owner_prefix:
+                projectName = repo['namespace']['path'] + "." + projectName
             issue_obj = self.get_issue_for_record(issue)
             issue_url = '%s/issues/%d' % (repo['web_url'], issue['iid'])
             extra = {
                 'issue_url': issue_url,
-                'project': repo['path'],
+                'project': projectName,
                 'namespace': repo['namespace']['full_path'],
                 'type': 'issue',
                 'annotations': self.annotations(repo, issue_url, 'issues', issue, issue_obj)
@@ -469,10 +474,13 @@ class GitlabService(IssueService, ServiceClient):
                 issue['repo'] = repo['path']
 
                 issue_obj = self.get_issue_for_record(issue)
+                projectName = repo['path']
+                if self.project_owner_prefix:
+                    projectName = repo['namespace']['path'] + "." + projectName
                 issue_url = '%s/merge_requests/%d' % (repo['web_url'], issue['iid'])
                 extra = {
                     'issue_url': issue_url,
-                    'project': repo['path'],
+                    'project': projectName,
                     'namespace': repo['namespace']['full_path'],
                     'type': 'merge_request',
                     'annotations': self.annotations(repo, issue_url, 'merge_requests', issue, issue_obj)
@@ -498,9 +506,12 @@ class GitlabService(IssueService, ServiceClient):
 
                 todo_obj = self.get_issue_for_record(todo)
                 todo_url = todo['target_url']
+                projectName = repo['path']
+                if self.project_owner_prefix:
+                    projectName = repo['namespace']['path'] + "." + projectName
                 extra = {
                     'issue_url': todo_url,
-                    'project': repo['path'],
+                    'project': projectName,
                     'namespace': "todo",
                     'type': 'todo',
                     'annotations': [],
