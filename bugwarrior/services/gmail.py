@@ -8,6 +8,7 @@ import googleapiclient.discovery
 import oauth2client.client
 import oauth2client.tools
 import oauth2client.file
+import time
 
 from bugwarrior.services import IssueService, Issue
 
@@ -65,6 +66,7 @@ class GmailIssue(Issue):
     def to_taskwarrior(self):
         return {
             'annotations': self.get_annotations(),
+            'entry': self.get_entry(),
             'tags': [label
                 for label in self.extra['labels']
                 if label not in self.EXCLUDE_LABELS],
@@ -88,6 +90,10 @@ class GmailIssue(Issue):
 
     def get_annotations(self):
         return self.extra.get('annotations', [])
+
+    def get_entry(self):
+        date_string = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(self.extra['internal_date'])/1000))
+        return self.parse_date(date_string, 'LOCAL_TIMEZONE')
 
     def get_url(self):
         return self.extra['url']
@@ -176,6 +182,7 @@ class GmailService(IssueService):
 def thread_extras(thread, labels, use_inbox_url):
     (name, address) = thread_last_sender(thread)
     return {
+        'internal_date': thread_timestamp(thread),
         'labels': [labels[label_id] for label_id in thread_labels(thread)],
         'last_sender_address': address,
         'last_sender_name': name,
@@ -197,6 +204,9 @@ def thread_last_sender(thread):
 
 def thread_last_message(thread):
     return message_header(thread['messages'][-1], 'Message-ID')
+
+def thread_timestamp(thread):
+    return thread['messages'][-1]['internalDate']
 
 def thread_snippet(thread):
     return thread['messages'][-1]['snippet']
