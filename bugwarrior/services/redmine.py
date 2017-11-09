@@ -245,7 +245,7 @@ class RedMineService(IssueService):
     def get_keyring_service(service_config):
         url = service_config.get('url')
         login = service_config.get('login')
-        return "redmine://%s@%s/%s" % (login, url)
+        return "redmine://%s@%s/" % (login, url)
 
     @classmethod
     def validate_config(cls, service_config, target):
