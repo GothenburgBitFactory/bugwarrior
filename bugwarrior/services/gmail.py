@@ -64,6 +64,7 @@ class GmailIssue(Issue):
 
     def to_taskwarrior(self):
         return {
+            'annotations': self.get_annotations(),
             'tags': [label
                 for label in self.extra['labels']
                 if label not in self.EXCLUDE_LABELS],
@@ -84,6 +85,12 @@ class GmailIssue(Issue):
             number=self.record['id'],
             cls='issue',
         )
+
+    def get_annotations(self):
+        return self.extra.get('annotations', [])
+
+    def get_url(self):
+        return self.extra['url']
 
 class GmailService(IssueService):
     APPLICATION_NAME = 'Bugwarrior Gmail Service'
@@ -153,10 +160,18 @@ class GmailService(IssueService):
             thread_service.get(userId='me', id=thread['id']).execute()
             for thread in result.get('threads', [])]
 
+    def annotations(self, issue, issue_obj):
+        return self.build_annotations(issue['messages'][-1]['snippet'], issue_obj.get_processed_url(issue_obj.get_url()))
+
     def issues(self):
         labels = self.get_labels()
         for thread in self.get_threads():
-            yield self.get_issue_for_record(thread, thread_extras(thread, labels, self.use_inbox_url))
+            issue = self.get_issue_for_record(thread, thread_extras(thread, labels, self.use_inbox_url))
+            extra = {
+                'annotations': self.annotations(thread, issue),
+            }
+            issue.update_extra(extra)
+            yield issue
 
 def thread_extras(thread, labels, use_inbox_url):
     (name, address) = thread_last_sender(thread)
@@ -188,7 +203,7 @@ def thread_snippet(thread):
 
 def thread_url(thread, use_inbox_url):
     if use_inbox_url:
-        return "https://inbox.google.com/search/rfc822msgid%3A" + re.sub('@', "%40", thread_last_message(thread))
+        return "https://inbox.google.com/search/rfc822msgid:" + thread_last_message(thread)
     return "https://mail.google.com/mail/u/0/#all/%s" % (thread['id'],)
 
 def message_header(message, header_name):
