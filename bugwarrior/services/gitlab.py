@@ -36,6 +36,7 @@ class GitlabIssue(Issue):
     AUTHOR = 'gitlabauthor'
     ASSIGNEE = 'gitlabassignee'
     NAMESPACE = 'gitlabnamespace'
+    WEIGHT = 'gitlabweight'
 
     UDAS = {
         TITLE: {
@@ -106,6 +107,10 @@ class GitlabIssue(Issue):
             'type': 'string',
             'label': 'Gitlab Namespace',
         },
+        WEIGHT: {
+            'type': 'numeric',
+            'label': 'Gitlab Weight',
+        },
     }
     UNIQUE_KEY = (REPO, TYPE, NUMBER,)
 
@@ -123,6 +128,7 @@ class GitlabIssue(Issue):
         work_in_progress = self.record.get('work_in_progress', 0)
         assignee = self.record.get('assignee')
         duedate = self.record.get('due_date')
+        weight = self.record.get('weight')
         number = (
             self.record['id'] if self.extra['type'] == 'todo'
             else self.record['iid'])
@@ -179,6 +185,7 @@ class GitlabIssue(Issue):
             self.AUTHOR: author,
             self.ASSIGNEE: assignee,
             self.NAMESPACE: self.extra['namespace'],
+            self.WEIGHT: weight,
         }
 
     def get_tags(self):

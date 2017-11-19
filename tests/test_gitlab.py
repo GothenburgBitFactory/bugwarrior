@@ -100,6 +100,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         "state": "opened",
         "updated_at": arbitrary_updated.isoformat(),
         "created_at": arbitrary_created.isoformat(),
+        "weight": 3,
     }
     arbitrary_extra = {
         'issue_url': 'https://gitlab.example.com/arbitrary_username/project/issues/3',
@@ -150,6 +151,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             issue.AUTHOR: 'john_smith',
             issue.ASSIGNEE: 'jack_smith',
             issue.NAMESPACE: 'arbitrary_namespace',
+            issue.WEIGHT: 3,
         }
         actual_output = issue.to_taskwarrior()
 
@@ -202,6 +204,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'gitlabupvotes': 0,
             'gitlaburl': u'example.com/issues/3',
             'gitlabwip': 0,
+            'gitlabweight': 3,
             'priority': 'M',
             'project': u'arbitrary_username/project',
             'tags': []}
