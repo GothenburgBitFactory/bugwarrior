@@ -191,6 +191,8 @@ Provided UDA Fields
 +-----------------------+-----------------------+---------------------+
 | ``gitlabwip``         | Work-in-Progress flag | Numeric             |
 +-----------------------+-----------------------+---------------------+
+| ``gitlabweight``      | Weight                | Numeric             |
++-----------------------+-----------------------+---------------------+
 | ``gitlabauthor``      | Issue/MR author       | Text (string)       |
 +-----------------------+-----------------------+---------------------+
 | ``gitlabassignee``    | Issue/MR assignee     | Text (string)       |
