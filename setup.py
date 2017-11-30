@@ -41,7 +41,7 @@ setup(name='bugwarrior',
           "future!=0.16.0",
       ],
       extras_require=dict(
-          keyring=["keyring", "dbus-python"],
+          keyring=["keyring"],
           jira=["jira>=0.22"],
           megaplan=["megaplan>=1.4"],
           activecollab=["pypandoc", "pyac>=0.1.5"],
