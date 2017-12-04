@@ -236,14 +236,14 @@ def get_data_path(config, main_section):
     # the `_` subcommands properly (`rc:` can't be used for them).
     line_prefix = 'data.location='
 
-    env={
-        'PATH': os.getenv('PATH'),
-        'TASKRC': taskrc,
-    }
-    # If TASKDATA is set but empty, taskwarrior's data.location is empty.
-    taskdata = os.getenv('TASKDATA')
-    if taskdata:
-        env['TASKDATA'] = taskdata
+    # Take a copy of the environment and add our taskrc to it.
+    env = os.environ
+    env['TASKRC'] = taskrc
+
+    # Prune the TASKDATA variable if it's completely empty, since otherwise
+    # taskwarrior tries to open the empty-string directory, which fails.
+    if not env.get('TASKDATA',''):
+        del env['TASKDATA']
 
     tw_show = subprocess.Popen(
         ('task', '_show'), stdout=subprocess.PIPE, env=env)
