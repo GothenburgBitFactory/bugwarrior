@@ -245,6 +245,11 @@ def get_data_path(config, main_section):
     if taskdata:
         env['TASKDATA'] = taskdata
 
+    # Let's not break TaskWarrior's Kusarigama
+    perl5lib = os.getenv('PERL5LIB')
+    if perl5lib:
+        env['PERL5LIB'] = perl5lib
+
     tw_show = subprocess.Popen(
         ('task', '_show'), stdout=subprocess.PIPE, env=env)
     data_location = subprocess.check_output(
