@@ -237,7 +237,7 @@ def get_data_path(config, main_section):
     line_prefix = 'data.location='
 
     # Take a copy of the environment and add our taskrc to it.
-    env = os.environ
+    env = dict(os.environ)
     env['TASKRC'] = taskrc
 
     # Prune the TASKDATA variable if it's completely empty, since otherwise
