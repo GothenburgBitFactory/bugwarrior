@@ -150,7 +150,7 @@ Example Configuration
     # 4 and 5(the default). You can find your particular version in the footer at
     # the dashboard.
     jira.version = 5
-    jira.add_tags = enterprisey work
+    jira.add_tags = enterprisey,work
 
     # Here's an example of a phabricator target
     [my_phabricator]
