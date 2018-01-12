@@ -60,6 +60,13 @@ you can find it out by querying Phabricator Conduit
 the methods which return the needed info are ``user.query``, ``project.query``
 and ``repository.query`` respectively.
 
+If your ``~/.arcrc`` includes credentials for multiple Phabricator instances,
+it is undefined which one will be used. To make it explicit, you can use::
+
+    phabricator.host = https://YOUR_PHABRICATOR_HOST
+
+Where ``https://YOUR_PHABRICATOR_HOST`` **must match** the corresponding json key
+in ``~/.arcrc``, which may include ``/api/`` besides your hostname.
 
 Provided UDA Fields
 -------------------
