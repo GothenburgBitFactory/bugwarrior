@@ -64,8 +64,14 @@ class PhabricatorService(IssueService):
 
     def __init__(self, *args, **kw):
         super(PhabricatorService, self).__init__(*args, **kw)
-        # These reads in login credentials from ~/.arcrc
-        self.api = phabricator.Phabricator()
+
+        self.host = self.config.get("host", None)
+
+        # These read login credentials from ~/.arcrc
+        if self.host is not None:
+            self.api = phabricator.Phabricator(host=self.host)
+        else:
+            self.api = phabricator.Phabricator()
 
         self.shown_user_phids = (
             self.config.get("user_phids", None, aslist))
