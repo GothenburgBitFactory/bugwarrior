@@ -65,6 +65,7 @@ class BTSIssue(Issue):
     def to_taskwarrior(self):
         return {
             'priority': self.get_priority(),
+            'annotations': self.extra.get('annotations', []),
 
             self.URL: self.record['url'],
             self.SUBJECT: self.record['subject'],
@@ -148,6 +149,12 @@ class BTSService(IssueService, ServiceClient):
         resp = requests.get(UDD_BUGS_SEARCH, request_params)
         return self.json_response(resp)
 
+    def annotations(self, issue, issue_obj):
+        return self.build_annotations(
+            [],
+            issue_obj.get_processed_url(issue['url'])
+        )
+
     def issues(self):
         # Initialise empty list of bug numbers
         collected_bugs = []
@@ -207,4 +214,8 @@ class BTSService(IssueService, ServiceClient):
 
         for issue in issues:
             issue_obj = self.get_issue_for_record(issue)
+            extra = {
+                'annotations': self.annotations(issue, issue_obj)
+            }
+            issue_obj.update_extra(extra)
             yield issue_obj

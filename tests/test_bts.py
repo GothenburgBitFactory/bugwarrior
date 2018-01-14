@@ -49,6 +49,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
 
         expected_output = {
             'priority': issue.PRIORITY_MAP[FakeBTSBug.severity],
+            'annotations': [],
 
             issue.URL: "https://bugs.debian.org/" + str(FakeBTSBug.bug_num),
             issue.SUBJECT: FakeBTSBug.subject,
@@ -67,6 +68,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
             issue = next(self.service.issues())
 
         expected = {
+            'annotations': [],
             'btsnumber': 810629,
             'btsforwarded': '',
             'btspackage': 'wnpp',
