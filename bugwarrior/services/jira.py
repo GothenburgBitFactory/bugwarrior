@@ -6,6 +6,7 @@ import six
 from jinja2 import Template
 from jira.client import JIRA as BaseJIRA
 from requests.cookies import RequestsCookieJar
+from dateutil.tz.tz import tzutc
 
 from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
@@ -123,7 +124,7 @@ class JiraIssue(Issue):
     def get_entry(self):
         created_at = self.record['fields']['created']
         # Convert timestamp to an offset-aware datetime
-        date = self.parse_date(created_at)
+        date = self.parse_date(created_at).astimezone(tzutc()).replace(microsecond=0)
         return date
 
     def get_tags(self):
