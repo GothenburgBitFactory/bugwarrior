@@ -133,7 +133,8 @@ class JiraIssue(Issue):
     def get_due(self):
         sprints = self.__get_sprints()
         for sprint in sprints:
-            return self.parse_date(sprint['endDate'])
+            endDate = sprint['endDate']
+            return '' if endDate == '<null>' else self.parse_date(endDate)
 
     def _get_tags_from_sprints(self):
         tags = []
