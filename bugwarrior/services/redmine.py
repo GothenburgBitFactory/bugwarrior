@@ -224,7 +224,7 @@ class RedMineService(IssueService):
         super(RedMineService, self).__init__(*args, **kw)
 
         self.url = self.config.get('url').rstrip("/")
-        self.key = self.config.get('key')
+        self.key = self.get_password('key')
         self.issue_limit = self.config.get('issue_limit')
 
         login = self.config.get('login')
