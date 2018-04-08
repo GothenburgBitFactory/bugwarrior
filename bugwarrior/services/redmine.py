@@ -56,6 +56,7 @@ class RedMineIssue(Issue):
     UPDATED_ON = 'redmineupdatedon'
     DUEDATE = 'redmineduedate'
     ASSIGNED_TO = 'redmineassignedto'
+    PROJECT_NAME = 'redmineprojectname'
 
     UDAS = {
         URL: {
@@ -118,7 +119,10 @@ class RedMineIssue(Issue):
             'type': 'string',
             'label': 'Redmine Assigned To',
         },
-
+        PROJECT_NAME: {
+            'type': 'string',
+            'label': 'Redmine Project',
+        },
     }
     UNIQUE_KEY = (ID, )
 
@@ -170,6 +174,7 @@ class RedMineIssue(Issue):
             self.TRACKER: self.record['tracker']['name'],
             self.STATUS: self.record['status']['name'],
             self.AUTHOR: self.record['author']['name'],
+            self.PROJECT_NAME: self.record['project']['name'],
             self.ASSIGNED_TO: assigned_to,
             self.CATEGORY: category,
             self.START_DATE: start_date,
