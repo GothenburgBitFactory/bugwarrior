@@ -240,11 +240,6 @@ def get_data_path(config, main_section):
     env = dict(os.environ)
     env['TASKRC'] = taskrc
 
-    # Prune the TASKDATA variable if it's completely empty, since otherwise
-    # taskwarrior tries to open the empty-string directory, which fails.
-    if not env.get('TASKDATA',''):
-        del env['TASKDATA']
-
     tw_show = subprocess.Popen(
         ('task', '_show'), stdout=subprocess.PIPE, env=env)
     data_location = subprocess.check_output(
