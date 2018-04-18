@@ -96,7 +96,7 @@ class TestGetDataPath(ConfigTest):
         """
         When TASKDATA is not set, data.location in taskrc should be respected.
         """
-        os.environ['TASKDATA'] = ''
+        self.assertTrue('TASKDATA' not in os.environ)
         self.assertDataPath(self.lists_path)
 
     def test_unassigned(self):
@@ -107,7 +107,7 @@ class TestGetDataPath(ConfigTest):
         with open(self.taskrc, 'w'):
             pass
 
-        os.environ['TASKDATA'] = ''
+        self.assertTrue('TASKDATA' not in os.environ)
 
         self.assertDataPath(os.path.expanduser('~/.task'))
 
