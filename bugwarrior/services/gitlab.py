@@ -80,7 +80,7 @@ class GitlabIssue(Issue):
             'label': 'Gitlab Type',
         },
         NUMBER: {
-            'type': 'numeric',
+            'type': 'string',
             'label': 'Gitlab Issue/MR #',
         },
         STATE: {
@@ -180,7 +180,7 @@ class GitlabIssue(Issue):
             self.TITLE: title,
             self.DESCRIPTION: description,
             self.MILESTONE: milestone,
-            self.NUMBER: number,
+            self.NUMBER: str(number),
             self.CREATED_AT: created,
             self.UPDATED_AT: updated,
             self.DUEDATE: duedate,
