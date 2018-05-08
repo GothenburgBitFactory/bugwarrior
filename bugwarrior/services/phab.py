@@ -1,7 +1,7 @@
 from builtins import str
 import six
 
-from bugwarrior.config import aslist
+from bugwarrior.config import aslist, asbool
 from bugwarrior.services import IssueService, Issue
 
 # This comes from PyPI
@@ -93,6 +93,9 @@ class PhabricatorService(IssueService):
         self.shown_project_phids = (
             self.config.get("project_phids", None, aslist))
 
+        self.strict_matching = self.config.get(
+            "strict_matching", None, asbool)
+
     def issues(self):
 
         # TODO -- get a list of these from the api
@@ -125,26 +128,30 @@ class PhabricatorService(IssueService):
             except (KeyError, IndexError):
                 pass
 
-            this_issue_matches = False
-
-            if self.shown_user_phids is None and self.shown_project_phids is None:
-                this_issue_matches = True
+            this_issue_matches = 0
+            issue_target_score = 0
+            if not self.strict_matching:
+                issue_target_score = 1
 
             if self.shown_user_phids is not None:
+                if self.strict_matching:
+                    issue_target_score += 1
                 # Checking whether authorPHID, ccPHIDs, ownerPHID
                 # are intersecting with self.shown_user_phids
                 issue_relevant_to = set(issue['ccPHIDs'] + [issue['ownerPHID'], issue['authorPHID']])
                 if len(issue_relevant_to.intersection(self.shown_user_phids)) > 0:
-                    this_issue_matches = True
+                    this_issue_matches += 1
 
             if self.shown_project_phids is not None:
+                if self.strict_matching:
+                    issue_target_score += 1
                 # Checking whether projectPHIDs
                 # is intersecting with self.shown_project_phids
                 issue_relevant_to = set(issue['projectPHIDs'])
                 if len(issue_relevant_to.intersection(self.shown_project_phids)) > 0:
-                    this_issue_matches = True
+                    this_issue_matches += 1
 
-            if not this_issue_matches:
+            if this_issue_matches < issue_target_score:
                 continue
 
             extra = {
@@ -173,19 +180,23 @@ class PhabricatorService(IssueService):
             except (KeyError, IndexError):
                 pass
 
-            this_diff_matches = False
-
-            if self.shown_user_phids is None and self.shown_project_phids is None:
-                this_diff_matches = True
+            this_diff_matches = 0
+            diff_target_score = 0
+            if not self.strict_matching:
+                diff_target_score = 1
 
             if self.shown_user_phids is not None:
+                if self.strict_matching:
+                    diff_target_score += 1
                 # Checking whether authorPHID, ccPHIDs, ownerPHID
                 # are intersecting with self.shown_user_phids
                 diff_relevant_to = set(list(diff['reviewers']) + [diff['authorPHID']])
                 if len(diff_relevant_to.intersection(self.shown_user_phids)) > 0:
-                    this_diff_matches = True
+                    this_diff_matches += 1
 
             if self.shown_project_phids is not None:
+                if self.strict_matching:
+                    diff_target_score += 1
                 # Checking whether projectPHIDs
                 # is intersecting with self.shown_project_phids
                 phabricator_projects = []
@@ -196,9 +207,9 @@ class PhabricatorService(IssueService):
 
                 diff_relevant_to = set(phabricator_projects + [diff['repositoryPHID']])
                 if len(diff_relevant_to.intersection(self.shown_project_phids)) > 0:
-                    this_diff_matches = True
+                    this_diff_matches += 1
 
-            if not this_diff_matches:
+            if this_diff_matches < diff_target_score:
                 continue
 
             extra = {
