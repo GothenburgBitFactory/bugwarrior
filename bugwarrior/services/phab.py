@@ -127,7 +127,7 @@ class PhabricatorService(IssueService):
                 # Checking whether projectPHIDs
                 # is intersecting with self.shown_project_phids
                 issue_relevant_to = set(issue['projectPHIDs'])
-                if len(issue_relevant_to.intersection(self.shown_user_phids)) > 0:
+                if len(issue_relevant_to.intersection(self.shown_project_phids)) > 0:
                     this_issue_matches = True
 
             if not this_issue_matches:
@@ -176,7 +176,7 @@ class PhabricatorService(IssueService):
                     pass
 
                 diff_relevant_to = set(phabricator_projects + [diff['repositoryPHID']])
-                if len(diff_relevant_to.intersection(self.shown_user_phids)) > 0:
+                if len(diff_relevant_to.intersection(self.shown_project_phids)) > 0:
                     this_diff_matches = True
 
             if not this_diff_matches:
