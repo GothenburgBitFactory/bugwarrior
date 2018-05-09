@@ -95,7 +95,7 @@ class PhabricatorService(IssueService):
                 seen = set()
                 issues = [item for item in issues if str(item[1]) not in seen and not seen.add(str(item[1]))]
             if self.shown_project_phids is not None:
-                issues = self.api.maniphest.query(status='status-open', projectsPHIDs = self.shown_project_phids)
+                issues = self.api.maniphest.query(status='status-open', projectPHIDs=self.shown_project_phids)
                 issues = issues.items()
         else:
             issues = self.api.maniphest.query(status='status-open')
