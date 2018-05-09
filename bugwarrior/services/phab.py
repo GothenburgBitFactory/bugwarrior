@@ -108,7 +108,7 @@ class PhabricatorService(IssueService):
             project = self.target  # a sensible default
             try:
                 project = projects.get(issue['projectPHIDs'][0], project)
-            except IndexError:
+            except (KeyError, IndexError):
                 pass
 
             this_issue_matches = False
@@ -151,7 +151,7 @@ class PhabricatorService(IssueService):
             project = self.target  # a sensible default
             try:
                 project = projects.get(diff['projectPHIDs'][0], project)
-            except IndexError:
+            except (KeyError, IndexError):
                 pass
 
             this_diff_matches = False
