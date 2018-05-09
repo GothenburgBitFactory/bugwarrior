@@ -1,7 +1,7 @@
 from builtins import str
 import six
 
-from bugwarrior.config import aslist
+from bugwarrior.config import aslist, asbool
 from bugwarrior.services import IssueService, Issue
 
 # This comes from PyPI
@@ -93,6 +93,9 @@ class PhabricatorService(IssueService):
         self.shown_project_phids = (
             self.config.get("project_phids", None, aslist))
 
+        self.target_is_project = self.config.get(
+            "target_is_project", None, asbool)
+
     def issues(self):
 
         # TODO -- get a list of these from the api
@@ -120,10 +123,11 @@ class PhabricatorService(IssueService):
         for phid, issue in issues:
 
             project = self.target  # a sensible default
-            try:
-                project = projects.get(issue['projectPHIDs'][0], project)
-            except (KeyError, IndexError):
-                pass
+            if not self.target_is_project:
+                try:
+                    project = projects.get(issue['projectPHIDs'][0], project)
+                except (KeyError, IndexError):
+                    pass
 
             this_issue_matches = False
 
@@ -168,10 +172,11 @@ class PhabricatorService(IssueService):
         for diff in diffs:
 
             project = self.target  # a sensible default
-            try:
-                project = projects.get(diff['projectPHIDs'][0], project)
-            except (KeyError, IndexError):
-                pass
+            if not self.target_is_project:
+                try:
+                    project = projects.get(diff['projectPHIDs'][0], project)
+                except (KeyError, IndexError):
+                    pass
 
             this_diff_matches = False
 
