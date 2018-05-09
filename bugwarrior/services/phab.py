@@ -15,7 +15,8 @@ class PhabricatorIssue(Issue):
     TITLE = 'phabricatortitle'
     URL = 'phabricatorurl'
     TYPE = 'phabricatortype'
-    OBJECT_NAME = 'phabricatorid'
+    ID = 'phabricatorid'
+    PHID = 'phabricatorphid'
 
     UDAS = {
         TITLE: {
@@ -30,9 +31,13 @@ class PhabricatorIssue(Issue):
             'type': 'string',
             'label': 'Phabricator Type',
         },
-        OBJECT_NAME: {
+        ID: {
             'type': 'string',
-            'label': 'Phabricator Object',
+            'label': 'Phabricator ID',
+        },
+        PHID: {
+            'type': 'string',
+            'label': 'Phabricator PHID',
         },
     }
     UNIQUE_KEY = (URL, )
@@ -46,6 +51,11 @@ class PhabricatorIssue(Issue):
         'Wishlist': 'L',
     }
 
+    _type_shorthand = {
+        "issue": "T",
+        "pull_request": "D",
+    }
+
     def to_taskwarrior(self):
         return {
             'project': self.extra['project'],
@@ -53,9 +63,10 @@ class PhabricatorIssue(Issue):
             'annotations': self.extra.get('annotations', []),
 
             self.URL: self.record['uri'],
-            self.TYPE: self.extra['type'],
+            self.TYPE: self.type,
             self.TITLE: self.record['title'],
-            self.OBJECT_NAME: self.record['uri'].split('/')[-1],
+            self.ID: self.id,
+            self.PHID: self.phid,
         }
 
     def get_default_description(self):
@@ -70,6 +81,21 @@ class PhabricatorIssue(Issue):
     def priority(self):
         return self.PRIORITY_MAP.get(self.record.get('priority')) \
                or self.origin['default_priority']
+
+    def type_shorthand(self):
+        return self._type_shorthand[self.extra['type']]
+
+    @property
+    def phid(self):
+        return self.record['phid']
+
+    @property
+    def type(self):
+        return self.extra['type']
+
+    @property
+    def id(self):
+        return "{type_short}{id}".format(type_short=self.type_shorthand(), id=self.record['id'])
 
 
 class PhabricatorService(IssueService):
