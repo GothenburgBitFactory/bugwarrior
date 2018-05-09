@@ -1,7 +1,7 @@
 from builtins import str
 import six
 
-from bugwarrior.config import aslist
+from bugwarrior.config import aslist, asbool
 from bugwarrior.services import IssueService, Issue
 
 # This comes from PyPI
@@ -93,10 +93,19 @@ class PhabricatorService(IssueService):
         self.shown_project_phids = (
             self.config.get("project_phids", None, aslist))
 
-    def issues(self):
+        self.include_sub_projects = self.config.get(
+            "include_sub_projects", None, asbool)
 
-        # TODO -- get a list of these from the api
+    def issues(self):
         projects = {}
+
+        if self.shown_project_phids is not None:
+            projects_by_phids = self.api.project.search(constraints={'phids': self.shown_project_phids})['data']
+            projects.update({project['phid']: project['fields']['slug'] for project in projects_by_phids})
+
+            if self.include_sub_projects:
+                projects_by_parents = self.api.project.search(constraints={'ancestors': self.shown_project_phids})['data']
+                projects.update({project['phid']: project['fields']['slug'] for project in projects_by_parents})
 
         issues = {}
         # If self.shown_user_phids or self.shown_project_phids is set, retrict API calls to user_phids or project_phids
@@ -111,8 +120,8 @@ class PhabricatorService(IssueService):
 
                 issues_by_author = self.api.maniphest.query(status='status-open', authorPHIDs=self.shown_user_phids)
                 issues.update({phid: issue for phid, issue in issues_by_author.items()})
-            if self.shown_project_phids is not None:
-                issues_by_project = self.api.maniphest.query(status='status-open', projectPHIDs=self.shown_project_phids)
+            if projects:
+                issues_by_project = self.api.maniphest.query(status='status-open', projectPHIDs=list(projects.keys()))
                 issues.update({phid: issue for phid, issue in issues_by_project.items()})
         else:
             issues_all = self.api.maniphest.query(status='status-open')
