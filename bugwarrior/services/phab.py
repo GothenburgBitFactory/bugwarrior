@@ -97,27 +97,30 @@ class PhabricatorService(IssueService):
 
         # TODO -- get a list of these from the api
         projects = {}
+
+        issues = {}
         # If self.shown_user_phids or self.shown_project_phids is set, retrict API calls to user_phids or project_phids
         # to avoid time out with Phabricator installations with huge userbase
         if (self.shown_user_phids is not None) or (self.shown_project_phids is not None):
             if self.shown_user_phids is not None:
-                issues_owner = self.api.maniphest.query(status='status-open', ownerPHIDs=self.shown_user_phids)
-                issues_cc = self.api.maniphest.query(status='status-open', ccPHIDs=self.shown_user_phids)
-                issues_author = self.api.maniphest.query(status='status-open', authorPHIDs=self.shown_user_phids)
-                issues = list(issues_owner.items()) + list(issues_cc.items()) + list(issues_author.items())
-                # Delete duplicates
-                seen = set()
-                issues = [item for item in issues if str(item[1]) not in seen and not seen.add(str(item[1]))]
+                issues_by_owner = self.api.maniphest.query(status='status-open', ownerPHIDs=self.shown_user_phids)
+                issues.update({phid: issue for phid, issue in issues_by_owner.items()})
+
+                issues_by_cc = self.api.maniphest.query(status='status-open', ccPHIDs=self.shown_user_phids)
+                issues.update({phid: issue for phid, issue in issues_by_cc.items()})
+
+                issues_by_author = self.api.maniphest.query(status='status-open', authorPHIDs=self.shown_user_phids)
+                issues.update({phid: issue for phid, issue in issues_by_author.items()})
             if self.shown_project_phids is not None:
-                issues = self.api.maniphest.query(status='status-open', projectPHIDs=self.shown_project_phids)
-                issues = issues.items()
+                issues_by_project = self.api.maniphest.query(status='status-open', projectPHIDs=self.shown_project_phids)
+                issues.update({phid: issue for phid, issue in issues_by_project.items()})
         else:
-            issues = self.api.maniphest.query(status='status-open')
-            issues = issues.items()
+            issues_all = self.api.maniphest.query(status='status-open')
+            issues.update({phid: issue for phid, issue in issues_all.items()})
 
         log.info("Found %i issues" % len(issues))
 
-        for phid, issue in issues:
+        for phid, issue in issues.items():
 
             project = self.target  # a sensible default
             try:
