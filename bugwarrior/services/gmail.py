@@ -21,6 +21,7 @@ class GmailIssue(Issue):
     LAST_SENDER = 'gmaillastsender'
     LAST_SENDER_ADDR = 'gmaillastsenderaddr'
     SNIPPET = 'gmailsnippet'
+    LABELS = 'gmaillabels'
 
     UNIQUE_KEY = (THREAD_ID,)
     UDAS = {
@@ -47,7 +48,11 @@ class GmailIssue(Issue):
         SNIPPET: {
             'type': 'string',
             'label': 'GMail snippet',
-        }
+        },
+        LABELS: {
+            'type': 'string',
+            'label': 'GMail labels',
+        },
     }
     EXCLUDE_LABELS = [
         'IMPORTANT',
@@ -69,6 +74,7 @@ class GmailIssue(Issue):
             self.LAST_SENDER: self.extra['last_sender_name'],
             self.LAST_SENDER_ADDR: self.extra['last_sender_address'],
             self.SNIPPET: self.extra['snippet'],
+            self.LABELS: " ".join(sorted(self.extra['labels'])),
         }
 
     def get_default_description(self):

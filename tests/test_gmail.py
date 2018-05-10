@@ -81,6 +81,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
             'tags': set(['sticky', 'postit']),
             'gmailsubject': 'Regarding Bugwarrior',
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
+            'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
             'priority': 'M',
             'gmaillastsenderaddr': 'foobar@example.com'}
 
@@ -100,6 +101,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
             'tags': set(['sticky', 'postit', 'added']),
             'gmailsubject': 'Regarding Bugwarrior',
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
+            'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
             'gmaillastsenderaddr': 'foobar@example.com'}
 
         taskwarrior = issue.get_taskwarrior_record()
