@@ -37,10 +37,19 @@ class PhabricatorIssue(Issue):
     }
     UNIQUE_KEY = (URL, )
 
+    PRIORITY_MAP = {
+        'Needs Triage': None,
+        'Unbreak Now!': 'H',
+        'High': 'H',
+        'Normal': 'M',
+        'Low': 'L',
+        'Wishlist': 'L',
+    }
+
     def to_taskwarrior(self):
         return {
             'project': self.extra['project'],
-            'priority': self.origin['default_priority'],
+            'priority': self.priority,
             'annotations': self.extra.get('annotations', []),
 
             self.URL: self.record['uri'],
@@ -56,6 +65,11 @@ class PhabricatorIssue(Issue):
             number=self.record['uri'].split('/')[-1],
             cls=self.extra['type'],
         )
+
+    @property
+    def priority(self):
+        return self.PRIORITY_MAP.get(self.record.get('priority')) \
+               or self.origin['default_priority']
 
 
 class PhabricatorService(IssueService):
