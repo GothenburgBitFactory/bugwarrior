@@ -58,7 +58,7 @@ class TrelloIssue(Issue):
     def to_taskwarrior(self):
         twdict = {
             'project': self.extra['boardname'],
-            'priority': 'M',
+            'priority': self.origin['default_priority'],
             self.NAME: self.record['name'],
             self.CARDID: self.record['id'],
             self.BOARD: self.extra['boardname'],
