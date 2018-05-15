@@ -188,14 +188,9 @@ class GithubIssue(Issue):
         if body:
             body = body.replace('\r\n', '\n')
 
-        if self.extra['type'] == 'pull_request':
-            priority = 'H'
-        else:
-            priority = self.origin['default_priority']
-
         return {
             'project': self.extra['project'],
-            'priority': priority,
+            'priority': self.origin['default_priority'],
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
 
