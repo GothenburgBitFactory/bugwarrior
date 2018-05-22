@@ -63,7 +63,7 @@ class IssueService(object):
         self.default_priority = self._get_config_or_default('default_priority','M')
 
         self.add_tags = []
-        for raw_option in aslist(self.config.get('add_tags', [])):
+        for raw_option in aslist(self.config.get('add_tags', '')):
             option = raw_option.strip(' +;')
             if option:
                 self.add_tags.append(option)
