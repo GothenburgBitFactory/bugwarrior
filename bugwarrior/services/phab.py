@@ -155,7 +155,12 @@ class PhabricatorService(IssueService):
 
             yield self.get_issue_for_record(issue, extra)
 
-        diffs = self.api.differential.query(status='status-open')
+        try:
+            diffs = self.api.differential.query(status='status-open')
+        except phabricator.APIError as err:
+            log.warn("Could not read reviews: %s" % err)
+            return
+
         diffs = list(diffs)
 
         log.info("Found %i differentials" % len(diffs))
