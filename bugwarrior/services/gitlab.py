@@ -125,7 +125,7 @@ class GitlabIssue(Issue):
         state = self.record['state']
         upvotes = self.record.get('upvotes', 0)
         downvotes = self.record.get('downvotes', 0)
-        work_in_progress = self.record.get('work_in_progress', 0)
+        work_in_progress = int(asbool(self.record.get('work_in_progress', 0)))
         assignee = self.record.get('assignee')
         duedate = self.record.get('due_date')
         weight = self.record.get('weight')
