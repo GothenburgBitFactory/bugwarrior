@@ -9,7 +9,8 @@ Additional Dependencies
 
 Install packages needed for Gmail support with:
 
-::
+.. code:: bash
+
    pip install bugwarrior[gmail]
 
 Client Secret
@@ -27,6 +28,7 @@ Example Service
 Here's an example of a gmail target:
 
 ::
+
     [my_gmail]
     service = gmail
     gmail.query = label:action OR label:readme
