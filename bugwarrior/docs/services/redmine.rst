@@ -25,6 +25,10 @@ You can also feel free to use any of the configuration options described in
 There are also `redmine.login`/`redmine.password` settings if your
 instance is behind basic auth.
 
+If you want to ignore verifying the SSL certificate, set::
+
+    redmine.verify_ssl = False
+
 Provided UDA Fields
 -------------------
 
