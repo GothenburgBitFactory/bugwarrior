@@ -327,11 +327,11 @@ class GitlabService(IssueService, ServiceClient):
         return is_included
 
     def _get_notes(self, rid, issue_type, issueid):
-        tmpl = '{scheme}://{host}/api/v3/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
+        tmpl = '{scheme}://{host}/api/v4/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
         return self._fetch_paged(tmpl)
 
     def annotations(self, repo, url, issue_type, issue, issue_obj):
-        notes = self._get_notes(repo['id'], issue_type, issue['id'])
+        notes = self._get_notes(repo['id'], issue_type, issue['iid'])
         return self.build_annotations(
             ((
                 n['author']['username'],
@@ -381,7 +381,7 @@ class GitlabService(IssueService, ServiceClient):
         return full
 
     def get_repo_issues(self, rid):
-        tmpl = '{scheme}://{host}/api/v3/projects/%d/issues' % rid
+        tmpl = '{scheme}://{host}/api/v4/projects/%d/issues?state=opened' % rid
         issues = {}
         try:
             repo_issues = self._fetch_paged(tmpl)
@@ -389,13 +389,11 @@ class GitlabService(IssueService, ServiceClient):
             # Projects may have issues disabled.
             return {}
         for issue in repo_issues:
-            if issue['state'] not in ('opened', 'reopened'):
-                continue
             issues[issue['id']] = (rid, issue)
         return issues
 
     def get_repo_merge_requests(self, rid):
-        tmpl = '{scheme}://{host}/api/v3/projects/%d/merge_requests' % rid
+        tmpl = '{scheme}://{host}/api/v4/projects/%d/merge_requests?state=opened' % rid
         issues = {}
         try:
             repo_merge_requests = self._fetch_paged(tmpl)
@@ -403,13 +401,11 @@ class GitlabService(IssueService, ServiceClient):
             # Projects may have merge requests disabled.
             return {}
         for issue in repo_merge_requests:
-            if issue['state'] not in ('opened', 'reopened'):
-                continue
             issues[issue['id']] = (rid, issue)
         return issues
 
     def get_todos(self):
-        tmpl = '{scheme}://{host}/api/v3/todos'
+        tmpl = '{scheme}://{host}/api/v4/todos?state=pending'
         todos = []
         try:
             fetched_todos = self._fetch_paged(tmpl)
@@ -417,8 +413,6 @@ class GitlabService(IssueService, ServiceClient):
             # Older gitlab versions do not have todo items.
             return {}
         for todo in fetched_todos:
-            if todo['state'] == 'done':
-                continue
             todos.append((todo.get('project'), todo))
         return todos
 
@@ -431,7 +425,7 @@ class GitlabService(IssueService, ServiceClient):
         return include_todo
 
     def issues(self):
-        tmpl = '{scheme}://{host}/api/v3/projects'
+        tmpl = '{scheme}://{host}/api/v4/projects'
         all_repos = self._fetch_paged(tmpl)
         repos = list(filter(self.filter_repos, all_repos))
 
