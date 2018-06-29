@@ -134,6 +134,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'priority': self.service.default_priority,
             'annotations': [],
             'tags': [u'feature'],
+            'entry': self.arbitrary_created.replace(microsecond=0),
             issue.URL: self.arbitrary_extra['issue_url'],
             issue.REPO: 'project',
             issue.STATE: self.arbitrary_issue['state'],
@@ -187,6 +188,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'annotations': [u'@john_smith - Some comment.'],
             'description':
                 u'(bw)Is#3 - Add user settings .. example.com/issues/3',
+            'entry': self.arbitrary_created,
             'gitlabassignee': u'jack_smith',
             'gitlabauthor': u'john_smith',
             'gitlabcreatedon': self.arbitrary_created,
