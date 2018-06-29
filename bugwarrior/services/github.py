@@ -193,11 +193,16 @@ class GithubIssue(Issue):
         else:
             priority = self.origin['default_priority']
 
+        created = self.record['created_at']
+        if created:
+            created = self.parse_date(self.record['created_at'])
+
         return {
             'project': self.extra['project'],
             'priority': priority,
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
+            'entry': created,
 
             self.URL: self.record['html_url'],
             self.REPO: self.record['repo'],
@@ -207,7 +212,7 @@ class GithubIssue(Issue):
             self.BODY: body,
             self.MILESTONE: milestone,
             self.NUMBER: self.record['number'],
-            self.CREATED_AT: self.parse_date(self.record['created_at']),
+            self.CREATED_AT: created,
             self.UPDATED_AT: self.parse_date(self.record['updated_at'])
         }
 

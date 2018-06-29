@@ -69,6 +69,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'priority': self.service.default_priority,
             'annotations': [],
             'tags': ['bugfix'],
+            'entry': ARBITRARY_CREATED,
             issue.URL: ARBITRARY_ISSUE['html_url'],
             issue.REPO: ARBITRARY_ISSUE['repo'],
             issue.TYPE: ARBITRARY_EXTRA['type'],
@@ -120,6 +121,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
         expected = {
             'annotations': [u'@arbitrary_login - Arbitrary comment.'],
             'description': u'(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
+            'entry': ARBITRARY_CREATED,
             'githubbody': u'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubmilestone': u'alpha',
@@ -173,6 +175,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
         expected = {
             'annotations': [u'@arbitrary_login - Arbitrary comment.'],
             'description': u'(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
+            'entry': ARBITRARY_CREATED,
             'githubbody': u'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubmilestone': u'alpha',
