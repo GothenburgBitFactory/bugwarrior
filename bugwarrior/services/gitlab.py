@@ -167,6 +167,7 @@ class GitlabIssue(Issue):
             'priority': priority,
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
+            'due': duedate,
             'entry': created,
 
             self.URL: self.extra['issue_url'],
