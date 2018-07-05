@@ -331,12 +331,17 @@ class GitlabService(IssueService, ServiceClient):
         return self._fetch_paged(tmpl)
 
     def annotations(self, repo, url, issue_type, issue, issue_obj):
-        notes = self._get_notes(repo['id'], issue_type, issue['iid'])
-        return self.build_annotations(
-            ((
+        annotations = []
+
+        if self.annotation_comments:
+            notes = self._get_notes(repo['id'], issue_type, issue['iid'])
+            annotations = ((
                 n['author']['username'],
                 n['body']
-            ) for n in notes),
+            ) for n in notes)
+
+        return self.build_annotations(
+            annotations,
             issue_obj.get_processed_url(url)
         )
 
