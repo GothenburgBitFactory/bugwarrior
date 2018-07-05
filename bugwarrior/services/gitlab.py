@@ -250,6 +250,18 @@ class GitlabService(IssueService, ServiceClient):
         self.include_regex = re.compile(self.include_regex) if self.include_regex else None
         self.exclude_regex = re.compile(self.exclude_regex) if self.exclude_regex else None
 
+        self.assignee = self.config.get('only_if_assigned', None)
+
+        if self.assignee:
+            tmpl = '{scheme}://{host}/api/v4/users?username=%s' % self.assignee
+            users = self._fetch_paged(tmpl)
+            for user in users:
+                self.assignee_id = user['id']
+        else:
+            self.assignee_id = None
+
+        self.also_unassigned = self.config.get('also_unassigned', None)
+
         self.import_labels_as_tags = self.config.get(
             'import_labels_as_tags', default=False, to_type=asbool
         )
@@ -439,11 +451,21 @@ class GitlabService(IssueService, ServiceClient):
         repo_map = {}
         issues = {}
         for repo in repos:
-            rid = repo['id']
-            repo_map[rid] = repo
-            issues.update(
-                self.get_repo_issues(rid)
-            )
+            repo_map[repo['id']] = repo
+
+        if self.assignee and not self.also_unassigned:
+            tmpl = '{scheme}://{host}/api/v4/issues?state=opened&assignee_id=%s' % self.assignee_id
+            repo_issues = self._fetch_paged(tmpl)
+
+            for issue in repo_issues:
+                iid = issue['id']
+                rid = issue['project_id']
+                issues[iid] = (rid, issue)
+
+        else:
+            for repo in repos:
+                issues.update(self.get_repo_issues(repo['id']))
+
         log.debug(" Found %i issues.", len(issues))
         issues = list(filter(self.include, issues.values()))
         log.debug(" Pruned down to %i issues.", len(issues))
@@ -468,11 +490,22 @@ class GitlabService(IssueService, ServiceClient):
 
         if not self.filter_merge_requests:
             merge_requests = {}
-            for repo in repos:
-                rid = repo['id']
-                merge_requests.update(
-                    self.get_repo_merge_requests(rid)
-                )
+
+            if self.assignee and not self.also_unassigned:
+                tmpl = '{scheme}://{host}/api/v4/merge_requests?state=opened&assignee_id=%s' % self.assignee_id
+                repo_merge_requests = self._fetch_paged(tmpl)
+
+                for merge_request in repo_merge_requests:
+                    rid = merge_request['project_id']
+                    mrid = merge_request['id']
+                    merge_requests[mrid] = (rid, merge_request)
+
+            else:
+                for repo in repos:
+                    merge_requests.update(
+                        self.get_repo_merge_requests(repo['id'])
+                    )
+
             log.debug(" Found %i merge requests.", len(merge_requests))
             merge_requests = list(filter(self.include, merge_requests.values()))
             log.debug(" Pruned down to %i merge requests.", len(merge_requests))
