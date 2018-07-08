@@ -101,6 +101,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         "updated_at": arbitrary_updated.isoformat(),
         "created_at": arbitrary_created.isoformat(),
         "weight": 3,
+        "work_in_progress": "true",
     }
     arbitrary_extra = {
         'issue_url': 'https://gitlab.example.com/arbitrary_username/project/issues/3',
@@ -126,6 +127,43 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         self.service.import_labels_as_tags = True
         issue = self.service.get_issue_for_record(
             self.arbitrary_issue,
+            self.arbitrary_extra
+        )
+
+        expected_output = {
+            'project': self.arbitrary_extra['project'],
+            'priority': self.service.default_priority,
+            'annotations': [],
+            'tags': [u'feature'],
+            issue.URL: self.arbitrary_extra['issue_url'],
+            issue.REPO: 'project',
+            issue.STATE: self.arbitrary_issue['state'],
+            issue.TYPE: self.arbitrary_extra['type'],
+            issue.TITLE: self.arbitrary_issue['title'],
+            issue.NUMBER: self.arbitrary_issue['iid'],
+            issue.UPDATED_AT: self.arbitrary_updated.replace(microsecond=0),
+            issue.CREATED_AT: self.arbitrary_created.replace(microsecond=0),
+            issue.DUEDATE: self.arbitrary_duedate,
+            issue.DESCRIPTION: self.arbitrary_issue['description'],
+            issue.MILESTONE: self.arbitrary_issue['milestone']['title'],
+            issue.UPVOTES: 0,
+            issue.DOWNVOTES: 0,
+            issue.WORK_IN_PROGRESS: 1,
+            issue.AUTHOR: 'john_smith',
+            issue.ASSIGNEE: 'jack_smith',
+            issue.NAMESPACE: 'arbitrary_namespace',
+            issue.WEIGHT: 3,
+        }
+        actual_output = issue.to_taskwarrior()
+
+        self.assertEqual(actual_output, expected_output)
+
+    def test_work_in_progress(self):
+        arbitrary_issue_2 = self.arbitrary_issue
+        arbitrary_issue_2['work_in_progress'] = 'false'
+        self.service.import_labels_as_tags = True
+        issue = self.service.get_issue_for_record(
+            arbitrary_issue_2,
             self.arbitrary_extra
         )
 
@@ -203,7 +241,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'gitlabduedate': self.arbitrary_duedate,
             'gitlabupvotes': 0,
             'gitlaburl': u'example.com/issues/3',
-            'gitlabwip': 0,
+            'gitlabwip': 1,
             'gitlabweight': 3,
             'priority': 'M',
             'project': u'arbitrary_username/project',
