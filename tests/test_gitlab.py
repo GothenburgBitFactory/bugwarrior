@@ -54,66 +54,66 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         'gitlab.login': 'arbitrary_login',
         'gitlab.token': 'arbitrary_token',
     }
-    arbitrary_created = (
-        datetime.datetime.utcnow() - datetime.timedelta(hours=1)
-    ).replace(tzinfo=pytz.UTC, microsecond=0)
-    arbitrary_updated = datetime.datetime.utcnow().replace(
-        tzinfo=pytz.UTC, microsecond=0)
-    arbitrary_duedate = (
-        datetime.datetime.combine(datetime.date.today(),
-                                  datetime.datetime.min.time())
-    ).replace(tzinfo=pytz.UTC)
-    arbitrary_issue = {
-        "id": 42,
-        "iid": 3,
-        "project_id": 8,
-        "title": "Add user settings",
-        "description": "",
-        "labels": [
-            "feature"
-        ],
-        "milestone": {
-            "id": 1,
-            "title": "v1.0",
-            "description": "",
-            "due_date": arbitrary_duedate.date().isoformat(),
-            "state": "closed",
-            "updated_at": "2012-07-04T13:42:48Z",
-            "created_at": "2012-07-04T13:42:48Z"
-        },
-        "assignee": {
-            "id": 2,
-            "username": "jack_smith",
-            "email": "jack@example.com",
-            "name": "Jack Smith",
-            "state": "active",
-            "created_at": "2012-05-23T08:01:01Z"
-        },
-        "author": {
-            "id": 1,
-            "username": "john_smith",
-            "email": "john@example.com",
-            "name": "John Smith",
-            "state": "active",
-            "created_at": "2012-05-23T08:00:58Z"
-        },
-        "state": "opened",
-        "updated_at": arbitrary_updated.isoformat(),
-        "created_at": arbitrary_created.isoformat(),
-        "weight": 3,
-        "work_in_progress": "true",
-    }
-    arbitrary_extra = {
-        'issue_url': 'https://gitlab.example.com/arbitrary_username/project/issues/3',
-        'project': 'project',
-        'namespace': 'arbitrary_namespace',
-        'type': 'issue',
-        'annotations': [],
-    }
 
     def setUp(self):
         super(TestGitlabIssue, self).setUp()
         self.service = self.get_mock_service(GitlabService)
+        self.arbitrary_created = (
+            datetime.datetime.utcnow() - datetime.timedelta(hours=1)
+        ).replace(tzinfo=pytz.UTC, microsecond=0)
+        self.arbitrary_updated = datetime.datetime.utcnow().replace(
+            tzinfo=pytz.UTC, microsecond=0)
+        self.arbitrary_duedate = (
+            datetime.datetime.combine(datetime.date.today(),
+                                      datetime.datetime.min.time())
+        ).replace(tzinfo=pytz.UTC)
+        self.arbitrary_issue = {
+            "id": 42,
+            "iid": 3,
+            "project_id": 8,
+            "title": "Add user settings",
+            "description": "",
+            "labels": [
+                "feature"
+            ],
+            "milestone": {
+                "id": 1,
+                "title": "v1.0",
+                "description": "",
+                "due_date": self.arbitrary_duedate.date().isoformat(),
+                "state": "closed",
+                "updated_at": "2012-07-04T13:42:48Z",
+                "created_at": "2012-07-04T13:42:48Z"
+            },
+            "assignee": {
+                "id": 2,
+                "username": "jack_smith",
+                "email": "jack@example.com",
+                "name": "Jack Smith",
+                "state": "active",
+                "created_at": "2012-05-23T08:01:01Z"
+            },
+            "author": {
+                "id": 1,
+                "username": "john_smith",
+                "email": "john@example.com",
+                "name": "John Smith",
+                "state": "active",
+                "created_at": "2012-05-23T08:00:58Z"
+            },
+            "state": "opened",
+            "updated_at": self.arbitrary_updated.isoformat(),
+            "created_at": self.arbitrary_created.isoformat(),
+            "weight": 3,
+            "work_in_progress": "true"
+        }
+        self.arbitrary_extra = {
+            'issue_url': 'https://gitlab.example.com/arbitrary_username/project/issues/3',
+            'project': 'project',
+            'namespace': 'arbitrary_namespace',
+            'type': 'issue',
+            'annotations': [],
+        }
 
     def test_normalize_label_to_tag(self):
         issue = self.service.get_issue_for_record(
@@ -159,11 +159,10 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         self.assertEqual(actual_output, expected_output)
 
     def test_work_in_progress(self):
-        arbitrary_issue_2 = self.arbitrary_issue
-        arbitrary_issue_2['work_in_progress'] = 'false'
+        self.arbitrary_issue['work_in_progress'] = 'false'
         self.service.import_labels_as_tags = True
         issue = self.service.get_issue_for_record(
-            arbitrary_issue_2,
+            self.arbitrary_issue,
             self.arbitrary_extra
         )
 
