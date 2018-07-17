@@ -203,7 +203,10 @@ def thread_last_sender(thread):
     return (name if name else address, address)
 
 def thread_last_message(thread):
-    return message_header(thread['messages'][-1], 'Message-ID')
+    message_id = message_header(thread['messages'][-1], 'Message-ID')
+    if not message_id:
+        message_id = message_header(thread['messages'][-1], 'Message-Id')
+    return message_id
 
 def thread_timestamp(thread):
     return thread['messages'][-1]['internalDate']
