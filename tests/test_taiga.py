@@ -84,7 +84,7 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
             'annotations': [u'@you - Blah blah blah!'],
             'description':
                 u'(bw)Is#40 - this is a title .. https://one/project/something/us/40',
-            'priority': 'M',
+            'priority': u'M',
             'project': u'something',
             'tags': [u'single', u'bugwarrior', u'task'],
             'taigaid': 40,

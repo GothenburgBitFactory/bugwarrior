@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import requests
 import six
-
+import sys
 from bugwarrior.db import CACHE_REGION as cache
 from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue, ServiceClient
@@ -48,7 +48,7 @@ class TaigaIssue(Issue):
         if isinstance(self.record['tags'], str):
             tags = self.record['tags']
         else:
-            tags = list(map(lambda x: (x if isinstance(x, str) else x[0]), self.record['tags']))
+            tags = list(map(lambda x: (x if isinstance(x, str if sys.version_info[0] >= 3 else basestring) else x[0]), self.record['tags']))
 
         return tags
 
