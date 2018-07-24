@@ -39,10 +39,18 @@ class TaigaIssue(Issue):
             self.URL: self.extra['url'],
 
             'priority': self.origin['default_priority'],
-            'tags': self.record['tags'],
+            'tags': self.get_tags(),
             self.FOREIGN_ID: self.record['ref'],
             self.SUMMARY: self.record['subject'],
         }
+
+    def get_tags(self):
+        if isinstance(self.record['tags'], str):
+            tags = self.record['tags']
+        else:
+            tags = list(map(lambda x: (x if isinstance(x, str) else x[0]), self.record['tags']))
+
+        return tags
 
     def get_default_description(self):
         return self.build_default_description(

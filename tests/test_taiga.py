@@ -17,7 +17,15 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
         'ref': 40,
         'subject': 'this is a title',
         'tags': [
-            'bugwarrior',
+            'single',
+            [
+                'bugwarrior',
+                None
+            ],
+            [
+                'task',
+                '#c0ffee'
+            ]
         ],
     }
 
@@ -40,7 +48,7 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
             'annotations': [],
             'priority': 'M',
             'project': 'awesome',
-            'tags': ['bugwarrior'],
+            'tags': ['single', 'bugwarrior', 'task'],
             'taigaid': 40,
             'taigasummary': 'this is a title',
             'taigaurl': 'this is a url',
@@ -78,7 +86,7 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
                 u'(bw)Is#40 - this is a title .. https://one/project/something/us/40',
             'priority': 'M',
             'project': u'something',
-            'tags': [u'bugwarrior'],
+            'tags': [u'single', u'bugwarrior', u'task'],
             'taigaid': 40,
             'taigasummary': u'this is a title',
             'taigaurl': u'https://one/project/something/us/40'}
