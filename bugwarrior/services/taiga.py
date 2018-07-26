@@ -45,12 +45,7 @@ class TaigaIssue(Issue):
         }
 
     def get_tags(self):
-        if isinstance(self.record['tags'], str):
-            tags = self.record['tags']
-        else:
-            tags = list(map(lambda x: (x if isinstance(x, str if sys.version_info[0] >= 3 else basestring) else x[0]), self.record['tags']))
-
-        return tags
+        return [x if isinstance(x, str if sys.version_info[0] >= 3 else basestring) else x[0] for x in self.record['tags']]
 
     def get_default_description(self):
         return self.build_default_description(
