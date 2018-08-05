@@ -173,6 +173,8 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'priority': self.service.default_priority,
             'annotations': [],
             'tags': [u'feature'],
+            'due': self.arbitrary_duedate.replace(microsecond=0),
+            'entry': self.arbitrary_created.replace(microsecond=0),
             issue.URL: self.arbitrary_extra['issue_url'],
             issue.REPO: 'project',
             issue.STATE: self.arbitrary_issue['state'],
