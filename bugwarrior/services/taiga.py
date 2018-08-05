@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import requests
 import six
-
+import sys
 from bugwarrior.db import CACHE_REGION as cache
 from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue, ServiceClient
@@ -39,10 +39,13 @@ class TaigaIssue(Issue):
             self.URL: self.extra['url'],
 
             'priority': self.origin['default_priority'],
-            'tags': self.record['tags'],
+            'tags': self.get_tags(),
             self.FOREIGN_ID: self.record['ref'],
             self.SUMMARY: self.record['subject'],
         }
+
+    def get_tags(self):
+        return [x if isinstance(x, str if sys.version_info[0] >= 3 else basestring) else x[0] for x in self.record['tags']]
 
     def get_default_description(self):
         return self.build_default_description(
