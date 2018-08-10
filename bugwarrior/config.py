@@ -211,7 +211,7 @@ def get_config_path():
 
 
 def load_config(main_section, interactive=False):
-    config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None})
+    config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None}, allow_no_value=True)
     path = get_config_path()
     config.readfp(codecs.open(path, "r", "utf-8",))
     config.interactive = interactive
