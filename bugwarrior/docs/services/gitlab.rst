@@ -60,6 +60,33 @@ In this example, ``noisy/repository`` is the repository you would
        gitlab.login = foo
        gitlab.include_repos = foo/bar
 
+Filtering Repositories with Regular Expressions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you don't want to list every single repository you want to include or
+exclude, you can additionally use the options ``gitlab.include_regex`` and
+``gitlab.exclude_regex`` and specify a regular expression (suitable for Python's
+``re`` module).
+No default namespace is applied here, the regular expressions are matched to the
+full repository name with its namespace.
+
+The regular expressions can be used in addition to the lists explained above.
+So if a repository is not included in ``gitlab.include_repos``, it can still be
+included by ``gitlab.include_regex``, and vice versa; and likewise for
+``gitlab.exclude_repos`` and ``gitlab.exclude_regex``.
+
+.. note::
+   If a repository matches both the inclusion and the exclusion options, the
+   exclusion takes precedence.
+
+For example, you want to include only the repositories ``foo/node`` and
+``bar/node`` as well as all repositories in the namespace ``foo`` starting with
+``ep_``, but not ``foo/ep_example``::
+
+    gitlab.include_repos = foo/node, bar/node
+    gitlab.include_regex = foo/ep_.*
+    gitlab.exclude_repos = foo/ep_example
+
 Import Labels as Tags
 +++++++++++++++++++++
 
@@ -164,7 +191,11 @@ Provided UDA Fields
 +-----------------------+-----------------------+---------------------+
 | ``gitlabwip``         | Work-in-Progress flag | Numeric             |
 +-----------------------+-----------------------+---------------------+
+| ``gitlabweight``      | Weight                | Numeric             |
++-----------------------+-----------------------+---------------------+
 | ``gitlabauthor``      | Issue/MR author       | Text (string)       |
 +-----------------------+-----------------------+---------------------+
 | ``gitlabassignee``    | Issue/MR assignee     | Text (string)       |
++-----------------------+-----------------------+---------------------+
+| ``gitlabnamespace``   | project namespace     | Text (string)       |
 +-----------------------+-----------------------+---------------------+

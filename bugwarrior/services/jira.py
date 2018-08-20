@@ -6,6 +6,7 @@ import six
 from jinja2 import Template
 from jira.client import JIRA as BaseJIRA
 from requests.cookies import RequestsCookieJar
+from dateutil.tz.tz import tzutc
 
 from bugwarrior.config import asbool, die
 from bugwarrior.services import IssueService, Issue
@@ -110,6 +111,7 @@ class JiraIssue(Issue):
             'priority': self.get_priority(),
             'annotations': self.get_annotations(),
             'tags': self.get_tags(),
+            'due': self.get_due(),
             'entry': self.get_entry(),
 
             self.URL: self.get_url(),
@@ -123,11 +125,17 @@ class JiraIssue(Issue):
     def get_entry(self):
         created_at = self.record['fields']['created']
         # Convert timestamp to an offset-aware datetime
-        date = self.parse_date(created_at)
+        date = self.parse_date(created_at).astimezone(tzutc()).replace(microsecond=0)
         return date
 
     def get_tags(self):
         return self._get_tags_from_labels() + self._get_tags_from_sprints()
+
+    def get_due(self):
+        sprints = self.__get_sprints()
+        for sprint in sprints:
+            endDate = sprint['endDate']
+            return '' if endDate == '<null>' else self.parse_date(endDate)
 
     def _get_tags_from_sprints(self):
         tags = []
@@ -137,7 +145,16 @@ class JiraIssue(Issue):
 
         context = self.record.copy()
         label_template = Template(self.origin['label_template'])
+        
+        sprints = self.__get_sprints()
+        for sprint in sprints:
+            # Extract the name and render it into a label
+            context.update({'label': sprint['name'].replace(' ', '')})
+            tags.append(label_template.render(context))
 
+        return tags
+
+    def __get_sprints(self):
         fields = self.record.get('fields', {})
         sprints = sum([
             fields.get(key) or []
@@ -145,12 +162,7 @@ class JiraIssue(Issue):
         ], [])
         for sprint in sprints:
             # Parse this big ugly string.
-            sprint = _parse_sprint_string(sprint)
-            # Extract the name and render it into a label
-            context.update({'label': sprint['name'].replace(' ', '')})
-            tags.append(label_template.render(context))
-
-        return tags
+            yield _parse_sprint_string(sprint)
 
     def _get_tags_from_labels(self):
         tags = []

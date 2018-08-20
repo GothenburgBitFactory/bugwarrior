@@ -35,6 +35,8 @@ class GitlabIssue(Issue):
     WORK_IN_PROGRESS = 'gitlabwip'
     AUTHOR = 'gitlabauthor'
     ASSIGNEE = 'gitlabassignee'
+    NAMESPACE = 'gitlabnamespace'
+    WEIGHT = 'gitlabweight'
 
     UDAS = {
         TITLE: {
@@ -101,6 +103,14 @@ class GitlabIssue(Issue):
             'type': 'string',
             'label': 'Gitlab Assignee',
         },
+        NAMESPACE: {
+            'type': 'string',
+            'label': 'Gitlab Namespace',
+        },
+        WEIGHT: {
+            'type': 'numeric',
+            'label': 'Gitlab Weight',
+        },
     }
     UNIQUE_KEY = (REPO, TYPE, NUMBER,)
 
@@ -115,9 +125,10 @@ class GitlabIssue(Issue):
         state = self.record['state']
         upvotes = self.record.get('upvotes', 0)
         downvotes = self.record.get('downvotes', 0)
-        work_in_progress = self.record.get('work_in_progress', 0)
+        work_in_progress = int(asbool(self.record.get('work_in_progress', 0)))
         assignee = self.record.get('assignee')
         duedate = self.record.get('due_date')
+        weight = self.record.get('weight')
         number = (
             self.record['id'] if self.extra['type'] == 'todo'
             else self.record['iid'])
@@ -128,8 +139,8 @@ class GitlabIssue(Issue):
             'Todo from %s for %s' % (author['name'], self.extra['project'])
             if self.extra['type'] == 'todo' else self.record['title'])
         description = (
-           self.record['body'] if self.extra['type'] == 'todo'
-           else self.record['description'])
+            self.record['body'] if self.extra['type'] == 'todo'
+            else self.record['description'])
 
         if milestone and (
                 self.extra['type'] == 'issue' or
@@ -156,6 +167,8 @@ class GitlabIssue(Issue):
             'priority': priority,
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
+            'due': duedate,
+            'entry': created,
 
             self.URL: self.extra['issue_url'],
             self.REPO: self.extra['project'],
@@ -173,6 +186,8 @@ class GitlabIssue(Issue):
             self.WORK_IN_PROGRESS: work_in_progress,
             self.AUTHOR: author,
             self.ASSIGNEE: assignee,
+            self.NAMESPACE: self.extra['namespace'],
+            self.WEIGHT: weight,
         }
 
     def get_tags(self):
@@ -227,9 +242,13 @@ class GitlabService(IssueService, ServiceClient):
 
         self.exclude_repos = self.config.get('exclude_repos', [], aslist)
         self.include_repos = self.config.get('include_repos', [], aslist)
+        self.exclude_regex = self.config.get('exclude_regex', None)
+        self.include_regex = self.config.get('include_regex', None)
 
         self.include_repos = list(map(self.add_default_namespace, self.include_repos))
         self.exclude_repos = list(map(self.add_default_namespace, self.exclude_repos))
+        self.include_regex = re.compile(self.include_regex) if self.include_regex else None
+        self.exclude_regex = re.compile(self.exclude_regex) if self.exclude_regex else None
 
         self.import_labels_as_tags = self.config.get(
             'import_labels_as_tags', default=False, to_type=asbool
@@ -245,6 +264,9 @@ class GitlabService(IssueService, ServiceClient):
         )
         self.include_all_todos = self.config.get(
             'include_all_todos', default=True, to_type=asbool
+        )
+        self.project_owner_prefix = self.config.get(
+            'project_owner_prefix', default=False, to_type=asbool
         )
 
     def add_default_namespace(self, repo):
@@ -285,25 +307,43 @@ class GitlabService(IssueService, ServiceClient):
             if repo['path_with_namespace'] in self.exclude_repos:
                 return False
 
+        if self.exclude_regex:
+            if self.exclude_regex.match(repo['path_with_namespace']):
+                return False
+
+        # fallback if no filter is set
+        is_included = True
+
         if self.include_repos:
             if repo['path_with_namespace'] in self.include_repos:
                 return True
             else:
-                return False
+                is_included = False
 
-        return True
+        if self.include_regex:
+            if self.include_regex.match(repo['path_with_namespace']):
+                return True
+            else:
+                is_included = False
+
+        return is_included
 
     def _get_notes(self, rid, issue_type, issueid):
-        tmpl = '{scheme}://{host}/api/v3/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
+        tmpl = '{scheme}://{host}/api/v4/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
         return self._fetch_paged(tmpl)
 
     def annotations(self, repo, url, issue_type, issue, issue_obj):
-        notes = self._get_notes(repo['id'], issue_type, issue['id'])
-        return self.build_annotations(
-            ((
+        annotations = []
+
+        if self.annotation_comments:
+            notes = self._get_notes(repo['id'], issue_type, issue['iid'])
+            annotations = ((
                 n['author']['username'],
                 n['body']
-            ) for n in notes),
+            ) for n in notes)
+
+        return self.build_annotations(
+            annotations,
             issue_obj.get_processed_url(url)
         )
 
@@ -348,7 +388,7 @@ class GitlabService(IssueService, ServiceClient):
         return full
 
     def get_repo_issues(self, rid):
-        tmpl = '{scheme}://{host}/api/v3/projects/%d/issues' % rid
+        tmpl = '{scheme}://{host}/api/v4/projects/%d/issues?state=opened' % rid
         issues = {}
         try:
             repo_issues = self._fetch_paged(tmpl)
@@ -356,13 +396,11 @@ class GitlabService(IssueService, ServiceClient):
             # Projects may have issues disabled.
             return {}
         for issue in repo_issues:
-            if issue['state'] not in ('opened', 'reopened'):
-                continue
             issues[issue['id']] = (rid, issue)
         return issues
 
     def get_repo_merge_requests(self, rid):
-        tmpl = '{scheme}://{host}/api/v3/projects/%d/merge_requests' % rid
+        tmpl = '{scheme}://{host}/api/v4/projects/%d/merge_requests?state=opened' % rid
         issues = {}
         try:
             repo_merge_requests = self._fetch_paged(tmpl)
@@ -370,13 +408,11 @@ class GitlabService(IssueService, ServiceClient):
             # Projects may have merge requests disabled.
             return {}
         for issue in repo_merge_requests:
-            if issue['state'] not in ('opened', 'reopened'):
-                continue
             issues[issue['id']] = (rid, issue)
         return issues
 
     def get_todos(self):
-        tmpl = '{scheme}://{host}/api/v3/todos'
+        tmpl = '{scheme}://{host}/api/v4/todos?state=pending'
         todos = []
         try:
             fetched_todos = self._fetch_paged(tmpl)
@@ -384,8 +420,6 @@ class GitlabService(IssueService, ServiceClient):
             # Older gitlab versions do not have todo items.
             return {}
         for todo in fetched_todos:
-            if todo['state'] == 'done':
-                continue
             todos.append((todo.get('project'), todo))
         return todos
 
@@ -398,7 +432,7 @@ class GitlabService(IssueService, ServiceClient):
         return include_todo
 
     def issues(self):
-        tmpl = '{scheme}://{host}/api/v3/projects'
+        tmpl = '{scheme}://{host}/api/v4/projects'
         all_repos = self._fetch_paged(tmpl)
         repos = list(filter(self.filter_repos, all_repos))
 
@@ -417,12 +451,15 @@ class GitlabService(IssueService, ServiceClient):
         for rid, issue in issues:
             repo = repo_map[rid]
             issue['repo'] = repo['path']
-
+            projectName = repo['path']
+            if self.project_owner_prefix:
+                projectName = repo['namespace']['path'] + "." + projectName
             issue_obj = self.get_issue_for_record(issue)
             issue_url = '%s/issues/%d' % (repo['web_url'], issue['iid'])
             extra = {
                 'issue_url': issue_url,
-                'project': repo['path'],
+                'project': projectName,
+                'namespace': repo['namespace']['full_path'],
                 'type': 'issue',
                 'annotations': self.annotations(repo, issue_url, 'issues', issue, issue_obj)
             }
@@ -445,10 +482,14 @@ class GitlabService(IssueService, ServiceClient):
                 issue['repo'] = repo['path']
 
                 issue_obj = self.get_issue_for_record(issue)
+                projectName = repo['path']
+                if self.project_owner_prefix:
+                    projectName = repo['namespace']['path'] + "." + projectName
                 issue_url = '%s/merge_requests/%d' % (repo['web_url'], issue['iid'])
                 extra = {
                     'issue_url': issue_url,
-                    'project': repo['path'],
+                    'project': projectName,
+                    'namespace': repo['namespace']['full_path'],
                     'type': 'merge_request',
                     'annotations': self.annotations(repo, issue_url, 'merge_requests', issue, issue_obj)
                 }
@@ -473,9 +514,13 @@ class GitlabService(IssueService, ServiceClient):
 
                 todo_obj = self.get_issue_for_record(todo)
                 todo_url = todo['target_url']
+                projectName = repo['path']
+                if self.project_owner_prefix:
+                    projectName = repo['namespace']['path'] + "." + projectName
                 extra = {
                     'issue_url': todo_url,
-                    'project': repo['path'],
+                    'project': projectName,
+                    'namespace': "todo",
                     'type': 'todo',
                     'annotations': [],
                 }

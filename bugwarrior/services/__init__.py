@@ -16,7 +16,7 @@ import six
 
 from taskw.task import Task
 
-from bugwarrior.config import asbool, die, get_service_password, ServiceConfig
+from bugwarrior.config import asbool, asint, aslist, die, get_service_password, ServiceConfig
 from bugwarrior.db import MARKUP, URLShortener
 
 import logging
@@ -51,51 +51,33 @@ class IssueService(object):
     def __init__(self, main_config, main_section, target):
         self.config = ServiceConfig(self.CONFIG_PREFIX, main_config, target)
         self.main_section = main_section
+        self.main_config = main_config
         self.target = target
 
-        self.desc_len = 35
-        if main_config.has_option(self.main_section, 'description_length'):
-            self.desc_len = main_config.getint(
-                self.main_section, 'description_length')
-
-        self.anno_len = 45
-        if main_config.has_option(self.main_section, 'annotation_length'):
-            self.anno_len = main_config.getint(
-                self.main_section, 'annotation_length')
-
-        self.inline_links = True
-        if main_config.has_option(self.main_section, 'inline_links'):
-            self.inline_links = asbool(main_config.get(
-                self.main_section, 'inline_links'))
-
-        self.annotation_links = not self.inline_links
-        if main_config.has_option(self.main_section, 'annotation_links'):
-            self.annotation_links = asbool(
-                main_config.get(self.main_section, 'annotation_links')
-            )
-
-        self.annotation_comments = True
-        if main_config.has_option(self.main_section, 'annotation_comments'):
-            self.annotation_comments = asbool(
-                main_config.get(self.main_section, 'annotation_comments')
-            )
-
-        self.shorten = False
-        if main_config.has_option(self.main_section, 'shorten'):
-            self.shorten = asbool(main_config.get(self.main_section, 'shorten'))
+        self.desc_len = self._get_config_or_default('description_length', 35, asint);
+        self.anno_len = self._get_config_or_default('annotation_length', 45, asint);
+        self.inline_links = self._get_config_or_default('inline_links', True, asbool);
+        self.annotation_links = self._get_config_or_default('annotation_links', not self.inline_links, asbool)
+        self.annotation_comments = self._get_config_or_default('annotation_comments', True, asbool)
+        self.shorten = self._get_config_or_default('shorten', False, asbool)
+        self.default_priority = self._get_config_or_default('default_priority','M')
 
         self.add_tags = []
-        if 'add_tags' in self.config:
-            for raw_option in self.config.get('add_tags').split(','):
-                option = raw_option.strip(' +;')
-                if option:
-                    self.add_tags.append(option)
-
-        self.default_priority = 'M'
-        if 'default_priority' in self.config:
-            self.default_priority = self.config.get('default_priority')
+        for raw_option in aslist(self.config.get('add_tags', '')):
+            option = raw_option.strip(' +;')
+            if option:
+                self.add_tags.append(option)
 
         log.info("Working on [%s]", self.target)
+
+
+    def _get_config_or_default(self, key, default, as_type=lambda x: x):
+        """Return a main config value, or default if it does not exist."""
+
+        if self.main_config.has_option(self.main_section, key):
+            return as_type(self.main_config.get(self.main_section, key))
+        return default
+
 
     def get_templates(self):
         """ Get any defined templates for configuration values.
@@ -184,6 +166,12 @@ class IssueService(object):
         if service_config.has_option(target, 'also_unassigned'):
             die("[%s] has an 'also_unassigned' option.  Should be "
                 "'%s.also_unassigned'." % (target, cls.CONFIG_PREFIX))
+        if service_config.has_option(target, 'default_priority'):
+            die("[%s] has a 'default_priority' option.  Should be "
+                "'%s.default_priority'." % (target, cls.CONFIG_PREFIX))
+        if service_config.has_option(target, 'add_tags'):
+            die("[%s] has an 'add_tags' option.  Should be "
+                "'%s.add_tags'." % (target, cls.CONFIG_PREFIX))
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
@@ -530,7 +518,7 @@ def aggregate_issues(conf, main_section, debug):
     log.info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
-    targets = [t.strip() for t in conf.get(main_section, 'targets').split(',')]
+    targets = aslist(conf.get(main_section, 'targets'))
 
     queue = multiprocessing.Queue()
 

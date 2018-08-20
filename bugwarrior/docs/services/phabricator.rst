@@ -1,7 +1,7 @@
 Phabricator
 ===========
 
-You can import tasks from your Phabricator instance using
+You can import Maniphest tasks from your Phabricator instance using
 the ``phabricator`` service name.
 
 Additional Requirements
@@ -24,6 +24,9 @@ Here's an example of a Phabricator target::
    Although this may not look like enough information for us
    to gather information from Phabricator,
    but credentials will be gathered from the user's ``~/.arcrc``.
+
+   To set up an ``~/.arcrc``, install arcanist and run ``arc
+   install-certificate``
 
 The above example is the minimum required to import issues from
 Phabricator.  You can also feel free to use any of the
@@ -60,6 +63,13 @@ you can find it out by querying Phabricator Conduit
 the methods which return the needed info are ``user.query``, ``project.query``
 and ``repository.query`` respectively.
 
+If your ``~/.arcrc`` includes credentials for multiple Phabricator instances,
+it is undefined which one will be used. To make it explicit, you can use::
+
+    phabricator.host = https://YOUR_PHABRICATOR_HOST
+
+Where ``https://YOUR_PHABRICATOR_HOST`` **must match** the corresponding json key
+in ``~/.arcrc``, which may include ``/api/`` besides your hostname.
 
 Provided UDA Fields
 -------------------

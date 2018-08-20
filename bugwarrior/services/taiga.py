@@ -2,10 +2,13 @@ from __future__ import absolute_import
 
 import requests
 import six
-
+import sys
 from bugwarrior.db import CACHE_REGION as cache
 from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue, ServiceClient
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class TaigaIssue(Issue):
@@ -36,10 +39,13 @@ class TaigaIssue(Issue):
             self.URL: self.extra['url'],
 
             'priority': self.origin['default_priority'],
-            'tags': self.record['tags'],
+            'tags': self.get_tags(),
             self.FOREIGN_ID: self.record['ref'],
             self.SUMMARY: self.record['subject'],
         }
+
+    def get_tags(self):
+        return [x if isinstance(x, str if sys.version_info[0] >= 3 else basestring) else x[0] for x in self.record['tags']]
 
     def get_default_description(self):
         return self.build_default_description(
@@ -57,6 +63,7 @@ class TaigaService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super(TaigaService, self).__init__(*args, **kw)
         self.url = self.config.get('base_uri')
+        self.include_tasks = self.config.get('include_tasks', default=False)
         self.auth_token = self.get_password('auth_token')
         self.label_template = self.config.get(
             'label_template', default='{{label}}', to_type=six.text_type
@@ -86,6 +93,23 @@ class TaigaService(IssueService, ServiceClient):
 
         IssueService.validate_config(service_config, target)
 
+    def _issues(self, userid, task_type, task_type_plural, task_type_short):
+        log.debug('Getting %s' % task_type_plural)
+
+        response = self.session.get(
+            self.url + '/api/v1/' + task_type_plural,
+            params={'assigned_to': userid, 'status__is_closed': "false"})
+        tasks = response.json()
+
+        for task in tasks:
+            project = self.get_project(task['project'])
+            extra = {
+                'project': project['slug'],
+                'annotations': self.annotations(task, project, task_type, task_type_short),
+                'url': self.build_url(task, project, task_type_short),
+            }
+            yield self.get_issue_for_record(task, extra)
+
     def issues(self):
         url = self.url + '/api/v1/users/me'
         me = self.session.get(url)
@@ -98,30 +122,23 @@ class TaigaService(IssueService, ServiceClient):
         # Otherwise, proceed.
         userid = data['id']
 
-        url = self.url + '/api/v1/userstories'
-        params = dict(assigned_to=userid, status__is_closed="false")
-        response = self.session.get(url, params=params)
-        stories = response.json()
+        for issue in self._issues(userid, 'userstory', 'userstories', 'us'):
+            yield issue
 
-        for story in stories:
-            project = self.get_project(story['project'])
-            extra = {
-                'project': project['slug'],
-                'annotations': self.annotations(story, project),
-                'url': self.build_url(story, project),
-            }
-            yield self.get_issue_for_record(story, extra)
+        if self.include_tasks:
+            for issue in self._issues(userid, 'task', 'tasks', 'task'):
+                yield issue
 
     @cache.cache_on_arguments()
     def get_project(self, project_id):
         url = '%s/api/v1/projects/%i' % (self.url, project_id)
         return self.json_response(self.session.get(url))
 
-    def build_url(self, story, project):
-        return '%s/project/%s/us/%i' % (self.url, project['slug'], story['ref'])
+    def build_url(self, task, project, task_type):
+        return '%s/project/%s/%s/%i' % (self.url, project['slug'], task_type, task['ref'])
 
-    def annotations(self, story, project):
-        url = '%s/api/v1/history/userstory/%i' % (self.url, story['id'])
+    def annotations(self, task, project, task_type, task_type_short):
+        url = '%s/api/v1/history/%s/%i' % (self.url, task_type, task['id'])
         response = self.session.get(url)
         history = response.json()
         return self.build_annotations(
@@ -129,5 +146,5 @@ class TaigaService(IssueService, ServiceClient):
                 item['user']['username'],
                 item['comment'],
             ) for item in history if item['comment']),
-            self.build_url(story, project)
+            self.build_url(task, project, task_type_short)
         )

@@ -131,6 +131,7 @@ class GithubIssue(Issue):
     TYPE = 'githubtype'
     NUMBER = 'githubnumber'
     USER = 'githubuser'
+    NAMESPACE = 'githubnamespace'
 
     UDAS = {
         TITLE: {
@@ -173,6 +174,10 @@ class GithubIssue(Issue):
             'type': 'string',
             'label': 'Github User',
         },
+        NAMESPACE: {
+            'type': 'string',
+            'label': 'Github Namespace',
+        },
     }
     UNIQUE_KEY = (URL, TYPE,)
 
@@ -193,11 +198,16 @@ class GithubIssue(Issue):
         else:
             priority = self.origin['default_priority']
 
+        created = self.record['created_at']
+        if created:
+            created = self.parse_date(self.record['created_at'])
+
         return {
             'project': self.extra['project'],
             'priority': priority,
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
+            'entry': created,
 
             self.URL: self.record['html_url'],
             self.REPO: self.record['repo'],
@@ -207,8 +217,9 @@ class GithubIssue(Issue):
             self.BODY: body,
             self.MILESTONE: milestone,
             self.NUMBER: self.record['number'],
-            self.CREATED_AT: self.parse_date(self.record['created_at']),
-            self.UPDATED_AT: self.parse_date(self.record['updated_at'])
+            self.CREATED_AT: created,
+            self.UPDATED_AT: self.parse_date(self.record['updated_at']),
+            self.NAMESPACE: self.extra['namespace'],
         }
 
     def get_tags(self):
@@ -276,10 +287,13 @@ class GithubService(IssueService):
         self.label_template = self.config.get(
             'label_template', default='{{label}}', to_type=six.text_type
         )
+        self.project_owner_prefix = self.config.get(
+            'project_owner_prefix', default=False, to_type=asbool
+        )
 
         self.query = self.config.get(
             'query',
-            default='involves: {user} state:open'.format(
+            default='involves:{user} state:open'.format(
                 user=self.username) if self.involved_issues else '',
             to_type=six.text_type
         )
@@ -429,10 +443,15 @@ class GithubService(IssueService):
             issue['repo'] = tag
 
             issue_obj = self.get_issue_for_record(issue)
+            tagParts = tag.split('/')
+            projectName = tagParts[1]
+            if self.project_owner_prefix:
+                projectName = tagParts[0]+"."+projectName
             extra = {
-                'project': tag.split('/')[1],
+                'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',
-                'annotations': self.annotations(tag, issue, issue_obj)
+                'annotations': self.annotations(tag, issue, issue_obj),
+                'namespace': self.username,
             }
             issue_obj.update_extra(extra)
             yield issue_obj

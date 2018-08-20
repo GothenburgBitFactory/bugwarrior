@@ -31,6 +31,13 @@ def aslist(value):
     return [item.strip() for item in value.strip().split(',')]
 
 
+def asint(value):
+    """ Cast config values to int, or None for empty strings."""
+    if value == '':
+        return None
+    return int(value)
+
+
 def get_keyring():
     """ Try to import and return optional keyring dependency. """
     try:
@@ -151,8 +158,8 @@ def validate_config(config, main_section):
     if not config.has_option(main_section, 'targets'):
         die("No targets= item in [%s] found." % main_section)
 
-    targets = config.get(main_section, 'targets')
-    targets = [t for t in [t.strip() for t in targets.split(",")] if len(t)]
+    targets = aslist(config.get(main_section, 'targets'))
+    targets = [t for t in targets if len(t)]
 
     if not targets:
         die("Empty targets= item in [%s]." % main_section)
@@ -204,7 +211,7 @@ def get_config_path():
 
 
 def load_config(main_section, interactive=False):
-    config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None})
+    config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None}, allow_no_value=True)
     path = get_config_path()
     config.readfp(codecs.open(path, "r", "utf-8",))
     config.interactive = interactive
@@ -229,14 +236,9 @@ def get_data_path(config, main_section):
     # the `_` subcommands properly (`rc:` can't be used for them).
     line_prefix = 'data.location='
 
-    env={
-        'PATH': os.getenv('PATH'),
-        'TASKRC': taskrc,
-    }
-    # If TASKDATA is set but empty, taskwarrior's data.location is empty.
-    taskdata = os.getenv('TASKDATA')
-    if taskdata:
-        env['TASKDATA'] = taskdata
+    # Take a copy of the environment and add our taskrc to it.
+    env = dict(os.environ)
+    env['TASKRC'] = taskrc
 
     tw_show = subprocess.Popen(
         ('task', '_show'), stdout=subprocess.PIPE, env=env)

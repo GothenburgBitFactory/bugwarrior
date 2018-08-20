@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '1.5.1'
+version = '1.6.0'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -41,13 +41,14 @@ setup(name='bugwarrior',
           "future!=0.16.0",
       ],
       extras_require=dict(
-          keyring=["keyring", "dbus-python"],
+          keyring=["keyring"],
           jira=["jira>=0.22"],
           megaplan=["megaplan>=1.4"],
           activecollab=["pypandoc", "pyac>=0.1.5"],
           bts=["PySimpleSOAP","python-debianbts>=2.6.1"],
           trac=["offtrac"],
           bugzilla=["python-bugzilla"],
+          gmail=["google-api-python-client", "oauth2client<4.0.0"],
       ),
       tests_require=[
           "Mock",
@@ -57,6 +58,7 @@ setup(name='bugwarrior',
           "bugwarrior[megaplan]",
           "bugwarrior[activecollab]",
           "bugwarrior[bts]",
+          "bugwarrior[gmail]",
           "bugwarrior[trac]",
           "bugwarrior[bugzilla]",
       ],
@@ -86,5 +88,6 @@ setup(name='bugwarrior',
       gerrit=bugwarrior.services.gerrit:GerritService
       trello=bugwarrior.services.trello:TrelloService
       youtrack=bugwarrior.services.youtrack:YoutrackService
+      gmail=bugwarrior.services.gmail:GmailService
       """,
       )

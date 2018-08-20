@@ -2,7 +2,7 @@ import six
 import requests
 import re
 
-from bugwarrior.config import die
+from bugwarrior.config import die, asbool
 from bugwarrior.services import Issue, IssueService, ServiceClient
 from taskw import TaskWarriorShellout
 
@@ -11,11 +11,12 @@ log = logging.getLogger(__name__)
 
 
 class RedMineClient(ServiceClient):
-    def __init__(self, url, key, auth, issue_limit):
+    def __init__(self, url, key, auth, issue_limit, verify_ssl):
         self.url = url
         self.key = key
         self.auth = auth
         self.issue_limit = issue_limit
+        self.verify_ssl = verify_ssl
 
     def find_issues(self, issue_limit=100, only_if_assigned=False):
         args = {}
@@ -36,6 +37,8 @@ class RedMineClient(ServiceClient):
 
         if self.auth:
             kwargs['auth'] = self.auth
+
+        kwargs['verify'] = self.verify_ssl
 
         return self.json_response(requests.get(url, **kwargs))
 
@@ -224,14 +227,18 @@ class RedMineService(IssueService):
         super(RedMineService, self).__init__(*args, **kw)
 
         self.url = self.config.get('url').rstrip("/")
-        self.key = self.config.get('key')
+        self.key = self.get_password('key')
         self.issue_limit = self.config.get('issue_limit')
+
+        self.verify_ssl = self.config.get(
+            'verify_ssl', default=True, to_type=asbool
+        )
 
         login = self.config.get('login')
         if login:
             password = self.get_password('password', login)
         auth = (login, password) if (login and password) else None
-        self.client = RedMineClient(self.url, self.key, auth, self.issue_limit)
+        self.client = RedMineClient(self.url, self.key, auth, self.issue_limit, self.verify_ssl)
 
         self.project_name = self.config.get('project_name')
 
@@ -245,7 +252,7 @@ class RedMineService(IssueService):
     def get_keyring_service(service_config):
         url = service_config.get('url')
         login = service_config.get('login')
-        return "redmine://%s@%s/%s" % (login, url)
+        return "redmine://%s@%s/" % (login, url)
 
     @classmethod
     def validate_config(cls, service_config, target):

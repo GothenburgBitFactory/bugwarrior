@@ -53,20 +53,23 @@ A more-detailed example configuration can be found at
 Common Service Configuration Options
 ------------------------------------
 
-All services support the following configuration options in addition
-to any specified service features or settings specified in the
-service example:
+All services support common configuration options in addition
+to their service-specific features.
+These configuration options are meant to be prefixed with the service name,
+e.g. ``github.add_tags``, or ``gitlab.default_priority``.
 
-* ``only_if_assigned``: Only import issues assigned to the specified
-  user.
-* ``also_unassigned``: Same as above, but also create tasks for issues
-  that are not assigned to anybody.
-* ``default_priority``: Assign this priority ('L', 'M', or 'H') to
-  newly-imported issues.
-* ``add_tags``: A comma-separated list of tags to add to an issue.  In most
-  cases, this will just be a series of strings, but you can also make
-  tags by defining one of your tags following the example set in
-  `Field Templates`_.
+The following options are supported:
+
+* ``SERVICE.only_if_assigned``: If set to a username, only import issues
+  assigned to the specified user.
+* ``SERVICE.also_unassigned``: If set to ``True`` and ``only_if_assigned`` is
+  set, then also create tasks for issues that are not assigned to anybody.
+  Defaults to ``False``.
+* ``SERVICE.default_priority``: Assign this priority ('L', 'M', or 'H') to
+  newly-imported issues. Defaults to ``M``.
+* ``SERVICE.add_tags``: A comma-separated list of tags to add to an issue.  In
+  most cases, plain strings will suffice, but you can also specify
+  templates.  See the section `Field Templates`_ for more information.
 
 .. _field_templates:
 

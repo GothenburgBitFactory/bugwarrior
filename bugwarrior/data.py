@@ -8,6 +8,7 @@ class BugwarriorData(object):
     def __init__(self, data_path):
         self.datafile = os.path.join(data_path, 'bugwarrior.data')
         self.lockfile = os.path.join(data_path, 'bugwarrior-data.lockfile')
+        self.path = data_path
 
     def get_data(self):
         with open(self.datafile, 'r') as jsondata:

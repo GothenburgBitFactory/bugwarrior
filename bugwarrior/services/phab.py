@@ -37,10 +37,19 @@ class PhabricatorIssue(Issue):
     }
     UNIQUE_KEY = (URL, )
 
+    PRIORITY_MAP = {
+        'Needs Triage': None,
+        'Unbreak Now!': 'H',
+        'High': 'H',
+        'Normal': 'M',
+        'Low': 'L',
+        'Wishlist': 'L',
+    }
+
     def to_taskwarrior(self):
         return {
             'project': self.extra['project'],
-            'priority': self.origin['default_priority'],
+            'priority': self.priority,
             'annotations': self.extra.get('annotations', []),
 
             self.URL: self.record['uri'],
@@ -57,6 +66,11 @@ class PhabricatorIssue(Issue):
             cls=self.extra['type'],
         )
 
+    @property
+    def priority(self):
+        return self.PRIORITY_MAP.get(self.record.get('priority')) \
+               or self.origin['default_priority']
+
 
 class PhabricatorService(IssueService):
     ISSUE_CLASS = PhabricatorIssue
@@ -64,8 +78,14 @@ class PhabricatorService(IssueService):
 
     def __init__(self, *args, **kw):
         super(PhabricatorService, self).__init__(*args, **kw)
-        # These reads in login credentials from ~/.arcrc
-        self.api = phabricator.Phabricator()
+
+        self.host = self.config.get("host", None)
+
+        # These read login credentials from ~/.arcrc
+        if self.host is not None:
+            self.api = phabricator.Phabricator(host=self.host)
+        else:
+            self.api = phabricator.Phabricator()
 
         self.shown_user_phids = (
             self.config.get("user_phids", None, aslist))
@@ -89,7 +109,7 @@ class PhabricatorService(IssueService):
                 seen = set()
                 issues = [item for item in issues if str(item[1]) not in seen and not seen.add(str(item[1]))]
             if self.shown_project_phids is not None:
-                issues = self.api.maniphest.query(status='status-open', projectsPHIDs = self.shown_project_phids)
+                issues = self.api.maniphest.query(status='status-open', projectPHIDs=self.shown_project_phids)
                 issues = issues.items()
         else:
             issues = self.api.maniphest.query(status='status-open')
@@ -102,7 +122,7 @@ class PhabricatorService(IssueService):
             project = self.target  # a sensible default
             try:
                 project = projects.get(issue['projectPHIDs'][0], project)
-            except IndexError:
+            except (KeyError, IndexError):
                 pass
 
             this_issue_matches = False
@@ -121,7 +141,7 @@ class PhabricatorService(IssueService):
                 # Checking whether projectPHIDs
                 # is intersecting with self.shown_project_phids
                 issue_relevant_to = set(issue['projectPHIDs'])
-                if len(issue_relevant_to.intersection(self.shown_user_phids)) > 0:
+                if len(issue_relevant_to.intersection(self.shown_project_phids)) > 0:
                     this_issue_matches = True
 
             if not this_issue_matches:
@@ -135,7 +155,12 @@ class PhabricatorService(IssueService):
 
             yield self.get_issue_for_record(issue, extra)
 
-        diffs = self.api.differential.query(status='status-open')
+        try:
+            diffs = self.api.differential.query(status='status-open')
+        except phabricator.APIError as err:
+            log.warn("Could not read reviews: %s" % err)
+            return
+
         diffs = list(diffs)
 
         log.info("Found %i differentials" % len(diffs))
@@ -144,8 +169,8 @@ class PhabricatorService(IssueService):
 
             project = self.target  # a sensible default
             try:
-                project = projects.get(issue['projectPHIDs'][0], project)
-            except IndexError:
+                project = projects.get(diff['projectPHIDs'][0], project)
+            except (KeyError, IndexError):
                 pass
 
             this_diff_matches = False
@@ -170,7 +195,7 @@ class PhabricatorService(IssueService):
                     pass
 
                 diff_relevant_to = set(phabricator_projects + [diff['repositoryPHID']])
-                if len(diff_relevant_to.intersection(self.shown_user_phids)) > 0:
+                if len(diff_relevant_to.intersection(self.shown_project_phids)) > 0:
                     this_diff_matches = True
 
             if not this_diff_matches:

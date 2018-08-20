@@ -34,6 +34,7 @@ ARBITRARY_EXTRA = {
     'project': 'one',
     'type': 'issue',
     'annotations': [],
+    'namespace': 'arbitrary_username',
 }
 
 
@@ -69,6 +70,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'priority': self.service.default_priority,
             'annotations': [],
             'tags': ['bugfix'],
+            'entry': ARBITRARY_CREATED,
             issue.URL: ARBITRARY_ISSUE['html_url'],
             issue.REPO: ARBITRARY_ISSUE['repo'],
             issue.TYPE: ARBITRARY_EXTRA['type'],
@@ -79,6 +81,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             issue.BODY: ARBITRARY_ISSUE['body'],
             issue.MILESTONE: ARBITRARY_ISSUE['milestone']['title'],
             issue.USER: ARBITRARY_ISSUE['user']['login'],
+            issue.NAMESPACE: 'arbitrary_username',
         }
         actual_output = issue.to_taskwarrior()
 
@@ -120,9 +123,11 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
         expected = {
             'annotations': [u'@arbitrary_login - Arbitrary comment.'],
             'description': u'(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
+            'entry': ARBITRARY_CREATED,
             'githubbody': u'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubmilestone': u'alpha',
+            'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
             'githubrepo': 'arbitrary_username/arbitrary_repo',
             'githubtitle': u'Hallo',
@@ -173,9 +178,11 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
         expected = {
             'annotations': [u'@arbitrary_login - Arbitrary comment.'],
             'description': u'(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
+            'entry': ARBITRARY_CREATED,
             'githubbody': u'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubmilestone': u'alpha',
+            'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
             'githubrepo': 'arbitrary_username/arbitrary_repo',
             'githubtitle': u'Hallo',

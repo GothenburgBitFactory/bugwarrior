@@ -3,6 +3,7 @@ python:
  - "2.7"
  - "3.4"
  - "3.5"
+ - "3.6"
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install uuid-dev
@@ -26,7 +27,7 @@ env:
   - JIRAVERSION=1.0.10
 install:
   - pip install jira==$JIRAVERSION
-  - pip install .[jira,megaplan,activecollab,bts,bugzilla,trac]
+  - pip install .[jira,megaplan,activecollab,bts,bugzilla,trac,gmail]
   - pip install codecov
   - pip install coverage
 script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior -v

@@ -1,4 +1,143 @@
 
+1.6.0
+-----
+
+Pull Requests
+
+- #536, Merge pull request #536 from mikem23/bugzilla-flags
+  https://github.com/ralphbean/bugwarrior/pull/536
+- #582, Merge pull request #582 from westurner/patch-1
+  https://github.com/ralphbean/bugwarrior/pull/582
+- #585, Merge pull request #585 from chikei/gitlabv4
+  https://github.com/ralphbean/bugwarrior/pull/585
+
+Commits
+
+- b41f814af Pagure API now requires a parameter.
+  https://github.com/ralphbean/bugwarrior/commit/b41f814af
+- 41280d6eb Add path attribute to BugwarriorData class so services can store data files.
+  https://github.com/ralphbean/bugwarrior/commit/41280d6eb
+- 8b987734b GMail service for bugwarrior
+  https://github.com/ralphbean/bugwarrior/commit/8b987734b
+- f914c1358 Add documentation for gmail service.
+  https://github.com/ralphbean/bugwarrior/commit/f914c1358
+- ddc60f6ee Wrap gmail authentication in a multiprocessing Lock.
+  https://github.com/ralphbean/bugwarrior/commit/ddc60f6ee
+- 51eaa4049 Gmail oauth flow shouldn't attempt to parse the command line.
+  https://github.com/ralphbean/bugwarrior/commit/51eaa4049
+- 9c5cf1025 github: prefix project name with org name
+  https://github.com/ralphbean/bugwarrior/commit/9c5cf1025
+- f91afba4b github: fix involves: query
+  https://github.com/ralphbean/bugwarrior/commit/f91afba4b
+- 39762c669 Update docs for common service configuration options
+  https://github.com/ralphbean/bugwarrior/commit/39762c669
+- 510e454ad Validate all common service configuration options
+  https://github.com/ralphbean/bugwarrior/commit/510e454ad
+- 3642b02bf services/__init__: Refactor handling of defaults (#493)
+  https://github.com/ralphbean/bugwarrior/commit/3642b02bf
+- 7b935b8d9 Use aslist everywhere when parsing list config options.
+  https://github.com/ralphbean/bugwarrior/commit/7b935b8d9
+- b2f7463a9 Update test for db handling of multiple static fields.
+  https://github.com/ralphbean/bugwarrior/commit/b2f7463a9
+- 89d6deddc Also include tasks for taiga (#499)
+  https://github.com/ralphbean/bugwarrior/commit/89d6deddc
+- 1d5b2af43 Globally exclude __pycache__ and py[co] from sdist
+  https://github.com/ralphbean/bugwarrior/commit/1d5b2af43
+- 992d35804 Update tests to support responses-0.6.
+  https://github.com/ralphbean/bugwarrior/commit/992d35804
+- c1f7fc57b add fallback way for annotation on gerrit service
+  https://github.com/ralphbean/bugwarrior/commit/c1f7fc57b
+- 65a957a30 adds namespace to gitlab uda
+  https://github.com/ralphbean/bugwarrior/commit/65a957a30
+- c5ed53be6 gitlab: filter repositories by regex
+  https://github.com/ralphbean/bugwarrior/commit/c5ed53be6
+- 05eb98ab7 doc: rework section Common Service Configuration Options
+  https://github.com/ralphbean/bugwarrior/commit/05eb98ab7
+- be408d291 Add python3.6 to the test matrix.
+  https://github.com/ralphbean/bugwarrior/commit/be408d291
+- fca71c87f Modify drop static field logic to prevent KeyError
+  https://github.com/ralphbean/bugwarrior/commit/fca71c87f
+- 370cad3ce Prepend Bitbucket project name to Taskwarrior project
+  https://github.com/ralphbean/bugwarrior/commit/370cad3ce
+- f84187139 Prepend Gitlab namespace path to Taskwarrior project
+  https://github.com/ralphbean/bugwarrior/commit/f84187139
+- 6c8788360 TypeError: not enough arguments for format string
+  https://github.com/ralphbean/bugwarrior/commit/6c8788360
+- 38e175a5f Remove dbus-python from keyring dependencies.
+  https://github.com/ralphbean/bugwarrior/commit/38e175a5f
+- 614f021f5 Work around bugzilla flags issue
+  https://github.com/ralphbean/bugwarrior/commit/614f021f5
+- c87044c1f Use comma instead of space separated list for [service].add_tags in example configuration
+  https://github.com/ralphbean/bugwarrior/commit/c87044c1f
+- 8ac1927c5 Update installation docs.
+  https://github.com/ralphbean/bugwarrior/commit/8ac1927c5
+- 55ab7ea31 Use get_password to evaluate API key
+  https://github.com/ralphbean/bugwarrior/commit/55ab7ea31
+- afa28123a Preserve existing environment variables when calling task
+  https://github.com/ralphbean/bugwarrior/commit/afa28123a
+- dc30b38db config.py/get_data_path: Copy our environment before changing
+  https://github.com/ralphbean/bugwarrior/commit/dc30b38db
+- 1fbdc7c62 config.py: Don't try to remove empty TASKDATA env variables
+  https://github.com/ralphbean/bugwarrior/commit/1fbdc7c62
+- fe5da905b test_config.py: Test TASKDATA is not set, rather than setting it empty
+  https://github.com/ralphbean/bugwarrior/commit/fe5da905b
+- 7fda40572 Phabricator: mention Maniphest, how to create .arcrc
+  https://github.com/ralphbean/bugwarrior/commit/7fda40572
+- bfbcc3a36 Store GMail labels in a new gmaillabels UDA (#555)
+  https://github.com/ralphbean/bugwarrior/commit/bfbcc3a36
+- 0724da884 Gitlab Weight UDA
+  https://github.com/ralphbean/bugwarrior/commit/0724da884
+- a132cbf9f Convert Jira time to UTC and strip microseconds (Closes: #450)
+  https://github.com/ralphbean/bugwarrior/commit/a132cbf9f
+- 8403cb817 Add support for annotation_links in Debian BTS
+  https://github.com/ralphbean/bugwarrior/commit/8403cb817
+- 6d04fc2cf Add phabricator.host option to enable multiple instances
+  https://github.com/ralphbean/bugwarrior/commit/6d04fc2cf
+- f49fbf63d Phabricator: Fix maniphest.query parameter projectPHIDs
+  https://github.com/ralphbean/bugwarrior/commit/f49fbf63d
+- 903f782a1 Phabricator: Fix "local variable 'issue' referenced before assignment" for diffs
+  https://github.com/ralphbean/bugwarrior/commit/903f782a1
+- a06d3712a Phabricator: Catch KeyErrors when fetching issues and diffs
+  https://github.com/ralphbean/bugwarrior/commit/a06d3712a
+- eddc690bb Phabricator: Fix comparing with projects/repositories
+  https://github.com/ralphbean/bugwarrior/commit/eddc690bb
+- 58da68f60 Phabricator: Use priorities of issues
+  https://github.com/ralphbean/bugwarrior/commit/58da68f60
+- 776a917e8 JiraIssue: set issue due to sprint endDate (#549)
+  https://github.com/ralphbean/bugwarrior/commit/776a917e8
+- 9dad3c180 Remove unnecessary conditional (#572)
+  https://github.com/ralphbean/bugwarrior/commit/9dad3c180
+- 2ff724d10 [phabricator] Connect to phabricator without Differential (#576)
+  https://github.com/ralphbean/bugwarrior/commit/2ff724d10
+- ee5c46f88 DOC: services/gmail.rst: Add newlines after .. code:
+  https://github.com/ralphbean/bugwarrior/commit/ee5c46f88
+- 4b02f4a62 gitlab: migrate to APIv4
+  https://github.com/ralphbean/bugwarrior/commit/4b02f4a62
+- 37269a2e9 gitlab WIP status is True or False. Use asbool to convert from string to numeric
+  https://github.com/ralphbean/bugwarrior/commit/37269a2e9
+- e831d80c3 added testcase for wip flip
+  https://github.com/ralphbean/bugwarrior/commit/e831d80c3
+- 3a6de6f9c Moved data definition to setUp method
+  https://github.com/ralphbean/bugwarrior/commit/3a6de6f9c
+- 2664b5669 redmine: add fetch_ssl configuration option
+  https://github.com/ralphbean/bugwarrior/commit/2664b5669
+- e8c15289c gitlab: uses created at date as entry date
+  https://github.com/ralphbean/bugwarrior/commit/e8c15289c
+- 104325271 github: uses created at date as entry date
+  https://github.com/ralphbean/bugwarrior/commit/104325271
+- d48f735ce gitlab: fetch annotations only if necessary
+  https://github.com/ralphbean/bugwarrior/commit/d48f735ce
+- 1bc853026 gitlab: uses due date as taskwarrior due date
+  https://github.com/ralphbean/bugwarrior/commit/1bc853026
+- 7df339e67 build list for multiple taiga tags (#594)
+  https://github.com/ralphbean/bugwarrior/commit/7df339e67
+- c9abd1a2d gitlab: fixes tests
+  https://github.com/ralphbean/bugwarrior/commit/c9abd1a2d
+- cc1cb7a33 github: adds namespace uda (#587)
+  https://github.com/ralphbean/bugwarrior/commit/cc1cb7a33
+- da9221ea6 set allow_no_value=True so that it doesn't break on Python 3.7
+  https://github.com/ralphbean/bugwarrior/commit/da9221ea6
+
 1.5.1
 -----
 

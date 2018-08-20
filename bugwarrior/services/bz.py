@@ -5,7 +5,7 @@ import pytz
 import datetime
 import six
 
-from bugwarrior.config import die, asbool
+from bugwarrior.config import die, asbool, aslist
 from bugwarrior.services import IssueService, Issue
 
 import logging
@@ -126,8 +126,7 @@ class BugzillaService(IssueService):
         self.query_url = self.config.get('query_url', default=None)
         self.include_needinfos = self.config.get(
             'include_needinfos', False, to_type=lambda x: x == "True")
-        self.open_statuses = self.config.get(
-            'open_statuses', _open_statuses, to_type=lambda x: x.split(','))
+        self.open_statuses = self.config.get('open_statuses', _open_statuses, to_type=aslist)
         log.debug(" filtering on statuses: %r", self.open_statuses)
 
         # So more modern bugzilla's require that we specify
@@ -285,7 +284,7 @@ class BugzillaService(IssueService):
 
 
 def _get_bug_attr(bug, attr):
-    """Default only the longdescs case to [] since it may not be present."""
-    if attr == "longdescs":
+    """Default longdescs/flags case to [] since they may not be present."""
+    if attr in ("longdescs", "flags"):
         return getattr(bug, attr, [])
     return getattr(bug, attr)
