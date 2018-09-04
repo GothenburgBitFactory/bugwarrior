@@ -4,6 +4,7 @@ standard_library.install_aliases()
 from builtins import map
 from builtins import filter
 
+from urllib import quote_plus
 from configparser import NoOptionError
 import re
 import requests
@@ -433,7 +434,19 @@ class GitlabService(IssueService, ServiceClient):
 
     def issues(self):
         tmpl = '{scheme}://{host}/api/v4/projects'
-        all_repos = self._fetch_paged(tmpl)
+
+        all_repos = []
+        if self.include_repos:
+            for repo in self.include_repos:
+                indiv_tmpl = tmpl + '/' + quote_plus(repo)
+                item = self._fetch(indiv_tmpl)
+                if not item:
+                    break
+
+                all_repos += [ item ]
+        else:
+            all_repos = self._fetch_paged(tmpl)
+
         repos = list(filter(self.filter_repos, all_repos))
 
         repo_map = {}
