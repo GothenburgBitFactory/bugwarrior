@@ -4,7 +4,10 @@ standard_library.install_aliases()
 from builtins import map
 from builtins import filter
 
-from urllib import quote_plus
+try:
+    from urllib import quote  # Python 2.X
+except ImportError:
+    from urllib.parse import quote  # Python 3+
 from configparser import NoOptionError
 import re
 import requests
@@ -432,7 +435,7 @@ class GitlabService(IssueService, ServiceClient):
         all_repos = []
         if self.include_repos:
             for repo in self.include_repos:
-                indiv_tmpl = tmpl + '/' + quote_plus(repo)
+                indiv_tmpl = tmpl + '/' + quote(repo, '')
                 item = self._fetch(indiv_tmpl)
                 if not item:
                     break
