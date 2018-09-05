@@ -438,7 +438,8 @@ class GitlabService(IssueService, ServiceClient):
                     break
 
                 all_repos += [ item ]
-        else:
+
+        if self.include_regex is not None:
             all_repos = self._fetch_paged(tmpl)
 
         repos = list(filter(self.filter_repos, all_repos))
