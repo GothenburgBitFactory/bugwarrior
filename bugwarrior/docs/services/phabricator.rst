@@ -71,6 +71,22 @@ it is undefined which one will be used. To make it explicit, you can use::
 Where ``https://YOUR_PHABRICATOR_HOST`` **must match** the corresponding json key
 in ``~/.arcrc``, which may include ``/api/`` besides your hostname.
 
+Ignoring Some Items
+...................
+
+By default, any Task or Revision relating to any of the given users or projects
+will be included.  This is likely more than you want!  You can ignore some user
+relationships with the following configuration::
+
+    phabricator.ignore_cc = True        # ignore CC field
+    phabricator.ignore_author = True    # ignore Author field
+    phabricator.ignore_owner = True     # ignore Owner field (Tasks only)
+    phabricator.ignore_reviewers = True # ignore Reviewers field (Revisions only)
+
+Note that there is no way to filter by the reviewer's response (for example, to
+exclude Revisions you have already reviewed). Phabricator does not provide the
+necessary information in the Conduit API.
+
 Provided UDA Fields
 -------------------
 
