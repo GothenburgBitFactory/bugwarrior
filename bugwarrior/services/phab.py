@@ -93,58 +93,62 @@ class PhabricatorService(IssueService):
         self.shown_project_phids = (
             self.config.get("project_phids", None, aslist))
 
-    def issues(self):
-
+    def tasks(self):
         # TODO -- get a list of these from the api
         projects = {}
+
         # If self.shown_user_phids or self.shown_project_phids is set, retrict API calls to user_phids or project_phids
         # to avoid time out with Phabricator installations with huge userbase
-        if (self.shown_user_phids is not None) or (self.shown_project_phids is not None):
-            if self.shown_user_phids is not None:
-                issues_owner = self.api.maniphest.query(status='status-open', ownerPHIDs=self.shown_user_phids)
-                issues_cc = self.api.maniphest.query(status='status-open', ccPHIDs=self.shown_user_phids)
-                issues_author = self.api.maniphest.query(status='status-open', authorPHIDs=self.shown_user_phids)
-                issues = list(issues_owner.items()) + list(issues_cc.items()) + list(issues_author.items())
-                # Delete duplicates
-                seen = set()
-                issues = [item for item in issues if str(item[1]) not in seen and not seen.add(str(item[1]))]
-            if self.shown_project_phids is not None:
-                issues = self.api.maniphest.query(status='status-open', projectPHIDs=self.shown_project_phids)
-                issues = issues.items()
-        else:
-            issues = self.api.maniphest.query(status='status-open')
-            issues = issues.items()
+        try:
+            if (self.shown_user_phids is not None) or (self.shown_project_phids is not None):
+                if self.shown_user_phids is not None:
+                    tasks_owner = self.api.maniphest.query(status='status-open', ownerPHIDs=self.shown_user_phids)
+                    tasks_cc = self.api.maniphest.query(status='status-open', ccPHIDs=self.shown_user_phids)
+                    tasks_author = self.api.maniphest.query(status='status-open', authorPHIDs=self.shown_user_phids)
+                    tasks = list(tasks_owner.items()) + list(tasks_cc.items()) + list(tasks_author.items())
+                    # Delete duplicates
+                    seen = set()
+                    tasks = [item for item in tasks if str(item[1]) not in seen and not seen.add(str(item[1]))]
+                if self.shown_project_phids is not None:
+                    tasks = self.api.maniphest.query(status='status-open', projectPHIDs=self.shown_project_phids)
+                    tasks = tasks.items()
+            else:
+                tasks = self.api.maniphest.query(status='status-open')
+                tasks = tasks.items()
+        except phabricator.APIError as err:
+            log.warn("Could not read tasks from Maniphest: %s" % err)
+            return
 
-        log.info("Found %i issues" % len(issues))
+        log.info("Found %i tasks" % len(tasks))
 
-        for phid, issue in issues:
+        for phid, task in tasks:
 
             project = self.target  # a sensible default
             try:
-                project = projects.get(issue['projectPHIDs'][0], project)
+                project = projects.get(task['projectPHIDs'][0], project)
             except (KeyError, IndexError):
                 pass
 
-            this_issue_matches = False
+            this_task_matches = False
 
             if self.shown_user_phids is None and self.shown_project_phids is None:
-                this_issue_matches = True
+                this_task_matches = True
 
             if self.shown_user_phids is not None:
                 # Checking whether authorPHID, ccPHIDs, ownerPHID
                 # are intersecting with self.shown_user_phids
-                issue_relevant_to = set(issue['ccPHIDs'] + [issue['ownerPHID'], issue['authorPHID']])
-                if len(issue_relevant_to.intersection(self.shown_user_phids)) > 0:
-                    this_issue_matches = True
+                task_relevant_to = set(task['ccPHIDs'] + [task['ownerPHID'], task['authorPHID']])
+                if len(task_relevant_to.intersection(self.shown_user_phids)) > 0:
+                    this_task_matches = True
 
             if self.shown_project_phids is not None:
                 # Checking whether projectPHIDs
                 # is intersecting with self.shown_project_phids
-                issue_relevant_to = set(issue['projectPHIDs'])
-                if len(issue_relevant_to.intersection(self.shown_project_phids)) > 0:
-                    this_issue_matches = True
+                task_relevant_to = set(task['projectPHIDs'])
+                if len(task_relevant_to.intersection(self.shown_project_phids)) > 0:
+                    this_task_matches = True
 
-            if not this_issue_matches:
+            if not this_task_matches:
                 continue
 
             extra = {
@@ -155,10 +159,14 @@ class PhabricatorService(IssueService):
 
             yield self.get_issue_for_record(issue, extra)
 
+    def revisions(self):
+        # TODO -- get a list of these from the api
+        projects = {}
+
         try:
             diffs = self.api.differential.query(status='status-open')
         except phabricator.APIError as err:
-            log.warn("Could not read reviews: %s" % err)
+            log.warn("Could not read revisions from Differential: %s" % err)
             return
 
         diffs = list(diffs)
@@ -207,3 +215,9 @@ class PhabricatorService(IssueService):
                 #'annotations': self.annotations(phid, issue)
             }
             yield self.get_issue_for_record(diff, extra)
+
+    def issues(self):
+        for issue in self.tasks():
+            yield issue
+        for issue in self.revisions():
+            yield issue
