@@ -4,6 +4,8 @@ Phabricator
 You can import Maniphest tasks from your Phabricator instance using
 the ``phabricator`` service name.
 
+This service supports both Maniphest (Tasks) and Differential (Revision).
+
 Additional Requirements
 -----------------------
 
@@ -35,6 +37,9 @@ configuration options described in :ref:`common_configuration_options`.
 Service Features
 ----------------
 
+Filtering by User and Project
+.............................
+
 If you have dozens of users and projects, you might want to
 pull the tasks and code review requests only for the specific ones.
 
@@ -63,6 +68,9 @@ you can find it out by querying Phabricator Conduit
 the methods which return the needed info are ``user.query``, ``project.query``
 and ``repository.query`` respectively.
 
+Selecting a Phabricator Host
+............................
+
 If your ``~/.arcrc`` includes credentials for multiple Phabricator instances,
 it is undefined which one will be used. To make it explicit, you can use::
 
@@ -74,14 +82,16 @@ in ``~/.arcrc``, which may include ``/api/`` besides your hostname.
 Provided UDA Fields
 -------------------
 
-+----------------------+----------------------+----------------------+
-| Field Name           | Description          | Type                 |
-+======================+======================+======================+
-| ``phabricatorid``    | Object               | Text (string)        |
-+----------------------+----------------------+----------------------+
-| ``phabricatortitle`` | Title                | Text (string)        |
-+----------------------+----------------------+----------------------+
-| ``phabricatortype``  | Type                 | Text (string)        |
-+----------------------+----------------------+----------------------+
-| ``phabricatorurl``   | URL                  | Text (string)        |
-+----------------------+----------------------+----------------------+
++----------------------+--------------------------+----------------------+
+| Field Name           | Description              | Type                 |
++======================+==========================+======================+
+| ``phabricatorid``    | Object                   | Text (string)        |
++----------------------+--------------------------+----------------------+
+| ``phabricatortitle`` | Title                    | Text (string)        |
++----------------------+--------------------------+----------------------+
+| ``phabricatortype``  | Type (``issue`` for      | Text (string)        |
+|                      | Tasks, ``pull_request``  |                      |
+|                      | for Revisions)           |                      |
++----------------------+--------------------------+----------------------+
+| ``phabricatorurl``   | URL                      | Text (string)        |
++----------------------+--------------------------+----------------------+
