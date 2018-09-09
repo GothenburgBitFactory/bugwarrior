@@ -94,9 +94,6 @@ class PhabricatorService(IssueService):
             self.config.get("project_phids", None, aslist))
 
     def tasks(self):
-        # TODO -- get a list of these from the api
-        projects = {}
-
         # If self.shown_user_phids or self.shown_project_phids is set, retrict API calls to user_phids or project_phids
         # to avoid time out with Phabricator installations with huge userbase
         try:
@@ -124,10 +121,6 @@ class PhabricatorService(IssueService):
         for phid, task in tasks:
 
             project = self.target  # a sensible default
-            try:
-                project = projects.get(task['projectPHIDs'][0], project)
-            except (KeyError, IndexError):
-                pass
 
             this_task_matches = False
 
@@ -160,9 +153,6 @@ class PhabricatorService(IssueService):
             yield self.get_issue_for_record(issue, extra)
 
     def revisions(self):
-        # TODO -- get a list of these from the api
-        projects = {}
-
         try:
             diffs = self.api.differential.query(status='status-open')
         except phabricator.APIError as err:
@@ -176,10 +166,6 @@ class PhabricatorService(IssueService):
         for diff in diffs:
 
             project = self.target  # a sensible default
-            try:
-                project = projects.get(diff['projectPHIDs'][0], project)
-            except (KeyError, IndexError):
-                pass
 
             this_diff_matches = False
 
