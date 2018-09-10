@@ -318,6 +318,12 @@ class GitlabService(IssueService, ServiceClient):
         # fallback if no filter is set
         is_included = True
 
+        if self.include_repos:	
+            if repo['path_with_namespace'] in self.include_repos:	
+                return True	
+            else:	
+                is_included = False
+
         if self.include_regex:
             if self.include_regex.match(repo['path_with_namespace']):
                 return True
@@ -433,7 +439,7 @@ class GitlabService(IssueService, ServiceClient):
         tmpl = '{scheme}://{host}/api/v4/projects'
 
         all_repos = []
-        if self.include_repos:
+        if self.include_repos and not self.include_regex:
             for repo in self.include_repos:
                 indiv_tmpl = tmpl + '/' + quote(repo, '')
                 item = self._fetch(indiv_tmpl)
@@ -442,8 +448,7 @@ class GitlabService(IssueService, ServiceClient):
 
                 all_repos += [ item ]
 
-        if (self.include_regex is not None
-            or not self.include_repos):
+        else:
             all_repos = self._fetch_paged(tmpl)
 
         repos = list(filter(self.filter_repos, all_repos))
