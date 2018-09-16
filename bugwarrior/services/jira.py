@@ -133,7 +133,7 @@ class JiraIssue(Issue):
 
     def get_due(self):
         sprints = self.__get_sprints()
-        for sprint in sprints:
+        for sprint in filter(lambda e: e.get('state') != 'CLOSED', sprints):
             endDate = sprint['endDate']
             return '' if endDate == '<null>' else self.parse_date(endDate)
 
