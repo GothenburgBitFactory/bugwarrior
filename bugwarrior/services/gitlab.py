@@ -318,10 +318,10 @@ class GitlabService(IssueService, ServiceClient):
         # fallback if no filter is set
         is_included = True
 
-        if self.include_repos:	
-            if repo['path_with_namespace'] in self.include_repos:	
-                return True	
-            else:	
+        if self.include_repos:
+            if repo['path_with_namespace'] in self.include_repos:
+                return True
+            else:
                 is_included = False
 
         if self.include_regex:
