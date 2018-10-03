@@ -436,7 +436,7 @@ class GitlabService(IssueService, ServiceClient):
         return include_todo
 
     def issues(self):
-        tmpl = '{scheme}://{host}/api/v4/projects'
+        tmpl = '{scheme}://{host}/api/v4/projects?owned=true&membership=true&simple=true'
 
         all_repos = []
         if self.include_repos and not self.include_regex:
