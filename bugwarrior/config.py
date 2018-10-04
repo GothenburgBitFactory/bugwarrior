@@ -210,12 +210,26 @@ def get_config_path():
     return paths[0]
 
 
+def fix_logging_path(config, main_section):
+    """
+    Expand environment variables and user home (~) in the log.file and return
+    as relative path.
+    """
+    log_file = config.get(main_section, 'log.file')
+    if log_file:
+        log_file = os.path.expanduser(os.path.expandvars(log_file))
+        if os.path.isabs(log_file):
+            log_file = os.path.relpath(log_file)
+    return log_file
+
+
 def load_config(main_section, interactive=False):
     config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None}, allow_no_value=True)
     path = get_config_path()
     config.readfp(codecs.open(path, "r", "utf-8",))
     config.interactive = interactive
     config.data = BugwarriorData(get_data_path(config, main_section))
+    config.set(main_section, 'log.file', fix_logging_path(config, main_section))
     validate_config(config, main_section)
     return config
 

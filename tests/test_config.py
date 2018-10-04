@@ -178,3 +178,48 @@ class TestServiceConfig(TestCase):
             self.service_config.get('somebool', to_type=config.asbool),
             True
         )
+
+
+class TestLoggingPath(TestCase):
+    def setUp(self):
+        self.config = config.BugwarriorConfigParser(allow_no_value=True)
+        self.config.add_section('general')
+        self.config.set('general', 'log.level', 'INFO')
+        self.config.set('general', 'log.file', None)
+        self.dir = os.getcwd()
+        os.chdir(os.path.expanduser('~'))
+
+    def test_log_stdout(self):
+        self.assertIsNone(config.fix_logging_path(self.config, 'general'))
+
+    def test_log_relative_path(self):
+        self.config.set('general', 'log.file', 'bugwarrior.log')
+        self.assertEqual(
+            config.fix_logging_path(self.config, 'general'),
+            'bugwarrior.log',
+        )
+
+    def test_log_absolute_path(self):
+        filename = os.path.join(os.path.expandvars('$HOME'), 'bugwarrior.log')
+        self.config.set('general', 'log.file', filename)
+        self.assertEqual(
+            config.fix_logging_path(self.config, 'general'),
+            'bugwarrior.log',
+        )
+
+    def test_log_userhome(self):
+        self.config.set('general', 'log.file', '~/bugwarrior.log')
+        self.assertEqual(
+            config.fix_logging_path(self.config, 'general'),
+            'bugwarrior.log',
+        )
+
+    def test_log_envvar(self):
+        self.config.set('general', 'log.file', '$HOME/bugwarrior.log')
+        self.assertEqual(
+            config.fix_logging_path(self.config, 'general'),
+            'bugwarrior.log',
+        )
+
+    def tearDown(self):
+        os.chdir(self.dir)
