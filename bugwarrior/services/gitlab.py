@@ -436,12 +436,12 @@ class GitlabService(IssueService, ServiceClient):
         return include_todo
 
     def issues(self):
-        tmpl = '{scheme}://{host}/api/v4/projects?owned=true&membership=true&simple=true'
+        tmpl = '{scheme}://{host}/api/v4/projects'
 
         all_repos = []
         if self.include_repos and not self.include_regex:
             for repo in self.include_repos:
-                indiv_tmpl = tmpl + '/' + quote(repo, '')
+                indiv_tmpl = tmpl + '/' + quote(repo, '') + '?simple=true'
                 item = self._fetch(indiv_tmpl)
                 if not item:
                     break
@@ -449,7 +449,7 @@ class GitlabService(IssueService, ServiceClient):
                 all_repos += [ item ]
 
         else:
-            all_repos = self._fetch_paged(tmpl)
+            all_repos = self._fetch_paged(tmpl + '?owned=true&membership=true&simple=true')
 
         repos = list(filter(self.filter_repos, all_repos))
 
