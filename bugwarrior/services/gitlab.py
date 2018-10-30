@@ -244,6 +244,8 @@ class GitlabService(IssueService, ServiceClient):
             'verify_ssl', default=True, to_type=asbool
         )
 
+        self.membership = self.config.get('membership', False)
+
         self.exclude_repos = self.config.get('exclude_repos', [], aslist)
         self.include_repos = self.config.get('include_repos', [], aslist)
         self.exclude_regex = self.config.get('exclude_regex', None)
@@ -450,6 +452,8 @@ class GitlabService(IssueService, ServiceClient):
 
         else:
             querystring = { 'simple': True }
+            if (self.membership):
+                querystring['membership'] = True
             all_repos = self._fetch_paged(tmpl + '?' + urlencode(querystring))
 
         repos = list(filter(self.filter_repos, all_repos))
