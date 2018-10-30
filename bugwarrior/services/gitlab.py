@@ -246,6 +246,8 @@ class GitlabService(IssueService, ServiceClient):
 
         self.membership = self.config.get('membership', False)
 
+        self.owned = self.config.get('owned', False)
+
         self.exclude_repos = self.config.get('exclude_repos', [], aslist)
         self.include_repos = self.config.get('include_repos', [], aslist)
         self.exclude_regex = self.config.get('exclude_regex', None)
@@ -454,6 +456,8 @@ class GitlabService(IssueService, ServiceClient):
             querystring = { 'simple': True }
             if (self.membership):
                 querystring['membership'] = True
+            if (self.owned):
+                querystring['owned'] = True
             all_repos = self._fetch_paged(tmpl + '?' + urlencode(querystring))
 
         repos = list(filter(self.filter_repos, all_repos))
