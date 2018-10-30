@@ -5,9 +5,9 @@ from builtins import map
 from builtins import filter
 
 try:
-    from urllib import quote  # Python 2.X
+    from urllib import quote, urlencode  # Python 2.X
 except ImportError:
-    from urllib.parse import quote  # Python 3+
+    from urllib.parse import quote, urlencode  # Python 3+
 from configparser import NoOptionError
 import re
 import requests
@@ -446,10 +446,11 @@ class GitlabService(IssueService, ServiceClient):
                 if not item:
                     break
 
-                all_repos += [ item ]
+                all_repos.append(item)
 
         else:
-            all_repos = self._fetch_paged(tmpl + '?owned=true&membership=true&simple=true')
+            querystring = { 'simple': True }
+            all_repos = self._fetch_paged(tmpl + '?' + urlencode(querystring))
 
         repos = list(filter(self.filter_repos, all_repos))
 
