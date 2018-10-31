@@ -201,7 +201,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         self.add_response(
-            'https://gitlab.example.com/api/v4/projects?per_page=100&page=1',
+            'https://gitlab.example.com/api/v4/projects?simple=True&per_page=100&page=1',
             json=[{
                 'id': 1,
                 'path': 'arbitrary_username/project',
