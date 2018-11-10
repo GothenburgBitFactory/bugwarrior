@@ -8,7 +8,7 @@ try:
     from urllib import quote  # Python 2.X
 except ImportError:
     from urllib.parse import quote  # Python 3+
-from configparser import NoOptionError
+from six.moves.configparser import NoOptionError
 import re
 import requests
 import six

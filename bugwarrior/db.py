@@ -4,7 +4,7 @@ standard_library.install_aliases()
 from builtins import zip
 from builtins import object
 
-from configparser import NoOptionError, NoSectionError
+from six.moves.configparser import NoOptionError, NoSectionError
 import os
 import re
 import subprocess

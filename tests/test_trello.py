@@ -3,7 +3,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import next
 
-import configparser
+from six.moves import configparser
 from mock import patch
 import responses
 

@@ -1,7 +1,7 @@
 from builtins import next
 import datetime
 from unittest import TestCase
-from configparser import RawConfigParser
+from six.moves.configparser import RawConfigParser
 
 import pytz
 import responses

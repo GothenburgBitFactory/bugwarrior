@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import os
-import configparser
+from six.moves import configparser
 from unittest import TestCase
 
 import bugwarrior.config as config

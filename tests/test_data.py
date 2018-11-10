@@ -1,6 +1,6 @@
 import os
 import json
-import configparser
+from six.moves import configparser
 
 from bugwarrior import data
 
