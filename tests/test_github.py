@@ -15,6 +15,9 @@ from .base import ServiceTest, AbstractServiceTest
 ARBITRARY_CREATED = (
     datetime.datetime.utcnow() - datetime.timedelta(hours=1)
 ).replace(tzinfo=pytz.UTC, microsecond=0)
+ARBITRARY_CLOSED = (
+    datetime.datetime.utcnow() - datetime.timedelta(hours=2)
+).replace(tzinfo=pytz.UTC, microsecond=0)
 ARBITRARY_UPDATED = datetime.datetime.utcnow().replace(
     tzinfo=pytz.UTC, microsecond=0)
 ARBITRARY_ISSUE = {
@@ -27,8 +30,10 @@ ARBITRARY_ISSUE = {
     'milestone': {'title': 'alpha'},
     'labels': [{'name': 'bugfix'}],
     'created_at': ARBITRARY_CREATED.isoformat(),
+    'closed_at': ARBITRARY_CLOSED.isoformat(),
     'updated_at': ARBITRARY_UPDATED.isoformat(),
     'repo': 'arbitrary_username/arbitrary_repo',
+    'state': 'open'
 }
 ARBITRARY_EXTRA = {
     'project': 'one',
@@ -71,6 +76,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'annotations': [],
             'tags': ['bugfix'],
             'entry': ARBITRARY_CREATED,
+            'end': ARBITRARY_CLOSED,
             issue.URL: ARBITRARY_ISSUE['html_url'],
             issue.REPO: ARBITRARY_ISSUE['repo'],
             issue.TYPE: ARBITRARY_EXTRA['type'],
@@ -78,10 +84,12 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             issue.NUMBER: ARBITRARY_ISSUE['number'],
             issue.UPDATED_AT: ARBITRARY_UPDATED,
             issue.CREATED_AT: ARBITRARY_CREATED,
+            issue.CLOSED_AT: ARBITRARY_CLOSED,
             issue.BODY: ARBITRARY_ISSUE['body'],
             issue.MILESTONE: ARBITRARY_ISSUE['milestone']['title'],
             issue.USER: ARBITRARY_ISSUE['user']['login'],
             issue.NAMESPACE: 'arbitrary_username',
+            issue.STATE: 'open',
         }
         actual_output = issue.to_taskwarrior()
 
@@ -124,8 +132,10 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'annotations': [u'@arbitrary_login - Arbitrary comment.'],
             'description': u'(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'entry': ARBITRARY_CREATED,
+            'end': ARBITRARY_CLOSED,
             'githubbody': u'Something',
             'githubcreatedon': ARBITRARY_CREATED,
+            'githubclosedon': ARBITRARY_CLOSED,
             'githubmilestone': u'alpha',
             'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
@@ -135,6 +145,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'githubupdatedat': ARBITRARY_UPDATED,
             'githuburl': u'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'githubuser': u'arbitrary_login',
+            'githubstate': u'open',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': []}
@@ -179,8 +190,10 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
             'annotations': [u'@arbitrary_login - Arbitrary comment.'],
             'description': u'(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'entry': ARBITRARY_CREATED,
+            'end': ARBITRARY_CLOSED,
             'githubbody': u'Something',
             'githubcreatedon': ARBITRARY_CREATED,
+            'githubclosedon': ARBITRARY_CLOSED,
             'githubmilestone': u'alpha',
             'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
@@ -190,6 +203,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
             'githubupdatedat': ARBITRARY_UPDATED,
             'githuburl': u'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'githubuser': u'arbitrary_login',
+            'githubstate': u'open',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': []}

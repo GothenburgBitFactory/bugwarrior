@@ -147,6 +147,8 @@ class TestUDAs(ConfigTest):
         self.assertEqual(udas, [
             u'uda.githubbody.label=Github Body',
             u'uda.githubbody.type=string',
+            u'uda.githubclosedon.label=GitHub Closed',
+            u'uda.githubclosedon.type=date',
             u'uda.githubcreatedon.label=Github Created',
             u'uda.githubcreatedon.type=date',
             u'uda.githubmilestone.label=Github Milestone',
@@ -157,6 +159,8 @@ class TestUDAs(ConfigTest):
             u'uda.githubnumber.type=numeric',
             u'uda.githubrepo.label=Github Repo Slug',
             u'uda.githubrepo.type=string',
+            u'uda.githubstate.label=GitHub State',
+            u'uda.githubstate.type=string',
             u'uda.githubtitle.label=Github Title',
             u'uda.githubtitle.type=string',
             u'uda.githubtype.label=Github Type',

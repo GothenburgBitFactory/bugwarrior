@@ -208,9 +208,9 @@ class GithubIssue(Issue):
         else:
             priority = self.origin['default_priority']
 
-        created = self.parse_date(self.record['created_at'])
-        updated = self.parse_date(self.record['updated_at'])
-        closed = self.parse_date(self.record['closed_at'])
+        created = self.parse_date(self.record.get('created_at'))
+        updated = self.parse_date(self.record.get('updated_at'))
+        closed = self.parse_date(self.record.get('closed_at'))
 
         return {
             'project': self.extra['project'],
@@ -232,7 +232,7 @@ class GithubIssue(Issue):
             self.UPDATED_AT: updated,
             self.CLOSED_AT: closed,
             self.NAMESPACE: self.extra['namespace'],
-            self.STATE: self.record['state']
+            self.STATE: self.record.get('state', '')
         }
 
     def get_tags(self):
