@@ -385,7 +385,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             send_notification(issue, 'Created', conf)
 
         try:
-            tw.task_add(**issue)
+            new_task = tw.task_add(**issue)
+            if 'end' in issue and issue['end']:
+                tw.task_done(uuid=new_task['uuid'])
         except TaskwarriorError as e:
             log.exception("Unable to add task: %s" % e.stderr)
 
@@ -410,7 +412,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             continue
 
         try:
-            tw.task_update(issue)
+            _, updated_task = tw.task_update(issue)
+            if 'end' in issue and issue['end']:
+                tw.task_done(uuid=updated_task['uuid'])
         except TaskwarriorError as e:
             log.exception("Unable to modify task: %s" % e.stderr)
 
