@@ -5,6 +5,8 @@ from builtins import object
 import copy
 import multiprocessing
 import time
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from pkg_resources import iter_entry_points
 
@@ -22,6 +24,7 @@ from bugwarrior.db import MARKUP, URLShortener
 import logging
 log = logging.getLogger(__name__)
 
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Sentinels for process completion status
 SERVICE_FINISHED_OK = 0
