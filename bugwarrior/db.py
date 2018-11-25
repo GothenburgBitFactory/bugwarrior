@@ -376,9 +376,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
     notreally = ' (not really)' if dry_run else ''
     # Add new issues
-    log.info("Adding %i tasks", len(issue_updates['new']))
+    log.info(" Adding %i tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
-        log.info(u"Adding task %s%s", issue['description'], notreally)
+        log.info(u" Adding task %s%s", issue['description'], notreally)
         if dry_run:
             continue
         if notify:
@@ -391,9 +391,10 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         except TaskwarriorError as e:
             log.exception("Unable to add task: %s" % e.stderr)
 
-    log.info("Updating %i tasks", len(issue_updates['changed']))
+    log.info(" Updating %i tasks", len(issue_updates['changed']))
+
     for issue in issue_updates['changed']:
-        changes = '; '.join([
+        changes = ';\n    '.join([
             '{field}: {f} -> {t}'.format(
                 field=field,
                 f=repr(ch[0]),
@@ -402,11 +403,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             for field, ch in six.iteritems(issue.get_changes(keep=True))
         ])
         log.info(
-            "Updating task %s, %s; %s%s",
-            six.text_type(issue['uuid']),
+            " Updating task %s, %s;%s\n    %s",
+            six.text_type(issue['id']),
             issue['description'],
-            changes,
-            notreally
+            notreally,
+            changes
         )
         if dry_run:
             continue
@@ -418,11 +419,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         except TaskwarriorError as e:
             log.exception("Unable to modify task: %s" % e.stderr)
 
-    log.info("Closing %i tasks", len(issue_updates['closed']))
+    log.info(" Closing %i tasks", len(issue_updates['closed']))
     for issue in issue_updates['closed']:
         _, task_info = tw.get_task(uuid=issue)
         log.info(
-            "Completing task %s %s%s",
+            " Completing task %s %s%s",
             issue,
             task_info.get('description', ''),
             notreally
