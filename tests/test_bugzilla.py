@@ -2,7 +2,7 @@ from builtins import next
 from builtins import object
 import mock
 from collections import namedtuple
-import configparser
+from six.moves import configparser
 
 from bugwarrior.services.bz import BugzillaService
 

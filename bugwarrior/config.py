@@ -1,7 +1,7 @@
 from future import standard_library
 standard_library.install_aliases()
 import codecs
-from configparser import ConfigParser
+from six.moves import configparser
 import os
 import subprocess
 import sys
@@ -254,7 +254,7 @@ def get_data_path(config, main_section):
 
 
 # ConfigParser is not a new-style class, so inherit from object to fix super().
-class BugwarriorConfigParser(ConfigParser, object):
+class BugwarriorConfigParser(configparser.ConfigParser, object):
     def getint(self, section, option):
         """ Accepts both integers and empty values. """
         try:

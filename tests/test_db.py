@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import configparser as ConfigParser
+from six.moves import configparser
 
 import taskw.task
 from bugwarrior import db
@@ -55,7 +55,7 @@ class TestSynchronize(ConfigTest):
 
             return tasks
 
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.add_section('general')
         config.set('general', 'targets', 'my_service')
         config.set('general', 'static_fields', 'project, priority')
@@ -137,7 +137,7 @@ class TestSynchronize(ConfigTest):
 
 class TestUDAs(ConfigTest):
     def test_udas(self):
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.add_section('general')
         config.set('general', 'targets', 'my_service')
         config.add_section('my_service')
