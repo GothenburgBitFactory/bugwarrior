@@ -16,7 +16,7 @@ ARBITRARY_CREATED = (
     datetime.datetime.utcnow() - datetime.timedelta(hours=1)
 ).replace(tzinfo=pytz.UTC, microsecond=0)
 ARBITRARY_CLOSED = (
-    datetime.datetime.utcnow() - datetime.timedelta(hours=2)
+    datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
 ).replace(tzinfo=pytz.UTC, microsecond=0)
 ARBITRARY_UPDATED = datetime.datetime.utcnow().replace(
     tzinfo=pytz.UTC, microsecond=0)
@@ -33,7 +33,7 @@ ARBITRARY_ISSUE = {
     'closed_at': ARBITRARY_CLOSED.isoformat(),
     'updated_at': ARBITRARY_UPDATED.isoformat(),
     'repo': 'arbitrary_username/arbitrary_repo',
-    'state': 'open'
+    'state': 'closed'
 }
 ARBITRARY_EXTRA = {
     'project': 'one',
@@ -89,7 +89,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             issue.MILESTONE: ARBITRARY_ISSUE['milestone']['title'],
             issue.USER: ARBITRARY_ISSUE['user']['login'],
             issue.NAMESPACE: 'arbitrary_username',
-            issue.STATE: 'open',
+            issue.STATE: 'closed',
         }
         actual_output = issue.to_taskwarrior()
 
@@ -145,7 +145,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'githubupdatedat': ARBITRARY_UPDATED,
             'githuburl': u'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'githubuser': u'arbitrary_login',
-            'githubstate': u'open',
+            'githubstate': u'closed',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': []}
@@ -203,7 +203,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
             'githubupdatedat': ARBITRARY_UPDATED,
             'githuburl': u'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'githubuser': u'arbitrary_login',
-            'githubstate': u'open',
+            'githubstate': u'closed',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': []}
