@@ -125,6 +125,7 @@ class GithubIssue(Issue):
     BODY = 'githubbody'
     CREATED_AT = 'githubcreatedon'
     UPDATED_AT = 'githubupdatedat'
+    CLOSED_AT = 'githubclosedon'
     MILESTONE = 'githubmilestone'
     URL = 'githuburl'
     REPO = 'githubrepo'
@@ -132,6 +133,7 @@ class GithubIssue(Issue):
     NUMBER = 'githubnumber'
     USER = 'githubuser'
     NAMESPACE = 'githubnamespace'
+    STATE = 'githubstate'
 
     UDAS = {
         TITLE: {
@@ -149,6 +151,10 @@ class GithubIssue(Issue):
         UPDATED_AT: {
             'type': 'date',
             'label': 'Github Updated',
+        },
+        CLOSED_AT: {
+            'type': 'date',
+            'label': 'GitHub Closed',
         },
         MILESTONE: {
             'type': 'string',
@@ -178,6 +184,10 @@ class GithubIssue(Issue):
             'type': 'string',
             'label': 'Github Namespace',
         },
+        STATE: {
+            'type': 'string',
+            'label': 'GitHub State',
+        }
     }
     UNIQUE_KEY = (URL, TYPE,)
 
@@ -198,9 +208,9 @@ class GithubIssue(Issue):
         else:
             priority = self.origin['default_priority']
 
-        created = self.record['created_at']
-        if created:
-            created = self.parse_date(self.record['created_at'])
+        created = self.parse_date(self.record.get('created_at'))
+        updated = self.parse_date(self.record.get('updated_at'))
+        closed = self.parse_date(self.record.get('closed_at'))
 
         return {
             'project': self.extra['project'],
@@ -208,6 +218,7 @@ class GithubIssue(Issue):
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
             'entry': created,
+            'end': closed,
 
             self.URL: self.record['html_url'],
             self.REPO: self.record['repo'],
@@ -218,8 +229,10 @@ class GithubIssue(Issue):
             self.MILESTONE: milestone,
             self.NUMBER: self.record['number'],
             self.CREATED_AT: created,
-            self.UPDATED_AT: self.parse_date(self.record['updated_at']),
+            self.UPDATED_AT: updated,
+            self.CLOSED_AT: closed,
             self.NAMESPACE: self.extra['namespace'],
+            self.STATE: self.record.get('state', '')
         }
 
     def get_tags(self):
