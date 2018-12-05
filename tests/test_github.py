@@ -1,4 +1,5 @@
 from builtins import next
+from copy import deepcopy
 import datetime
 from unittest import TestCase
 from six.moves.configparser import RawConfigParser
@@ -35,6 +36,11 @@ ARBITRARY_ISSUE = {
     'repo': 'arbitrary_username/arbitrary_repo',
     'state': 'closed'
 }
+ARBITRARY_CLOSED_ISSUE = ARBITRARY_ISSUE
+ARBITRARY_OPEN_ISSUE = deepcopy(ARBITRARY_ISSUE)
+ARBITRARY_OPEN_ISSUE['state'] = 'open'
+del ARBITRARY_OPEN_ISSUE['closed_at']
+
 ARBITRARY_EXTRA = {
     'project': 'one',
     'type': 'issue',
@@ -112,12 +118,12 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             }])
 
         self.add_response(
-            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues?per_page=100',
-            json=[ARBITRARY_ISSUE])
+            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues?state=open&per_page=100',
+            json=[ARBITRARY_OPEN_ISSUE])
 
         self.add_response(
-            'https://api.github.com/user/issues?per_page=100',
-            json=[ARBITRARY_ISSUE])
+            'https://api.github.com/user/issues?state=open&per_page=100',
+            json=[ARBITRARY_OPEN_ISSUE])
 
         self.add_response(
             'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',
@@ -132,10 +138,10 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'annotations': [u'@arbitrary_login - Arbitrary comment.'],
             'description': u'(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'entry': ARBITRARY_CREATED,
-            'end': ARBITRARY_CLOSED,
+            'end': None,
             'githubbody': u'Something',
             'githubcreatedon': ARBITRARY_CREATED,
-            'githubclosedon': ARBITRARY_CLOSED,
+            'githubclosedon': None,
             'githubmilestone': u'alpha',
             'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
@@ -145,7 +151,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'githubupdatedat': ARBITRARY_UPDATED,
             'githuburl': u'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'githubuser': u'arbitrary_login',
-            'githubstate': u'closed',
+            'githubstate': u'open',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': []}
