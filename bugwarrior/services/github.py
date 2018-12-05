@@ -43,20 +43,23 @@ class GithubClient(ServiceClient):
             "/search/issues?q={query}&per_page=100", query=query)
         return self._getter(url, subkey='items')
 
-    def get_issues(self, username, repo):
+    def get_issues(self, username, repo, state='open'):
         url = self._api_url(
-            "/repos/{username}/{repo}/issues?per_page=100",
-            username=username, repo=repo)
+            "/repos/{username}/{repo}/issues?state={state}&per_page=100",
+            username=username, repo=repo, state=state)
         return self._getter(url)
 
-    def get_directly_assigned_issues(self):
+    def get_directly_assigned_issues(self, state='open'):
         """ Returns all issues assigned to authenticated user.
 
         This will return all issues assigned to the authenticated user
         regardless of whether the user owns the repositories in which the
         issues exist.
         """
-        url = self._api_url("/user/issues?per_page=100")
+        url = self._api_url(
+            "/user/issues?state={state}&per_page=100",
+            state=state
+        )
         return self._getter(url)
 
     def get_comments(self, username, repo, number):
@@ -311,6 +314,12 @@ class GithubService(IssueService):
             to_type=six.text_type
         )
 
+        self.issue_state = {True: 'all', False: 'open'}.get(
+            self.config.get(
+                'include_closed_issues', False, asbool
+            )
+        )
+
     @staticmethod
     def get_keyring_service(service_config):
         login = service_config.get('login')
@@ -328,7 +337,7 @@ class GithubService(IssueService):
     def get_owned_repo_issues(self, tag):
         """ Grab all the issues """
         issues = {}
-        for issue in self.client.get_issues(*tag.split('/')):
+        for issue in self.client.get_issues(*tag.split('/'), state=self.issue_state):
             issues[issue['url']] = (tag, issue)
         return issues
 
@@ -347,7 +356,7 @@ class GithubService(IssueService):
 
     def get_directly_assigned_issues(self):
         issues = {}
-        for issue in self.client.get_directly_assigned_issues():
+        for issue in self.client.get_directly_assigned_issues(state=self.issue_state):
             repos = self.get_repository_from_issue(issue)
             issues[issue['url']] = (repos, issue)
         return issues
