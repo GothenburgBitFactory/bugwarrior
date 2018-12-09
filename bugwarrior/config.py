@@ -150,7 +150,8 @@ def validate_config(config, main_section):
     spammers = [
         'bugzilla.base',
         'bugzilla.bug',
-        'requests.packages.urllib3.connectionpool',
+        'googleapiclient.discovery',
+        'urllib3.connectionpool',
     ]
     for spammer in spammers:
         logging.getLogger(spammer).setLevel(logging.WARN)
