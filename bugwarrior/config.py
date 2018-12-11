@@ -151,6 +151,7 @@ def validate_config(config, main_section):
         'bugzilla.base',
         'bugzilla.bug',
         'googleapiclient.discovery',
+        'oauth2client',
         'urllib3.connectionpool',
     ]
     for spammer in spammers:
