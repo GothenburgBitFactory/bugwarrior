@@ -68,3 +68,4 @@ Contributors
 - Iain R. Learmonth (contributed support for the Debian BTS and maintains the
   Debian package)
 - BinaryBabel (contributed support for YouTrack)
+- Matthew Cengia (contributed extra support for Trello)

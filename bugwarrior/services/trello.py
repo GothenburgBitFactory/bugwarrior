@@ -59,6 +59,7 @@ class TrelloIssue(Issue):
         twdict = {
             'project': self.extra['boardname'],
             'priority': 'M',
+            'due': self.parse_date(self.record['due']),
             self.NAME: self.record['name'],
             self.CARDID: self.record['id'],
             self.BOARD: self.extra['boardname'],
@@ -161,7 +162,7 @@ class TrelloService(IssueService, ServiceClient):
         """ Returns an iterator for the cards in a given list, filtered
         according to configuration values of trello.only_if_assigned and
         trello.also_unassigned """
-        params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels'}
+        params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels,due'}
         member = self.config.get('only_if_assigned', None)
         unassigned = self.config.get('also_unassigned', False, asbool)
         if member is not None:
