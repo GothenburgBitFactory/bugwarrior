@@ -82,6 +82,11 @@ def get_service_password(service, username, oracle=None, interactive=False):
                                             oracle, interactive=True)
             if password:
                 keyring.set_password(service, username, password)
+        elif not interactive and password is None:
+            log.error(
+                'Unable to retrieve password from keyring. '
+                'Re-run in interactive mode to set a password'
+            )
     elif interactive and oracle == "@oracle:ask_password":
         prompt = "%s password: " % service
         password = getpass.getpass(prompt)
