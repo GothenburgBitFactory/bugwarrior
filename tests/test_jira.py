@@ -1,10 +1,9 @@
 from builtins import next
 from builtins import object
-from collections import namedtuple
-from dateutil.tz import tzutc
 
 import mock
-from dateutil.tz import tzoffset, datetime
+from collections import namedtuple
+from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
 from bugwarrior.services.jira import JiraService
@@ -40,7 +39,9 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'summary': arbitrary_summary,
             'timeestimate': arbitrary_estimation,
             'created': '2016-06-06T06:07:08.123-0700',
-            'fixVersions': [{'name': '1.2.3'}]
+            'fixVersions': [{'name': '1.2.3'}],
+            'issuetype': {'name': 'Epic'},
+            'status': {'name': 'Open'}
         },
         'key': '%s-%s' % (arbitrary_project, arbitrary_id, ),
     }
@@ -84,6 +85,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'tags': [],
             'entry': datetime.datetime(2016, 6, 6, 13, 7, 8, tzinfo=tzutc()),
             'jirafixversion': '1.2.3',
+            'jiraissuetype': 'Epic',
+            'jirastatus': 'Open',
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: self.arbitrary_record['key'],
@@ -128,6 +131,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'tags': ['Sprint1'],
             'entry': datetime.datetime(2016, 6, 6, 13, 7, 8, tzinfo=tzutc()),
             'jirafixversion': '1.2.3',
+            'jiraissuetype': 'Epic',
+            'jirastatus': 'Open',
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: record_with_goal['key'],
@@ -157,6 +162,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraestimate': 1,
             'jirafixversion': '1.2.3',
             'jiraid': 'DONUT-10',
+            'jiraissuetype': 'Epic',
+            'jirastatus': 'Open',
             'jirasummary': 'lkjaldsfjaldf',
             'jiraurl': 'two/browse/DONUT-10',
             'priority': 'H',
@@ -167,6 +174,6 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
 
     def test_get_due(self):
         issue = self.service.get_issue_for_record(
-            self.arbitrary_record_with_due            
+            self.arbitrary_record_with_due
         )
         self.assertEqual(issue.get_due(), datetime.datetime(2016, 9, 23, 16, 8, tzinfo=tzutc()))
