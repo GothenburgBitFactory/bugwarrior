@@ -49,6 +49,17 @@ class GithubClient(ServiceClient):
             username=username, repo=repo)
         return self._getter(url)
 
+    def get_issue_from_path(self, issue_path):
+        """Get issue from issue_path."""
+        # TODO: test new scheme of issue_path
+        regex = r'(^[^/]+)(/)([^/]+)(/issues/[0-9]+)'
+        if not re.match(regex, issue_path):
+            log.error("issue path given in config is invalid")
+            raise ValueError
+        url_path = "/repos/" + issue_path
+        url = self._api_url(url_path)
+        return self._getter(url)
+
     def get_directly_assigned_issues(self):
         """ Returns all issues assigned to authenticated user.
 
@@ -97,7 +108,10 @@ class GithubClient(ServiceClient):
             if subkey is not None:
                 json_res = json_res[subkey]
 
-            results += json_res
+            if isinstance(json_res, dict):
+                return json_res
+            elif isinstance(json_res, list):
+                results += json_res
 
             link = self._link_field_to_dict(response.headers.get('link', None))
 
@@ -343,6 +357,15 @@ class GithubService(IssueService):
                 issues[url] = (repo, issue)
         return issues
 
+    def get_issue_from_path(self, issue_path):
+        """Return an issue from a path to issue."""
+        issue = self.client.get_issue_from_path(issue_path)
+        repo = self.get_repository_from_issue(issue)
+        url = "https://" + self.host + "/" + issue_path
+        return {
+            url: (repo, issue)
+        }
+
     def get_directly_assigned_issues(self):
         issues = {}
         for issue in self.client.get_directly_assigned_issues():
@@ -430,7 +453,10 @@ class GithubService(IssueService):
         issues = {}
         if self.query:
             issues.update(self.get_query(self.query))
-
+        arbitrary_issues = self.config.get('include_these_issues')
+        if arbitrary_issues:
+            for issue in arbitrary_issues.split(","):
+                issues.update(self.get_issue_from_path(issue.strip()))
         if self.config.get('include_user_repos', True, asbool):
             # Only query for all repos if an explicit
             # include_repos list is not specified.
