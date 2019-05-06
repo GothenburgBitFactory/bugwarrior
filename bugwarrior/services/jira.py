@@ -228,7 +228,9 @@ class JiraIssue(Issue):
             value = value['name']
         except (TypeError, ):
             value = str(value)
-        return self.PRIORITY_MAP.get(value, self.origin['default_priority'])
+        # priority.name format: "1 - Critical"
+        map_key = value.strip().split()[-1]
+        return self.PRIORITY_MAP.get(map_key, self.origin['default_priority'])
 
     def get_default_description(self):
         return self.build_default_description(
