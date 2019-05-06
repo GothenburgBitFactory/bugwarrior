@@ -30,7 +30,7 @@ class TestTrelloIssue(ServiceTest):
     def setUp(self):
         super(TestTrelloIssue, self).setUp()
         origin = dict(inline_links=True, description_length=31,
-                      import_labels_as_tags=True)
+                      import_labels_as_tags=True, default_priority='M')
         extra = {'boardname': 'Hyperspatial express route',
                  'listname': 'Something'}
         self.issue = TrelloIssue(self.JSON, origin, extra)
