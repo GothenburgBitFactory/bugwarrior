@@ -89,5 +89,6 @@ setup(name='bugwarrior',
       trello=bugwarrior.services.trello:TrelloService
       youtrack=bugwarrior.services.youtrack:YoutrackService
       gmail=bugwarrior.services.gmail:GmailService
+      teamworks_projects=bugwarrior.services.teamworks_projects:TeamworksService
       """,
       )
