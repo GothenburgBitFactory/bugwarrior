@@ -87,6 +87,20 @@ For example, you want to include only the repositories ``foo/node`` and
     gitlab.include_regex = foo/ep_.*
     gitlab.exclude_repos = foo/ep_example
 
+Filtering Membership
+^^^^^^^^^^^^^^^^^^^^
+
+If you want to filter repositories that you have a membership.
+
+    gitlab.membership = True
+
+Filtering Owned
+^^^^^^^^^^^^^^^^^^^^
+
+If you want to filter repositories that you own.
+
+    gitlab.owned = True
+    
 Import Labels as Tags
 +++++++++++++++++++++
 
