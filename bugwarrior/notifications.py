@@ -107,7 +107,8 @@ def send_notification(issue, op, conf):
             message = "Finished querying for new issues.\n%s" %\
                 issue['description']
         else:
-            message = "%s task: %s" % (op, issue['description'])
+            message = "%s task: %s" % (
+                op.encode("utf-8"), issue['description'].encode("utf-8"))
             metadata = _get_metadata(issue)
             if metadata is not None:
                 message += metadata
