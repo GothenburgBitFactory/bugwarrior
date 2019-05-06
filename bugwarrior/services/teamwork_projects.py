@@ -13,7 +13,7 @@ from bugwarrior.services import IssueService, Issue, ServiceClient
 import logging
 log = logging.getLogger(__name__)
 
-class TeamworksClient(ServiceClient):
+class TeamworkClient(ServiceClient):
 
     def __init__(self, host, token):
         self.host = host
@@ -30,50 +30,47 @@ class TeamworksClient(ServiceClient):
             response = requests.post(self.host + endpoint, auth=(self.token, ""), data=data)
         return self.json_response(response)
 
-class TeamworksIssue(Issue):
-    URL = 'teamworks_url'
-    TITLE = 'teamworks_title'
-    DESCRIPTION_LONG = 'teamworks_description_long'
-    PROJECT_ID = 'teamworks_id'
-    STATUS = 'teamworks_status'
+class TeamworkIssue(Issue):
+    URL = 'teamwork_url'
+    TITLE = 'teamwork_title'
+    DESCRIPTION_LONG = 'teamwork_description_long'
+    PROJECT_ID = 'teamwork_id'
+    STATUS = 'teamwork_status'
+    ID = 'teamwork_id'
 
     UDAS = {
         URL: {
             'type': 'string',
-            'label': 'Teamworks Url',
+            'label': 'Teamwork Url',
         },
         TITLE: {
             'type': 'string',
-            'label': 'Teamworks Title',
+            'label': 'Teamwork Title',
         },
         DESCRIPTION_LONG: {
             'type': 'string',
-            'label': 'Teamworks Description Long',
+            'label': 'Teamwork Description Long',
         },
         PROJECT_ID: {
             'type': 'string',
-            'label': 'Teamworks Project ID',
+            'label': 'Teamwork Project ID',
         },
         STATUS: {
             'type': 'string',
-            'label': 'Teamworks Status',
-        }
+            'label': 'Teamwork Status',
+        },
+        ID: {
+            'type': 'string',
+            'label': 'Teamwork Task ID',
+        },
     }
 
     UNIQUE_KEY = (URL, )
-    #TITLE = 'teamworkstitle'
-    #DESCRIPTION = 'teamworksdescription'
-    #CREATED_AT = 'teamworkscreatedon'
-    #UPDATED_AT = 'teamworksupdatedat'
-    #BODY = 'githubbody'
-    #CLOSED_AT = 'githubclosedon'
-    #MILESTONE = 'githubmilestone'
-    #REPO = 'githubrepo'
-    #TYPE = 'githubtype'
-    #NUMBER = 'githubnumber'
-    #USER = 'githubuser'
-    #NAMESPACE = 'githubnamespace'
-    #STATE = 'githubstate'
+    PRIORITY_MAP = {
+        "low": "L",
+        "medium": "M",
+        "high": "H"
+    }
 
     def get_owner(self, issue):
         if issue:
@@ -99,28 +96,47 @@ class TeamworksIssue(Issue):
     def to_taskwarrior(self):
         task_url = self.get_task_url()
         description = self.record.get("content", "")
+        parent_id = self.record["parentTaskId"]
+        status = self.record["status"]
+
+        start = self.parse_date(self.record.get('start-date'))
+        due = self.parse_date(self.record.get('due-date'))
         created = self.parse_date(self.record.get('created-on'))
+        modified = self.parse_date(self.record.get('last-changed-on'))
+
+        end = ""
+        if str(status) in ["reopened", "new"]:
+            status = "Open"
+        else:
+            end = modified
+            status = "Closed"
+
         return {
             'project': self.record["project-name"],
-            'priority': 'M',
+            'priority': self.get_priority(),
+            'start': start,
+            'due': due,
             'entry': created,
+            'end': end,
+            'modified': modified,
             'annotations': self.extra.get('annotations', []),
             self.URL: task_url,
             self.TITLE: self.record.get("content", ""),
             self.DESCRIPTION_LONG: self.record.get("description", ""),
             self.PROJECT_ID: self.record["project-id"],
-            self.STATUS: self.record["status"],
+            self.STATUS: status,
+            self.ID: self.record["id"],
         }
 
-class TeamworksService(IssueService):
-    ISSUE_CLASS = TeamworksIssue
-    CONFIG_PREFIX = 'teamworks_projects'
+class TeamworkService(IssueService):
+    ISSUE_CLASS = TeamworkIssue
+    CONFIG_PREFIX = 'teamwork_projects'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.host = self.config.get('host', '')
         self.token = self.config.get('token', '')
-        self.client = TeamworksClient(self.host, self.token)
+        self.client = TeamworkClient(self.host, self.token)
         user = self.client.authenticate()
         self.user_id = user["account"]["userId"]
         self.name = user["account"]["firstname"] + " " + user["account"]["lastname"]
@@ -146,7 +162,9 @@ class TeamworksService(IssueService):
         response = self.client.call_api("GET", "/tasks.json")#, data= { "responsible-party-ids": self.user_id })
         for issue in response["todo-items"]:
             # If folliwng comments changes
-            if issue["userFollowingComments"] or issue["userFollowingChanges"]:
+
+            if issue["userFollowingComments"] or issue["userFollowingChanges"]\
+                    or (self.user_id in issue.get("responsible-party-ids", "")):
                 issue_obj = self.get_issue_for_record(issue)
                 extra = {
                     "host": self.host,
