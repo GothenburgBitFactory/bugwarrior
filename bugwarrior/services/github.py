@@ -291,6 +291,9 @@ class GithubService(IssueService):
         self.filter_pull_requests = self.config.get(
             'filter_pull_requests', default=False, to_type=asbool
         )
+        self.exclude_pull_requests = self.config.get(
+            'exclude_pull_requests', default=False, to_type=asbool
+        )
         self.involved_issues = self.config.get(
             'involved_issues', default=False, to_type=asbool
         )
@@ -421,8 +424,11 @@ class GithubService(IssueService):
         return True
 
     def include(self, issue):
-        if 'pull_request' in issue[1] and not self.filter_pull_requests:
-            return True
+        if 'pull_request' in issue[1]:
+            if self.exclude_pull_requests:
+                return False
+            if not self.filter_pull_requests:
+                return True
         return super(GithubService, self).include(issue)
 
     def issues(self):
