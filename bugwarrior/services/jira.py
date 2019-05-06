@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from builtins import str
 
+import re
 
 import six
 from jinja2 import Template
@@ -256,6 +257,10 @@ class JiraIssue(Issue):
         return self.record['fields']['issuetype']['name']
 
 
+def jira_escape(s):
+    return re.sub('([ +.,;?|*/%^$#@[\]])', r'\\\1', s)
+
+
 class JiraService(IssueService):
     ISSUE_CLASS = JiraIssue
     CONFIG_PREFIX = 'jira'
@@ -266,9 +271,10 @@ class JiraService(IssueService):
         self.url = self.config.get('base_uri')
         password = self.get_password('password', self.username)
 
-        default_query = 'assignee=' + self.username + \
+        default_query = 'assignee=' + jira_escape(self.username) + \
             ' AND resolution is null'
         self.query = self.config.get('query', default_query)
+        log.debug("JQL: %r", self.query)
         if password == '@kerberos':
             auth = dict(kerberos=True)
         else:
