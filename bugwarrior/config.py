@@ -254,6 +254,9 @@ def get_data_path(config, main_section):
     env = dict(os.environ)
     env['TASKRC'] = taskrc
 
+    if not os.path.isfile(taskrc):
+        raise IOError('Unable to find taskrc file.')
+
     tw_show = subprocess.Popen(
         ('task', '_show'), stdout=subprocess.PIPE, env=env)
     data_location = subprocess.check_output(
