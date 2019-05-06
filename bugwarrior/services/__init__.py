@@ -59,6 +59,7 @@ class IssueService(object):
         self.inline_links = self._get_config_or_default('inline_links', True, asbool);
         self.annotation_links = self._get_config_or_default('annotation_links', not self.inline_links, asbool)
         self.annotation_comments = self._get_config_or_default('annotation_comments', True, asbool)
+        self.annotation_newlines = self._get_config_or_default('annotation_newlines', False, asbool)
         self.shorten = self._get_config_or_default('shorten', False, asbool)
 
         self.default_priority = self.config.get('default_priority', 'M')
@@ -149,7 +150,10 @@ class IssueService(object):
                 message = message.strip()
                 if not message or not author:
                     continue
-                message = message.replace('\n', '').replace('\r', '')
+
+                if not self.annotation_newlines:
+                    message = message.replace('\n', '').replace('\r', '')
+
                 if self.anno_len:
                     message = '%s%s' % (
                         message[:self.anno_len],
