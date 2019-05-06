@@ -439,6 +439,27 @@ class GitlabService(IssueService, ServiceClient):
             return project is None or project['id'] in ids
         return include_todo
 
+    def _get_issue_objs(self, issues, issue_type, repo_map):
+        type_plural = issue_type + 's'
+
+        for rid, issue in issues:
+            repo = repo_map[rid]
+            issue['repo'] = repo['path']
+            projectName = repo['path']
+            if self.project_owner_prefix:
+                projectName = repo['namespace']['path'] + "." + projectName
+            issue_obj = self.get_issue_for_record(issue)
+            issue_url = '%s/%s/%d' % (repo['web_url'], type_plural, issue['iid'])
+            extra = {
+                'issue_url': issue_url,
+                'project': repo['path'],
+                'namespace': repo['namespace']['full_path'],
+                'type': issue_type,
+                'annotations': self.annotations(repo, issue_url, type_plural, issue, issue_obj)
+            }
+            issue_obj.update_extra(extra)
+            yield issue_obj
+
     def issues(self):
         tmpl = '{scheme}://{host}/api/v4/projects'
 
@@ -474,23 +495,8 @@ class GitlabService(IssueService, ServiceClient):
         issues = list(filter(self.include, issues.values()))
         log.debug(" Pruned down to %i issues.", len(issues))
 
-        for rid, issue in issues:
-            repo = repo_map[rid]
-            issue['repo'] = repo['path']
-            projectName = repo['path']
-            if self.project_owner_prefix:
-                projectName = repo['namespace']['path'] + "." + projectName
-            issue_obj = self.get_issue_for_record(issue)
-            issue_url = '%s/issues/%d' % (repo['web_url'], issue['iid'])
-            extra = {
-                'issue_url': issue_url,
-                'project': projectName,
-                'namespace': repo['namespace']['full_path'],
-                'type': 'issue',
-                'annotations': self.annotations(repo, issue_url, 'issues', issue, issue_obj)
-            }
-            issue_obj.update_extra(extra)
-            yield issue_obj
+        for issue in self._get_issue_objs(issues, 'issue', repo_map):
+            yield issue
 
         if not self.filter_merge_requests:
             merge_requests = {}
@@ -503,24 +509,10 @@ class GitlabService(IssueService, ServiceClient):
             merge_requests = list(filter(self.include, merge_requests.values()))
             log.debug(" Pruned down to %i merge requests.", len(merge_requests))
 
-            for rid, issue in merge_requests:
-                repo = repo_map[rid]
-                issue['repo'] = repo['path']
-
-                issue_obj = self.get_issue_for_record(issue)
-                projectName = repo['path']
-                if self.project_owner_prefix:
-                    projectName = repo['namespace']['path'] + "." + projectName
-                issue_url = '%s/merge_requests/%d' % (repo['web_url'], issue['iid'])
-                extra = {
-                    'issue_url': issue_url,
-                    'project': projectName,
-                    'namespace': repo['namespace']['full_path'],
-                    'type': 'merge_request',
-                    'annotations': self.annotations(repo, issue_url, 'merge_requests', issue, issue_obj)
-                }
-                issue_obj.update_extra(extra)
-                yield issue_obj
+            for issue in self._get_issue_objs(merge_requests,
+                                              'merge_request',
+                                              repo_map):
+                yield issue
 
         if self.include_todos:
             todos = self.get_todos()
