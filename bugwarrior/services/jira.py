@@ -152,7 +152,8 @@ class JiraIssue(Issue):
         sprints = self.__get_sprints()
         for sprint in filter(lambda e: e.get('state') != 'CLOSED', sprints):
             endDate = sprint['endDate']
-            return '' if endDate == '<null>' else self.parse_date(endDate)
+            if endDate != '<null>':
+                return self.parse_date(endDate)
 
     def _get_tags_from_sprints(self):
         tags = []
