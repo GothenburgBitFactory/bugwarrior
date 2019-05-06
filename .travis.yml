@@ -1,9 +1,10 @@
 language: python
+# Required for python3.7 and higher.
+dist: xenial
 python:
- - "2.7"
- - "3.4"
- - "3.5"
+ - "3.7"
  - "3.6"
+ - "2.7"
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install uuid-dev
@@ -23,10 +24,18 @@ before_install:
   - pip install PySimpleSOAP
   - cd $TRAVIS_BUILD_DIR
 env:
-  - JIRAVERSION=1.0.7
+  - JIRAVERSION=2.0.0
   - JIRAVERSION=1.0.10
+  - JIRAVERSION=1.0.7
+
+matrix:
+  exclude:
+  - python: "3.7"
+    env: JIRAVERSION=1.0.10
+  - python: "3.7"
+    env: JIRAVERSION=1.0.7
+
 install:
-  - pip install jira==$JIRAVERSION
   - pip install .[jira,megaplan,activecollab,bts,bugzilla,trac,gmail]
   - pip install codecov
   - pip install coverage
