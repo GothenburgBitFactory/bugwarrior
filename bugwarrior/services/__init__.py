@@ -60,7 +60,8 @@ class IssueService(object):
         self.annotation_links = self._get_config_or_default('annotation_links', not self.inline_links, asbool)
         self.annotation_comments = self._get_config_or_default('annotation_comments', True, asbool)
         self.shorten = self._get_config_or_default('shorten', False, asbool)
-        self.default_priority = self._get_config_or_default('default_priority','M')
+
+        self.default_priority = self.config.get('default_priority', 'M')
 
         self.add_tags = []
         for raw_option in aslist(self.config.get('add_tags', '')):

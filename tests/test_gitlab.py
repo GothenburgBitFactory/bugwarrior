@@ -142,7 +142,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             issue.STATE: self.arbitrary_issue['state'],
             issue.TYPE: self.arbitrary_extra['type'],
             issue.TITLE: self.arbitrary_issue['title'],
-            issue.NUMBER: self.arbitrary_issue['iid'],
+            issue.NUMBER: str(self.arbitrary_issue['iid']),
             issue.UPDATED_AT: self.arbitrary_updated.replace(microsecond=0),
             issue.CREATED_AT: self.arbitrary_created.replace(microsecond=0),
             issue.DUEDATE: self.arbitrary_duedate,
@@ -180,7 +180,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             issue.STATE: self.arbitrary_issue['state'],
             issue.TYPE: self.arbitrary_extra['type'],
             issue.TITLE: self.arbitrary_issue['title'],
-            issue.NUMBER: self.arbitrary_issue['iid'],
+            issue.NUMBER: str(self.arbitrary_issue['iid']),
             issue.UPDATED_AT: self.arbitrary_updated.replace(microsecond=0),
             issue.CREATED_AT: self.arbitrary_created.replace(microsecond=0),
             issue.DUEDATE: self.arbitrary_duedate,
@@ -201,7 +201,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         self.add_response(
-            'https://gitlab.example.com/api/v4/projects?per_page=100&page=1',
+            'https://gitlab.example.com/api/v4/projects?simple=True&per_page=100&page=1',
             json=[{
                 'id': 1,
                 'path': 'arbitrary_username/project',
@@ -237,7 +237,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'gitlabdownvotes': 0,
             'gitlabmilestone': u'v1.0',
             'gitlabnamespace': u'arbitrary_username',
-            'gitlabnumber': 3,
+            'gitlabnumber': '3',
             'gitlabrepo': u'arbitrary_username/project',
             'gitlabstate': u'opened',
             'gitlabtitle': u'Add user settings',

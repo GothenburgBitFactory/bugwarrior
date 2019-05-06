@@ -5,9 +5,9 @@ from builtins import map
 from builtins import filter
 
 try:
-    from urllib import quote  # Python 2.X
+    from urllib import quote, urlencode  # Python 2.X
 except ImportError:
-    from urllib.parse import quote  # Python 3+
+    from urllib.parse import quote, urlencode # Python 3+
 from six.moves.configparser import NoOptionError
 import re
 import requests
@@ -80,7 +80,7 @@ class GitlabIssue(Issue):
             'label': 'Gitlab Type',
         },
         NUMBER: {
-            'type': 'numeric',
+            'type': 'string',
             'label': 'Gitlab Issue/MR #',
         },
         STATE: {
@@ -180,7 +180,7 @@ class GitlabIssue(Issue):
             self.TITLE: title,
             self.DESCRIPTION: description,
             self.MILESTONE: milestone,
-            self.NUMBER: number,
+            self.NUMBER: str(number),
             self.CREATED_AT: created,
             self.UPDATED_AT: updated,
             self.DUEDATE: duedate,
@@ -243,6 +243,10 @@ class GitlabService(IssueService, ServiceClient):
         self.verify_ssl = self.config.get(
             'verify_ssl', default=True, to_type=asbool
         )
+
+        self.membership = self.config.get('membership', False)
+
+        self.owned = self.config.get('owned', False)
 
         self.exclude_repos = self.config.get('exclude_repos', [], aslist)
         self.include_repos = self.config.get('include_repos', [], aslist)
@@ -441,15 +445,20 @@ class GitlabService(IssueService, ServiceClient):
         all_repos = []
         if self.include_repos and not self.include_regex:
             for repo in self.include_repos:
-                indiv_tmpl = tmpl + '/' + quote(repo, '')
+                indiv_tmpl = tmpl + '/' + quote(repo, '') + '?simple=true'
                 item = self._fetch(indiv_tmpl)
                 if not item:
                     break
 
-                all_repos += [ item ]
+                all_repos.append(item)
 
         else:
-            all_repos = self._fetch_paged(tmpl)
+            querystring = { 'simple': True }
+            if self.membership:
+                querystring['membership'] = True
+            if self.owned:
+                querystring['owned'] = True
+            all_repos = self._fetch_paged(tmpl + '?' + urlencode(querystring))
 
         repos = list(filter(self.filter_repos, all_repos))
 

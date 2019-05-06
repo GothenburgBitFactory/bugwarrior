@@ -93,6 +93,18 @@ class PhabricatorService(IssueService):
         self.shown_project_phids = (
             self.config.get("project_phids", None, aslist))
 
+        self.ignore_cc = self.config.get('ignore_cc', default=False,
+                                          to_type=lambda x: x == "True")
+
+        self.ignore_author = self.config.get('ignore_author', default=False,
+                                             to_type=lambda x: x == "True")
+
+        self.ignore_owner = self.config.get('ignore_owner', default=False,
+                                             to_type=lambda x: x == "True")
+
+        self.ignore_reviewers = self.config.get('ignore_reviewers', default=False,
+                                                to_type=lambda x: x == "True")
+
     def tasks(self):
         # If self.shown_user_phids or self.shown_project_phids is set, retrict API calls to user_phids or project_phids
         # to avoid time out with Phabricator installations with huge userbase
@@ -130,7 +142,13 @@ class PhabricatorService(IssueService):
             if self.shown_user_phids is not None:
                 # Checking whether authorPHID, ccPHIDs, ownerPHID
                 # are intersecting with self.shown_user_phids
-                task_relevant_to = set(task['ccPHIDs'] + [task['ownerPHID'], task['authorPHID']])
+                task_relevant_to = set()
+                if not self.ignore_cc:
+                    task_relevant_to.update(task['ccPHIDs'])
+                if not self.ignore_owner:
+                    task_relevant_to.add(task['ownerPHID'])
+                if not self.ignore_author:
+                    task_relevant_to.add(task['authorPHID'])
                 if len(task_relevant_to.intersection(self.shown_user_phids)) > 0:
                     this_task_matches = True
 
@@ -173,9 +191,15 @@ class PhabricatorService(IssueService):
                 this_diff_matches = True
 
             if self.shown_user_phids is not None:
-                # Checking whether authorPHID, ccPHIDs, ownerPHID
+                # Checking whether authorPHID, ccPHIDs, reviewers
                 # are intersecting with self.shown_user_phids
-                diff_relevant_to = set(list(diff['reviewers']) + [diff['authorPHID']])
+                diff_relevant_to = set()
+                if not self.ignore_reviewers:
+                    diff_relevant_to.update(list(diff['reviewers']))
+                if not self.ignore_cc:
+                    diff_relevant_to.update(diff['ccs'])
+                if not self.ignore_author:
+                    diff_relevant_to.add(diff['authorPHID'])
                 if len(diff_relevant_to.intersection(self.shown_user_phids)) > 0:
                     this_diff_matches = True
 

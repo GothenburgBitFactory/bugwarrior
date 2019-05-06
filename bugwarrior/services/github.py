@@ -203,18 +203,13 @@ class GithubIssue(Issue):
         if body:
             body = body.replace('\r\n', '\n')
 
-        if self.extra['type'] == 'pull_request':
-            priority = 'H'
-        else:
-            priority = self.origin['default_priority']
-
         created = self.parse_date(self.record.get('created_at'))
         updated = self.parse_date(self.record.get('updated_at'))
         closed = self.parse_date(self.record.get('closed_at'))
 
         return {
             'project': self.extra['project'],
-            'priority': priority,
+            'priority': self.origin['default_priority'],
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
             'entry': created,
@@ -290,6 +285,9 @@ class GithubService(IssueService):
         self.username = self.config.get('username')
         self.filter_pull_requests = self.config.get(
             'filter_pull_requests', default=False, to_type=asbool
+        )
+        self.exclude_pull_requests = self.config.get(
+            'exclude_pull_requests', default=False, to_type=asbool
         )
         self.involved_issues = self.config.get(
             'involved_issues', default=False, to_type=asbool
@@ -421,8 +419,11 @@ class GithubService(IssueService):
         return True
 
     def include(self, issue):
-        if 'pull_request' in issue[1] and not self.filter_pull_requests:
-            return True
+        if 'pull_request' in issue[1]:
+            if self.exclude_pull_requests:
+                return False
+            if not self.filter_pull_requests:
+                return True
         return super(GithubService, self).include(issue)
 
     def issues(self):
