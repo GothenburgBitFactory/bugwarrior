@@ -38,7 +38,7 @@ setup(name='bugwarrior',
           "dogpile.cache>=0.5.3",
           "lockfile>=0.9.1",
           "click",
-          "future!=0.16.0",
+          "future",
       ],
       extras_require=dict(
           keyring=["keyring"],
