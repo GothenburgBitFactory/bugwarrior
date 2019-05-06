@@ -87,11 +87,7 @@ class BugzillaIssue(Issue):
 
         # iff field is defined, use it, converting None to empty string.
         if 'assigned_on' in self.extra:
-            if self.extra['assigned_on']:
-                task[self.ASSIGNED_ON] = self.extra.get('assigned_on')
-            else:
-                task[self.ASSIGNED_ON] = ''
-
+            task[self.ASSIGNED_ON] = self.extra.get('assigned_on') or ''
 
         return task
 
@@ -306,17 +302,14 @@ class BugzillaService(IssueService):
     def _get_assigned_date(self, issue):
         assigned_date = None
 
-        if issue['status'] != 'ASSIGNED':
-            return assigned_date
-
         bug = self.bz.getbug(issue['id'])
         history = bug.get_history()['bugs'][0]['history']
 
         # this is already in chronological order, so the last change is the one we want
-        for h in history:
-            for change in h['changes']:
-                if change['field_name'] == 'status' and change['added'] == 'ASSIGNED':
-                  assigned_date = h['when']
+        h = history[-1]
+        for change in h['changes']:
+            if change['field_name'] == 'status' and change['added'] == 'ASSIGNED':
+              assigned_date = h['when']
 
         # messy conversion :(
         # TODO: create method that's used here and in needinfos time conv above
