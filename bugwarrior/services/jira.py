@@ -14,6 +14,7 @@ from bugwarrior.services import IssueService, Issue
 import logging
 log = logging.getLogger(__name__)
 
+
 # The below `ObliviousCookieJar` and `JIRA` classes are MIT Licensed.
 # They were taken from this wonderful commit by @GaretJax
 # https://github.com/GaretJax/lancet/commit/f175cb2ec9a2135fb78188cf0b9f621b51d88977
@@ -40,6 +41,7 @@ class JIRA(BaseJIRA):
     def close(self):
         self._session.close()
 
+
 def _parse_sprint_string(sprint):
     """ Parse the big ugly sprint string stored by JIRA.
 
@@ -52,6 +54,7 @@ def _parse_sprint_string(sprint):
     fields = sum((entry.rsplit(',', 1) for entry in entries), [])
     return dict(zip(fields[::2], fields[1::2]))
 
+
 class JiraIssue(Issue):
     ISSUE_TYPE = 'jiraissuetype'
     SUMMARY = 'jirasummary'
@@ -61,7 +64,7 @@ class JiraIssue(Issue):
     ESTIMATE = 'jiraestimate'
     FIX_VERSION = 'jirafixversion'
     CREATED_AT = 'jiracreatedts'
-    STATUS ='jirastatus'
+    STATUS = 'jirastatus'
 
     UDAS = {
         ISSUE_TYPE: {
@@ -163,7 +166,7 @@ class JiraIssue(Issue):
 
         context = self.record.copy()
         label_template = Template(self.origin['label_template'])
-        
+
         sprints = self.__get_sprints()
         for sprint in sprints:
             # Extract the name and render it into a label
@@ -251,6 +254,7 @@ class JiraIssue(Issue):
 
     def get_issue_type(self):
         return self.record['fields']['issuetype']['name']
+
 
 class JiraService(IssueService):
     ISSUE_CLASS = JiraIssue
