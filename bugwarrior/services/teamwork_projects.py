@@ -24,10 +24,7 @@ class TeamworkClient(ServiceClient):
         return self.json_response(response)
 
     def call_api(self, method, endpoint, data=None):
-        if method == "GET":
-            response = requests.get(self.host + endpoint, auth=(self.token, ""), params=data)
-        else:
-            response = requests.post(self.host + endpoint, auth=(self.token, ""), data=data)
+        response = requests.get(self.host + endpoint, auth=(self.token, ""), params=data)
         return self.json_response(response)
 
 class TeamworkIssue(Issue):
@@ -52,7 +49,7 @@ class TeamworkIssue(Issue):
             'label': 'Teamwork Description Long',
         },
         PROJECT_ID: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'Teamwork Project ID',
         },
         STATUS: {
@@ -60,7 +57,7 @@ class TeamworkIssue(Issue):
             'label': 'Teamwork Status',
         },
         ID: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'Teamwork Task ID',
         },
     }
@@ -99,7 +96,6 @@ class TeamworkIssue(Issue):
         parent_id = self.record["parentTaskId"]
         status = self.record["status"]
 
-        start = self.parse_date(self.record.get('start-date'))
         due = self.parse_date(self.record.get('due-date'))
         created = self.parse_date(self.record.get('created-on'))
         modified = self.parse_date(self.record.get('last-changed-on'))
@@ -114,7 +110,6 @@ class TeamworkIssue(Issue):
         return {
             'project': self.record["project-name"],
             'priority': self.get_priority(),
-            'start': start,
             'due': due,
             'entry': created,
             'end': end,
@@ -123,9 +118,9 @@ class TeamworkIssue(Issue):
             self.URL: task_url,
             self.TITLE: self.record.get("content", ""),
             self.DESCRIPTION_LONG: self.record.get("description", ""),
-            self.PROJECT_ID: self.record["project-id"],
+            self.PROJECT_ID: int(self.record["project-id"]),
             self.STATUS: status,
-            self.ID: self.record["id"],
+            self.ID: int(self.record["id"]),
         }
 
 class TeamworkService(IssueService):
@@ -133,7 +128,7 @@ class TeamworkService(IssueService):
     CONFIG_PREFIX = 'teamwork_projects'
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(TeamworkService, self).__init__(*args, **kwargs)
         self.host = self.config.get('host', '')
         self.token = self.config.get('token', '')
         self.client = TeamworkClient(self.host, self.token)
@@ -142,27 +137,27 @@ class TeamworkService(IssueService):
         self.name = user["account"]["firstname"] + " " + user["account"]["lastname"]
 
     def get_comments(self, issue):
-        if issue.get("comments-count", 0) > 0:
-            endpoint = "/tasks/{task_id}/comments.json".format(task_id=issue["id"])
-            comments = self.client.call_api("GET", endpoint)
-            comment_list = []
-            for comment in comments["comments"]:
-                url = self.host + "/#/tasks/" + str(issue["id"])
-                author = "{first} {last}".format(
-                    first=comment["author-firstname"],
-                    last=comment["author-lastname"],
-                )
-                text = comment["body"]
-                comment_list.append((author, text))
-            return self.build_annotations(comment_list, None)
+        if self.annotation_comments:
+            if issue.get("comments-count", 0) > 0:
+                endpoint = "/tasks/{task_id}/comments.json".format(task_id=issue["id"])
+                comments = self.client.call_api("GET", endpoint)
+                comment_list = []
+                for comment in comments["comments"]:
+                    url = self.host + "/#/tasks/" + str(issue["id"])
+                    author = "{first} {last}".format(
+                        first=comment["author-firstname"],
+                        last=comment["author-lastname"],
+                    )
+                    text = comment["body"]
+                    comment_list.append((author, text))
+                return self.build_annotations(comment_list, None)
         return ""
 
 
     def issues(self):
         response = self.client.call_api("GET", "/tasks.json")#, data= { "responsible-party-ids": self.user_id })
         for issue in response["todo-items"]:
-            # If folliwng comments changes
-
+            # Determine if issue is need by if following comments, changes or assigned
             if issue["userFollowingComments"] or issue["userFollowingChanges"]\
                     or (self.user_id in issue.get("responsible-party-ids", "")):
                 issue_obj = self.get_issue_for_record(issue)
