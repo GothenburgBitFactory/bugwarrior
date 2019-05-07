@@ -75,7 +75,12 @@ class TestSynchronize(ConfigTest):
 
         # TEST NEW ISSUE AND EXISTING ISSUE.
         for _ in range(2):
-            db.synchronize(iter((issue,)), config, 'general')
+            # Use an issue generator with two copies of the same issue.
+            # These should be de-duplicated in db.synchronize before
+            # writing out to taskwarrior.
+            # https://github.com/ralphbean/bugwarrior/issues/601
+            issue_generator = iter((issue, issue,))
+            db.synchronize(issue_generator, config, 'general')
 
             self.assertEqual(get_tasks(tw), {
                 'completed': [],
