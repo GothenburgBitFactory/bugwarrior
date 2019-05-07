@@ -1,7 +1,7 @@
 Teamworks Project
-=======
+=================
 
-You can import tasks from Teamworks Projects using
+You can import tasks from Teamwork Projects using
 the ``teamwork_projects`` service name.
 
 Example Service

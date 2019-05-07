@@ -151,7 +151,7 @@ class TeamworkService(IssueService):
                     text = comment["body"]
                     comment_list.append((author, text))
                 return self.build_annotations(comment_list, None)
-        return ""
+        return [] 
 
 
     def issues(self):
