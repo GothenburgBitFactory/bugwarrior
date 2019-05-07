@@ -145,10 +145,15 @@ class JiraIssue(Issue):
         return self._get_tags_from_labels() + self._get_tags_from_sprints()
 
     def get_due(self):
+        # If the duedate is explicitly set on the issue, then use that.
+        if self.record['fields'].get('duedate'):
+            return self.parse_date(self.record['fields']['duedate'])
+        # Otherwise, if the issue is in a sprint, use the end date of that sprint.
         sprints = self.__get_sprints()
         for sprint in filter(lambda e: e.get('state') != 'CLOSED', sprints):
             endDate = sprint['endDate']
-            return '' if endDate == '<null>' else self.parse_date(endDate)
+            if endDate != '<null>':
+                return self.parse_date(endDate)
 
     def _get_tags_from_sprints(self):
         tags = []
@@ -223,7 +228,9 @@ class JiraIssue(Issue):
             value = value['name']
         except (TypeError, ):
             value = str(value)
-        return self.PRIORITY_MAP.get(value, self.origin['default_priority'])
+        # priority.name format: "1 - Critical"
+        map_key = value.strip().split()[-1]
+        return self.PRIORITY_MAP.get(map_key, self.origin['default_priority'])
 
     def get_default_description(self):
         return self.build_default_description(

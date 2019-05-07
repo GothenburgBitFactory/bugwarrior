@@ -32,6 +32,9 @@ Example Configuration
     # annotations
     annotation_comments = True
 
+    # Setting this to False will strip newlines from comment annotations
+    annotation_newlines = False
+
     # Defines whether or not issues should be matched based upon their description.
     # In legacy mode, we will attempt to match issues to bugs based upon the
     # presence of the '(bw)' marker in the task description.
