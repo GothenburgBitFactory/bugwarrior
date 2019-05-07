@@ -31,7 +31,7 @@ class TeamworkIssue(Issue):
     URL = 'teamwork_url'
     TITLE = 'teamwork_title'
     DESCRIPTION_LONG = 'teamwork_description_long'
-    PROJECT_ID = 'teamwork_id'
+    PROJECT_ID = 'teamwork_project_id'
     STATUS = 'teamwork_status'
     ID = 'teamwork_id'
 
