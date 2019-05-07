@@ -146,14 +146,19 @@ issues matched by the query, set::
 Include Certain Issues
 ++++++++++++++++++++++
 
-Since Github doesn't allow to show on the website or even directly with their
-API issues a user is subscribed to (see [#] and [#]), Bugwarrior allows to
-specify specific issues you'd like to be added to your Taskwarrior database::
+GitHub can show you a list of issues you are subscribed to in their website in the URL:
+
+https://github.com/notifications/subscriptions
+
+This could have been very useful for Bugwarrior but unfortunately there is no
+way to access this list of issues through the API. (See [#] and [#]). However,
+Bugwarrior allows to specify specific issues you'd like to be added to your
+Taskwarrior database::
 
     github.include_these_issues = octokit/octokit.rb/issues/1057, octokit/octokit.rb/issues/957
 
 Note that you need to specify only the part that comes after the host and the
-scheme, usually what's after ``https://github.com/``, including the last ``/``.
+scheme, usually what's after ``https://github.com/``, including the last ``/``
 
 .. [#] https://github.com/dear-github/dear-github/issues/247
 .. [#] https://stackoverflow.com/questions/25438721/how-can-i-see-all-the-issues-im-watching-on-github
