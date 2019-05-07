@@ -432,14 +432,19 @@ class GithubService(IssueService):
             issues.update(self.get_query(self.query))
 
         if self.config.get('include_user_repos', True, asbool):
-            all_repos = self.client.get_repos(self.username)
-            assert(type(all_repos) == list)
-            repos = filter(self.filter_repos, all_repos)
+            # Only query for all repos if an explicit
+            # include_repos list is not specified.
+            if self.include_repos:
+                repos = self.include_repos
+            else:
+                all_repos = self.client.get_repos(self.username)
+                repos = filter(self.filter_repos, all_repos)
+                repos = [repo['name'] for repo in repos]
 
             for repo in repos:
                 issues.update(
                     self.get_owned_repo_issues(
-                        self.username + "/" + repo['name'])
+                        self.username + "/" + repo)
                 )
         if self.config.get('include_user_issues', True, asbool):
             issues.update(
