@@ -338,6 +338,10 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                     except UnicodeDecodeError:
                         log.warn("Failed to interpret %r as utf-8" % key)
 
+            # Blank priority should mean *no* priority
+            if issue_dict['priority'] == u'':
+                issue_dict['priority'] = None
+
             existing_uuid = find_local_uuid(
                 tw, key_list, issue, legacy_matching=legacy_matching
             )
@@ -379,9 +383,6 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     log.info("Adding %i tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
         log.info(u"Adding task %s%s", issue['description'], notreally)
-        # Blank priority should mean *no* priority
-        if issue['priority'] == u'':
-            issue['priority'] = None
         if dry_run:
             continue
         if notify:
