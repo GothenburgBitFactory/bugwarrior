@@ -379,6 +379,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     log.info("Adding %i tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
         log.info(u"Adding task %s%s", issue['description'], notreally)
+        # Blank priority should mean *no* priority
+        if issue['priority'] == u'':
+            issue['priority'] = None
         if dry_run:
             continue
         if notify:
