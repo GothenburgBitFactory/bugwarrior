@@ -21,6 +21,7 @@ class FakeJiraClient(object):
     def comments(self, *args, **kwargs):
         return None
 
+
 class TestJiraIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'jira.username': 'one',
@@ -47,10 +48,12 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
     }
 
     arbitrary_record_with_due = arbitrary_record.copy()
-    arbitrary_record_with_due['fields']=arbitrary_record_with_due['fields'].copy()
-    arbitrary_record_with_due['fields']['Sprint']=['com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
-                    state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4\
-                    55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]']
+
+    arbitrary_record_with_due['fields'] = arbitrary_record_with_due['fields'].copy()
+    arbitrary_record_with_due['fields']['Sprint'] = [
+        'com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
+        state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4\
+        55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]']
 
     def setUp(self):
         super(TestJiraIssue, self).setUp()
@@ -148,7 +151,6 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             actual_output = issue.to_taskwarrior()
 
         self.assertEqual(actual_output, expected_output)
-
 
     def test_issues(self):
         issue = next(self.service.issues())
