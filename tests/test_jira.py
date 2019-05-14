@@ -6,7 +6,7 @@ from collections import namedtuple
 from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.services.jira import JiraService
+from bugwarrior.services.jira import JiraService, jira_escape
 from .base import ServiceTest, AbstractServiceTest
 
 
@@ -177,3 +177,9 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             self.arbitrary_record_with_due
         )
         self.assertEqual(issue.get_due(), datetime.datetime(2016, 9, 23, 16, 8, tzinfo=tzutc()))
+
+    def test_escape(self):
+        original = 'user@foo.com'
+        actual = jira_escape(original)
+        expected = 'user\\@foo\\.com'
+        self.assertEqual(actual, expected)
