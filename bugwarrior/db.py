@@ -5,6 +5,7 @@ from builtins import zip
 from builtins import object
 
 from six.moves.configparser import NoOptionError, NoSectionError
+import json
 import os
 import re
 import subprocess
@@ -126,8 +127,29 @@ def get_managed_task_uuids(tw, key_list, legacy_matching):
     return expected_task_ids
 
 
-def find_local_uuid(tw, keys, issue, legacy_matching=False):
-    """ For a given issue issue, find its local UUID.
+def make_unique_identifier(keys, issue):
+    """ For a given issue, make an identifier from its unique keys.
+
+    This is not the same as the taskwarrior uuid, which is assigned
+    only once the task is created.
+
+    :params:
+    * `keys`: A list of lists of keys to use for uniquely identifying
+      an issue.
+    * `issue`: An instance of a subclass of `bugwarrior.services.Issue`.
+
+    :returns:
+    * A single string UUID.
+    """
+    for service, key_list in six.iteritems(keys):
+        if all([key in issue for key in key_list]):
+            subset = dict([(key, issue[key]) for key in key_list])
+            return json.dumps(subset, sort_keys=True)
+    raise RuntimeError("Could not determine unique identifier for %s" % issue)
+
+
+def find_taskwarrior_uuid(tw, keys, issue, legacy_matching=False):
+    """ For a given issue issue, find its local taskwarrior UUID.
 
     Assembles a list of task IDs existing in taskwarrior
     matching the supplied issue (`issue`) on the combination of any
@@ -322,6 +344,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         'closed': get_managed_task_uuids(tw, key_list, legacy_matching),
     }
 
+    seen = []
     for issue in issue_generator:
 
         try:
@@ -342,10 +365,17 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             if issue_dict['priority'] == u'':
                 issue_dict['priority'] = None
 
-            existing_uuid = find_local_uuid(
+            # De-duplicate issues coming in
+            unique_identifier = make_unique_identifier(key_list, issue)
+            if unique_identifier in seen:
+                log.debug("Skipping.  Seen %s of %r" % (unique_identifier, issue))
+                continue
+            seen.append(unique_identifier)
+
+            existing_taskwarrior_uuid = find_taskwarrior_uuid(
                 tw, key_list, issue, legacy_matching=legacy_matching
             )
-            _, task = tw.get_task(uuid=existing_uuid)
+            _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
 
             # Drop static fields from the upstream issue.  We don't want to
             # overwrite local changes to fields we declare static.
@@ -370,8 +400,8 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             else:
                 issue_updates['existing'].append(task)
 
-            if existing_uuid in issue_updates['closed']:
-                issue_updates['closed'].remove(existing_uuid)
+            if existing_taskwarrior_uuid in issue_updates['closed']:
+                issue_updates['closed'].remove(existing_taskwarrior_uuid)
 
         except MultipleMatches as e:
             log.exception("Multiple matches: %s", six.text_type(e))
