@@ -127,9 +127,10 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
 
         issue = self.service.get_issue_for_record(
             record_with_goal, arbitrary_extra
+
         )
 
-        JIRA_PRIORITIES = [p.id for p in self.jira.priorities()]
+        JIRA_PRIORITIES = [p.id for p in self.service.jira.priorities()]
         TASK_PRIORITIES = "LMH"
         issue.PRIORITY_MAP = {
             p: TASK_PRIORITIES[int(len(TASK_PRIORITIES)*i/len(JIRA_PRIORITIES))]
