@@ -43,7 +43,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
 
     arbitrary_record = {
         'fields': {
-            'priority': '4',
+            'priority': '2',
             'summary': arbitrary_summary,
             'timeestimate': arbitrary_estimation,
             'created': '2016-06-06T06:07:08.123-0700',
