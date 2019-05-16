@@ -15,9 +15,11 @@ class FakeJiraClient(object):
         self.arbitrary_record = arbitrary_record
 
     def priorities(self):
+
+        Priority = namedtuple('Priority', ['id', 'name'])
         names = ["Low", "Medium", "High", "Critical"]
         return [
-            dict(id=str(i), name=f"{i} - {name}")
+            Priority(id=str(i), name=f"{i} - {name}")
             for i, name in enumerate(names)]
 
     def search_issues(self, *args, **kwargs):
