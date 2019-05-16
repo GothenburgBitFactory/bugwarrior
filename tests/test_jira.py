@@ -14,6 +14,12 @@ class FakeJiraClient(object):
     def __init__(self, arbitrary_record):
         self.arbitrary_record = arbitrary_record
 
+    def priorities(self):
+        names = ["Low", "Medium", "High", "Critical"]
+        return [
+            dict(id=str(i), name=f"{i} - {name}")
+            for i, name in enumerate(names)]
+
     def search_issues(self, *args, **kwargs):
         Case = namedtuple('Case', ['raw', 'key'])
         return [Case(self.arbitrary_record, self.arbitrary_record['key'])]
@@ -121,7 +127,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             record_with_goal, arbitrary_extra
         )
 
-        JIRA_PRIORITIES = "1234"
+        JIRA_PRIORITIES = [p.id for p in self.jira.priorities()]
         TASK_PRIORITIES = "LMH"
         issue.PRIORITY_MAP = {
             p: TASK_PRIORITIES[int(len(TASK_PRIORITIES)*i/len(JIRA_PRIORITIES))]
