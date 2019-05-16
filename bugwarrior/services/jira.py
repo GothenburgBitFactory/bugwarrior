@@ -106,19 +106,6 @@ class JiraIssue(Issue):
     }
     UNIQUE_KEY = (URL, )
 
-    PRIORITY_MAP = {
-        'Highest': 'H',
-        'High': 'H',
-        'Medium': 'M',
-        'Low': 'L',
-        'Lowest': 'L',
-        'Trivial': 'L',
-        'Minor': 'L',
-        'Major': 'M',
-        'Critical': 'H',
-        'Blocker': 'H',
-    }
-
     def to_taskwarrior(self):
         return {
             'project': self.get_project(),
@@ -228,12 +215,10 @@ class JiraIssue(Issue):
     def get_priority(self):
         value = self.record['fields'].get('priority')
         try:
-            value = value['name']
+            value = value['id']
         except (TypeError, ):
             value = str(value)
-        # priority.name format: "1 - Critical"
-        map_key = value.strip().split()[-1]
-        return self.PRIORITY_MAP.get(map_key, self.origin['default_priority'])
+        return self.PRIORITY_MAP.get(value, self.origin['default_priority'])
 
     def get_default_description(self):
         return self.build_default_description(
@@ -338,12 +323,21 @@ class JiraService(IssueService):
     def issues(self):
         cases = self.jira.search_issues(self.query, maxResults=-1)
 
+        # map JIRA priority list to taskwarrior priorites
+        JIRA_PRIORITIES = [p.id for p in self.jira.priorities()]
+        TASK_PRIORITIES = "LMH"
+        PRIORITY_MAP = {
+            p: TASK_PRIORITIES[int(len(TASK_PRIORITIES)*i/len(JIRA_PRIORITIES))]
+            for i, p in enumerate(JIRA_PRIORITIES)
+        }
+
         jira_version = 5
         if self.config.has_option(self.target, 'jira.version'):
             jira_version = self.config.getint(self.target, 'jira.version')
 
         for case in cases:
             issue = self.get_issue_for_record(case.raw)
+            issue.PRIORITY_MAP = PRIORITY_MAP
             extra = {
                 'jira_version': jira_version,
             }
