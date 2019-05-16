@@ -124,7 +124,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         JIRA_PRIORITIES = "1234"
         TASK_PRIORITIES = "LMH"
         issue.PRIORITY_MAP = {
-            p: TASK_PRIORITIES[int(len(TASK_PRIORITIES*i/len(JIRA_PRIORITIES))]
+            p: TASK_PRIORITIES[int(len(TASK_PRIORITIES*i/len(JIRA_PRIORITIES)))]
             for i, p in enumerate(JIRA_PRIORITIES)
         }
 
