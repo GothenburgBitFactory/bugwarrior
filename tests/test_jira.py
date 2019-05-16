@@ -121,6 +121,13 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             record_with_goal, arbitrary_extra
         )
 
+        JIRA_PRIORITIES = "1234"
+        TASK_PRIORITIES = "LMH"
+        issue.PRIORITY_MAP = {
+            TASK_PRIORITIES[int(len(TASK_PRIORITIES*i/len(JIRA_PRIORITIES))]
+            for i, p in enumerate(JIRA_PRIORITIES)
+        }
+
         expected_output = {
             'project': self.arbitrary_project,
             'priority': (
