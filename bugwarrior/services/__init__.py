@@ -54,9 +54,9 @@ class IssueService(object):
         self.main_config = main_config
         self.target = target
 
-        self.desc_len = self._get_config_or_default('description_length', 35, asint);
-        self.anno_len = self._get_config_or_default('annotation_length', 45, asint);
-        self.inline_links = self._get_config_or_default('inline_links', True, asbool);
+        self.desc_len = self._get_config_or_default('description_length', 35, asint)
+        self.anno_len = self._get_config_or_default('annotation_length', 45, asint)
+        self.inline_links = self._get_config_or_default('inline_links', True, asbool)
         self.annotation_links = self._get_config_or_default('annotation_links', not self.inline_links, asbool)
         self.annotation_comments = self._get_config_or_default('annotation_comments', True, asbool)
         self.annotation_newlines = self._get_config_or_default('annotation_newlines', False, asbool)
