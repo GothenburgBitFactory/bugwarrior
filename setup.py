@@ -49,6 +49,7 @@ setup(name='bugwarrior',
           trac=["offtrac"],
           bugzilla=["python-bugzilla"],
           gmail=["google-api-python-client", "oauth2client<4.0.0"],
+          kanboard=["kanboard"],
       ),
       tests_require=[
           "Mock",
@@ -61,6 +62,7 @@ setup(name='bugwarrior',
           "bugwarrior[gmail]",
           "bugwarrior[trac]",
           "bugwarrior[bugzilla]",
+          "bugwarrior[kanboard]",
       ],
       test_suite='nose.collector',
       entry_points="""
@@ -75,6 +77,7 @@ setup(name='bugwarrior',
       trac=bugwarrior.services.trac:TracService
       bts=bugwarrior.services.bts:BTSService
       bugzilla=bugwarrior.services.bz:BugzillaService
+      kanboard=bugwarrior.services.kanboard:KanboardService
       teamlab=bugwarrior.services.teamlab:TeamLabService
       redmine=bugwarrior.services.redmine:RedMineService
       activecollab2=bugwarrior.services.activecollab2:ActiveCollab2Service

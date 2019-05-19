@@ -155,6 +155,21 @@ Example Configuration
     jira.version = 5
     jira.add_tags = enterprisey,work
 
+
+    # This is a kanboard example.
+    [my_kanboard]
+    service = kanboard
+    kanboard.base_uri = https://kanboard.example.org
+    kanboard.username = ralphbean
+
+    # Your password or, even better, API token
+    kanboard.password = OMG_LULZ
+
+    # A custom query to search for open issues. By default, assigned and open
+    # tasks are queried.
+    kanboard.query = status:open assignee:me
+
+
     # Here's an example of a phabricator target
     [my_phabricator]
     service = phabricator

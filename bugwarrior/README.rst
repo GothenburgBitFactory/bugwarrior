@@ -18,6 +18,7 @@ It currently supports the following remote resources:
  - `teamlab <https://www.teamlab.com/>`_
  - `redmine <https://www.redmine.org/>`_
  - `jira <https://www.atlassian.com/software/jira/overview>`_
+ - `kanboard <https://kanboard.org/>`_
  - `taiga <https://taiga.io>`_
  - `gerrit <https://www.gerritcodereview.com/>`_
  - `activecollab <https://www.activecollab.com>`_ (2.x and 4.x)
@@ -69,3 +70,4 @@ Contributors
   Debian package)
 - BinaryBabel (contributed support for YouTrack)
 - Matthew Cengia (contributed extra support for Trello)
+- Florian Preinstorfer (contributed support for Kanboard)
