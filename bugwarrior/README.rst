@@ -16,6 +16,7 @@ It currently supports the following remote resources:
  - `gitlab <https://gitlab.com>`_ (api v3)
  - `gmail <https://www.google.com/gmail/about/>`_
  - `jira <https://www.atlassian.com/software/jira/overview>`_
+ - `kanboard <https://kanboard.org/>`_
  - `megaplan <https://www.megaplan.ru/>`_
  - `pagure <https://pagure.io/>`_
  - `phabricator <http://phabricator.org/>`_
@@ -72,3 +73,4 @@ Contributors
 - BinaryBabel (contributed support for YouTrack)
 - Matthew Cengia (contributed extra support for Trello)
 - Andrew Demas (contributed support for PivotalTracker)
+- Florian Preinstorfer (contributed support for Kanboard)
