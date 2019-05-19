@@ -4,9 +4,11 @@ import datetime
 import logging
 import re
 
+from dateutil.tz.tz import tzutc
+from kanboard import Kanboard
+
 from bugwarrior.config import die
 from bugwarrior.services import Issue, IssueService
-from kanboard import Kanboard
 
 log = logging.getLogger(__name__)
 
@@ -81,17 +83,22 @@ class KanboardIssue(Issue):
         return self.extra.get("tags", [])
 
     def get_due(self):
-        timestamp = int(self.record.get("date_due", "0"))
-        if timestamp:
-            return datetime.datetime.fromtimestamp(timestamp)
+        return self._convert_timestamp_from_field("date_due")
 
     def get_entry(self):
-        timestamp = int(self.record.get("date_creation", "0"))
-        if timestamp:
-            return datetime.datetime.fromtimestamp(timestamp)
+        return self._convert_timestamp_from_field("date_creation")
 
     def get_annotations(self):
         return self.extra.get("annotations", [])
+
+    def _convert_timestamp_from_field(self, field):
+        timestamp = int(self.record.get(field, "0"))
+        if timestamp:
+            return (
+                datetime.datetime.fromtimestamp(timestamp)
+                .astimezone(tzutc())
+                .replace(microsecond=0)
+            )
 
 
 class KanboardService(IssueService):
