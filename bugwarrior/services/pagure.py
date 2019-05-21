@@ -85,7 +85,7 @@ class PagureIssue(Issue):
         tag_template = Template(self.origin['tag_template'])
 
         for tagname in self.record.get('tags', []):
-            context.update({'label': self._normalize_label_to_tag(tagname) })
+            context.update({'label': self._normalize_label_to_tag(tagname)})
             tags.append(tag_template.render(context))
 
         return tags

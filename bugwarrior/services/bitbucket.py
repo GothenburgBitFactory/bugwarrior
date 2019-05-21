@@ -9,6 +9,7 @@ from bugwarrior.config import asbool, aslist, die
 import logging
 log = logging.getLogger(__name__)
 
+
 class BitbucketIssue(Issue):
     TITLE = 'bitbuckettitle'
     URL = 'bitbucketurl'

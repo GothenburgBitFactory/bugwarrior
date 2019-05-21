@@ -14,6 +14,7 @@ from bugwarrior.services import IssueService, Issue
 import logging
 log = logging.getLogger(__name__)
 
+
 class GmailIssue(Issue):
     THREAD_ID = 'gmailthreadid'
     SUBJECT = 'gmailsubject'
@@ -84,6 +85,7 @@ class GmailIssue(Issue):
             number=self.record['id'],
             cls='issue',
         )
+
 
 class GmailService(IssueService):
     APPLICATION_NAME = 'Bugwarrior Gmail Service'
@@ -156,6 +158,7 @@ class GmailService(IssueService):
         for thread in self.get_threads():
             yield self.get_issue_for_record(thread, thread_extras(thread, labels))
 
+
 def thread_extras(thread, labels):
     (name, address) = thread_last_sender(thread)
     return {
@@ -167,24 +170,30 @@ def thread_extras(thread, labels):
         'snippet': thread_snippet(thread),
     }
 
+
 def thread_labels(thread):
     return {label for message in thread['messages'] for label in message['labelIds']}
 
+
 def thread_subject(thread):
     return message_header(thread['messages'][0], 'Subject')
+
 
 def thread_last_sender(thread):
     from_header = message_header(thread['messages'][-1], 'From')
     (name, address) = email.utils.parseaddr(from_header)
     return (name if name else address, address)
 
+
 def thread_snippet(thread):
     return thread['messages'][-1]['snippet']
+
 
 def message_header(message, header_name):
     for item in message['payload']['headers']:
         if item['name'] == header_name:
             return item['value']
+
 
 def clean_filename(name):
     return re.sub(r'[^A-Za-z0-9_]+', '_', name)

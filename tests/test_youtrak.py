@@ -18,6 +18,7 @@ class TestYoutrackService(ConfigTest):
         self.config.add_section('myservice')
         self.config.set('myservice', 'youtrack.login', 'foobar')
         self.config.set('myservice', 'youtrack.password', 'XXXXXX')
+
     def test_get_keyring_service(self):
         self.config.set('myservice', 'youtrack.host', 'youtrack.example.com')
         service_config = ServiceConfig(

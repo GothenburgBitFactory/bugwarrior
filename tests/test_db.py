@@ -138,7 +138,8 @@ class TestSynchronize(ConfigTest):
                 u'status': u'completed',
                 u'urgency': 4.9,
             }],
-             'pending': []})
+            'pending': []})
+
 
 class TestUDAs(ConfigTest):
     def test_udas(self):

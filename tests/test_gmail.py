@@ -47,6 +47,7 @@ TEST_LABELS = [
         {'id': 'Label_43', 'name': 'postit'},
 ]
 
+
 class TestGmailIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'gmail.add_tags': 'added',

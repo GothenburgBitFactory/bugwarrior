@@ -1,10 +1,8 @@
 from builtins import filter
 import re
 import six
-from urllib.parse import urlparse
 
 import requests
-from six.moves.urllib.parse import quote_plus
 from jinja2 import Template
 
 from bugwarrior.config import asbool, aslist, die
@@ -465,7 +463,7 @@ class GithubService(IssueService):
             tagParts = tag.split('/')
             projectName = tagParts[1]
             if self.project_owner_prefix:
-                projectName = tagParts[0]+"."+projectName
+                projectName = tagParts[0] + "." + projectName
             extra = {
                 'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',

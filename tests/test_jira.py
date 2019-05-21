@@ -21,6 +21,7 @@ class FakeJiraClient(object):
     def comments(self, *args, **kwargs):
         return None
 
+
 class TestJiraIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'jira.username': 'one',
@@ -148,7 +149,6 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             actual_output = issue.to_taskwarrior()
 
         self.assertEqual(actual_output, expected_output)
-
 
     def test_issues(self):
         issue = next(self.service.issues())

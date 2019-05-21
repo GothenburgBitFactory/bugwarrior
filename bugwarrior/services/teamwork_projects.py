@@ -1,17 +1,10 @@
-from builtins import filter
-import re
-import six
-from urllib.parse import urlparse
-
 import requests
-from six.moves.urllib.parse import quote_plus
-from jinja2 import Template
 
-from bugwarrior.config import asbool, aslist, die
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
+
 
 class TeamworkClient(ServiceClient):
 
@@ -26,6 +19,7 @@ class TeamworkClient(ServiceClient):
     def call_api(self, method, endpoint, data=None):
         response = requests.get(self.host + endpoint, auth=(self.token, ""), params=data)
         return self.json_response(response)
+
 
 class TeamworkIssue(Issue):
     URL = 'teamwork_url'
@@ -123,6 +117,7 @@ class TeamworkIssue(Issue):
             self.ID: int(self.record["id"]),
         }
 
+
 class TeamworkService(IssueService):
     ISSUE_CLASS = TeamworkIssue
     CONFIG_PREFIX = 'teamwork_projects'
@@ -151,8 +146,7 @@ class TeamworkService(IssueService):
                     text = comment["body"]
                     comment_list.append((author, text))
                 return self.build_annotations(comment_list, None)
-        return [] 
-
+        return []
 
     def issues(self):
         response = self.client.call_api("GET", "/tasks.json")#, data= { "responsible-party-ids": self.user_id })

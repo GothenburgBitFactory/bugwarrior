@@ -5,9 +5,6 @@ import pytz
 import datetime
 import six
 
-from dateutil.parser import parse as parse_date
-from dateutil.tz import tzlocal
-
 from bugwarrior.config import die, asbool, aslist
 from bugwarrior.services import IssueService, Issue
 

@@ -123,6 +123,7 @@ def load_example_rc():
     example = readme.split('.. example')[1][4:]
     return example
 
+
 error_template = """
 *************************************************
 * There was a problem with your bugwarriorrc    *

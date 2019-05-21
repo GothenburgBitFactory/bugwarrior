@@ -31,6 +31,7 @@ SERVICE_FINISHED_ERROR = 1
 # date string to be parsed as if it were in your local timezone
 LOCAL_TIMEZONE = 'LOCAL_TIMEZONE'
 
+
 def get_service(service_name):
     epoint = iter_entry_points(group='bugwarrior.service', name=service_name)
     try:
@@ -72,14 +73,12 @@ class IssueService(object):
 
         log.info("Working on [%s]", self.target)
 
-
     def _get_config_or_default(self, key, default, as_type=lambda x: x):
         """Return a main config value, or default if it does not exist."""
 
         if self.main_config.has_option(self.main_section, key):
             return as_type(self.main_config.get(self.main_section, key))
         return default
-
 
     def get_templates(self):
         """ Get any defined templates for configuration values.
@@ -306,7 +305,7 @@ class Issue(object):
         record = copy.deepcopy(self._taskwarrior_record)
         if refined:
             record = self.refine_record(record)
-        if not 'tags' in record:
+        if 'tags' not in record:
             record['tags'] = []
         if refined:
             record['tags'].extend(self.get_added_tags())

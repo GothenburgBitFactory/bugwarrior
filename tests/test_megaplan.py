@@ -15,6 +15,7 @@ from .base import ServiceTest, AbstractServiceTest
 class FakeMegaplanClient(object):
     def __init__(self, record):
         self.record = record
+
     def get_actual_tasks(self):
         return [self.record]
 

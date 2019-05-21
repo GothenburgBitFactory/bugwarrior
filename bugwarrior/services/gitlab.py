@@ -7,8 +7,7 @@ from builtins import filter
 try:
     from urllib import quote, urlencode  # Python 2.X
 except ImportError:
-    from urllib.parse import quote, urlencode # Python 3+
-from six.moves.configparser import NoOptionError
+    from urllib.parse import quote, urlencode  # Python 3+
 import re
 import requests
 import six
@@ -163,7 +162,6 @@ class GitlabIssue(Issue):
         if assignee:
             assignee = assignee['username']
 
-
         self.title = title
 
         return {
@@ -300,7 +298,6 @@ class GitlabService(IssueService, ServiceClient):
             'import_labels_as_tags': self.import_labels_as_tags,
             'label_template': self.label_template,
         }
-
 
     def get_owner(self, issue):
         if issue[1]['assignee'] != None and issue[1]['assignee']['username']:
@@ -474,7 +471,7 @@ class GitlabService(IssueService, ServiceClient):
                 all_repos.append(item)
 
         else:
-            querystring = { 'simple': True }
+            querystring = {'simple': True}
             if self.membership:
                 querystring['membership'] = True
             if self.owned:

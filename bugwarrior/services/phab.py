@@ -1,5 +1,4 @@
 from builtins import str
-import six
 
 from bugwarrior.config import aslist
 from bugwarrior.services import IssueService, Issue
@@ -165,7 +164,7 @@ class PhabricatorService(IssueService):
             extra = {
                 'project': project,
                 'type': 'issue',
-                #'annotations': self.annotations(phid, issue)
+                # 'annotations': self.annotations(phid, issue)
             }
 
             yield self.get_issue_for_record(issue, extra)
@@ -222,7 +221,7 @@ class PhabricatorService(IssueService):
             extra = {
                 'project': project,
                 'type': 'pull_request',
-                #'annotations': self.annotations(phid, issue)
+                # 'annotations': self.annotations(phid, issue)
             }
             yield self.get_issue_for_record(diff, extra)
 

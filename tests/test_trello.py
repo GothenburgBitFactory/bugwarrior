@@ -8,7 +8,6 @@ from mock import patch
 import responses
 
 from dateutil.parser import parse as parse_date
-from dateutil.tz import tzlocal
 
 from bugwarrior.config import ServiceConfig
 from bugwarrior.services.trello import TrelloService, TrelloIssue
@@ -25,7 +24,7 @@ class TestTrelloIssue(ServiceTest):
         "shortUrl": "https://trello.com/c/AAaaBBbb",
         "url": "https://trello.com/c/AAaBBbb/42-so-long",
         "labels": [{'name': "foo"}, {"name": "bar"}],
-        }
+    }
 
     def setUp(self):
         super(TestTrelloIssue, self).setUp()
@@ -194,7 +193,7 @@ class TestTrelloService(ConfigTest):
             'trellourl': 'https://trello.com/c/AAaBBbb/42-so-long',
             'annotations': [
                 "@luidgi - Preums",
-                "@mario - Deuz" ],
+                "@mario - Deuz"],
             'tags': []}
         actual = next(issues).get_taskwarrior_record()
         self.assertEqual(expected, actual)

@@ -1,8 +1,10 @@
 from future import standard_library
 standard_library.install_aliases()
-import datetime
+
 import os
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 import warnings
 
 from bugwarrior.config import asbool
@@ -32,9 +34,6 @@ def _get_metadata(issue):
     project = ''
     if 'project' in issue:
         project = "Project: " + issue['project']
-    # if 'due' in issue:
-    #     due = "Due: " + datetime.datetime.fromtimestamp(
-    #         int(issue['due'])).strftime('%Y-%m-%d')
     if 'tags' in issue:
         tags = "Tags: " + ', '.join(issue['tags'])
     if 'priority' in issue:

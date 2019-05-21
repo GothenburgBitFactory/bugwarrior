@@ -7,7 +7,9 @@ import offtrac
 import csv
 import io as StringIO
 import requests
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 
 from bugwarrior.config import die, asbool
 from bugwarrior.services import Issue, IssueService
