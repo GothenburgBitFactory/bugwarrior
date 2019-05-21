@@ -86,8 +86,6 @@ class TeamworkIssue(Issue):
 
     def to_taskwarrior(self):
         task_url = self.get_task_url()
-        description = self.record.get("content", "")
-        parent_id = self.record["parentTaskId"]
         status = self.record["status"]
 
         due = self.parse_date(self.record.get('due-date'))
