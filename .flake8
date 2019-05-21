@@ -7,3 +7,4 @@ exclude =
     .tox,
     bugwarrior/docs/conf.py,
     build,
+    task-2.4.4,
