@@ -300,11 +300,11 @@ class GitlabService(IssueService, ServiceClient):
         }
 
     def get_owner(self, issue):
-        if issue[1]['assignee'] != None and issue[1]['assignee']['username']:
+        if issue[1]['assignee'] is not None and issue[1]['assignee']['username']:
             return issue[1]['assignee']['username']
 
     def get_author(self, issue):
-        if issue[1]['author'] != None and issue[1]['author']['username']:
+        if issue[1]['author'] is not None and issue[1]['author']['username']:
             return issue[1]['author']['username']
 
     def filter_repos(self, repo):
