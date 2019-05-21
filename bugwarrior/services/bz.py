@@ -306,7 +306,7 @@ class BugzillaService(IssueService):
         h = history[-1]
         for change in h['changes']:
             if change['field_name'] == 'status' and change['added'] == 'ASSIGNED':
-              assigned_date = h['when']
+                assigned_date = h['when']
 
         # messy conversion :(
         # TODO: create method that's used here and in needinfos time conv above

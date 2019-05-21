@@ -121,7 +121,7 @@ class BTSService(IssueService, ServiceClient):
             die("[%s] has neither 'bts.email' or 'bts.packages'" % (target,))
 
         if ('udd_ignore_sponsor' in service_config and
-            (not asbool(service_config.get('udd')))):
+                (not asbool(service_config.get('udd')))):
             die("[%s] defines settings for UDD search without enabling"
                 " UDD search" % (target,))
 
@@ -143,7 +143,7 @@ class BTSService(IssueService, ServiceClient):
             'format': 'json',
             'dmd': 1,
             'email1': self.email,
-            }
+        }
         if self.udd_ignore_sponsor:
             request_params['nosponsor1'] = "on"
         resp = requests.get(UDD_BUGS_SEARCH, request_params)
