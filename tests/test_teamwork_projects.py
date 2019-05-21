@@ -63,25 +63,23 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
         self.arbitrary_comments = {
             "comments": [
                 {
-                  "project-id": "999",
-                  "author-lastname": "User",
-                  "datetime": "2014-03-31T13:03:29Z",
-                  "author_id": "999",
-                  "id": "999",
-                  "company-name": "Test Company",
-                  "last-changed-on": "",
-                  "company-id": "999",
-                  "project-name": "demo",
-                  "body": "A test comment",
-                  "commentNo": "1",
-                  "author-firstname": "Demo",
-                  "comment-link": "tasks/436523?c=93",
-                  "author-id": "999"
+                    "project-id": "999",
+                    "author-lastname": "User",
+                    "datetime": "2014-03-31T13:03:29Z",
+                    "author_id": "999",
+                    "id": "999",
+                    "company-name": "Test Company",
+                    "last-changed-on": "",
+                    "company-id": "999",
+                    "project-name": "demo",
+                    "body": "A test comment",
+                    "commentNo": "1",
+                    "author-firstname": "Demo",
+                    "comment-link": "tasks/436523?c=93",
+                    "author-id": "999"
                 }
             ]
         }
-
-
 
     @responses.activate
     def test_to_taskwarrior(self):

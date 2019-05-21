@@ -59,12 +59,12 @@ class TestTrelloService(ConfigTest):
     CARD3 = {'id': 'K4rD', 'name': 'Card 3', 'members': []}
     LIST1 = {'id': 'L15T', 'name': 'List 1'}
     LIST2 = {'id': 'ZZZZ', 'name': 'List 2'}
-    COMMENT1 = { "type": "commentCard",
-                 "data": { "text": "Preums" },
-                 "memberCreator": { "username": "luidgi" } }
-    COMMENT2 = { "type": "commentCard",
-                 "data": { "text": "Deuz" },
-                 "memberCreator": { "username": "mario" } }
+    COMMENT1 = {"type": "commentCard",
+                "data": {"text": "Preums"},
+                "memberCreator": {"username": "luidgi"}}
+    COMMENT2 = {"type": "commentCard",
+                "data": {"text": "Deuz"},
+                "memberCreator": {"username": "mario"}}
 
     def setUp(self):
         super(TestTrelloService, self).setUp()

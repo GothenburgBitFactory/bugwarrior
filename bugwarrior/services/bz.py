@@ -277,7 +277,7 @@ class BugzillaService(IssueService):
                 'annotations': self.annotations(tag, issue, issue_obj),
             }
 
-            needinfos = [f for f in issue['flags'] if (    f['name'] == 'needinfo'
+            needinfos = [f for f in issue['flags'] if (f['name'] == 'needinfo'
                                           and f['status'] == '?'
                                           and f.get('requestee', self.username) == self.username)]
             if needinfos:

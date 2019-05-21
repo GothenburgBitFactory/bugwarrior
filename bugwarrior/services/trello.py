@@ -97,7 +97,7 @@ class TrelloService(IssueService, ServiceClient):
             self.config.get('import_labels_as_tags', False, asbool),
             'label_template':
             self.config.get('label_template', DEFAULT_LABEL_TEMPLATE),
-            }
+        }
 
     def issues(self):
         """
@@ -119,7 +119,6 @@ class TrelloService(IssueService, ServiceClient):
             ((c['memberCreator']['username'], c['data']['text']) for c in comments),
             card_json["shortUrl"])
         return annotations
-
 
     def get_boards(self):
         """

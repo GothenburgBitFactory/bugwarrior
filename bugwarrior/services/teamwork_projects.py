@@ -149,7 +149,7 @@ class TeamworkService(IssueService):
         return []
 
     def issues(self):
-        response = self.client.call_api("GET", "/tasks.json")#, data= { "responsible-party-ids": self.user_id })
+        response = self.client.call_api("GET", "/tasks.json")
         for issue in response["todo-items"]:
             # Determine if issue is need by if following comments, changes or assigned
             if issue["userFollowingComments"] or issue["userFollowingChanges"]\
