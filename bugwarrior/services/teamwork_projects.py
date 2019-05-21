@@ -132,18 +132,18 @@ class TeamworkService(IssueService):
     def get_comments(self, issue):
         if self.annotation_comments:
             if issue.get("comments-count", 0) > 0:
+                url = self.host + "/#/tasks/" + str(issue["id"])
                 endpoint = "/tasks/{task_id}/comments.json".format(task_id=issue["id"])
                 comments = self.client.call_api("GET", endpoint)
                 comment_list = []
                 for comment in comments["comments"]:
-                    url = self.host + "/#/tasks/" + str(issue["id"])
                     author = "{first} {last}".format(
                         first=comment["author-firstname"],
                         last=comment["author-lastname"],
                     )
                     text = comment["body"]
                     comment_list.append((author, text))
-                return self.build_annotations(comment_list, None)
+                return self.build_annotations(comment_list, url)
         return []
 
     def issues(self):
