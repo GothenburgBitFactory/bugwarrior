@@ -73,11 +73,11 @@ class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         self.add_response(
             re.compile(
-                'http://hello/\?(?=.*token=howdy)(?=.*path_info=\%2Fprojects\%2F[1-2]\%2Fuser-tasks)(?=.*format=json)'),
+                'http://hello/?(?=.*token=howdy)(?=.*path_info=%2Fprojects%2F[1-2]%2Fuser-tasks)(?=.*format=json)'),
             json=[self.arbitrary_issue])
         self.add_response(
             re.compile(
-                'http://hello/\?(?=.*token=howdy)(?=.*path_info=\%2Fprojects\%2F20\%2Ftickets\%2F10)(?=.*format=json)'),
+                'http://hello/?(?=.*token=howdy)(?=.*path_info=%2Fprojects%2F20%2Ftickets%2F10)(?=.*format=json)'),
             json=self.arbitrary_issue)
 
         issue = next(self.service.issues())
