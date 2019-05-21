@@ -1,0 +1,9 @@
+[flake8]
+max-line-length = 100
+exclude =
+    .eggs,
+    .env,
+    .git,
+    .tox,
+    bugwarrior/docs/conf.py,
+    build,

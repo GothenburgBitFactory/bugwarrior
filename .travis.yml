@@ -37,9 +37,12 @@ matrix:
 
 install:
   - pip install .[jira,megaplan,activecollab,bts,bugzilla,trac,gmail]
+  - pip install flake8
   - pip install codecov
   - pip install coverage
-script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior -v
+script:
+  - nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior -v
+  - flake8 .
 after_success: codecov
 notifications:
     email: true
