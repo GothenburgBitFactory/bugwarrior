@@ -125,6 +125,7 @@ class GithubIssue(Issue):
     BODY = 'githubbody'
     CREATED_AT = 'githubcreatedon'
     UPDATED_AT = 'githubupdatedat'
+    CLOSED_AT = 'githubclosedon'
     MILESTONE = 'githubmilestone'
     URL = 'githuburl'
     REPO = 'githubrepo'
@@ -132,6 +133,7 @@ class GithubIssue(Issue):
     NUMBER = 'githubnumber'
     USER = 'githubuser'
     NAMESPACE = 'githubnamespace'
+    STATE = 'githubstate'
 
     UDAS = {
         TITLE: {
@@ -149,6 +151,10 @@ class GithubIssue(Issue):
         UPDATED_AT: {
             'type': 'date',
             'label': 'Github Updated',
+        },
+        CLOSED_AT: {
+            'type': 'date',
+            'label': 'GitHub Closed',
         },
         MILESTONE: {
             'type': 'string',
@@ -178,6 +184,10 @@ class GithubIssue(Issue):
             'type': 'string',
             'label': 'Github Namespace',
         },
+        STATE: {
+            'type': 'string',
+            'label': 'GitHub State',
+        }
     }
     UNIQUE_KEY = (URL, TYPE,)
 
@@ -193,21 +203,17 @@ class GithubIssue(Issue):
         if body:
             body = body.replace('\r\n', '\n')
 
-        if self.extra['type'] == 'pull_request':
-            priority = 'H'
-        else:
-            priority = self.origin['default_priority']
-
-        created = self.record['created_at']
-        if created:
-            created = self.parse_date(self.record['created_at'])
+        created = self.parse_date(self.record.get('created_at'))
+        updated = self.parse_date(self.record.get('updated_at'))
+        closed = self.parse_date(self.record.get('closed_at'))
 
         return {
             'project': self.extra['project'],
-            'priority': priority,
+            'priority': self.origin['default_priority'],
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
             'entry': created,
+            'end': closed,
 
             self.URL: self.record['html_url'],
             self.REPO: self.record['repo'],
@@ -218,8 +224,10 @@ class GithubIssue(Issue):
             self.MILESTONE: milestone,
             self.NUMBER: self.record['number'],
             self.CREATED_AT: created,
-            self.UPDATED_AT: self.parse_date(self.record['updated_at']),
+            self.UPDATED_AT: updated,
+            self.CLOSED_AT: closed,
             self.NAMESPACE: self.extra['namespace'],
+            self.STATE: self.record.get('state', '')
         }
 
     def get_tags(self):
@@ -277,6 +285,9 @@ class GithubService(IssueService):
         self.username = self.config.get('username')
         self.filter_pull_requests = self.config.get(
             'filter_pull_requests', default=False, to_type=asbool
+        )
+        self.exclude_pull_requests = self.config.get(
+            'exclude_pull_requests', default=False, to_type=asbool
         )
         self.involved_issues = self.config.get(
             'involved_issues', default=False, to_type=asbool
@@ -408,8 +419,11 @@ class GithubService(IssueService):
         return True
 
     def include(self, issue):
-        if 'pull_request' in issue[1] and not self.filter_pull_requests:
-            return True
+        if 'pull_request' in issue[1]:
+            if self.exclude_pull_requests:
+                return False
+            if not self.filter_pull_requests:
+                return True
         return super(GithubService, self).include(issue)
 
     def issues(self):
@@ -418,14 +432,19 @@ class GithubService(IssueService):
             issues.update(self.get_query(self.query))
 
         if self.config.get('include_user_repos', True, asbool):
-            all_repos = self.client.get_repos(self.username)
-            assert(type(all_repos) == list)
-            repos = filter(self.filter_repos, all_repos)
+            # Only query for all repos if an explicit
+            # include_repos list is not specified.
+            if self.include_repos:
+                repos = self.include_repos
+            else:
+                all_repos = self.client.get_repos(self.username)
+                repos = filter(self.filter_repos, all_repos)
+                repos = [repo['name'] for repo in repos]
 
             for repo in repos:
                 issues.update(
                     self.get_owned_repo_issues(
-                        self.username + "/" + repo['name'])
+                        self.username + "/" + repo)
                 )
         if self.config.get('include_user_issues', True, asbool):
             issues.update(

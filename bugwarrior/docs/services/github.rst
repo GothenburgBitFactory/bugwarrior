@@ -49,7 +49,7 @@ included. To turn this off, set::
     github.include_user_repos = False
 
 If you happen to be working with a large number of projects, you
-may want to pull issues from only a subset of your repositories.  To 
+may want to pull issues from only a subset of your repositories.  To
 do that, you can use the ``github.include_repos`` option.
 
 For example, if you would like to only pull-in issues from
@@ -60,7 +60,7 @@ this line to your service configuration::
 
 Alternatively, if you have a particularly noisy repository, you can
 instead choose to import all issues excepting it using the
-``github.exclude_repos`` configuration option.  
+``github.exclude_repos`` configuration option.
 
 In this example, ``noisy_repository`` is the repository you would
 *not* like issues created for::
@@ -102,6 +102,14 @@ pull requests are not filtered by default.  You can filter pull requests
 by adding the following configuration option::
 
     github.filter_pull_requests = True
+
+Exclude Pull Requests
+++++++++++++++++++++
+
+If you want bugwarrior to not track pull requests you can disable it altogether
+and ensure bugwarrior only tracks issues.
+
+    github.exclude_pull_requests = True
 
 Get involved issues
 +++++++++++++++++++
@@ -153,6 +161,8 @@ Provided UDA Fields
 +---------------------+---------------------+---------------------+
 | ``githubcreatedon`` | Created             | Date & Time         |
 +---------------------+---------------------+---------------------+
+| ``githubclosedon``  | Closed              | Date & Time         |
++---------------------+---------------------+---------------------+
 | ``githubmilestone`` | Milestone           | Text (string)       |
 +---------------------+---------------------+---------------------+
 | ``githubnumber``    | Issue/PR #          | Numeric             |
@@ -170,4 +180,6 @@ Provided UDA Fields
 | ``githubuser``      | Author of issue/PR  | Text (string)       |
 +---------------------+---------------------+---------------------+
 | ``githubnamespace`` | project namespace   | Text (string)       |
++---------------------+---------------------+---------------------+
+| ``githubstate``     | Issue/PR state      | Text (string)       |
 +---------------------+---------------------+---------------------+

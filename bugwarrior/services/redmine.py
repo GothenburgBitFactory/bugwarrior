@@ -169,7 +169,7 @@ class RedMineIssue(Issue):
             self.URL: self.get_issue_url(),
             self.SUBJECT: self.record['subject'],
             self.ID: self.record['id'],
-            self.DESCRIPTION: self.record['description'],
+            self.DESCRIPTION: self.record.get('description', ''),
             self.TRACKER: self.record['tracker']['name'],
             self.STATUS: self.record['status']['name'],
             self.AUTHOR: self.record['author']['name'],

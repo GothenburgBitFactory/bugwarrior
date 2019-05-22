@@ -153,7 +153,8 @@ class YoutrackService(IssueService, ServiceClient):
         )
 
     def _login(self, login, password):
-        resp = self.session.post(self.rest_url + "/user/login", {'login': login, 'password': password})
+        params = {'login': login, 'password': password}
+        resp = self.session.post(self.rest_url + "/user/login", params)
         if resp.status_code != 200:
             raise RuntimeError("YouTrack responded with %s" % resp)
         self.session.headers['Cookie'] = resp.headers['set-cookie']
@@ -180,7 +181,8 @@ class YoutrackService(IssueService, ServiceClient):
         IssueService.validate_config(service_config, target)
 
     def issues(self):
-        resp = self.session.get(self.rest_url + '/issue', params={'filter': self.query, 'max': self.query_limit})
+        params = {'filter': self.query, 'max': self.query_limit}
+        resp = self.session.get(self.rest_url + '/issue', params=params)
         issues = self.json_response(resp)['issue']
         log.debug(" Found %i total.", len(issues))
 

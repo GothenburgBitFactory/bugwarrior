@@ -4,6 +4,8 @@ Phabricator
 You can import Maniphest tasks from your Phabricator instance using
 the ``phabricator`` service name.
 
+This service supports both Maniphest (Tasks) and Differential (Revision).
+
 Additional Requirements
 -----------------------
 
@@ -35,6 +37,9 @@ configuration options described in :ref:`common_configuration_options`.
 Service Features
 ----------------
 
+Filtering by User and Project
+.............................
+
 If you have dozens of users and projects, you might want to
 pull the tasks and code review requests only for the specific ones.
 
@@ -63,6 +68,9 @@ you can find it out by querying Phabricator Conduit
 the methods which return the needed info are ``user.query``, ``project.query``
 and ``repository.query`` respectively.
 
+Selecting a Phabricator Host
+............................
+
 If your ``~/.arcrc`` includes credentials for multiple Phabricator instances,
 it is undefined which one will be used. To make it explicit, you can use::
 
@@ -71,17 +79,35 @@ it is undefined which one will be used. To make it explicit, you can use::
 Where ``https://YOUR_PHABRICATOR_HOST`` **must match** the corresponding json key
 in ``~/.arcrc``, which may include ``/api/`` besides your hostname.
 
+Ignoring Some Items
+...................
+
+By default, any Task or Revision relating to any of the given users or projects
+will be included.  This is likely more than you want!  You can ignore some user
+relationships with the following configuration::
+
+    phabricator.ignore_cc = True        # ignore CC field
+    phabricator.ignore_author = True    # ignore Author field
+    phabricator.ignore_owner = True     # ignore Owner field (Tasks only)
+    phabricator.ignore_reviewers = True # ignore Reviewers field (Revisions only)
+
+Note that there is no way to filter by the reviewer's response (for example, to
+exclude Revisions you have already reviewed). Phabricator does not provide the
+necessary information in the Conduit API.
+
 Provided UDA Fields
 -------------------
 
-+----------------------+----------------------+----------------------+
-| Field Name           | Description          | Type                 |
-+======================+======================+======================+
-| ``phabricatorid``    | Object               | Text (string)        |
-+----------------------+----------------------+----------------------+
-| ``phabricatortitle`` | Title                | Text (string)        |
-+----------------------+----------------------+----------------------+
-| ``phabricatortype``  | Type                 | Text (string)        |
-+----------------------+----------------------+----------------------+
-| ``phabricatorurl``   | URL                  | Text (string)        |
-+----------------------+----------------------+----------------------+
++----------------------+--------------------------+----------------------+
+| Field Name           | Description              | Type                 |
++======================+==========================+======================+
+| ``phabricatorid``    | Object                   | Text (string)        |
++----------------------+--------------------------+----------------------+
+| ``phabricatortitle`` | Title                    | Text (string)        |
++----------------------+--------------------------+----------------------+
+| ``phabricatortype``  | Type (``issue`` for      | Text (string)        |
+|                      | Tasks, ``pull_request``  |                      |
+|                      | for Revisions)           |                      |
++----------------------+--------------------------+----------------------+
+| ``phabricatorurl``   | URL                      | Text (string)        |
++----------------------+--------------------------+----------------------+

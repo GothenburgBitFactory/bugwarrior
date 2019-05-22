@@ -1,7 +1,7 @@
 from future import standard_library
 standard_library.install_aliases()
 import codecs
-from configparser import ConfigParser
+from six.moves import configparser
 import os
 import subprocess
 import sys
@@ -82,6 +82,11 @@ def get_service_password(service, username, oracle=None, interactive=False):
                                             oracle, interactive=True)
             if password:
                 keyring.set_password(service, username, password)
+        elif not interactive and password is None:
+            log.error(
+                'Unable to retrieve password from keyring. '
+                'Re-run in interactive mode to set a password'
+            )
     elif interactive and oracle == "@oracle:ask_password":
         prompt = "%s password: " % service
         password = getpass.getpass(prompt)
@@ -210,12 +215,26 @@ def get_config_path():
     return paths[0]
 
 
+def fix_logging_path(config, main_section):
+    """
+    Expand environment variables and user home (~) in the log.file and return
+    as relative path.
+    """
+    log_file = config.get(main_section, 'log.file')
+    if log_file:
+        log_file = os.path.expanduser(os.path.expandvars(log_file))
+        if os.path.isabs(log_file):
+            log_file = os.path.relpath(log_file)
+    return log_file
+
+
 def load_config(main_section, interactive=False):
     config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None}, allow_no_value=True)
     path = get_config_path()
     config.readfp(codecs.open(path, "r", "utf-8",))
     config.interactive = interactive
     config.data = BugwarriorData(get_data_path(config, main_section))
+    config.set(main_section, 'log.file', fix_logging_path(config, main_section))
     validate_config(config, main_section)
     return config
 
@@ -240,6 +259,9 @@ def get_data_path(config, main_section):
     env = dict(os.environ)
     env['TASKRC'] = taskrc
 
+    if not os.path.isfile(taskrc):
+        raise IOError('Unable to find taskrc file.')
+
     tw_show = subprocess.Popen(
         ('task', '_show'), stdout=subprocess.PIPE, env=env)
     data_location = subprocess.check_output(
@@ -248,13 +270,13 @@ def get_data_path(config, main_section):
     data_path = data_location[len(line_prefix):].rstrip().decode('utf-8')
 
     if not data_path:
-        raise RuntimeError('Unable to determine the data location.')
+        raise IOError('Unable to determine the data location.')
 
     return os.path.normpath(os.path.expanduser(data_path))
 
 
 # ConfigParser is not a new-style class, so inherit from object to fix super().
-class BugwarriorConfigParser(ConfigParser, object):
+class BugwarriorConfigParser(configparser.ConfigParser, object):
     def getint(self, section, option):
         """ Accepts both integers and empty values. """
         try:

@@ -12,6 +12,7 @@ It currently supports the following remote resources:
  - `bitbucket <https://bitbucket.org>`_
  - `pagure <https://pagure.io/>`_
  - `bugzilla <https://www.bugzilla.org/>`_
+ - `Debian BTS <https://bugs.debian.org/>`_
  - `trac <https://trac.edgewall.org/>`_
  - `megaplan <https://www.megaplan.ru/>`_
  - `teamlab <https://www.teamlab.com/>`_
@@ -67,3 +68,4 @@ Contributors
 - Iain R. Learmonth (contributed support for the Debian BTS and maintains the
   Debian package)
 - BinaryBabel (contributed support for YouTrack)
+- Matthew Cengia (contributed extra support for Trello)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import configparser as ConfigParser
+from six.moves import configparser
 
 import taskw.task
 from bugwarrior import db
@@ -55,7 +55,7 @@ class TestSynchronize(ConfigTest):
 
             return tasks
 
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.add_section('general')
         config.set('general', 'targets', 'my_service')
         config.set('general', 'static_fields', 'project, priority')
@@ -75,7 +75,12 @@ class TestSynchronize(ConfigTest):
 
         # TEST NEW ISSUE AND EXISTING ISSUE.
         for _ in range(2):
-            db.synchronize(iter((issue,)), config, 'general')
+            # Use an issue generator with two copies of the same issue.
+            # These should be de-duplicated in db.synchronize before
+            # writing out to taskwarrior.
+            # https://github.com/ralphbean/bugwarrior/issues/601
+            issue_generator = iter((issue, issue,))
+            db.synchronize(issue_generator, config, 'general')
 
             self.assertEqual(get_tasks(tw), {
                 'completed': [],
@@ -137,7 +142,7 @@ class TestSynchronize(ConfigTest):
 
 class TestUDAs(ConfigTest):
     def test_udas(self):
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.add_section('general')
         config.set('general', 'targets', 'my_service')
         config.add_section('my_service')
@@ -147,6 +152,8 @@ class TestUDAs(ConfigTest):
         self.assertEqual(udas, [
             u'uda.githubbody.label=Github Body',
             u'uda.githubbody.type=string',
+            u'uda.githubclosedon.label=GitHub Closed',
+            u'uda.githubclosedon.type=date',
             u'uda.githubcreatedon.label=Github Created',
             u'uda.githubcreatedon.type=date',
             u'uda.githubmilestone.label=Github Milestone',
@@ -157,6 +164,8 @@ class TestUDAs(ConfigTest):
             u'uda.githubnumber.type=numeric',
             u'uda.githubrepo.label=Github Repo Slug',
             u'uda.githubrepo.type=string',
+            u'uda.githubstate.label=GitHub State',
+            u'uda.githubstate.type=string',
             u'uda.githubtitle.label=Github Title',
             u'uda.githubtitle.type=string',
             u'uda.githubtype.label=Github Type',

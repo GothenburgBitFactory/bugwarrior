@@ -1,4 +1,171 @@
 
+1.7.0
+-----
+
+Pull Requests
+
+- (@jspricke)       #610, Ignore closed sprints for due date
+  https://github.com/ralphbean/bugwarrior/pull/610
+- (@ssbarnea)       #618, Fix tests on py27 due to configparser
+  https://github.com/ralphbean/bugwarrior/pull/618
+- (@pawamoy)        #621, Complete tasks with end value, add state and closed UDAs to GitHub
+  https://github.com/ralphbean/bugwarrior/pull/621
+- (@jspricke)       #630, Add Debian BTS to the Readme
+  https://github.com/ralphbean/bugwarrior/pull/630
+- (@mattcen)        #629, Add support for Trello due dates
+  https://github.com/ralphbean/bugwarrior/pull/629
+- (@Fongshway)      #633, [JIRA] Add status and issue type UDAs
+  https://github.com/ralphbean/bugwarrior/pull/633
+- (@ssbarnea)       #497, Unpin futures to avoid dependency conflicts
+  https://github.com/ralphbean/bugwarrior/pull/497
+- (@gustavoheinz)   #646, Fix config exceptions
+  https://github.com/ralphbean/bugwarrior/pull/646
+- (@mathiashls)     #648, optionally set bug to "started" when assigned
+  https://github.com/ralphbean/bugwarrior/pull/648
+- (@ralphbean)      #647, Update python3 versions.
+  https://github.com/ralphbean/bugwarrior/pull/647
+- (@danihodovic)    #642, Add the ability to exclude Github pull-requests
+  https://github.com/ralphbean/bugwarrior/pull/642
+- (@gustavoheinz)   #649, Update gitlab project requests
+  https://github.com/ralphbean/bugwarrior/pull/649
+- (@mathiashls)     #650, Reduce redundant code in services/gitlab.py
+  https://github.com/ralphbean/bugwarrior/pull/650
+- (@ralphbean)      #651, Use explicit due date from jira, if set.
+  https://github.com/ralphbean/bugwarrior/pull/651
+- (@stashlukj)      #645, jira: split priority.name for lookup
+  https://github.com/ralphbean/bugwarrior/pull/645
+- (@cure)           #657, Do not abort with ValueError when default_permission is blank
+  https://github.com/ralphbean/bugwarrior/pull/657
+- (@ralphbean)      #653, GitHub: Only query for user repos if an include_repos list is not specified
+  https://github.com/ralphbean/bugwarrior/pull/653
+- (@ralphbean)      #654, De-duplicate issues before first write to taskwarrior.
+  https://github.com/ralphbean/bugwarrior/pull/654
+
+Commits
+
+- 18b6e5232 Unpin futures to avoid dependency conflicts
+  https://github.com/ralphbean/bugwarrior/commit/18b6e5232
+- b512100d5 Fix UDA fields table in gmail
+  https://github.com/ralphbean/bugwarrior/commit/b512100d5
+- b949cbb01 Ignore closed sprints for due date
+  https://github.com/ralphbean/bugwarrior/commit/b949cbb01
+- 5f9fc143d Support Phabricator installations without Maniphest installed
+  https://github.com/ralphbean/bugwarrior/commit/5f9fc143d
+- eea91cabf Remove unused `projects` dictionary
+  https://github.com/ralphbean/bugwarrior/commit/eea91cabf
+- dc614824a Make include_repos work the way the documentation suggests (#605)
+  https://github.com/ralphbean/bugwarrior/commit/dc614824a
+- 3e28b11f7 Fix tests on py27 due to configparser
+  https://github.com/ralphbean/bugwarrior/commit/3e28b11f7
+- 41ee8405a Add state and closedon UDAs to GitHub service
+  https://github.com/ralphbean/bugwarrior/commit/41ee8405a
+- b8a2e9a47 Mark new and updated tasks as completed if end date
+  https://github.com/ralphbean/bugwarrior/commit/b8a2e9a47
+- e9ab77786 Update tests for new GitHub closedon and state UDAs
+  https://github.com/ralphbean/bugwarrior/commit/e9ab77786
+- 4c5cedf94 Make tests coherent
+  https://github.com/ralphbean/bugwarrior/commit/4c5cedf94
+- efce86574 Add UDAs in documentation
+  https://github.com/ralphbean/bugwarrior/commit/efce86574
+- 9297ba717 Add test to expose sprint parsing bug
+  https://github.com/ralphbean/bugwarrior/commit/9297ba717
+- 1471b7f45 Fix for jira sprint parsing bug
+  https://github.com/ralphbean/bugwarrior/commit/1471b7f45
+- 4a3805373 Handle paths absolutes or with envvars for logging
+  https://github.com/ralphbean/bugwarrior/commit/4a3805373
+- 30e0fb2f9 Log exceptions during command execution with their backtrace
+  https://github.com/ralphbean/bugwarrior/commit/30e0fb2f9
+- abaa17936 Add support for Trello due dates
+  https://github.com/ralphbean/bugwarrior/commit/abaa17936
+- 5a2c6810d fix tests
+  https://github.com/ralphbean/bugwarrior/commit/5a2c6810d
+- 641842ef5 Add Debian BTS to the Readme
+  https://github.com/ralphbean/bugwarrior/commit/641842ef5
+- 726afa652 [JIRA] Add status and issue type UDAs
+  https://github.com/ralphbean/bugwarrior/commit/726afa652
+- 779bf8dd8 Add the ability to exclude Github pull-requests
+  https://github.com/ralphbean/bugwarrior/commit/779bf8dd8
+- 28879506b jira: split priority.name for lookup
+  https://github.com/ralphbean/bugwarrior/commit/28879506b
+- bf468543d Check if taskrc file exists before trying to load config
+  https://github.com/ralphbean/bugwarrior/commit/bf468543d
+- 05c5e2eb2 Raise proper exception when trying to handle data_path on config
+  https://github.com/ralphbean/bugwarrior/commit/05c5e2eb2
+- 52bdd8ae2 optionally set bug to "started" when assigned
+  https://github.com/ralphbean/bugwarrior/commit/52bdd8ae2
+- ccc371e15 code simplification based on PR feedback
+  https://github.com/ralphbean/bugwarrior/commit/ccc371e15
+- 0c139f34c gitlab: make the gitlabnumber UDA a string (fixes #552)
+  https://github.com/ralphbean/bugwarrior/commit/0c139f34c
+- 7a0b2959c Fix tests and docs for #557.
+  https://github.com/ralphbean/bugwarrior/commit/7a0b2959c
+- ce4beba12 Update python3 versions.
+  https://github.com/ralphbean/bugwarrior/commit/ce4beba12
+- 94a724b8a Update gitlab service to correct project request
+  https://github.com/ralphbean/bugwarrior/commit/94a724b8a
+- 4dccbed38 Fix when request single project for include_repos
+  https://github.com/ralphbean/bugwarrior/commit/4dccbed38
+- 6fc90d8cf Gitlab request projects in simple mode
+  https://github.com/ralphbean/bugwarrior/commit/6fc90d8cf
+- ec2024150 Fix default_priority option
+  https://github.com/ralphbean/bugwarrior/commit/ec2024150
+- 58c3b4edb Revert "Make pull requests a top priority."
+  https://github.com/ralphbean/bugwarrior/commit/58c3b4edb
+- ba93fabdd Don't hardcode priority for trello cards
+  https://github.com/ralphbean/bugwarrior/commit/ba93fabdd
+- 5af3b30a1 Set default priority in trello test.
+  https://github.com/ralphbean/bugwarrior/commit/5af3b30a1
+- 8fdb37826 Gitlab config membership filter
+  https://github.com/ralphbean/bugwarrior/commit/8fdb37826
+- d3d4e59e6 Gitlab config owner filter
+  https://github.com/ralphbean/bugwarrior/commit/d3d4e59e6
+- c01b977bf Fix gitlab test
+  https://github.com/ralphbean/bugwarrior/commit/c01b977bf
+- ec1128c41 Support ignoring some fields in Phabricator
+  https://github.com/ralphbean/bugwarrior/commit/ec1128c41
+- 64f0c2880 Merge branch 'ignore_stuff' into develop
+  https://github.com/ralphbean/bugwarrior/commit/64f0c2880
+- ffe11e743 Add a log message to help debug keyring password errors
+  https://github.com/ralphbean/bugwarrior/commit/ffe11e743
+- 0465f09ec services/gitlab.py: Refactor redundant code to _get_issue_objs()
+  https://github.com/ralphbean/bugwarrior/commit/0465f09ec
+- 92d60802f JIRA: Use explicit due date, if set.
+  https://github.com/ralphbean/bugwarrior/commit/92d60802f
+- 6397b2bb8 Refactor logic to return None if no valid sprint found.
+  https://github.com/ralphbean/bugwarrior/commit/6397b2bb8
+- 9f340b128 Redmine description is optional.
+  https://github.com/ralphbean/bugwarrior/commit/9f340b128
+- f69bbed8a Make newline stripping in annotations configurable.
+  https://github.com/ralphbean/bugwarrior/commit/f69bbed8a
+- 41664dc0f GitHub: Only query for user repos if an include_repos list is not specified.
+  https://github.com/ralphbean/bugwarrior/commit/41664dc0f
+- e322d4e42 An initial flake8 config.
+  https://github.com/ralphbean/bugwarrior/commit/e322d4e42
+- 7aad5253d PEP8: youtrack service.
+  https://github.com/ralphbean/bugwarrior/commit/7aad5253d
+- ca3d416c0 PEP8: jira cleanup.
+  https://github.com/ralphbean/bugwarrior/commit/ca3d416c0
+- 8a56c4b14 PEP8: taiga cleanup.
+  https://github.com/ralphbean/bugwarrior/commit/8a56c4b14
+- e874eece7 Adding initial teamworks projects support
+  https://github.com/ralphbean/bugwarrior/commit/e874eece7
+- 8118d8dcf Correcting name, adding dates, adding priority
+  https://github.com/ralphbean/bugwarrior/commit/8118d8dcf
+- 026be2439 Removing start, adding tests
+  https://github.com/ralphbean/bugwarrior/commit/026be2439
+- 2a88cb0fa Fixing project id, adding docs
+  https://github.com/ralphbean/bugwarrior/commit/2a88cb0fa
+- 244208db8 Doc edits, fixing return value
+  https://github.com/ralphbean/bugwarrior/commit/244208db8
+- 7fba706a4 Do not abort with ValueError when default_permission is blank
+  https://github.com/ralphbean/bugwarrior/commit/7fba706a4
+- ff3352785 Move this up a bit.
+  https://github.com/ralphbean/bugwarrior/commit/ff3352785
+- 28e6b178c Apply mock during instantiation.
+  https://github.com/ralphbean/bugwarrior/commit/28e6b178c
+- 12f214656 De-duplicate issues before first write to taskwarrior.
+  https://github.com/ralphbean/bugwarrior/commit/12f214656
+
 1.6.0
 -----
 

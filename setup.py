@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '1.6.0'
+version = '1.7.0'
 
 f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
@@ -38,14 +38,14 @@ setup(name='bugwarrior',
           "dogpile.cache>=0.5.3",
           "lockfile>=0.9.1",
           "click",
-          "future!=0.16.0",
+          "future",
       ],
       extras_require=dict(
           keyring=["keyring"],
           jira=["jira>=0.22"],
           megaplan=["megaplan>=1.4"],
           activecollab=["pypandoc", "pyac>=0.1.5"],
-          bts=["PySimpleSOAP","python-debianbts>=2.6.1"],
+          bts=["PySimpleSOAP", "python-debianbts>=2.6.1"],
           trac=["offtrac"],
           bugzilla=["python-bugzilla"],
           gmail=["google-api-python-client", "oauth2client<4.0.0"],
@@ -89,5 +89,6 @@ setup(name='bugwarrior',
       trello=bugwarrior.services.trello:TrelloService
       youtrack=bugwarrior.services.youtrack:YoutrackService
       gmail=bugwarrior.services.gmail:GmailService
+      teamworks_projects=bugwarrior.services.teamworks_projects:TeamworksService
       """,
       )

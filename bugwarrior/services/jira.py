@@ -14,6 +14,7 @@ from bugwarrior.services import IssueService, Issue
 import logging
 log = logging.getLogger(__name__)
 
+
 # The below `ObliviousCookieJar` and `JIRA` classes are MIT Licensed.
 # They were taken from this wonderful commit by @GaretJax
 # https://github.com/GaretJax/lancet/commit/f175cb2ec9a2135fb78188cf0b9f621b51d88977
@@ -40,6 +41,7 @@ class JIRA(BaseJIRA):
     def close(self):
         self._session.close()
 
+
 def _parse_sprint_string(sprint):
     """ Parse the big ugly sprint string stored by JIRA.
 
@@ -48,10 +50,13 @@ def _parse_sprint_string(sprint):
         ViewId=1173,state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4
         55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]
     """
-    entries = sprint[sprint.index('[')+1:sprint.index(']')].split(',')
-    return dict([entry.split('=') for entry in entries])
+    entries = sprint[sprint.index('[')+1:sprint.index(']')].split('=')
+    fields = sum((entry.rsplit(',', 1) for entry in entries), [])
+    return dict(zip(fields[::2], fields[1::2]))
+
 
 class JiraIssue(Issue):
+    ISSUE_TYPE = 'jiraissuetype'
     SUMMARY = 'jirasummary'
     URL = 'jiraurl'
     FOREIGN_ID = 'jiraid'
@@ -59,8 +64,13 @@ class JiraIssue(Issue):
     ESTIMATE = 'jiraestimate'
     FIX_VERSION = 'jirafixversion'
     CREATED_AT = 'jiracreatedts'
+    STATUS = 'jirastatus'
 
     UDAS = {
+        ISSUE_TYPE: {
+            'type': 'string',
+            'label': 'Issue Type'
+        },
         SUMMARY: {
             'type': 'string',
             'label': 'Jira Summary'
@@ -89,6 +99,10 @@ class JiraIssue(Issue):
             'type': 'date',
             'label': 'Created At'
         },
+        STATUS: {
+            'type': 'string',
+            'label': "Jira Status"
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -114,12 +128,14 @@ class JiraIssue(Issue):
             'due': self.get_due(),
             'entry': self.get_entry(),
 
+            self.ISSUE_TYPE: self.get_issue_type(),
             self.URL: self.get_url(),
             self.FOREIGN_ID: self.record['key'],
             self.DESCRIPTION: self.record.get('fields', {}).get('description'),
             self.SUMMARY: self.get_summary(),
             self.ESTIMATE: self.get_estimate(),
-            self.FIX_VERSION: self.get_fix_version()
+            self.FIX_VERSION: self.get_fix_version(),
+            self.STATUS: self.get_status()
         }
 
     def get_entry(self):
@@ -132,10 +148,15 @@ class JiraIssue(Issue):
         return self._get_tags_from_labels() + self._get_tags_from_sprints()
 
     def get_due(self):
+        # If the duedate is explicitly set on the issue, then use that.
+        if self.record['fields'].get('duedate'):
+            return self.parse_date(self.record['fields']['duedate'])
+        # Otherwise, if the issue is in a sprint, use the end date of that sprint.
         sprints = self.__get_sprints()
-        for sprint in sprints:
+        for sprint in filter(lambda e: e.get('state') != 'CLOSED', sprints):
             endDate = sprint['endDate']
-            return '' if endDate == '<null>' else self.parse_date(endDate)
+            if endDate != '<null>':
+                return self.parse_date(endDate)
 
     def _get_tags_from_sprints(self):
         tags = []
@@ -145,7 +166,7 @@ class JiraIssue(Issue):
 
         context = self.record.copy()
         label_template = Template(self.origin['label_template'])
-        
+
         sprints = self.__get_sprints()
         for sprint in sprints:
             # Extract the name and render it into a label
@@ -210,7 +231,9 @@ class JiraIssue(Issue):
             value = value['name']
         except (TypeError, ):
             value = str(value)
-        return self.PRIORITY_MAP.get(value, self.origin['default_priority'])
+        # priority.name format: "1 - Critical"
+        map_key = value.strip().split()[-1]
+        return self.PRIORITY_MAP.get(map_key, self.origin['default_priority'])
 
     def get_default_description(self):
         return self.build_default_description(
@@ -225,6 +248,12 @@ class JiraIssue(Issue):
             return self.record['fields'].get('fixVersions', [{}])[0].get('name')
         except (IndexError, KeyError, AttributeError, TypeError):
             return None
+
+    def get_status(self):
+        return self.record['fields']['status']['name']
+
+    def get_issue_type(self):
+        return self.record['fields']['issuetype']['name']
 
 
 class JiraService(IssueService):

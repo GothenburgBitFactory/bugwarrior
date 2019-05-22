@@ -3,9 +3,12 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import next
 
-import configparser
+from six.moves import configparser
 from mock import patch
 import responses
+
+from dateutil.parser import parse as parse_date
+from dateutil.tz import tzlocal
 
 from bugwarrior.config import ServiceConfig
 from bugwarrior.services.trello import TrelloService, TrelloIssue
@@ -14,6 +17,7 @@ from .base import ConfigTest, ServiceTest
 
 class TestTrelloIssue(ServiceTest):
     JSON = {
+        "due": "2018-12-02T12:59:00.000Z",
         "id": "542bbb6583d705eb05bbe491",
         "idShort": 42,
         "name": "So long, and thanks for all the fish!",
@@ -26,7 +30,7 @@ class TestTrelloIssue(ServiceTest):
     def setUp(self):
         super(TestTrelloIssue, self).setUp()
         origin = dict(inline_links=True, description_length=31,
-                      import_labels_as_tags=True)
+                      import_labels_as_tags=True, default_priority='M')
         extra = {'boardname': 'Hyperspatial express route',
                  'listname': 'Something'}
         self.issue = TrelloIssue(self.JSON, origin, extra)
@@ -47,6 +51,7 @@ class TestTrelloIssue(ServiceTest):
 class TestTrelloService(ConfigTest):
     BOARD = {'id': 'B04RD', 'name': 'My Board'}
     CARD1 = {'id': 'C4RD', 'name': 'Card 1', 'members': [{'username': 'tintin'}],
+             'due': '2018-12-02T12:59:00.000Z',
              'idShort': 1,
              'shortLink': 'abcd',
              'shortUrl': 'https://trello.com/c/AAaaBBbb',
@@ -176,6 +181,7 @@ class TestTrelloService(ConfigTest):
         service = TrelloService(self.config, 'general', 'mytrello')
         issues = service.issues()
         expected = {
+            'due': parse_date('2018-12-02T12:59:00.000Z'),
             'description': u'(bw)#1 - Card 1 .. https://trello.com/c/AAaaBBbb',
             'priority': 'M',
             'project': 'My Board',
