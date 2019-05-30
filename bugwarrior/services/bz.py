@@ -303,7 +303,7 @@ class BugzillaService(IssueService):
         assigned_date = None
 
         bug = self.bz.getbug(issue['id'])
-        history = bug.get_history()['bugs'][0]['history']
+        history = bug.get_history_raw()['bugs'][0]['history']
 
         # this is already in chronological order, so the last change is the one we want
         h = history[-1]

@@ -47,7 +47,7 @@ setup(name='bugwarrior',
           activecollab=["pypandoc", "pyac>=0.1.5"],
           bts=["PySimpleSOAP", "python-debianbts>=2.6.1"],
           trac=["offtrac"],
-          bugzilla=["python-bugzilla"],
+          bugzilla=["python-bugzilla>=2.0.0"],
           gmail=["google-api-python-client", "oauth2client<4.0.0"],
       ),
       tests_require=[
