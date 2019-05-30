@@ -212,6 +212,7 @@ def find_taskwarrior_uuid(tw, keys, issue, legacy_matching=False):
                 'or': [
                     ('status', 'pending'),
                     ('status', 'waiting'),
+                    ('status', 'completed')
                 ],
             })
             possibilities = possibilities | set([
@@ -448,7 +449,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         try:
             _, updated_task = tw.task_update(issue)
             if 'end' in issue and issue['end']:
-                tw.task_done(uuid=updated_task['uuid'])
+                try:
+                    tw.task_done(uuid=updated_task['uuid'])
+                except ValueError as e:
+                    if e.args != ('Task is not pending.',):
+                        raise
         except TaskwarriorError as e:
             log.exception("Unable to modify task: %s" % e.stderr)
 
