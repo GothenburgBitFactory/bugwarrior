@@ -2,10 +2,11 @@ from __future__ import absolute_import
 from builtins import str
 
 
-import six
+import six, ssl
 from jinja2 import Template
 from jira.client import JIRA as BaseJIRA
 from requests.cookies import RequestsCookieJar
+from requests.adapters import HTTPAdapter
 from dateutil.tz.tz import tzutc
 
 from bugwarrior.config import asbool, die
@@ -13,6 +14,26 @@ from bugwarrior.services import IssueService, Issue
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class SSLAdapter(HTTPAdapter):
+    def __init__(self, certfile, keyfile, password=None, cafile=None, *args, **kwargs):
+        self._certfile = certfile
+        self._keyfile = keyfile
+        self._password = password
+        self._cafile = cafile
+        super(self.__class__, self).__init__(*args, **kwargs)
+
+    def init_poolmanager(self, *args, **kwargs):
+        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        if self._certfile is not None and self._keyfile is not None:
+            context.load_cert_chain(certfile=self._certfile,
+                                    keyfile=self._keyfile,
+                                    password=self._password)
+        if self._cafile:
+            context.load_verify_locations(cafile=self._cafile)
+        kwargs['ssl_context'] = context
+        return super(self.__class__, self).init_poolmanager(*args, **kwargs)
 
 
 # The below `ObliviousCookieJar` and `JIRA` classes are MIT Licensed.
@@ -37,6 +58,12 @@ class JIRA(BaseJIRA):
         # back from the first request in any subsequent requests. As we don't
         # need cookies when accessing the API anyway, just ignore all of them.
         self._session.cookies = ObliviousCookieJar()
+
+        client_cert = self._options.get('ssl_client_cert')
+        client_key = self._options.get('ssl_client_key')
+        client_key_password = self._options.get('ssl_client_key_password')
+        client_ca = self._options.get('ssl_client_ca')
+        self._session.mount('https://', SSLAdapter(client_cert, client_key, client_key_password, client_ca))
 
     def close(self):
         self._session.close()
@@ -273,12 +300,27 @@ class JiraService(IssueService):
             auth = dict(kerberos=True)
         else:
             auth = dict(basic_auth=(self.username, password))
+
+        options={
+            'server': self.config.get('base_uri'),
+            'rest_api_version': 'latest',
+            'verify': self.config.get('verify_ssl', default=True, to_type=asbool),
+        }
+        ssl_client_cert = self.config.get('ssl_client_cert')
+        ssl_client_key = self.config.get('ssl_client_key')
+        if ssl_client_cert is not None and ssl_client_key is not None:
+            ssl_client_key_password = None
+            if self.config.get('ssl_client_key_password') is not None:
+                ssl_client_key_password = self.get_password('ssl_client_key_password')
+            ssl_client_ca = self.config.get('ssl_client_ca')
+            options.update({
+                'ssl_client_cert': ssl_client_cert,
+                'ssl_client_key': ssl_client_key,
+                'ssl_client_key_password': ssl_client_key_password,
+                'ssl_client_ca': ssl_client_ca,
+            })
         self.jira = JIRA(
-            options={
-                'server': self.config.get('base_uri'),
-                'rest_api_version': 'latest',
-                'verify': self.config.get('verify_ssl', default=True, to_type=asbool),
-            },
+            options=options,
             **auth
         )
         self.import_labels_as_tags = self.config.get(
