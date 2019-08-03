@@ -35,13 +35,6 @@ Example Configuration
     # Setting this to False will strip newlines from comment annotations
     annotation_newlines = False
 
-    # Defines whether or not issues should be matched based upon their description.
-    # In legacy mode, we will attempt to match issues to bugs based upon the
-    # presence of the '(bw)' marker in the task description.
-    # If this is false, we will only select issues having the appropriate UDA
-    # fields defined (which is smarter, better, newer, etc..)
-    legacy_matching = False
-
     # log.level specifies the verbosity.  The default is DEBUG.
     # log.level can be one of DEBUG, INFO, WARNING, ERROR, CRITICAL, DISABLED
     #log.level = DEBUG

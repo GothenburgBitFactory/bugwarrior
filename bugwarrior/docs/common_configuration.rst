@@ -21,9 +21,6 @@ Optional options include:
   annotations. Defaults to ``True``.
 * ``annotation_newlines``: When ``False`` strips newlines from comments in
   annotations. Defaults to ``False``.
-* ``legacy_matching``: Set to ``False`` to instruct Bugwarrior to match
-  issues using only the issue's unique identifiers (rather than matching
-  on description).
 * ``log.level``: Set to one of ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``,
   ``CRITICAL``, or ``DISABLED`` to control the logging verbosity.  By
   default, this is set to ``DEBUG``.
