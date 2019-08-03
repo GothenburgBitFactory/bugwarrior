@@ -9,7 +9,7 @@ import time
 from pkg_resources import iter_entry_points
 
 from dateutil.parser import parse as parse_date
-from dateutil.tz import tzlocal, tzutc
+from dateutil.tz import tzlocal
 from jinja2 import Template
 import pytz
 import six
@@ -346,8 +346,6 @@ class Issue(object):
             if not date.tzinfo:
                 if timezone == LOCAL_TIMEZONE:
                     tzinfo = tzlocal()
-                elif timezone == 'UTC':
-                    tzinfo = tzutc()
                 else:
                     tzinfo = pytz.timezone(timezone)
                 date = date.replace(tzinfo=tzinfo)
