@@ -37,9 +37,3 @@ install:
   - pip install coverage
 script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior -v
 after_success: codecov
-notifications:
-    email: true
-    irc:
-        - "irc.freenode.net#threebean"
-    on_success: change
-    on_failure: always
