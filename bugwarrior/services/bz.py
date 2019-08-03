@@ -306,17 +306,18 @@ class BugzillaService(IssueService):
         history = bug.get_history_raw()['bugs'][0]['history']
 
         # this is already in chronological order, so the last change is the one we want
-        h = history[-1]
-        for change in h['changes']:
-            if change['field_name'] == 'status' and change['added'] == 'ASSIGNED':
-              assigned_date = h['when']
+        for h in reversed(history):
+            for change in h['changes']:
+                if change['field_name'] == 'status' and change['added'] == 'ASSIGNED':
+                    assigned_date = h['when']
 
-        # messy conversion :(
-        # TODO: create method that's used here and in needinfos time conv above
-        assigned_date_datetime = datetime.datetime.fromtimestamp(time.mktime(assigned_date.timetuple()))
-        assigned_date_str = pytz.UTC.localize(assigned_date_datetime).isoformat()
+                    # messy conversion :(
+                    # TODO: create method that's used here and in needinfos time conv above
+                    assigned_date_datetime = datetime.datetime.fromtimestamp(
+                        time.mktime(assigned_date.timetuple()))
+                    assigned_date_str = pytz.UTC.localize(assigned_date_datetime).isoformat()
 
-        return assigned_date_str
+                    return assigned_date_str
 
 
 def _get_bug_attr(bug, attr):
