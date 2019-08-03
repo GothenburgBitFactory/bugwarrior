@@ -19,7 +19,11 @@ TEST_THREAD = {
                         {
                             "name": "To",
                             "value": "ct@example.com"
-                        }
+                        },
+                        {
+                            "name": "Message-ID",
+                            "value": "<CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com>",
+                        },
                     ],
                     "parts": [
                         {
@@ -76,13 +80,14 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
                 gmail.thread_extras(thread, self.service.get_labels()))
         expected = {
             'gmailthreadid': '1234',
+            'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',
             'gmailsnippet': 'Bugwarrior is great',
             'gmaillastsender': 'Foo Bar',
             'tags': set(['sticky', 'postit']),
             'gmailsubject': 'Regarding Bugwarrior',
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
             'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
-            'priority': 'M',
+            'priority': u'M',
             'gmaillastsenderaddr': 'foobar@example.com'}
 
         taskwarrior = issue.to_taskwarrior()
@@ -94,10 +99,11 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
         issue = next(self.service.issues())
         expected = {
             'gmailthreadid': '1234',
+            'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',
             'gmailsnippet': 'Bugwarrior is great',
             'gmaillastsender': 'Foo Bar',
             'description': u'(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234',
-            'priority': 'M',
+            'priority': u'M',
             'tags': set(['sticky', 'postit', 'added']),
             'gmailsubject': 'Regarding Bugwarrior',
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
