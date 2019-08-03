@@ -6,7 +6,7 @@ Getting bugwarrior
 Requirements
 ------------
 
-To use bugwarrior, you need python 2.7 and taskwarrior. Upon installation, the
+To use bugwarrior, you need python 3 and taskwarrior. Upon installation, the
 setup script will automatically download and install missing python
 dependencies.
 
