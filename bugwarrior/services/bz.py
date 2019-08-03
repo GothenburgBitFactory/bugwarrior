@@ -5,9 +5,6 @@ import pytz
 import datetime
 import six
 
-from dateutil.parser import parse as parse_date
-from dateutil.tz import tzlocal
-
 from bugwarrior.config import die, asbool, aslist
 from bugwarrior.services import IssueService, Issue
 
@@ -134,7 +131,7 @@ class BugzillaService(IssueService):
         self.base_uri = self.config.get('base_uri')
         self.username = self.config.get('username')
         self.ignore_cc = self.config.get('ignore_cc', default=False,
-                                                 to_type=lambda x: x == "True")
+                                         to_type=lambda x: x == "True")
         self.query_url = self.config.get('query_url', default=None)
         self.include_needinfos = self.config.get(
             'include_needinfos', False, to_type=lambda x: x == "True")
@@ -280,9 +277,11 @@ class BugzillaService(IssueService):
                 'annotations': self.annotations(tag, issue, issue_obj),
             }
 
-            needinfos = [f for f in issue['flags'] if (    f['name'] == 'needinfo'
-                                          and f['status'] == '?'
-                                          and f.get('requestee', self.username) == self.username)]
+            needinfos = [f for f in issue['flags'] if (
+                f['name'] == 'needinfo' and
+                f['status'] == '?' and
+                f.get('requestee', self.username) == self.username
+            )]
             if needinfos:
                 last_mod = needinfos[0]['modification_date']
                 # convert from RPC DateTime string to datetime.datetime object
