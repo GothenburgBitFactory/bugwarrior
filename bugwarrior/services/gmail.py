@@ -22,6 +22,7 @@ class GmailIssue(Issue):
     URL = 'gmailurl'
     LAST_SENDER = 'gmaillastsender'
     LAST_SENDER_ADDR = 'gmaillastsenderaddr'
+    LAST_MESSAGE_ID = 'gmaillastmessageid'
     SNIPPET = 'gmailsnippet'
     LABELS = 'gmaillabels'
 
@@ -46,6 +47,10 @@ class GmailIssue(Issue):
         LAST_SENDER_ADDR: {
             'type': 'string',
             'label': 'GMail last sender address',
+        },
+        LAST_MESSAGE_ID: {
+            'type': 'string',
+            'label': 'Last RFC2822 Message-ID',
         },
         SNIPPET: {
             'type': 'string',
@@ -75,6 +80,7 @@ class GmailIssue(Issue):
             self.URL: self.extra['url'],
             self.LAST_SENDER: self.extra['last_sender_name'],
             self.LAST_SENDER_ADDR: self.extra['last_sender_address'],
+            self.LAST_MESSAGE_ID: self.extra['last_message_id'],
             self.SNIPPET: self.extra['snippet'],
             self.LABELS: " ".join(sorted(self.extra['labels'])),
         }
@@ -180,11 +186,13 @@ class GmailService(IssueService):
 
 def thread_extras(thread, labels):
     name, address = thread_last_sender(thread)
+    last_message_id = thread_last_message_id(thread)
     return {
         'internal_date': thread_timestamp(thread),
         'labels': [labels[label_id] for label_id in thread_labels(thread)],
         'last_sender_address': address,
         'last_sender_name': name,
+        'last_message_id': last_message_id,
         'snippet': thread_snippet(thread),
         'subject': thread_subject(thread),
         'url': thread_url(thread),
@@ -203,6 +211,13 @@ def thread_last_sender(thread):
     from_header = message_header(thread['messages'][-1], 'From')
     name, address = email.utils.parseaddr(from_header)
     return name if name else address, address
+
+
+def thread_last_message_id(thread):
+    message_id_header = message_header(thread['messages'][-1], 'Message-ID')
+    if not message_id_header or message_id_header == '':
+        return ''
+    return message_id_header[1:-1]  # remove the enclosing < >.
 
 
 def thread_timestamp(thread):
