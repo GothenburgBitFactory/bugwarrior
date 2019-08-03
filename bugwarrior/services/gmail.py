@@ -97,8 +97,8 @@ class GmailIssue(Issue):
         return self.extra.get('annotations', [])
 
     def get_entry(self):
-        date_string = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(self.extra['internal_date']) / 1000))
-        return self.parse_date(date_string, 'LOCAL_TIMEZONE')
+        date_string = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(int(self.extra['internal_date']) / 1000))
+        return self.parse_date(date_string)
 
 
 class GmailService(IssueService):
