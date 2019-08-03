@@ -81,6 +81,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
             issue.CREATED_ON: self.arbitrary_created,
             issue.UPDATED_ON: self.arbitrary_updated,
             issue.ID: self.arbitrary_issue['id'],
+            issue.PROJECT_NAME: 'Boiled Cabbage - Yum',
             issue.SPENT_HOURS: None,
             issue.START_DATE: None,
         }
@@ -109,6 +110,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
             'priority': 'M',
             'project': u'boiledcabbageyum',
             'redmineid': 363901,
+            'redmineprojectname': 'Boiled Cabbage - Yum',
             issue.SPENT_HOURS: None,
             issue.START_DATE: None,
             'redmineassignedto': 'Adam Coddington',
