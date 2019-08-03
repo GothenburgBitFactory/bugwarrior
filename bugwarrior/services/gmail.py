@@ -20,7 +20,6 @@ class GmailIssue(Issue):
     URL = 'gmailurl'
     LAST_SENDER = 'gmaillastsender'
     LAST_SENDER_ADDR = 'gmaillastsenderaddr'
-    LAST_MESSAGE_ID = 'gmaillastmessageid'
     SNIPPET = 'gmailsnippet'
     LABELS = 'gmaillabels'
 
@@ -54,10 +53,6 @@ class GmailIssue(Issue):
             'type': 'string',
             'label': 'GMail labels',
         },
-        LAST_MESSAGE_ID: {
-            'type': 'string',
-            'label': 'Last RFC2822 Message-ID',
-        }
     }
     EXCLUDE_LABELS = [
         'IMPORTANT',
@@ -74,7 +69,6 @@ class GmailIssue(Issue):
                 if label not in self.EXCLUDE_LABELS],
             'priority': self.origin['default_priority'],
             self.THREAD_ID: self.record['id'],
-            self.LAST_MESSAGE_ID: self.extra['last_message_id'],
             self.SUBJECT: self.extra['subject'],
             self.URL: self.extra['url'],
             self.LAST_SENDER: self.extra['last_sender_name'],
@@ -170,7 +164,6 @@ def thread_extras(thread, labels):
         'url': "https://mail.google.com/mail/u/0/#all/%s" % (thread['id'],),
         'last_sender_name': name,
         'last_sender_address': address,
-        'last_message_id': thread_last_message_id(thread),
         'snippet': thread_snippet(thread),
     }
 
@@ -179,12 +172,6 @@ def thread_labels(thread):
 
 def thread_subject(thread):
     return message_header(thread['messages'][0], 'Subject')
-
-def thread_last_message_id(thread):
-    message_id_header = message_header(thread['messages'][-1], 'Message-ID')
-    if not message_id_header or message_id_header == '':
-        return ''
-    return message_id_header[1:-1]  # remove the enclosing < >.
 
 def thread_last_sender(thread):
     from_header = message_header(thread['messages'][-1], 'From')
