@@ -1,8 +1,8 @@
 import os.path
-import dateutil
 from datetime import datetime
 
 import mock
+from dateutil.tz import tzutc
 
 import bugwarrior.services.gmail as gmail
 from .base import ServiceTest, AbstractServiceTest
@@ -86,7 +86,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
                 gmail.thread_extras(thread, self.service.get_labels()))
         expected = {
             'annotations': [],
-            'entry': datetime(2019, 1, 5, 16, 7, 47, tzinfo=dateutil.tz.tz.tzutc()),
+            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=tzutc()),
             'gmailthreadid': '1234',
             'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',
             'gmailsnippet': 'Bugwarrior is great',
@@ -107,7 +107,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
         issue = next(self.service.issues())
         expected = {
             'annotations': ['@Foo Bar - Regarding Bugwarrior'],
-            'entry': datetime(2019, 1, 5, 16, 7, 47, tzinfo=dateutil.tz.tz.tzutc()),
+            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=tzutc()),
             'gmailthreadid': '1234',
             'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',
             'gmailsnippet': 'Bugwarrior is great',
