@@ -49,6 +49,7 @@ setup(name='bugwarrior',
           trac=["offtrac"],
           bugzilla=["python-bugzilla>=2.0.0"],
           gmail=["google-api-python-client", "oauth2client<4.0.0"],
+          phabricator=["phabricator"],
       ),
       tests_require=[
           "Mock",
@@ -61,6 +62,7 @@ setup(name='bugwarrior',
           "bugwarrior[gmail]",
           "bugwarrior[trac]",
           "bugwarrior[bugzilla]",
+          "bugwarrior[phabricator]"
       ],
       test_suite='nose.collector',
       entry_points="""

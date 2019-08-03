@@ -22,6 +22,7 @@ before_install:
   - pip install mock
   - pip install responses
   - pip install PySimpleSOAP
+  - pip install phabricator
   - cd $TRAVIS_BUILD_DIR
 env:
   - JIRAVERSION=2.0.0
