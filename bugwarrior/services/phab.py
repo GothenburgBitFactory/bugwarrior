@@ -168,7 +168,7 @@ class PhabricatorService(IssueService):
                 #'annotations': self.annotations(phid, issue)
             }
 
-            yield self.get_issue_for_record(issue, extra)
+            yield self.get_issue_for_record(task, extra)
 
     def revisions(self):
         try:
