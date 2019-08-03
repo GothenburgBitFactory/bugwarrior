@@ -69,11 +69,13 @@ class BitbucketService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
 
-        key = self.config.get('key')
-        secret = self.config.get('secret')
-        auth = {'oauth': (key, secret)}
-
         refresh_token = self.config.data.get('bitbucket_refresh_token')
+
+        auth = {}
+        key = self.config.get('key')
+        if key:
+            secret = self.get_password('secret', key)
+            auth['oauth'] = (key, secret)
 
         if not refresh_token:
             login = self.config.get('login')
