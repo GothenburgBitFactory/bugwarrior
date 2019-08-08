@@ -98,7 +98,7 @@ def hamdist(str1, str2):
     return diffs
 
 
-def get_managed_task_uuids(tw, key_list, legacy_matching):
+def get_managed_task_uuids(tw, key_list):
     expected_task_ids = set([])
     for keys in key_list.values():
         tasks = tw.filter_tasks({
@@ -110,18 +110,6 @@ def get_managed_task_uuids(tw, key_list, legacy_matching):
         })
         expected_task_ids = expected_task_ids | set([
             task['uuid'] for task in tasks
-        ])
-
-    if legacy_matching:
-        starts_with_markup = tw.filter_tasks({
-            'description.startswith': MARKUP,
-            'or': [
-                ('status', 'pending'),
-                ('status', 'waiting'),
-            ],
-        })
-        expected_task_ids = expected_task_ids | set([
-            task['uuid'] for task in starts_with_markup
         ])
 
     return expected_task_ids
@@ -148,13 +136,12 @@ def make_unique_identifier(keys, issue):
     raise RuntimeError("Could not determine unique identifier for %s" % issue)
 
 
-def find_taskwarrior_uuid(tw, keys, issue, legacy_matching=False):
+def find_taskwarrior_uuid(tw, keys, issue):
     """ For a given issue issue, find its local taskwarrior UUID.
 
     Assembles a list of task IDs existing in taskwarrior
     matching the supplied issue (`issue`) on the combination of any
-    set of supplied unique identifiers (`keys`) or, optionally,
-    the task's description field (should `legacy_matching` be `True`).
+    set of supplied unique identifiers (`keys`).
 
     :params:
     * `tw`: An instance of `taskw.TaskWarriorShellout`
@@ -171,10 +158,6 @@ def find_taskwarrior_uuid(tw, keys, issue, legacy_matching=False):
         ]
 
     * `issue`: An instance of a subclass of `bugwarrior.services.Issue`.
-    * `legacy_matching`: By default, this is disabled, and it allows
-      the matching algorithm to -- in addition to searching by stored
-      issue keys -- search using the task's description for a match.
-      It is prone to error and should avoided if possible.
 
     :returns:
     * A single string UUID.
@@ -188,22 +171,6 @@ def find_taskwarrior_uuid(tw, keys, issue, legacy_matching=False):
         raise ValueError('Issue %s has no description.' % issue)
 
     possibilities = set([])
-
-    if legacy_matching:
-        legacy_description = issue.get_default_description().rsplit('..', 1)[0]
-        # Furthermore, we have to kill off any single quotes which break in
-        # task-2.4.x, as much as it saddens me.
-        legacy_description = legacy_description.split("'")[0]
-        results = tw.filter_tasks({
-            'description.startswith': legacy_description,
-            'or': [
-                ('status', 'pending'),
-                ('status', 'waiting'),
-            ],
-        })
-        possibilities = possibilities | set([
-            task['uuid'] for task in results
-        ])
 
     for service, key_list in six.iteritems(keys):
         if any([key in issue for key in key_list]):
@@ -333,7 +300,6 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         marshal=True,
     )
 
-    legacy_matching = _bool_option(main_section, 'legacy_matching', False)
     merge_annotations = _bool_option(main_section, 'merge_annotations', True)
     merge_tags = _bool_option(main_section, 'merge_tags', True)
 
@@ -341,7 +307,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         'new': [],
         'existing': [],
         'changed': [],
-        'closed': get_managed_task_uuids(tw, key_list, legacy_matching),
+        'closed': get_managed_task_uuids(tw, key_list),
     }
 
     seen = []
@@ -372,9 +338,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 continue
             seen.append(unique_identifier)
 
-            existing_taskwarrior_uuid = find_taskwarrior_uuid(
-                tw, key_list, issue, legacy_matching=legacy_matching
-            )
+            existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
             _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
 
             # Drop static fields from the upstream issue.  We don't want to
