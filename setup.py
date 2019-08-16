@@ -49,6 +49,7 @@ setup(name='bugwarrior',
           bugzilla=["python-bugzilla>=2.0.0"],
           gmail=["google-api-python-client", "oauth2client<4.0.0"],
           phabricator=["phabricator"],
+          outlook365=["O365"],
       ),
       tests_require=[
           "Mock",
@@ -61,7 +62,8 @@ setup(name='bugwarrior',
           "bugwarrior[gmail]",
           "bugwarrior[trac]",
           "bugwarrior[bugzilla]",
-          "bugwarrior[phabricator]"
+          "bugwarrior[phabricator]",
+          "bugwarrior[outlook365]",
       ],
       test_suite='nose.collector',
       entry_points="""
@@ -91,5 +93,6 @@ setup(name='bugwarrior',
       youtrack=bugwarrior.services.youtrack:YoutrackService
       gmail=bugwarrior.services.gmail:GmailService
       teamworks_projects=bugwarrior.services.teamworks_projects:TeamworksService
+      outlook365=bugwarrior.services.outlook365:Outlook365Service
       """,
       )
