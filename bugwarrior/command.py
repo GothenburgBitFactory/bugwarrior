@@ -49,7 +49,7 @@ def _try_load_config(main_section, interactive=False):
 @click.option('--dry-run', is_flag=True)
 @click.option('--flavor', default=None, help='The flavor to use')
 @click.option('--interactive', is_flag=True)
-@click.option('--debug', is_flag=True,
+@click.option('--debug', '--foreground', is_flag=True,
               help='Do not use multiprocessing (which breaks pdb).')
 def pull(dry_run, flavor, interactive, debug):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.

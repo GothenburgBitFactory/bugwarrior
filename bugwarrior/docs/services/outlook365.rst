@@ -90,9 +90,9 @@ Because Bugwarrior normally runs the services as background processes, and
 this authentication flow requires keyboard interaction, it would fail (likely
 with a ``EOFError: EOF when reading a line``).
 
-In that case, you should run ``bugwarrior-pull --debug`` which disables the
-use of multiple processes. In this case, it would print out a consent URL (if
-authentication is needed).
+In that case, you should run ``bugwarrior-pull --foreground`` which disables
+the use of multiple processes. In this case, it would print out a consent URL
+(if authentication is needed).
 
 Then,
 
