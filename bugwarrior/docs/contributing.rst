@@ -45,6 +45,15 @@ This will actually run it.. be careful and back up your task directory!
 
     (bugwarrior)$ bugwarrior-pull
 
+
+Run the tests:
+
+::
+
+    (bugwarrior)$ pip install nose
+    (bugwarrior)$ python setup.py nosetests
+
+
 Making a pull request
 ---------------------
 
