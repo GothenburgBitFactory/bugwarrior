@@ -269,10 +269,17 @@ class JiraService(IssueService):
         default_query = 'assignee=' + self.username + \
             ' AND resolution is null'
         self.query = self.config.get('query', default_query)
+        self.use_cookies = self.config.get(
+            'use_cookies', default=False, to_type=asbool
+        )
+
         if password == '@kerberos':
             auth = dict(kerberos=True)
         else:
-            auth = dict(basic_auth=(self.username, password))
+            if self.use_cookies:
+                auth = dict(auth=(self.username, password))
+            else:
+                auth = dict(basic_auth=(self.username, password))
         self.jira = JIRA(
             options={
                 'server': self.config.get('base_uri'),
