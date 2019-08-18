@@ -1,5 +1,6 @@
 import json
 import logging
+import multiprocessing
 import os
 
 from O365 import Account, FileSystemTokenBackend
@@ -99,8 +100,13 @@ class Outlook365Service(IssueService):
 
     def issues(self):
         if not self.account.is_authenticated:
-            # start the console based authentication
-            self.account.authenticate(scopes=self.SCOPES)
+            # we can't do the auth flow if we're running in the background via the
+            # multiprocessing pool.
+            if multiprocessing.current_process().name == __name__.split('.')[-1]:
+                raise Exception('Authentication required. Please run with the --foreground option.')
+            else:
+                # start the console based authentication
+                self.account.authenticate(scopes=self.SCOPES)
 
         mailbox = self.account.mailbox()
         messages = mailbox.get_messages(query=mailbox.q().search(self.query))

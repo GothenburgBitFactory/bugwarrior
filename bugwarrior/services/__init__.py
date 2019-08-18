@@ -543,7 +543,8 @@ def aggregate_issues(conf, main_section, debug):
         for target in targets:
             proc = multiprocessing.Process(
                 target=_aggregate_issues,
-                args=(conf, main_section, target, queue, conf.get(target, 'service'))
+                args=(conf, main_section, target, queue, conf.get(target, 'service')),
+                name=conf.get(target, 'service'),
             )
             proc.start()
             processes.append(proc)

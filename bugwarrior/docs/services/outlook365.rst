@@ -87,12 +87,12 @@ After you configure the Outlook 365 service in your Bugwarrior configuration
 file, ``bugwarrior-pull`` will guide you through the authentication process.
 
 Because Bugwarrior normally runs the services as background processes, and
-this authentication flow requires keyboard interaction, it would fail (likely
-with a ``EOFError: EOF when reading a line``).
+this authentication flow requires keyboard interaction, it would fail with
+a message about running with the ``--foreground`` option.
 
 In that case, you should run ``bugwarrior-pull --foreground`` which disables
-the use of multiple processes. In this case, it would print out a consent URL
-(if authentication is needed).
+the use of multiple processes. Doing so would print out a consent URL (if
+authentication is needed).
 
 Then,
 
