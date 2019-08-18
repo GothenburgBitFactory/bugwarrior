@@ -119,6 +119,18 @@ If the ``password`` is specified as ``@kerberos``, the service plugin will try
 to authenticate against server with kerberos. A ticket must be already present
 on the client (created by running ``kinit`` or any other method).
 
+
+Cookie auth vs. HTTP-Basic auth
++++++++++++++++++++++++++++++++
+
+If the ``use_cookies`` option is set to ``True``, the credentials are used for
+Cookie-based authentication as opposed to HTTP-Basic authenticaton. This only
+makes sense when Kerberos is not being used (see above).
+
+This is useful in situations where HTTP-Basic auth is disabled or disallowed
+for some reason.
+
+
 Provided UDA Fields
 -------------------
 
