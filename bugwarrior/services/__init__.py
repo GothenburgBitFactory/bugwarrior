@@ -566,7 +566,7 @@ def aggregate_issues(conf, main_section, debug):
                 for process in processes:
                     process.terminate()
                 raise RuntimeError(
-                    "critical error in target '{}'".format(target))
+                    "critical error in target '{}': {}".format(target, e))
             currently_running -= 1
             continue
         yield issue
