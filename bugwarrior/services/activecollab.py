@@ -104,7 +104,7 @@ class ActiveCollabIssue(Issue):
             'priority': self.get_priority(),
             'annotations': self.extra.get('annotations', []),
             self.NAME: self.record.get('name', ''),
-            self.BODY: pypandoc.convert(self.record.get('body'),
+            self.BODY: pypandoc.convert_text(self.record.get('body'),
                                         'md', format='html').rstrip(),
             self.PERMALINK: self.record['permalink'],
             self.TASK_ID: int(self.record.get('task_id')),
@@ -211,7 +211,7 @@ class ActiveCollabService(IssueService):
         return self.build_annotations(
             ((
                 c['user'],
-                pypandoc.convert(c['body'], 'md', format='html').rstrip()
+                pypandoc.convert_text(c['body'], 'md', format='html').rstrip()
             ) for c in comments),
             issue_obj.get_processed_url(issue_obj.record['permalink']),
         )
