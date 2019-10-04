@@ -236,39 +236,39 @@ class TestGithubService(TestCase):
     def test_default_host(self):
         """ Check that if github.host is not set, we default to github.com """
         service = GithubService(self.config, 'general', 'mygithub')
-        self.assertEquals("github.com", service.host)
+        self.assertEqual("github.com", service.host)
 
     def test_overwrite_host(self):
         """ Check that if github.host is set, we use its value as host """
         self.config.set('mygithub', 'github.host', 'github.example.com')
         service = GithubService(self.config, 'general', 'mygithub')
-        self.assertEquals("github.example.com", service.host)
+        self.assertEqual("github.example.com", service.host)
 
     def test_keyring_service(self):
         """ Checks that the keyring service name """
         keyring_service = GithubService.get_keyring_service(self.service_config)
-        self.assertEquals("github://tintin@github.com/milou", keyring_service)
+        self.assertEqual("github://tintin@github.com/milou", keyring_service)
 
     def test_keyring_service_host(self):
         """ Checks that the keyring key depends on the github host. """
         self.config.set('mygithub', 'github.host', 'github.example.com')
         keyring_service = GithubService.get_keyring_service(self.service_config)
-        self.assertEquals("github://tintin@github.example.com/milou", keyring_service)
+        self.assertEqual("github://tintin@github.example.com/milou", keyring_service)
 
     def test_get_repository_from_issue_url__issue(self):
         issue = dict(repos_url="https://github.com/foo/bar")
         repository = GithubService.get_repository_from_issue(issue)
-        self.assertEquals("foo/bar", repository)
+        self.assertEqual("foo/bar", repository)
 
     def test_get_repository_from_issue_url__pull_request(self):
         issue = dict(repos_url="https://github.com/foo/bar")
         repository = GithubService.get_repository_from_issue(issue)
-        self.assertEquals("foo/bar", repository)
+        self.assertEqual("foo/bar", repository)
 
     def test_get_repository_from_issue__enterprise_github(self):
         issue = dict(repos_url="https://github.acme.biz/foo/bar")
         repository = GithubService.get_repository_from_issue(issue)
-        self.assertEquals("foo/bar", repository)
+        self.assertEqual("foo/bar", repository)
 
 
 class TestGithubClient(TestCase):
@@ -276,13 +276,13 @@ class TestGithubClient(TestCase):
     def test_api_url(self):
         auth = {'token': 'xxxx'}
         client = GithubClient('github.com', auth)
-        self.assertEquals(
+        self.assertEqual(
             client._api_url('/some/path'), 'https://api.github.com/some/path')
 
     def test_api_url_with_context(self):
         auth = {'token': 'xxxx'}
         client = GithubClient('github.com', auth)
-        self.assertEquals(
+        self.assertEqual(
             client._api_url('/some/path/{foo}', foo='bar'),
             'https://api.github.com/some/path/bar')
 
@@ -290,6 +290,6 @@ class TestGithubClient(TestCase):
         """ Test generating an API URL with a custom host """
         auth = {'token': 'xxxx'}
         client = GithubClient('github.example.com', auth)
-        self.assertEquals(
+        self.assertEqual(
             client._api_url('/some/path'),
             'https://github.example.com/api/v3/some/path')

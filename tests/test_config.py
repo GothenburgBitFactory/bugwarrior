@@ -27,14 +27,14 @@ class TestGetConfigPath(ConfigTest):
         If it exists, use the file at $XDG_CONFIG_HOME/bugwarrior/bugwarriorrc
         """
         rc = self.create('.config/bugwarrior/bugwarriorrc')
-        self.assertEquals(config.get_config_path(), rc)
+        self.assertEqual(config.get_config_path(), rc)
 
     def test_legacy(self):
         """
         Falls back on .bugwarriorrc if it exists
         """
         rc = self.create('.bugwarriorrc')
-        self.assertEquals(config.get_config_path(), rc)
+        self.assertEqual(config.get_config_path(), rc)
 
     def test_xdg_first(self):
         """
@@ -42,14 +42,14 @@ class TestGetConfigPath(ConfigTest):
         """
         self.create('.bugwarriorrc')
         rc = self.create('.config/bugwarrior/bugwarriorrc')
-        self.assertEquals(config.get_config_path(), rc)
+        self.assertEqual(config.get_config_path(), rc)
 
     def test_no_file(self):
         """
         If no bugwarriorrc exist anywhere, the path to the prefered one is
         returned.
         """
-        self.assertEquals(
+        self.assertEqual(
             config.get_config_path(),
             os.path.join(self.tempdir, '.config/bugwarrior/bugwarriorrc'))
 
@@ -62,7 +62,7 @@ class TestGetConfigPath(ConfigTest):
         os.environ['BUGWARRIORRC'] = rc
         self.create('.bugwarriorrc')
         self.create('.config/bugwarrior/bugwarriorrc')
-        self.assertEquals(config.get_config_path(), rc)
+        self.assertEqual(config.get_config_path(), rc)
 
     def test_BUGWARRIORRC_empty(self):
         """
@@ -71,7 +71,7 @@ class TestGetConfigPath(ConfigTest):
         """
         os.environ['BUGWARRIORRC'] = ''
         rc = self.create('.config/bugwarrior/bugwarriorrc')
-        self.assertEquals(config.get_config_path(), rc)
+        self.assertEqual(config.get_config_path(), rc)
 
 
 class TestGetDataPath(ConfigTest):

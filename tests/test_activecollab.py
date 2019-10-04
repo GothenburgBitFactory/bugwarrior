@@ -45,7 +45,7 @@ class TestActiveCollabIssues(AbstractServiceTest, ServiceTest):
     ).replace(tzinfo=pytz.UTC)
 
     try:
-        _body = pypandoc.convert('<p>Ticket Body</p>', 'md', format='html')
+        _body = pypandoc.convert_text('<p>Ticket Body</p>', 'md', format='html')
     except OSError:
         raise unittest.SkipTest('Pandoc is not installed.')
     arbitrary_issue = {

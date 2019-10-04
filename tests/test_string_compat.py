@@ -20,4 +20,4 @@ implementation of __str__ and __repr__ methods"""
         issue.get_default_description = MagicMock(return_value='description')
         self.assertIsInstance(str(issue), six.string_types)
         self.assertIsInstance(issue.__repr__(), six.string_types)
-        self.assert_(six.PY3 or hasattr(issue, '__unicode__'))
+        self.assertTrue(six.PY3 or hasattr(issue, '__unicode__'))
