@@ -77,7 +77,7 @@ class TestTracIssue(AbstractServiceTest, ServiceTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEquals(actual_output, expected_output)
+        self.assertEqual(actual_output, expected_output)
 
     def test_issues(self):
         issue = next(self.service.issues())
