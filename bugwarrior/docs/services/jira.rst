@@ -38,6 +38,16 @@ or described in `Service Features`_ below.
 Service Features
 ----------------
 
+The following default configuration is used::
+
+    jira.import_labels_as_tags = False
+    jira.import_sprints_as_tags = False
+    jira.label_template = {{label}}
+    jira.query = assignee = <jira.username> AND resolution is null
+    jira.verify_ssl = True
+    jira.version = 5
+
+
 Specify the Query to Use for Gathering Issues
 +++++++++++++++++++++++++++++++++++++++++++++
 
