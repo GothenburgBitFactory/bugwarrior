@@ -161,16 +161,16 @@ class BTSService(IssueService, ServiceClient):
 
         # Search BTS for bugs owned by email address
         if self.email:
-            owned_bugs = debianbts.get_bugs("owner", self.email,
-                                            "status", "open")
+            owned_bugs = debianbts.get_bugs(owner=self.email,
+                                            status="open")
             collected_bugs.extend(owned_bugs)
 
         # Search BTS for bugs related to specified packages
         if self.packages:
             packages = self.packages.split(",")
             for pkg in packages:
-                pkg_bugs = debianbts.get_bugs("package", pkg,
-                                              "status", "open")
+                pkg_bugs = debianbts.get_bugs(package=pkg,
+                                              status="open")
                 for bug in pkg_bugs:
                     if bug not in collected_bugs:
                         collected_bugs.append(bug)
