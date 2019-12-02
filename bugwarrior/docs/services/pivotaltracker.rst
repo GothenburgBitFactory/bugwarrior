@@ -25,6 +25,8 @@ or described in `Service Features`_ below.
 
     Your Pivotal Tracker user account.
 
+    You can get your user_id by going to https://www.pivotaltracker.com/services/v5/me. It's the id field in the JSON response.
+
 .. describe:: pivotaltracker.token
 
     Pivotal Tracker offers API keys for accounts to access resources through their
