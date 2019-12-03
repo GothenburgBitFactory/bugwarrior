@@ -70,7 +70,7 @@ class PivotalTrackerIssue(Issue):
 
         modified = self.record.get('updated_at')
         if modified:
-            modified = self.parse_date().replace(microsecond=0)
+            modified = self.parse_date(modified).replace(microsecond=0)
 
         closed = self.record.get('accepted_at')
         if closed:
