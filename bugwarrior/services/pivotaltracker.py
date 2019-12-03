@@ -64,9 +64,17 @@ class PivotalTrackerIssue(Issue):
         if description:
             description = description.replace('\r\n', '\n')
 
-        created = self.parse_date(self.record.get('created_at')).replace(microsecond=0)
-        modified = self.parse_date(self.record.get('updated_at')).replace(microsecond=0)
-        closed = self.parse_date(self.record.get('accepted_at')).replace(microsecond=0)
+        created = self.record.get('created_at')
+        if created:
+            created = self.parse_date(created).replace(microsecond=0)
+
+        modified = self.record.get('updated_at')
+        if modified:
+            modified = self.parse_date().replace(microsecond=0)
+
+        closed = self.record.get('accepted_at')
+        if closed:
+            closed = self.parse_date(closed).replace(microsecond=0)
 
         return {
             'project': self.extra['project_name'],
