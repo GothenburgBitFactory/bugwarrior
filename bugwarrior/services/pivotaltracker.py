@@ -64,19 +64,19 @@ class PivotalTrackerIssue(Issue):
         closed = self.parse_date(self.record.get('accepted_at'))
 
         return {
-            'project': self.record['project_name'],
+            'project': self.extra['project_name'],
             'priority': self.origin['default_priority'],
-            'annotations': self.record.get('annotations', []),
+            'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
 
             self.URL: self.record['url'],
             self.DESCRIPTION: description,
             self.TYPE: self.record['story_type'],
             self.FOREIGN_ID: self.record['id'],
-            self.OWNED_BY: self.record['owned_user'],
-            self.REQUEST_BY: self.record['request_user'],
+            self.OWNED_BY: self.extra['owned_user'],
+            self.REQUEST_BY: self.extra['request_user'],
             self.ESTIMATE: int(self.record.get('estimate', 0)),
-            self.BLOCKERS: self.record['blockers'],
+            self.BLOCKERS: self.extra['blockers'],
             self.CREATED_AT: created,
             self.UPDATED_AT: modified,
             self.CLOSED_AT: closed,
@@ -262,7 +262,7 @@ class PivotalTrackerService(IssueService, ServiceClient):
                             story_obj
                         )
                     }
-                    story_obj._foreign_record.update(extra)
+                    story_obj.update_extra(extra)
                     yield story_obj
 
     def api_request(self, endpoint, params={}):

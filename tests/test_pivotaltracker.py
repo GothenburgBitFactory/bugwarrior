@@ -166,6 +166,10 @@ EXTRA = {
     [
         'request_user'
     ],
+    'owned_user':
+    [
+        'owned_user'
+    ],
     'annotations': TASKS,
     'blockers': BLOCKERS,
     'project_name': PROJECT['name']
@@ -283,10 +287,11 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
 		    'updated_at': '2019-05-14T12:00:00Z'
 		}
 	    ],
-	    'end': datetime.datetime(2019, 5, 14, 12, 0, tzinfo=tzutc()),
-	    'entry': datetime.datetime(2019, 5, 14, 12, 0, tzinfo=tzutc()),
-	    'modified': datetime.datetime(2019, 5, 14, 12, 0, tzinfo=tzutc()),
-	    'pivotal_blockers':
+	    'pivotalclosed': datetime.datetime(2019, 5, 14, 12, 0, tzinfo=tzutc()),
+	    'pivotalcreated': datetime.datetime(2019, 5, 14, 12, 0, tzinfo=tzutc()),
+	    'pivotalupdated': datetime.datetime(2019, 5, 14, 12, 0, tzinfo=tzutc()),
+	    'pivotalurl': 'http://localhost/story/show/561',
+        'pivotalblockers':
 	    [
 		{
 		    'created_at': '2019-05-14T12:00:00Z',
@@ -299,12 +304,12 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
 		    'updated_at': '2019-05-14T12:00:00Z'
 		}
 	    ],
-	    'pivotal_current_state': 'unstarted',
-	    'pivotal_description': 'All your base are belong to us',
-	    'pivotal_estimate': 3,
-	    'pivotal_id': 561,
-	    'pivotal_request_users': 'request_user',
-	    'pivotal_story_type': 'story',
+	    'pivotaldescription': 'All your base are belong to us',
+	    'pivotalestimate': 3,
+	    'pivotalid': 561,
+        'pivotalowners': ['owned_user'],
+	    'pivotalrequesters': ['request_user'],
+	    'pivotalstorytype': 'story',
 	    'priority': 'M',
 	    'project': 'Death Star',
 	    'tags':
@@ -327,19 +332,17 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
 	    ],
 	    'description': '(bw)Story#561 - Tractor beam loses power intermittently .. '
 	    'http://localhost/story/show/561',
-	    'end': story_date,
-	    'entry': story_date,
-	    'modified': story_date,
-	    'pivotal_blockers':
-	    [
-		'Description: Set weapons to stun Resovled: False'
-	    ],
-	    'pivotal_current_state': 'unstarted',
-	    'pivotal_description': 'All your base are belong to us',
-	    'pivotal_estimate': 3,
-	    'pivotal_id': 561,
-	    'pivotal_request_users': 'starkiller',
-	    'pivotal_story_type': 'story',
+	    'pivotalclosed': story_date,
+	    'pivotalcreated': story_date,
+	    'pivotalupdated': story_date,
+        'pivotalurl': 'http://localhost/story/show/561',
+	    'pivotalblockers': 'Description: Set weapons to stun Resovled: False',
+	    'pivotaldescription': 'All your base are belong to us',
+	    'pivotalestimate': 3,
+	    'pivotalid': 561,
+        'pivotalowners': 'starkiller',
+	    'pivotalrequesters': 'starkiller',
+	    'pivotalstorytype': 'story',
 	    'priority': 'M',
 	    'project': 'Death Star',
 	    'tags': ['look_sir_metal']
