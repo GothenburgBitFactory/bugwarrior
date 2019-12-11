@@ -121,9 +121,9 @@ In this example, ``noisy_project`` is the project you would
 Exclude Certain Stories
 +++++++++++++++++++++++
 
-If you want bugwarrior to not track specific stories you can ignore those stories
-and ensure bugwarrior only tracks the stories you want. To do this, you need to
-set::
+If you want bugwarrior to not track specific stories you can ignore those
+stories and ensure bugwarrior only tracks the stories you want. To do
+this, you need to set::
 
     pivotaltracker.exclude_stories = 123456
 
@@ -136,14 +136,14 @@ Import Labels as Tags
 +++++++++++++++++++++
 
 Pivotal Tracker allows you to attach labels to stories; to
-use those labels as tags, you can use the ``pivotaltracker.import_labels_as_tags``
-option::
+use those labels as tags, you can use the
+``pivotaltracker.import_labels_as_tags`` option::
 
     pivotaltracker.import_labels_as_tags = True
 
 Also, if you would like to control how these labels are created, you can
-specify a template used for converting the Pivotal Tracker label into a Taskwarrior
-tag.
+specify a template used for converting the Pivotal Tracker label into a
+Taskwarrior tag.
 
 For example, to prefix all incoming labels with the string `pivotal_` (perhaps
 to differentiate them from any existing tags you might have), you could
@@ -162,15 +162,15 @@ to all fields on the Taskwarrior task, if needed.
 Get involved stories
 ++++++++++++++++++++
 
-By default, stories from all projects assigned to ``pivotaltracker.user_id`` are
-tracked. To turn this off, set::
+By default, stories from all projects assigned to ``pivotaltracker.user_id``
+are tracked. To turn this off, set::
 
     pivotaltracker.only_if_assigned = False
 
 Instead of fetching stories on ``pivotaltracker.user_id``'s assigned
-stories, you may instead get those that are not assigned to ``pivotaltracker.user_id``.
-This includes all stories in all projects the user has access to. To
-pull stories, use::
+stories, you may instead get those that are not assigned to
+``pivotaltracker.user_id``. This includes all stories in all projects
+the user has access to. To pull stories, use::
 
     pivotaltracker.also_unassigned = True
 
@@ -182,9 +182,9 @@ To only pull stories where ``{{user_id}}`` is the requestor of the story, use::
 Queries
 +++++++
 
-Pivotal Traker provides a decent search feature in their API. If you want to write
-your own query, as described at https://www.pivotaltracker.com/help/articles/advanced_search/
-you will need to use::
+Pivotal Traker provides a decent search feature in their API. If you want
+to write your own query, as described at
+https://www.pivotaltracker.com/help/articles/advanced_search/ you will need to use::
 
     pivotaltracker.query = mywork:1234
 
@@ -207,8 +207,8 @@ Story Tasks
 +++++++++++
 
 Pivotal Tracker provides the ability to add tasks to stories. Stories pulled in
-by bugwarrior will create an annotation for each "subtask" provided in the story.
-To turn this off, set::
+by bugwarrior will create an annotation for each "subtask" provided in the
+story. To turn this off, set::
 
     pivotaltracker.annotation_comments = False
 
@@ -268,18 +268,22 @@ Provided UDA Fields
 +----------------------------+-------------------+-----------------+
 | Field Name                 | Description       | Type            |
 +============================+===================+=================+
-| ``pivotal_description``    | Story Description | Text (string)   |
+| ``pivotaldescription``     | Story Description | Text (string)   |
 +----------------------------+-------------------+-----------------+
-| ``pivotal_story_type``     | Story Type        |  Text (string)  |
+| ``pivotalstorytype``       | Story Type        |  Text (string)  |
 |                            |     (story, issue)|                 |
 +----------------------------+-------------------+-----------------+
-| ``pivotal_request_users``  | Reuqest Users     | Text (string)   |
+| ``pivotalrequesters``      | Story Requested By| Text (string)   |
 +----------------------------+-------------------+-----------------+
-| ``pivotal_current_state``  | Story State       | Text (string)   |
+| ``pivotalid``              | Story ID          | Numeric         |
 +----------------------------+-------------------+-----------------+
-| ``pivotal_id``             | Story ID          | Numeric         |
+| ``pivotalestimate``        | Story Estimate    | Text (string)   |
 +----------------------------+-------------------+-----------------+
-| ``pivotal_estimate``       | Story Estimate    | Text (string)   |
+| ``pivotalblockers``        | Story Blockers    | Text (string)   |
 +----------------------------+-------------------+-----------------+
-| ``pivotal_blockers``       | Story Blockers    | Text (string)   |
+| ``pivotalcreated``         | Story Created     | Date (date)     |
++----------------------------+-------------------+-----------------+
+| ``pivotalupdated``         | Story Updated     | Date (date)     |
++----------------------------+-------------------+-----------------+
+| ``pivotalclosed``          | Story Closed      | Date (date)     |
 +----------------------------+-------------------+-----------------+

@@ -366,6 +366,7 @@ class Issue(object):
             'bug': 'Bug',
             'story': 'Story',
             'release': 'Release',
+            'chore': 'Chore',
         }
         url_separator = ' .. '
         url = url if self.origin['inline_links'] else ''

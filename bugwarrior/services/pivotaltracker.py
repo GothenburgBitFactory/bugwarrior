@@ -15,83 +15,71 @@ log = logging.getLogger(__name__)
 
 
 class PivotalTrackerIssue(Issue):
-    DESCRIPTION = 'pivotal_description'
-    TYPE = 'pivotal_story_type'
-    REQUEST_USER = 'pivotal_request_users'
-    STATE = 'pivotal_current_state'
-    FOREIGN_ID = 'pivotal_id'
-    ESTIMATE = 'pivotal_estimate'
-    BLOCKERS = 'pivotal_blockers'
+    URL = 'pivotalurl'
+    DESCRIPTION = 'pivotaldescription'
+    TYPE = 'pivotalstorytype'
+    OWNED_BY = 'pivotalowners'
+    REQUEST_BY = 'pivotalrequesters'
+    FOREIGN_ID = 'pivotalid'
+    ESTIMATE = 'pivotalestimate'
+    BLOCKERS = 'pivotalblockers'
+    CREATED_AT = 'pivotalcreated'
+    UPDATED_AT = 'pivotalupdated'
+    CLOSED_AT = 'pivotalclosed'
 
     UDAS = {
-        DESCRIPTION: {
-            'type': 'string',
-            'label': 'Story Description',
-        },
-        TYPE: {
-            'type': 'string',
-            'label': 'Story Type',
-        },
-        FOREIGN_ID: {
-            'type': 'numeric',
-            'label': 'Story ID',
-        },
-        REQUEST_USER: {
-            'type': 'string',
-            'label': 'Story Requesting User',
-        },
-        STATE: {
-            'type': 'string',
-            'label': 'Story State',
-        },
-        ESTIMATE: {
-            'type': 'numeric',
-            'label': 'Story Estimate',
-        },
-        BLOCKERS: {
-            'type': 'string',
-            'label': 'Story Blockers',
-        },
+        URL: {'type': 'string', 'label': 'Story URL'},
+        DESCRIPTION: {'type': 'string', 'label': 'Story Description'},
+        TYPE: {'type': 'string', 'label': 'Story Type'},
+        FOREIGN_ID: {'type': 'numeric', 'label': 'Story ID'},
+        OWNED_BY: {'type': 'string', 'label': 'Story Owned By'},
+        REQUEST_BY: {'type': 'string', 'label': 'Story Requested By'},
+        ESTIMATE: {'type': 'numeric', 'label': 'Story Estimate'},
+        BLOCKERS: {'type': 'string', 'label': 'Story Blockers'},
+        CREATED_AT: {'type': 'date', 'label': 'Story Created'},
+        UPDATED_AT: {'type': 'date', 'label': 'Story Updated'},
+        CLOSED_AT: {'type': 'date', 'label': 'Story Closed'}
     }
 
-    UNIQUE_KEY = (FOREIGN_ID, TYPE,)
+    UNIQUE_KEY = (FOREIGN_ID,)
 
     def _normalize_label_to_tag(self, label):
         return re.sub(r'[^a-zA-Z0-9]', '_', label)
+
+    def get_owner(self, issue):
+        _, issue = issue
+        return issue.get('pivotalowners')
+
+    def get_author(self, issue):
+        _, issue = issue
+        return issue.get('pivotalrequesters')
 
     def to_taskwarrior(self):
         description = self.record.get('description')
         if description:
             description = description.replace('\r\n', '\n')
 
-        created = self.record.get('created_at')
-        if created:
-            created = self.parse_date(created).replace(microsecond=0)
-
-        modified = self.record.get('updated_at')
-        if modified:
-            modified = self.parse_date(modified).replace(microsecond=0)
-
-        closed = self.record.get('accepted_at')
-        if closed:
-            closed = self.parse_date(closed).replace(microsecond=0)
+        created = self.parse_date(self.record.get('created_at'))
+        modified = self.parse_date(self.record.get('updated_at'))
+        closed = self.parse_date(self.record.get('accepted_at'))
 
         return {
-            'project': self.extra['project_name'],
+            'project': self.record['project_name'],
             'priority': self.origin['default_priority'],
-            'annotations': self.extra['annotations'],
+            'annotations': self.record.get('annotations', []),
             'tags': self.get_tags(),
-            'entry': created,
-            'modified': modified,
-            'end': closed or '',
 
-            self.REQUEST_USER: ', '.join(self.extra['request_user']),
+            self.URL: self.record['url'],
             self.DESCRIPTION: description,
             self.TYPE: self.record['story_type'],
             self.FOREIGN_ID: self.record['id'],
-            self.STATE: self.record['current_state'],
-            self.ESTIMATE: self.record.get('estimate'),
-            self.BLOCKERS: self.extra['blockers']
+            self.OWNED_BY: self.record['owned_user'],
+            self.REQUEST_BY: self.record['request_user'],
+            self.ESTIMATE: int(self.record.get('estimate', 0)),
+            self.BLOCKERS: self.record['blockers'],
+            self.CREATED_AT: created,
+            self.UPDATED_AT: modified,
+            self.CLOSED_AT: closed,
         }
 
     def get_tags(self):
@@ -237,7 +225,8 @@ class PivotalTrackerService(IssueService, ServiceClient):
             blockers.append(
                 blocker_template.render(context)
             )
-        return blockers
+
+        return ', '.join(blockers)
 
     def issues(self):
         for project in self.get_projects(self.account_ids):
@@ -260,16 +249,20 @@ class PivotalTrackerService(IssueService, ServiceClient):
                             tasks,
                             story_obj
                         ),
-                        'request_user': self.get_user_by_id(
+                        'owned_user': self.get_user_by_id(
                             project_id,
                             story['owner_ids']
+                        ),
+                        'request_user': self.get_user_by_id(
+                            project_id,
+                            [story['requested_by_id']]
                         ),
                         'blockers': self.blockers(
                             blockers,
                             story_obj
                         )
                     }
-                    story_obj.update_extra(extra)
+                    story_obj._foreign_record.update(extra)
                     yield story_obj
 
     def api_request(self, endpoint, params={}):
@@ -338,7 +331,4 @@ class PivotalTrackerService(IssueService, ServiceClient):
             lambda x: x.get('id') in user_ids,
             map(operator.itemgetter('person'), persons)
         )
-        return list(map(operator.itemgetter('username'), user_list))
-
-
-
+        return ', '.join(list(map(operator.itemgetter('username'), user_list)))
