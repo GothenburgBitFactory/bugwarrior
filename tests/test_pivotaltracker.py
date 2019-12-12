@@ -308,10 +308,12 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
 	    'pivotalestimate': 3,
 	    'pivotalid': 561,
         'pivotalowners': ['owned_user'],
+        'pivotalprojectid': 99,
+        'pivotalprojectname': 'Death Star',
 	    'pivotalrequesters': ['request_user'],
 	    'pivotalstorytype': 'story',
 	    'priority': 'M',
-	    'project': 'Death Star',
+	    'project': 'death_star',
 	    'tags':
 	    [
 		'look_sir_metal'
@@ -341,10 +343,12 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
 	    'pivotalestimate': 3,
 	    'pivotalid': 561,
         'pivotalowners': 'starkiller',
+        'pivotalprojectid': 99,
+        'pivotalprojectname': 'Death Star',
 	    'pivotalrequesters': 'starkiller',
 	    'pivotalstorytype': 'story',
 	    'priority': 'M',
-	    'project': 'Death Star',
+	    'project': 'death_star',
 	    'tags': ['look_sir_metal']
 	}
         self.assertEqual(story.get_taskwarrior_record(), expected)

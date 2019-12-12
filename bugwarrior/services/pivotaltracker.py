@@ -6,7 +6,6 @@ import operator
 import requests
 from jinja2 import Template
 
-from bugwarrior.db import MARKUP
 from bugwarrior.config import asbool, aslist, asint, die
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
@@ -18,6 +17,8 @@ class PivotalTrackerIssue(Issue):
     URL = 'pivotalurl'
     DESCRIPTION = 'pivotaldescription'
     TYPE = 'pivotalstorytype'
+    PROJECT_ID = 'pivotalprojectid'
+    PROJECT_NAME = 'pivotalprojectname'
     OWNED_BY = 'pivotalowners'
     REQUEST_BY = 'pivotalrequesters'
     FOREIGN_ID = 'pivotalid'
@@ -31,6 +32,8 @@ class PivotalTrackerIssue(Issue):
         URL: {'type': 'string', 'label': 'Story URL'},
         DESCRIPTION: {'type': 'string', 'label': 'Story Description'},
         TYPE: {'type': 'string', 'label': 'Story Type'},
+        PROJECT_ID: {'type': 'numeric', 'label': 'Project ID'},
+        PROJECT_NAME: {'type': 'string', 'label': 'Project Name'},
         FOREIGN_ID: {'type': 'numeric', 'label': 'Story ID'},
         OWNED_BY: {'type': 'string', 'label': 'Story Owned By'},
         REQUEST_BY: {'type': 'string', 'label': 'Story Requested By'},
@@ -41,7 +44,7 @@ class PivotalTrackerIssue(Issue):
         CLOSED_AT: {'type': 'date', 'label': 'Story Closed'}
     }
 
-    UNIQUE_KEY = (FOREIGN_ID,)
+    UNIQUE_KEY = (URL,)
 
     def _normalize_label_to_tag(self, label):
         return re.sub(r'[^a-zA-Z0-9]', '_', label)
@@ -56,15 +59,12 @@ class PivotalTrackerIssue(Issue):
 
     def to_taskwarrior(self):
         description = self.record.get('description')
-        if description:
-            description = description.replace('\r\n', '\n')
-
         created = self.parse_date(self.record.get('created_at'))
         modified = self.parse_date(self.record.get('updated_at'))
         closed = self.parse_date(self.record.get('accepted_at'))
 
         return {
-            'project': self.extra['project_name'],
+            'project': self._normalize_label_to_tag(self.extra['project_name']).lower(),
             'priority': self.origin['default_priority'],
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
@@ -72,7 +72,9 @@ class PivotalTrackerIssue(Issue):
             self.URL: self.record['url'],
             self.DESCRIPTION: description,
             self.TYPE: self.record['story_type'],
-            self.FOREIGN_ID: self.record['id'],
+            self.PROJECT_ID: int(self.record['project_id']),
+            self.PROJECT_NAME: self.extra['project_name'],
+            self.FOREIGN_ID: int(self.record['id']),
             self.OWNED_BY: self.extra['owned_user'],
             self.REQUEST_BY: self.extra['request_user'],
             self.ESTIMATE: int(self.record.get('estimate', 0)),
@@ -105,7 +107,7 @@ class PivotalTrackerIssue(Issue):
         return self.build_default_description(
             title=self.record.get('name'),
             url=self.get_processed_url(self.record.get('url')),
-            number=self.record.get('id'),
+            number=int(self.record.get('id')),
             cls=self.record.get('story_type')
         )
 
@@ -184,49 +186,37 @@ class PivotalTrackerService(IssueService, ServiceClient):
         return {
             'import_labels_as_tags': self.import_labels_as_tags,
             'label_template': self.label_template,
-            'annotation_comments': self.annotation_comments,
             'annotation_template': self.annotation_template,
             'import_blockers': self.import_blockers,
             'blocker_template': self.blocker_template
         }
 
-    @classmethod
-    def get_project_from_story(cls, story):
-        if 'project_id' in story:
-            return story['project_id']
-        else:
-            raise ValueError("Story has no project id" + str(story))
-
-    def annotations(self, annotations, story_obj):
+    def annotations(self, annotations, story):
         final_annotations = []
         if self.annotation_comments:
-            context = story_obj.record.copy()
             annotation_template = Template(self.annotation_template)
             for annotation in annotations:
-                context.update(annotation)
                 final_annotations.append(
-                    ('task', annotation_template.render(context))
+                    ('task', annotation_template.render(annotation))
                 )
         return self.build_annotations(
             final_annotations,
-            story_obj.get_processed_url(story_obj.record.get('url'))
+            story.get('url')
         )
 
-    def blockers(self, blocker_list, story_obj):
+    def blockers(self, blocker_list):
         blockers = []
 
         if not self.import_blockers:
             return blockers
 
-        context = story_obj.record.copy()
         blocker_template = Template(self.blocker_template)
         for blocker in blocker_list:
-            context.update(blocker)
             blockers.append(
-                blocker_template.render(context)
+                blocker_template.render(blocker)
             )
 
-        return ', '.join(blockers)
+        return ', '.join(blockers) or None
 
     def issues(self):
         for project in self.get_projects(self.account_ids):
@@ -242,12 +232,11 @@ class PivotalTrackerService(IssueService, ServiceClient):
                         project_id,
                         story_id
                     )
-                    story_obj = self.get_issue_for_record(story)
                     extra = {
-                        'project_name': project.get('name', ''),
+                        'project_name': project.get('name'),
                         'annotations': self.annotations(
                             tasks,
-                            story_obj
+                            story
                         ),
                         'owned_user': self.get_user_by_id(
                             project_id,
@@ -257,13 +246,9 @@ class PivotalTrackerService(IssueService, ServiceClient):
                             project_id,
                             [story['requested_by_id']]
                         ),
-                        'blockers': self.blockers(
-                            blockers,
-                            story_obj
-                        )
+                        'blockers': self.blockers(blockers)
                     }
-                    story_obj.update_extra(extra)
-                    yield story_obj
+                    yield self.get_issue_for_record(story, extra)
 
     def api_request(self, endpoint, params={}):
         """
@@ -331,4 +316,4 @@ class PivotalTrackerService(IssueService, ServiceClient):
             lambda x: x.get('id') in user_ids,
             map(operator.itemgetter('person'), persons)
         )
-        return ', '.join(list(map(operator.itemgetter('username'), user_list)))
+        return ', '.join(list(map(operator.itemgetter('username'), user_list))) or None

@@ -98,6 +98,10 @@ or described in `Service Features`_ below.
    are processed.
    The default value is ``status: {{complete}} - {{description}}``.
 
+   .. note::
+
+      Using ``annotations_templates`` will break so do not use it.
+
 
 Service Features
 ----------------
