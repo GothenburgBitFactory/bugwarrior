@@ -42,14 +42,4 @@ configuration options described in :ref:`common_configuration_options`.
 Provided UDA Fields
 -------------------
 
-+-------------------+-----------------+-----------------+
-| Field Name        | Description     | Type            |
-+===================+=================+=================+
-| ``tracnumber``    | Number          | Text (string)   |
-+-------------------+-----------------+-----------------+
-| ``tracsummary``   | Summary         | Text (string)   |
-+-------------------+-----------------+-----------------+
-| ``tracurl``       | URL             | Text (string)   |
-+-------------------+-----------------+-----------------+
-| ``traccomponent`` | Component       | Text (string)   |
-+-------------------+-----------------+-----------------+
+.. udas:: bugwarrior.services.trac.TracIssue

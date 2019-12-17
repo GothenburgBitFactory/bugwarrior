@@ -43,20 +43,9 @@ For example::
 Provided UDA Fields
 -------------------
 
-+---------------------+---------------------+---------------------+
-| Field Name          | Description         | Type                |
-+=====================+=====================+=====================+
-| ``gerritbranch``    | Branch              | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``gerritid``        | Issue ID            | Numeric (integer)   |
-+---------------------+---------------------+---------------------+
-| ``gerritsummary``   | Summary             | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``gerrittopic``     | Topic               | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``gerriturl``       | URL                 | Text (string)       |
-+---------------------+---------------------+---------------------+
+.. udas:: bugwarrior.services.gerrit.GerritIssue
 
 The Gerrit service provides a limited set of UDAs.  If you have need for some
 other values not present here, please file a request (there's lots of metadata
 in there that we could expose).
+

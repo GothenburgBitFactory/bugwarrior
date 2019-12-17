@@ -163,32 +163,7 @@ Put the PAT in the ``jira.PAT`` field and do not set ``jira.password``.
 Provided UDA Fields
 -------------------
 
-+---------------------+--------------------------------+---------------------+
-| Field Name          | Description                    | Type                |
-+=====================+================================+=====================+
-| ``jiradescription`` | Description                    | Text (string)       |
-+---------------------+--------------------------------+---------------------+
-| ``jiraid``          | Issue ID                       | Text (string)       |
-+---------------------+--------------------------------+---------------------+
-| ``jirasummary``     | Summary                        | Text (string)       |
-+---------------------+--------------------------------+---------------------+
-| ``jiraurl``         | URL                            | Text (string)       |
-+---------------------+--------------------------------+---------------------+
-| ``jiraestimate``    | Estimate                       | Decimal (numeric)   |
-+---------------------+--------------------------------+---------------------+
-| ``jiraparent``      | ID of Parent Issue             | Text (string)       |
-+---------------------+--------------------------------+---------------------+
-| ``jirasubtasks``    | ,-separated subtasks Issue IDs | Text (string)       |
-+---------------------+--------------------------------+---------------------+
-| ``jiraissuetype``   | Issue Type                     | Text (string)       |
-+---------------------+--------------------------------+---------------------+
-| ``jirafixversion``  | Fix Version                    | Date                |
-+---------------------+--------------------------------+---------------------+
-| ``jiracreatedts``   | ,-separated subtasks Issue IDs | Text (string)       |
-+---------------------+--------------------------------+---------------------+
-| ``jirastatus``      | Status                         | Text (string)       |
-+---------------------+--------------------------------+---------------------+
-
+.. udas:: bugwarrior.services.jira.JiraIssue
 
 Support for Extra UDA Fields
 +++++++++++++++++++++++++++++
@@ -197,4 +172,3 @@ To export additional UDA fields, set ``jira.extra_fields`` to comma-separated en
     jira.extra_fields = jiraextrafield1:customfield_10000, jiraextrafield2:customfield_10001.attributes.description
 
 The correct key (and subkeys) can be found by inspecting the `fields` attribute of a standard Jira issue response.
-
