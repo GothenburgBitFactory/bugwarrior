@@ -70,12 +70,4 @@ To include the project owner in the project name::
 Provided UDA Fields
 -------------------
 
-+--------------------+--------------------+--------------------+
-| Field Name         | Description        | Type               |
-+====================+====================+====================+
-| ``bitbucketid``    | Issue ID           | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``bitbuckettitle`` | Title              | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``bitbucketurl``   | URL                | Text (string)      |
-+--------------------+--------------------+--------------------+
+.. udas:: bugwarrior.services.bitbucket.BitbucketIssue

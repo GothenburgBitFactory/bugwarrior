@@ -85,22 +85,4 @@ possible for the user to specify whether they want to pass that argument or not:
 Provided UDA Fields
 -------------------
 
-+------------------------+-------------------------------+---------------------+
-| Field Name             | Description                   | Type                |
-+========================+===============================+=====================+
-| ``bugzillasummary``    | Summary                       | Text (string)       |
-+------------------------+-------------------------------+---------------------+
-| ``bugzillaurl``        | URL                           | Text (string)       |
-+------------------------+-------------------------------+---------------------+
-| ``bugzillabugid``      | Bug ID                        | Numeric (integer)   |
-+------------------------+-------------------------------+---------------------+
-| ``bugzillastatus``     | Bugzilla Status               | Text (string)       |
-+------------------------+-------------------------------+---------------------+
-| ``bugzillaproduct``    | Bugzilla Product              | Text (string)       |
-+------------------------+-------------------------------+---------------------+
-| ``bugzillacomponent``  | Bugzilla Component            | Text (string)       |
-+------------------------+-------------------------------+---------------------+
-| ``bugzillaneedinfo``   | Needinfo                      | Date                |
-+------------------------+-------------------------------+---------------------+
-| ``bugzillaassignedon`` | date BZ was set to 'assigned' | Date                |
-+------------------------+-------------------------------+---------------------+
+.. udas:: bugwarrior.services.bz.BugzillaIssue

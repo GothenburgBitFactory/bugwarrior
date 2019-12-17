@@ -136,24 +136,4 @@ to all fields on the Taskwarrior task if needed.
 Provided UDA Fields
 -------------------
 
-+-----------------------+-----------------------+---------------------+
-| Field Name            | Description           | Type                |
-+=======================+=======================+=====================+
-| ``trelloboard``       | Board name            | Text (string)       |
-+-----------------------+-----------------------+---------------------+
-| ``trellocard``        | Card name             | Text (string)       |
-+-----------------------+-----------------------+---------------------+
-| ``trellocardid``      | Card ID               | Text (string)       |
-+-----------------------+-----------------------+---------------------+
-| ``trellolist``        | List name             | Text (string)       |
-+-----------------------+-----------------------+---------------------+
-| ``trelloshortlink``   | Short Link            | Text (string)       |
-+-----------------------+-----------------------+---------------------+
-| ``trelloshorturl``    | Short URL             | Text (string)       |
-+-----------------------+-----------------------+---------------------+
-| ``trellourl``         | Full URL              | Text (string)       |
-+-----------------------+-----------------------+---------------------+
-| ``trellocardidshort`` | Short card ID         | Number (numeric)    |
-+-----------------------+-----------------------+---------------------+
-| ``trellodescription`` | Description           | Text (string)       |
-+-----------------------+-----------------------+---------------------+
+.. udas:: bugwarrior.services.trello.TrelloIssue
