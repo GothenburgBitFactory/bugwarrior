@@ -19,6 +19,9 @@ import os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../..'))
 
+# Custom Sphinx Extensions
+sys.path.insert(0, os.path.abspath('_ext'))
+
 import bugwarrior
 
 # -- General configuration ------------------------------------------------
@@ -36,6 +39,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx_click',
+    'udas',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
