@@ -58,30 +58,4 @@ configuration options described in :ref:`common_configuration_options`.
 Provided UDA Fields
 -------------------
 
-+---------------------+-----------------+----------------+
-| Field Name          | Description     | Type           |
-+=====================+=================+================+
-| ``acbody``          | Body            | Text (string)  |
-+---------------------+-----------------+----------------+
-| ``accreatedbyname`` | Created By Name | Text (string)  |
-+---------------------+-----------------+----------------+
-| ``accreatedon``     | Created On      | Date & Time    |
-+---------------------+-----------------+----------------+
-| ``acid``            | ID              | Text (string)  |
-+---------------------+-----------------+----------------+
-| ``acname``          | Name            | Text (string)  |
-+---------------------+-----------------+----------------+
-| ``acpermalink``     | Permalink       | Text (string)  |
-+---------------------+-----------------+----------------+
-| ``acprojectid``     | Project ID      | Text (string)  |
-+---------------------+-----------------+----------------+
-| ``actaskid``        | Task ID         | Text (string)  |
-+---------------------+-----------------+----------------+
-| ``actype``          | Task Type       | Text (string)  |
-+---------------------+-----------------+----------------+
-| ``acestimatedtime`` | Estimated Time  | Text (numeric) |
-+---------------------+-----------------+----------------+
-| ``actrackedtime``   | Tracked Time    | Text (numeric) |
-+---------------------+-----------------+----------------+
-| ``acmilestone``     | Milestone       | Text (string)  |
-+---------------------+-----------------+----------------+
+.. udas:: bugwarrior.services.activecollab.ActiveCollabIssue

@@ -75,12 +75,4 @@ by adding the following configuration option::
 Provided UDA Fields
 -------------------
 
-+--------------------+--------------------+--------------------+
-| Field Name         | Description        | Type               |
-+====================+====================+====================+
-| ``bitbucketid``    | Issue ID           | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``bitbuckettitle`` | Title              | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``bitbucketurl``   | URL                | Text (string)      |
-+--------------------+--------------------+--------------------+
+.. udas:: bugwarrior.services.bitbucket.BitbucketIssue

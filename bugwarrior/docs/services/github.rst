@@ -154,32 +154,4 @@ point bugwarrior to it with the ``github.host`` configuration option. E.g.::
 Provided UDA Fields
 -------------------
 
-+---------------------+---------------------+---------------------+
-| Field Name          | Description         | Type                |
-+=====================+=====================+=====================+
-| ``githubbody``      | Body                | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``githubcreatedon`` | Created             | Date & Time         |
-+---------------------+---------------------+---------------------+
-| ``githubclosedon``  | Closed              | Date & Time         |
-+---------------------+---------------------+---------------------+
-| ``githubmilestone`` | Milestone           | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``githubnumber``    | Issue/PR #          | Numeric             |
-+---------------------+---------------------+---------------------+
-| ``githubtitle``     | Title               | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``githubtype``      | Type                | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``githubupdatedat`` | Updated             | Date & Time         |
-+---------------------+---------------------+---------------------+
-| ``githuburl``       | URL                 | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``githubrepo``      | username/reponame   | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``githubuser``      | Author of issue/PR  | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``githubnamespace`` | project namespace   | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``githubstate``     | Issue/PR state      | Text (string)       |
-+---------------------+---------------------+---------------------+
+.. udas:: bugwarrior.services.github.GithubIssue

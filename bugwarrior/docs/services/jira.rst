@@ -108,16 +108,4 @@ on the client (created by running ``kinit`` or any other method).
 Provided UDA Fields
 -------------------
 
-+---------------------+---------------------+---------------------+
-| Field Name          | Description         | Type                |
-+=====================+=====================+=====================+
-| ``jiradescription`` | Description         | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``jiraid``          | Issue ID            | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``jirasummary``     | Summary             | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``jiraurl``         | URL                 | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``jiraestimate``    | Estimate            | Decimal (numeric)   |
-+---------------------+---------------------+---------------------+
+.. udas:: bugwarrior.services.jira.JiraIssue

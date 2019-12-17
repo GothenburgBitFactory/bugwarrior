@@ -98,16 +98,4 @@ necessary information in the Conduit API.
 Provided UDA Fields
 -------------------
 
-+----------------------+--------------------------+----------------------+
-| Field Name           | Description              | Type                 |
-+======================+==========================+======================+
-| ``phabricatorid``    | Object                   | Text (string)        |
-+----------------------+--------------------------+----------------------+
-| ``phabricatortitle`` | Title                    | Text (string)        |
-+----------------------+--------------------------+----------------------+
-| ``phabricatortype``  | Type (``issue`` for      | Text (string)        |
-|                      | Tasks, ``pull_request``  |                      |
-|                      | for Revisions)           |                      |
-+----------------------+--------------------------+----------------------+
-| ``phabricatorurl``   | URL                      | Text (string)        |
-+----------------------+--------------------------+----------------------+
+.. udas:: bugwarrior.services.phab.PhabricatorIssue

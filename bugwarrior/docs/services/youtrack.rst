@@ -85,16 +85,4 @@ to all fields on the Taskwarrior task if needed.
 Provided UDA Fields
 -------------------
 
-+---------------------------+----------------------+---------------------+
-| Field Name                | Description          | Type                |
-+===========================+======================+=====================+
-| ``youtrackissue``         | PROJECT-ISSUE#       | Text (string)       |
-+---------------------------+----------------------+---------------------+
-| ``youtracksummary``       | Summary              | Text (string)       |
-+---------------------------+----------------------+---------------------+
-| ``youtrackurl``           | URL                  | Text (string)       |
-+---------------------------+----------------------+---------------------+
-| ``youtrackproject``       | Project short name   | Text (string)       |
-+---------------------------+----------------------+---------------------+
-| ``youtracknumber``        | Project issue number | Numeric             |
-+---------------------------+----------------------+---------------------+
+.. udas:: bugwarrior.services.youtrack.YoutrackIssue

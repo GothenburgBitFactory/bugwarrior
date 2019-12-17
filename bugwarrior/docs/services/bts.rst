@@ -106,21 +106,4 @@ of the following lines to your service configuration::
 Provided UDA Fields
 -------------------
 
-+---------------------+---------------------+---------------------+
-| Field Name          | Description         | Type                |
-+=====================+=====================+=====================+
-| ``btsnumber``       | Bug Number          | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``btsurl``          | bugs.d.o URL        | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``btssubject``      | Subject             | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``btssource``       | Source Package      | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``btspackage``      | Binary Package      | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``btsforwarded``    | Forwarded URL       | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``btsstatus``       | Status              | Text (string)       |
-+---------------------+---------------------+---------------------+
-
+.. udas:: bugwarrior.services.bts.BTSIssue

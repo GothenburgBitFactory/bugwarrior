@@ -47,22 +47,4 @@ configuration options described in :ref:`common_configuration_options`.
 Provided UDA Fields
 -------------------
 
-+--------------------+--------------------+--------------------+
-| Field Name         | Description        | Type               |
-+====================+====================+====================+
-| ``ac2body``        | Body               | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``ac2createdbyid`` | Created By         | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``ac2createdon``   | Created On         | Date & Time        |
-+--------------------+--------------------+--------------------+
-| ``ac2name``        | Name               | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``ac2permalink``   | Permalink          | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``ac2projectid``   | Project ID         | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``ac2ticketid``    | Ticket ID          | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``ac2type``        | Task Type          | Text (string)      |
-+--------------------+--------------------+--------------------+
+.. udas:: bugwarrior.services.activecollab2.ActiveCollab2Issue

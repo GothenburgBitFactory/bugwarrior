@@ -32,12 +32,4 @@ If you want to ignore verifying the SSL certificate, set::
 Provided UDA Fields
 -------------------
 
-+--------------------+--------------------+--------------------+
-| Field Name         | Description        | Type               |
-+====================+====================+====================+
-| ``redmineid``      | ID                 | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``redminesubject`` | Subject            | Text (string)      |
-+--------------------+--------------------+--------------------+
-| ``redmineurl``     | URL                | Text (string)      |
-+--------------------+--------------------+--------------------+
+.. udas:: bugwarrior.services.redmine.RedMineIssue

@@ -29,16 +29,9 @@ You can also feel free to use any of the configuration options described in
 Provided UDA Fields
 -------------------
 
-+---------------------+---------------------+---------------------+
-| Field Name          | Description         | Type                |
-+=====================+=====================+=====================+
-| ``gerritid``        | Issue ID            | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``gerritsummary``   | Summary             | Text (string)       |
-+---------------------+---------------------+---------------------+
-| ``gerriturl``       | URL                 | Text (string)       |
-+---------------------+---------------------+---------------------+
+.. udas:: bugwarrior.services.gerrit.GerritIssue
 
 The Gerrit service provides a limited set of UDAs.  If you have need for some
 other values not present here, please file a request (there's lots of metadata
 in there that we could expose).
+

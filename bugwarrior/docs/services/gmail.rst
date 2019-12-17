@@ -51,16 +51,4 @@ token will be stored in your bugwarrior data directory.
 Provided UDA Fields
 -------------------
 
-+---------------------+-----------------------------------+---------------+
-| ``gmailthreadid``   | Thread Id                         | Text (string) |
-+---------------------+-----------------------------------+---------------+
-| ``gmailsubject``    | Subject                           | Text (string) |
-+---------------------+-----------------------------------+---------------+
-| ``gmailurl``        | URL                               | Text (string) |
-+---------------------+-----------------------------------+---------------+
-| ``gmaillastsender`` | Last Sender's Name                | Text (string) |
-+---------------------+-----------------------------------+---------------+
-| ``gmaillastsender`` | Last Sender's E-mail Address      | Text (string) |
-+---------------------+-----------------------------------+---------------+
-| ``gmailsnippet``    | Snippet of text from conversation | Text (string) |
-+---------------------+-----------------------------------+---------------+
+.. udas:: bugwarrior.services.gmail.GmailIssue

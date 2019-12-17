@@ -30,12 +30,4 @@ configuration options described in :ref:`common_configuration_options`.
 Provided UDA Fields
 -------------------
 
-+-------------------+-------------------+-------------------+
-| Field Name        | Description       | Type              |
-+===================+===================+===================+
-| ``megaplanid``    | Issue ID          | Text (string)     |
-+-------------------+-------------------+-------------------+
-| ``megaplantitle`` | Title             | Text (string)     |
-+-------------------+-------------------+-------------------+
-| ``megaplanurl``   | URL               | Text (string)     |
-+-------------------+-------------------+-------------------+
+# .. udas:: bugwarrior.services.mplan.MegaplanIssue
