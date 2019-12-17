@@ -20,6 +20,9 @@ import os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 
+sys.path.insert(0, os.path.abspath('_ext'))  # Custom sphinx extensions
+sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))  # To import modules from bugwarior
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -34,6 +37,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
+    'udas',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
