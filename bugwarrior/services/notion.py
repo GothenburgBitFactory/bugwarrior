@@ -188,3 +188,12 @@ class NotionService(IssueService, ServiceClient):
 
         for issue in issues:
             yield self.get_issue_for_record(issue)
+
+
+#client = NotionClient(token_v2=TOKEN_V2)
+#response = client.get_block(TASK_PAGE)
+#rows = response.collection.get_rows()
+#for row in rows:
+#    if any(x.email == MY_EMAIL for x in row.engineers):
+#        print((row.id, row.engineers, row.status, row.title))
+
