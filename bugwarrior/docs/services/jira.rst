@@ -26,6 +26,10 @@ Here's an example of a jira project::
 
    The ``base_uri`` must not have a trailing slash.
 
+.. note::
+
+   The `jira.password` may contain an `api token <https://confluence.atlassian.com/cloud/api-tokens-938839638.html>`_.
+
 The above example is the minimum required to import issues from
 Jira.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`
