@@ -65,6 +65,7 @@ class JiraIssue(Issue):
     FIX_VERSION = 'jirafixversion'
     CREATED_AT = 'jiracreatedts'
     STATUS = 'jirastatus'
+    SUBTASKS = 'jirasubtasks'
 
     UDAS = {
         ISSUE_TYPE: {
@@ -103,6 +104,10 @@ class JiraIssue(Issue):
             'type': 'string',
             'label': "Jira Status"
         },
+        SUBTASKS: {
+            'type': 'string',
+            'label': "Jira Subtasks"
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -135,7 +140,8 @@ class JiraIssue(Issue):
             self.SUMMARY: self.get_summary(),
             self.ESTIMATE: self.get_estimate(),
             self.FIX_VERSION: self.get_fix_version(),
-            self.STATUS: self.get_status()
+            self.STATUS: self.get_status(),
+            self.SUBTASKS: self.get_subtasks(),
         }
 
     def get_entry(self):
@@ -251,6 +257,9 @@ class JiraIssue(Issue):
 
     def get_status(self):
         return self.record['fields']['status']['name']
+
+    def get_subtasks(self):
+        return ','.join(task['key'] for task in self.record['fields']['subtasks'])
 
     def get_issue_type(self):
         return self.record['fields']['issuetype']['name']

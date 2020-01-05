@@ -30,6 +30,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
 
     arbitrary_estimation = 3600
     arbitrary_id = '10'
+    arbitrary_subtask_ids = ['11', '12']
     arbitrary_project = 'DONUT'
     arbitrary_summary = 'lkjaldsfjaldf'
 
@@ -41,7 +42,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'created': '2016-06-06T06:07:08.123-0700',
             'fixVersions': [{'name': '1.2.3'}],
             'issuetype': {'name': 'Epic'},
-            'status': {'name': 'Open'}
+            'status': {'name': 'Open'},
+            'subtasks': [{'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids]
         },
         'key': '%s-%s' % (arbitrary_project, arbitrary_id, ),
     }
@@ -87,6 +89,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jirafixversion': '1.2.3',
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
+            'jirasubtasks': 'DONUT-11,DONUT-12',
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: self.arbitrary_record['key'],
@@ -133,6 +136,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jirafixversion': '1.2.3',
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
+            'jirasubtasks': 'DONUT-11,DONUT-12',
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: record_with_goal['key'],
@@ -166,6 +170,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jirastatus': 'Open',
             'jirasummary': 'lkjaldsfjaldf',
             'jiraurl': 'two/browse/DONUT-10',
+            'jirasubtasks': 'DONUT-11,DONUT-12',
             'priority': 'H',
             'project': 'DONUT',
             'tags': []}
