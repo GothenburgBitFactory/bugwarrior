@@ -266,7 +266,7 @@ def run_hooks(conf, name):
                     raise RuntimeError(msg)
 
 
-def synchronize(issue_generator, conf, main_section, dry_run=False):
+def synchronize(issue_generator, conf, main_section, allow_close=True, dry_run=False):
     def _bool_option(section, option, default):
         try:
             return asbool(conf.get(section, option))
@@ -416,25 +416,31 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         except TaskwarriorError as e:
             log.exception("Unable to modify task: %s" % e.stderr)
 
-    log.info("Closing %i tasks", len(issue_updates['closed']))
-    for issue in issue_updates['closed']:
-        _, task_info = tw.get_task(uuid=issue)
+    if allow_close:
+        log.info("Closing %i tasks", len(issue_updates['closed']))
+        for issue in issue_updates['closed']:
+            _, task_info = tw.get_task(uuid=issue)
+            log.info(
+                "Completing task %s %s%s",
+                issue,
+                task_info.get('description', ''),
+                notreally
+            )
+            if dry_run:
+                continue
+
+            if notify:
+                send_notification(task_info, 'Completed', conf)
+
+            try:
+                tw.task_done(uuid=issue)
+            except TaskwarriorError as e:
+                log.exception("Unable to close task: %s" % e.stderr)
+    else:
         log.info(
-            "Completing task %s %s%s",
-            issue,
-            task_info.get('description', ''),
-            notreally
+            '%s tasks are ready to be closed, but closing of tasks disabled',
+            len(issue_updates['closed'])
         )
-        if dry_run:
-            continue
-
-        if notify:
-            send_notification(task_info, 'Completed', conf)
-
-        try:
-            tw.task_done(uuid=issue)
-        except TaskwarriorError as e:
-            log.exception("Unable to close task: %s" % e.stderr)
 
     # Send notifications
     if notify:
