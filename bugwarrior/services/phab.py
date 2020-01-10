@@ -93,10 +93,13 @@ class PhabricatorService(IssueService):
         self.shown_project_phids = (
             self.config.get("project_phids", None, aslist))
 
-        self.ignore_cc = self.config.get('ignore_cc', default=False,
+        only_if_assigned = self.config.get('only_if_assigned', default=False,
+                                           to_type=lambda x: x not in [False, "False", ""])
+
+        self.ignore_cc = self.config.get('ignore_cc', default=only_if_assigned,
                                           to_type=lambda x: x == "True")
 
-        self.ignore_author = self.config.get('ignore_author', default=False,
+        self.ignore_author = self.config.get('ignore_author', default=only_if_assigned,
                                              to_type=lambda x: x == "True")
 
         self.ignore_owner = self.config.get('ignore_owner', default=False,
