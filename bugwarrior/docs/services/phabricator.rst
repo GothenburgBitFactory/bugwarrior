@@ -95,6 +95,9 @@ Note that there is no way to filter by the reviewer's response (for example, to
 exclude Revisions you have already reviewed). Phabricator does not provide the
 necessary information in the Conduit API.
 
+Furthermore, setting `phabricator.only_if_assigned` to something other than False
+will default to ignoring the CC and Author fields as reported in phabricator.
+
 Provided UDA Fields
 -------------------
 
