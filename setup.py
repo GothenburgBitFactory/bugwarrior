@@ -49,6 +49,7 @@ setup(name='bugwarrior',
           trac=["offtrac"],
           bugzilla=["python-bugzilla"],
           gmail=["google-api-python-client", "oauth2client<4.0.0"],
+          notion=["notion==0.0.24"],
       ),
       tests_require=[
           "Mock",
@@ -89,6 +90,7 @@ setup(name='bugwarrior',
       trello=bugwarrior.services.trello:TrelloService
       youtrack=bugwarrior.services.youtrack:YoutrackService
       gmail=bugwarrior.services.gmail:GmailService
+      notion=bugwarrior.services.notion:NotionService
       teamworks_projects=bugwarrior.services.teamworks_projects:TeamworksService
       """,
       )
