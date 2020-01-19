@@ -75,6 +75,11 @@ from your browser into the ``bugzilla.query_url`` option::
 
     bugzilla.query_url = https://bugzilla.mozilla.org/query.cgi?bug_status=ASSIGNED&email1=myname%40mozilla.com&emailassigned_to1=1&emailtype1=exact
 
+Note that versions of Python-Bugzilla newer than 2.3.0 support the Bugzilla REST interface, but prefer the XMLRPC interface if both are configured.
+To force use of the REST interface, ensure you are using a newer version of the library and add::
+
+    bugzilla.force_rest = True
+
 Provided UDA Fields
 -------------------
 

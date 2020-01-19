@@ -146,16 +146,20 @@ class BugzillaService(IssueService):
         # to pass that argument or not.
         self.advanced = asbool(self.config.get('advanced', 'no'))
 
-        url = 'https://%s/xmlrpc.cgi' % self.base_uri
+        force_rest_kwargs = {}
+        if asbool(self.config.get("force_rest", "no")):
+            force_rest_kwargs = {"force_rest": True}
+
+        url = 'https://%s' % self.base_uri
         api_key = self.config.get('api_key', default=None)
         if api_key:
             try:
-                self.bz = bugzilla.Bugzilla(url=url, api_key=api_key)
+                self.bz = bugzilla.Bugzilla(url=url, api_key=api_key, **force_rest_kwargs)
             except TypeError:
                 raise Exception("Bugzilla API keys require python-bugzilla>=2.1.0")
         else:
             password = self.get_password('password', self.username)
-            self.bz = bugzilla.Bugzilla(url=url)
+            self.bz = bugzilla.Bugzilla(url=url, **force_rest_kwargs)
             self.bz.login(self.username, password)
 
     @staticmethod
