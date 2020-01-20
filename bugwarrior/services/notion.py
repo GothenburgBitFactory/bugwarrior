@@ -95,21 +95,6 @@ class NotionIssue(Issue):
 
     def get_tags(self):
         tags = []
-
-        if not self.origin['import_tags']:
-            return tags
-
-        context = self.record.copy()
-        tag_template = Template(self.origin['tag_template'])
-
-        for tag_dict in self.record.get('tag', []):
-            context.update({
-                'tag': re.sub(r'[^a-zA-Z0-9]', '_', tag_dict['value'])
-            })
-            tags.append(
-                tag_template.render(context)
-            )
-
         return tags
 
 
@@ -122,12 +107,15 @@ class NotionService(IssueService, ServiceClient):
         self.token_v2 = self.config.get('token_v2')
         self.task_page = self.config.get('task_page')
         self.email = self.config.get('email')
+        self.base_url = 'https://notion.so'
+
 
     def get_service_metadata(self):
         return {
             'token_v2': self.token_v2,
             'task_page': self.task_page,
             'email': self.email,
+            'base_url': self.base_url,
         }
 
     @classmethod
@@ -146,10 +134,14 @@ class NotionService(IssueService, ServiceClient):
         issues = []
         for row in rows:
             if any(x.email == self.email for x in row.engineers):
+                field = [ { "name": "projectShortName", "value": "TEST" },
+                        { "name": "numberInProject", "value": "1" },
+                        { "name": "summary", "value": "Hello World" }, ]
                 issues.append({'id':row.id,
                                'assignee':row.engineers,
                                'status':row.status,
-                               'title':row.title})
+                               'title':row.title,
+                               'field':field})
         log.debug(" Found %i total.", len(issues))
 
         for issue in issues:
