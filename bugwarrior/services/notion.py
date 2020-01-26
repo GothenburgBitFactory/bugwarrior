@@ -20,6 +20,7 @@ class NotionIssue(Issue):
     URL = ISSUE_PREFIX + 'url'
     PROJECT = ISSUE_PREFIX + 'project'
     NUMBER = ISSUE_PREFIX + 'number'
+    STATUS = ISSUE_PREFIX + 'status'
 
     UDAS = {
         ISSUE: {
@@ -41,6 +42,10 @@ class NotionIssue(Issue):
         NUMBER: {
             'type': 'string',
             'label': 'Notion Project Issue Number'
+        },
+        STATUS: {
+            'type': 'string',
+            'label': 'Notion Status',
         },
     }
     UNIQUE_KEY = (URL,)
@@ -136,7 +141,8 @@ class NotionService(IssueService, ServiceClient):
             if any(x.email == self.email for x in row.engineers):
                 field = [ { "name": "projectShortName", "value": "TEST" },
                         { "name": "numberInProject", "value": "1" },
-                        { "name": "summary", "value": "Hello World" }, ]
+                        { "name": "Status", "value": row.status },
+                        { "name": "summary", "value": row.title }, ]
                 issues.append({'id':row.id,
                                'assignee':row.engineers,
                                'status':row.status,
