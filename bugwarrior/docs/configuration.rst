@@ -14,7 +14,7 @@ Example Configuration
     # Here you define a comma separated list of targets.  Each of them must have a
     # section below determining their properties, how to query them, etc.  The name
     # is just a symbol, and doesn't have any functional importance.
-    targets = my_github, my_bitbucket, paj_bitbucket, moksha_trac, bz.redhat
+    targets = my_github, my_bitbucket, paj_bitbucket, moksha_trac, bz.redhat, pivotaltracker
 
     # If unspecified, the default taskwarrior config will be used.
     #taskrc = /path/to/.taskrc
@@ -189,3 +189,23 @@ Example Configuration
     service = gmail
     gmail.query = label:action OR label:readme
     gmail.login_name = you@example.com
+
+    [pivotaltracker]
+    service = pivotaltracker
+    pivotaltracker.token = your-api-key
+    pivotaltracker.version = v5
+    pivotaltracker.user_id = your-user-id
+    pivotaltracker.account_ids = first_account_id,second_account_id
+    pivotaltracker.only_if_assigned = True
+    pivotaltracker.also_unassigned = False
+    pivotaltracker.only_if_author = False
+    pivotaltracker.import_labels_as_tags = True
+    pivotaltracker.label_template = pivotal_{{label}}
+    pivotaltracker.import_blockers = True
+    pivotaltracker.blocker_template = "Description: {{description}} State: {{resolved}}\n"
+    pivotaltracker.annotation_comments = True
+    pivotaltracker.annotation_template = "status: {{completed}} - MYDESC {{description}}"
+    piivotaltracker.exclude_projects = first_project_id,second_project_id
+    pivotaltracker.exclude_stories = first_story_id,second_story_id
+    pivotaltracker.exclude_tags = "wont fix", "should fix"
+    pivotaltracker.query = mywork:1234 -has:label

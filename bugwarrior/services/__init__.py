@@ -362,6 +362,11 @@ class Issue(object):
             'todo': '',
             'task': '',
             'subtask': 'Subtask #',
+            'feature': 'Feature',
+            'bug': 'Bug',
+            'story': 'Story',
+            'release': 'Release',
+            'chore': 'Chore',
         }
         url_separator = ' .. '
         url = url if self.origin['inline_links'] else ''
