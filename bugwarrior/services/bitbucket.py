@@ -62,7 +62,6 @@ class BitbucketService(IssueService, ServiceClient):
     ISSUE_CLASS = BitbucketIssue
     CONFIG_PREFIX = 'bitbucket'
 
-    BASE_API = 'https://api.bitbucket.org/1.0'
     BASE_API2 = 'https://api.bitbucket.org/2.0'
     BASE_URL = 'https://bitbucket.org/'
 
@@ -172,18 +171,6 @@ class BitbucketService(IssueService, ServiceClient):
         return [(tag, issue) for issue in response]
 
     def get_annotations(self, tag, issue, issue_obj, url):
-        response = self.get_data(
-            self.BASE_API +
-            '/repositories/%s/issues/%i/comments' % (tag, issue['id']))
-        return self.build_annotations(
-            ((
-                comment['author_info']['username'],
-                comment['content'],
-            ) for comment in response),
-            issue_obj.get_processed_url(url)
-        )
-
-    def get_annotations2(self, tag, issue, issue_obj, url):
         response = self.get_collection(
             '/repositories/%s/pullrequests/%i/comments' % (tag, issue['id'])
         )
@@ -258,7 +245,8 @@ class BitbucketService(IssueService, ServiceClient):
                 extras = {
                     'project': projectName,
                     'url': url,
-                    'annotations': self.get_annotations2(tag, issue, issue_obj, url)
+                    'annotations': self.get_annotations(
+                        tag, issue, issue_obj, url)
                 }
                 issue_obj.update_extra(extras)
                 yield issue_obj
