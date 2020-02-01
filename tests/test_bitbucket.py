@@ -69,13 +69,6 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
             }]})
 
         self.add_response(
-            'https://api.bitbucket.org/1.0/repositories/somename/somerepo/issues/1/comments',
-            json=[{
-                'author_info': {'username': 'nobody'},
-                'content': 'Some comment.'
-            }])
-
-        self.add_response(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/pullrequests/',
             json={'values': [{
                 'title': 'Some Feature',
