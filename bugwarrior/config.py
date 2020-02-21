@@ -5,6 +5,7 @@ from six.moves import configparser
 import os
 import subprocess
 import sys
+import re
 
 import six
 
@@ -28,7 +29,7 @@ def asbool(some_value):
 
 def aslist(value):
     """ Cast config values to lists of strings """
-    return [item.strip() for item in value.strip().split(',')]
+    return [item.strip() for item in re.split(",(?![^{]*})",value.strip())]
 
 
 def asint(value):
