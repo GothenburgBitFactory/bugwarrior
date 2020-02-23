@@ -223,3 +223,25 @@ class TestLoggingPath(TestCase):
 
     def tearDown(self):
         os.chdir(self.dir)
+
+
+class TestCasters(TestCase):
+    def test_asbool(self):
+        self.assertEqual(config.asbool('True'), True)
+        self.assertEqual(config.asbool('False'), False)
+
+    def test_aslist(self):
+        self.assertEqual(
+            config.aslist('project_bar,project_baz'),
+            ['project_bar', 'project_baz']
+        )
+
+    def test_aslist_jinja(self):
+        self.assertEqual(
+            config.aslist("work, jira, {{jirastatus|lower|replace(' ','_')}}"),
+            ['work', 'jira', "{{jirastatus|lower|replace(' ','_')}}"]
+        )
+
+    def test_asint(self):
+        self.assertEqual(config.asint(''), None)
+        self.assertEqual(config.asint('42'), 42)
