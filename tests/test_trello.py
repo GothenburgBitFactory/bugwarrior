@@ -217,3 +217,10 @@ class TestTrelloService(ConfigTest):
         self.config.remove_option('mytrello', 'trello.api_key')
         TrelloService.validate_config(self.service_config, 'mytrello')
         die.assert_called_with("[mytrello] has no 'trello.api_key'")
+
+
+    def test_keyring_service(self):
+        """ Checks that the keyring service name """
+        keyring_service = TrelloService.get_keyring_service(self.service_config)
+        self.assertEqual("trello://XXXX@trello.com", keyring_service)
+
