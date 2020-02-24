@@ -89,6 +89,11 @@ class TrelloService(IssueService, ServiceClient):
         check_key('token')
         check_key('api_key')
 
+    @staticmethod
+    def get_keyring_service(service_config):
+        api_key = service_config.get('api_key')
+        return "trello://{api_key}@trello.com".format(api_key=api_key)
+
     def get_service_metadata(self):
         """
         Return extra config options to be passed to the TrelloIssue class
@@ -194,6 +199,6 @@ class TrelloService(IssueService, ServiceClient):
         key and token from the configuration
         """
         params['key'] = self.config.get('api_key'),
-        params['token'] = self.config.get('token'),
+        params['token'] = self.get_password('token', self.config),
         url = "https://api.trello.com" + url
         return self.json_response(requests.get(url, params=params))
