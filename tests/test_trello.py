@@ -25,6 +25,7 @@ class TestTrelloIssue(ServiceTest):
         "shortUrl": "https://trello.com/c/AAaaBBbb",
         "url": "https://trello.com/c/AAaBBbb/42-so-long",
         "labels": [{'name': "foo"}, {"name": "bar"}],
+        "desc": "some description",
         }
 
     def setUp(self):
@@ -55,6 +56,7 @@ class TestTrelloService(ConfigTest):
              'idShort': 1,
              'shortLink': 'abcd',
              'shortUrl': 'https://trello.com/c/AAaaBBbb',
+             'desc': 'some description',
              'url': 'https://trello.com/c/AAaBBbb/42-so-long'}
     CARD2 = {'id': 'kard', 'name': 'Card 2', 'members': [{'username': 'mario'}]}
     CARD3 = {'id': 'K4rD', 'name': 'Card 3', 'members': []}
@@ -189,6 +191,8 @@ class TestTrelloService(ConfigTest):
             'trellolist': 'List 1',
             'trellocard': 'Card 1',
             'trellocardid': 'C4RD',
+            'trellocardidshort': 1,
+            'trellodescription': 'some description',
             'trelloshortlink': 'abcd',
             'trelloshorturl': 'https://trello.com/c/AAaaBBbb',
             'trellourl': 'https://trello.com/c/AAaBBbb/42-so-long',

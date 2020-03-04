@@ -22,6 +22,8 @@ DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')}}"
 class TrelloIssue(Issue):
     NAME = 'trellocard'
     CARDID = 'trellocardid'
+    SHORTCARDID = 'trellocardidshort'
+    DESCRIPTION = 'trellodescription'
     BOARD = 'trelloboard'
     LIST = 'trellolist'
     SHORTLINK = 'trelloshortlink'
@@ -31,6 +33,8 @@ class TrelloIssue(Issue):
     UDAS = {
         NAME: {'type': 'string', 'label': 'Trello card name'},
         CARDID: {'type': 'string', 'label': 'Trello card ID'},
+        SHORTCARDID: {'type': 'string', 'label': 'Trello short card ID'},
+        DESCRIPTION: {'type': 'string', 'label': 'Trello description'},
         BOARD: {'type': 'string', 'label': 'Trello board name'},
         LIST: {'type': 'string', 'label': 'Trello list name'},
         SHORTLINK: {'type': 'string', 'label': 'Trello shortlink'},
@@ -62,6 +66,8 @@ class TrelloIssue(Issue):
             'priority': self.origin['default_priority'],
             self.NAME: self.record['name'],
             self.CARDID: self.record['id'],
+            self.SHORTCARDID: self.record['idShort'],
+            self.DESCRIPTION: self.record['desc'],
             self.BOARD: self.extra['boardname'],
             self.LIST: self.extra['listname'],
             self.SHORTLINK: self.record['shortLink'],
@@ -167,7 +173,7 @@ class TrelloService(IssueService, ServiceClient):
         """ Returns an iterator for the cards in a given list, filtered
         according to configuration values of trello.only_if_assigned and
         trello.also_unassigned """
-        params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels,due'}
+        params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels,due,desc'}
         member = self.config.get('only_if_assigned', None)
         unassigned = self.config.get('also_unassigned', False, asbool)
         if member is not None:
