@@ -78,6 +78,10 @@ class GerritService(IssueService, ServiceClient):
             'Accept': 'application/json',
             'Accept-Encoding': 'gzip',
         })
+        self.query_string = self.config.get(
+            'query',
+            'is:open+is:reviewer'
+        ) + '&o=MESSAGES&o=DETAILED_ACCOUNTS'
 
         if self.ssl_ca_path:
             self.session.verify = os.path.expanduser(self.ssl_ca_path)
@@ -113,9 +117,7 @@ class GerritService(IssueService, ServiceClient):
     def issues(self):
         # Construct the whole url by hand here, because otherwise requests will
         # percent-encode the ':' characters, which gerrit doesn't like.
-        url = self.url + '/a/changes/' + \
-            '?q=is:open+is:reviewer' + \
-            '&o=MESSAGES&o=DETAILED_ACCOUNTS'
+        url = self.url + '/a/changes/?q=' + self.query_string
         response = self.session.get(url)
         response.raise_for_status()
         # The response has some ")]}'" garbage prefixed.

@@ -26,6 +26,20 @@ alternative certificate authority to verify the connection.
 You can also feel free to use any of the configuration options described in
 :ref:`common_configuration_options`.
 
+Specify the Query to Use for Gathering Patchsets
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+By default, the Gerrit plugin will query patchsets based on this simple
+API query
+
+    is:open+is:reviewer
+
+You may override this query string through your `bugwarriorrc` file.
+
+For example:
+
+    gerrit.query = is:open+((reviewer:self+-owner:self+-is:ignored)+OR+assignee:self)
+
 Provided UDA Fields
 -------------------
 
