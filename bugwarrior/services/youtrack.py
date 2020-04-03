@@ -128,6 +128,8 @@ class YoutrackService(IssueService, ServiceClient):
             self.port = '80'
         self.port = self.config.get('port', self.port)
         self.base_url = '%s://%s:%s' % (self.scheme, self.host, self.port)
+        if self.config.get('incloud_instance', default=False, to_type=asbool):
+            self.base_url += '/youtrack'
         self.rest_url = self.base_url + '/rest'
 
         self.session = requests.Session()
