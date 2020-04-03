@@ -42,6 +42,10 @@ If you want to ignore verifying the SSL certificate, set::
 
     youtrack.verify_ssl = False
 
+For YouTrack InCloud instances set::
+
+    youtrack.incloud_instance = True
+
 Specify the Query to Use for Gathering Issues
 +++++++++++++++++++++++++++++++++++++++++++++
 
