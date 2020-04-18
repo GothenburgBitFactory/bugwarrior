@@ -16,6 +16,7 @@ class GerritIssue(Issue):
     BRANCH = 'gerritbranch'
     TOPIC = 'gerrittopic'
     REVIEWS = 'gerritreviews'    
+    OWNER = 'gerritowner'
 
     UDAS = {
         SUMMARY: {
@@ -42,6 +43,10 @@ class GerritIssue(Issue):
             'type': 'string',
             'label': 'Gerrit Reviews',
         },
+        OWNER: {
+            'type': 'string',
+            'label': 'Gerrit Owner Username',
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -62,6 +67,7 @@ class GerritIssue(Issue):
             self.BRANCH: self.record['branch'],
             self.TOPIC: self.record.get('topic', 'notopic'),
             self.REVIEWS: self._get_reviews(),
+            self.OWNER: self.record['owner']['username'],
         }
 
     def get_default_description(self):

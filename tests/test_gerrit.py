@@ -15,6 +15,8 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
     }
 
     record = {
+        'owner': {
+            'username': 'owner'},
         'project': 'nova',
         '_number': 1,
         'branch': 'master',
@@ -58,6 +60,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'priority': 'M',
             'project': 'nova',
             'gerritid': 1,
+            'gerritowner': 'owner',
             'gerritsummary': 'this is a title',
             'gerriturl': 'this is a url',
             'gerritbranch': 'master',
@@ -81,6 +84,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'annotations': [u'@Iam Author - is is a message'],
             'description': u'(bw)PR#1 - this is a title .. https://one.com/#/c/1/',
             'gerritid': 1,
+            'gerritowner': 'owner',
             'gerritsummary': u'this is a title',
             'gerriturl': 'https://one.com/#/c/1/',
             'gerritbranch': 'master',
