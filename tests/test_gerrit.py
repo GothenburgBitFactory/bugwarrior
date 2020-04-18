@@ -20,6 +20,14 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
         'branch': 'master',
         'topic': 'test-topic',
         'subject': 'this is a title',
+        'labels': {
+            'Code-Review': {
+                'all': [
+                    {'value': -2},
+                    {'value': -1},
+                    {'value': 0},
+                    {'value': 1},
+                    {'value': 2}]}},
         'messages': [{'author': {'username': 'Iam Author'},
                       'message': 'this is a message',
                       '_revision_number': 1}],
@@ -54,6 +62,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'gerriturl': 'this is a url',
             'gerritbranch': 'master',
             'gerrittopic': 'test-topic',
+            'gerritreviews': '-2 -1 1 2',
             'tags': [],
         }
 
@@ -62,7 +71,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         self.add_response(
-            'https://one.com/a/changes/?q=is:open+is:reviewer&o=MESSAGES&o=DETAILED_ACCOUNTS',
+            'https://one.com/a/changes/?q=is:open+is:reviewer&o=DETAILED_LABELS&o=MESSAGES&o=DETAILED_ACCOUNTS',
             # The response has some ")]}'" garbage prefixed.
             body=")]}'" + json.dumps([self.record]))
 
@@ -76,6 +85,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'gerriturl': 'https://one.com/#/c/1/',
             'gerritbranch': 'master',
             'gerrittopic': 'test-topic',
+            'gerritreviews': '-2 -1 1 2',
             'priority': 'M',
             'project': u'nova',
             'tags': []}

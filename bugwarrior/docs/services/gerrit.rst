@@ -52,6 +52,8 @@ Provided UDA Fields
 +---------------------+---------------------+---------------------+
 | ``gerriturl``       | URL                 | Text (string)       |
 +---------------------+---------------------+---------------------+
+| ``gerritreviews``   | Reviews             | Text (string)       |
++---------------------+---------------------+---------------------+
 
 The Gerrit service provides a limited set of UDAs.  If you have need for some
 other values not present here, please file a request (there's lots of metadata

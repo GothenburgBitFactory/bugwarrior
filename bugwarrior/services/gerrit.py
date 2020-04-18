@@ -15,6 +15,7 @@ class GerritIssue(Issue):
     FOREIGN_ID = 'gerritid'
     BRANCH = 'gerritbranch'
     TOPIC = 'gerrittopic'
+    REVIEWS = 'gerritreviews'    
 
     UDAS = {
         SUMMARY: {
@@ -37,8 +38,16 @@ class GerritIssue(Issue):
             'type': 'string',
             'label': 'Gerrit Topic',
         },
+        REVIEWS: {
+            'type': 'string',
+            'label': 'Gerrit Reviews',
+        },
     }
     UNIQUE_KEY = (URL, )
+
+    def _get_reviews(self):
+        reviews = self.record['labels']['Code-Review']['all']
+        return ' '.join([str(r['value']) for r in reviews if r['value'] != 0])
 
     def to_taskwarrior(self):
         return {
@@ -52,6 +61,7 @@ class GerritIssue(Issue):
             self.SUMMARY: self.record['subject'],
             self.BRANCH: self.record['branch'],
             self.TOPIC: self.record.get('topic', 'notopic'),
+            self.REVIEWS: self._get_reviews(),
         }
 
     def get_default_description(self):
@@ -81,7 +91,7 @@ class GerritService(IssueService, ServiceClient):
         self.query_string = self.config.get(
             'query',
             'is:open+is:reviewer'
-        ) + '&o=MESSAGES&o=DETAILED_ACCOUNTS'
+        ) + '&o=DETAILED_LABELS&o=MESSAGES&o=DETAILED_ACCOUNTS'
 
         if self.ssl_ca_path:
             self.session.verify = os.path.expanduser(self.ssl_ca_path)
