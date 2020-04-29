@@ -80,11 +80,10 @@ class BugzillaIssue(Issue):
             self.COMPONENT: self.record['component'],
         }
         if self.extra.get('needinfo_since', None) is not None:
-            task[self.NEEDINFO] = self.extra.get('needinfo_since')
+            task[self.NEEDINFO] = self.parse_date(self.extra.get('needinfo_since'))
 
-        # iff field is defined, use it, converting None to empty string.
-        if 'assigned_on' in self.extra:
-            task[self.ASSIGNED_ON] = self.extra.get('assigned_on') or ''
+        if self.extra.get('assigned_on', None) is not None:
+            task[self.ASSIGNED_ON] = self.parse_date(self.extra.get('assigned_on'))
 
         return task
 
