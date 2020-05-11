@@ -33,7 +33,7 @@ class TrelloIssue(Issue):
     UDAS = {
         NAME: {'type': 'string', 'label': 'Trello card name'},
         CARDID: {'type': 'string', 'label': 'Trello card ID'},
-        SHORTCARDID: {'type': 'string', 'label': 'Trello short card ID'},
+        SHORTCARDID: {'type': 'numeric', 'label': 'Trello short card ID'},
         DESCRIPTION: {'type': 'string', 'label': 'Trello description'},
         BOARD: {'type': 'string', 'label': 'Trello board name'},
         LIST: {'type': 'string', 'label': 'Trello list name'},

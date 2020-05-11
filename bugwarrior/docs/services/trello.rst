@@ -153,7 +153,7 @@ Provided UDA Fields
 +-----------------------+-----------------------+---------------------+
 | ``trellourl``         | Full URL              | Text (string)       |
 +-----------------------+-----------------------+---------------------+
-| ``trellocardidshort`` | Short card ID         | Text (string)       |
+| ``trellocardidshort`` | Short card ID         | Number (numeric)    |
 +-----------------------+-----------------------+---------------------+
 | ``trellodescription`` | Description           | Text (string)       |
 +-----------------------+-----------------------+---------------------+
