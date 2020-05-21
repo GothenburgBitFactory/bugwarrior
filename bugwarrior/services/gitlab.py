@@ -284,9 +284,7 @@ class GitlabService(IssueService, ServiceClient):
         otherwise, the loggin will be prepended as namespace:
             e.g. "bar" → "<login>/bar"
         """
-        if repo.startswith('id:'):
-            return repo
-        elif repo.find('/') < 0:
+        if not repo.startswith('id:') and repo.find('/') < 0:
             return self.login + '/' + repo
         else:
             return repo
