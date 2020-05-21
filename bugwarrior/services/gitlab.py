@@ -284,7 +284,9 @@ class GitlabService(IssueService, ServiceClient):
         otherwise, the loggin will be prepended as namespace:
             e.g. "bar" → "<login>/bar"
         """
-        if repo.find('/') < 0:
+        if repo.startswith('id:'):
+            return repo
+        elif repo.find('/') < 0:
             return self.login + '/' + repo
         else:
             return repo
@@ -312,7 +314,7 @@ class GitlabService(IssueService, ServiceClient):
 
     def filter_repos(self, repo):
         if self.exclude_repos:
-            if repo['path_with_namespace'] in self.exclude_repos:
+            if repo['path_with_namespace'] in self.exclude_repos or "id:%d" % repo['id'] in self.exclude_repos:
                 return False
 
         if self.exclude_regex:
@@ -323,7 +325,7 @@ class GitlabService(IssueService, ServiceClient):
         is_included = True
 
         if self.include_repos:
-            if repo['path_with_namespace'] in self.include_repos:
+            if repo['path_with_namespace'] in self.include_repos or "id:%d" % repo['id'] in self.include_repos:
                 return True
             else:
                 is_included = False
@@ -466,6 +468,8 @@ class GitlabService(IssueService, ServiceClient):
         all_repos = []
         if self.include_repos and not self.include_regex:
             for repo in self.include_repos:
+                if repo.startswith("id:"):
+                    repo = repo[3:]
                 indiv_tmpl = tmpl + '/' + quote(repo, '') + '?simple=true'
                 item = self._fetch(indiv_tmpl)
                 if not item:

@@ -60,6 +60,11 @@ In this example, ``noisy/repository`` is the repository you would
        gitlab.login = foo
        gitlab.include_repos = foo/bar
 
+Alternatively, you can use project IDs instead of names by prefixing the
+project id with `id:`::
+
+   gitlab.include_repos = id:1234,id:3141
+
 Filtering Repositories with Regular Expressions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -100,7 +105,7 @@ Filtering Owned
 If you want to filter repositories that you own.
 
     gitlab.owned = True
-    
+
 Import Labels as Tags
 +++++++++++++++++++++
 
