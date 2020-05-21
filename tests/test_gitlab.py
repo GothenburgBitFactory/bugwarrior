@@ -46,6 +46,35 @@ class TestGitlabService(ConfigTest):
         service = GitlabService(self.config, 'general', 'myservice')
         self.assertEqual(service.exclude_repos, ['foobar/baz', 'banana/tree'])
 
+    def test_filter_repos_default(self):
+        service = GitlabService(self.config, 'general', 'myservice')
+        repo = {'path_with_namespace': 'foobar/baz'}
+        self.assertTrue(service.filter_repos(repo))
+
+    def test_filter_repos_exclude(self):
+        self.config.set('myservice', 'gitlab.exclude_repos', 'foobar/baz')
+        service = GitlabService(self.config, 'general', 'myservice')
+        repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
+        self.assertFalse(service.filter_repos(repo))
+
+    def test_filter_repos_exclude_id(self):
+        self.config.set('myservice', 'gitlab.exclude_repos', 'id:1234')
+        service = GitlabService(self.config, 'general', 'myservice')
+        repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
+        self.assertFalse(service.filter_repos(repo))
+
+    def test_filter_repos_include(self):
+        self.config.set('myservice', 'gitlab.include_repos', 'foobar/baz')
+        service = GitlabService(self.config, 'general', 'myservice')
+        repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
+        self.assertTrue(service.filter_repos(repo))
+
+    def test_filter_repos_include_id(self):
+        self.config.set('myservice', 'gitlab.include_repos', 'id:1234')
+        service = GitlabService(self.config, 'general', 'myservice')
+        repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
+        self.assertTrue(service.filter_repos(repo))
+
 
 class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
