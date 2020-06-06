@@ -1,4 +1,5 @@
 import copy
+import subprocess
 import unittest
 
 import taskw.task
@@ -112,6 +113,9 @@ class TestSynchronize(ConfigTest):
                 task['tags'] = sorted(task['tags'])
         return tasks
 
+    def get_tasks(self) -> dict:
+        return self.remove_non_deterministic_keys(self.tw.load_tasks())
+
     def assertUpdatesEqual(self, updates: dict):
         # Make tag order deterministic.
         for key in ['new', 'existing', 'changed', 'closed']:
@@ -123,8 +127,6 @@ class TestSynchronize(ConfigTest):
         self.assertEqual(self.synchronizer.updates, updates)
 
     def test_synchronize_integration(self):
-        def get_tasks() -> dict:
-            return self.remove_non_deterministic_keys(self.tw.load_tasks())
 
         self.assertEqual(self.tw.load_tasks(), {'completed': [], 'pending': []})
 
@@ -132,7 +134,7 @@ class TestSynchronize(ConfigTest):
         for _ in range(2):
             db.synchronize(iter((self.issue,)), self.bwconfig, 'general')
 
-            self.assertEqual(get_tasks(), {
+            self.assertEqual(self.get_tasks(), {
                 'completed': [],
                 'pending': [{
                     'project': 'sample_project',
@@ -154,7 +156,7 @@ class TestSynchronize(ConfigTest):
 
         db.synchronize(iter((self.issue,)), self.bwconfig, 'general')
 
-        self.assertEqual(get_tasks(), {
+        self.assertEqual(self.get_tasks(), {
             'completed': [],
             'pending': [{
                 'priority': 'M',
@@ -237,6 +239,37 @@ class TestSynchronize(ConfigTest):
             'existing': [],
             'changed': [],
             'closed': []
+        })
+
+    @unittest.skipIf(
+        subprocess.run(['task', '--version'], capture_output=True).stdout.strip() <= b'2.5.1',
+        'https://github.com/ralphbean/bugwarrior/issues/733')
+    def test_synchronize_depends_description(self):
+        """
+        Certain versions of taskwarrior/taskw don't properly handle
+        descriptions that start with taskwarrior keywords.
+
+        See https://github.com/ralphbean/bugwarrior/issues/733.
+        """
+        self.issue['description'] = 'depends filter does not work with IDs'
+
+        # Note: In order to test the desired taskwarrior behavior we need to
+        # actually commit the changes to the database.
+        db.synchronize(iter((self.issue,)), self.bwconfig, 'general')
+
+        self.assertEqual(self.get_tasks(), {
+            'completed': [],
+            'pending': [{
+                'priority': 'M',
+                'project': 'sample_project',
+                'status': 'pending',
+                'description': 'depends filter does not work with IDs',
+                'githuburl': 'https://example.com',
+                'githubtype': 'issue',
+                'id': 1,
+                'tags': ['foo'],
+                'urgency': 5.7,
+            }]
         })
 
 
