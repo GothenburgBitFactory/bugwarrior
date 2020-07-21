@@ -7,25 +7,26 @@ bugwarrior - Pull tickets from github, bitbucket, bugzilla, jira, trac, and othe
 
 It currently supports the following remote resources:
 
- - `github <https://github.com>`_ (api v3)
- - `gitlab <https://gitlab.com>`_ (api v3)
+ - `activecollab <https://www.activecollab.com>`_ (2.x and 4.x)
  - `bitbucket <https://bitbucket.org>`_
- - `pagure <https://pagure.io/>`_
  - `bugzilla <https://www.bugzilla.org/>`_
  - `Debian BTS <https://bugs.debian.org/>`_
- - `trac <https://trac.edgewall.org/>`_
- - `megaplan <https://www.megaplan.ru/>`_
- - `teamlab <https://www.teamlab.com/>`_
- - `redmine <https://www.redmine.org/>`_
- - `jira <https://www.atlassian.com/software/jira/overview>`_
- - `taiga <https://taiga.io>`_
  - `gerrit <https://www.gerritcodereview.com/>`_
- - `activecollab <https://www.activecollab.com>`_ (2.x and 4.x)
+ - `github <https://github.com>`_ (api v3)
+ - `gitlab <https://gitlab.com>`_ (api v3)
+ - `gmail <https://www.google.com/gmail/about/>`_
+ - `jira <https://www.atlassian.com/software/jira/overview>`_
+ - `megaplan <https://www.megaplan.ru/>`_
+ - `pagure <https://pagure.io/>`_
  - `phabricator <http://phabricator.org/>`_
- - `versionone <http://www.versionone.com/>`_
- - `trello <https://trello.com/>`_
- - `youtrack <https://www.jetbrains.com/youtrack/>`_
  - `Pivotal Tracker <https://www.pivotaltracker.com/>`_
+ - `redmine <https://www.redmine.org/>`_
+ - `taiga <https://taiga.io>`_
+ - `teamlab <https://www.teamlab.com/>`_
+ - `trac <https://trac.edgewall.org/>`_
+ - `trello <https://trello.com/>`_
+ - `versionone <http://www.versionone.com/>`_
+ - `youtrack <https://www.jetbrains.com/youtrack/>`_
 
 Documentation
 -------------
