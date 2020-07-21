@@ -76,7 +76,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
     def test_config_paths(self):
         credentials_path = os.path.join(
             self.service.config.data.path,
-            'gmail_credentials_test_example_com.json')
+            'gmail_credentials_test_example_com.pickle')
         self.assertEqual(self.service.credentials_path, credentials_path)
 
     def test_to_taskwarrior(self):
