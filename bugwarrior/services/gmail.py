@@ -2,14 +2,13 @@ import email
 import logging
 import multiprocessing
 import os
+import pickle
 import re
 import time
 
 import googleapiclient.discovery
-import httplib2
-import oauth2client.client
-import oauth2client.file
-import oauth2client.tools
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 from bugwarrior.services import IssueService, Issue
 
@@ -103,7 +102,7 @@ class GmailIssue(Issue):
 
 class GmailService(IssueService):
     APPLICATION_NAME = 'Bugwarrior Gmail Service'
-    SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
+    SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
     DEFAULT_CLIENT_SECRET_PATH = '~/.gmail_client_secret.json'
 
     ISSUE_CLASS = GmailIssue
@@ -122,7 +121,7 @@ class GmailService(IssueService):
         credentials_name = clean_filename(self.login_name if self.login_name != 'me' else self.target)
         self.credentials_path = os.path.join(
             self.config.data.path,
-            'gmail_credentials_%s.json' % (credentials_name,))
+            'gmail_credentials_%s.pickle' % (credentials_name,))
         self.gmail_api = self.build_api()
 
     def get_config_path(self, varname, default_path=None):
@@ -130,8 +129,7 @@ class GmailService(IssueService):
 
     def build_api(self):
         credentials = self.get_credentials()
-        http = credentials.authorize(httplib2.Http())
-        return googleapiclient.discovery.build('gmail', 'v1', http=http)
+        return googleapiclient.discovery.build('gmail', 'v1', credentials=credentials, cache_discovery=False)
 
     def get_credentials(self):
         """Gets valid user credentials from storage.
@@ -144,14 +142,26 @@ class GmailService(IssueService):
         """
         with self.AUTHENTICATION_LOCK:
             log.info('Starting authentication for %s', self.target)
-            store = oauth2client.file.Storage(self.credentials_path)
-            credentials = store.get()
-            if not credentials or credentials.invalid:
+            credentials = None
+            # The self.credentials_path file stores the user's access and refresh
+            # tokens as a pickle, and is created automatically when the
+            # authorization flow completes for the first time.
+            if os.path.exists(self.credentials_path):
+                with open(self.credentials_path, 'rb') as token:
+                    credentials = pickle.load(token)
+
+            # If there are no (valid) credentials available, let the user log in.
+            if not credentials or not credentials.valid:
                 log.info("No valid login. Starting OAUTH flow.")
-                flow = oauth2client.client.flow_from_clientsecrets(self.client_secret_path, self.SCOPES)
-                flow.user_agent = self.APPLICATION_NAME
-                flags = oauth2client.tools.argparser.parse_args([])
-                credentials = oauth2client.tools.run_flow(flow, store, flags)
+                if credentials and credentials.expired and credentials.refresh_token:
+                    credentials.refresh(Request())
+                else:
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        self.client_secret_path, self.SCOPES)
+                    credentials = flow.run_local_server(port=0)
+                # Save the credentials for the next run
+                with open(self.credentials_path, 'wb') as token:
+                    pickle.dump(credentials, token)
                 log.info('Storing credentials to %r', self.credentials_path)
             return credentials
 
