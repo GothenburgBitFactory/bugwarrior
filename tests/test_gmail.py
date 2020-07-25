@@ -1,10 +1,12 @@
 import os.path
 import pickle
+from copy import copy
 from datetime import datetime
 
 import mock
 from dateutil.tz import tzutc
 from google.oauth2.credentials import Credentials
+from mock import patch
 from six.moves import configparser
 
 import bugwarrior.services.gmail as gmail
@@ -13,9 +15,17 @@ from bugwarrior.services.gmail import GmailService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
+CREDENTIAL_DATA = {
+    "token": "itsatokeneveryone",
+    "refresh_token": "itsarefreshtokeneveryone",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "client_id": "example.apps.googleusercontent.com",
+    "client_secret": "itsasecrettoeveryone",
+    "scopes": ["https://www.googleapis.com/auth/gmail.readonly"],
+}
+
 
 class TestGmailService(ConfigTest):
-
     def setUp(self):
         super(TestGmailService, self).setUp()
         self.config = configparser.RawConfigParser()
@@ -28,24 +38,31 @@ class TestGmailService(ConfigTest):
 
         self.service_config = ServiceConfig(GmailService.CONFIG_PREFIX, self.config, "myservice")
 
-    def test_get_credentials(self):
+    def test_get_credentials_exists(self):
         mock_api = mock.Mock()
         gmail.GmailService.build_api = mock_api
         service = GmailService(self.config, "general", "myservice")
 
-        data = {
-            "token": "itsatokeneveryone",
-            "refresh_token": "itsarefreshtokeneveryone",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "client_id": "example.apps.googleusercontent.com",
-            "client_secret": "itsasecrettoeveryone",
-            "scopes": ["https://www.googleapis.com/auth/gmail.readonly"],
-        }
-        expected = Credentials(**data)
+        expected = Credentials(**copy(CREDENTIAL_DATA))
         with open(service.credentials_path, "wb") as token:
             pickle.dump(expected, token)
 
         self.assertEqual(service.get_credentials().to_json(), expected.to_json())
+
+    def test_get_credentials_expired(self):
+        mock_api = mock.Mock()
+        gmail.GmailService.build_api = mock_api
+        service = GmailService(self.config, "general", "myservice")
+
+        expected = Credentials(**copy(CREDENTIAL_DATA))
+        expected.__dict__["expiry"] = datetime.now()
+        with open(service.credentials_path, "wb") as token:
+            pickle.dump(expected, token)
+
+        with patch.object(Credentials, "refresh") as mock_method:
+            mock_method.return_value = None
+            actual = service.get_credentials()
+        self.assertEqual(actual.to_json(), expected.to_json())
 
 
 TEST_THREAD = {
