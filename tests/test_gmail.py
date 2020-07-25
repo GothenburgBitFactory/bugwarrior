@@ -1,59 +1,83 @@
 import os.path
+import pickle
 from datetime import datetime
 
 import mock
 from dateutil.tz import tzutc
+from google.oauth2.credentials import Credentials
+from six.moves import configparser
 
 import bugwarrior.services.gmail as gmail
-from .base import ServiceTest, AbstractServiceTest
+from bugwarrior.config import ServiceConfig
+from bugwarrior.services.gmail import GmailService
+
+from .base import AbstractServiceTest, ConfigTest, ServiceTest
+
+
+class TestGmailService(ConfigTest):
+
+    def setUp(self):
+        super(TestGmailService, self).setUp()
+        self.config = configparser.RawConfigParser()
+        self.config.add_section("general")
+        self.config.add_section("myservice")
+
+        mock_data = mock.Mock()
+        mock_data.path = self.tempdir
+        self.config.data = mock_data
+
+        self.service_config = ServiceConfig(GmailService.CONFIG_PREFIX, self.config, "myservice")
+
+    def test_get_credentials(self):
+        mock_api = mock.Mock()
+        gmail.GmailService.build_api = mock_api
+        service = GmailService(self.config, "general", "myservice")
+
+        data = {
+            "token": "itsatokeneveryone",
+            "refresh_token": "itsarefreshtokeneveryone",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "client_id": "example.apps.googleusercontent.com",
+            "client_secret": "itsasecrettoeveryone",
+            "scopes": ["https://www.googleapis.com/auth/gmail.readonly"],
+        }
+        expected = Credentials(**data)
+        with open(service.credentials_path, "wb") as token:
+            pickle.dump(expected, token)
+
+        self.assertEqual(service.get_credentials().to_json(), expected.to_json())
+
 
 TEST_THREAD = {
-        "messages": [
-            {
-                "payload": {
-                    "headers": [
-                        {
-                            "name": "From",
-                            "value": "Foo Bar <foobar@example.com>"
-                        },
-                        {
-                            "name": "Subject",
-                            "value": "Regarding Bugwarrior"
-                        },
-                        {
-                            "name": "To",
-                            "value": "ct@example.com"
-                        },
-                        {
-                            "name": "Message-ID",
-                            "value": "<CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com>",
-                        },
-                    ],
-                    "parts": [
-                        {
-                        }
-                    ]
-                },
-                "snippet": "Bugwarrior is great",
-                "internalDate": 1546722467000,
-                "threadId": "1234",
-                "labelIds": [
-                    "IMPORTANT",
-                    "Label_1",
-                    "Label_43",
-                    "CATEGORY_PERSONAL"
+    "messages": [
+        {
+            "payload": {
+                "headers": [
+                    {"name": "From", "value": "Foo Bar <foobar@example.com>"},
+                    {"name": "Subject", "value": "Regarding Bugwarrior"},
+                    {"name": "To", "value": "ct@example.com"},
+                    {
+                        "name": "Message-ID",
+                        "value": "<CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com>",
+                    },
                 ],
-                "id": "9999"
-            }
-        ],
-        "id": "1234"
-    }
+                "parts": [{}],
+            },
+            "snippet": "Bugwarrior is great",
+            "internalDate": 1546722467000,
+            "threadId": "1234",
+            "labelIds": ["IMPORTANT", "Label_1", "Label_43", "CATEGORY_PERSONAL"],
+            "id": "9999",
+        }
+    ],
+    "id": "1234",
+}
 
 TEST_LABELS = [
-        {'id': 'IMPORTANT', 'name': 'IMPORTANT'},
-        {'id': 'CATEGORY_PERSONAL', 'name': 'CATEGORY_PERSONAL'},
-        {'id': 'Label_1', 'name': 'sticky'},
-        {'id': 'Label_43', 'name': 'postit'},
+    {"id": "IMPORTANT", "name": "IMPORTANT"},
+    {"id": "CATEGORY_PERSONAL", "name": "CATEGORY_PERSONAL"},
+    {"id": "Label_1", "name": "sticky"},
+    {"id": "Label_43", "name": "postit"},
 ]
 
 
