@@ -1,7 +1,7 @@
 import os.path
 import pickle
 from copy import copy
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import mock
 from dateutil.tz import tzutc
@@ -15,7 +15,7 @@ from bugwarrior.services.gmail import GmailService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
-CREDENTIAL_DATA = {
+TEST_CREDENTIAL = {
     "token": "itsatokeneveryone",
     "refresh_token": "itsarefreshtokeneveryone",
     "token_uri": "https://oauth2.googleapis.com/token",
@@ -26,6 +26,7 @@ CREDENTIAL_DATA = {
 
 
 class TestGmailService(ConfigTest):
+
     def setUp(self):
         super(TestGmailService, self).setUp()
         self.config = configparser.RawConfigParser()
@@ -43,7 +44,7 @@ class TestGmailService(ConfigTest):
         gmail.GmailService.build_api = mock_api
         service = GmailService(self.config, "general", "myservice")
 
-        expected = Credentials(**copy(CREDENTIAL_DATA))
+        expected = Credentials(**copy(TEST_CREDENTIAL))
         with open(service.credentials_path, "wb") as token:
             pickle.dump(expected, token)
 
@@ -54,15 +55,23 @@ class TestGmailService(ConfigTest):
         gmail.GmailService.build_api = mock_api
         service = GmailService(self.config, "general", "myservice")
 
-        expected = Credentials(**copy(CREDENTIAL_DATA))
-        expected.__dict__["expiry"] = datetime.now()
-        with open(service.credentials_path, "wb") as token:
-            pickle.dump(expected, token)
+        expired_credential = Credentials(**copy(TEST_CREDENTIAL))
+        expired_credential.expiry = datetime.now()
+        self.assertEqual(expired_credential.valid, False)
+        self.assertEqual(expired_credential.expired, True)
 
-        with patch.object(Credentials, "refresh") as mock_method:
-            mock_method.return_value = None
-            actual = service.get_credentials()
-        self.assertEqual(actual.to_json(), expected.to_json())
+        with open(service.credentials_path, "wb") as token:
+            pickle.dump(expired_credential, token)
+
+        with patch("google.oauth2._client.refresh_grant") as mock_refresh_grant:
+            access_token = "newaccesstoken"
+            refresh_token = "newrefreshtoken"
+            expiry = datetime.now() + timedelta(hours=24)
+            grant_response = {"id_token": "idtoken"}
+            mock_refresh_grant.return_value = access_token, refresh_token, expiry, grant_response
+            refreshed_credential = service.get_credentials()
+        self.assertEqual(refreshed_credential.valid, True)
+        self.assertEqual(refreshed_credential.expired, False)
 
 
 TEST_THREAD = {
