@@ -39,18 +39,19 @@ class TestGmailService(ConfigTest):
 
         self.service_config = ServiceConfig(GmailService.CONFIG_PREFIX, self.config, "myservice")
 
-    def test_get_credentials_exists(self):
+    def test_get_credentials_exists_and_valid(self):
         mock_api = mock.Mock()
         gmail.GmailService.build_api = mock_api
         service = GmailService(self.config, "general", "myservice")
 
         expected = Credentials(**copy(TEST_CREDENTIAL))
+        self.assertEqual(expected.valid, True)
         with open(service.credentials_path, "wb") as token:
             pickle.dump(expected, token)
 
         self.assertEqual(service.get_credentials().to_json(), expected.to_json())
 
-    def test_get_credentials_expired(self):
+    def test_get_credentials_with_refresh(self):
         mock_api = mock.Mock()
         gmail.GmailService.build_api = mock_api
         service = GmailService(self.config, "general", "myservice")
@@ -58,8 +59,6 @@ class TestGmailService(ConfigTest):
         expired_credential = Credentials(**copy(TEST_CREDENTIAL))
         expired_credential.expiry = datetime.now()
         self.assertEqual(expired_credential.valid, False)
-        self.assertEqual(expired_credential.expired, True)
-
         with open(service.credentials_path, "wb") as token:
             pickle.dump(expired_credential, token)
 
@@ -71,7 +70,6 @@ class TestGmailService(ConfigTest):
             mock_refresh_grant.return_value = access_token, refresh_token, expiry, grant_response
             refreshed_credential = service.get_credentials()
         self.assertEqual(refreshed_credential.valid, True)
-        self.assertEqual(refreshed_credential.expired, False)
 
 
 TEST_THREAD = {
