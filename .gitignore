@@ -18,3 +18,4 @@ man/*
 *.idea
 .tox/*
 *.bak
+Pipfile*
