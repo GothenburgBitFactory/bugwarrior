@@ -92,5 +92,6 @@ setup(name='bugwarrior',
       gmail=bugwarrior.services.gmail:GmailService
       teamworks_projects=bugwarrior.services.teamworks_projects:TeamworksService
       pivotaltracker=bugwarrior.services.pivotaltracker:PivotalTrackerService
+      azuredevops=bugwarrior.services.azuredevops:AzureDevopsService
       """,
       )
