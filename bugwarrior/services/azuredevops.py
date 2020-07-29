@@ -140,7 +140,7 @@ class AzureDevopsIssue(Issue):
             title=self.record["fields"]["System.Title"],
             url=self.get_processed_url(self.record["_links"]["html"]["href"]),
             number=self.record["id"],
-            cls=self.record["fields"]["System.WorkItemType"],
+            cls=self.record["fields"]["System.WorkItemType"].lower(),
         )
 
 
