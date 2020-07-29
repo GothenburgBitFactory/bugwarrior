@@ -368,6 +368,8 @@ class Issue(object):
             'release': 'Release',
             'chore': 'Chore',
         }
+        if cls not in cls_markup.keys():
+            cls_markup[cls] = cls.lower()
         url_separator = ' .. '
         url = url if self.origin['inline_links'] else ''
         desc_len = self.origin['description_length']
