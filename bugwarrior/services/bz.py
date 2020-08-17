@@ -150,8 +150,8 @@ class BugzillaService(IssueService):
             force_rest_kwargs = {"force_rest": True}
 
         url = 'https://%s' % self.base_uri
-        api_key = self.config.get('api_key', default=None)
-        if api_key:
+        if self.config.get('api_key'):
+            api_key = self.get_password('api_key')
             try:
                 self.bz = bugzilla.Bugzilla(url=url, api_key=api_key, **force_rest_kwargs)
             except TypeError:
