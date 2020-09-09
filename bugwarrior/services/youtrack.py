@@ -38,7 +38,7 @@ class YoutrackIssue(Issue):
             'label': 'YouTrack Project'
         },
         NUMBER: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'YouTrack Project Issue Number'
         },
     }
