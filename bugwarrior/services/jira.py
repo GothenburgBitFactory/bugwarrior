@@ -275,7 +275,8 @@ class JiraService(IssueService):
         self.url = self.config.get('base_uri')
         password = self.get_password('password', self.username)
 
-        default_query = 'assignee="' + self.username + \
+        default_query = 'assignee="' + \
+            self.username.replace("@", "\\u0040") + \
             '" AND resolution is null'
         self.query = self.config.get('query', default_query)
         self.use_cookies = self.config.get(
