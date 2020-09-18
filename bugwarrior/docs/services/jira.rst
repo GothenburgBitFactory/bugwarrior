@@ -130,6 +130,13 @@ makes sense when Kerberos is not being used (see above).
 This is useful in situations where HTTP-Basic auth is disabled or disallowed
 for some reason.
 
+When using API token
+++++++++++++++++++++
+
+Some hosts only support API tokens to authenticate. If so, ``bugwarrior-pull`` will respond with ``Err: 401 Unauthorized``. Create a token here_. Handle the token like it is a password.
+
+.. _here: https://id.atlassian.com/manage-profile/security/api-tokens
+
 
 Provided UDA Fields
 -------------------
