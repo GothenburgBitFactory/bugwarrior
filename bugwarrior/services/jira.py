@@ -188,8 +188,13 @@ class JiraIssue(Issue):
             for key in self.origin['sprint_field_names']
         ], [])
         for sprint in sprints:
-            # Parse this big ugly string.
-            yield _parse_sprint_string(sprint)
+            if isinstance(sprint, dict):
+                yield sprint
+            else:
+                # Backward compatibility for oder Jira versions where
+                # python-jira is not able to parse the sprint and returns a
+                # string
+                yield _parse_sprint_string(sprint)
 
     def _get_tags_from_labels(self):
         tags = []
