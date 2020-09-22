@@ -144,7 +144,7 @@ class PhabricatorService(IssueService):
 
             project = self.target  # a sensible default
             try:
-                project = projects.get(issue['projectPHIDs'][0], project)
+                project = projects.get(diff['projectPHIDs'][0], project)
             except IndexError:
                 pass
 
