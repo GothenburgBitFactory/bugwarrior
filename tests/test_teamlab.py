@@ -1,5 +1,6 @@
 from builtins import next
-import mock
+from unittest import mock
+
 import responses
 
 from bugwarrior.services.teamlab import TeamLabService

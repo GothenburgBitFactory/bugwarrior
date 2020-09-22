@@ -1,8 +1,8 @@
 from builtins import next
 from builtins import object
-
-import mock
 from collections import namedtuple
+from unittest import mock
+
 from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 

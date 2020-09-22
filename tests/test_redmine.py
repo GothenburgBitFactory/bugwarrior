@@ -1,7 +1,7 @@
 from builtins import next
 import datetime
+from unittest import mock
 
-import mock
 import dateutil
 import responses
 

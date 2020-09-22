@@ -2,9 +2,9 @@ from __future__ import unicode_literals, print_function
 from future import standard_library
 standard_library.install_aliases()
 from builtins import next
+from unittest.mock import patch
 
 from six.moves import configparser
-from mock import patch
 import responses
 
 from dateutil.parser import parse as parse_date
