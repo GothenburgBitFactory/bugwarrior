@@ -1,9 +1,9 @@
 from builtins import object
-import mock
 import shutil
 import os.path
 import tempfile
 import unittest
+from unittest import mock
 
 import responses
 

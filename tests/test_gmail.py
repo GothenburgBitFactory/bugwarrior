@@ -2,11 +2,11 @@ import os.path
 import pickle
 from copy import copy
 from datetime import datetime, timedelta
+from unittest import mock
+from unittest.mock import patch
 
-import mock
 from dateutil.tz import tzutc
 from google.oauth2.credentials import Credentials
-from mock import patch
 from six.moves import configparser
 
 import bugwarrior.services.gmail as gmail

@@ -1,7 +1,7 @@
 from builtins import next
 from builtins import object
-import mock
 import unittest
+from unittest import mock
 
 try:
     from bugwarrior.services.mplan import MegaplanService

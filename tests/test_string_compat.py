@@ -1,6 +1,6 @@
 import unittest
 import six
-from mock import MagicMock
+from unittest.mock import MagicMock
 from bugwarrior.services import Issue
 
 

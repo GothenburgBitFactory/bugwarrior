@@ -1,6 +1,6 @@
 from builtins import next
 from builtins import object
-import mock
+from unittest import mock
 from collections import namedtuple
 from six.moves import configparser
 

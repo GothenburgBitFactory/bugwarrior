@@ -51,7 +51,6 @@ setup(name='bugwarrior',
           "trac": ["offtrac"],
       },
       tests_require=[
-          "Mock",
           "nose",
           "responses",
           "bugwarrior[jira]",

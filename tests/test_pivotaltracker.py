@@ -1,10 +1,9 @@
 import datetime
 from dateutil.tz import tzutc
 from six.moves import configparser
+from unittest import mock
 
 import responses
-import mock
-import operator
 
 from .base import ServiceTest, AbstractServiceTest, ConfigTest
 from bugwarrior.config import ServiceConfig

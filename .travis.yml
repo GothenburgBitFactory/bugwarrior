@@ -18,7 +18,6 @@ before_install:
   - task --version
   - pip install --upgrade pip
   - pip install taskw
-  - pip install mock
   - pip install responses
   - pip install PySimpleSOAP
   - pip install phabricator
