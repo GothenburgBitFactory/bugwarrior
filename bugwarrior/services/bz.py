@@ -291,7 +291,7 @@ class BugzillaService(IssueService):
                 mod_date = datetime.datetime.fromtimestamp(
                     time.mktime(last_mod.timetuple()))
 
-                extra['needinfo_since'] = pytz.UTC.localize(mod_date)
+                extra['needinfo_since'] = pytz.UTC.localize(mod_date).isoformat()
 
             if issue['status'] == 'ASSIGNED':
                 extra['assigned_on'] = self._get_assigned_date(issue)
