@@ -109,6 +109,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'gmail.add_tags': 'added',
         'gmail.login_name': 'test@example.com',
+        'gmail.project_name': 'test_project'
     }
 
     def setUp(self):
@@ -144,6 +145,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
             'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
             'priority': u'M',
+            'project': 'test_project',
             'gmaillastsenderaddr': 'foobar@example.com'}
 
         taskwarrior = issue.to_taskwarrior()
@@ -162,6 +164,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
             'gmaillastsender': 'Foo Bar',
             'description': u'(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234',
             'priority': u'M',
+            'project': 'test_project',
             'tags': {'added', 'postit', 'sticky'},
             'gmailsubject': 'Regarding Bugwarrior',
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
