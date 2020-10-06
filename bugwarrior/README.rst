@@ -69,3 +69,4 @@ Contributors
   Debian package)
 - BinaryBabel (contributed support for YouTrack)
 - Matthew Cengia (contributed extra support for Trello)
+- Stephan Meijer (contributed fixes for JIRA, extra support for Gmail)
