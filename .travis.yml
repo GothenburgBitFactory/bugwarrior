@@ -24,6 +24,10 @@ before_install:
   - pip install responses
   - pip install PySimpleSOAP
   - pip install phabricator
+  - | 
+   if [[ "$TRAVIS_CPU_ARCH" == "ppc64le" ]]; then
+     sudo chown -Rv $USER:$GROUP ~/.cache/pip/wheels
+   fi
   - cd $TRAVIS_BUILD_DIR
 env:
   - JIRAVERSION=2.0.0
