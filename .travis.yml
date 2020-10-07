@@ -37,3 +37,4 @@ install:
   - pip install coverage
 script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior -v
 after_success: codecov
+ 
