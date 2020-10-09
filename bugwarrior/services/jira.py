@@ -358,7 +358,7 @@ class JiraService(IssueService):
         )
 
     def issues(self):
-        cases = self.jira.search_issues(self.query, maxResults=-1)
+        cases = self.jira.search_issues(self.query, maxResults=None)
 
         jira_version = 5
         if self.config.has_option(self.target, 'jira.version'):
