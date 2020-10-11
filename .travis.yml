@@ -1,6 +1,9 @@
 language: python
 # Required for python3.7 and higher.
 dist: xenial
+arch:
+ - AMD64
+ - ppc64le
 python:
  - "3.7"
  - "3.6"
@@ -21,6 +24,10 @@ before_install:
   - pip install responses
   - pip install PySimpleSOAP
   - pip install phabricator
+  - | 
+   if [[ "$TRAVIS_CPU_ARCH" == "ppc64le" ]]; then
+     sudo chown -Rv $USER:$GROUP ~/.cache/pip/wheels
+   fi
   - cd $TRAVIS_BUILD_DIR
 env:
   - JIRAVERSION=2.0.0
@@ -37,3 +44,4 @@ install:
   - pip install coverage
 script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior -v
 after_success: codecov
+ 
