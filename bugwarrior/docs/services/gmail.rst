@@ -33,7 +33,6 @@ Here's an example of a gmail target:
     service = gmail
     gmail.query = label:action OR label:readme
     gmail.login_name = you@example.com
-    gmail.project_name = example_gmail
 
 The specified query can be any gmail search term. By default it will select
 starred threads. One task is created per selected thread, not per e-mail.
