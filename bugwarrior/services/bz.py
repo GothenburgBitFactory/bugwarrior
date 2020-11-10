@@ -123,6 +123,7 @@ class BugzillaService(IssueService):
         'component',
         'flags',
         'longdescs',
+        'assigned_to',
     ]
 
     def __init__(self, *args, **kw):
@@ -179,9 +180,7 @@ class BugzillaService(IssueService):
         super(BugzillaService, cls).validate_config(service_config, target)
 
     def get_owner(self, issue):
-        # NotImplemented, but we should never get called since .include() isn't
-        # used by this IssueService.
-        raise NotImplementedError
+        return issue['assigned_to']
 
     def annotations(self, tag, issue, issue_obj):
         base_url = "https://%s/show_bug.cgi?id=" % self.base_uri
@@ -268,6 +267,7 @@ class BugzillaService(IssueService):
             ) for bug in bugs
         ]
 
+        bugs = filter(self.include, bugs)
         issues = [(self.target, bug) for bug in bugs]
         log.debug(" Found %i total.", len(issues))
 

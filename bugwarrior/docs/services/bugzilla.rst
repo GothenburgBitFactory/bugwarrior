@@ -44,15 +44,10 @@ still required in this case, in order to identify bugs belonging to you.
 The above example is the minimum required to import issues from
 Bugzilla.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`.
-Note, however, that the filtering options, including ``only_if_assigned``
-and ``also_unassigned``, do not work
 
-There is an option to ignore bugs that you are only cc'd on::
+There is also an option to ignore bugs that you are only cc'd on::
 
     bugzilla.ignore_cc = True
-
-But this will continue to include bugs that you reported, regardless of
-whether they are assigned to you.
 
 If your bugzilla "actionable" bugs only include ON_QA, FAILS_QA, PASSES_QA, and POST::
 
