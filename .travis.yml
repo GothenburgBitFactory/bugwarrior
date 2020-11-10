@@ -1,6 +1,5 @@
 language: python
-# Required for python3.7 and higher.
-dist: xenial
+dist: bionic
 arch:
  - AMD64
  - ppc64le
