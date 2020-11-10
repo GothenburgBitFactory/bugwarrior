@@ -11,19 +11,12 @@ Bugwarrior
 Build Status
 ------------
 
-.. |master| image:: https://secure.travis-ci.org/ralphbean/bugwarrior.png?branch=master
-   :alt: Build Status - master branch
-   :target: http://travis-ci.org/#!/ralphbean/bugwarrior
-
-.. |develop| image:: https://secure.travis-ci.org/ralphbean/bugwarrior.png?branch=develop
+.. |develop| image:: https://github.com/ralphbean/bugwarrior/actions/workflows/bugwarrior.yml/badge.svg?branch=develop
    :alt: Build Status - develop branch
-   :target: http://travis-ci.org/#!/ralphbean/bugwarrior
 
 +----------+-----------+
 | Branch   | Status    |
 +==========+===========+
-| master   | |master|  |
-+----------+-----------+
 | develop  | |develop| |
 +----------+-----------+
 
