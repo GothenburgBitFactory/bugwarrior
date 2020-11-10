@@ -1,3 +1,4 @@
+import datetime
 from builtins import next
 from builtins import object
 from unittest import mock
@@ -11,12 +12,12 @@ from bugwarrior.config import ServiceConfig
 
 
 class FakeBugzillaLib(object):
-    def __init__(self, record):
-        self.record = record
+    def __init__(self, records):
+        self.records = records
 
     def query(self, query):
-        Record = namedtuple('Record', list(self.record.keys()))
-        return [Record(**self.record)]
+        return [namedtuple('Record', list(record.keys()))(**record)
+                for record in self.records]
 
 
 class TestBugzillaServiceConfig(ConfigTest):
@@ -68,7 +69,10 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
         'summary': 'This is the issue summary',
         'id': 1234567,
         'flags': [],
+        'assigned_to': None,
     }
+
+    arbitrary_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
 
     def setUp(self):
         super(TestBugzillaService, self).setUp()
@@ -78,7 +82,9 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
     def get_mock_service(self, *args, **kwargs):
         service = super(TestBugzillaService, self).get_mock_service(
             *args, **kwargs)
-        service.bz = FakeBugzillaLib(self.arbitrary_record)
+        service.bz = FakeBugzillaLib([self.arbitrary_record])
+        service._get_assigned_date = (
+            lambda issues: self.arbitrary_datetime.isoformat())
         return service
 
     def test_api_key_supplied(self):
@@ -137,3 +143,98 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)
+
+    def test_only_if_assigned(self):
+        with mock.patch('bugzilla.Bugzilla'):
+            self.service = self.get_mock_service(
+                BugzillaService,
+                config_overrides={
+                    'bugzilla.only_if_assigned': 'hello',
+                })
+
+        assigned_records = [
+            {
+                'product': 'Product',
+                'component': 'Something',
+                'priority': 'urgent',
+                'status': 'ASSIGNED',
+                'summary': 'This is the issue summary',
+                'id': 1234568,
+                'flags': [],
+                'assigned_to': 'hello'
+            },
+            {
+                'product': 'Product',
+                'component': 'Something',
+                'priority': 'urgent',
+                'status': 'ASSIGNED',
+                'summary': 'This is the issue summary',
+                'id': 1234569,
+                'flags': [],
+                'assigned_to': 'somebodyelse'
+            },
+        ]
+        self.service.bz.records.extend(assigned_records)
+
+        issues = self.service.issues()
+
+        expected = {
+            'annotations': [],
+            'bugzillaassignedon': self.arbitrary_datetime,
+            'bugzillabugid': 1234568,
+            'bugzillastatus': 'ASSIGNED',
+            'bugzillasummary': 'This is the issue summary',
+            'bugzillaurl': u'https://http://one.com//show_bug.cgi?id=1234568',
+            'bugzillaproduct': 'Product',
+            'bugzillacomponent': 'Something',
+            'description': u'(bw)Is#1234568 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234568',
+            'priority': 'H',
+            'project': 'Something',
+            'tags': []}
+
+        self.assertEqual(next(issues).get_taskwarrior_record(), expected)
+
+        # Only one issue is assigned.
+        self.assertRaises(StopIteration, lambda: next(issues))
+
+    def test_also_unassigned(self):
+        with mock.patch('bugzilla.Bugzilla'):
+            self.service = self.get_mock_service(
+                BugzillaService,
+                config_overrides={
+                    'bugzilla.only_if_assigned': 'hello',
+                    'bugzilla.also_unassigned': True,
+                })
+
+        assigned_records = [
+            {
+                'product': 'Product',
+                'component': 'Something',
+                'priority': 'urgent',
+                'status': 'ASSIGNED',
+                'summary': 'This is the issue summary',
+                'id': 1234568,
+                'flags': [],
+                'assigned_to': 'hello'
+            },
+            {
+                'product': 'Product',
+                'component': 'Something',
+                'priority': 'urgent',
+                'status': 'ASSIGNED',
+                'summary': 'This is the issue summary',
+                'id': 1234569,
+                'flags': [],
+                'assigned_to': 'somebodyelse'
+            },
+        ]
+        self.service.bz.records.extend(assigned_records)
+
+        issues = self.service.issues()
+
+        self.assertIn(next(issues).get_taskwarrior_record()['bugzillabugid'],
+                      [1234567, 1234568])
+        self.assertIn(next(issues).get_taskwarrior_record()['bugzillabugid'],
+                      [1234567, 1234568])
+        # Only two issues are assigned to the user or unassigned.
+        self.assertRaises(StopIteration, lambda: next(issues))
