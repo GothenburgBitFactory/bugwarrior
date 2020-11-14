@@ -64,8 +64,7 @@ class TestHttpIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'description': 'Attempting to scare those annoying cats away',
-            'entry': "20200709T141933Z",
-            'modified': "20200709T141933Z",
+            'entry': datetime(2020, 7, 9, 14, 19, 33, tzinfo=tzutc()),
             'tags': {'home', 'garden', 'add', 'tags'},
             'project': 'AnnoyingCats',
             'priority': u'H',

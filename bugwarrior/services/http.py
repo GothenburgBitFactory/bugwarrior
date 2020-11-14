@@ -1,6 +1,6 @@
 import requests
 import logging
-import multiprocessing
+from dateutil.parser import isoparse
 
 from bugwarrior.services import IssueService, Issue
 
@@ -34,8 +34,7 @@ class HttpIssue(Issue):
 
     def to_taskwarrior(self):
         bw = {
-            'entry': self.record.get('entry'),
-            'modified': self.record.get('modified'),
+            'entry': isoparse(self.record.get('entry')),
             'tags': self.record.get('tags', []) + self.origin.get('add_tags', []),
             'project': self.record.get('project', self.extra.get('default_project')),
             'description': self.record.get('description'),
@@ -45,7 +44,7 @@ class HttpIssue(Issue):
             self.URL: self.extra.get('url')
         }
 
-        print(bw)
+        #print(bw)
 
         return bw
 
