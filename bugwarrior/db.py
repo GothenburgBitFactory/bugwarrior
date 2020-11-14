@@ -179,6 +179,7 @@ def find_taskwarrior_uuid(tw, keys, issue):
                 'or': [
                     ('status', 'pending'),
                     ('status', 'waiting'),
+                    ('status', 'completed')
                 ],
             })
             possibilities = possibilities | set([
@@ -383,6 +384,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
             _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
 
+            if task['status'] == 'completed':
+                # Reopen task
+                task['status'] = 'pending'
+                task['end'] = None
+
             # Drop static fields from the upstream issue.  We don't want to
             # overwrite local changes to fields we declare static.
             for field in static_fields:
@@ -422,6 +428,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     log.info("Adding %i tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
         log.info(u"Adding task %s%s", issue['description'], notreally)
+
         if dry_run:
             continue
         if notify:
