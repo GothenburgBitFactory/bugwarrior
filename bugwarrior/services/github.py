@@ -208,8 +208,8 @@ class GithubIssue(Issue):
         closed = self.parse_date(self.record.get('closed_at'))
 
         return {
-            'project': self.extra['project'],
-            'priority': self.origin['default_priority'],
+            'project': self.get_project(),
+            'priority': self.get_priority(),
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
             'entry': created,

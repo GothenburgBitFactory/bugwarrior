@@ -62,7 +62,8 @@ class IssueService(object):
         self.annotation_newlines = self._get_config_or_default('annotation_newlines', False, asbool)
         self.shorten = self._get_config_or_default('shorten', False, asbool)
 
-        self.default_priority = self.config.get('default_priority', 'M')
+        self.default_priority = self.config.get('default_priority')
+        self.default_project = self.config.get('default_project')
 
         self.add_tags = []
         for raw_option in aslist(self.config.get('add_tags', '')):
@@ -131,6 +132,7 @@ class IssueService(object):
         origin = {
             'annotation_length': self.anno_len,
             'default_priority': self.default_priority,
+            'default_project': self.default_project,
             'description_length': self.desc_len,
             'templates': self.get_templates(),
             'target': self.target,
@@ -165,18 +167,14 @@ class IssueService(object):
     @classmethod
     def validate_config(cls, service_config, target):
         """ Validate generic options for a particular target """
-        if service_config.has_option(target, 'only_if_assigned'):
-            die("[%s] has an 'only_if_assigned' option.  Should be "
-                "'%s.only_if_assigned'." % (target, cls.CONFIG_PREFIX))
-        if service_config.has_option(target, 'also_unassigned'):
-            die("[%s] has an 'also_unassigned' option.  Should be "
-                "'%s.also_unassigned'." % (target, cls.CONFIG_PREFIX))
-        if service_config.has_option(target, 'default_priority'):
-            die("[%s] has a 'default_priority' option.  Should be "
-                "'%s.default_priority'." % (target, cls.CONFIG_PREFIX))
-        if service_config.has_option(target, 'add_tags'):
-            die("[%s] has an 'add_tags' option.  Should be "
-                "'%s.add_tags'." % (target, cls.CONFIG_PREFIX))
+
+        for option in ['only_if_assigned', 'also_unassigned',
+                       'default_project', 'default_priority',
+                       'add_tags']:
+            if service.config.has_option(target, option):
+                die("[%s] has an '%s' option. Should be '%s.%s'." % (
+                    target, option, cls.CONFIG_PREFIX, option
+                ))
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
@@ -317,6 +315,9 @@ class Issue(object):
             self.record.get('priority'),
             self.origin['default_priority']
         )
+    
+    def get_project(self):
+        self.extra.get('project', self.origin.get('default_project'))
 
     def get_processed_url(self, url):
         """ Returns a URL with conditional processing.

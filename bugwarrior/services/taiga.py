@@ -33,7 +33,7 @@ class TaigaIssue(Issue):
 
     def to_taskwarrior(self):
         return {
-            'project': self.extra['project'],
+            'project': self.get_project(),
             'annotations': self.extra['annotations'],
             self.URL: self.extra['url'],
 

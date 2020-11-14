@@ -52,7 +52,7 @@ class TracIssue(Issue):
 
     def to_taskwarrior(self):
         return {
-            'project': self.extra['project'],
+            'project': self.get_project(),
             'priority': self.get_priority(),
             'annotations': self.extra['annotations'],
 

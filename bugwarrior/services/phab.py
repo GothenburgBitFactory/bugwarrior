@@ -48,7 +48,7 @@ class PhabricatorIssue(Issue):
 
     def to_taskwarrior(self):
         return {
-            'project': self.extra['project'],
+            'project': self.get_project(),
             'priority': self.priority,
             'annotations': self.extra.get('annotations', []),
 

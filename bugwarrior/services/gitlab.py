@@ -167,7 +167,7 @@ class GitlabIssue(Issue):
         self.title = title
 
         return {
-            'project': self.extra['project'],
+            'project': self.get_project(),
             'priority': priority,
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),

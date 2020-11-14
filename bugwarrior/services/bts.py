@@ -66,6 +66,7 @@ class BTSIssue(Issue):
         return {
             'priority': self.get_priority(),
             'annotations': self.extra.get('annotations', []),
+            'project': self.get_project(),
 
             self.URL: self.record['url'],
             self.SUBJECT: self.record['subject'],

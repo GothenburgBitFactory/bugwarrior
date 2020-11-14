@@ -42,7 +42,7 @@ class GerritIssue(Issue):
 
     def to_taskwarrior(self):
         return {
-            'project': self.record['project'],
+            'project': self.get_project(),
             'annotations': self.extra['annotations'],
             self.URL: self.extra['url'],
 
@@ -61,7 +61,9 @@ class GerritIssue(Issue):
             number=self.record['_number'],
             cls='pull_request',
         )
-
+    
+    def get_project(self):
+        self.record.get('project', self.origin.get('default_project'))
 
 class GerritService(IssueService, ServiceClient):
     ISSUE_CLASS = GerritIssue
