@@ -49,6 +49,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
 
         expected_output = {
             'priority': issue.PRIORITY_MAP[FakeBTSBug.severity],
+            'project': None,
             'annotations': [],
 
             issue.URL: "https://bugs.debian.org/" + str(FakeBTSBug.bug_num),
@@ -82,6 +83,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
                             u'and others into taskwa .. https://bugs.debian.o'
                             u'rg/810629'),
             'priority': 'L',
+            'project': None,
             'btsstatus': 'pending',
             u'tags': []}
 

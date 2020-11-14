@@ -54,6 +54,9 @@ class TaigaIssue(Issue):
             cls='issue',
         )
 
+    def get_project(self):
+        return self.extra.get('project', self.origin.get('default_project'))
+
 
 class TaigaService(IssueService, ServiceClient):
     ISSUE_CLASS = TaigaIssue

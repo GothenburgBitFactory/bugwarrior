@@ -62,7 +62,7 @@ class IssueService(object):
         self.annotation_newlines = self._get_config_or_default('annotation_newlines', False, asbool)
         self.shorten = self._get_config_or_default('shorten', False, asbool)
 
-        self.default_priority = self.config.get('default_priority')
+        self.default_priority = self.config.get('default_priority', u'M')
         self.default_project = self.config.get('default_project')
 
         self.add_tags = []
@@ -171,7 +171,7 @@ class IssueService(object):
         for option in ['only_if_assigned', 'also_unassigned',
                        'default_project', 'default_priority',
                        'add_tags']:
-            if service.config.has_option(target, option):
+            if service_config.has_option(target, option):
                 die("[%s] has an '%s' option. Should be '%s.%s'." % (
                     target, option, cls.CONFIG_PREFIX, option
                 ))
@@ -317,7 +317,7 @@ class Issue(object):
         )
     
     def get_project(self):
-        self.record.get(
+        return self.record.get(
             'project',
             self.extra.get(
                 'project',

@@ -62,9 +62,6 @@ class GerritIssue(Issue):
             cls='pull_request',
         )
     
-    def get_project(self):
-        self.record.get('project', self.origin.get('default_project'))
-
 class GerritService(IssueService, ServiceClient):
     ISSUE_CLASS = GerritIssue
     CONFIG_PREFIX = 'gerrit'
