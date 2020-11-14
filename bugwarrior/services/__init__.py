@@ -317,7 +317,15 @@ class Issue(object):
         )
     
     def get_project(self):
-        self.extra.get('project', self.origin.get('default_project'))
+        self.record.get(
+            'project',
+            self.extra.get(
+                'project',
+                self.origin.get(
+                    'default_project'
+                )
+            )
+        )
 
     def get_processed_url(self, url):
         """ Returns a URL with conditional processing.
