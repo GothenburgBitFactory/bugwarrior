@@ -63,7 +63,7 @@ class TrelloIssue(Issue):
         twdict = {
             'project': self.extra['boardname'],
             'due': self.parse_date(self.record['due']),
-            'priority': self.origin['default_priority'],
+            'priority': self.get_priority(),
             self.NAME: self.record['name'],
             self.CARDID: self.record['id'],
             self.SHORTCARDID: self.record['idShort'],

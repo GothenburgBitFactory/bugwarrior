@@ -58,7 +58,7 @@ class PagureIssue(Issue):
         if self.extra['type'] == 'pull_request':
             priority = 'H'
         else:
-            priority = self.origin['default_priority']
+            priority = self.get_priority()
 
         return {
             'project': self.get_project(),

@@ -65,7 +65,7 @@ class PivotalTrackerIssue(Issue):
 
         return {
             'project': self._normalize_label_to_tag(self.extra['project_name']).lower(),
-            'priority': self.origin['default_priority'],
+            'priority': self.get_priority(),
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
 

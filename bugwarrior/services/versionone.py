@@ -108,7 +108,7 @@ class VersionOneIssue(Issue):
     def to_taskwarrior(self):
         return {
             'project': self.get_project(),
-            'priority': self.origin['default_priority'],
+            'priority': self.get_priority(),
             'due': self.parse_date(
                 self.record['timebox']['EndDate'],
                 self.origin['timezone']

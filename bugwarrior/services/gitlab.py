@@ -137,7 +137,7 @@ class GitlabIssue(Issue):
             self.record['id'] if self.extra['type'] == 'todo'
             else self.record['iid'])
         priority = (
-            self.origin['default_priority'] if self.extra['type'] == 'issue'
+            self.get_priority() if self.extra['type'] == 'issue'
             else 'H')
         title = (
             'Todo from %s for %s' % (author['name'], self.extra['project'])

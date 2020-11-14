@@ -46,7 +46,7 @@ class GerritIssue(Issue):
             'annotations': self.extra['annotations'],
             self.URL: self.extra['url'],
 
-            'priority': self.origin['default_priority'],
+            'priority': self.get_priority(),
             'tags': [],
             self.FOREIGN_ID: self.record['_number'],
             self.SUMMARY: self.record['subject'],
