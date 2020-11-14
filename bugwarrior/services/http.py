@@ -33,9 +33,9 @@ class HttpIssue(Issue):
         )
 
     def to_taskwarrior(self):
-        bw = {
-            'entry': isoparse(self.record.get('entry')),
-            'tags': self.record.get('tags', []) + self.origin.get('add_tags', []),
+        return {
+            'entry': isoparse(self.record.get('entry')) if self.record.get('entry') else None,
+            'tags': self.record.get('tags', []),
             'project': self.record.get('project', self.extra.get('default_project')),
             'description': self.record.get('description'),
             'priority': self.record.get('priority', self.origin.get('default_priority')),
@@ -43,10 +43,6 @@ class HttpIssue(Issue):
             self.UUID: self.record.get('uuid'),
             self.URL: self.extra.get('url')
         }
-
-        #print(bw)
-
-        return bw
 
 
 class HttpService(IssueService):
@@ -75,9 +71,7 @@ class HttpService(IssueService):
     def convert_to_issue(self, task):
         issue = self.get_issue_for_record(task)
 
-        issue.update_extra({
-            'url': self.url,
-            'default_project': self.default_project
-        })
+        issue.update_extra({ 'url': self.url,
+                             'default_project': self.default_project })
 
         return issue

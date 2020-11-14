@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from unittest import mock
 from unittest.mock import patch
 
+import responses
+
 from dateutil.tz import tzutc
 from six.moves import configparser
 
@@ -26,12 +28,33 @@ TEST_RESPONSE = [
         "priority": "H"
 	},
     {
-        "description": "Miniumum task",
+        "description": "Minimum task",
         "uuid": "9ce52fe2-ec48-000d-ba00-c30f463fc422"
     }
 ]
 
+MIN_TASK = {
+    'priority': u'L',
+    'project': 'IDK',
+    'tags': ['add', 'tags'],
+    "entry": None,
+    'description': 'Minimum task',
+    'http_uuid': '9ce52fe2-ec48-000d-ba00-c30f463fc422',
+    'http_url': 'https://example.com/tasks'
+};
+
+MAX_TASK = {
+    'description': 'Attempting to scare those annoying cats away',
+    'entry': datetime(2020, 7, 9, 14, 19, 33, tzinfo=tzutc()),
+    'tags': ['home', 'garden', 'add', 'tags'],
+    'project': 'AnnoyingCats',
+    'priority': u'H',
+    'http_uuid': '8ce52fe2-ec48-489d-ba00-c30f463fc422',
+    'http_url': 'https://example.com/tasks'
+}
+
 class TestHttpIssue(AbstractServiceTest, ServiceTest):
+    maxDiff = None
     SERVICE_CONFIG = {
         'http.url': 'https://example.com/tasks',
         'http.add_tags': "add,tags",
@@ -42,37 +65,52 @@ class TestHttpIssue(AbstractServiceTest, ServiceTest):
     def setUp(self):
         super(TestHttpIssue, self).setUp()
 
-        mock_api = mock.Mock()
-        mock_api().execute.return_value = TEST_RESPONSE
-        HttpService.request = mock_api
+        #mock_api = mock.Mock()
+        #mock_api().execute.return_value = TEST_RESPONSE
+        #HttpService.request = mock_api
         self.service = self.get_mock_service(HttpService, section='test_section')
 
-    def test_to_taskwarrior_minimum(self):
-        issue = self.service.convert_to_issue(TEST_RESPONSE[1])
+    @responses.activate
+    def test_issues(self):
+        """
+        Test: conversion from HTTP to taskwarrior tasks.
+        """
+        responses.add(
+            responses.GET,
+            'https://example.com/tasks',
+            json=TEST_RESPONSE,
+            status=200
+        )
 
-        expected = {
-            'priority': u'L',
-            'project': 'IDK',
-            'tags': {'add', 'tags'},
-            'description': 'Minimum task',
-            'http_uuid': '9ce52fe2-ec48-000d-ba00-c30f463fc422',
-            'http_url': 'https://example.com/tasks'
-        }
+        self.assertEqual(self.service.request(), TEST_RESPONSE)
+
+        issues = [ issue.get_taskwarrior_record() for issue in self.service.issues() ]
+
+        self.assertEqual(issues[0], MAX_TASK)
+        self.assertEqual(issues[1], MIN_TASK)
+
+        """
+
+        responses.add(
+            responses.GET,
+            'https://example.com/tasks',
+            json=TEST_RESPONSE,
+            status=200
+        )
+
+        issues = list(self.service.issues())
+
+        print(issues)
+
+        self.assertEqual(len(issues), 2)
+
+        self.assertTrue(MAX_TASK in issues)
+        self.assertEqual(issues[1], MIN_TASK)
+        """
 
     def test_to_taskwarrior(self):
         issue = self.service.convert_to_issue(TEST_RESPONSE[0])
 
-        expected = {
-            'description': 'Attempting to scare those annoying cats away',
-            'entry': datetime(2020, 7, 9, 14, 19, 33, tzinfo=tzutc()),
-            'tags': {'home', 'garden', 'add', 'tags'},
-            'project': 'AnnoyingCats',
-            'priority': u'H',
-            'http_uuid': '8ce52fe2-ec48-489d-ba00-c30f463fc422',
-            'http_url': 'https://example.com/tasks'
-        }
+        taskwarrior = issue.get_taskwarrior_record()
 
-        taskwarrior = issue.to_taskwarrior()
-        taskwarrior['tags'] = set(taskwarrior['tags'])
-
-        self.assertEqual(taskwarrior, expected)
+        self.assertEqual(taskwarrior, MAX_TASK)
