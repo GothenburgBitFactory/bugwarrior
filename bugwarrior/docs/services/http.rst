@@ -51,8 +51,6 @@ Other settings
 +--------------------------------+---------------------------------------------------------------------------------+
 | ``http.authorization_header``  | Header for authorization, useable for Bearer-tokens, Basic-Authentication, etc. |
 +--------------------------------+---------------------------------------------------------------------------------+
-| ``http.default_project``       | Default project to use if no project is given in HTTP Response                  |
-+--------------------------------+---------------------------------------------------------------------------------+
 
 Provided UDA Fields
 -------------------

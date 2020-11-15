@@ -58,16 +58,13 @@ class TestHttpIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'http.url': 'https://example.com/tasks',
         'http.add_tags': "add,tags",
-        'http.default_project': 'IDK',
+        'http.project_name': 'IDK',
         'http.default_priority': "L"
     }
 
     def setUp(self):
         super(TestHttpIssue, self).setUp()
 
-        #mock_api = mock.Mock()
-        #mock_api().execute.return_value = TEST_RESPONSE
-        #HttpService.request = mock_api
         self.service = self.get_mock_service(HttpService, section='test_section')
 
     @responses.activate

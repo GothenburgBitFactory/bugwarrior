@@ -36,9 +36,9 @@ class HttpIssue(Issue):
         return {
             'entry': isoparse(self.record.get('entry')) if self.record.get('entry') else None,
             'tags': self.record.get('tags', []),
-            'project': self.record.get('project', self.extra.get('default_project')),
+            'project': self.get_project(),
             'description': self.record.get('description'),
-            'priority': self.record.get('priority', self.origin.get('default_priority')),
+            'priority': self.get_priority(),
 
             self.UUID: self.record.get('uuid'),
             self.URL: self.extra.get('url')
@@ -57,7 +57,6 @@ class HttpService(IssueService):
         self.url = self.config.get('url')
         self.method = self.config.get('method', 'GET')
         self.authorization_header = self.config.get('authorization_header')
-        self.default_project = self.config.get('default_project')
 
     def issues(self):
         return ( self.convert_to_issue(task) for task in self.request() )
@@ -71,7 +70,6 @@ class HttpService(IssueService):
     def convert_to_issue(self, task):
         issue = self.get_issue_for_record(task)
 
-        issue.update_extra({ 'url': self.url,
-                             'default_project': self.default_project })
+        issue.update_extra({ 'url': self.url })
 
         return issue
