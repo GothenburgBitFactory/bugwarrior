@@ -63,7 +63,7 @@ class IssueService(object):
         self.shorten = self._get_config_or_default('shorten', False, asbool)
 
         self.default_priority = self.config.get('default_priority', u'M')
-        self.default_project = self.config.get('default_project')
+        self.project_name = self.config.get('project_name')
 
         self.add_tags = []
         for raw_option in aslist(self.config.get('add_tags', '')):
@@ -132,7 +132,7 @@ class IssueService(object):
         origin = {
             'annotation_length': self.anno_len,
             'default_priority': self.default_priority,
-            'default_project': self.default_project,
+            'project_name': self.project_name,
             'description_length': self.desc_len,
             'templates': self.get_templates(),
             'target': self.target,
@@ -169,7 +169,7 @@ class IssueService(object):
         """ Validate generic options for a particular target """
 
         for option in ['only_if_assigned', 'also_unassigned',
-                       'default_project', 'default_priority',
+                       'project_name', 'default_priority',
                        'add_tags']:
             if service_config.has_option(target, option):
                 die("[%s] has an '%s' option. Should be '%s.%s'." % (
@@ -322,7 +322,7 @@ class Issue(object):
             self.extra.get(
                 'project',
                 self.origin.get(
-                    'default_project'
+                    'project_name'
                 )
             )
         )

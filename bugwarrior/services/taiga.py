@@ -55,7 +55,7 @@ class TaigaIssue(Issue):
         )
 
     def get_project(self):
-        return self.extra.get('project', self.origin.get('default_project'))
+        return self.extra.get('project', self.origin.get('project_name'))
 
 
 class TaigaService(IssueService, ServiceClient):
