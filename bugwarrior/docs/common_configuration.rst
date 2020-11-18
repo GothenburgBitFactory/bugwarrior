@@ -34,6 +34,12 @@ Optional options include:
   annotations to your tasks at all.  Default: ``True``.
 * ``merge_tags``: If ``False``, bugwarrior won't bother with adding
   tags to your tasks at all.  Default: ``True``.
+* ``replace_tags``: If ``True``, bugwarrior will delete all tags prior to
+  fetching new ones, except those listed in ``static_tags``. Only work if
+  merge_tags is ``True``. Default: ``False``.
+* ``static_tags``: A comma separated list of tags that shouldn't be *removed* by
+  bugwarrior. Use for tags that you want to keep when replace_tags is set to
+  ``True``.
 * ``static_fields``: A comma separated list of attributes that shouldn't be
   *updated* by bugwarrior.  Use for values that you want to tune manually.
   Default: ``priority``.

@@ -201,6 +201,43 @@ def find_taskwarrior_uuid(tw, keys, issue):
     )
 
 
+def replace_left(field, local_task, remote_issue, keep_items=[]):
+    """ Replace array field from the remote_issue to the local_task
+
+    * Local 'left' entries are suppressed, unless those listed in keep_items.
+    * Remote 'left' are appended to task, if not present in local.
+    
+    :param `field`: Task field to merge.
+    :param `local_task`: `taskw.task.Task` object into which to replace
+        remote changes.
+    :param `remote_issue`: `dict` instance from which to add into
+        local task.
+    :param `keep_items`: list of items to keep into local_task even if not 
+        present in remote_issue
+    """
+
+    # Ensure that empty default are present
+    local_field = local_task.get(field, []).copy()
+    remote_field = remote_issue.get(field, [])
+
+    # We need to make sure an array exists for this field because
+    # we will be appending to it in a moment.
+    if field not in local_task:
+        local_task[field] = []
+
+    #Delete all items in local_task, unless they are in keep_items or in remote_issue
+    #This ensure that the task is not being updated if there is no changes
+    for item in local_field:
+        if keep_items.count(item) == 0 and remote_field.count(item) == 0:
+            log.debug('found %s to remove' % (item))
+            local_task[field].remove(item)
+        elif remote_field.count(item) > 0:
+            remote_field.remove(item)
+
+    if len(remote_field) > 0:
+        local_task[field] += remote_field
+
+
 def merge_left(field, local_task, remote_issue, hamming=False):
     """ Merge array field from the remote_issue into local_task
 
@@ -302,6 +339,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
     merge_annotations = _bool_option(main_section, 'merge_annotations', True)
     merge_tags = _bool_option(main_section, 'merge_tags', True)
+    replace_tags = _bool_option(main_section, 'replace_tags', False)
+
+    static_tags = []
+    if conf.has_option(main_section, 'static_tags'):
+        static_tags = aslist(conf.get(main_section, 'static_tags'))
 
     issue_updates = {
         'new': [],
@@ -352,7 +394,10 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 merge_left('annotations', task, issue_dict, hamming=True)
 
             if merge_tags:
-                merge_left('tags', task, issue_dict)
+                if replace_tags:
+                    replace_left('tags', task, issue_dict, static_tags)
+                else:
+                    merge_left('tags', task, issue_dict)
 
             issue_dict.pop('annotations', None)
             issue_dict.pop('tags', None)
