@@ -39,6 +39,7 @@ ARBITRARY_EXTRA = {
     'project': 'one',
     'type': 'issue',
     'annotations': [],
+    'body': 'Something',
     'namespace': 'arbitrary_username',
 }
 
@@ -85,7 +86,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             issue.UPDATED_AT: ARBITRARY_UPDATED,
             issue.CREATED_AT: ARBITRARY_CREATED,
             issue.CLOSED_AT: ARBITRARY_CLOSED,
-            issue.BODY: ARBITRARY_ISSUE['body'],
+            issue.BODY: ARBITRARY_EXTRA['body'],
             issue.MILESTONE: ARBITRARY_ISSUE['milestone']['title'],
             issue.USER: ARBITRARY_ISSUE['user']['login'],
             issue.NAMESPACE: 'arbitrary_username',
@@ -269,6 +270,22 @@ class TestGithubService(TestCase):
         issue = dict(repos_url="https://github.acme.biz/foo/bar")
         repository = GithubService.get_repository_from_issue(issue)
         self.assertEqual("foo/bar", repository)
+
+    def test_body_no_limit(self):
+        service = GithubService(self.config, 'general', 'mygithub')
+        issue = dict(body="A very short issue body.  Fixes #42.")
+        self.assertEqual(issue["body"], service.body(issue))
+
+    def test_body_newline_style(self):
+        service = GithubService(self.config, 'general', 'mygithub')
+        issue = dict(body="An\r\nIssue\r\nWith\r\nNewlines")
+        self.assertEqual("An\nIssue\nWith\nNewlines", service.body(issue))
+
+    def test_body_length_limit(self):
+        self.config.set('mygithub', 'github.body_length', '5')
+        service = GithubService(self.config, 'general', 'mygithub')
+        issue = dict(body="A very short issue body.  Fixes #42.")
+        self.assertEqual(issue["body"][:5], service.body(issue))
 
 
 class TestGithubClient(TestCase):
