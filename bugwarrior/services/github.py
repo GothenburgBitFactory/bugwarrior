@@ -1,6 +1,7 @@
 from builtins import filter
 import re
 import six
+import sys
 from urllib.parse import urlparse
 
 import requests
@@ -199,10 +200,6 @@ class GithubIssue(Issue):
         if milestone:
             milestone = milestone['title']
 
-        body = self.record['body']
-        if body:
-            body = body.replace('\r\n', '\n')
-
         created = self.parse_date(self.record.get('created_at'))
         updated = self.parse_date(self.record.get('updated_at'))
         closed = self.parse_date(self.record.get('closed_at'))
@@ -220,7 +217,7 @@ class GithubIssue(Issue):
             self.TYPE: self.extra['type'],
             self.USER: self.record['user']['login'],
             self.TITLE: self.record['title'],
-            self.BODY: body,
+            self.BODY: self.extra['body'],
             self.MILESTONE: milestone,
             self.NUMBER: self.record['number'],
             self.CREATED_AT: created,
@@ -384,6 +381,16 @@ class GithubService(IssueService):
             issue_obj.get_processed_url(url)
         )
 
+    def body(self, issue):
+        body = issue['body']
+
+        if body:
+            body = body.replace('\r\n', '\n')
+            max_length = self.config.get('body_length', default=sys.maxsize, to_type=int)
+            body = body[:max_length]
+
+        return body
+
     def _reqs(self, tag):
         """ Grab all the pull requests """
         return [
@@ -470,6 +477,7 @@ class GithubService(IssueService):
                 'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',
                 'annotations': self.annotations(tag, issue, issue_obj),
+                'body': self.body(issue),
                 'namespace': self.username,
             }
             issue_obj.update_extra(extra)

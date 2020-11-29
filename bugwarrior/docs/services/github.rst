@@ -151,6 +151,17 @@ point bugwarrior to it with the ``github.host`` configuration option. E.g.::
 
     github.host = github.acme.biz
 
+Synchronizing Issue Content
++++++++++++++++++++++++++++
+
+This service synchronizes most GitHub fields to UDAs, as described below.
+Comments are synchronized as annotations.
+
+To limit the amount of content synchronized into TaskWarrior (which can help to avoid issues with synchronization), use
+
+ * ``annotation_comments=False`` (a global configuration) to disable synchronizing comments to annotations; and
+ * ``github.body_length=0``` to disable synchronizing the Github Body UDA (or set it to a small value to limit size).
+
 Provided UDA Fields
 -------------------
 
