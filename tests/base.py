@@ -3,6 +3,7 @@ import shutil
 import os.path
 import tempfile
 import unittest
+import configparser
 from unittest import mock
 
 import responses
@@ -88,7 +89,10 @@ class ServiceTest(ConfigTest):
                 return False
 
         def get_option(section, name):
-            return options[section][name]
+            try:
+                return options[section][name]
+            except KeyError:
+                raise configparser.NoOptionError(section, name)
 
         def get_int(section, name):
             return int(get_option(section, name))

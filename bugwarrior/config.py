@@ -313,7 +313,9 @@ class ServiceConfig(object):
             if to_type:
                 return to_type(value)
             return value
-        except:
+        except configparser.NoSectionError:
+            return default
+        except configparser.NoOptionError:
             return default
 
     def _get_key(self, key):
