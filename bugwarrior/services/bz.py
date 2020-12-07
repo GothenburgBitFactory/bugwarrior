@@ -158,9 +158,10 @@ class BugzillaService(IssueService):
             except TypeError:
                 raise Exception("Bugzilla API keys require python-bugzilla>=2.1.0")
         else:
-            password = self.get_password('password', self.username)
             self.bz = bugzilla.Bugzilla(url=url, **force_rest_kwargs)
-            self.bz.login(self.username, password)
+            if self.config.get('password'):
+                password = self.get_password('password', self.username)
+                self.bz.login(self.username, password)
 
     @staticmethod
     def get_keyring_service(service_config):
@@ -174,8 +175,6 @@ class BugzillaService(IssueService):
         for option in req:
             if option not in service_config:
                 die("[%s] has no 'bugzilla.%s'" % (target, option))
-        if 'password' not in service_config and 'api_key' not in service_config:
-            die("[%s] has neither 'bugzilla.password' nor 'bugzilla.api_key'" % (target,))
 
         super(BugzillaService, cls).validate_config(service_config, target)
 
