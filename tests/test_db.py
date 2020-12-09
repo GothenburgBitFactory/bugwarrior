@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import copy
 import unittest
 from six.moves import configparser
 
@@ -74,15 +75,17 @@ class TestSynchronize(ConfigTest):
 
     def test_synchronize(self):
 
-        def get_tasks(tw):
-            tasks = tw.load_tasks()
-
-            # Remove non-deterministic keys.
-            del tasks['pending'][0]['modified']
-            del tasks['pending'][0]['entry']
-            del tasks['pending'][0]['uuid']
+        def remove_non_deterministic_keys(tasks):
+            for status in ['pending', 'completed']:
+                for task in tasks[status]:
+                    del task['modified']
+                    del task['entry']
+                    del task['uuid']
 
             return tasks
+
+        def get_tasks(tw):
+            return remove_non_deterministic_keys(tw.load_tasks())
 
         config = configparser.RawConfigParser()
         config.add_section('general')
@@ -148,14 +151,10 @@ class TestSynchronize(ConfigTest):
         # TEST CLOSED ISSUE.
         db.synchronize(iter(()), config, 'general')
 
-        tasks = tw.load_tasks()
+        completed_tasks = tw.load_tasks()
 
-        # Remove non-deterministic keys.
-        del tasks['completed'][0]['modified']
-        del tasks['completed'][0]['entry']
+        tasks = remove_non_deterministic_keys(copy.deepcopy(completed_tasks))
         del tasks['completed'][0]['end']
-        del tasks['completed'][0]['uuid']
-
         self.assertEqual(tasks, {
             'completed': [{
                 u'project': u'sample_project',
@@ -167,7 +166,30 @@ class TestSynchronize(ConfigTest):
                 u'status': u'completed',
                 u'urgency': 4.9,
             }],
-             'pending': []})
+            'pending': []})
+
+        # TEST REOPENED ISSUE
+        db.synchronize(iter((issue,)), config, 'general')
+
+        tasks = tw.load_tasks()
+        self.assertEqual(
+            completed_tasks['completed'][0]['uuid'],
+            tasks['pending'][0]['uuid'])
+
+        tasks = remove_non_deterministic_keys(tasks)
+        self.assertEqual(tasks, {
+            'completed': [],
+            'pending': [{
+                u'priority': u'M',
+                u'project': u'sample_project',
+                u'status': u'pending',
+                u'description': u'Yada yada yada.',
+                u'githuburl': u'https://example.com',
+                u'githubtype': u'issue',
+                u'id': 1,
+                u'urgency': 4.9,
+            }]})
+
 
 class TestUDAs(ConfigTest):
     def test_udas(self):
