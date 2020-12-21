@@ -156,7 +156,7 @@ Example Configuration
     kanboard.username = ralphbean
 
     # Your password or, even better, API token
-    kanboard.password = OMG_LULZ
+    kanboard.password = my_api_token
 
     # A custom query to search for open issues. By default, assigned and open
     # tasks are queried.
