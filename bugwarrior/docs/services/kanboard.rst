@@ -19,11 +19,12 @@ Here's an example of a Kanboard project::
     service = kanboard
     kanboard.url = https://kanboard.example.org
     kanboard.username = ralph
-    kanboard.password = OMG_LULZ
+    kanboard.password = my_api_token
 
-The above example is the minimum required to import issues from Kanboard. You
-can also feel free to use any of the configuration options described in
-`Service Features`_ below.
+The above example is the minimum required to import issues from Kanboard. It is
+recommended to use a personal API token instead of a password, which can be
+created on the Kanboard settings page. You can also feel free to use any of the
+configuration options described in `Service Features`_ below.
 
 Service Features
 ----------------
