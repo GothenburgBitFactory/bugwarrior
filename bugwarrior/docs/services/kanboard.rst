@@ -47,13 +47,13 @@ Provided UDA Fields
 +-----------------------------+---------------------+---------------------+
 | Field Name                  | Description         | Type                |
 +=============================+=====================+=====================+
-| ``kanboardtaskid``          | Task ID             | Decimal (numeric)   |
+| ``kanboardtaskid``          | Task ID             | Number (numeric)    |
 +-----------------------------+---------------------+---------------------+
 | ``kanboardtasktitle``       | Task Title          | Text (string)       |
 +-----------------------------+---------------------+---------------------+
 | ``kanboardtaskdescription`` | Task Description    | Text (string)       |
 +-----------------------------+---------------------+---------------------+
-| ``kanboardprojectid``       | Project ID          | Decimal (numeric)   |
+| ``kanboardprojectid``       | Project ID          | Number (numeric)    |
 +-----------------------------+---------------------+---------------------+
 | ``kanboardprojectname``     | Project Name        | Text (string)       |
 +-----------------------------+---------------------+---------------------+
