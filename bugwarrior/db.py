@@ -179,7 +179,6 @@ def find_taskwarrior_uuid(tw, keys, issue):
                 'or': [
                     ('status', 'pending'),
                     ('status', 'waiting'),
-                    ('status', 'completed')
                 ],
             })
             possibilities = possibilities | set([
@@ -196,6 +195,19 @@ def find_taskwarrior_uuid(tw, keys, issue):
                 possibilities
             )
         )
+
+    # old bugwarrior did not consider completed task so there could be multiple ones matching
+    for service, key_list in six.iteritems(keys):
+        if any([key in issue for key in key_list]):
+            results = tw.filter_tasks({
+                'and': [("%s.is" % key, issue[key]) for key in key_list] + ['status', 'completed'],
+            })
+            possibilities = possibilities | set([
+                task['uuid'] for task in results
+            ])
+
+    if len(possibilities) >= 1:
+        return possibilities.pop()
 
     raise NotFound(
         "No issue was found matching %s" % issue
