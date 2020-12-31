@@ -182,9 +182,20 @@ def find_taskwarrior_uuid(tw, keys, issue):
                     ('status', 'completed')
                 ],
             })
-            possibilities = possibilities | set([
-                task['uuid'] for task in results
-            ])
+            new_possibilities = set([task['uuid'] for task in results])
+            # Previous versions of bugwarrior did not allow for reopening
+            # completed tasks, so there could be multiple completed tasks
+            # for the same issue if it was closed and reopened before that.
+            if len(new_possibilities) > 1 and all(
+                    r['status'] == 'completed' for r in results):
+                for r in results[1:]:
+                    for k in key_list:
+                        if r[k] != results[0][k]:
+                            break
+                else:
+                    # All results are completed duplicates.
+                    new_possibilities = set([new_possibilities.pop()])
+            possibilities = possibilities | new_possibilities
 
     if len(possibilities) == 1:
         return possibilities.pop()
