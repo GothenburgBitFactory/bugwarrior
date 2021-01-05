@@ -49,6 +49,7 @@ setup(name='bugwarrior',
           "megaplan": ["megaplan>=1.4"],
           "phabricator": ["phabricator"],
           "trac": ["offtrac"],
+          "zepel": ["zepel==0.1.0"]
       },
       tests_require=[
           "nose",
@@ -60,7 +61,8 @@ setup(name='bugwarrior',
           "bugwarrior[gmail]",
           "bugwarrior[trac]",
           "bugwarrior[bugzilla]",
-          "bugwarrior[phabricator]"
+          "bugwarrior[phabricator]",
+          "bugwarrior[zepel]"
       ],
       test_suite='nose.collector',
       entry_points="""
@@ -91,5 +93,6 @@ setup(name='bugwarrior',
       gmail=bugwarrior.services.gmail:GmailService
       teamworks_projects=bugwarrior.services.teamworks_projects:TeamworksService
       pivotaltracker=bugwarrior.services.pivotaltracker:PivotalTrackerService
+      zepel=bugwarrior.services.zepel:ZepelService
       """,
       )

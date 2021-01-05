@@ -74,6 +74,7 @@ class GmailIssue(Issue):
             'entry': self.get_entry(),
             'tags': [label for label in self.extra['labels'] if label not in self.EXCLUDE_LABELS],
             'priority': self.origin['default_priority'],
+            'project': self.origin['project_name'],
             self.THREAD_ID: self.record['id'],
             self.SUBJECT: self.extra['subject'],
             self.URL: self.extra['url'],
@@ -124,6 +125,8 @@ class GmailService(IssueService):
             'gmail_credentials_%s.pickle' % (credentials_name,))
         self.gmail_api = self.build_api()
 
+        self.project_name = self.config.get('project_name', None)
+
     def get_config_path(self, varname, default_path=None):
         return os.path.expanduser(self.config.get(varname, default_path))
 
@@ -167,7 +170,7 @@ class GmailService(IssueService):
 
     def get_labels(self):
         result = self.gmail_api.users().labels().list(userId=self.login_name).execute()
-        return {label['id']: label['name'] for label in result['labels']}
+        return { label['id']: label['name'] for label in result['labels'] }
 
     def get_threads(self):
         thread_service = self.gmail_api.users().threads()
@@ -193,6 +196,9 @@ class GmailService(IssueService):
             issue.update_extra(extra)
             yield issue
 
+
+    def get_service_metadata(self):
+        return { 'project_name': self.project_name }
 
 def thread_extras(thread, labels):
     name, address = thread_last_sender(thread)

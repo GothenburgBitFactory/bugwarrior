@@ -72,3 +72,4 @@ Contributors
 - BinaryBabel (contributed support for YouTrack)
 - Matthew Cengia (contributed extra support for Trello)
 - Andrew Demas (contributed support for PivotalTracker)
+- Stephan Meijer (contributed support for Zepel, fixes for JIRA, extra support for Gmail)

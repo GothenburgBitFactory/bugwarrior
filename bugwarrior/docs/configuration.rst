@@ -189,6 +189,7 @@ Example Configuration
     service = gmail
     gmail.query = label:action OR label:readme
     gmail.login_name = you@example.com
+    gmail.project_name = example
 
     [pivotaltracker]
     service = pivotaltracker
