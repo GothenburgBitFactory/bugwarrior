@@ -45,6 +45,7 @@ setup(name='bugwarrior',
           "bugzilla": ["python-bugzilla>=2.0.0"],
           "gmail": ["google-api-python-client", "google-auth-oauthlib"],
           "jira": ["jira>=0.22"],
+          "kanboard": ["kanboard"],
           "keyring": ["keyring"],
           "megaplan": ["megaplan>=1.4"],
           "phabricator": ["phabricator"],
@@ -60,7 +61,8 @@ setup(name='bugwarrior',
           "bugwarrior[gmail]",
           "bugwarrior[trac]",
           "bugwarrior[bugzilla]",
-          "bugwarrior[phabricator]"
+          "bugwarrior[phabricator]",
+          "bugwarrior[kanboard]",
       ],
       test_suite='nose.collector',
       entry_points="""
@@ -75,6 +77,7 @@ setup(name='bugwarrior',
       trac=bugwarrior.services.trac:TracService
       bts=bugwarrior.services.bts:BTSService
       bugzilla=bugwarrior.services.bz:BugzillaService
+      kanboard=bugwarrior.services.kanboard:KanboardService
       teamlab=bugwarrior.services.teamlab:TeamLabService
       redmine=bugwarrior.services.redmine:RedMineService
       activecollab2=bugwarrior.services.activecollab2:ActiveCollab2Service
