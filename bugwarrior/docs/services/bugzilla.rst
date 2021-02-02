@@ -20,7 +20,7 @@ This will scrape every ticket that:
 
 1. Is not closed and
 2. rbean@redhat.com is either the owner, reporter or is cc'd on the issue.
-   
+
 Bugzilla instances can be quite different from one another so use this
 with caution and please report bugs so we can
 make bugwarrior support more robust!
@@ -88,6 +88,10 @@ Provided UDA Fields
 | ``bugzillabugid``      | Bug ID                        | Numeric (integer)   |
 +------------------------+-------------------------------+---------------------+
 | ``bugzillastatus``     | Bugzilla Status               | Text (string)       |
++------------------------+-------------------------------+---------------------+
+| ``bugzillaproduct``    | Bugzilla Product              | Text (string)       |
++------------------------+-------------------------------+---------------------+
+| ``bugzillacomponent``  | Bugzilla Component            | Text (string)       |
 +------------------------+-------------------------------+---------------------+
 | ``bugzillaneedinfo``   | Needinfo                      | Date                |
 +------------------------+-------------------------------+---------------------+
