@@ -40,7 +40,6 @@ matrix:
 install:
   - pip install .[jira,megaplan,activecollab,bts,bugzilla,trac,gmail,kanboard]
   - pip install codecov
-  - pip install coverage
-script: nosetests -w tests --with-coverage --cover-branches --cover-package=bugwarrior -v
+  - pip install pytest-cov
+script: pytest --cov=bugwarrior --cov-branch tests
 after_success: codecov
- 

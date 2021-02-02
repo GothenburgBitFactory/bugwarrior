@@ -54,7 +54,7 @@ Create a new branch for each pull request based off the ``develop`` branch::
 
 Please add tests when appropriate and run the test suite before opening a PR::
 
-    (bugwarrior)$ python setup.py nosetests
+    (bugwarrior)$ pytest
 
 We look forward to your contribution!
 
