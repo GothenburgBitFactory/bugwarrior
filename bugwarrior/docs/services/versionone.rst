@@ -104,3 +104,9 @@ Provided UDA Fields
 +-----------------------------------+-----------------------+---------------+
 | ``versiononestorydescription``    | Story Description     | Text (string) |
 +-----------------------------------+-----------------------+---------------+
+| ``versiononetimeboxbegindate``    | Timebox Begin Date    | Text (string) |
++-----------------------------------+-----------------------+---------------+
+| ``versiononetimeboxenddate``      | Timebox End Date      | Text (string) |
++-----------------------------------+-----------------------+---------------+
+| ``versiononetimeboxname``         | Timebox Name          | Text (string) |
++-----------------------------------+-----------------------+---------------+

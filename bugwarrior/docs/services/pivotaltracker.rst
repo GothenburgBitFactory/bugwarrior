@@ -279,6 +279,8 @@ Provided UDA Fields
 +----------------------------+-------------------+-----------------+
 | ``pivotalrequesters``      | Story Requested By| Text (string)   |
 +----------------------------+-------------------+-----------------+
+| ``pivotalowners``          | Story Owned By    | Text (string)   |
++----------------------------+-------------------+-----------------+
 | ``pivotalid``              | Story ID          | Numeric         |
 +----------------------------+-------------------+-----------------+
 | ``pivotalestimate``        | Story Estimate    | Text (string)   |
@@ -290,4 +292,10 @@ Provided UDA Fields
 | ``pivotalupdated``         | Story Updated     | Date (date)     |
 +----------------------------+-------------------+-----------------+
 | ``pivotalclosed``          | Story Closed      | Date (date)     |
++----------------------------+-------------------+-----------------+
+| ``pivotalurl``             | Story URL         | Text (string)   |
++----------------------------+-------------------+-----------------+
+| ``pivotalprojectid``       | Project ID        | Text (string)   |
++----------------------------+-------------------+-----------------+
+| ``pivotalprojectname``     | Project Name      | Text (string)   |
 +----------------------------+-------------------+-----------------+
