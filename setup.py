@@ -52,7 +52,7 @@ setup(name='bugwarrior',
           "trac": ["offtrac"],
       },
       tests_require=[
-          "nose",
+          "pytest",
           "responses",
           "bugwarrior[jira]",
           "bugwarrior[megaplan]",
@@ -64,7 +64,6 @@ setup(name='bugwarrior',
           "bugwarrior[phabricator]",
           "bugwarrior[kanboard]",
       ],
-      test_suite='nose.collector',
       entry_points="""
       [console_scripts]
       bugwarrior-pull = bugwarrior:pull
