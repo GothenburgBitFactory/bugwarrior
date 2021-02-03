@@ -533,7 +533,6 @@ def aggregate_issues(conf, main_section, debug):
     queue = multiprocessing.Queue()
 
     log.info("Spawning %i workers." % len(targets))
-    processes = []
 
     if debug:
         for target in targets:
@@ -551,7 +550,6 @@ def aggregate_issues(conf, main_section, debug):
                 args=(conf, main_section, target, queue, conf.get(target, 'service'))
             )
             proc.start()
-            processes.append(proc)
 
             # Sleep for 1 second here to try and avoid a race condition where
             # all N workers start up and ask the gpg-agent process for
@@ -566,11 +564,7 @@ def aggregate_issues(conf, main_section, debug):
             completion_type, args = issue
             if completion_type == SERVICE_FINISHED_ERROR:
                 target, e = args
-                log.info("Terminating workers")
-                for process in processes:
-                    process.terminate()
-                raise RuntimeError(
-                    "critical error in target '{}'".format(target))
+                log.exception(f"Aborted (critical error in target '{target}')")
             currently_running -= 1
             continue
         yield issue
