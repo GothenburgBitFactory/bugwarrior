@@ -87,6 +87,9 @@ class TestPull(ConfigTest):
     def test_partial_failure(self):
         """
         One service is broken but the other succeeds.
+
+        Synchronization should work for succeeding services even if one service
+        fails.  See https://github.com/ralphbean/bugwarrior/issues/279.
         """
         self.config.set('general', 'targets', 'my_service,my_broken_service')
         self.config.add_section('my_broken_service')
@@ -98,11 +101,10 @@ class TestPull(ConfigTest):
 
         self.write_rc(self.config)
 
-        with self.caplog.at_level(logging.ERROR):
+        with self.caplog.at_level(logging.INFO):
             self.runner.invoke(command.pull)
 
-        self.assertNotEqual(self.caplog.records, [])
-        self.assertEqual(len(self.caplog.records), 1)
-        self.assertEqual(
-            self.caplog.records[0].message,
-            "Aborted (critical error in target 'my_broken_service')")
+        logs = [rec.message for rec in self.caplog.records]
+        self.assertIn(
+            "Aborted (critical error in target 'my_broken_service')", logs)
+        self.assertIn('Adding 0 tasks', logs)
