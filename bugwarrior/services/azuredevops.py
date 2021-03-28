@@ -1,5 +1,5 @@
 ### From Other Work
-# from bugwarrior.config import asbool, aslist, die
+from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue, ServiceClient
 from urllib.parse import quote
 import base64
@@ -161,7 +161,7 @@ class AzureDevopsService(IssueService):
 
     def get_query(self):
         default_query = (
-            "SELECT [System.Id] FROM workitems WHERE [System.AssignedTo] = @me "
+            "SELECT [System.Id] FROM workitems WHERE [System.AssignedTo] = @me"
         )
         if self.query_filter:
             default_query += f"AND {self.query_filter}"
@@ -203,5 +203,7 @@ class AzureDevopsService(IssueService):
 
     @classmethod
     def validate_config(cls, service_config, target):
-        # Check config has PAT, Org, Team
-        pass
+        for option in ("PAT", "project", "organization"):
+            if option not in service_config:
+                die(f"[{target}] has no 'ado.{option}'")
+        IssueService.validate_config(service_config, target)
