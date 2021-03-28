@@ -362,18 +362,13 @@ class Issue(object):
             'todo': '',
             'task': '',
             'subtask': 'Subtask #',
-            'feature': 'Feature',
-            'bug': 'Bug',
-            'story': 'Story',
-            'release': 'Release',
-            'chore': 'Chore',
         }
         url_separator = ' .. '
         url = url if self.origin['inline_links'] else ''
         desc_len = self.origin['description_length']
         return u"%s%s#%s - %s%s%s" % (
             MARKUP,
-            cls_markup[cls],
+            cls_markup.get(cls, cls.title()),
             number,
             title[:desc_len] if desc_len else title,
             url_separator if url else '',
