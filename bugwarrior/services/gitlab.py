@@ -145,6 +145,9 @@ class GitlabIssue(Issue):
         description = (
             self.record['body'] if self.extra['type'] == 'todo'
             else self.record['description'])
+        if self.extra['type'] == 'todo':
+            target = self.record.get('target')
+            duedate = target.get('due_date')
 
         if milestone and (
                 self.extra['type'] == 'issue' or
