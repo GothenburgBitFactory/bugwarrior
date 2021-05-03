@@ -14,6 +14,9 @@ Here's an example of a Gitlab target::
     gitlab.login = ralphbean
     gitlab.token = OMG_LULZ
     gitlab.host = gitlab.com
+    gitlab.issue_priority = 'M'
+    gitlab.todo_priority = 'M'
+    gitlab.mr_priority = 'H'
 
 The above example is the minimum required to import issues from
 Gitlab.  You can also feel free to use any of the
@@ -162,6 +165,16 @@ Include Only One Author
 If you would like to only pull issues and MRs that you've authored, you may set::
 
     gitlab.only_if_author = myusername
+
+Priority by type
+++++++++++++++++
+
+If you would like that your issues have a different default priority than your MRs or todo items,
+you can configure individual priorities for each::
+
+    gitlab.issue_priority = 'M'
+    gitlab.todo_priority = 'M'
+    gitlab.mr_priority = 'H'
 
 Use HTTP
 ++++++++
