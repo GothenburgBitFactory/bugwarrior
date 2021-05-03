@@ -163,6 +163,16 @@ If you would like to only pull issues and MRs that you've authored, you may set:
 
     gitlab.only_if_author = myusername
 
+Priority by type
+++++++++++++++++
+
+If you would like that your issues have a different default priority than your MRs or todo items,
+you can configure individual priorities for each::
+
+    gitlab.issue_priority = M
+    gitlab.todo_priority = M
+    gitlab.mr_priority = H
+
 Use HTTP
 ++++++++
 
