@@ -121,6 +121,18 @@ class GitlabIssue(Issue):
     def _normalize_label_to_tag(self, label):
         return re.sub(r'[^a-zA-Z0-9]', '_', label)
 
+    # Override the method from parent class
+    def get_priority(self):
+        type_str = self.extra['type']
+        default_priority = self.origin['default_priority']
+        if type_str == 'todo':
+            return self.origin['todo_priority']
+        elif type_str == 'merge_request':
+            return self.origin['mr_priority']
+        elif type_str == 'issue':
+            return self.origin['issue_priority']
+        return default_priority
+
     def to_taskwarrior(self):
         author = self.record['author']
         milestone = self.record.get('milestone')
@@ -136,9 +148,7 @@ class GitlabIssue(Issue):
         number = (
             self.record['id'] if self.extra['type'] == 'todo'
             else self.record['iid'])
-        priority = (
-            self.origin['default_priority'] if self.extra['type'] == 'issue'
-            else 'H')
+        priority = self.get_priority()
         title = (
             'Todo from %s for %s' % (author['name'], self.extra['project'])
             if self.extra['type'] == 'todo' else self.record['title'])
@@ -299,6 +309,9 @@ class GitlabService(IssueService, ServiceClient):
         return {
             'import_labels_as_tags': self.import_labels_as_tags,
             'label_template': self.label_template,
+            'issue_priority': self.config.get('issue_priority', self.default_priority),
+            'todo_priority': self.config.get('todo_priority', self.default_priority),
+            'mr_priority': self.config.get('mr_priority', self.default_priority),
         }
 
 
