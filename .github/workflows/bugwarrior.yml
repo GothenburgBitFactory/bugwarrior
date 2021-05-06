@@ -1,6 +1,7 @@
+---
 name: bugwarrior
 
-on: push
+on: [push, pull_request]
 
 jobs:
   bugwarrior-test:
