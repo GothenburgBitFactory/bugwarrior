@@ -199,6 +199,46 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
         self.assertEqual(actual_output, expected_output)
 
+    def test_custom_issue_priority(self):
+        overrides = {
+            'gitlab.issue_priority': 'L',
+        }
+        service = self.get_mock_service(GitlabService, config_overrides=overrides)
+        service.import_labels_as_tags = True
+        issue = service.get_issue_for_record(
+            self.arbitrary_issue,
+            self.arbitrary_extra
+        )
+        expected_output = {
+            'project': self.arbitrary_extra['project'],
+            'priority': 'L',
+            'annotations': [],
+            'tags': [u'feature'],
+            'due': self.arbitrary_duedate.replace(microsecond=0),
+            'entry': self.arbitrary_created.replace(microsecond=0),
+            issue.URL: self.arbitrary_extra['issue_url'],
+            issue.REPO: 'project',
+            issue.STATE: self.arbitrary_issue['state'],
+            issue.TYPE: self.arbitrary_extra['type'],
+            issue.TITLE: self.arbitrary_issue['title'],
+            issue.NUMBER: str(self.arbitrary_issue['iid']),
+            issue.UPDATED_AT: self.arbitrary_updated.replace(microsecond=0),
+            issue.CREATED_AT: self.arbitrary_created.replace(microsecond=0),
+            issue.DUEDATE: self.arbitrary_duedate,
+            issue.DESCRIPTION: self.arbitrary_issue['description'],
+            issue.MILESTONE: self.arbitrary_issue['milestone']['title'],
+            issue.UPVOTES: 0,
+            issue.DOWNVOTES: 0,
+            issue.WORK_IN_PROGRESS: 1,
+            issue.AUTHOR: 'john_smith',
+            issue.ASSIGNEE: 'jack_smith',
+            issue.NAMESPACE: 'arbitrary_namespace',
+            issue.WEIGHT: 3,
+        }
+        actual_output = issue.to_taskwarrior()
+
+        self.assertEqual(actual_output, expected_output)
+
     def test_work_in_progress(self):
         self.arbitrary_issue['work_in_progress'] = 'false'
         self.service.import_labels_as_tags = True
