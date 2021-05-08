@@ -75,6 +75,16 @@ class TestGitlabService(ConfigTest):
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         self.assertTrue(service.filter_repos(repo))
 
+    def test_default_priorities(self):
+        self.config.set('myservice', 'gitlab.issue_priority', 'L')
+        self.config.set('myservice', 'gitlab.mr_priority', 'M')
+        self.config.set('myservice', 'gitlab.todo_priority', 'H')
+        service = GitlabService(self.config, 'general', 'myservice')
+        self.assertEqual('L', service.default_issue_priority)
+        self.assertEqual('M', service.default_mr_priority)
+        self.assertEqual('H', service.default_todo_priority)
+
+
 
 class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
