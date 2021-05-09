@@ -153,6 +153,79 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'type': 'issue',
             'annotations': [],
         }
+        self.arbitrary_todo = {
+            "id": 42,
+            "project": {
+                "id": 2,
+                "name": "project",
+                "name_with_namespace": "arbitrary_namespace / project",
+                "path": "project",
+                "path_with_namespace": "arbitrary_namespace/project"
+            },
+            "author": {
+                "id": 1,
+                "username": "john_smith",
+                "email": "john@example.com",
+                "name": "John Smith",
+                "state": "active",
+                "created_at": "2012-05-23T08:00:58Z"
+            },
+            "action_name": "marked",
+            "target_type": "Issue",
+            "target": {
+                "id": 42,
+                "iid": 3,
+                "project_id": 8,
+                "title": "Add user settings",
+                "description": "",
+                "labels": [
+                    "feature"
+                ],
+                "milestone": {
+                    "id": 1,
+                    "title": "v1.0",
+                    "description": "",
+                    "due_date": self.arbitrary_duedate.date().isoformat(),
+                    "state": "closed",
+                    "updated_at": "2012-07-04T13:42:48Z",
+                    "created_at": "2012-07-04T13:42:48Z"
+                },
+                "assignee": {
+                    "id": 2,
+                    "username": "jack_smith",
+                    "email": "jack@example.com",
+                    "name": "Jack Smith",
+                    "state": "active",
+                    "created_at": "2012-05-23T08:01:01Z"
+                },
+                "author": {
+                    "id": 1,
+                    "username": "john_smith",
+                    "email": "john@example.com",
+                    "name": "John Smith",
+                    "state": "active",
+                    "created_at": "2012-05-23T08:00:58Z"
+                },
+                "state": "opened",
+                "updated_at": self.arbitrary_updated.isoformat(),
+                "created_at": self.arbitrary_created.isoformat(),
+                "weight": 3,
+                "work_in_progress": "true"
+
+            },
+            "target_url": "https://gitlab.example.com/arbitrary_username/project/issues/3",
+            "body": "Add user settings",
+            "state": "pending",
+            "created_at": self.arbitrary_created.isoformat(),
+            "updated_at": self.arbitrary_updated.isoformat(),
+        }
+        self.arbitrary_todo_extra = {
+            'issue_url': 'https://gitlab.example.com/arbitrary_username/project/issues/3',
+            'project': 'project',
+            'namespace': 'arbitrary_namespace',
+            'type': 'todo',
+            'annotations': [],
+        }
 
     def test_normalize_label_to_tag(self):
         issue = self.service.get_issue_for_record(
@@ -234,6 +307,47 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             issue.ASSIGNEE: 'jack_smith',
             issue.NAMESPACE: 'arbitrary_namespace',
             issue.WEIGHT: 3,
+        }
+        actual_output = issue.to_taskwarrior()
+
+        self.assertEqual(actual_output, expected_output)
+
+    def test_custom_todo_priority(self):
+        overrides = {
+            'gitlab.todo_priority': 'H',
+        }
+        service = self.get_mock_service(GitlabService, config_overrides=overrides)
+        service.import_labels_as_tags = True
+        issue = service.get_issue_for_record(
+            self.arbitrary_todo,
+            self.arbitrary_todo_extra
+        )
+        expected_output = {
+            'project': self.arbitrary_todo_extra['project'],
+            'priority': overrides['gitlab.todo_priority'],
+            'annotations': [],
+            'tags': [],
+            'due': None, # currently not parsed for ToDos
+            'entry': self.arbitrary_created.replace(microsecond=0),
+            issue.URL: self.arbitrary_todo_extra['issue_url'],
+            issue.REPO: 'project',
+            issue.STATE: self.arbitrary_todo['state'],
+            issue.TYPE: self.arbitrary_todo_extra['type'],
+            issue.TITLE: 'Todo from %s for %s' % (self.arbitrary_todo['author']['name'],
+                                                  self.arbitrary_todo['project']['path']),
+            issue.NUMBER: str(self.arbitrary_todo['id']),
+            issue.UPDATED_AT: self.arbitrary_updated.replace(microsecond=0),
+            issue.CREATED_AT: self.arbitrary_created.replace(microsecond=0),
+            issue.DUEDATE: None, # Currently not parsed for ToDos
+            issue.DESCRIPTION: self.arbitrary_todo['body'],
+            issue.MILESTONE: None,
+            issue.UPVOTES: 0,
+            issue.DOWNVOTES: 0,
+            issue.WORK_IN_PROGRESS: 0,
+            issue.AUTHOR: 'john_smith',
+            issue.ASSIGNEE: None, # Currently not parsed for ToDos
+            issue.NAMESPACE: 'arbitrary_namespace',
+            issue.WEIGHT: None, # Currently not parsed for ToDos
         }
         actual_output = issue.to_taskwarrior()
 
