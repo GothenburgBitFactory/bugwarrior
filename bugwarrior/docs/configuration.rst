@@ -130,6 +130,12 @@ Example Configuration
     megaplan.password = secret
     megaplan.project_name = example
 
+    # Example gitlab configuration containing individual priorities
+    [gitlab_config]
+    gitlab.default_issue_priority = M
+    gitlab.default_todo_priority = M
+    gitlab.default_mr_priority = H
+
     # Here's an example of a jira project. The ``jira-python`` module is
     # a bit particular, and jira deployments, like Bugzilla, tend to be
     # reasonably customized. So YMMV. The ``base_uri`` must not have a

@@ -121,6 +121,18 @@ class GitlabIssue(Issue):
     def _normalize_label_to_tag(self, label):
         return re.sub(r'[^a-zA-Z0-9]', '_', label)
 
+    # Override the method from parent class
+    def get_priority(self):
+        default_priority_map = {
+        'todo': self.origin['default_todo_priority'],
+        'merge_request': self.origin['default_mr_priority'],
+        'issue': self.origin['default_issue_priority']}
+
+        type_str = self.extra['type']
+        default_priority = self.origin['default_priority']
+
+        return default_priority_map.get(type_str, default_priority)
+
     def to_taskwarrior(self):
         author = self.record['author']
         milestone = self.record.get('milestone')
@@ -136,9 +148,7 @@ class GitlabIssue(Issue):
         number = (
             self.record['id'] if self.extra['type'] == 'todo'
             else self.record['iid'])
-        priority = (
-            self.origin['default_priority'] if self.extra['type'] == 'issue'
-            else 'H')
+        priority = self.get_priority()
         title = (
             'Todo from %s for %s' % (author['name'], self.extra['project'])
             if self.extra['type'] == 'todo' else self.record['title'])
@@ -258,6 +268,10 @@ class GitlabService(IssueService, ServiceClient):
         self.include_regex = re.compile(self.include_regex) if self.include_regex else None
         self.exclude_regex = re.compile(self.exclude_regex) if self.exclude_regex else None
 
+        self.default_issue_priority = self.config.get('default_issue_priority', self.default_priority)
+        self.default_todo_priority = self.config.get('default_todo_priority', self.default_priority)
+        self.default_mr_priority = self.config.get('default_mr_priority', self.default_priority)
+
         self.import_labels_as_tags = self.config.get(
             'import_labels_as_tags', default=False, to_type=asbool
         )
@@ -299,6 +313,9 @@ class GitlabService(IssueService, ServiceClient):
         return {
             'import_labels_as_tags': self.import_labels_as_tags,
             'label_template': self.label_template,
+            'default_issue_priority': self.default_issue_priority,
+            'default_todo_priority': self.default_todo_priority,
+            'default_mr_priority': self.default_mr_priority,
         }
 
 
