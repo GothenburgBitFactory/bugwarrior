@@ -124,9 +124,9 @@ class GitlabIssue(Issue):
     # Override the method from parent class
     def get_priority(self):
         default_priority_map = {
-        'todo': self.origin['todo_priority'],
-        'merge_request': self.origin['mr_priority'],
-        'issue': self.origin['issue_priority']}
+        'todo': self.origin['default_todo_priority'],
+        'merge_request': self.origin['default_mr_priority'],
+        'issue': self.origin['default_issue_priority']}
 
         type_str = self.extra['type']
         default_priority = self.origin['default_priority']
@@ -268,9 +268,9 @@ class GitlabService(IssueService, ServiceClient):
         self.include_regex = re.compile(self.include_regex) if self.include_regex else None
         self.exclude_regex = re.compile(self.exclude_regex) if self.exclude_regex else None
 
-        self.default_issue_priority = self.config.get('issue_priority', self.default_priority)
-        self.default_todo_priority = self.config.get('todo_priority', self.default_priority)
-        self.default_mr_priority = self.config.get('mr_priority', self.default_priority)
+        self.default_issue_priority = self.config.get('default_issue_priority', self.default_priority)
+        self.default_todo_priority = self.config.get('default_todo_priority', self.default_priority)
+        self.default_mr_priority = self.config.get('default_mr_priority', self.default_priority)
 
         self.import_labels_as_tags = self.config.get(
             'import_labels_as_tags', default=False, to_type=asbool
@@ -313,9 +313,9 @@ class GitlabService(IssueService, ServiceClient):
         return {
             'import_labels_as_tags': self.import_labels_as_tags,
             'label_template': self.label_template,
-            'issue_priority': self.default_issue_priority,
-            'todo_priority': self.default_todo_priority,
-            'mr_priority': self.default_mr_priority,
+            'default_issue_priority': self.default_issue_priority,
+            'default_todo_priority': self.default_todo_priority,
+            'default_mr_priority': self.default_mr_priority,
         }
 
 

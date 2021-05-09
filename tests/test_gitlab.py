@@ -76,9 +76,9 @@ class TestGitlabService(ConfigTest):
         self.assertTrue(service.filter_repos(repo))
 
     def test_default_priorities(self):
-        self.config.set('myservice', 'gitlab.issue_priority', 'L')
-        self.config.set('myservice', 'gitlab.mr_priority', 'M')
-        self.config.set('myservice', 'gitlab.todo_priority', 'H')
+        self.config.set('myservice', 'gitlab.default_issue_priority', 'L')
+        self.config.set('myservice', 'gitlab.default_mr_priority', 'M')
+        self.config.set('myservice', 'gitlab.default_todo_priority', 'H')
         service = GitlabService(self.config, 'general', 'myservice')
         self.assertEqual('L', service.default_issue_priority)
         self.assertEqual('M', service.default_mr_priority)
@@ -321,7 +321,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     def test_custom_issue_priority(self):
         overrides = {
-            'gitlab.issue_priority': 'L',
+            'gitlab.default_issue_priority': 'L',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         service.import_labels_as_tags = True
@@ -361,7 +361,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     def test_custom_todo_priority(self):
         overrides = {
-            'gitlab.todo_priority': 'H',
+            'gitlab.default_todo_priority': 'H',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         service.import_labels_as_tags = True
@@ -371,7 +371,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         )
         expected_output = {
             'project': self.arbitrary_todo_extra['project'],
-            'priority': overrides['gitlab.todo_priority'],
+            'priority': overrides['gitlab.default_todo_priority'],
             'annotations': [],
             'tags': [],
             'due': None, # currently not parsed for ToDos
@@ -402,7 +402,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     def test_custom_mr_priority(self):
         overrides = {
-            'gitlab.mr_priority': '',
+            'gitlab.default_mr_priority': '',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         service.import_labels_as_tags = True
@@ -412,7 +412,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         )
         expected_output = {
             'project': self.arbitrary_mr_extra['project'],
-            'priority': overrides['gitlab.mr_priority'],
+            'priority': overrides['gitlab.default_mr_priority'],
             'annotations': [],
             'tags': [u'feature'],
             'due': self.arbitrary_duedate.replace(microsecond=0),

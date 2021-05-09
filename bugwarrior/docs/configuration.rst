@@ -132,9 +132,9 @@ Example Configuration
 
     # Example gitlab configuration containing individual priorities
     [gitlab_config]
-    gitlab.issue_priority = M
-    gitlab.todo_priority = M
-    gitlab.mr_priority = H
+    gitlab.default_issue_priority = M
+    gitlab.default_todo_priority = M
+    gitlab.default_mr_priority = H
 
     # Here's an example of a jira project. The ``jira-python`` module is
     # a bit particular, and jira deployments, like Bugzilla, tend to be
