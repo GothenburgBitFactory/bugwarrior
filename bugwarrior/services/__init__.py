@@ -564,7 +564,9 @@ def aggregate_issues(conf, main_section, debug):
             completion_type, args = issue
             if completion_type == SERVICE_FINISHED_ERROR:
                 target, e = args
-                log.exception(f"Aborted (critical error in target '{target}')")
+                log.exception(f"Aborted {target} due to critical error.")
+                currently_running -= 1
+                yield ('SERVICE FAILED', target)
             currently_running -= 1
             continue
         yield issue

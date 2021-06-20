@@ -361,14 +361,22 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         'new': [],
         'existing': [],
         'changed': [],
-        'closed': get_managed_task_uuids(tw, key_list),
+        'closed': [],
     }
 
     seen = []
+    seen_uuids = set([])
     for issue in issue_generator:
 
         try:
             issue_dict = dict(issue)
+        except ValueError:
+            if isinstance(issue, tuple) and issue[0] == 'SERVICE FAILED':
+                targets.remove(issue[1])
+                continue
+            else:
+                raise
+        try:
             # We received this issue from The Internet, but we're not sure what
             # kind of encoding the service providers may have handed us. Let's try
             # and decode all byte strings from UTF8 off the bat.  If we encounter
@@ -393,6 +401,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             seen.append(unique_identifier)
 
             existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
+            seen_uuids.add(existing_taskwarrior_uuid)
             _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
 
             if task['status'] == 'completed':
@@ -426,9 +435,6 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             else:
                 issue_updates['existing'].append(task)
 
-            if existing_taskwarrior_uuid in issue_updates['closed']:
-                issue_updates['closed'].remove(existing_taskwarrior_uuid)
-
         except MultipleMatches as e:
             log.exception("Multiple matches: %s", six.text_type(e))
         except NotFound:
@@ -451,6 +457,8 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 tw.task_done(uuid=new_task['uuid'])
         except TaskwarriorError as e:
             log.exception("Unable to add task: %s" % e.stderr)
+        finally:
+            seen_uuids.add(new_task['uuid'])
 
     log.info("Updating %i tasks", len(issue_updates['changed']))
     for issue in issue_updates['changed']:
@@ -479,6 +487,12 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         except TaskwarriorError as e:
             log.exception("Unable to modify task: %s" % e.stderr)
 
+    log.debug(f'Closing tasks for succeeding services: {targets}.')
+    succeeded_service_task_uuids = get_managed_task_uuids(
+        tw,
+        build_key_list(
+            set([conf.get(target, 'service') for target in targets])))
+    issue_updates['closed'] = succeeded_service_task_uuids - seen_uuids
     log.info("Closing %i tasks", len(issue_updates['closed']))
     for issue in issue_updates['closed']:
         _, task_info = tw.get_task(uuid=issue)
