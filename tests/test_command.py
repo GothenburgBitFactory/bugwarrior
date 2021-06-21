@@ -9,6 +9,7 @@ import pytest
 from bugwarrior import command
 
 from .base import ConfigTest
+from .test_github import ARBITRARY_ISSUE, ARBITRARY_EXTRA
 
 
 class TestPull(ConfigTest):
@@ -45,7 +46,9 @@ class TestPull(ConfigTest):
 
     @mock.patch(
         'bugwarrior.services.github.GithubService.issues',
-        lambda self: []
+        lambda self: (
+            issue for issue in [
+                self.get_issue_for_record(ARBITRARY_ISSUE, ARBITRARY_EXTRA)])
     )
     def test_success(self):
         """
@@ -53,10 +56,14 @@ class TestPull(ConfigTest):
         """
         self.write_rc(self.config)
 
-        with self.caplog.at_level(logging.ERROR):
+        with self.caplog.at_level(logging.INFO):
             self.runner.invoke(command.pull)
 
-        self.assertEqual(self.caplog.records, [])
+        logs = [rec.message for rec in self.caplog.records]
+
+        self.assertIn('Adding 1 tasks', logs)
+        self.assertIn('Updating 0 tasks', logs)
+        self.assertIn('Closing 0 tasks', logs)
 
     @mock.patch(
         'bugwarrior.services.github.GithubService.issues',
