@@ -43,7 +43,9 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'fixVersions': [{'name': '1.2.3'}],
             'issuetype': {'name': 'Epic'},
             'status': {'name': 'Open'},
-            'subtasks': [{'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids]
+            'subtasks': [{'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids],
+            'assignee': {'displayName': 'Super P', 'emailAddress': 'potato@tomatocom'},
+            'reporter': {'displayName': 'Super T', 'emailAddress': 'tomato@potatocom'},
         },
         'key': '%s-%s' % (arbitrary_project, arbitrary_id, ),
     }
@@ -90,6 +92,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
             'jirasubtasks': 'DONUT-11,DONUT-12',
+            'jiraassignee': 'potato@tomatocom',
+            'jirareporter': 'tomato@potatocom',
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: self.arbitrary_record['key'],
