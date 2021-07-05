@@ -87,7 +87,7 @@ class AzureDevopsIssue(Issue):
         URL: {"type": "string", "label": "Azure Devops URL"},
         TYPE: {"type": "string", "label": "Azure Devops Work Item Type"},
         STATE: {"type": "string", "label": "Azure Devops Work Item State"},
-        ACTIVITY: {"type": "string", "label": "Azure Devops "},
+        ACTIVITY: {"type": "string", "label": "Azure Devops Activity"},
         PRIORITY: {"type": "numeric", "label": "Azure Devops Priority"},
         REMAINING_WORK: {
             "type": "numeric",
@@ -101,7 +101,7 @@ class AzureDevopsIssue(Issue):
     PRIORITY_MAP = {"1": "H", "2": "M", "3": "L", "4": "L"}
 
     def get_priority(self):
-        # Map to Priority Maptas
+        # Map to Priority Maps
         pass
 
 
