@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from builtins import str
+import sys
 
 
 import six
@@ -39,7 +40,10 @@ class JIRA(BaseJIRA):
         self._session.cookies = ObliviousCookieJar()
 
     def close(self):
-        self._session.close()
+        # this is called in a destructor, which may occur before the session
+        # has been created, so be resilient to a missing session
+        if hasattr(self, "_session"):
+            self._session.close()
 
 
 def _parse_sprint_string(sprint):
@@ -136,7 +140,7 @@ class JiraIssue(Issue):
             self.ISSUE_TYPE: self.get_issue_type(),
             self.URL: self.get_url(),
             self.FOREIGN_ID: self.record['key'],
-            self.DESCRIPTION: self.record.get('fields', {}).get('description'),
+            self.DESCRIPTION: self.extra.get('body'),
             self.SUMMARY: self.get_summary(),
             self.ESTIMATE: self.get_estimate(),
             self.FIX_VERSION: self.get_fix_version(),
@@ -275,6 +279,7 @@ class JiraService(IssueService):
     CONFIG_PREFIX = 'jira'
 
     def __init__(self, *args, **kw):
+        _skip_server = kw.pop('_skip_server', False)
         super(JiraService, self).__init__(*args, **kw)
         self.username = self.config.get('username')
         self.url = self.config.get('base_uri')
@@ -295,14 +300,15 @@ class JiraService(IssueService):
                 auth = dict(auth=(self.username, password))
             else:
                 auth = dict(basic_auth=(self.username, password))
-        self.jira = JIRA(
-            options={
-                'server': self.config.get('base_uri'),
-                'rest_api_version': 'latest',
-                'verify': self.config.get('verify_ssl', default=True, to_type=asbool),
-            },
-            **auth
-        )
+        if not _skip_server:
+            self.jira = JIRA(
+                options={
+                    'server': self.config.get('base_uri'),
+                    'rest_api_version': 'latest',
+                    'verify': self.config.get('verify_ssl', default=True, to_type=asbool),
+                },
+                **auth
+            )
         self.import_labels_as_tags = self.config.get(
             'import_labels_as_tags', default=False, to_type=asbool
         )
@@ -347,6 +353,15 @@ class JiraService(IssueService):
 
         IssueService.validate_config(service_config, target)
 
+    def body(self, issue):
+        body = issue.record.get('fields', {}).get('description')
+
+        if body:
+            max_length = self.config.get('body_length', default=sys.maxsize, to_type=int)
+            body = body[:max_length]
+
+        return body
+
     def annotations(self, issue, issue_obj):
         comments = self.jira.comments(issue.key) or []
         return self.build_annotations(
@@ -368,6 +383,7 @@ class JiraService(IssueService):
             issue = self.get_issue_for_record(case.raw)
             extra = {
                 'jira_version': jira_version,
+                'body': self.body(issue)
             }
             if jira_version > 4:
                 extra.update({

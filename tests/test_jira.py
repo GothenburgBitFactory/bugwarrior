@@ -1,11 +1,13 @@
 from builtins import next
 from builtins import object
 from collections import namedtuple
-from unittest import mock
+from unittest import mock, TestCase
+from six.moves.configparser import RawConfigParser
 
 from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
+from bugwarrior.config import ServiceConfig
 from bugwarrior.services.jira import JiraService
 from .base import ServiceTest, AbstractServiceTest
 
@@ -20,6 +22,36 @@ class FakeJiraClient(object):
 
     def comments(self, *args, **kwargs):
         return None
+
+
+class testJiraService(TestCase):
+
+    def setUp(self):
+        self.config = RawConfigParser()
+        self.config.interactive = False
+        self.config.add_section('general')
+        self.config.add_section('myjira')
+        self.config.set('myjira', 'service', 'jira')
+        self.config.set('myjira', 'jira.username', 'milou')
+        self.config.set('myjira', 'jira.password', 't0ps3cr3t')
+        self.service_config = ServiceConfig(
+            JiraService.CONFIG_PREFIX, self.config, 'myjira')
+
+    def test_body_length_no_limit(self):
+        description = "A very short issue body.  Fixes #828."
+        self.config.set('myjira', 'jira.body_length', '5')
+        service = JiraService(self.config, 'general', 'myjira', _skip_server=True)
+        issue = mock.Mock()
+        issue.record = dict(fields=dict(description=description))
+        self.assertEqual(description[:5], service.body(issue))
+
+    def test_body_length_limit(self):
+        description = "A very short issue body.  Fixes #828."
+        service = JiraService(self.config, 'general', 'myjira', _skip_server=True)
+        issue = mock.Mock()
+        issue.record = dict(fields=dict(description=description))
+        self.assertEqual(description, service.body(issue))
+
 
 class TestJiraIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
@@ -71,6 +103,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         arbitrary_extra = {
             'jira_version': 5,
             'annotations': ['an annotation'],
+            'body': 'issue body',
         }
 
         issue = self.service.get_issue_for_record(
@@ -94,7 +127,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: self.arbitrary_record['key'],
             issue.SUMMARY: self.arbitrary_summary,
-            issue.DESCRIPTION: None,
+            issue.DESCRIPTION: 'issue body',
             issue.ESTIMATE: self.arbitrary_estimation / 60 / 60
         }
 
