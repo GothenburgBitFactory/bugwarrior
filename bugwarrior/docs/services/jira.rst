@@ -130,10 +130,20 @@ makes sense when Kerberos is not being used (see above).
 This is useful in situations where HTTP-Basic auth is disabled or disallowed
 for some reason.
 
+Synchronizing Issue Content
++++++++++++++++++++++++++++
+
+By default, this service synchronizes the description of the Jira issue as ``jiradescription``.
+In some cases, this is not required.
+It also risks triggering bugs in Taskwarrior around unicode encodings.
+Set ``jira.body_length=0``` to disable synchronizing the description (or set it to a small value to limit size).
+
 When using API token
 ++++++++++++++++++++
 
 Some hosts only support API tokens to authenticate. If so, ``bugwarrior-pull`` will respond with ``Err: 401 Unauthorized``. Create a token here_. Handle the token like it is a password.
+
+Note that if given a correct API token and an incorrect username, Jira will authenticate successfully but not allow access to any issues.
 
 .. _here: https://id.atlassian.com/manage-profile/security/api-tokens
 
