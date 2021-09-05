@@ -42,7 +42,7 @@ Optional options include:
   ``True``.
 * ``static_fields``: A comma separated list of attributes that shouldn't be
   *updated* by bugwarrior.  Use for values that you want to tune manually.
-  Default: ``priority``.
+  Note that service-specific UDAs can be included here.  Default: ``priority``.
 
 In addition to the ``[general]`` section, sections may be named
 ``[flavor.myflavor]`` and may be selected using the ``--flavor`` option to
