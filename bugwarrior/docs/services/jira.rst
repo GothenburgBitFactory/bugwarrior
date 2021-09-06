@@ -136,7 +136,8 @@ Synchronizing Issue Content
 By default, this service synchronizes the description of the Jira issue as ``jiradescription``.
 In some cases, this is not required.
 It also risks triggering bugs in Taskwarrior around unicode encodings.
-Set ``jira.body_length=0``` to disable synchronizing the description (or set it to a small value to limit size).
+
+Set ``jira.body_length``` to limit the size of the description UDA or include ``jiradescription`` in ``static_fields`` in the ``[general]`` section to eliminate the UDA entirely.
 
 When using API token
 ++++++++++++++++++++
