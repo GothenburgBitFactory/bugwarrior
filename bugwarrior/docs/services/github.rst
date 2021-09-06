@@ -160,7 +160,7 @@ Comments are synchronized as annotations.
 To limit the amount of content synchronized into TaskWarrior (which can help to avoid issues with synchronization), use
 
  * ``annotation_comments=False`` (a global configuration) to disable synchronizing comments to annotations; and
- * either ``github.body_length=0``` to disable synchronizing the Github Body UDA (or set it to a small value to limit size) or include ``githubbody`` in ``static_fields`` in the ``[general]`` section to eliminate the UDA entirely.
+ * either ``github.body_length``` to limit the size of the Github Body UDA or include ``githubbody`` in ``static_fields`` in the ``[general]`` section to eliminate the UDA entirely.
 
 Provided UDA Fields
 -------------------
