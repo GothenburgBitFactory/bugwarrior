@@ -183,7 +183,6 @@ class AzureDevopsService(IssueService):
         return self.build_annotations(annotations, issue_obj.get_processed_url(url))
 
     def issues(self):
-        issues = {}
         issue_ids = self.get_query()
         for issue_id in issue_ids:
             issue = self.client.get_work_item(issue_id)
@@ -197,7 +196,6 @@ class AzureDevopsService(IssueService):
             }
             issue_obj.update_extra(extra)
             yield issue_obj
-        pass
 
     @classmethod
     def validate_config(cls, service_config, target):
@@ -205,3 +203,6 @@ class AzureDevopsService(IssueService):
             if option not in service_config:
                 die(f"[{target}] has no 'ado.{option}'")
         super(AzureDevopsService, cls).validate_config(service_config, target)
+
+    def get_owner(self, issue):
+        return issue['fields'].get("System.AssignedTo").get("uniqueName")
