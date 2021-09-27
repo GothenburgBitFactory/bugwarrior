@@ -353,6 +353,11 @@ class JiraService(IssueService):
 
         IssueService.validate_config(service_config, target)
 
+    def get_owner(self, issue):
+        # TODO
+        raise NotImplementedError(
+            "This service has not implemented support for 'only_if_assigned'.")
+
     def body(self, issue):
         body = issue.record.get('fields', {}).get('description')
 

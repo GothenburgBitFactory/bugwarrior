@@ -95,6 +95,10 @@ class TrelloService(IssueService, ServiceClient):
         check_key('token')
         check_key('api_key')
 
+    def get_owner(self, issue):
+        # Issue filtering is implemented as part of the api query.
+        pass
+
     @staticmethod
     def get_keyring_service(service_config):
         api_key = service_config.get('api_key')

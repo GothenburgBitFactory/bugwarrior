@@ -162,6 +162,11 @@ class KanboardService(IssueService):
 
         IssueService.validate_config(service_config, target)
 
+    def get_owner(self, issue):
+        # TODO
+        raise NotImplementedError(
+            "This service has not implemented support for 'only_if_assigned'.")
+
     @staticmethod
     def get_keyring_service(service_config):
         parsed = urlparse(service_config.get("url"))

@@ -1,4 +1,4 @@
-from builtins import object
+import abc
 import shutil
 import os.path
 import tempfile
@@ -12,12 +12,14 @@ from bugwarrior import config
 from bugwarrior.data import BugwarriorData
 
 
-class AbstractServiceTest(object):
+class AbstractServiceTest(abc.ABC):
     """ Ensures that certain test methods are implemented for each service. """
+    @abc.abstractmethod
     def test_to_taskwarrior(self):
         """ Test Service.to_taskwarrior(). """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def test_issues(self):
         """
         Test Service.issues().

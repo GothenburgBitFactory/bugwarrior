@@ -183,6 +183,15 @@ class GmailService(IssueService):
         issue_url = issue.get_processed_url(issue.extra['url'])
         return self.build_annotations([(sender, subj)], issue_url)
 
+    @classmethod
+    def validate_config(cls, service_config, target):
+        # There are no additional required fields.
+        super().validate_config(service_config, target)
+
+    def get_owner(self, issue):
+        raise NotImplementedError(
+            "This service has not implemented support for 'only_if_assigned'.")
+
     def issues(self):
         labels = self.get_labels()
         for thread in self.get_threads():

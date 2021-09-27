@@ -202,6 +202,11 @@ class ActiveCollab2Service(IssueService):
 
         super(ActiveCollab2Service, cls).validate_config(service_config, target)
 
+    def get_owner(self, issue):
+        # TODO
+        raise NotImplementedError(
+            "This service has not implemented support for 'only_if_assigned'.")
+
     def issues(self):
         # Loop through each project
         start = time.time()
