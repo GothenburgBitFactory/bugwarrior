@@ -229,6 +229,15 @@ class PhabricatorService(IssueService):
             }
             yield self.get_issue_for_record(diff, extra)
 
+    @classmethod
+    def validate_config(cls, service_config, target):
+        # There are no additional required fields.
+        super().validate_config(service_config, target)
+
+    def get_owner(self, issue):
+        # Issue filtering is implemented as part of issue aggregation.
+        pass
+
     def issues(self):
         for issue in self.tasks():
             yield issue

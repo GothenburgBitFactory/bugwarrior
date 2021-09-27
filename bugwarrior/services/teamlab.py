@@ -136,6 +136,11 @@ class TeamLabService(IssueService):
 
         IssueService.validate_config(service_config, target)
 
+    def get_owner(self, issue):
+        # TODO
+        raise NotImplementedError(
+            "This service has not implemented support for 'only_if_assigned'.")
+
     def issues(self):
         issues = self.client.get_task_list()
         log.debug(" Remote has %i total issues.", len(issues))

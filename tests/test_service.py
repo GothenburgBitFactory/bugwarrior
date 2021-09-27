@@ -8,6 +8,32 @@ going to fill up your floppy disk taskwarrior backup. Actually it's not
 that long.""".replace('\n', ' ')
 
 
+class DumbIssue(services.Issue):
+    """
+    Implement the required methods but they shouldn't be called.
+    """
+    def get_default_description(self):
+        raise NotImplementedError
+
+    def to_taskwarrior(self):
+        raise NotImplementedError
+
+
+class DumbIssueService(services.IssueService):
+    """
+    Implement the required methods but they shouldn't be called.
+    """
+    def get_owner(self, issue):
+        raise NotImplementedError
+
+    def issues(self):
+        raise NotImplementedError
+
+    @classmethod
+    def validate_config(cls, service_config, target):
+        raise NotImplementedError
+
+
 class TestIssueService(unittest.TestCase):
     def setUp(self):
         super(TestIssueService, self).setUp()
@@ -15,7 +41,7 @@ class TestIssueService(unittest.TestCase):
         self.config.add_section('general')
 
     def test_build_annotations_default(self):
-        service = services.IssueService(self.config, 'general', 'test')
+        service = DumbIssueService(self.config, 'general', 'test')
 
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com')
@@ -25,7 +51,7 @@ class TestIssueService(unittest.TestCase):
 
     def test_build_annotations_limited(self):
         self.config.set('general', 'annotation_length', '20')
-        service = services.IssueService(self.config, 'general', 'test')
+        service = DumbIssueService(self.config, 'general', 'test')
 
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com')
@@ -34,7 +60,7 @@ class TestIssueService(unittest.TestCase):
 
     def test_build_annotations_limitless(self):
         self.config.set('general', 'annotation_length', '')
-        service = services.IssueService(self.config, 'general', 'test')
+        service = DumbIssueService(self.config, 'general', 'test')
 
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com')
@@ -49,8 +75,8 @@ class TestIssue(unittest.TestCase):
         self.config.add_section('general')
 
     def makeIssue(self):
-        service = services.IssueService(self.config, 'general', 'test')
-        service.ISSUE_CLASS = services.Issue
+        service = DumbIssueService(self.config, 'general', 'test')
+        service.ISSUE_CLASS = DumbIssue
         return service.get_issue_for_record(None)
 
     def test_build_default_description_default(self):

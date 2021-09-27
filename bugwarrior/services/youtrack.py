@@ -182,6 +182,11 @@ class YoutrackService(IssueService, ServiceClient):
 
         IssueService.validate_config(service_config, target)
 
+    def get_owner(self, issue):
+        # TODO
+        raise NotImplementedError(
+            "This service has not implemented support for 'only_if_assigned'.")
+
     def issues(self):
         params = {'filter': self.query, 'max': self.query_limit}
         resp = self.session.get(self.rest_url + '/issue', params=params)

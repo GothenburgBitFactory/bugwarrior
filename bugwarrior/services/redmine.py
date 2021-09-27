@@ -267,6 +267,10 @@ class RedMineService(IssueService):
 
         IssueService.validate_config(service_config, target)
 
+    def get_owner(self, issue):
+        # Issue filtering is implemented as part of the api query.
+        pass
+
     def issues(self):
         only_if_assigned = self.config.get('only_if_assigned', False)
         issues = self.client.find_issues(self.issue_limit, only_if_assigned)

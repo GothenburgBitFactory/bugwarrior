@@ -151,8 +151,19 @@ class TeamworkService(IssueService):
                     text = comment["body"]
                     comment_list.append((author, text))
                 return self.build_annotations(comment_list, None)
-        return [] 
+        return []
 
+    @classmethod
+    def validate_config(cls, service_config, target):
+        for field in ['token', 'hosts']:
+            if field not in service_config:
+                die(f"[{target}] has no 'teamwork_projects.{field}'")
+        super().validate_config(service_config, target)
+
+    def get_owner(self, issue):
+        # TODO
+        raise NotImplementedError(
+            "This service has not implemented support for 'only_if_assigned'.")
 
     def issues(self):
         response = self.client.call_api("GET", "/tasks.json")#, data= { "responsible-party-ids": self.user_id })

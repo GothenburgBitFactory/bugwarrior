@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from builtins import str
-from builtins import object
 
+import abc
 import copy
 import multiprocessing
 import time
@@ -41,7 +41,7 @@ def get_service(service_name):
     return epoint.load()
 
 
-class IssueService(object):
+class IssueService(abc.ABC):
     """ Abstract base class for each service """
     # Which class should this service instantiate for holding these issues?
     ISSUE_CLASS = None
@@ -163,6 +163,7 @@ class IssueService(object):
         return final
 
     @classmethod
+    @abc.abstractmethod
     def validate_config(cls, service_config, target):
         """ Validate generic options for a particular target """
         if service_config.has_option(target, 'only_if_assigned'):
@@ -198,6 +199,7 @@ class IssueService(object):
 
         return True
 
+    @abc.abstractmethod
     def get_owner(self, issue):
         """ Override this for filtering on tickets """
         raise NotImplementedError()
@@ -206,6 +208,7 @@ class IssueService(object):
         """ Override this for filtering on tickets """
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def issues(self):
         """ Returns a list of dicts representing issues from a remote service.
 
@@ -241,8 +244,7 @@ class IssueService(object):
         raise NotImplementedError
 
 
-@six.python_2_unicode_compatible
-class Issue(object):
+class Issue(abc.ABC):
     # Set to a dictionary mapping UDA short names with type and long name.
     #
     # Example::
@@ -275,10 +277,12 @@ class Issue(object):
     def update_extra(self, extra):
         self._extra.update(extra)
 
+    @abc.abstractmethod
     def to_taskwarrior(self):
         """ Transform a foreign record into a taskwarrior dictionary."""
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def get_default_description(self):
         """ Return the old-style verbose description from bugwarrior.
 
@@ -467,7 +471,7 @@ class Issue(object):
         return '<%s>' % str(self)
 
 
-class ServiceClient(object):
+class ServiceClient:
     """ Abstract class responsible for making requests to service API's. """
     @staticmethod
     def json_response(response):

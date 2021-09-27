@@ -219,3 +219,7 @@ class AzureDevopsService(IssueService):
             if option not in service_config:
                 die(f"[{target}] has no 'ado.{option}'")
         super(AzureDevopsService, cls).validate_config(service_config, target)
+
+    def get_owner(self, issue):
+        # Issue filtering is implemented as part of issue aggregation.
+        pass

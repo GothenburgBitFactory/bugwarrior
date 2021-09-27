@@ -182,6 +182,10 @@ class PivotalTrackerService(IssueService, ServiceClient):
 
         super(PivotalTrackerService, cls).validate_config(service_config, target)
 
+    def get_owner(self, issue):
+        # Issue filtering is implemented as part of the api query.
+        pass
+
     def get_service_metadata(self):
         return {
             'import_labels_as_tags': self.import_labels_as_tags,

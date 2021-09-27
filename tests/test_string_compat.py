@@ -1,7 +1,8 @@
 import unittest
 import six
 from unittest.mock import MagicMock
-from bugwarrior.services import Issue
+
+from .test_service import DumbIssue
 
 
 class StringCompatTest(unittest.TestCase):
@@ -15,7 +16,7 @@ implementation of __str__ and __repr__ methods"""
                   'default_priority': 'prio',
                   'templates': 'templates',
                   'add_tags': []}
-        issue = Issue(record, origin)
+        issue = DumbIssue(record, origin)
         issue.to_taskwarrior = MagicMock(return_value=record)
         issue.get_default_description = MagicMock(return_value='description')
         self.assertIsInstance(str(issue), six.string_types)

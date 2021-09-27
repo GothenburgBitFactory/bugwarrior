@@ -1,6 +1,5 @@
-from bugwarrior.services import Issue
-
 from .base import ServiceTest
+from .test_service import DumbIssue
 
 
 class TestTemplates(ServiceTest):
@@ -25,7 +24,7 @@ class TestTemplates(ServiceTest):
             'add_tags': add_tags if add_tags else [],
         }
 
-        issue = Issue({}, origin)
+        issue = DumbIssue({}, origin)
         issue.to_taskwarrior = lambda: (
             self.arbitrary_issue if description is None else description
         )

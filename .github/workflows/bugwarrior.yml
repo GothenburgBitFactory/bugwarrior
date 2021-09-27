@@ -45,7 +45,6 @@ jobs:
             pip install phabricator
             pip install codecov
             pip install pytest-cov
-            pip install nose
           run: |
             source $HOME/.cargo/env
             pip3 install .[jira,megaplan,activecollab,bts,bugzilla,trac,gmail,kanboard]
