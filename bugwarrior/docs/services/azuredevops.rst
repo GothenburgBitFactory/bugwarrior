@@ -8,17 +8,18 @@ the ``azuredevops`` service name.
 Example Service
 ---------------
 
-Here's an example of a jira project::
+Here's an example of a azure devops project::
 
     [my_issue_tracker]
     service = azuredevops
     ado.PAT = 1234abcd5678efgh
-    ado.project = testproject
+    ado.project = testproject1
     ado.organization = testorganization
 
 .. note::
-
+ 
    If you look at a work item in the browser, the url should be something like https://dev.azure.com/testorganziation/testproject/_workitems/edit/12345/
+
 
 
 The above example is the minimum required to import issues from
@@ -26,26 +27,33 @@ Azure DevOps.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
+The PAT (Personal Access Token) can be generated for your project by following https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
+
 Service Features
 ----------------
 
 The following default configuration is used::
 
     ado.host = dev.azure.com
-    ado.wiql_filter = SELECT [System.Id] FROM workitems WHERE [System.AssignedTo] = @me
+    ado.wiql_filter = SELECT [System.Id] FROM workitems
 
 
 Specify the Query to Use for Gathering Issues
 +++++++++++++++++++++++++++++++++++++++++++++
 
-By default, the Azure DevOps plugin will include any issues that are assigned to you, but you can fine-tune the query used
-for gathering issues by setting the ``ado.wiql_filter`` parameter. This parameter will not replace the default filter, but will append
-your query to the end of the filter with an ``AND`` keyword. 
-
-For example, to select issues only in an active state 
+By default, the Azure DevOps plugin will include all issues in the project, but you can fine-tune the query used
+for gathering issues by setting the ``ado.wiql_filter`` parameter. 
+Please note there is a limit imposed by the Azure DevOps API on the number of workitems you can pull at the same time (20000). If your query exceeds this limitation, the application will produce an error. 
+A good default would be to only pull ado workitem assigned to yourself. Do that with this query:
 configuration option::
 
-    ado.wiql_filter = [System.State] = 'Active'
+    ado.wiql_filter = [System.AssignedTo] = @me
+
+
+To select issues only in an active state 
+configuration option::
+
+    ado.wiql_filter = [System.AssignedTo] = @me AND [System.State] = 'Active'
 
 Provided UDA Fields
 -------------------
@@ -55,21 +63,21 @@ Provided UDA Fields
 +=====================+================================+=====================+
 | ``adodescription``  | Description                    | Text (string)       |
 +---------------------+--------------------------------+---------------------+
-| ``adoid``           | Issue ID                       | Decimal (numeric)   |
+| ``adoid``           | Issue ID                       | Numeric             |
 +---------------------+--------------------------------+---------------------+
 | ``adotitle``        | Title                          | Text (string)       |
 +---------------------+--------------------------------+---------------------+
 | ``adourl``          | URL                            | Text (string)       |
 +---------------------+--------------------------------+---------------------+
-| ``adoremainingwork``| Remaining Work                 | Decimal (numeric)   |
+| ``adoremainingwork``| Remaining Work                 | Numeric             |
 +---------------------+--------------------------------+---------------------+
 | ``adostate``        | State                          | Text (string)       |
 +---------------------+--------------------------------+---------------------+
 | ``adotype``         | Issue Type                     | Text (string)       |
 +---------------------+--------------------------------+---------------------+
-| ``adoactivity``     | Fix Version                    | Text (String)       |
+| ``adoactivity``     | Fix Version                    | Text (string)       |
 +---------------------+--------------------------------+---------------------+
-| ``adopriority``     | Priority                       | Decimal (numeric)   |
+| ``adopriority``     | Priority                       | Numeric             |
 +---------------------+--------------------------------+---------------------+
 | ``adoparent``       | Parent Task                    | Text (string)       |
 +---------------------+--------------------------------+---------------------+

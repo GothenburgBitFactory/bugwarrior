@@ -1,11 +1,9 @@
-### From Other Work
 from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue, ServiceClient
 from urllib.parse import quote
 import base64
 import requests
 import re
-import string
 
 
 def striphtml(data):
@@ -33,18 +31,16 @@ class AzureDevopsClient(ServiceClient):
         self.project = quote(project)
         self.host = host
         self.base_url = f"https://{host}/{org}/{project}/_apis/wit"
-        self.headers = {
+        self.session = requests.Session()
+        self.session.headers = {
             "authorization": f"Basic {self.token}",
             "accept": "application/json",
             "content-type": "application/json",
         }
-        self.session = requests.Session()
         self.params = {"api-version": "6.0-preview.2"}
-        for k, v in self.headers.items():
-            self.session.headers[k] = v
 
     def get_work_item(self, workitemid):
-        queryset = dict(self.params)
+        queryset = self.params.copy()
         queryset.update({"$expand": "all"})
         resp = self.session.get(f"{self.base_url}/workitems/{workitemid}", params=queryset)
         return resp.json()
@@ -52,6 +48,8 @@ class AzureDevopsClient(ServiceClient):
     def get_work_items_from_query(self, query):
         data = str({"query": query})
         resp = self.session.post(f"{self.base_url}/wiql", data=data, params=self.params)
+        if resp.status_code == 400 and resp.json()['typeKey'] == "WorkItemTrackingQueryResultSizeLimitExceededException":
+            die("Too many azure devops results in query, please narrow the search by updating the ado.wiql_filter")
         return [workitem['id'] for workitem in resp.json()["workItems"]]
 
     def get_workitem_comments(self, workitem):
@@ -65,7 +63,7 @@ class AzureDevopsClient(ServiceClient):
             parent_item = self.get_work_item(parent_id)
             return parent_item["fields"]["System.Title"]
         else:
-            return
+            return None
 
 class AzureDevopsIssue(Issue):
     TITLE = "adotitle"
@@ -101,8 +99,10 @@ class AzureDevopsIssue(Issue):
     PRIORITY_MAP = {"1": "H", "2": "M", "3": "L", "4": "L"}
 
     def get_priority(self):
-        # Map to Priority Maps
-        pass
+        value = self.record.get("fields").get(
+                "Microsoft.VSTS.Common.Priority", self.origin['default_priority']
+            )
+        return self.PRIORITY_MAP.get(value, self.origin['default_priority'])
 
 
     def to_taskwarrior(self):
@@ -126,7 +126,7 @@ class AzureDevopsIssue(Issue):
             self.STATE: self.record["fields"]["System.State"],
             self.ACTIVITY: self.record.get("fields").get("System.Activity", ""),
             self.PRIORITY: self.record.get("fields").get(
-                "Microsoft.VSTS.Common.Priority", 2
+                "Microsoft.VSTS.Common.Priority", self.origin['default_priority']
             ),
             self.REMAINING_WORK: self.record.get("fields").get(
                 "Microsoft.VSTS.Scheduling.RemainingWork"
@@ -160,16 +160,14 @@ class AzureDevopsService(IssueService):
         self.query_filter = self.config.get("wiql_filter")
 
     def get_query(self):
-        default_query = (
-            "SELECT [System.Id] FROM workitems WHERE [System.AssignedTo] = @me"
-        )
+        default_query = "SELECT [System.Id] FROM workitems"
         if self.query_filter:
-            default_query += f"AND {self.query_filter}"
+            default_query += f"WHERE {self.query_filter}"
         list_of_items = self.client.get_work_items_from_query(default_query)
         return list_of_items
 
     def annotations(self, issue, issue_obj):
-        # Build Annotations based on comments and description
+        # Build Annotations based on comments by commenter and comment text
         url = issue["_links"]["html"]["href"]
         annotations = []
         if self.annotation_comments:
@@ -206,4 +204,4 @@ class AzureDevopsService(IssueService):
         for option in ("PAT", "project", "organization"):
             if option not in service_config:
                 die(f"[{target}] has no 'ado.{option}'")
-        IssueService.validate_config(service_config, target)
+        super(AzureDevopsService, cls).validate_config(service_config, target)

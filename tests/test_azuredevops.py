@@ -1,5 +1,4 @@
 import configparser
-import responses
 import datetime
 from unittest import mock
 
@@ -8,11 +7,9 @@ from dateutil.tz.tz import tzutc
 from bugwarrior.config import ServiceConfig
 from bugwarrior.services.azuredevops import (
     AzureDevopsService,
-    AzureDevopsClient,
     striphtml,
 )
 
-from builtins import next
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
 
@@ -113,25 +110,6 @@ TEST_ISSUE = {
     "url": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1",
 }
 
-EXPECTED_OUTPUT = {
-    "project": None,
-    "priority": None,  # TODO Set priority Map
-    "annotations": [],
-    "entry": datetime.datetime(2020, 7, 8, 17, 31, 46, 493000, tzinfo=tzutc()),
-    "end": datetime.datetime(2020, 7, 8, 19, 55, 46, 113000, tzinfo=tzutc()),
-    "adotitle": "Example Title",
-    "adodescription": " This Description has some html in it ",
-    "adoid": 1,
-    "adourl": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",
-    "adotype": "Impediment",
-    "adostate": "Closed",
-    "adoactivity": "",
-    "adopriority": 2,
-    "adoremainingwork": None,
-    "adoparent": None,
-    "adonamespace": "test_organization\\test_project",
-}
-
 
 class TestAzureDevopsServiceConfig(ConfigTest):
     def setUp(self):
@@ -172,7 +150,6 @@ class TestAzureDevopsServiceConfig(ConfigTest):
         AzureDevopsService.validate_config(self.service_config, "test_ado")
         die.assert_called_with("[test_ado] has no 'ado.PAT'")
 
-
 class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         "ado.organization": "test_organization",
@@ -194,7 +171,6 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
 
     def test_to_taskwarrior(self):
         record = TEST_ISSUE
-
         issue = self.service.get_issue_for_record(record)
         extra = {
             "project": None,
@@ -202,12 +178,49 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "namespace": "test_organization\\test_project",
         }
         issue.update_extra(extra)
-        expected_output = EXPECTED_OUTPUT
+
+        expected = {
+            issue.TITLE: TEST_ISSUE["fields"]["System.Title"],
+            issue.DESCRIPTION: striphtml(TEST_ISSUE["fields"]["System.Description"]),
+            issue.ID: TEST_ISSUE["id"],
+            issue.URL: TEST_ISSUE["_links"]["html"]["href"],
+            issue.TYPE: TEST_ISSUE["fields"]["System.WorkItemType"],
+            issue.STATE: TEST_ISSUE["fields"]["System.State"],
+            issue.PRIORITY: TEST_ISSUE["fields"]["Microsoft.VSTS.Common.Priority"],
+            "priority": "M",
+            "project": None,
+            "annotations": [],
+            "adonamespace": "test_organization\\test_project",
+            "entry": datetime.datetime(2020, 7, 8, 17, 31, 46, 493000, tzinfo=tzutc()),
+            "end": datetime.datetime(2020, 7, 8, 19, 55, 46, 113000, tzinfo=tzutc()),
+            "adoactivity": "",
+            "adoremainingwork": None,
+            "adoparent": None,
+        }
         actual_output = issue.to_taskwarrior()
-        self.assertEqual(actual_output, expected_output)
+        self.assertEqual(actual_output, expected)
 
 
     def test_issues(self):
+        expected = {
+            "project": None,
+            "priority": "M",
+            "annotations": [],
+            "entry": datetime.datetime(2020, 7, 8, 17, 31, 46, 493000, tzinfo=tzutc()),
+            "end": datetime.datetime(2020, 7, 8, 19, 55, 46, 113000, tzinfo=tzutc()),
+            "adotitle": "Example Title",
+            "adodescription": " This Description has some html in it ",
+            "adoid": 1,
+            "adourl": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",
+            "adotype": "Impediment",
+            "adostate": "Closed",
+            "adoactivity": "",
+            "adopriority": 2,
+            "adoremainingwork": None,
+            "adoparent": None,
+            "adonamespace": "test_organization\\test_project",
+            "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',
+            "tags": []
+        }
         issue = next(self.service.issues())
-        my_var = issue.to_taskwarrior()
-        self.assertEqual(my_var, EXPECTED_OUTPUT)
+        self.assertEqual(issue.get_taskwarrior_record(), expected)
