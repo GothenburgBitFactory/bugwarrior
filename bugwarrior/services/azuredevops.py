@@ -161,8 +161,24 @@ class AzureDevopsService(IssueService):
 
     def get_query(self):
         default_query = "SELECT [System.Id] FROM workitems"
+
+        # Test for Clauses, add WHERE if any exist
+        if any([self.query_filter, self.config.get("only_if_assigned"), self.config.get("also_unassigned")]):
+            default_query += " WHERE "
+        
+        # Adding The User Added Query
         if self.query_filter:
-            default_query += f"WHERE {self.query_filter}"
+            default_query += self.query_filter
+
+        # Adding logic for common configuration items
+        if self.config.get("only_if_assigned"):
+            if self.query_filter:
+                    default_query += " AND "
+            if self.config.get("also_unassigned"):
+                default_query += "([System.AssignedTo] = @me OR [System.AssignedTo] == '')"
+            else:
+                default_query += "[System.AssignedTo] = @me "
+        
         list_of_items = self.client.get_work_items_from_query(default_query)
         return list_of_items
 
@@ -203,6 +219,3 @@ class AzureDevopsService(IssueService):
             if option not in service_config:
                 die(f"[{target}] has no 'ado.{option}'")
         super(AzureDevopsService, cls).validate_config(service_config, target)
-
-    def get_owner(self, issue):
-        return issue['fields'].get("System.AssignedTo").get("uniqueName")
