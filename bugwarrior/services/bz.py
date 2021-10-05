@@ -10,7 +10,6 @@ import six
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.config import asbool, aslist
 from bugwarrior.services import IssueService, Issue
 
 log = logging.getLogger(__name__)
@@ -68,7 +67,7 @@ class BugzillaIssue(Issue):
         BUG_ID: {
             'type': 'numeric',
             'label': 'Bugzilla Bug ID',
-        },
+       },
         NEEDINFO: {
             'type': 'date',
             'label': 'Bugzilla Needinfo',
@@ -126,23 +125,8 @@ class BugzillaIssue(Issue):
         )
 
 
-_open_statuses = [
-    'NEW',
-    'ASSIGNED',
-    'NEEDINFO',
-    'ON_DEV',
-    'MODIFIED',
-    'POST',
-    'REOPENED',
-    'ON_QA',
-    'FAILS_QA',
-    'PASSES_QA',
-]
-
-
 class BugzillaService(IssueService):
     ISSUE_CLASS = BugzillaIssue
-    CONFIG_PREFIX = 'bugzilla'
     CONFIG_SCHEMA = BugzillaConfig
 
     COLUMN_LIST = [
@@ -159,24 +143,14 @@ class BugzillaService(IssueService):
 
     def __init__(self, *args, **kw):
         super(BugzillaService, self).__init__(*args, **kw)
-        self.base_uri = self.config.get('base_uri')
-        self.username = self.config.get('username')
-        self.ignore_cc = self.config.get('ignore_cc', default=False,
-                                         to_type=lambda x: x == "True")
-        self.query_url = self.config.get('query_url', default=None)
-        self.include_needinfos = self.config.get(
-            'include_needinfos', False, to_type=lambda x: x == "True")
-        self.open_statuses = self.config.get('open_statuses', _open_statuses, to_type=aslist)
-        log.debug(" filtering on statuses: %r", self.open_statuses)
-
-        self.advanced = asbool(self.config.get('advanced', 'no'))
+        log.debug(" filtering on statuses: %r", self.config.open_statuses)
 
         force_rest_kwargs = {}
-        if asbool(self.config.get("force_rest", "no")):
+        if self.config.force_rest:
             force_rest_kwargs = {"force_rest": True}
 
-        url = 'https://%s' % self.base_uri
-        if self.config.get('api_key'):
+        url = 'https://%s' % self.config.base_uri
+        if self.config.api_key:
             api_key = self.get_password('api_key')
             try:
                 self.bz = bugzilla.Bugzilla(url=url, api_key=api_key, **force_rest_kwargs)
@@ -184,21 +158,19 @@ class BugzillaService(IssueService):
                 raise Exception("Bugzilla API keys require python-bugzilla>=2.1.0")
         else:
             self.bz = bugzilla.Bugzilla(url=url, **force_rest_kwargs)
-            if self.config.get('password'):
-                password = self.get_password('password', self.username)
-                self.bz.login(self.username, password)
+            if self.config.password:
+                password = self.get_password('password', self.config.username)
+                self.bz.login(self.config.username, password)
 
     @staticmethod
-    def get_keyring_service(service_config):
-        username = service_config.get('username')
-        base_uri = service_config.get('base_uri')
-        return "bugzilla://%s@%s" % (username, base_uri)
+    def get_keyring_service(config):
+        return f"bugzilla://{config.username}@{config.base_uri}"
 
     def get_owner(self, issue):
         return issue['assigned_to']
 
     def annotations(self, tag, issue, issue_obj):
-        base_url = "https://%s/show_bug.cgi?id=" % self.base_uri
+        base_url = "https://%s/show_bug.cgi?id=" % self.config.base_uri
         long_url = base_url + six.text_type(issue['id'])
         url = issue_obj.get_processed_url(long_url)
 
@@ -236,16 +208,16 @@ class BugzillaService(IssueService):
             )
 
     def issues(self):
-        email = self.username
+        email = self.config.username
         # TODO -- doing something with blockedby would be nice.
 
-        if self.query_url:
-            query = self.bz.url_to_query(self.query_url)
+        if self.config.query_url:
+            query = self.bz.url_to_query(self.config.query_url)
             query['column_list'] = self.COLUMN_LIST
         else:
             query = dict(
                 column_list=self.COLUMN_LIST,
-                bug_status=self.open_statuses,
+                bug_status=self.config.open_statuses,
                 email1=email,
                 emailreporter1=1,
                 emailassigned_to1=1,
@@ -253,17 +225,17 @@ class BugzillaService(IssueService):
                 emailtype1="substring",
             )
 
-            if not self.ignore_cc:
+            if not self.config.ignore_cc:
                 query['emailcc1'] = 1
 
-        if self.advanced:
+        if self.config.advanced:
             # Required for new bugzilla
             # https://bugzilla.redhat.com/show_bug.cgi?id=825370
             query['query_format'] = 'advanced'
 
         bugs = self.bz.query(query)
 
-        if self.include_needinfos:
+        if self.config.include_needinfos:
             needinfos = self.bz.query(dict(
                 column_list=self.COLUMN_LIST,
                 quicksearch='flag:needinfo?%s' % email,
@@ -287,7 +259,7 @@ class BugzillaService(IssueService):
         log.debug(" Found %i total.", len(issues))
 
         # Build a url for each issue
-        base_url = "https://%s/show_bug.cgi?id=" % (self.base_uri)
+        base_url = "https://%s/show_bug.cgi?id=" % self.config.base_uri
         for tag, issue in issues:
             issue_obj = self.get_issue_for_record(issue)
             extra = {
@@ -295,10 +267,11 @@ class BugzillaService(IssueService):
                 'annotations': self.annotations(tag, issue, issue_obj),
             }
 
+            username = self.config.username
             needinfos = [f for f in issue['flags'] if (
                 f['name'] == 'needinfo' and
                 f['status'] == '?' and
-                f.get('requestee', self.username) == self.username
+                f.get('requestee', username) == username
             )]
             if needinfos:
                 last_mod = needinfos[0]['modification_date']

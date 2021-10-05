@@ -4,7 +4,6 @@ standard_library.install_aliases()
 from builtins import zip
 from builtins import object
 
-from six.moves.configparser import NoOptionError, NoSectionError
 import json
 import os
 import re
@@ -17,7 +16,6 @@ import six
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
-from bugwarrior.config.parse import asbool, aslist, get_taskrc_path
 from bugwarrior.notifications import send_notification
 
 import logging
@@ -301,29 +299,20 @@ def merge_left(field, local_task, remote_issue, hamming=False):
             new_count, field, len(local_task[field]),))
 
 
-def run_hooks(conf, name):
-    if conf.has_option('hooks', name):
-        pre_import = aslist(conf.get('hooks', name))
-        if pre_import is not None:
-            for hook in pre_import:
-                exit_code = subprocess.call(hook, shell=True)
-                if exit_code != 0:
-                    msg = 'Non-zero exit code %d on hook %s' % (
-                        exit_code, hook
-                    )
-                    log.error(msg)
-                    raise RuntimeError(msg)
+def run_hooks(pre_import):
+    for hook in pre_import:
+        exit_code = subprocess.call(hook, shell=True)
+        if exit_code != 0:
+            msg = 'Non-zero exit code %d on hook %s' % exit_code, hook
+            log.error(msg)
+            raise RuntimeError(msg)
 
 
 def synchronize(issue_generator, conf, main_section, dry_run=False):
-    def _bool_option(section, option, default):
-        try:
-            return asbool(conf.get(section, option))
-        except (NoSectionError, NoOptionError):
-            return default
+    main_config = conf[main_section]
 
-    targets = aslist(conf.get(main_section, 'targets'))
-    services = set([conf.get(target, 'service') for target in targets])
+    targets = main_config.targets.copy()
+    services = set([conf[target].service for target in targets])
     key_list = build_key_list(services)
     uda_list = build_uda_config_overrides(services)
 
@@ -334,28 +323,16 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             'add to your taskrc file.'
         )
 
-    static_fields = ['priority']
-    if conf.has_option(main_section, 'static_fields'):
-        static_fields = aslist(conf.get(main_section, 'static_fields'))
-
     # Before running CRUD operations, call the pre_import hook(s).
-    run_hooks(conf, 'pre_import')
+    run_hooks(conf['hooks'].pre_import)
 
-    notify = _bool_option('notifications', 'notifications', False) and not dry_run
+    notify = conf['notifications'].notifications and not dry_run
 
     tw = TaskWarriorShellout(
-        config_filename=get_taskrc_path(conf, main_section),
+        config_filename=main_config.taskrc,
         config_overrides=uda_list,
         marshal=True,
     )
-
-    merge_annotations = _bool_option(main_section, 'merge_annotations', True)
-    merge_tags = _bool_option(main_section, 'merge_tags', True)
-    replace_tags = _bool_option(main_section, 'replace_tags', False)
-
-    static_tags = []
-    if conf.has_option(main_section, 'static_tags'):
-        static_tags = aslist(conf.get(main_section, 'static_tags'))
 
     issue_updates = {
         'new': [],
@@ -411,17 +388,17 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
             # Drop static fields from the upstream issue.  We don't want to
             # overwrite local changes to fields we declare static.
-            for field in static_fields:
+            for field in main_config.static_fields:
                 if field in issue_dict:
                     del issue_dict[field]
 
             # Merge annotations & tags from online into our task object
-            if merge_annotations:
+            if main_config.merge_annotations:
                 merge_left('annotations', task, issue_dict, hamming=True)
 
-            if merge_tags:
-                if replace_tags:
-                    replace_left('tags', task, issue_dict, static_tags)
+            if main_config.merge_tags:
+                if main_config.replace_tags:
+                    replace_left('tags', task, issue_dict, main_config.static_tags)
                 else:
                     merge_left('tags', task, issue_dict)
 
@@ -449,7 +426,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         if dry_run:
             continue
         if notify:
-            send_notification(issue, 'Created', conf)
+            send_notification(issue, 'Created', conf['notifications'])
 
         try:
             new_task = tw.task_add(**issue)
@@ -491,7 +468,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     succeeded_service_task_uuids = get_managed_task_uuids(
         tw,
         build_key_list(
-            set([conf.get(target, 'service') for target in targets])))
+            set([conf[target].service for target in targets])))
     issue_updates['closed'] = succeeded_service_task_uuids - seen_uuids
     log.info("Closing %i tasks", len(issue_updates['closed']))
     for issue in issue_updates['closed']:
@@ -506,7 +483,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             continue
 
         if notify:
-            send_notification(task_info, 'Completed', conf)
+            send_notification(task_info, 'Completed', conf['notifications'])
 
         try:
             tw.task_done(uuid=issue)
@@ -515,8 +492,10 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
     # Send notifications
     if notify:
-        only_on_new_tasks = _bool_option('notifications', 'only_on_new_tasks', False)
-        if not only_on_new_tasks or len(issue_updates['new']) + len(issue_updates['changed']) + len(issue_updates['closed']) > 0:
+        updates = (len(issue_updates['new']) +
+                   len(issue_updates['changed']) +
+                   len(issue_updates['closed']))
+        if not main_config.notifications.only_on_new_tasks or updates > 0:
             send_notification(
                 dict(
                     description="New: %d, Changed: %d, Completed: %d" % (
@@ -526,7 +505,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                     )
                 ),
                 'bw_finished',
-                conf,
+                conf['notificatons'],
             )
 
 
@@ -540,8 +519,8 @@ def build_key_list(targets):
 
 
 def get_defined_udas_as_strings(conf, main_section):
-    targets = aslist(conf.get(main_section, 'targets'))
-    services = set([conf.get(target, 'service') for target in targets])
+    targets = conf[main_section].targets
+    services = set([conf[target].service for target in targets])
     uda_list = build_uda_config_overrides(services)
 
     for uda in convert_override_args_to_taskrc_settings(uda_list):

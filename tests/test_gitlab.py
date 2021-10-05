@@ -1,10 +1,10 @@
 import datetime
+import unittest
 
 import pytz
 import responses
 
 from bugwarrior.config.load import BugwarriorConfigParser
-from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.gitlab import GitlabService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -16,76 +16,80 @@ class TestGitlabService(ConfigTest):
         super(TestGitlabService, self).setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
+        self.config.set('general', 'targets', 'myservice')
         self.config.add_section('myservice')
+        self.config.set('myservice', 'service', 'gitlab')
         self.config.set('myservice', 'gitlab.login', 'foobar')
         self.config.set('myservice', 'gitlab.token', 'XXXXXX')
-        self.service_config = ServiceConfig(
-            GitlabService.CONFIG_PREFIX, self.config, 'myservice')
+        self.config.set('myservice', 'gitlab.host', 'gitlab.com')
+
+    @property
+    def service(self):
+        conf = self.validate()
+        return GitlabService(conf['myservice'], conf['general'], 'myservice')
 
     def test_get_keyring_service_default_host(self):
+        conf = self.validate()['myservice']
         self.assertEqual(
-            GitlabService.get_keyring_service(self.service_config),
+            GitlabService.get_keyring_service(conf),
             'gitlab://foobar@gitlab.com')
 
     def test_get_keyring_service_custom_host(self):
         self.config.set('myservice', 'gitlab.host', 'gitlab.example.com')
+        conf = self.validate()['myservice']
         self.assertEqual(
-            GitlabService.get_keyring_service(self.service_config),
+            GitlabService.get_keyring_service(conf),
             'gitlab://foobar@gitlab.example.com')
 
     def test_add_default_namespace_to_included_repos(self):
-        self.config.set('myservice', 'gitlab.include_repos', 'baz, banana/tree')
-        service = GitlabService(self.config, 'general', 'myservice')
-        self.assertEqual(service.include_repos, ['foobar/baz', 'banana/tree'])
+        self.config.set(
+            'myservice', 'gitlab.include_repos', 'baz, banana/tree')
+        self.assertEqual(self.service.config.include_repos,
+                         ['foobar/baz', 'banana/tree'])
 
     def test_add_default_namespace_to_excluded_repos(self):
-        self.config.set('myservice', 'gitlab.exclude_repos', 'baz, banana/tree')
-        service = GitlabService(self.config, 'general', 'myservice')
-        self.assertEqual(service.exclude_repos, ['foobar/baz', 'banana/tree'])
+        self.config.set(
+            'myservice', 'gitlab.exclude_repos', 'baz, banana/tree')
+        self.assertEqual(self.service.config.exclude_repos,
+                         ['foobar/baz', 'banana/tree'])
 
     def test_filter_repos_default(self):
-        service = GitlabService(self.config, 'general', 'myservice')
-        repo = {'path_with_namespace': 'foobar/baz'}
-        self.assertTrue(service.filter_repos(repo))
+        repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
+        self.assertTrue(self.service.filter_repos(repo))
 
     def test_filter_repos_exclude(self):
         self.config.set('myservice', 'gitlab.exclude_repos', 'foobar/baz')
-        service = GitlabService(self.config, 'general', 'myservice')
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
-        self.assertFalse(service.filter_repos(repo))
+        self.assertFalse(self.service.filter_repos(repo))
 
     def test_filter_repos_exclude_id(self):
         self.config.set('myservice', 'gitlab.exclude_repos', 'id:1234')
-        service = GitlabService(self.config, 'general', 'myservice')
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
-        self.assertFalse(service.filter_repos(repo))
+        self.assertFalse(self.service.filter_repos(repo))
 
     def test_filter_repos_include(self):
         self.config.set('myservice', 'gitlab.include_repos', 'foobar/baz')
-        service = GitlabService(self.config, 'general', 'myservice')
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
-        self.assertTrue(service.filter_repos(repo))
+        self.assertTrue(self.service.filter_repos(repo))
 
     def test_filter_repos_include_id(self):
         self.config.set('myservice', 'gitlab.include_repos', 'id:1234')
-        service = GitlabService(self.config, 'general', 'myservice')
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
-        self.assertTrue(service.filter_repos(repo))
+        self.assertTrue(self.service.filter_repos(repo))
 
     def test_default_priorities(self):
         self.config.set('myservice', 'gitlab.default_issue_priority', 'L')
         self.config.set('myservice', 'gitlab.default_mr_priority', 'M')
         self.config.set('myservice', 'gitlab.default_todo_priority', 'H')
-        service = GitlabService(self.config, 'general', 'myservice')
-        self.assertEqual('L', service.default_issue_priority)
-        self.assertEqual('M', service.default_mr_priority)
-        self.assertEqual('H', service.default_todo_priority)
-
+        self.assertEqual('L', self.service.config.default_issue_priority)
+        self.assertEqual('M', self.service.config.default_mr_priority)
+        self.assertEqual('H', self.service.config.default_todo_priority)
 
 
 class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
+        'service': 'gitlab',
         'gitlab.host': 'gitlab.example.com',
         'gitlab.login': 'arbitrary_login',
         'gitlab.token': 'arbitrary_token',
@@ -141,7 +145,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             "updated_at": self.arbitrary_updated.isoformat(),
             "created_at": self.arbitrary_created.isoformat(),
             "weight": 3,
-            "work_in_progress": "true"
+            "work_in_progress": True
         }
         self.arbitrary_extra = {
             'issue_url': 'https://gitlab.example.com/arbitrary_username/project/issues/3',
@@ -207,7 +211,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
                 "updated_at": self.arbitrary_updated.isoformat(),
                 "created_at": self.arbitrary_created.isoformat(),
                 "weight": 3,
-                "work_in_progress": "true"
+                "work_in_progress": True
 
             },
             "target_url": "https://gitlab.example.com/arbitrary_username/project/issues/3",
@@ -261,7 +265,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             "updated_at": self.arbitrary_updated.isoformat(),
             "created_at": self.arbitrary_created.isoformat(),
             "weight": 3,
-            "work_in_progress": "true"
+            "work_in_progress": True
         }
         self.arbitrary_mr_extra = {
             'issue_url': 'https://gitlab.example.com/arbitrary_username/project/merge_requests/3',
@@ -280,7 +284,6 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
                          'needs_work')
 
     def test_to_taskwarrior(self):
-        self.service.import_labels_as_tags = True
         issue = self.service.get_issue_for_record(
             self.arbitrary_issue,
             self.arbitrary_extra
@@ -288,9 +291,9 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
         expected_output = {
             'project': self.arbitrary_extra['project'],
-            'priority': self.service.default_priority,
+            'priority': self.service.config.default_priority,
             'annotations': [],
-            'tags': [u'feature'],
+            'tags': [],
             'due': self.arbitrary_duedate.replace(microsecond=0),
             'entry': self.arbitrary_created.replace(microsecond=0),
             issue.URL: self.arbitrary_extra['issue_url'],
@@ -321,7 +324,6 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'gitlab.default_issue_priority': 'L',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
-        service.import_labels_as_tags = True
         issue = service.get_issue_for_record(
             self.arbitrary_issue,
             self.arbitrary_extra
@@ -330,7 +332,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'project': self.arbitrary_extra['project'],
             'priority': 'L',
             'annotations': [],
-            'tags': [u'feature'],
+            'tags': [],
             'due': self.arbitrary_duedate.replace(microsecond=0),
             'entry': self.arbitrary_created.replace(microsecond=0),
             issue.URL: self.arbitrary_extra['issue_url'],
@@ -399,10 +401,10 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     def test_custom_mr_priority(self):
         overrides = {
-            'gitlab.default_mr_priority': '',
+            'gitlab.default_mr_priority': None,
+            'gitlab.import_labels_as_tags': True,
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
-        service.import_labels_as_tags = True
         issue = service.get_issue_for_record(
             self.arbitrary_mr,
             self.arbitrary_mr_extra
@@ -411,7 +413,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'project': self.arbitrary_mr_extra['project'],
             'priority': overrides['gitlab.default_mr_priority'],
             'annotations': [],
-            'tags': [u'feature'],
+            'tags': ['feature'],
             'due': self.arbitrary_duedate.replace(microsecond=0),
             'entry': self.arbitrary_created.replace(microsecond=0),
             issue.URL: self.arbitrary_mr_extra['issue_url'],
@@ -438,8 +440,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         self.assertEqual(actual_output, expected_output)
 
     def test_work_in_progress(self):
-        self.arbitrary_issue['work_in_progress'] = 'false'
-        self.service.import_labels_as_tags = True
+        self.arbitrary_issue['work_in_progress'] = False
         issue = self.service.get_issue_for_record(
             self.arbitrary_issue,
             self.arbitrary_extra
@@ -447,9 +448,9 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
         expected_output = {
             'project': self.arbitrary_extra['project'],
-            'priority': self.service.default_priority,
+            'priority': self.service.config.default_priority,
             'annotations': [],
-            'tags': [u'feature'],
+            'tags': [],
             'due': self.arbitrary_duedate.replace(microsecond=0),
             'entry': self.arbitrary_created.replace(microsecond=0),
             issue.URL: self.arbitrary_extra['issue_url'],
@@ -485,7 +486,8 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
                 'web_url': 'example.com',
                 "namespace": {
                     "full_path": "arbitrary_username"
-                }
+                },
+                'path_with_namespace': 'arbitrary_username/project'
             }])
 
         self.add_response(

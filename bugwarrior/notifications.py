@@ -1,11 +1,8 @@
 from future import standard_library
 standard_library.install_aliases()
-import datetime
 import os
 import urllib.request, urllib.parse, urllib.error
 import warnings
-
-from bugwarrior.config.parse import asbool
 
 
 cache_dir = os.path.expanduser(os.getenv('XDG_CACHE_HOME', "~/.cache") + "/bugwarrior")
@@ -51,7 +48,7 @@ def _get_metadata(issue):
 
 
 def send_notification(issue, op, conf):
-    notify_backend = conf.get('notifications', 'backend')
+    notify_backend = conf.backend
 
     if notify_backend == 'pynotify':
         warnings.warn("pynotify is deprecated.  Use backend=gobject.  "
@@ -73,8 +70,7 @@ def send_notification(issue, op, conf):
                 title="Bugwarrior",
                 description="Finished querying for new issues.\n%s" %
                 issue['description'],
-                sticky=asbool(conf.get(
-                    'notifications', 'finished_querying_sticky', 'True')),
+                sticky=conf.finished_querying_sticky,
                 icon="https://upload.wikimedia.org/wikipedia/"
                 "en/5/59/Taskwarrior_logo.png",
                 priority=1,
@@ -88,8 +84,7 @@ def send_notification(issue, op, conf):
             noteType="New Messages",
             title="Bugwarrior",
             description=message,
-            sticky=asbool(conf.get(
-                'notifications', 'task_crud_sticky', 'True')),
+            sticky=conf.task_crud_sticky,
             icon="https://upload.wikimedia.org/wikipedia/"
             "en/5/59/Taskwarrior_logo.png",
             priority=1,

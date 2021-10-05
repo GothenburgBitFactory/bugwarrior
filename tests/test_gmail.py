@@ -9,9 +9,7 @@ from dateutil.tz import tzutc
 from google.oauth2.credentials import Credentials
 
 from bugwarrior.config.load import BugwarriorConfigParser
-from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services import gmail
-from bugwarrior.services.gmail import GmailService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
@@ -30,36 +28,35 @@ class TestGmailService(ConfigTest):
     def setUp(self):
         super(TestGmailService, self).setUp()
         self.config = BugwarriorConfigParser()
-        self.config.add_section("general")
-        self.config.add_section("myservice")
+        self.config.add_section('general')
+        self.config.set('general', 'targets', 'myservice')
+        self.config.add_section('myservice')
+        self.config.set('myservice', 'service', 'gmail')
 
         mock_data = mock.Mock()
         mock_data.path = self.tempdir
-        self.config.data = mock_data
 
-        self.service_config = ServiceConfig(GmailService.CONFIG_PREFIX, self.config, "myservice")
+        mock_api = mock.Mock()
+        gmail.GmailService.build_api = mock_api
+
+        conf = self.validate()
+        self.service = gmail.GmailService(
+            conf['myservice'], conf['general'], 'myservice')
 
     def test_get_credentials_exists_and_valid(self):
-        mock_api = mock.Mock()
-        gmail.GmailService.build_api = mock_api
-        service = GmailService(self.config, "general", "myservice")
-
         expected = Credentials(**copy(TEST_CREDENTIAL))
         self.assertEqual(expected.valid, True)
-        with open(service.credentials_path, "wb") as token:
+        with open(self.service.credentials_path, "wb") as token:
             pickle.dump(expected, token)
 
-        self.assertEqual(service.get_credentials().to_json(), expected.to_json())
+        self.assertEqual(self.service.get_credentials().to_json(),
+                         expected.to_json())
 
     def test_get_credentials_with_refresh(self):
-        mock_api = mock.Mock()
-        gmail.GmailService.build_api = mock_api
-        service = GmailService(self.config, "general", "myservice")
-
         expired_credential = Credentials(**copy(TEST_CREDENTIAL))
         expired_credential.expiry = datetime.utcnow()
         self.assertEqual(expired_credential.valid, False)
-        with open(service.credentials_path, "wb") as token:
+        with open(self.service.credentials_path, "wb") as token:
             pickle.dump(expired_credential, token)
 
         with patch("google.oauth2.reauth.refresh_grant") as mock_refresh_grant:
@@ -69,7 +66,7 @@ class TestGmailService(ConfigTest):
             grant_response = {"id_token": "idtoken"}
             rapt_token = "reauthprooftoken"
             mock_refresh_grant.return_value = access_token, refresh_token, expiry, grant_response, rapt_token
-            refreshed_credential = service.get_credentials()
+            refreshed_credential = self.service.get_credentials()
         self.assertEqual(refreshed_credential.valid, True)
 
 
@@ -108,6 +105,7 @@ TEST_LABELS = [
 
 class TestGmailIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        'service': 'gmail',
         'gmail.add_tags': 'added',
         'gmail.login_name': 'test@example.com',
     }
@@ -124,7 +122,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
 
     def test_config_paths(self):
         credentials_path = os.path.join(
-            self.service.config.data.path,
+            self.service.main_config.data.path,
             'gmail_credentials_test_example_com.pickle')
         self.assertEqual(self.service.credentials_path, credentials_path)
 

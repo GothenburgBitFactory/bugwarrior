@@ -3,8 +3,8 @@ from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
+from bugwarrior import config
 from bugwarrior.config.load import BugwarriorConfigParser
-from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.kanboard import KanboardService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -18,9 +18,6 @@ class TestKanboardServiceConfig(ConfigTest):
         self.config.set("general", "targets", "kb")
         self.config.add_section("kb")
         self.config.set("kb", "service", "kanboard")
-        self.service_config = ServiceConfig(
-            KanboardService.CONFIG_PREFIX, self.config, "kb"
-        )
 
     def test_validate_config_required_fields(self):
         self.config.set("kb", "kanboard.url", "http://example.com/")
@@ -53,14 +50,17 @@ class TestKanboardServiceConfig(ConfigTest):
     def test_get_keyring_service(self):
         self.config.set("kb", "kanboard.url", "http://example.com/")
         self.config.set("kb", "kanboard.username", "myuser")
+        self.config.set("kb", "kanboard.password", "mypass")
+        service_config = self.validate()['kb']
         self.assertEqual(
-            KanboardService.get_keyring_service(self.service_config),
+            KanboardService.get_keyring_service(service_config),
             "kanboard://myuser@example.com",
         )
 
 
 class TestKanboardService(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        "service": "kanboard",
         "kanboard.url": "http://example.com",
         "kanboard.username": "myuser",
         "kanboard.password": "mypass",

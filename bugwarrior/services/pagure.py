@@ -11,7 +11,6 @@ import typing_extensions
 from jinja2 import Template
 
 from bugwarrior import config
-from bugwarrior.config import asbool, aslist
 from bugwarrior.services import IssueService, Issue
 
 import logging
@@ -127,7 +126,6 @@ class PagureIssue(Issue):
 
 class PagureService(IssueService):
     ISSUE_CLASS = PagureIssue
-    CONFIG_PREFIX = 'pagure'
     CONFIG_SCHEMA = PagureConfig
 
     def __init__(self, *args, **kw):
@@ -135,24 +133,10 @@ class PagureService(IssueService):
 
         self.session = requests.Session()
 
-        self.tag = self.config.get('tag')
-        self.repo = self.config.get('repo')
-        self.base_url = self.config.get('base_url')
-
-        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
-        self.include_repos = self.config.get('include_repos', [], aslist)
-
-        self.import_tags = self.config.get(
-            'import_tags', default=False, to_type=asbool
-        )
-        self.tag_template = self.config.get(
-            'tag_template', default='{{label}}', to_type=six.text_type
-        )
-
     def get_service_metadata(self):
         return {
-            'import_tags': self.import_tags,
-            'tag_template': self.tag_template,
+            'import_tags': self.config.import_tags,
+            'tag_template': self.config.tag_template,
         }
 
     def get_issues(self, repo, keys):
@@ -160,7 +144,7 @@ class PagureService(IssueService):
         key1, key2 = keys
         key3 = key1[:-1]  # Just the singular form of key1
 
-        url = self.base_url + "/api/0/" + repo + "/" + key1
+        url = self.config.base_url + "/api/0/" + repo + "/" + key1
         response = self.session.get(url, params=dict(status='Open'))
 
         if not bool(response):
@@ -174,7 +158,8 @@ class PagureService(IssueService):
         issues = []
         for result in response.json()[key2]:
             idx = six.text_type(result['id'])
-            result['html_url'] = "/".join([self.base_url, repo, key3, idx])
+            result['html_url'] = "/".join([
+                self.config.base_url, repo, key3, idx])
             issues.append((repo, result))
 
         return issues
@@ -194,12 +179,11 @@ class PagureService(IssueService):
             return issue[1]['assignee']['name']
 
     def filter_repos(self, repo):
-        if self.exclude_repos:
-            if repo in self.exclude_repos:
-                return False
+        if repo in self.config.exclude_repos:
+            return False
 
-        if self.include_repos:
-            if repo in self.include_repos:
+        if self.config.include_repos:
+            if repo in self.config.include_repos:
                 return True
             else:
                 return False
@@ -207,15 +191,16 @@ class PagureService(IssueService):
         return True
 
     def issues(self):
-        if self.tag:
-            url = self.base_url + "/api/0/projects?tags=" + self.tag
+        if self.config.tag:
+            url = (self.config.base_url +
+                   "/api/0/projects?tags=" + self.config.tag)
             response = self.session.get(url)
             if not bool(response):
                 raise IOError('Failed to talk to %r %r' % (url, response))
 
             all_repos = [r['name'] for r in response.json()['projects']]
         else:
-            all_repos = [self.repo]
+            all_repos = [self.config.repo]
 
         repos = filter(self.filter_repos, all_repos)
 

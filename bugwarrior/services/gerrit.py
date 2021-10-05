@@ -78,46 +78,39 @@ class GerritIssue(Issue):
 
 class GerritService(IssueService, ServiceClient):
     ISSUE_CLASS = GerritIssue
-    CONFIG_PREFIX = 'gerrit'
     CONFIG_SCHEMA = GerritConfig
 
     def __init__(self, *args, **kw):
         super(GerritService, self).__init__(*args, **kw)
-        self.url = self.config.get('base_uri').strip('/')
-        self.username = self.config.get('username')
-        self.password = self.get_password('password', self.username)
-        self.ssl_ca_path = self.config.get('ssl_ca_path', None)
+        self.password = self.get_password('password', self.config.username)
         self.session = requests.session()
         self.session.headers.update({
             'Accept': 'application/json',
             'Accept-Encoding': 'gzip',
         })
-        self.query_string = self.config.get(
-            'query',
-            'is:open+is:reviewer'
-        ) + '&o=MESSAGES&o=DETAILED_ACCOUNTS'
+        self.query_string = (
+            self.config.query + '&o=MESSAGES&o=DETAILED_ACCOUNTS')
 
-        if self.ssl_ca_path:
-            self.session.verify = os.path.expanduser(self.ssl_ca_path)
+        if self.config.ssl_ca_path:
+            self.session.verify = self.config.ssl_ca_path
 
         # uses digest authentication if supported by the server, fallback to basic
         # gerrithub.io supports only basic
-        response = self.session.head(self.url + '/a/')
+        response = self.session.head(self.config.base_uri + '/a/')
         if 'digest' in response.headers.get('www-authenticate', '').lower():
             self.session.auth = requests.auth.HTTPDigestAuth(
-                self.username, self.password)
+                self.config.username, self.password)
         else:
             self.session.auth = requests.auth.HTTPBasicAuth(
-                self.username, self.password)
+                self.config.username, self.password)
 
     @staticmethod
-    def get_keyring_service(service_config):
-        base_uri = service_config.get('base_uri')
-        return "gerrit://%s" % base_uri
+    def get_keyring_service(config):
+        return f"gerrit://{config.base_uri}"
 
     def get_service_metadata(self):
         return {
-            'url': self.url,
+            'url': self.config.base_uri,
         }
 
     def get_owner(self, issue):
@@ -128,7 +121,7 @@ class GerritService(IssueService, ServiceClient):
     def issues(self):
         # Construct the whole url by hand here, because otherwise requests will
         # percent-encode the ':' characters, which gerrit doesn't like.
-        url = self.url + '/a/changes/?q=' + self.query_string
+        url = self.config.base_uri + '/a/changes/?q=' + self.query_string
         response = self.session.get(url)
         response.raise_for_status()
         # The response has some ")]}'" garbage prefixed.
@@ -143,7 +136,7 @@ class GerritService(IssueService, ServiceClient):
             yield self.get_issue_for_record(change, extra)
 
     def build_url(self, change):
-        return '%s/#/c/%i/' % (self.url, change['_number'])
+        return '%s/#/c/%i/' % (self.config.base_uri, change['_number'])
 
     def annotations(self, change):
         entries = []

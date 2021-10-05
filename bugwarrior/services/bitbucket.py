@@ -6,7 +6,6 @@ import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import IssueService, Issue, ServiceClient
-from bugwarrior.config import asbool, aslist
 
 import logging
 log = logging.getLogger(__name__)
@@ -79,7 +78,6 @@ class BitbucketIssue(Issue):
 
 class BitbucketService(IssueService, ServiceClient):
     ISSUE_CLASS = BitbucketIssue
-    CONFIG_PREFIX = 'bitbucket'
     CONFIG_SCHEMA = BitbucketConfig
 
     BASE_API2 = 'https://api.bitbucket.org/2.0'
@@ -88,18 +86,15 @@ class BitbucketService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super(BitbucketService, self).__init__(*args, **kw)
 
-        key = self.config.get('key')
-        secret = self.config.get('secret')
-        auth = {'oauth': (key, secret)}
+        auth = {'oauth': (self.config.key, self.config.secret)}
 
-        refresh_token = self.config.data.get('bitbucket_refresh_token')
+        refresh_token = self.main_config.data.get('bitbucket_refresh_token')
 
         if not refresh_token:
-            login = self.config.get('login')
-            password = self.get_password('password', login)
-            auth['basic'] = (login, password)
+            password = self.get_password('password', self.config.login)
+            auth['basic'] = (self.config.login, password)
 
-        if key and secret:
+        if self.config.key and self.config.secret:
             if refresh_token:
                 response = requests.post(
                     self.BASE_URL + 'site/oauth2/access_token',
@@ -110,12 +105,12 @@ class BitbucketService(IssueService, ServiceClient):
                 response = requests.post(
                     self.BASE_URL + 'site/oauth2/access_token',
                     data={'grant_type': 'password',
-                          'username': login,
+                          'username': self.config.login,
                           'password': password},
                     auth=auth['oauth']).json()
 
-                self.config.data.set('bitbucket_refresh_token',
-                                     response['refresh_token'])
+                self.main_config.data.set('bitbucket_refresh_token',
+                                          response['refresh_token'])
 
             auth['token'] = response['access_token']
 
@@ -126,32 +121,19 @@ class BitbucketService(IssueService, ServiceClient):
         elif 'basic' in auth:
             self.requests_kwargs['auth'] = auth['basic']
 
-        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
-        self.include_repos = self.config.get('include_repos', [], aslist)
-
-        self.filter_merge_requests = self.config.get(
-            'filter_merge_requests', default=False, to_type=asbool
-        )
-
-        self.project_owner_prefix = self.config.get(
-            'project_owner_prefix', default=False, to_type=asbool
-        )
-
     @staticmethod
-    def get_keyring_service(service_config):
-        login = service_config.get('login')
-        username = service_config.get('username')
-        return "bitbucket://%s@bitbucket.org/%s" % (login, username)
+    def get_keyring_service(config):
+        return f"bitbucket://{config.login}@bitbucket.org/{config.username}"
 
     def filter_repos(self, repo_tag):
         repo = repo_tag.split('/').pop()
 
-        if self.exclude_repos:
-            if repo in self.exclude_repos:
+        if self.config.exclude_repos:
+            if repo in self.config.exclude_repos:
                 return False
 
-        if self.include_repos:
-            if repo in self.include_repos:
+        if self.config.include_repos:
+            if repo in self.config.include_repos:
                 return True
             else:
                 return False
@@ -200,7 +182,7 @@ class BitbucketService(IssueService, ServiceClient):
             return assignee.get('username', None)
 
     def issues(self):
-        user = self.config.get('username')
+        user = self.config.username
         response = self.get_collection('/repositories/' + user + '/')
         repo_tags = list(filter(self.filter_repos, [
             repo['full_name'] for repo in response
@@ -222,7 +204,7 @@ class BitbucketService(IssueService, ServiceClient):
             issue_obj = self.get_issue_for_record(issue)
             tagParts = tag.split('/')
             projectName = tagParts[1]
-            if self.project_owner_prefix:
+            if self.config.project_owner_prefix:
                 projectName = tagParts[0] + "." + projectName
             url = issue['links']['html']['href']
             extras = {
@@ -233,7 +215,7 @@ class BitbucketService(IssueService, ServiceClient):
             issue_obj.update_extra(extras)
             yield issue_obj
 
-        if not self.filter_merge_requests:
+        if not self.config.filter_merge_requests:
             pull_requests = sum(
                 [self.fetch_pull_requests(repo) for repo in repo_tags], [])
             log.debug(" Found %i total.", len(pull_requests))
@@ -248,7 +230,7 @@ class BitbucketService(IssueService, ServiceClient):
                 issue_obj = self.get_issue_for_record(issue)
                 tagParts = tag.split('/')
                 projectName = tagParts[1]
-                if self.project_owner_prefix:
+                if self.config.project_owner_prefix:
                     projectName = tagParts[0] + "." + projectName
                 url = self.BASE_URL + '/'.join(
                     issue['links']['html']['href'].split('/')[3:]

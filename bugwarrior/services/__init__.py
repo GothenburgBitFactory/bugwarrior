@@ -16,7 +16,6 @@ import six
 
 from taskw.task import Task
 
-from bugwarrior.config.parse import asbool, asint, aslist, ServiceConfig
 from bugwarrior.config.secrets import get_service_password
 from bugwarrior.db import MARKUP, URLShortener
 
@@ -46,43 +45,15 @@ class IssueService(abc.ABC):
     """ Abstract base class for each service """
     # Which class should this service instantiate for holding these issues?
     ISSUE_CLASS = None
-    # What prefix should we use for this service's configuration values
-    CONFIG_PREFIX = ''
     # Which class defines this service's configuration options?
     CONFIG_SCHEMA = None
 
-    def __init__(self, main_config, main_section, target):
-        self.config = ServiceConfig(self.CONFIG_PREFIX, main_config, target)
-        self.main_section = main_section
+    def __init__(self, config, main_config, target):
+        self.config = config
         self.main_config = main_config
         self.target = target
 
-        self.desc_len = self._get_config_or_default('description_length', 35, asint);
-        self.anno_len = self._get_config_or_default('annotation_length', 45, asint);
-        self.inline_links = self._get_config_or_default('inline_links', True, asbool);
-        self.annotation_links = self._get_config_or_default('annotation_links', not self.inline_links, asbool)
-        self.annotation_comments = self._get_config_or_default('annotation_comments', True, asbool)
-        self.annotation_newlines = self._get_config_or_default('annotation_newlines', False, asbool)
-        self.shorten = self._get_config_or_default('shorten', False, asbool)
-
-        self.default_priority = self.config.get('default_priority', 'M')
-
-        self.add_tags = []
-        for raw_option in aslist(self.config.get('add_tags', '')):
-            option = raw_option.strip(' +;')
-            if option:
-                self.add_tags.append(option)
-
         log.info("Working on [%s]", self.target)
-
-
-    def _get_config_or_default(self, key, default, as_type=lambda x: x):
-        """Return a main config value, or default if it does not exist."""
-
-        if self.main_config.has_option(self.main_section, key):
-            return as_type(self.main_config.get(self.main_section, key))
-        return default
-
 
     def get_templates(self):
         """ Get any defined templates for configuration values.
@@ -113,18 +84,18 @@ class IssueService(abc.ABC):
         """
         templates = {}
         for key in six.iterkeys(Task.FIELDS):
-            template_key = '%s_template' % key
-            if template_key in self.config:
-                templates[key] = self.config.get(template_key)
+            template = getattr(self.config, f'{key}_template')
+            if template:
+                templates[key] = template
         return templates
 
     def get_password(self, key, login='nousername'):
-        password = self.config.get(key)
+        password = getattr(self.config, key)
         keyring_service = self.get_keyring_service(self.config)
         if not password or password.startswith("@oracle:"):
             password = get_service_password(
                 keyring_service, login, oracle=password,
-                interactive=self.config.interactive)
+                interactive=self.main_config.interactive)
         return password
 
     def get_service_metadata(self):
@@ -132,56 +103,50 @@ class IssueService(abc.ABC):
 
     def get_issue_for_record(self, record, extra=None):
         origin = {
-            'annotation_length': self.anno_len,
-            'default_priority': self.default_priority,
-            'description_length': self.desc_len,
+            'annotation_length': self.main_config.annotation_length,
+            'default_priority': self.config.default_priority,
+            'description_length': self.main_config.description_length,
             'templates': self.get_templates(),
             'target': self.target,
-            'shorten': self.shorten,
-            'inline_links': self.inline_links,
-            'add_tags': self.add_tags,
+            'shorten': self.main_config.shorten,
+            'inline_links': self.main_config.inline_links,
+            'add_tags': self.config.add_tags,
         }
         origin.update(self.get_service_metadata())
         return self.ISSUE_CLASS(record, origin=origin, extra=extra)
 
     def build_annotations(self, annotations, url):
         final = []
-        if self.annotation_links:
+        if self.main_config.annotation_links:
             final.append(url)
-        if self.annotation_comments:
+        if self.main_config.annotation_comments:
             for author, message in annotations:
                 message = message.strip()
                 if not message or not author:
                     continue
 
-                if not self.annotation_newlines:
+                if not self.main_config.annotation_newlines:
                     message = message.replace('\n', '').replace('\r', '')
 
-                if self.anno_len:
+                annotation_length = self.main_config.annotation_length
+                if annotation_length:
                     message = '%s%s' % (
-                        message[:self.anno_len],
-                        '...' if len(message) > self.anno_len else ''
+                        message[:annotation_length],
+                        '...' if len(message) > annotation_length else ''
                     )
                 final.append('@%s - %s' % (author, message))
         return final
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
-        only_if_assigned = self.config.get('only_if_assigned', None)
-
-        if only_if_assigned:
+        if self.config.only_if_assigned:
             owner = self.get_owner(issue)
-            include_owners = [only_if_assigned]
+            include_owners = [self.config.only_if_assigned]
 
-            if self.config.get('also_unassigned', None, asbool):
+            if self.config.also_unassigned:
                 include_owners.append(None)
 
             return owner in include_owners
-
-        only_if_author = self.config.get('only_if_author', None)
-
-        if only_if_author:
-            return self.get_author(issue) == only_if_author
 
         return True
 
@@ -475,7 +440,7 @@ class ServiceClient:
             return response.json
 
 
-def _aggregate_issues(conf, main_section, target, queue, service_name):
+def _aggregate_issues(conf, main_section, target, queue):
     """ This worker function is separated out from the main
     :func:`aggregate_issues` func only so that we can use multiprocessing
     on it for speed reasons.
@@ -484,7 +449,8 @@ def _aggregate_issues(conf, main_section, target, queue, service_name):
     start = time.time()
 
     try:
-        service = get_service(service_name)(conf, main_section, target)
+        service = get_service(conf[target].service)(
+            conf[target], conf[main_section], target)
         issue_count = 0
         for issue in service.issues():
             queue.put(issue)
@@ -513,7 +479,7 @@ def aggregate_issues(conf, main_section, debug):
     log.info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
-    targets = aslist(conf.get(main_section, 'targets'))
+    targets = conf[main_section].targets
 
     queue = multiprocessing.Queue()
 
@@ -521,18 +487,12 @@ def aggregate_issues(conf, main_section, debug):
 
     if debug:
         for target in targets:
-            _aggregate_issues(
-                conf,
-                main_section,
-                target,
-                queue,
-                conf.get(target, 'service')
-            )
+            _aggregate_issues(conf, main_section, target, queue)
     else:
         for target in targets:
             proc = multiprocessing.Process(
                 target=_aggregate_issues,
-                args=(conf, main_section, target, queue, conf.get(target, 'service'))
+                args=(conf, main_section, target, queue)
             )
             proc.start()
 

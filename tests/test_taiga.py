@@ -1,4 +1,3 @@
-from builtins import next
 import responses
 
 from bugwarrior.services.taiga import TaigaService
@@ -8,6 +7,7 @@ from .base import ServiceTest, AbstractServiceTest
 
 class TestTaigaIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        'service': 'taiga',
         'taiga.base_uri': 'https://one',
         'taiga.auth_token': 'two',
     }

@@ -6,12 +6,10 @@ from jinja2 import Template
 from jira.client import JIRA as BaseJIRA
 import pydantic
 from requests.cookies import RequestsCookieJar
-import six
 import typing_extensions
 from dateutil.tz.tz import tzutc
 
 from bugwarrior import config
-from bugwarrior.config import asbool
 from bugwarrior.services import IssueService, Issue
 
 import logging
@@ -304,51 +302,39 @@ class JiraIssue(Issue):
 
 class JiraService(IssueService):
     ISSUE_CLASS = JiraIssue
-    CONFIG_PREFIX = 'jira'
     CONFIG_SCHEMA = JiraConfig
 
     def __init__(self, *args, **kw):
         _skip_server = kw.pop('_skip_server', False)
         super(JiraService, self).__init__(*args, **kw)
-        self.username = self.config.get('username')
-        self.url = self.config.get('base_uri')
+
         default_query = 'assignee="' + \
-            self.username.replace("@", "\\u0040") + \
+            self.config.username.replace("@", "\\u0040") + \
             '" AND resolution is null'
-        self.query = self.config.get('query', default_query)
-        self.use_cookies = self.config.get(
-            'use_cookies', default=False, to_type=asbool
-        )
-        if 'PAT' in self.config:
-            pat = self.get_password('PAT', self.username)
+        self.query = self.config.query or default_query
+
+        if self.config.PAT:
+            pat = self.get_password('PAT', self.config.username)
             auth = dict(token_auth=pat)
         else:
-            password = self.get_password('password', self.username)
+            password = self.get_password('password', self.config.username)
             if password == '@kerberos':
                 auth = dict(kerberos=True)
             else:
-                if self.use_cookies:
-                    auth = dict(auth=(self.username, password))
+                if self.config.use_cookies:
+                    auth = dict(auth=(self.config.username, password))
                 else:
-                    auth = dict(basic_auth=(self.username, password))
+                    auth = dict(basic_auth=(self.config.username, password))
         if not _skip_server:
             self.jira = JIRA(
                 options={
-                    'server': self.config.get('base_uri'),
+                    'server': self.config.base_uri,
                     'rest_api_version': 'latest',
-                    'verify': self.config.get('verify_ssl', default=True, to_type=asbool),
+                    'verify': self.config.verify_ssl,
                 },
                 **auth
             )
-        self.import_labels_as_tags = self.config.get(
-            'import_labels_as_tags', default=False, to_type=asbool
-        )
-        self.import_sprints_as_tags = self.config.get(
-            'import_sprints_as_tags', default=False, to_type=asbool
-        )
-        self.label_template = self.config.get(
-            'label_template', default='{{label}}', to_type=six.text_type
-        )
+        self.import_sprints_as_tags = self.config.import_sprints_as_tags
 
         self.sprint_field_names = []
         if self.import_sprints_as_tags:
@@ -362,18 +348,16 @@ class JiraService(IssueService):
                 self.sprint_field_names = [field['id'] for field in field_names]
 
     @staticmethod
-    def get_keyring_service(service_config):
-        username = service_config.get('username')
-        base_uri = service_config.get('base_uri')
-        return "jira://%s@%s" % (username, base_uri)
+    def get_keyring_service(config):
+        return f"jira://{config.username}@{config.base_uri}"
 
     def get_service_metadata(self):
         return {
-            'url': self.url,
-            'import_labels_as_tags': self.import_labels_as_tags,
+            'url': self.config.base_uri,
+            'import_labels_as_tags': self.config.import_labels_as_tags,
             'import_sprints_as_tags': self.import_sprints_as_tags,
             'sprint_field_names': self.sprint_field_names,
-            'label_template': self.label_template,
+            'label_template': self.config.label_template,
         }
 
     def get_owner(self, issue):
@@ -385,8 +369,7 @@ class JiraService(IssueService):
         body = issue.record.get('fields', {}).get('description')
 
         if body:
-            max_length = self.config.get('body_length', default=sys.maxsize, to_type=int)
-            body = body[:max_length]
+            body = body[:self.config.body_length]
 
         return body
 
@@ -403,17 +386,13 @@ class JiraService(IssueService):
     def issues(self):
         cases = self.jira.search_issues(self.query, maxResults=None)
 
-        jira_version = 5
-        if self.config.has_option(self.target, 'jira.version'):
-            jira_version = self.config.getint(self.target, 'jira.version')
-
         for case in cases:
             issue = self.get_issue_for_record(case.raw)
             extra = {
-                'jira_version': jira_version,
+                'jira_version': self.config.version,
                 'body': self.body(issue)
             }
-            if jira_version > 4:
+            if self.config.version > 4:
                 extra.update({
                     'annotations': self.annotations(case, issue)
                 })

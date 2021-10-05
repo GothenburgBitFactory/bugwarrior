@@ -112,30 +112,25 @@ class TeamLabIssue(Issue):
 
 class TeamLabService(IssueService):
     ISSUE_CLASS = TeamLabIssue
-    CONFIG_PREFIX = 'teamlab'
     CONFIG_SCHEMA = TeamLabConfig
 
     def __init__(self, *args, **kw):
         super(TeamLabService, self).__init__(*args, **kw)
 
-        self.hostname = self.config.get('hostname')
-        _login = self.config.get('login')
-        _password = self.get_password('password', _login)
+        _password = self.get_password('password', self.config.login)
 
-        self.client = TeamLabClient(self.hostname)
-        self.client.authenticate(_login, _password)
+        self.client = TeamLabClient(self.config.hostname)
+        self.client.authenticate(self.config.login, _password)
 
-        self.project_name = self.config.get('project_name', self.hostname)
+        self.project_name = self.config.project_name or self.config.hostname
 
     @staticmethod
-    def get_keyring_service(service_config):
-        login = service_config.get('login')
-        hostname = service_config.get('hostname')
-        return "teamlab://%s@%s" % (login, hostname)
+    def get_keyring_service(config):
+        return f"teamlab://{config.login}@{config.hostname}"
 
     def get_service_metadata(self):
         return {
-            'hostname': self.hostname,
+            'hostname': self.config.hostname,
             'project_name': self.project_name,
         }
 

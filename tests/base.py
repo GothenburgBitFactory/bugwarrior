@@ -3,8 +3,6 @@ import shutil
 import os.path
 import tempfile
 import unittest
-import configparser
-from unittest import mock
 
 import pytest
 import responses
@@ -82,6 +80,7 @@ class ConfigTest(unittest.TestCase):
 
 class ServiceTest(ConfigTest):
     GENERAL_CONFIG = {
+        'interactive': False,
         'annotation_length': 100,
         'description_length': 100,
     }
@@ -97,7 +96,7 @@ class ServiceTest(ConfigTest):
         config_overrides=None, general_overrides=None
     ):
         options = {
-            'general': self.GENERAL_CONFIG.copy(),
+            'general': {**self.GENERAL_CONFIG, 'targets': section},
             section: self.SERVICE_CONFIG.copy(),
         }
         if config_overrides:
@@ -105,30 +104,11 @@ class ServiceTest(ConfigTest):
         if general_overrides:
             options['general'].update(general_overrides)
 
-        def has_option(section, name):
-            try:
-                return options[section][name]
-            except KeyError:
-                return False
+        service_config = service_class.CONFIG_SCHEMA(**options[section])
+        main_config = schema.MainSectionConfig(**options['general'])
+        main_config.data = data.BugwarriorData(self.lists_path)
 
-        def get_option(section, name):
-            try:
-                return options[section][name]
-            except KeyError:
-                raise configparser.NoOptionError(section, name)
-
-        def get_int(section, name):
-            return int(get_option(section, name))
-
-        config = mock.Mock()
-        config.has_option = mock.Mock(side_effect=has_option)
-        config.get = mock.Mock(side_effect=get_option)
-        config.getint = mock.Mock(side_effect=get_int)
-        config.data = data.BugwarriorData(self.lists_path)
-
-        service_instance = service_class(config, 'general', section)
-
-        return service_instance
+        return service_class(service_config, main_config, section)
 
     @staticmethod
     def add_response(url, **kwargs):

@@ -1,7 +1,6 @@
 # coding: utf-8
 from future import standard_library
 standard_library.install_aliases()
-from builtins import map
 from builtins import filter
 
 try:
@@ -10,7 +9,6 @@ except ImportError:
     from urllib.parse import quote, urlencode # Python 3+
 import re
 import requests
-import six
 import typing
 
 from jinja2 import Template
@@ -18,7 +16,6 @@ import pydantic
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.config import asbool, aslist
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
@@ -200,7 +197,7 @@ class GitlabIssue(Issue):
         state = self.record['state']
         upvotes = self.record.get('upvotes', 0)
         downvotes = self.record.get('downvotes', 0)
-        work_in_progress = int(asbool(self.record.get('work_in_progress', 0)))
+        work_in_progress = int(self.record.get('work_in_progress', 0))
         assignee = self.record.get('assignee')
         duedate = self.record.get('due_date')
         weight = self.record.get('weight')
@@ -293,91 +290,31 @@ class GitlabIssue(Issue):
 
 class GitlabService(IssueService, ServiceClient):
     ISSUE_CLASS = GitlabIssue
-    CONFIG_PREFIX = 'gitlab'
     CONFIG_SCHEMA = GitlabConfig
 
     def __init__(self, *args, **kw):
         super(GitlabService, self).__init__(*args, **kw)
 
-        host = self.config.get(
-            'host', default='gitlab.com', to_type=six.text_type)
-        self.login = self.config.get('login')
-        token = self.get_password('token', self.login)
-        self.auth = (host, token)
+        token = self.get_password('token', self.config.login)
+        self.auth = (self.config.host, token)
 
-        if self.config.get('use_https', default=True, to_type=asbool):
+        if self.config.use_https:
             self.scheme = 'https'
         else:
             self.scheme = 'http'
 
-        self.verify_ssl = self.config.get(
-            'verify_ssl', default=True, to_type=asbool
-        )
-
-        self.membership = self.config.get('membership', False)
-
-        self.owned = self.config.get('owned', False)
-
-        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
-        self.include_repos = self.config.get('include_repos', [], aslist)
-        self.exclude_regex = self.config.get('exclude_regex', None)
-        self.include_regex = self.config.get('include_regex', None)
-
-        self.include_repos = list(map(self.add_default_namespace, self.include_repos))
-        self.exclude_repos = list(map(self.add_default_namespace, self.exclude_repos))
-        self.include_regex = re.compile(self.include_regex) if self.include_regex else None
-        self.exclude_regex = re.compile(self.exclude_regex) if self.exclude_regex else None
-
-        self.default_issue_priority = self.config.get('default_issue_priority', self.default_priority)
-        self.default_todo_priority = self.config.get('default_todo_priority', self.default_priority)
-        self.default_mr_priority = self.config.get('default_mr_priority', self.default_priority)
-
-        self.import_labels_as_tags = self.config.get(
-            'import_labels_as_tags', default=False, to_type=asbool
-        )
-        self.label_template = self.config.get(
-            'label_template', default='{{label}}', to_type=six.text_type
-        )
-        self.filter_merge_requests = self.config.get(
-            'filter_merge_requests', default=False, to_type=asbool
-        )
-        self.include_todos = self.config.get(
-            'include_todos', default=False, to_type=asbool
-        )
-        self.include_all_todos = self.config.get(
-            'include_all_todos', default=True, to_type=asbool
-        )
-        self.project_owner_prefix = self.config.get(
-            'project_owner_prefix', default=False, to_type=asbool
-        )
-
-    def add_default_namespace(self, repo):
-        """ Add a default namespace to a repository name.  If the name already
-        contains a namespace, it will be returned unchanged:
-            e.g. "foo/bar" → "foo/bar"
-        otherwise, the loggin will be prepended as namespace:
-            e.g. "bar" → "<login>/bar"
-        """
-        if not repo.startswith('id:') and repo.find('/') < 0:
-            return self.login + '/' + repo
-        else:
-            return repo
-
     @staticmethod
-    def get_keyring_service(service_config):
-        login = service_config.get('login')
-        host = service_config.get('host', default='gitlab.com')
-        return "gitlab://%s@%s" % (login, host)
+    def get_keyring_service(config):
+        return f"gitlab://{config.login}@{config.host}"
 
     def get_service_metadata(self):
         return {
-            'import_labels_as_tags': self.import_labels_as_tags,
-            'label_template': self.label_template,
-            'default_issue_priority': self.default_issue_priority,
-            'default_todo_priority': self.default_todo_priority,
-            'default_mr_priority': self.default_mr_priority,
+            'import_labels_as_tags': self.config.import_labels_as_tags,
+            'label_template': self.config.label_template,
+            'default_issue_priority': self.config.default_issue_priority,
+            'default_todo_priority': self.config.default_todo_priority,
+            'default_mr_priority': self.config.default_mr_priority,
         }
-
 
     def get_owner(self, issue):
         if issue[1]['assignee'] != None and issue[1]['assignee']['username']:
@@ -388,25 +325,26 @@ class GitlabService(IssueService, ServiceClient):
             return issue[1]['author']['username']
 
     def filter_repos(self, repo):
-        if self.exclude_repos:
-            if repo['path_with_namespace'] in self.exclude_repos or "id:%d" % repo['id'] in self.exclude_repos:
-                return False
+        if (repo['path_with_namespace'] in self.config.exclude_repos
+                or "id:%d" % repo['id'] in self.config.exclude_repos):
+            return False
 
-        if self.exclude_regex:
-            if self.exclude_regex.match(repo['path_with_namespace']):
+        if self.config.exclude_regex:
+            if self.config.exclude_regex.match(repo['path_with_namespace']):
                 return False
 
         # fallback if no filter is set
         is_included = True
 
-        if self.include_repos:
-            if repo['path_with_namespace'] in self.include_repos or "id:%d" % repo['id'] in self.include_repos:
+        if self.config.include_repos:
+            if (repo['path_with_namespace'] in self.config.include_repos
+                    or "id:%d" % repo['id'] in self.config.include_repos):
                 return True
             else:
                 is_included = False
 
-        if self.include_regex:
-            if self.include_regex.match(repo['path_with_namespace']):
+        if self.config.include_regex:
+            if self.config.include_regex.match(repo['path_with_namespace']):
                 return True
             else:
                 is_included = False
@@ -420,7 +358,7 @@ class GitlabService(IssueService, ServiceClient):
     def annotations(self, repo, url, issue_type, issue, issue_obj):
         annotations = []
 
-        if self.annotation_comments:
+        if self.main_config.annotation_comments:
             notes = self._get_notes(repo['id'], issue_type, issue['iid'])
             annotations = ((
                 n['author']['username'],
@@ -436,9 +374,10 @@ class GitlabService(IssueService, ServiceClient):
         url = tmpl.format(scheme=self.scheme, host=self.auth[0])
         headers = {'PRIVATE-TOKEN': self.auth[1]}
 
-        if not self.verify_ssl:
+        if not self.config.verify_ssl:
             requests.packages.urllib3.disable_warnings()
-        response = requests.get(url, headers=headers, verify=self.verify_ssl, **kwargs)
+        response = requests.get(
+            url, headers=headers, verify=self.config.verify_ssl, **kwargs)
 
         return self.json_response(response)
 
@@ -523,7 +462,7 @@ class GitlabService(IssueService, ServiceClient):
             repo = repo_map[rid]
             issue['repo'] = repo['path']
             projectName = repo['path']
-            if self.project_owner_prefix:
+            if self.config.project_owner_prefix:
                 projectName = repo['namespace']['path'] + "." + projectName
             issue_obj = self.get_issue_for_record(issue)
             issue_url = '%s/%s/%d' % (repo['web_url'], type_plural, issue['iid'])
@@ -537,12 +476,28 @@ class GitlabService(IssueService, ServiceClient):
             issue_obj.update_extra(extra)
             yield issue_obj
 
+    def include(self, issue):
+        """ Return true if the issue in question should be included """
+        if self.config.only_if_assigned:
+            owner = self.get_owner(issue)
+            include_owners = [self.config.only_if_assigned]
+
+            if self.config.also_unassigned:
+                include_owners.append(None)
+
+            return owner in include_owners
+
+        if self.config.only_if_author:
+            return self.get_author(issue) == self.config.only_if_author
+
+        return True
+
     def issues(self):
         tmpl = '{scheme}://{host}/api/v4/projects'
 
         all_repos = []
-        if self.include_repos and not self.include_regex:
-            for repo in self.include_repos:
+        if self.config.include_repos and not self.config.include_regex:
+            for repo in self.config.include_repos:
                 if repo.startswith("id:"):
                     repo = repo[3:]
                 indiv_tmpl = tmpl + '/' + quote(repo, '') + '?simple=true'
@@ -554,9 +509,9 @@ class GitlabService(IssueService, ServiceClient):
 
         else:
             querystring = { 'simple': True }
-            if self.membership:
+            if self.config.membership:
                 querystring['membership'] = True
-            if self.owned:
+            if self.config.owned:
                 querystring['owned'] = True
             all_repos = self._fetch_paged(tmpl + '?' + urlencode(querystring))
 
@@ -577,7 +532,7 @@ class GitlabService(IssueService, ServiceClient):
         for issue in self._get_issue_objs(issues, 'issue', repo_map):
             yield issue
 
-        if not self.filter_merge_requests:
+        if not self.config.filter_merge_requests:
             merge_requests = {}
             for repo in repos:
                 rid = repo['id']
@@ -593,10 +548,10 @@ class GitlabService(IssueService, ServiceClient):
                                               repo_map):
                 yield issue
 
-        if self.include_todos:
+        if self.config.include_todos:
             todos = self.get_todos()
             log.debug(" Found %i todo items.", len(todos))
-            if not self.include_all_todos:
+            if not self.config.include_all_todos:
                 todos = list(filter(self.include_todo(repos), todos))
             log.debug(" Pruned down to %i todos.", len(todos))
 
@@ -612,7 +567,7 @@ class GitlabService(IssueService, ServiceClient):
                 todo_obj = self.get_issue_for_record(todo)
                 todo_url = todo['target_url']
                 projectName = repo['path']
-                if self.project_owner_prefix:
+                if self.config.project_owner_prefix:
                     projectName = repo['namespace']['path'] + "." + projectName
                 extra = {
                     'issue_url': todo_url,

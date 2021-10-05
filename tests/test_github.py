@@ -1,13 +1,13 @@
 from builtins import next
 import datetime
 from unittest import TestCase
-from six.moves.configparser import RawConfigParser
 
 import pytz
 import responses
 
-from bugwarrior.config.parse import ServiceConfig
-from bugwarrior.services.github import GithubService, GithubClient
+from bugwarrior import config
+from bugwarrior.services.github import (
+    GithubConfig, GithubService, GithubClient)
 
 from .base import ServiceTest, AbstractServiceTest
 
@@ -47,17 +47,15 @@ ARBITRARY_EXTRA = {
 class TestGithubIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
+        'service': 'github',
         'github.login': 'arbitrary_login',
         'github.password': 'arbitrary_password',
         'github.username': 'arbitrary_username',
     }
 
-    def setUp(self):
-        super(TestGithubIssue, self).setUp()
-        self.service = self.get_mock_service(GithubService)
-
     def test_normalize_label_to_tag(self):
-        issue = self.service.get_issue_for_record(
+        service = self.get_mock_service(GithubService)
+        issue = service.get_issue_for_record(
             ARBITRARY_ISSUE,
             ARBITRARY_EXTRA
         )
@@ -65,15 +63,16 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
                          'needs_work')
 
     def test_to_taskwarrior(self):
-        self.service.import_labels_as_tags = True
-        issue = self.service.get_issue_for_record(
+        service = self.get_mock_service(GithubService, config_overrides={
+            'github.import_labels_as_tags': True})
+        issue = service.get_issue_for_record(
             ARBITRARY_ISSUE,
             ARBITRARY_EXTRA
         )
 
         expected_output = {
             'project': ARBITRARY_EXTRA['project'],
-            'priority': self.service.default_priority,
+            'priority': service.config.default_priority,
             'annotations': [],
             'tags': ['bugfix'],
             'entry': ARBITRARY_CREATED,
@@ -127,7 +126,8 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
                 'body': 'Arbitrary comment.'
             }])
 
-        issue = next(self.service.issues())
+        service = self.get_mock_service(GithubService)
+        issue = next(service.issues())
 
         expected = {
             'annotations': [u'@arbitrary_login - Arbitrary comment.'],
@@ -157,6 +157,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
 class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
+        'service': 'github',
         'github.login': 'arbitrary_login',
         'github.password': 'arbitrary_password',
         'github.username': 'arbitrary_username',
@@ -212,48 +213,45 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
         self.assertEqual(issue.get_taskwarrior_record(), expected)
 
 
-class TestGithubService(TestCase):
+class TestGithubService(ServiceTest):
+    SERVICE_CONFIG = {
+        'service': 'github',
+        'github.login': 'tintin',
+        'github.username': 'milou',
+        'github.password': 't0ps3cr3t',
 
-    def setUp(self):
-        self.config = RawConfigParser()
-        self.config.interactive = False
-        self.config.add_section('general')
-        self.config.add_section('mygithub')
-        self.config.set('mygithub', 'service', 'github')
-        self.config.set('mygithub', 'github.login', 'tintin')
-        self.config.set('mygithub', 'github.username', 'milou')
-        self.config.set('mygithub', 'github.password', 't0ps3cr3t')
-        self.service_config = ServiceConfig(
-            GithubService.CONFIG_PREFIX, self.config, 'mygithub')
+    }
 
     def test_token_authorization_header(self):
-        self.config.remove_option('mygithub', 'github.password')
-        self.config.set('mygithub', 'github.token',
-                        '@oracle:eval:echo 1234567890ABCDEF')
-        service = GithubService(self.config, 'general', 'mygithub')
+        service = self.get_mock_service(GithubService)
+        service = self.get_mock_service(GithubService, config_overrides={
+            'github.password': '',
+            'github.token': '@oracle:eval:echo 1234567890ABCDEF'})
         self.assertEqual(service.client.session.headers['Authorization'],
                          "token 1234567890ABCDEF")
 
     def test_default_host(self):
         """ Check that if github.host is not set, we default to github.com """
-        service = GithubService(self.config, 'general', 'mygithub')
-        self.assertEqual("github.com", service.host)
+        service = self.get_mock_service(GithubService)
+        self.assertEqual("github.com", service.config.host)
 
     def test_overwrite_host(self):
         """ Check that if github.host is set, we use its value as host """
-        self.config.set('mygithub', 'github.host', 'github.example.com')
-        service = GithubService(self.config, 'general', 'mygithub')
-        self.assertEqual("github.example.com", service.host)
+        service = self.get_mock_service(GithubService, config_overrides={
+            'github.host': 'github.example.com'})
+        self.assertEqual("github.example.com", service.config.host)
 
     def test_keyring_service(self):
         """ Checks that the keyring service name """
-        keyring_service = GithubService.get_keyring_service(self.service_config)
+        service_config = GithubConfig(**self.SERVICE_CONFIG)
+        keyring_service = GithubService.get_keyring_service(service_config)
         self.assertEqual("github://tintin@github.com/milou", keyring_service)
 
     def test_keyring_service_host(self):
         """ Checks that the keyring key depends on the github host. """
-        self.config.set('mygithub', 'github.host', 'github.example.com')
-        keyring_service = GithubService.get_keyring_service(self.service_config)
+        service_config = GithubConfig(**{'github.host': 'github.example.com'},
+                                      **self.SERVICE_CONFIG)
+        keyring_service = GithubService.get_keyring_service(service_config)
         self.assertEqual("github://tintin@github.example.com/milou", keyring_service)
 
     def test_get_repository_from_issue_url__issue(self):
@@ -272,18 +270,19 @@ class TestGithubService(TestCase):
         self.assertEqual("foo/bar", repository)
 
     def test_body_no_limit(self):
-        service = GithubService(self.config, 'general', 'mygithub')
+        service = self.get_mock_service(GithubService)
         issue = dict(body="A very short issue body.  Fixes #42.")
         self.assertEqual(issue["body"], service.body(issue))
 
     def test_body_newline_style(self):
-        service = GithubService(self.config, 'general', 'mygithub')
+        service = self.get_mock_service(GithubService)
         issue = dict(body="An\r\nIssue\r\nWith\r\nNewlines")
         self.assertEqual("An\nIssue\nWith\nNewlines", service.body(issue))
 
     def test_body_length_limit(self):
-        self.config.set('mygithub', 'github.body_length', '5')
-        service = GithubService(self.config, 'general', 'mygithub')
+        service = self.get_mock_service(GithubService, config_overrides={
+            'github.body_length': 5
+        })
         issue = dict(body="A very short issue body.  Fixes #42.")
         self.assertEqual(issue["body"][:5], service.body(issue))
 

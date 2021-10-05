@@ -3,7 +3,6 @@ import logging
 from unittest import mock
 
 from click.testing import CliRunner
-import pytest
 
 from bugwarrior import command
 from bugwarrior.config.load import BugwarriorConfigParser
@@ -44,6 +43,7 @@ class TestPull(ConfigTest):
         self.config.add_section('general')
         self.config.set('general', 'targets', 'my_service')
         self.config.set('general', 'static_fields', 'project, priority')
+        self.config.set('general', 'taskrc', self.taskrc)
         self.config.add_section('my_service')
         self.config.set('my_service', 'service', 'github')
         self.config.set('my_service', 'github.login', 'ralphbean')
@@ -52,7 +52,7 @@ class TestPull(ConfigTest):
 
         self.write_rc(self.config)
 
-    def write_rc(self, config):
+    def write_rc(self, conf):
         """
         Write configparser object to temporary bugwarriorrc path.
         """
@@ -60,7 +60,7 @@ class TestPull(ConfigTest):
         if not os.path.exists(os.path.dirname(rcfile)):
             os.makedirs(os.path.dirname(rcfile))
         with open(rcfile, 'w') as configfile:
-            config.write(configfile)
+            conf.write(configfile)
         return rcfile
 
     @mock.patch(
@@ -70,7 +70,7 @@ class TestPull(ConfigTest):
         A normal bugwarrior-pull invocation.
         """
         with self.caplog.at_level(logging.INFO):
-            self.runner.invoke(command.pull)
+            self.runner.invoke(command.pull, args=('--debug'))
 
         logs = [rec.message for rec in self.caplog.records]
 

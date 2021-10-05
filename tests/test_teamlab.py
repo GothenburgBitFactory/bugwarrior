@@ -10,6 +10,7 @@ from .base import ServiceTest, AbstractServiceTest
 
 class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        'service': 'teamlab',
         'teamlab.hostname': 'something',
         'teamlab.login': 'alkjdsf',
         'teamlab.password': 'lkjklj',
@@ -38,7 +39,7 @@ class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
 
         expected_output = {
             'project': self.SERVICE_CONFIG['teamlab.project_name'],
-            'priority': self.service.default_priority,
+            'priority': self.service.config.default_priority,
             issue.TITLE: self.arbitrary_issue['title'],
             issue.FOREIGN_ID: self.arbitrary_issue['id'],
             issue.URL: arbitrary_url,

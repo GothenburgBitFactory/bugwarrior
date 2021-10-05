@@ -4,11 +4,9 @@ import typing
 
 from jinja2 import Template
 import requests
-import six
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.config import asbool
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
@@ -134,46 +132,32 @@ class YoutrackIssue(Issue):
 
 class YoutrackService(IssueService, ServiceClient):
     ISSUE_CLASS = YoutrackIssue
-    CONFIG_PREFIX = 'youtrack'
     CONFIG_SCHEMA = YoutrackConfig
 
     def __init__(self, *args, **kw):
         super(YoutrackService, self).__init__(*args, **kw)
 
-        self.host = self.config.get('host')
-        if self.config.get('use_https', default=True, to_type=asbool):
-            self.scheme = 'https'
-            self.port = '443'
+        if self.config.use_https:
+            scheme = 'https'
+            port = 443
         else:
-            self.scheme = 'http'
-            self.port = '80'
-        self.port = self.config.get('port', self.port)
-        self.base_url = '%s://%s:%s' % (self.scheme, self.host, self.port)
-        if self.config.get('incloud_instance', default=False, to_type=asbool):
+            scheme = 'http'
+            port = 80
+        port = self.config.port or port
+        self.base_url = f'{scheme}://{self.config.host}:{port}'
+        if self.config.incloud_instance:
             self.base_url += '/youtrack'
         self.rest_url = self.base_url + '/rest'
 
         self.session = requests.Session()
         self.session.headers['Accept'] = 'application/json'
-        self.verify_ssl = self.config.get('verify_ssl', default=True, to_type=asbool)
-        if not self.verify_ssl:
+        if not self.config.verify_ssl:
             requests.packages.urllib3.disable_warnings()
             self.session.verify = False
 
-        login = self.config.get('login')
-        password = self.get_password('password', login)
-        if not self.config.get('anonymous', False):
-            self._login(login, password)
-
-        self.query = self.config.get('query', default='for:me #Unresolved')
-        self.query_limit = self.config.get('query_limit', default="100")
-
-        self.import_tags = self.config.get(
-            'import_tags', default=True, to_type=asbool
-        )
-        self.tag_template = self.config.get(
-            'tag_template', default='{{tag|lower}}', to_type=six.text_type
-        )
+        password = self.get_password('password', self.config.login)
+        if not self.config.anonymous:
+            self._login(self.config.login, password)
 
     def _login(self, login, password):
         params = {'login': login, 'password': password}
@@ -183,16 +167,14 @@ class YoutrackService(IssueService, ServiceClient):
         self.session.headers['Cookie'] = resp.headers['set-cookie']
 
     @staticmethod
-    def get_keyring_service(service_config):
-        host = service_config.get('host')
-        login = service_config.get('login')
-        return "youtrack://%s@%s" % (login, host)
+    def get_keyring_service(config):
+        return f"youtrack://{config.login}@{config.host}"
 
     def get_service_metadata(self):
         return {
             'base_url': self.base_url,
-            'import_tags': self.import_tags,
-            'tag_template': self.tag_template,
+            'import_tags': self.config.import_tags,
+            'tag_template': self.config.tag_template,
         }
 
     def get_owner(self, issue):
@@ -201,7 +183,7 @@ class YoutrackService(IssueService, ServiceClient):
             "This service has not implemented support for 'only_if_assigned'.")
 
     def issues(self):
-        params = {'filter': self.query, 'max': self.query_limit}
+        params = {'filter': self.config.query, 'max': self.config.query_limit}
         resp = self.session.get(self.rest_url + '/issue', params=params)
         issues = self.json_response(resp)['issue']
         log.debug(" Found %i total.", len(issues))

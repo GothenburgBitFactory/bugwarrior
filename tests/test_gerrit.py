@@ -9,6 +9,7 @@ from .base import ServiceTest, AbstractServiceTest
 
 class TestGerritIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        'service': 'gerrit',
         'gerrit.base_uri': 'https://one.com',
         'gerrit.username': 'two',
         'gerrit.password': 'three',

@@ -12,6 +12,7 @@ from .base import ServiceTest, AbstractServiceTest
 
 class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        'service': 'activecollab2',
         'activecollab2.url': 'http://hello',
         'activecollab2.key': 'howdy',
         'activecollab2.user_id': 0,

@@ -5,8 +5,10 @@ import responses
 import datetime
 from dateutil.tz import tzutc
 
+
 class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        'service': 'teamwork_projects',
         'teamwork_projects.host': 'https://test.teamwork_projects.com',
         'teamwork_projects.token': 'arbitrary_token',
     }

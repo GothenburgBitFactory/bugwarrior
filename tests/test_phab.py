@@ -11,7 +11,8 @@ from .base import ServiceTest, AbstractServiceTest
 class TestPhabricatorIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
-        'phabricator.host': 'phabricator.example.com',
+        'service': 'phabricator',
+        'phabricator.host': 'https://phabricator.example.com',
     }
 
     def setUp(self):

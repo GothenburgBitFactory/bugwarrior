@@ -11,6 +11,21 @@ from . import data, schema
 BUGWARRIORRC = "BUGWARRIORRC"
 
 
+def configure_logging(logfile, loglevel):
+    logging.basicConfig(filename=logfile, level=loglevel)
+
+    # In general, its nice to log "everything", but some of the loggers from
+    # our dependencies are very very spammy.  Here, we silence most of their
+    # noise:
+    spammers = [
+        'bugzilla.base',
+        'bugzilla.bug',
+        'requests.packages.urllib3.connectionpool',
+    ]
+    for spammer in spammers:
+        logging.getLogger(spammer).setLevel(logging.WARN)
+
+
 def get_config_path():
     """
     Determine the path to the config file. This will return, in this order of
@@ -46,51 +61,17 @@ def remove_inactive_flavors(rawconfig, main_section):
             rawconfig.remove_section(section)
 
 
-def fix_logging_path(config, main_section):
-    """
-    Expand environment variables and user home (~) in the log.file and return
-    as relative path.
-    """
-    log_file = config.get(main_section, 'log.file')
-    if log_file:
-        log_file = os.path.expanduser(os.path.expandvars(log_file))
-        if os.path.isabs(log_file):
-            log_file = os.path.relpath(log_file)
-    return log_file
-
-
-def configure_logging(config, main_section):
-    logging.basicConfig(
-        level=getattr(logging, config.get(main_section, 'log.level')),
-        filename=config.get(main_section, 'log.file'),
-    )
-
-    # In general, its nice to log "everything", but some of the loggers from
-    # our dependencies are very very spammy.  Here, we silence most of their
-    # noise:
-    spammers = [
-        'bugzilla.base',
-        'bugzilla.bug',
-        'requests.packages.urllib3.connectionpool',
-    ]
-    for spammer in spammers:
-        logging.getLogger(spammer).setLevel(logging.WARN)
-
-
-def load_config(main_section, interactive=False):
-    config = BugwarriorConfigParser()
-    path = get_config_path()
-    config.readfp(codecs.open(path, "r", "utf-8",))
-    config.set(main_section, 'log.level', 'INFO')
-    config.set(main_section, 'log.file', None)
-    remove_inactive_flavors(config, main_section)
-    config.interactive = interactive
-    config.data = data.BugwarriorData(
-        data.get_data_path(config, main_section))
-    config.set(
-        main_section, 'log.file', fix_logging_path(config, main_section))
-    schema.validate_config(config, main_section, path)
-    configure_logging(config, main_section)
+def load_config(main_section, interactive):
+    configpath = get_config_path()
+    rawconfig = BugwarriorConfigParser()
+    rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
+    remove_inactive_flavors(rawconfig, main_section)
+    config = schema.validate_config(rawconfig, main_section, configpath)
+    main_config = config[main_section]
+    main_config.interactive = str(interactive)
+    main_config.data = data.BugwarriorData(
+        data.get_data_path(config[main_section].taskrc))
+    configure_logging(main_config.log__file, main_config.log__level)
     return config
 
 

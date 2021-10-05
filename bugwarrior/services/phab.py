@@ -8,7 +8,6 @@ import pydantic
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.config import aslist
 from bugwarrior.services import IssueService, Issue
 
 log = logging.getLogger(__name__)
@@ -92,56 +91,48 @@ class PhabricatorIssue(Issue):
 
 class PhabricatorService(IssueService):
     ISSUE_CLASS = PhabricatorIssue
-    CONFIG_PREFIX = 'phabricator'
     CONFIG_SCHEMA = PhabricatorConfig
 
     def __init__(self, *args, **kw):
         super(PhabricatorService, self).__init__(*args, **kw)
 
-        self.host = self.config.get("host", None)
-
         # These read login credentials from ~/.arcrc
-        if self.host is not None:
-            self.api = phabricator.Phabricator(host=self.host)
+        if self.config.host:
+            self.api = phabricator.Phabricator(host=self.config.host)
         else:
             self.api = phabricator.Phabricator()
 
-        self.shown_user_phids = (
-            self.config.get("user_phids", None, aslist))
-
-        self.shown_project_phids = (
-            self.config.get("project_phids", None, aslist))
-
-        only_if_assigned = self.config.get('only_if_assigned', default=False,
-                                           to_type=lambda x: x not in [False, "False", ""])
-
-        self.ignore_cc = self.config.get('ignore_cc', default=only_if_assigned,
-                                          to_type=lambda x: x == "True")
-
-        self.ignore_author = self.config.get('ignore_author', default=only_if_assigned,
-                                             to_type=lambda x: x == "True")
-
-        self.ignore_owner = self.config.get('ignore_owner', default=False,
-                                             to_type=lambda x: x == "True")
-
-        self.ignore_reviewers = self.config.get('ignore_reviewers', default=False,
-                                                to_type=lambda x: x == "True")
+        self.ignore_cc = (
+            self.config.ignore_cc if self.config.ignore_cc is not None
+            else self.config.only_if_assigned)
+        self.ignore_author = (
+            self.config.ignore_author if self.config.ignore_author is not None
+            else self.config.only_if_assigned)
 
     def tasks(self):
-        # If self.shown_user_phids or self.shown_project_phids is set, retrict API calls to user_phids or project_phids
-        # to avoid time out with Phabricator installations with huge userbase
+        # If self.config.user_phids or self.config.project_phids is set,
+        # retrict API calls to user_phids or project_phids to avoid time out
+        # with Phabricator installations with huge userbase.
         try:
-            if (self.shown_user_phids is not None) or (self.shown_project_phids is not None):
-                if self.shown_user_phids is not None:
-                    tasks_owner = self.api.maniphest.query(status='status-open', ownerPHIDs=self.shown_user_phids)
-                    tasks_cc = self.api.maniphest.query(status='status-open', ccPHIDs=self.shown_user_phids)
-                    tasks_author = self.api.maniphest.query(status='status-open', authorPHIDs=self.shown_user_phids)
+            if self.config.user_phids or self.config.project_phids:
+                if self.config.user_phids:
+                    tasks_owner = self.api.maniphest.query(
+                        status='status-open',
+                        ownerPHIDs=self.config.user_phids)
+                    tasks_cc = self.api.maniphest.query(
+                        status='status-open',
+                        ccPHIDs=self.config.user_phids)
+                    tasks_author = self.api.maniphest.query(
+                        status='status-open',
+                        authorPHIDs=self.config.user_phids)
                     tasks = list(tasks_owner.items()) + list(tasks_cc.items()) + list(tasks_author.items())
                     # Delete duplicates
                     seen = set()
                     tasks = [item for item in tasks if str(item[1]) not in seen and not seen.add(str(item[1]))]
-                if self.shown_project_phids is not None:
-                    tasks = self.api.maniphest.query(status='status-open', projectPHIDs=self.shown_project_phids)
+                if self.config.project_phids:
+                    tasks = self.api.maniphest.query(
+                        status='status-open',
+                        projectPHIDs=self.config.project_phids)
                     tasks = tasks.items()
             else:
                 tasks = self.api.maniphest.query(status='status-open')
@@ -158,27 +149,29 @@ class PhabricatorService(IssueService):
 
             this_task_matches = False
 
-            if self.shown_user_phids is None and self.shown_project_phids is None:
+            if not self.config.user_phids and not self.config.project_phids:
                 this_task_matches = True
 
-            if self.shown_user_phids is not None:
+            if self.config.user_phids:
                 # Checking whether authorPHID, ccPHIDs, ownerPHID
-                # are intersecting with self.shown_user_phids
+                # are intersecting with self.config.user_phids
                 task_relevant_to = set()
                 if not self.ignore_cc:
                     task_relevant_to.update(task['ccPHIDs'])
-                if not self.ignore_owner:
+                if not self.config.ignore_owner:
                     task_relevant_to.add(task['ownerPHID'])
                 if not self.ignore_author:
                     task_relevant_to.add(task['authorPHID'])
-                if len(task_relevant_to.intersection(self.shown_user_phids)) > 0:
+                if len(task_relevant_to.intersection(
+                        self.config.user_phids)) > 0:
                     this_task_matches = True
 
-            if self.shown_project_phids is not None:
+            if self.config.project_phids:
                 # Checking whether projectPHIDs
-                # is intersecting with self.shown_project_phids
+                # is intersecting with self.config.project_phids
                 task_relevant_to = set(task['projectPHIDs'])
-                if len(task_relevant_to.intersection(self.shown_project_phids)) > 0:
+                if len(task_relevant_to.intersection(
+                        self.config.project_phids)) > 0:
                     this_task_matches = True
 
             if not this_task_matches:
@@ -209,25 +202,26 @@ class PhabricatorService(IssueService):
 
             this_diff_matches = False
 
-            if self.shown_user_phids is None and self.shown_project_phids is None:
+            if not self.config.user_phids and not self.config.project_phids:
                 this_diff_matches = True
 
-            if self.shown_user_phids is not None:
+            if self.config.user_phids:
                 # Checking whether authorPHID, ccPHIDs, reviewers
-                # are intersecting with self.shown_user_phids
+                # are intersecting with self.config.user_phids
                 diff_relevant_to = set()
-                if not self.ignore_reviewers:
+                if not self.config.ignore_reviewers:
                     diff_relevant_to.update(list(diff['reviewers']))
                 if not self.ignore_cc:
                     diff_relevant_to.update(diff['ccs'])
                 if not self.ignore_author:
                     diff_relevant_to.add(diff['authorPHID'])
-                if len(diff_relevant_to.intersection(self.shown_user_phids)) > 0:
+                if len(diff_relevant_to.intersection(
+                        self.config.user_phids)) > 0:
                     this_diff_matches = True
 
-            if self.shown_project_phids is not None:
+            if self.config.project_phids:
                 # Checking whether projectPHIDs
-                # is intersecting with self.shown_project_phids
+                # is intersecting with self.config.project_phids
                 phabricator_projects = []
                 try:
                     phabricator_projects = diff['phabricator:projects']
@@ -235,7 +229,8 @@ class PhabricatorService(IssueService):
                     pass
 
                 diff_relevant_to = set(phabricator_projects + [diff['repositoryPHID']])
-                if len(diff_relevant_to.intersection(self.shown_project_phids)) > 0:
+                if len(diff_relevant_to.intersection(
+                        self.config.project_phids)) > 0:
                     this_diff_matches = True
 
             if not this_diff_matches:

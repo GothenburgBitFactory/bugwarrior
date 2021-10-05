@@ -1,7 +1,7 @@
 import os
 import json
 
-from bugwarrior.config import data, load
+from bugwarrior.config import data, load, schema
 
 from ..base import ConfigTest
 
@@ -42,12 +42,20 @@ class TestGetDataPath(ConfigTest):
 
     def setUp(self):
         super(TestGetDataPath, self).setUp()
-        self.config = load.BugwarriorConfigParser()
-        self.config.add_section('general')
+        rawconfig = load.BugwarriorConfigParser()
+        rawconfig.add_section('general')
+        rawconfig.set('general', 'targets', 'my_service')
+        rawconfig.add_section('my_service')
+        rawconfig.set('my_service', 'service', 'github')
+        rawconfig.set('my_service', 'github.login', 'ralphbean')
+        rawconfig.set('my_service', 'github.password', 'abc123')
+        rawconfig.set('my_service', 'github.username', 'ralphbean')
+        self.config = schema.validate_config(
+            rawconfig, 'general', 'configpath')
 
     def assertDataPath(self, expected_datapath):
-        self.assertEqual(
-            expected_datapath, data.get_data_path(self.config, 'general'))
+        self.assertEqual(expected_datapath,
+                         data.get_data_path(self.config['general'].taskrc))
 
     def test_TASKDATA(self):
         """

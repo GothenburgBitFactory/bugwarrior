@@ -5,11 +5,9 @@ import sys
 from jinja2 import Template
 import pydantic
 import requests
-import six
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.config import asbool, aslist
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
@@ -300,68 +298,29 @@ class GithubIssue(Issue):
 
 class GithubService(IssueService):
     ISSUE_CLASS = GithubIssue
-    CONFIG_PREFIX = 'github'
     CONFIG_SCHEMA = GithubConfig
 
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
 
-        self.host = self.config.get('host', 'github.com')
-        self.login = self.config.get('login')
-
         auth = {}
-        token = self.config.get('token')
-        if 'token' in self.config:
-            token = self.get_password('token', self.login)
+        if self.config.token:
+            token = self.get_password('token', self.config.login)
             auth['token'] = token
         else:
-            password = self.get_password('password', self.login)
-            auth['basic'] = (self.login, password)
+            password = self.get_password('password', self.config.login)
+            auth['basic'] = (self.config.login, password)
 
-        self.client = GithubClient(self.host, auth)
-
-        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
-        self.include_repos = self.config.get('include_repos', [], aslist)
-
-        self.username = self.config.get('username')
-        self.filter_pull_requests = self.config.get(
-            'filter_pull_requests', default=False, to_type=asbool
-        )
-        self.exclude_pull_requests = self.config.get(
-            'exclude_pull_requests', default=False, to_type=asbool
-        )
-        self.involved_issues = self.config.get(
-            'involved_issues', default=False, to_type=asbool
-        )
-        self.import_labels_as_tags = self.config.get(
-            'import_labels_as_tags', default=False, to_type=asbool
-        )
-        self.label_template = self.config.get(
-            'label_template', default='{{label}}', to_type=six.text_type
-        )
-        self.project_owner_prefix = self.config.get(
-            'project_owner_prefix', default=False, to_type=asbool
-        )
-
-        self.query = self.config.get(
-            'query',
-            default='involves:{user} state:open'.format(
-                user=self.username) if self.involved_issues else '',
-            to_type=six.text_type
-        )
+        self.client = GithubClient(self.config.host, auth)
 
     @staticmethod
-    def get_keyring_service(service_config):
-        login = service_config.get('login')
-        username = service_config.get('username')
-        host = service_config.get('host', default='github.com')
-        return "github://{login}@{host}/{username}".format(
-            login=login, username=username, host=host)
+    def get_keyring_service(config):
+        return f"github://{config.login}@{config.host}/{config.username}"
 
     def get_service_metadata(self):
         return {
-            'import_labels_as_tags': self.import_labels_as_tags,
-            'label_template': self.label_template,
+            'import_labels_as_tags': self.config.import_labels_as_tags,
+            'label_template': self.config.label_template,
         }
 
     def get_owned_repo_issues(self, tag):
@@ -413,7 +372,7 @@ class GithubService(IssueService):
     def annotations(self, tag, issue, issue_obj):
         url = issue['html_url']
         annotations = []
-        if self.annotation_comments:
+        if self.main_config.annotation_comments:
             comments = self._comments(tag, issue['number'])
             log.debug(" got comments for %s", issue['html_url'])
             annotations = ((
@@ -430,7 +389,7 @@ class GithubService(IssueService):
 
         if body:
             body = body.replace('\r\n', '\n')
-            max_length = self.config.get('body_length', default=sys.maxsize, to_type=int)
+            max_length = self.config.body_length
             body = body[:max_length]
 
         return body
@@ -451,18 +410,17 @@ class GithubService(IssueService):
         return self.filter_repo_name(repo.split('/')[-3])
 
     def filter_repos(self, repo):
-        if repo['owner']['login'] != self.username:
+        if repo['owner']['login'] != self.config.username:
             return False
 
         return self.filter_repo_name(repo['name'])
 
     def filter_repo_name(self, name):
-        if self.exclude_repos:
-            if name in self.exclude_repos:
-                return False
+        if name in self.config.exclude_repos:
+            return False
 
-        if self.include_repos:
-            if name in self.include_repos:
+        if self.config.include_repos:
+            if name in self.config.include_repos:
                 return True
             else:
                 return False
@@ -471,33 +429,36 @@ class GithubService(IssueService):
 
     def include(self, issue):
         if 'pull_request' in issue[1]:
-            if self.exclude_pull_requests:
+            if self.config.exclude_pull_requests:
                 return False
-            if not self.filter_pull_requests:
+            if not self.config.filter_pull_requests:
                 return True
         return super(GithubService, self).include(issue)
 
     def issues(self):
         issues = {}
-        if self.query:
-            issues.update(self.get_query(self.query))
+        if self.config.query:
+            issues.update(self.get_query(self.config.query))
+        elif self.config.involved_issues:
+            issues.update(self.get_query('involves:{user} state:open'.format(
+                user=self.config.username)))
 
-        if self.config.get('include_user_repos', True, asbool):
+        if self.config.include_user_repos:
             # Only query for all repos if an explicit
             # include_repos list is not specified.
-            if self.include_repos:
-                repos = self.include_repos
+            if self.config.include_repos:
+                repos = self.config.include_repos
             else:
-                all_repos = self.client.get_repos(self.username)
+                all_repos = self.client.get_repos(self.config.username)
                 repos = filter(self.filter_repos, all_repos)
                 repos = [repo['name'] for repo in repos]
 
             for repo in repos:
                 issues.update(
                     self.get_owned_repo_issues(
-                        self.username + "/" + repo)
+                        self.config.username + "/" + repo)
                 )
-        if self.config.get('include_user_issues', True, asbool):
+        if self.config.include_user_issues:
             issues.update(
                 filter(self.filter_issues,
                        self.get_directly_assigned_issues().items())
@@ -515,14 +476,14 @@ class GithubService(IssueService):
             issue_obj = self.get_issue_for_record(issue)
             tagParts = tag.split('/')
             projectName = tagParts[1]
-            if self.project_owner_prefix:
+            if self.config.project_owner_prefix:
                 projectName = tagParts[0]+"."+projectName
             extra = {
                 'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',
                 'annotations': self.annotations(tag, issue, issue_obj),
                 'body': self.body(issue),
-                'namespace': self.username,
+                'namespace': self.config.username,
             }
             issue_obj.update_extra(extra)
             yield issue_obj

@@ -126,26 +126,23 @@ class TeamworkIssue(Issue):
 
 class TeamworkService(IssueService):
     ISSUE_CLASS = TeamworkIssue
-    CONFIG_PREFIX = 'teamwork_projects'
     CONFIG_SCHEMA = TeamworkConfig
 
     def __init__(self, *args, **kwargs):
         super(TeamworkService, self).__init__(*args, **kwargs)
-        self.host = self.config.get('host', '')
-        self.token = self.config.get('token', '')
-        self.client = TeamworkClient(self.host, self.token)
+        self.client = TeamworkClient(self.config.host, self.config.token)
         user = self.client.authenticate()
         self.user_id = user["account"]["userId"]
         self.name = user["account"]["firstname"] + " " + user["account"]["lastname"]
 
     def get_comments(self, issue):
-        if self.annotation_comments:
+        if self.main_config.annotation_comments:
             if issue.get("comments-count", 0) > 0:
                 endpoint = "/tasks/{task_id}/comments.json".format(task_id=issue["id"])
                 comments = self.client.call_api("GET", endpoint)
                 comment_list = []
                 for comment in comments["comments"]:
-                    url = self.host + "/#/tasks/" + str(issue["id"])
+                    url = self.config.host + "/#/tasks/" + str(issue["id"])
                     author = "{first} {last}".format(
                         first=comment["author-firstname"],
                         last=comment["author-lastname"],
@@ -168,7 +165,7 @@ class TeamworkService(IssueService):
                     or (self.user_id in issue.get("responsible-party-ids", "")):
                 issue_obj = self.get_issue_for_record(issue)
                 extra = {
-                    "host": self.host,
+                    "host": self.config.host,
                     'annotations': self.get_comments(issue),
                 }
                 issue_obj.update_extra(extra)

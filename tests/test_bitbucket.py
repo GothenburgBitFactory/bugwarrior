@@ -10,6 +10,7 @@ from .base import ServiceTest, AbstractServiceTest
 
 class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        'service': 'bitbucket',
         'bitbucket.login': 'something',
         'bitbucket.username': 'somename',
         'bitbucket.password': 'something else',

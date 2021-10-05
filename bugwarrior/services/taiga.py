@@ -68,17 +68,11 @@ class TaigaIssue(Issue):
 
 class TaigaService(IssueService, ServiceClient):
     ISSUE_CLASS = TaigaIssue
-    CONFIG_PREFIX = 'taiga'
     CONFIG_SCHEMA = TaigaConfig
 
     def __init__(self, *args, **kw):
         super(TaigaService, self).__init__(*args, **kw)
-        self.url = self.config.get('base_uri')
-        self.include_tasks = self.config.get('include_tasks', default=False)
         self.auth_token = self.get_password('auth_token')
-        self.label_template = self.config.get(
-            'label_template', default='{{label}}', to_type=six.text_type
-        )
         self.session = requests.session()
         self.session.headers.update({
             'Accept': 'application/json',
@@ -86,14 +80,13 @@ class TaigaService(IssueService, ServiceClient):
         })
 
     @staticmethod
-    def get_keyring_service(service_config):
-        base_uri = service_config.get('base_uri')
-        return "taiga://%s" % base_uri
+    def get_keyring_service(config):
+        return f"taiga://{config.base_uri}"
 
     def get_service_metadata(self):
         return {
-            'url': self.url,
-            'label_template': self.label_template,
+            'url': self.config.base_uri,
+            'label_template': self.config.label_template,
         }
 
     def get_owner(self, issue):
@@ -105,7 +98,7 @@ class TaigaService(IssueService, ServiceClient):
         log.debug('Getting %s' % task_type_plural)
 
         response = self.session.get(
-            self.url + '/api/v1/' + task_type_plural,
+            self.config.base_uri + '/api/v1/' + task_type_plural,
             params={'assigned_to': userid, 'status__is_closed': "false"})
         tasks = response.json()
 
@@ -119,7 +112,7 @@ class TaigaService(IssueService, ServiceClient):
             yield self.get_issue_for_record(task, extra)
 
     def issues(self):
-        url = self.url + '/api/v1/users/me'
+        url = self.config.base_uri + '/api/v1/users/me'
         me = self.session.get(url)
         data = me.json()
 
@@ -133,20 +126,21 @@ class TaigaService(IssueService, ServiceClient):
         for issue in self._issues(userid, 'userstory', 'userstories', 'us'):
             yield issue
 
-        if self.include_tasks:
+        if self.config.include_tasks:
             for issue in self._issues(userid, 'task', 'tasks', 'task'):
                 yield issue
 
     @cache.cache_on_arguments()
     def get_project(self, project_id):
-        url = '%s/api/v1/projects/%i' % (self.url, project_id)
+        url = '%s/api/v1/projects/%i' % (self.config.base_uri, project_id)
         return self.json_response(self.session.get(url))
 
     def build_url(self, task, project, task_type):
-        return '%s/project/%s/%s/%i' % (self.url, project['slug'], task_type, task['ref'])
+        return '%s/project/%s/%s/%i' % (
+            self.config.base_uri, project['slug'], task_type, task['ref'])
 
     def annotations(self, task, project, task_type, task_type_short):
-        url = '%s/api/v1/history/%s/%i' % (self.url, task_type, task['id'])
+        url = f"{self.config.base_uri}/api/v1/history/{task_type}/{task['id']}"
         response = self.session.get(url)
         history = response.json()
         return self.build_annotations(

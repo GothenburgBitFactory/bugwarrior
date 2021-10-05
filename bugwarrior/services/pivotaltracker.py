@@ -1,5 +1,4 @@
 from builtins import filter, map
-import six
 import re
 import operator
 
@@ -8,7 +7,6 @@ from jinja2 import Template
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.config import asbool, aslist, asint
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
@@ -142,61 +140,35 @@ class PivotalTrackerIssue(Issue):
 
 class PivotalTrackerService(IssueService, ServiceClient):
     ISSUE_CLASS = PivotalTrackerIssue
-    CONFIG_PREFIX = 'pivotaltracker'
     CONFIG_SCHEMA = PivotalTrackerConfig
 
     def __init__(self, *args, **kwargs):
         super(PivotalTrackerService, self).__init__(*args, **kwargs)
 
-        self.host=self.config.get('host', 'https://www.pivotaltracker.com/services')
-        self.version = self.config.get('version', 'v5')
-        self.token = self.config.get('token')
-        self.path = "{0}/{1}".format(self.host, self.version)
+        self.path = "{0}/{1}".format(self.config.host, self.config.version)
 
         self.session = requests.Session()
         self.session.headers.update(
             {
-                'X-TrackerToken': self.token,
+                'X-TrackerToken': self.config.token,
                 'Content-Type': 'application/json'
             }
         )
 
-        self.account_ids = self.config.get(
-	    'account_ids', default=[], to_type=aslist)
-        self.user_id = self.config.get('user_id', to_type=asint)
-        self.only_if_assigned = self.config.get(
-            'only_if_assigned', default=True, to_type=asbool)
-        self.also_unassigned = self.config.get(
-            'also_unassigned', default=False, to_type=asbool)
-        self.only_if_author = self.config.get(
-            'only_if_author', default=False, to_type=asbool)
-        self.exclude_stories = self.config.get(
-            'exclude_stories', default=[], to_type=aslist)
-        self.exclude_projects = self.config.get(
-            'exclude_projects', default=[], to_type=aslist)
-        self.exclude_tags = self.config.get(
-            'exclude_tag', default=[], to_type=aslist)
-        self.import_labels_as_tags = self.config.get(
-            'import_labels_as_tags', default=False, to_type=asbool)
-        self.label_template = self.config.get(
-            'label_template', default='{{label}}', to_type=six.text_type)
-        self.import_blockers = self.config.get(
-            'import_blockers', default=True, to_type=asbool)
-        self.blocker_template = self.config.get(
-            'blocker_template', default='Description: {{description}} State: {{resolved}}\n', to_type=six.text_type)
-        self.annotation_template = self.config.get(
-            'annotation_template', default='Completed: {{complete}} - {{description}}', to_type=six.text_type)
-        self.query = self.config.get('query', default="", to_type=six.text_type)
+        self.query = self.config.query
 
         if not self.query:
-            if self.only_if_assigned and not self.also_unassigned:
-                self.query += "mywork:{user_id}".format(user_id=self.user_id)
-            if self.exclude_stories:
-                self.query += " -id:{stories}".format(stories=",".join(self.exclude_stories))
-            if self.exclude_tags:
-                self.query += " -label:{labels}".format(labels=",".join(self.exclude_tags))
-            if self.only_if_author:
-                self.query += " requester:{user_id}".format(user_id=self.user_id)
+            if (self.config.only_if_assigned
+                    and not self.config.also_unassigned):
+                self.query += f"mywork:{self.config.user_id}"
+            if self.config.exclude_stories:
+                self.query += " -id:{stories}".format(
+                    stories=",".join(self.config.exclude_stories))
+            if self.config.exclude_tags:
+                self.query += " -label:{labels}".format(
+                    labels=",".join(self.config.exclude_tags))
+            if self.config.only_if_author:
+                self.query += f" requester:{self.config.user_id}"
 
     def get_owner(self, issue):
         # Issue filtering is implemented as part of the api query.
@@ -204,17 +176,17 @@ class PivotalTrackerService(IssueService, ServiceClient):
 
     def get_service_metadata(self):
         return {
-            'import_labels_as_tags': self.import_labels_as_tags,
-            'label_template': self.label_template,
-            'annotation_template': self.annotation_template,
-            'import_blockers': self.import_blockers,
-            'blocker_template': self.blocker_template
+            'import_labels_as_tags': self.config.import_labels_as_tags,
+            'label_template': self.config.label_template,
+            'annotation_template': self.config.annotation_template,
+            'import_blockers': self.config.import_blockers,
+            'blocker_template': self.config.blocker_template
         }
 
     def annotations(self, annotations, story):
         final_annotations = []
-        if self.annotation_comments:
-            annotation_template = Template(self.annotation_template)
+        if self.main_config.annotation_comments:
+            annotation_template = Template(self.config.annotation_template)
             for annotation in annotations:
                 final_annotations.append(
                     ('task', annotation_template.render(annotation))
@@ -227,10 +199,10 @@ class PivotalTrackerService(IssueService, ServiceClient):
     def blockers(self, blocker_list):
         blockers = []
 
-        if not self.import_blockers:
+        if not self.config.import_blockers:
             return blockers
 
-        blocker_template = Template(self.blocker_template)
+        blocker_template = Template(self.config.blocker_template)
         for blocker in blocker_list:
             blockers.append(
                 blocker_template.render(blocker)
@@ -239,9 +211,9 @@ class PivotalTrackerService(IssueService, ServiceClient):
         return ', '.join(blockers) or None
 
     def issues(self):
-        for project in self.get_projects(self.account_ids):
+        for project in self.get_projects(self.config.account_ids):
             project_id = project.get('id')
-            if project_id not in self.exclude_projects:
+            if project_id not in self.config.exclude_projects:
                 for story in self.get_query(project_id, query=self.query):
                     story_id = story.get('id')
                     tasks = self.get_tasks(

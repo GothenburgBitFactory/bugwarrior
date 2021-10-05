@@ -7,7 +7,6 @@ from taskw import TaskWarriorShellout
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.config import asbool
 from bugwarrior.services import Issue, IssueService, ServiceClient
 
 import logging
@@ -34,7 +33,7 @@ class RedMineClient(ServiceClient):
         self.issue_limit = issue_limit
         self.verify_ssl = verify_ssl
 
-    def find_issues(self, issue_limit=100, only_if_assigned=False):
+    def find_issues(self, issue_limit, only_if_assigned=False):
         args = {}
         # TODO: if issue_limit is greater than 100, implement pagination to return all issues.
         # Leave the implementation of this to the unlucky soul with >100 issues assigned to them.
@@ -242,47 +241,40 @@ class RedMineIssue(Issue):
 
 class RedMineService(IssueService):
     ISSUE_CLASS = RedMineIssue
-    CONFIG_PREFIX = 'redmine'
     CONFIG_SCHEMA = RedMineConfig
 
     def __init__(self, *args, **kw):
         super(RedMineService, self).__init__(*args, **kw)
 
-        self.url = self.config.get('url').rstrip("/")
         self.key = self.get_password('key')
-        self.issue_limit = self.config.get('issue_limit')
 
-        self.verify_ssl = self.config.get(
-            'verify_ssl', default=True, to_type=asbool
-        )
-
-        login = self.config.get('login')
-        if login:
-            password = self.get_password('password', login)
-        auth = (login, password) if (login and password) else None
-        self.client = RedMineClient(self.url, self.key, auth, self.issue_limit, self.verify_ssl)
-
-        self.project_name = self.config.get('project_name')
+        password = (self.get_password('password', self.config.login)
+                    if self.config.login else None)
+        auth = ((self.config.login, password)
+                if (self.config.login and password) else None)
+        self.client = RedMineClient(self.config.url,
+                                    self.key,
+                                    auth,
+                                    self.config.issue_limit,
+                                    self.config.verify_ssl)
 
     def get_service_metadata(self):
         return {
-            'project_name': self.project_name,
-            'url': self.url,
+            'project_name': self.config.project_name,
+            'url': self.config.url,
         }
 
     @staticmethod
-    def get_keyring_service(service_config):
-        url = service_config.get('url')
-        login = service_config.get('login')
-        return "redmine://%s@%s/" % (login, url)
+    def get_keyring_service(config):
+        return f"redmine://{config.login}@{config.url}/"
 
     def get_owner(self, issue):
         # Issue filtering is implemented as part of the api query.
         pass
 
     def issues(self):
-        only_if_assigned = self.config.get('only_if_assigned', False)
-        issues = self.client.find_issues(self.issue_limit, only_if_assigned)
+        issues = self.client.find_issues(
+            self.config.issue_limit, self.config.only_if_assigned)
         log.debug(" Found %i total.", len(issues))
         for issue in issues:
             yield self.get_issue_for_record(issue)
