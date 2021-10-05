@@ -12,7 +12,6 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.config import asbool
 from bugwarrior.services import Issue, IssueService
 
 import logging
@@ -98,33 +97,28 @@ class TracIssue(Issue):
 
 class TracService(IssueService):
     ISSUE_CLASS = TracIssue
-    CONFIG_PREFIX = 'trac'
     CONFIG_SCHEMA = TracConfig
 
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
-        base_uri = self.config.get('base_uri')
-        scheme = self.config.get('scheme', default='https')
-        username = self.config.get('username', default=None)
-        if username:
-            password = self.get_password('password', username)
+        if self.config.username:
+            password = self.get_password('password', self.config.username)
 
-            auth = urllib.parse.quote_plus('%s:%s' % (username, password)) + '@'
+            auth = urllib.parse.quote_plus(
+                f'{self.config.username}:{password}@')
         else:
             auth = ''
-        if self.config.get('no_xmlrpc', default=False, to_type=asbool):
-            uri = '%s://%s%s/' % (scheme, auth, base_uri)
+
+        self.trac = None
+        uri = f'{self.config.scheme}://{auth}{self.config.base_uri}/'
+        if self.config.no_xmlrpc:
             self.uri = uri
-            self.trac = None
         else:
-            uri = '%s://%s%s/login/xmlrpc' % (scheme, auth, base_uri)
-            self.trac = offtrac.TracServer(uri)
+            self.trac = offtrac.TracServer(uri + 'login/xmlrpc')
 
     @staticmethod
-    def get_keyring_service(service_config):
-        username = service_config.get('username')
-        base_uri = service_config.get('base_uri')
-        return "https://%s@%s/" % (username, base_uri)
+    def get_keyring_service(config):
+        return f"https://{config.username}@{config.base_uri}/"
 
     def annotations(self, tag, issue, issue_obj):
         annotations = []
@@ -144,7 +138,7 @@ class TracService(IssueService):
         return issue.get('owner', None) or None
 
     def issues(self):
-        base_url = "https://" + self.config.get('base_uri')
+        base_url = "https://" + self.config.base_uri
         if self.trac:
             tickets = self.trac.query_tickets('status!=closed&max=0')
             tickets = list(map(self.trac.get_ticket, tickets))

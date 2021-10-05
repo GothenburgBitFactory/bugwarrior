@@ -1,7 +1,6 @@
 import responses
 
 from bugwarrior.config.load import BugwarriorConfigParser
-from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.youtrack import YoutrackService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -12,13 +11,15 @@ class TestYoutrackService(ConfigTest):
         super(TestYoutrackService, self).setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
+        self.config.set('general', 'targets', 'myservice')
         self.config.add_section('myservice')
+        self.config.set('myservice', 'service', 'youtrack')
         self.config.set('myservice', 'youtrack.login', 'foobar')
         self.config.set('myservice', 'youtrack.password', 'XXXXXX')
+
     def test_get_keyring_service(self):
         self.config.set('myservice', 'youtrack.host', 'youtrack.example.com')
-        service_config = ServiceConfig(
-            YoutrackService.CONFIG_PREFIX, self.config, 'myservice')
+        service_config = self.validate()['myservice']
         self.assertEqual(
             YoutrackService.get_keyring_service(service_config),
             'youtrack://foobar@youtrack.example.com')
@@ -27,6 +28,7 @@ class TestYoutrackService(ConfigTest):
 class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
+        'service': 'youtrack',
         'youtrack.host': 'youtrack.example.com',
         'youtrack.login': 'arbitrary_login',
         'youtrack.password': 'arbitrary_password',
@@ -70,7 +72,7 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
 
         expected_output = {
             'project': 'TEST',
-            'priority': self.service.default_priority,
+            'priority': self.service.config.default_priority,
             'tags': [u'bug', u'new_feature'],
             issue.ISSUE: 'TEST-1',
             issue.SUMMARY: 'Hello World',
@@ -94,7 +96,7 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
             'description':
                 u'(bw)Is#TEST-1 - Hello World .. https://youtrack.example.com:443/issue/TEST-1',
             'project': 'TEST',
-            'priority': self.service.default_priority,
+            'priority': self.service.config.default_priority,
             'tags': [u'bug', u'new_feature'],
             'youtrackissue': 'TEST-1',
             'youtracksummary': 'Hello World',

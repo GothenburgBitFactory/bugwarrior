@@ -9,7 +9,6 @@ import getpass
 import click
 
 from bugwarrior.config import get_keyring, load_config
-from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services import aggregate_issues, get_service
 from bugwarrior.db import (
     get_defined_udas_as_strings,
@@ -61,7 +60,8 @@ def pull(dry_run, flavor, interactive, debug):
         main_section = _get_section_name(flavor)
         config = _try_load_config(main_section, interactive)
 
-        lockfile_path = os.path.join(config.data.path, 'bugwarrior.lockfile')
+        lockfile_path = os.path.join(
+            config[main_section].data.path, 'bugwarrior.lockfile')
         lockfile = PIDLockFile(lockfile_path)
         lockfile.acquire(timeout=10)
         try:
@@ -95,21 +95,13 @@ def vault():
 
 
 def targets():
-    config = load_config('general')
-    for section in config.sections():
-        if section in ['general', 'notifications'] or \
-           section.startswith('flavor.'):
-            continue
-        service_name = config.get(section, 'service')
-        service_class = get_service(service_name)
-        for option in config.options(section):
-            value = config.get(section, option)
-            if not value:
-                continue
+    config = _try_load_config('general')
+    for target in config['general'].targets:
+        service_class = get_service(config[target].service)
+        for value in [v for v in dict(config[target]).values()
+                      if isinstance(v, str)]:
             if '@oracle:use_keyring' in value:
-                service_config = ServiceConfig(
-                    service_class.CONFIG_PREFIX, config, section)
-                yield service_class.get_keyring_service(service_config)
+                yield service_class.get_keyring_service(config[target])
 
 
 @vault.command()

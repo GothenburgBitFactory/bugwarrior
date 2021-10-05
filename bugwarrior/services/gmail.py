@@ -114,30 +114,21 @@ class GmailIssue(Issue):
 class GmailService(IssueService):
     APPLICATION_NAME = 'Bugwarrior Gmail Service'
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-    DEFAULT_CLIENT_SECRET_PATH = '~/.gmail_client_secret.json'
 
     ISSUE_CLASS = GmailIssue
-    CONFIG_PREFIX = 'gmail'
     CONFIG_SCHEMA = GmailConfig
     AUTHENTICATION_LOCK = multiprocessing.Lock()
 
     def __init__(self, *args, **kw):
         super(GmailService, self).__init__(*args, **kw)
 
-        self.query = self.config.get('query', 'label:Starred')
-        self.login_name = self.config.get('login_name', 'me')
-        self.client_secret_path = self.get_config_path(
-            'client_secret_path',
-            self.DEFAULT_CLIENT_SECRET_PATH)
-
-        credentials_name = clean_filename(self.login_name if self.login_name != 'me' else self.target)
+        credentials_name = clean_filename(
+            self.config.login_name if self.config.login_name != 'me'
+            else self.target)
         self.credentials_path = os.path.join(
-            self.config.data.path,
+            self.main_config.data.path,
             'gmail_credentials_%s.pickle' % (credentials_name,))
         self.gmail_api = self.build_api()
-
-    def get_config_path(self, varname, default_path=None):
-        return os.path.expanduser(self.config.get(varname, default_path))
 
     def build_api(self):
         credentials = self.get_credentials()
@@ -169,7 +160,7 @@ class GmailService(IssueService):
                     credentials.refresh(Request())
                 else:
                     flow = InstalledAppFlow.from_client_secrets_file(
-                        self.client_secret_path, self.SCOPES)
+                        self.config.client_secret_path, self.SCOPES)
                     credentials = flow.run_local_server(port=0)
                 # Save the credentials for the next run
                 with open(self.credentials_path, 'wb') as token:
@@ -178,13 +169,15 @@ class GmailService(IssueService):
             return credentials
 
     def get_labels(self):
-        result = self.gmail_api.users().labels().list(userId=self.login_name).execute()
+        result = self.gmail_api.users().labels().list(
+            userId=self.config.login_name).execute()
         return {label['id']: label['name'] for label in result['labels']}
 
     def get_threads(self):
         thread_service = self.gmail_api.users().threads()
 
-        result = thread_service.list(userId=self.login_name, q=self.query).execute()
+        result = thread_service.list(
+            userId=self.config.login_name, q=self.config.query).execute()
         return [
             thread_service.get(userId='me', id=thread['id']).execute()
             for thread in result.get('threads', [])]

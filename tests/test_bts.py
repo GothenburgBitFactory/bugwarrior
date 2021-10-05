@@ -34,6 +34,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
     maxDiff = None
 
     SERVICE_CONFIG = {
+        'service': 'bts',
         'bts.email': 'irl@debian.org',
         'bts.packages': 'bugwarrior',
     }
@@ -77,10 +78,10 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
                            'taskwarrior'),
             'btsurl': 'https://bugs.debian.org/810629',
             'btssource': '',
-            'description': (u'(bw)Is#810629 - ITP: bugwarrior -- Pull tickets'
-                            u' from github, bitbucket, bugzilla, jira, trac, '
-                            u'and others into taskwa .. https://bugs.debian.o'
-                            u'rg/810629'),
+            'description': (
+                '(bw)Is#810629 - ITP: bugwarrior -- Pull tickets from github, '
+                'bitbucket, bugzilla, jira, trac, and others into taskwa .. '
+                'https://bugs.debian.org/810629'),
             'priority': 'L',
             'btsstatus': 'pending',
             u'tags': []}

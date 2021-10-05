@@ -4,8 +4,8 @@ import unittest
 
 import taskw.task
 
+from bugwarrior import config, db
 from bugwarrior.config.load import BugwarriorConfigParser
-from bugwarrior import db
 
 from .base import ConfigTest
 
@@ -87,12 +87,17 @@ class TestSynchronize(ConfigTest):
         def get_tasks(tw):
             return remove_non_deterministic_keys(tw.load_tasks())
 
-        rawconfig = BugwarriorConfigParser()
-        rawconfig.add_section('general')
-        rawconfig.set('general', 'targets', 'my_service')
-        rawconfig.set('general', 'static_fields', 'project, priority')
-        rawconfig.add_section('my_service')
-        rawconfig.set('my_service', 'service', 'github')
+        self.config = BugwarriorConfigParser()
+        self.config.add_section('general')
+        self.config.set('general', 'targets', 'my_service')
+        self.config.set('general', 'taskrc', self.taskrc)
+        self.config.set('general', 'static_fields', 'project, priority')
+        self.config.add_section('my_service')
+        self.config.set('my_service', 'service', 'github')
+        self.config.set('my_service', 'github.login', 'ralphbean')
+        self.config.set('my_service', 'github.username', 'ralphbean')
+        self.config.set('my_service', 'github.password', 'abc123')
+        bwconfig = self.validate()
 
         tw = taskw.TaskWarrior(self.taskrc)
         self.assertEqual(tw.load_tasks(), {'completed': [], 'pending': []})
@@ -112,7 +117,7 @@ class TestSynchronize(ConfigTest):
             # writing out to taskwarrior.
             # https://github.com/ralphbean/bugwarrior/issues/601
             issue_generator = iter((issue, issue,))
-            db.synchronize(issue_generator, rawconfig, 'general')
+            db.synchronize(issue_generator, bwconfig, 'general')
 
             self.assertEqual(get_tasks(tw), {
                 'completed': [],
@@ -133,7 +138,7 @@ class TestSynchronize(ConfigTest):
         # Change static field
         issue['project'] = 'other_project'
 
-        db.synchronize(iter((issue,)), rawconfig, 'general')
+        db.synchronize(iter((issue,)), bwconfig, 'general')
 
         self.assertEqual(get_tasks(tw), {
             'completed': [],
@@ -149,7 +154,7 @@ class TestSynchronize(ConfigTest):
             }]})
 
         # TEST CLOSED ISSUE.
-        db.synchronize(iter(()), rawconfig, 'general')
+        db.synchronize(iter(()), bwconfig, 'general')
 
         completed_tasks = tw.load_tasks()
 
@@ -169,7 +174,7 @@ class TestSynchronize(ConfigTest):
             'pending': []})
 
         # TEST REOPENED ISSUE
-        db.synchronize(iter((issue,)), rawconfig, 'general')
+        db.synchronize(iter((issue,)), bwconfig, 'general')
 
         tasks = tw.load_tasks()
         self.assertEqual(
@@ -193,14 +198,18 @@ class TestSynchronize(ConfigTest):
 
 class TestUDAs(ConfigTest):
     def test_udas(self):
-        rawconfig = BugwarriorConfigParser()
-        rawconfig.add_section('general')
-        rawconfig.set('general', 'targets', 'my_service')
-        rawconfig.add_section('my_service')
-        rawconfig.set('my_service', 'service', 'github')
+        self.config = BugwarriorConfigParser()
+        self.config.add_section('general')
+        self.config.set('general', 'targets', 'my_service')
+        self.config.add_section('my_service')
+        self.config.set('my_service', 'service', 'github')
+        self.config.set('my_service', 'github.login', 'ralphbean')
+        self.config.set('my_service', 'github.username', 'ralphbean')
+        self.config.set('my_service', 'github.password', 'abc123')
+        self.config.set('my_service', 'service', 'github')
 
-        udas = sorted(list(
-            db.get_defined_udas_as_strings(rawconfig, 'general')))
+        conf = self.validate()
+        udas = sorted(list(db.get_defined_udas_as_strings(conf, 'general')))
         self.assertEqual(udas, [
             u'uda.githubbody.label=Github Body',
             u'uda.githubbody.type=string',

@@ -64,18 +64,14 @@ def format_item(item):
 
 class AzureDevopsClient(ServiceClient):
     def __init__(self, pat, org, project, host):
-        if pat[0] != ":":
-            self.pat = f":{pat}"
-        else:
-            self.pat = pat
-        self.token = base64.b64encode(self.pat.encode("ascii")).decode("ascii")
-        self.organization = quote(org)
-        self.project = quote(project)
+        self.pat = pat
+        self.organization = org
+        self.project = project
         self.host = host
         self.base_url = f"https://{host}/{org}/{project}/_apis/wit"
         self.session = requests.Session()
         self.session.headers = {
-            "authorization": f"Basic {self.token}",
+            "authorization": f"Basic {self.pat}",
             "accept": "application/json",
             "content-type": "application/json",
         }
@@ -190,40 +186,39 @@ class AzureDevopsIssue(Issue):
 
 class AzureDevopsService(IssueService):
     ISSUE_CLASS = AzureDevopsIssue
-    CONFIG_PREFIX = "ado"
     CONFIG_SCHEMA = AzureDevopsConfig
 
     def __init__(self, *args, **kw):
         super(AzureDevopsService, self).__init__(*args, **kw)
-        self.host = self.config.get("host", "dev.azure.com")
-        self.PAT = self.config.get("PAT")
-        self.project = self.config.get("project")
-        self.org = self.config.get("organization")
         self.client = AzureDevopsClient(
-            pat=self.PAT, project=quote(self.project), org=quote(self.org), host=self.host
+            pat=self.config.PAT,
+            project=self.config.project,
+            org=self.config.organization,
+            host=self.config.host
         )
-        self.query_filter = self.config.get("wiql_filter")
 
     def get_query(self):
         default_query = "SELECT [System.Id] FROM workitems"
 
         # Test for Clauses, add WHERE if any exist
-        if any([self.query_filter, self.config.get("only_if_assigned"), self.config.get("also_unassigned")]):
+        if any([self.config.wiql_filter,
+                self.config.only_if_assigned,
+                self.config.also_unassigned]):
             default_query += " WHERE "
-        
+
         # Adding The User Added Query
-        if self.query_filter:
-            default_query += self.query_filter
+        if self.config.wiql_filter:
+            default_query += self.wiql_filter
 
         # Adding logic for common configuration items
-        if self.config.get("only_if_assigned"):
-            if self.query_filter:
-                    default_query += " AND "
-            if self.config.get("also_unassigned"):
+        if self.config.only_if_assigned:
+            if self.config.wiql_filter:
+                default_query += " AND "
+            if self.config.also_unassigned:
                 default_query += "([System.AssignedTo] = @me OR [System.AssignedTo] == '')"
             else:
                 default_query += "[System.AssignedTo] = @me "
-        
+
         list_of_items = self.client.get_work_items_from_query(default_query)
         return list_of_items
 
@@ -231,7 +226,7 @@ class AzureDevopsService(IssueService):
         # Build Annotations based on comments by commenter and comment text
         url = issue["_links"]["html"]["href"]
         annotations = []
-        if self.annotation_comments:
+        if self.main_config.annotation_comments:
             comments = self.client.get_workitem_comments(issue)
             if comments:
                 for comment in comments:
@@ -253,7 +248,8 @@ class AzureDevopsService(IssueService):
             extra = {
                 "project": issue["ParentTitle"],
                 "annotations": self.annotations(issue, issue_obj),
-                "namespace": f"{self.org}\\{self.project}",
+                "namespace": (
+                    f"{self.config.organization}\\{self.config.project}"),
             }
             issue_obj.update_extra(extra)
             yield issue_obj

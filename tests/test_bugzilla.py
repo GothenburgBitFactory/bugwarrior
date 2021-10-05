@@ -5,7 +5,6 @@ from unittest import mock
 from collections import namedtuple
 
 from bugwarrior.config.load import BugwarriorConfigParser
-from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.bz import BugzillaService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -29,8 +28,6 @@ class TestBugzillaServiceConfig(ConfigTest):
         self.config.set('general', 'targets', 'mybz')
         self.config.add_section('mybz')
         self.config.set('mybz', 'service', 'bugzilla')
-        self.service_config = ServiceConfig(
-            BugzillaService.CONFIG_PREFIX, self.config, 'mybz')
 
     def test_validate_config_username_password(self):
         self.config.set('mybz', 'bugzilla.base_uri', 'one.com/')
@@ -58,7 +55,8 @@ class TestBugzillaServiceConfig(ConfigTest):
 
 class TestBugzillaService(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
-        'bugzilla.base_uri': 'http://one.com/',
+        'service': 'bugzilla',
+        'bugzilla.base_uri': 'one.com/',
         'bugzilla.username': 'hello',
         'bugzilla.password': 'there',
     }
@@ -94,7 +92,7 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             self.service = self.get_mock_service(
                 BugzillaService,
                 config_overrides={
-                    'bugzilla.base_uri': 'http://one.com/',
+                    'bugzilla.base_uri': 'one.com/',
                     'bugzilla.username': 'me',
                     'bugzilla.api_key': '123',
                 })
@@ -136,10 +134,11 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             'bugzillabugid': 1234567,
             'bugzillastatus': 'NEW',
             'bugzillasummary': 'This is the issue summary',
-            'bugzillaurl': u'https://http://one.com//show_bug.cgi?id=1234567',
+            'bugzillaurl': 'https://one.com/show_bug.cgi?id=1234567',
             'bugzillaproduct': 'Product',
             'bugzillacomponent': 'Something',
-            'description': u'(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',
+            'description': ('(bw)Is#1234567 - This is the issue summary .. '
+                            'https://one.com/show_bug.cgi?id=1234567'),
             'priority': 'H',
             'project': 'Something',
             'tags': []}
@@ -186,10 +185,11 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             'bugzillabugid': 1234568,
             'bugzillastatus': 'ASSIGNED',
             'bugzillasummary': 'This is the issue summary',
-            'bugzillaurl': u'https://http://one.com//show_bug.cgi?id=1234568',
+            'bugzillaurl': 'https://one.com/show_bug.cgi?id=1234568',
             'bugzillaproduct': 'Product',
             'bugzillacomponent': 'Something',
-            'description': u'(bw)Is#1234568 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234568',
+            'description': ('(bw)Is#1234568 - This is the issue summary .. '
+                            'https://one.com/show_bug.cgi?id=1234568'),
             'priority': 'H',
             'project': 'Something',
             'tags': []}

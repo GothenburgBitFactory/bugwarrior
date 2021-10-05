@@ -112,17 +112,15 @@ class KanboardIssue(Issue):
 
 class KanboardService(IssueService):
     ISSUE_CLASS = KanboardIssue
-    CONFIG_PREFIX = "kanboard"
     CONFIG_SCHEMA = KanboardConfig
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
-        username = self.config.get("username")
-        password = self.get_password("password", username)
-        url = self.config.get("url").rstrip("/")
-        self.client = Client(f"{url}/jsonrpc.php", username, password)
-        default_query = f"status:open assignee:{username}"
-        self.query = self.config.get("query", default_query)
+        password = self.get_password("password", self.config.username)
+        self.client = Client(
+            f"{self.config.url}/jsonrpc.php", self.config.username, password)
+        default_query = f"status:open assignee:{self.config.username}"
+        self.query = self.config.query or default_query
 
     def annotations(self, task, url):
         comments = []
@@ -171,7 +169,6 @@ class KanboardService(IssueService):
             "This service has not implemented support for 'only_if_assigned'.")
 
     @staticmethod
-    def get_keyring_service(service_config):
-        parsed = urlparse(service_config.get("url"))
-        username = service_config.get("username")
-        return f"kanboard://{username}@{parsed.netloc}"
+    def get_keyring_service(config):
+        parsed = urlparse(config.url)
+        return f"kanboard://{config.username}@{parsed.netloc}"

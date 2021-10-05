@@ -4,8 +4,7 @@ from unittest import mock
 from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config.load import BugwarriorConfigParser
-from bugwarrior.config.parse import ServiceConfig
+from bugwarrior.config import load, schema
 from bugwarrior.services.jira import JiraService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -27,27 +26,32 @@ class testJiraService(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = BugwarriorConfigParser()
-        self.config.interactive = False
+        self.config = load.BugwarriorConfigParser()
         self.config.add_section('general')
+        self.config.set('general', 'targets', 'myjira')
+        self.config.set('general', 'interactive', 'false')
         self.config.add_section('myjira')
         self.config.set('myjira', 'service', 'jira')
+        self.config.set('myjira', 'jira.base_uri', 'https://example.com')
         self.config.set('myjira', 'jira.username', 'milou')
         self.config.set('myjira', 'jira.password', 't0ps3cr3t')
-        self.service_config = ServiceConfig(
-            JiraService.CONFIG_PREFIX, self.config, 'myjira')
 
     def test_body_length_no_limit(self):
         description = "A very short issue body.  Fixes #828."
         self.config.set('myjira', 'jira.body_length', '5')
-        service = JiraService(self.config, 'general', 'myjira', _skip_server=True)
+        conf = schema.validate_config(self.config, 'general', 'configpath')
+        service = JiraService(
+            conf['myjira'], conf['general'], 'myjira', _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
         self.assertEqual(description[:5], service.body(issue))
 
     def test_body_length_limit(self):
         description = "A very short issue body.  Fixes #828."
-        service = JiraService(self.config, 'general', 'myjira', _skip_server=True)
+        conf = schema.validate_config(self.config, 'general', 'configpath')
+        service = JiraService(
+            conf['myjira'], conf['general'], 'myjira', _skip_server=True)
+        issue = mock.Mock()
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
         self.assertEqual(description, service.body(issue))
@@ -55,8 +59,9 @@ class testJiraService(ConfigTest):
 
 class TestJiraIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        'service': 'jira',
         'jira.username': 'one',
-        'jira.base_uri': 'two',
+        'jira.base_uri': 'https://two.org',
         'jira.password': 'three',
     }
 
@@ -186,14 +191,14 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
 
         self.assertEqual(actual_output, expected_output)
 
-
     def test_issues(self):
         issue = next(self.service.issues())
 
         expected = {
             'annotations': [],
             'due': None,
-            'description': '(bw)Is#10 - lkjaldsfjaldf .. two/browse/DONUT-10',
+            'description': ('(bw)Is#10 - lkjaldsfjaldf .. '
+                            'https://two.org/browse/DONUT-10'),
             'entry': datetime.datetime(2016, 6, 6, 13, 7, 8, tzinfo=tzutc()),
             'jiradescription': None,
             'jiraestimate': 1,
@@ -202,7 +207,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
             'jirasummary': 'lkjaldsfjaldf',
-            'jiraurl': 'two/browse/DONUT-10',
+            'jiraurl': 'https://two.org/browse/DONUT-10',
             'jirasubtasks': 'DONUT-11,DONUT-12',
             'priority': 'H',
             'project': 'DONUT',

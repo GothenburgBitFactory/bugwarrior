@@ -60,7 +60,7 @@ class ActiveCollab2Client(ServiceClient):
             for assignee in assignees:
                 if (
                     (assignee[u'is_owner'] is True)
-                    and (assignee[u'user_id'] == int(self.user_id))
+                    and (assignee[u'user_id'] == self.user_id)
                 ):
                     assigned_task.update(ticket_data)
                     return assigned_task
@@ -192,29 +192,16 @@ class ActiveCollab2Issue(Issue):
 
 class ActiveCollab2Service(IssueService):
     ISSUE_CLASS = ActiveCollab2Issue
-    CONFIG_PREFIX = 'activecollab2'
     CONFIG_SCHEMA = ActiveCollab2Config
 
     def __init__(self, *args, **kw):
         super(ActiveCollab2Service, self).__init__(*args, **kw)
 
-        self.url = self.config.get('url').rstrip('/')
-        self.key = self.config.get('key')
-        self.user_id = self.config.get('user_id')
-        projects_raw = self.config.get('projects')
-
-        projects_list = projects_raw.split(',')
-        projects = []
-        for k, v in enumerate(projects_list):
-            project_data = v.strip().split(":")
-            project = dict([(project_data[0], project_data[1])])
-            projects.append(project)
-
-        self.projects = projects
-
-        self.client = ActiveCollab2Client(
-            self.url, self.key, self.user_id, self.projects, self.target
-        )
+        self.client = ActiveCollab2Client(self.config.url,
+                                          self.config.key,
+                                          self.config.user_id,
+                                          self.config.projects,
+                                          self.target)
 
     def get_owner(self, issue):
         # TODO
@@ -225,7 +212,7 @@ class ActiveCollab2Service(IssueService):
         # Loop through each project
         start = time.time()
         issue_generators = []
-        projects = self.projects
+        projects = self.config.projects
         for project in projects:
             for project_id, project_name in project.items():
                 log.debug(
@@ -233,7 +220,7 @@ class ActiveCollab2Service(IssueService):
                     " " + project_name + '"')
                 issue_generators.append(
                     self.client.get_issue_generator(
-                        self.user_id, project_id, project_name
+                        self.config.user_id, project_id, project_name
                     )
                 )
 

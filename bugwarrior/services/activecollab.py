@@ -169,20 +169,17 @@ class ActiveCollabIssue(Issue):
 
 class ActiveCollabService(IssueService):
     ISSUE_CLASS = ActiveCollabIssue
-    CONFIG_PREFIX = 'activecollab'
     CONFIG_SCHEMA = ActiveCollabConfig
 
     def __init__(self, *args, **kw):
         super(ActiveCollabService, self).__init__(*args, **kw)
 
-        self.url = self.config.get('url').rstrip('/')
-        self.key = self.config.get('key')
-        self.user_id = int(self.config.get('user_id'))
         self.client = ActiveCollabClient(
-            self.url, self.key, self.user_id
+            self.config.url, self.config.key, self.config.user_id
         )
-        self.activecollab = activeCollab(url=self.url, key=self.key,
-                                         user_id=self.user_id)
+        self.activecollab = activeCollab(url=self.config.url,
+                                         key=self.config.key,
+                                         user_id=self.config.user_id)
 
     def _comments(self, issue):
         comments = self.activecollab.get_comments(
@@ -229,14 +226,14 @@ class ActiveCollabService(IssueService):
             for task_id, task in record['assignments'].items():
                 task_count = task_count + 1
                 # Add tasks
-                if task['assignee_id'] == self.user_id:
+                if task['assignee_id'] == self.config.user_id:
                     task['label'] = labels.get(task['label_id'])
                     issues.append(task)
                 if 'subtasks' in task:
                     for subtask_id, subtask in task['subtasks'].items():
                         # Add subtasks
                         task_count = task_count + 1
-                        if subtask['assignee_id'] is self.user_id:
+                        if subtask['assignee_id'] is self.config.user_id:
                             # Add some data from the parent task
                             subtask['label'] = labels.get(subtask['label_id'])
                             subtask['project_id'] = task['project_id']

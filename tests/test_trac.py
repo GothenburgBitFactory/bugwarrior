@@ -1,21 +1,19 @@
-from builtins import next
-from builtins import object
 from bugwarrior.services.trac import TracService
 
 from .base import ServiceTest, AbstractServiceTest
 
 
-class FakeTracTicket(object):
+class FakeTracTicket:
     @staticmethod
     def changeLog(issuenumber):
         return []
 
 
-class FakeTracServer(object):
+class FakeTracServer:
     ticket = FakeTracTicket()
 
 
-class FakeTracLib(object):
+class FakeTracLib:
     server = FakeTracServer()
 
     def __init__(self, record):
@@ -31,7 +29,8 @@ class FakeTracLib(object):
 
 class TestTracIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
-        'trac.base_uri': 'http://ljlkajsdfl.com',
+        'service': 'trac',
+        'trac.base_uri': 'ljlkajsdfl.com',
         'trac.username': 'something',
         'trac.password': 'somepwd',
     }
@@ -85,13 +84,13 @@ class TestTracIssue(AbstractServiceTest, ServiceTest):
         expected = {
             'annotations': [],
             'description':
-                '(bw)Is#1 - Some Summary .. https://http://ljlkajsdfl.com/ticket/1',
+                '(bw)Is#1 - Some Summary .. https://ljlkajsdfl.com/ticket/1',
             'priority': 'H',
             'project': 'unspecified',
             'tags': [],
             'tracnumber': 1,
             'tracsummary': 'Some Summary',
-            'tracurl': 'https://http://ljlkajsdfl.com/ticket/1',
+            'tracurl': 'https://ljlkajsdfl.com/ticket/1',
             'traccomponent': 'testcomponent'}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)

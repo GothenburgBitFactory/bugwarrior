@@ -1,11 +1,9 @@
 import datetime
-from unittest import mock
 
 from dateutil.tz import tzutc
 import responses
 
 from bugwarrior.config.load import BugwarriorConfigParser
-from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.pivotaltracker import PivotalTrackerService
 
 from .base import ServiceTest, AbstractServiceTest, ConfigTest
@@ -184,8 +182,6 @@ class TestPivotalTrackerServiceConfig(ConfigTest):
         self.config.set('general', 'targets', 'pivotal')
         self.config.add_section('pivotal')
         self.config.set('pivotal', 'service', 'pivotaltracker')
-        self.service_config = ServiceConfig(
-            PivotalTrackerService.CONFIG_PREFIX, self.config, 'pivotal')
 
     def test_validate_config(self):
         self.config.set('pivotal', 'pivotaltracker.account_ids', '12345')
@@ -227,10 +223,10 @@ class TestPivotalTrackerServiceConfig(ConfigTest):
 
 class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        'service': 'pivotaltracker',
         'pivotaltracker.token': '123456',
         'pivotaltracker.user_id': 106,
         'pivotaltracker.account_ids': '100',
-        'pivotaltracker.annotation_comments': True,
         'pivotaltracker.import_labels_as_tags': True,
         'pivotaltracker.import_blockers': True
     }
@@ -329,11 +325,12 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
         expected ={
 	    'annotations':
 	    [
-		'@task - Completed: False - Port 0',
-		'@task - Completed: False - Port 90'
+		'@task - status: False - Port 0',
+		'@task - status: False - Port 90'
 	    ],
-	    'description': '(bw)Story#561 - Tractor beam loses power intermittently .. '
-	    'http://localhost/story/show/561',
+	    'description': (
+                '(bw)Story#561 - Tractor beam loses power intermittently .. '
+                'http://localhost/story/show/561'),
 	    'pivotalclosed': story_date,
 	    'pivotalcreated': story_date,
 	    'pivotalupdated': story_date,

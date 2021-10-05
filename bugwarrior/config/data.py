@@ -5,18 +5,7 @@ import subprocess
 from lockfile.pidlockfile import PIDLockFile
 
 
-def get_taskrc_path(conf, main_section):
-    path = os.getenv('TASKRC', '~/.taskrc')
-    if conf.has_option(main_section, 'taskrc'):
-        path = conf.get(main_section, 'taskrc')
-    return os.path.normpath(
-        os.path.expanduser(path)
-    )
-
-
-def get_data_path(config, main_section):
-    taskrc = get_taskrc_path(config, main_section)
-
+def get_data_path(taskrc):
     # We cannot use the taskw module here because it doesn't really support
     # the `_` subcommands properly (`rc:` can't be used for them).
     line_prefix = 'data.location='

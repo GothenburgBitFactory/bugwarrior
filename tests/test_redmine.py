@@ -13,6 +13,7 @@ from .base import ServiceTest, AbstractServiceTest
 class TestRedmineIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
+        'service': 'redmine',
         'redmine.url': 'https://something',
         'redmine.key': 'something_else',
         'redmine.issue_limit': '100',
@@ -67,7 +68,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
         expected_output = {
             'annotations': [],
             'project': issue.get_project_name(),
-            'priority': self.service.default_priority,
+            'priority': self.service.config.default_priority,
             issue.DUEDATE: None,
             issue.ASSIGNED_TO: self.arbitrary_issue['assigned_to']['name'],
             issue.AUTHOR: self.arbitrary_issue['author']['name'],

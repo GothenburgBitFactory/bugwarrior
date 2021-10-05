@@ -163,7 +163,6 @@ class VersionOneIssue(Issue):
 
 class VersionOneService(IssueService):
     ISSUE_CLASS = VersionOneIssue
-    CONFIG_PREFIX = 'versionone'
     CONFIG_SCHEMA = VersionOneConfig
 
     TASK_COLLECT_DATA = (
@@ -194,31 +193,24 @@ class VersionOneService(IssueService):
     def __init__(self, *args, **kw):
         super(VersionOneService, self).__init__(*args, **kw)
 
-        parsed_address = parse.urlparse(
-            self.config.get('base_uri')
-        )
+        parsed_address = parse.urlparse(self.config.base_uri)
+
         self.address = parsed_address.netloc
         self.instance = parsed_address.path.strip('/')
-        self.username = self.config.get('username')
-        self.password = self.get_password('password', self.username)
-
-        self.timezone = self.config.get('timezone', default=LOCAL_TIMEZONE)
-        self.project = self.config.get('project_name', default='')
-        self.timebox_name = self.config.get('timebox_name')
+        self.password = self.get_password('password', self.config.username)
 
     @staticmethod
-    def get_keyring_service(service_config):
-        parsed_address = parse.urlparse(service_config.get('base_uri'))
-        username = service_config.get('username')
-        return "versionone://%s@%s%s" % (
-            username,
+    def get_keyring_service(config):
+        parsed_address = parse.urlparse(config.base_uri)
+        return f"versionone://%s@%s%s" % (
+            config.username,
             parsed_address.netloc,
             parsed_address.path
         )
 
     def get_service_metadata(self):
         return {
-            'timezone': self.timezone
+            'timezone': self.config.timezone
         }
 
     def get_meta(self):
@@ -226,7 +218,7 @@ class VersionOneService(IssueService):
             self._meta = V1Meta(
                 address=self.address,
                 instance=self.instance,
-                username=self.username,
+                username=self.config.username,
                 password=self.password
             )
         return self._meta
@@ -240,8 +232,8 @@ class VersionOneService(IssueService):
             'IsDeleted': False,
             'IsInactive': False,
         }
-        if self.timebox_name:
-            where['Parent.Timebox.Name'] = self.timebox_name
+        if self.config.timebox_name:
+            where['Parent.Timebox.Name'] = self.config.timebox_name
 
         tasks = meta.Task.select(
             'Name',
@@ -252,12 +244,12 @@ class VersionOneService(IssueService):
             'ToDo',
             'Reference',
         ).filter(
-            "Owners.Username='{username}'".format(username=self.username)
+            f"Owners.Username='{self.config.username}'"
         ).where(**where)
         return tasks
 
     def issues(self):
-        for issue in self.get_assignments(self.username):
+        for issue in self.get_assignments(self.config.username):
             issue_data = {
                 'task': {},
                 'story': {},
@@ -277,7 +269,7 @@ class VersionOneService(IssueService):
                     issue_data[key][column] = value
 
             extras = {
-                'project': self.project
+                'project': self.config.project_name
             }
 
             yield self.get_issue_for_record(

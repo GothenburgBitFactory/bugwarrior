@@ -15,9 +15,18 @@ import typing_extensions
 
 from bugwarrior.services import IssueService, Issue, ServiceClient
 from bugwarrior import config
-from bugwarrior.config import asbool, aslist
 
-DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')}}"
+
+class TrelloConfig(config.ServiceConfig, prefix='trello'):
+    service: typing_extensions.Literal['trello']
+    api_key: str
+    token: str
+
+    include_boards: config.ConfigList = config.ConfigList([])
+    include_lists: config.ConfigList = config.ConfigList([])
+    exclude_lists: config.ConfigList = config.ConfigList([])
+    import_labels_as_tags: bool = False
+    label_template: str = "{{label|replace(' ', '_')}}"
 
 
 class TrelloConfig(config.ServiceConfig, prefix='trello'):
@@ -67,8 +76,7 @@ class TrelloIssue(Issue):
         )
 
     def get_tags(self, twdict):
-        tmpl = Template(
-            self.origin.get('label_template', DEFAULT_LABEL_TEMPLATE))
+        tmpl = Template(self.origin['label_template'])
         return [tmpl.render(twdict, label=label['name'])
                 for label in self.record['labels']]
 
@@ -95,8 +103,6 @@ class TrelloIssue(Issue):
 
 class TrelloService(IssueService, ServiceClient):
     ISSUE_CLASS = TrelloIssue
-    # What prefix should we use for this service's configuration values
-    CONFIG_PREFIX = 'trello'
     CONFIG_SCHEMA = TrelloConfig
 
     def get_owner(self, issue):
@@ -104,19 +110,16 @@ class TrelloService(IssueService, ServiceClient):
         pass
 
     @staticmethod
-    def get_keyring_service(service_config):
-        api_key = service_config.get('api_key')
-        return "trello://{api_key}@trello.com".format(api_key=api_key)
+    def get_keyring_service(config):
+        return f"trello://{config.api_key}@trello.com"
 
     def get_service_metadata(self):
         """
         Return extra config options to be passed to the TrelloIssue class
         """
         return {
-            'import_labels_as_tags':
-            self.config.get('import_labels_as_tags', False, asbool),
-            'label_template':
-            self.config.get('label_template', DEFAULT_LABEL_TEMPLATE),
+            'import_labels_as_tags': self.config.import_labels_as_tags,
+            'label_template': self.config.label_template,
             }
 
     def issues(self):
@@ -147,8 +150,8 @@ class TrelloService(IssueService, ServiceClient):
         trello.include_boards use that, otherwise ask the Trello API for the
         user's boards.
         """
-        if 'include_boards' in self.config:
-            for boardid in self.config.get('include_boards', to_type=aslist):
+        if self.config.include_boards:
+            for boardid in self.config.include_boards:
                 # Get the board name
                 yield self.api_request(
                     "/1/boards/{id}".format(id=boardid), fields='name')
@@ -167,13 +170,13 @@ class TrelloService(IssueService, ServiceClient):
             "/1/boards/{board_id}/lists/open".format(board_id=board),
             fields='name')
 
-        include_lists = self.config.get('include_lists', to_type=aslist)
-        if include_lists:
-            lists = [l for l in lists if l['name'] in include_lists]
+        if self.config.include_lists:
+            lists = [lst for lst in lists
+                     if lst['name'] in self.config.include_lists]
 
-        exclude_lists = self.config.get('exclude_lists', to_type=aslist)
-        if exclude_lists:
-            lists = [l for l in lists if l['name'] not in exclude_lists]
+        if self.config.exclude_lists:
+            lists = [lst for lst in lists
+                     if lst['name'] not in self.config.exclude_lists]
 
         return lists
 
@@ -182,18 +185,17 @@ class TrelloService(IssueService, ServiceClient):
         according to configuration values of trello.only_if_assigned and
         trello.also_unassigned """
         params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels,due,desc'}
-        member = self.config.get('only_if_assigned', None)
-        unassigned = self.config.get('also_unassigned', False, asbool)
-        if member is not None:
+        if self.config.only_if_assigned:
             params['members'] = 'true'
             params['member_fields'] = 'username'
         cards = self.api_request(
             "/1/lists/{list_id}/cards/open".format(list_id=list_id),
             **params)
         for card in cards:
-            if (member is None
-                    or member in [m['username'] for m in card['members']]
-                    or (unassigned and not card['members'])):
+            cardmembers = [m['username'] for m in card['members']]
+            if (not self.config.only_if_assigned
+                    or self.config.only_if_assigned in cardmembers
+                    or (self.config.also_unassigned and not cardmembers)):
                 yield card
 
     def get_comments(self, card_id):
@@ -212,7 +214,7 @@ class TrelloService(IssueService, ServiceClient):
         and host) and a list of argumnets and return a GET request with the
         key and token from the configuration
         """
-        params['key'] = self.config.get('api_key'),
-        params['token'] = self.get_password('token', self.config),
+        params['key'] = self.config.api_key,
+        params['token'] = self.get_password('token'),
         url = "https://api.trello.com" + url
         return self.json_response(requests.get(url, params=params))

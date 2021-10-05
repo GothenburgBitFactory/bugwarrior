@@ -5,7 +5,6 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.config import asbool
 from bugwarrior.services import Issue, IssueService, ServiceClient
 
 import logging
@@ -124,21 +123,7 @@ class BTSIssue(Issue):
 
 class BTSService(IssueService, ServiceClient):
     ISSUE_CLASS = BTSIssue
-    CONFIG_PREFIX = 'bts'
     CONFIG_SCHEMA = BTSConfig
-
-    def __init__(self, *args, **kw):
-        super(BTSService, self).__init__(*args, **kw)
-        self.email = self.config.get('email', default=None)
-        self.packages = self.config.get('packages', default=None)
-        self.udd = self.config.get(
-            'udd', default=False, to_type=asbool)
-        self.udd_ignore_sponsor = self.config.get(
-            'udd_ignore_sponsor', default=True, to_type=asbool)
-        self.ignore_pkg = self.config.get('ignore_pkg', default=None)
-        self.ignore_src = self.config.get('ignore_src', default=None)
-        self.ignore_pending = self.config.get(
-            'ignore_pending', default=True, to_type=asbool)
 
     def get_owner(self, issue):
         # TODO
@@ -160,9 +145,9 @@ class BTSService(IssueService, ServiceClient):
         request_params = {
             'format': 'json',
             'dmd': 1,
-            'email1': self.email,
+            'email1': self.config.email,
             }
-        if self.udd_ignore_sponsor:
+        if self.config.udd_ignore_sponsor:
             request_params['nosponsor1'] = "on"
         resp = requests.get(UDD_BUGS_SEARCH, request_params)
         return self.json_response(resp)
@@ -178,24 +163,21 @@ class BTSService(IssueService, ServiceClient):
         collected_bugs = []
 
         # Search BTS for bugs owned by email address
-        if self.email:
-            owned_bugs = debianbts.get_bugs(owner=self.email,
+        if self.config.email:
+            owned_bugs = debianbts.get_bugs(owner=self.config.email,
                                             status="open")
             collected_bugs.extend(owned_bugs)
 
         # Search BTS for bugs related to specified packages
-        if self.packages:
-            packages = self.packages.split(",")
-            for pkg in packages:
-                pkg_bugs = debianbts.get_bugs(package=pkg,
-                                              status="open")
-                for bug in pkg_bugs:
-                    if bug not in collected_bugs:
-                        collected_bugs.append(bug)
+        for pkg in self.config.packages:
+            pkg_bugs = debianbts.get_bugs(package=pkg, status="open")
+            for bug in pkg_bugs:
+                if bug not in collected_bugs:
+                    collected_bugs.append(bug)
 
         # Search UDD bugs search for bugs belonging to packages that
         # are maintained by the email address
-        if self.udd:
+        if self.config.udd:
             udd_bugs = self._get_udd_bugs()
             for bug in udd_bugs:
                 if bug not in collected_bugs:
@@ -206,19 +188,13 @@ class BTSService(IssueService, ServiceClient):
 
         log.debug(" Found %i total.", len(issues))
 
-        if self.ignore_pkg:
-            ignore_pkg = self.ignore_pkg.split(",")
-            for pkg in ignore_pkg:
-                issues = [issue
-                          for issue in issues if not issue['package'] == pkg]
+        for pkg in self.config.ignore_pkg:
+            issues = [issue for issue in issues if not issue['package'] == pkg]
 
-        if self.ignore_src:
-            ignore_src = self.ignore_src.split(",")
-            for src in ignore_src:
-                issues = [issue
-                          for issue in issues if not issue['source'] == src]
+        for src in self.config.ignore_src:
+            issues = [issue for issue in issues if not issue['source'] == src]
 
-        if self.ignore_pending:
+        if self.config.ignore_pending:
             issues = [issue
                       for issue in issues
                       if not issue['status'] == 'pending-fixed']

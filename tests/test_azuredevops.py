@@ -3,7 +3,7 @@ from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config.parse import ServiceConfig
+from bugwarrior import config
 from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.azuredevops import (
     AzureDevopsService,
@@ -119,9 +119,6 @@ class TestAzureDevopsServiceConfig(ConfigTest):
         self.config.set("general", "targets", "test_ado")
         self.config.add_section("test_ado")
         self.config.set("test_ado", "service", "azuredevops")
-        self.service_config = ServiceConfig(
-            AzureDevopsService.CONFIG_PREFIX, self.config, "test_ado"
-        )
 
     def test_validate_config_required_fields(self):
         self.config.set("test_ado", "ado.organization", "test_organization")
@@ -153,6 +150,7 @@ class TestAzureDevopsServiceConfig(ConfigTest):
 
 class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
+        "service": "azuredevops",
         "ado.organization": "test_organization",
         "ado.project": "test_project",
         "ado.PAT": "myPAT",
