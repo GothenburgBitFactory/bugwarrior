@@ -32,8 +32,8 @@ It currently supports the following remote resources:
 Documentation
 -------------
 
-For information on how to install and use bugwarrior, read `the docs
-<https://bugwarrior.readthedocs.io>`_ on RTFD.
+For information on how to install and use bugwarrior, `read the docs
+<https://bugwarrior-docs.readthedocs.io>`_ on RTFD.
 
 Build Status
 ------------
