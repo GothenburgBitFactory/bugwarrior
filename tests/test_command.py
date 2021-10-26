@@ -133,7 +133,8 @@ class TestPull(ConfigTest):
 
     @mock.patch(
         'bugwarrior.services.github.GithubService.issues', fake_github_issues)
-    def test_partial_failure_database_integrity(self):
+    @mock.patch('bugzilla.Bugzilla')
+    def test_partial_failure_database_integrity(self, bugzillalib):
         """
         When a service fails and is terminated, don't close existing tasks.
 
