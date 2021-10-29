@@ -47,7 +47,7 @@ jobs:
             pip install pytest-cov
           run: |
             source $HOME/.cargo/env
-            pip3 install .[jira,megaplan,activecollab,bts,bugzilla,trac,gmail,kanboard]
+            pip3 install .[jira,activecollab,bts,bugzilla,trac,gmail,kanboard]
             pytest --cov=bugwarrior --cov-branch tests
       - name: Coverage
         uses: codecov/codecov-action@v1

@@ -121,15 +121,6 @@ Example Configuration
     trac.default_priority = H
     trac.add_tags = work
 
-    # Here's an example of a megaplan target.
-    [my_megaplan]
-    service = megaplan
-
-    megaplan.hostname = example.megaplan.ru
-    megaplan.login = alice
-    megaplan.password = secret
-    megaplan.project_name = example
-
     # Example gitlab configuration containing individual priorities
     [gitlab_config]
     gitlab.default_issue_priority = M

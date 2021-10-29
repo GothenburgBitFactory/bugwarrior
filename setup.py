@@ -47,7 +47,6 @@ setup(name='bugwarrior',
           "jira": ["jira>=0.22"],
           "kanboard": ["kanboard"],
           "keyring": ["keyring"],
-          "megaplan": ["megaplan>=1.4"],
           "phabricator": ["phabricator"],
           "trac": ["offtrac"],
       },
@@ -55,7 +54,6 @@ setup(name='bugwarrior',
           "pytest",
           "responses",
           "bugwarrior[jira]",
-          "bugwarrior[megaplan]",
           "bugwarrior[activecollab]",
           "bugwarrior[bts]",
           "bugwarrior[gmail]",
@@ -82,7 +80,6 @@ setup(name='bugwarrior',
       activecollab2=bugwarrior.services.activecollab2:ActiveCollab2Service
       activecollab=bugwarrior.services.activecollab:ActiveCollabService
       jira=bugwarrior.services.jira:JiraService
-      megaplan=bugwarrior.services.megaplan:MegaplanService
       phabricator=bugwarrior.services.phab:PhabricatorService
       versionone=bugwarrior.services.versionone:VersionOneService
       pagure=bugwarrior.services.pagure:PagureService

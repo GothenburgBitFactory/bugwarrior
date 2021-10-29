@@ -17,7 +17,6 @@ It currently supports the following remote resources:
  - `gmail <https://www.google.com/gmail/about/>`_
  - `jira <https://www.atlassian.com/software/jira/overview>`_
  - `kanboard <https://kanboard.org/>`_
- - `megaplan <https://www.megaplan.ru/>`_
  - `pagure <https://pagure.io/>`_
  - `phabricator <http://phabricator.org/>`_
  - `Pivotal Tracker <https://www.pivotaltracker.com/>`_
