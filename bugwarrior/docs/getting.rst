@@ -44,7 +44,6 @@ The following extra dependency sets are available:
 - keyring (See also `linux installation instructions <https://github.com/jaraco/keyring#linux>`_.)
 - jira
 - kanboard
-- megaplan
 - activecollab
 - bts
 - trac
