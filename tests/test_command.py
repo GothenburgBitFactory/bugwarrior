@@ -1,5 +1,4 @@
 import os
-import configparser
 import logging
 from unittest import mock
 
@@ -7,6 +6,7 @@ from click.testing import CliRunner
 import pytest
 
 from bugwarrior import command
+from bugwarrior.config import BugwarriorConfigParser
 
 from .base import ConfigTest
 from .test_github import ARBITRARY_ISSUE, ARBITRARY_EXTRA
@@ -39,7 +39,7 @@ class TestPull(ConfigTest):
         super().setUp()
 
         self.runner = CliRunner()
-        self.config = configparser.RawConfigParser()
+        self.config = BugwarriorConfigParser()
 
         self.config.add_section('general')
         self.config.set('general', 'targets', 'my_service')

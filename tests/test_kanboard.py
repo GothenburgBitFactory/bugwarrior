@@ -1,10 +1,9 @@
-import configparser
 import datetime
 from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config import ServiceConfig
+from bugwarrior.config import ServiceConfig, BugwarriorConfigParser
 from bugwarrior.services.kanboard import KanboardService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -13,7 +12,7 @@ from .base import AbstractServiceTest, ConfigTest, ServiceTest
 class TestKanboardServiceConfig(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = configparser.RawConfigParser()
+        self.config = BugwarriorConfigParser()
         self.config.add_section("general")
         self.config.add_section("kb")
         self.service_config = ServiceConfig(

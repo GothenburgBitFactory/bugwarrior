@@ -1,11 +1,8 @@
 # coding: utf-8
-from __future__ import unicode_literals
-
 import os
-from six.moves import configparser
 from unittest import TestCase
 
-import bugwarrior.config as config
+from bugwarrior import config
 
 from .base import ConfigTest
 
@@ -78,7 +75,7 @@ class TestGetDataPath(ConfigTest):
 
     def setUp(self):
         super(TestGetDataPath, self).setUp()
-        self.config = configparser.RawConfigParser()
+        self.config = config.BugwarriorConfigParser()
         self.config.add_section('general')
 
     def assertDataPath(self, expected_datapath):
@@ -182,7 +179,7 @@ class TestServiceConfig(TestCase):
 
 class TestLoggingPath(TestCase):
     def setUp(self):
-        self.config = config.BugwarriorConfigParser(allow_no_value=True)
+        self.config = config.BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.set('general', 'log.level', 'INFO')
         self.config.set('general', 'log.file', None)

@@ -1,14 +1,12 @@
-from builtins import next
-from builtins import object
 from collections import namedtuple
 from unittest import mock, TestCase
-from six.moves.configparser import RawConfigParser
 
 from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config import ServiceConfig
+from bugwarrior.config import ServiceConfig, BugwarriorConfigParser
 from bugwarrior.services.jira import JiraService
+
 from .base import ServiceTest, AbstractServiceTest
 
 
@@ -27,7 +25,7 @@ class FakeJiraClient(object):
 class testJiraService(TestCase):
 
     def setUp(self):
-        self.config = RawConfigParser()
+        self.config = BugwarriorConfigParser()
         self.config.interactive = False
         self.config.add_section('general')
         self.config.add_section('myjira')

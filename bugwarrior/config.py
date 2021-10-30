@@ -230,7 +230,7 @@ def fix_logging_path(config, main_section):
 
 
 def load_config(main_section, interactive=False):
-    config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None}, allow_no_value=True)
+    config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None})
     path = get_config_path()
     config.readfp(codecs.open(path, "r", "utf-8",))
     config.interactive = interactive
@@ -278,10 +278,13 @@ def get_data_path(config, main_section):
 
 # ConfigParser is not a new-style class, so inherit from object to fix super().
 class BugwarriorConfigParser(configparser.ConfigParser, object):
+    def __init__(self, *args, allow_no_value=True, **kwargs):
+        super().__init__(*args, allow_no_value=allow_no_value, **kwargs)
+
     def getint(self, section, option):
         """ Accepts both integers and empty values. """
         try:
-            return super(BugwarriorConfigParser, self).getint(section, option)
+            return super().getint(section, option)
         except ValueError:
             if self.get(section, option) == u'':
                 return None

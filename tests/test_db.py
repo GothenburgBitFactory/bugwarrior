@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-
 import copy
 import unittest
-from six.moves import configparser
 
 import taskw.task
+
+from bugwarrior.config import BugwarriorConfigParser
 from bugwarrior import db
 
 from .base import ConfigTest
@@ -87,12 +87,12 @@ class TestSynchronize(ConfigTest):
         def get_tasks(tw):
             return remove_non_deterministic_keys(tw.load_tasks())
 
-        config = configparser.RawConfigParser()
-        config.add_section('general')
-        config.set('general', 'targets', 'my_service')
-        config.set('general', 'static_fields', 'project, priority')
-        config.add_section('my_service')
-        config.set('my_service', 'service', 'github')
+        rawconfig = BugwarriorConfigParser()
+        rawconfig.add_section('general')
+        rawconfig.set('general', 'targets', 'my_service')
+        rawconfig.set('general', 'static_fields', 'project, priority')
+        rawconfig.add_section('my_service')
+        rawconfig.set('my_service', 'service', 'github')
 
         tw = taskw.TaskWarrior(self.taskrc)
         self.assertEqual(tw.load_tasks(), {'completed': [], 'pending': []})
@@ -112,7 +112,7 @@ class TestSynchronize(ConfigTest):
             # writing out to taskwarrior.
             # https://github.com/ralphbean/bugwarrior/issues/601
             issue_generator = iter((issue, issue,))
-            db.synchronize(issue_generator, config, 'general')
+            db.synchronize(issue_generator, rawconfig, 'general')
 
             self.assertEqual(get_tasks(tw), {
                 'completed': [],
@@ -133,7 +133,7 @@ class TestSynchronize(ConfigTest):
         # Change static field
         issue['project'] = 'other_project'
 
-        db.synchronize(iter((issue,)), config, 'general')
+        db.synchronize(iter((issue,)), rawconfig, 'general')
 
         self.assertEqual(get_tasks(tw), {
             'completed': [],
@@ -149,7 +149,7 @@ class TestSynchronize(ConfigTest):
             }]})
 
         # TEST CLOSED ISSUE.
-        db.synchronize(iter(()), config, 'general')
+        db.synchronize(iter(()), rawconfig, 'general')
 
         completed_tasks = tw.load_tasks()
 
@@ -169,7 +169,7 @@ class TestSynchronize(ConfigTest):
             'pending': []})
 
         # TEST REOPENED ISSUE
-        db.synchronize(iter((issue,)), config, 'general')
+        db.synchronize(iter((issue,)), rawconfig, 'general')
 
         tasks = tw.load_tasks()
         self.assertEqual(
@@ -193,13 +193,14 @@ class TestSynchronize(ConfigTest):
 
 class TestUDAs(ConfigTest):
     def test_udas(self):
-        config = configparser.RawConfigParser()
-        config.add_section('general')
-        config.set('general', 'targets', 'my_service')
-        config.add_section('my_service')
-        config.set('my_service', 'service', 'github')
+        rawconfig = BugwarriorConfigParser()
+        rawconfig.add_section('general')
+        rawconfig.set('general', 'targets', 'my_service')
+        rawconfig.add_section('my_service')
+        rawconfig.set('my_service', 'service', 'github')
 
-        udas = sorted(list(db.get_defined_udas_as_strings(config, 'general')))
+        udas = sorted(list(
+            db.get_defined_udas_as_strings(rawconfig, 'general')))
         self.assertEqual(udas, [
             u'uda.githubbody.label=Github Body',
             u'uda.githubbody.type=string',

@@ -7,10 +7,9 @@ from unittest.mock import patch
 
 from dateutil.tz import tzutc
 from google.oauth2.credentials import Credentials
-from six.moves import configparser
 
-import bugwarrior.services.gmail as gmail
-from bugwarrior.config import ServiceConfig
+from bugwarrior.config import BugwarriorConfigParser, ServiceConfig
+from bugwarrior.services import gmail
 from bugwarrior.services.gmail import GmailService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -29,7 +28,7 @@ class TestGmailService(ConfigTest):
 
     def setUp(self):
         super(TestGmailService, self).setUp()
-        self.config = configparser.RawConfigParser()
+        self.config = BugwarriorConfigParser()
         self.config.add_section("general")
         self.config.add_section("myservice")
 
