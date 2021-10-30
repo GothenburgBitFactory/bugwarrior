@@ -3,12 +3,11 @@ from builtins import next
 from builtins import object
 from unittest import mock
 from collections import namedtuple
-from six.moves import configparser
 
+from bugwarrior.config import ServiceConfig, BugwarriorConfigParser
 from bugwarrior.services.bz import BugzillaService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
-from bugwarrior.config import ServiceConfig
 
 
 class FakeBugzillaLib(object):
@@ -24,7 +23,7 @@ class TestBugzillaServiceConfig(ConfigTest):
 
     def setUp(self):
         super(TestBugzillaServiceConfig, self).setUp()
-        self.config = configparser.RawConfigParser()
+        self.config = BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.add_section('mybz')
         self.service_config = ServiceConfig(

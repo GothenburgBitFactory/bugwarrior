@@ -1,13 +1,9 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import next
-from six.moves import configparser
 import datetime
 
 import pytz
 import responses
 
-from bugwarrior.config import ServiceConfig
+from bugwarrior.config import BugwarriorConfigParser, ServiceConfig
 from bugwarrior.services.gitlab import GitlabService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -17,7 +13,7 @@ class TestGitlabService(ConfigTest):
 
     def setUp(self):
         super(TestGitlabService, self).setUp()
-        self.config = configparser.RawConfigParser()
+        self.config = BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.add_section('myservice')
         self.config.set('myservice', 'gitlab.login', 'foobar')

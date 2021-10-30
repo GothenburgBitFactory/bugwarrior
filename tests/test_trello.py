@@ -1,17 +1,11 @@
-from __future__ import unicode_literals, print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import next
 from unittest.mock import patch
 
-from six.moves import configparser
+from dateutil.parser import parse as parse_date
 import responses
 
-from dateutil.parser import parse as parse_date
-from dateutil.tz import tzlocal
-
-from bugwarrior.config import ServiceConfig
+from bugwarrior.config import ServiceConfig, BugwarriorConfigParser
 from bugwarrior.services.trello import TrelloService, TrelloIssue
+
 from .base import ConfigTest, ServiceTest
 
 
@@ -71,7 +65,7 @@ class TestTrelloService(ConfigTest):
 
     def setUp(self):
         super(TestTrelloService, self).setUp()
-        self.config = configparser.RawConfigParser()
+        self.config = BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.add_section('mytrello')
         self.config.set('mytrello', 'trello.api_key', 'XXXX')

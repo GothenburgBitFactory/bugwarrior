@@ -1,6 +1,5 @@
 import os
 import json
-from six.moves import configparser
 
 from bugwarrior import data
 
@@ -10,8 +9,6 @@ from .base import ConfigTest
 class TestData(ConfigTest):
     def setUp(self):
         super(TestData, self).setUp()
-        config = configparser.RawConfigParser()
-        config.add_section('general')
         self.data = data.BugwarriorData(self.lists_path)
 
     def assert0600(self):

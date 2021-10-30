@@ -1,10 +1,6 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import next
-from six.moves import configparser
 import responses
 
-from bugwarrior.services import ServiceConfig
+from bugwarrior.config import ServiceConfig, BugwarriorConfigParser
 from bugwarrior.services.youtrack import YoutrackService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -13,7 +9,7 @@ from .base import ConfigTest, ServiceTest, AbstractServiceTest
 class TestYoutrackService(ConfigTest):
     def setUp(self):
         super(TestYoutrackService, self).setUp()
-        self.config = configparser.RawConfigParser()
+        self.config = BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.add_section('myservice')
         self.config.set('myservice', 'youtrack.login', 'foobar')
