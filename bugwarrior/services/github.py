@@ -491,7 +491,7 @@ class GithubService(IssueService):
         if 'token' not in service_config and 'password' not in service_config:
             die("[%s] has no 'github.token' or 'github.password'" % target)
 
-        if 'username' not in service_config:
-            die("[%s] has no 'github.username'" % target)
+        if 'username' not in service_config and 'query' not in service_config:
+            die("[%s] has no 'github.username' or 'github.query'" % target)
 
         super(GithubService, cls).validate_config(service_config, target)
