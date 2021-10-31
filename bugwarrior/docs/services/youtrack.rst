@@ -76,9 +76,10 @@ Queries are capped at 100 max results by default, but may be adjusted to meet yo
 Import Issue Tags
 +++++++++++++++++
 
-The YouTrack issue tracker allows you to tag issues. To apply these tags in Taskwarrior, set::
+The YouTrack issue tracker allows you to tag issues and these tags are applied
+to tasks by default. To disable this behavior, set::
 
-    youtrack.import_tags = True
+    youtrack.import_tags = False
 
 If you would like to control how these tags are formatted, you can
 specify a template used for converting the YouTrack tag into a Taskwarrior
