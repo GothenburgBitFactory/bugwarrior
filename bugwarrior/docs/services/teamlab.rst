@@ -14,11 +14,21 @@ Here's an example of a Teamlab target::
     teamlab.hostname = teamlab.example.com
     teamlab.login = alice
     teamlab.password = secret
-    teamlab.project_name = example_teamlab
 
 The above example is the minimum required to import issues from
-Teamlab.  You can also feel free to use any of the
+Teamlab. You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`.
+
+Service Features
+----------------
+
+Project Name
+++++++++++++
+
+By default the project name is set to the hostname. To set a different name::
+
+    teamlab.project_name = example_teamlab
+
 
 Provided UDA Fields
 -------------------
