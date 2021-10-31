@@ -188,7 +188,6 @@ Example Configuration
     service = redmine
     redmine.url = http://redmine.example.org/
     redmine.key = c0c4c014cafebabe
-    redmine.user_id = 7
     redmine.project_name = redmine
     redmine.add_tags = chiliproject
 
