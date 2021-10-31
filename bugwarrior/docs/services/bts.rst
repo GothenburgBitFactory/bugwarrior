@@ -72,17 +72,14 @@ service configuration::
 
     bts.ignore_pending = False
 
-Excluding sponsored and NMU'd packages
+Including sponsored and NMU'd packages
 ++++++++++++++++++++++++++++++++++++++
 
-If you maintain an even larger number of packages, you may wish to exclude some
-packages.
+By default, packages that you have sponsored or have uploaded as a non-maintainer
+upload or team upload will be excluded. You can include tasks from these packages
+by disabling this feature::
 
-You can exclude packages that you have sponsored or have uploaded as a
-non-maintainer upload or team upload by adding the following line to your
-service configuration::
-
-    bts.udd_ignore_sponsor = True
+    bts.udd_ignore_sponsor = False
 
 .. note:: This will only affect the bugs returned by the UDD bugs search service
           and will not exclude bugs that are discovered due to ownership or due
