@@ -212,9 +212,9 @@ Story Tasks
 
 Pivotal Tracker provides the ability to add tasks to stories. Stories pulled in
 by bugwarrior will create an annotation for each "subtask" provided in the
-story. To turn this off, set::
+story. To turn this off, in your main section set::
 
-    pivotaltracker.annotation_comments = False
+    annotation_comments = False
 
 Also, if you would like to control how these blockers are created, you can
 specify a template used for converting the story blocker into a more reasonable
