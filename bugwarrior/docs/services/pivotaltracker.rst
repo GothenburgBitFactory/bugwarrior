@@ -240,10 +240,10 @@ shown here https://www.pivotaltracker.com/help/api/rest/v5#Story_Tasks.
 Story Blocker
 +++++++++++++
 
-Pivotal Tracker allows you assign blockers to stories. To include blockers in
-the stories pulled by bugwarrior, set::
+Pivotal Tracker allows you assign blockers to stories and bugwarrior pulls
+these in by default. To disable this behavior set::
 
-    pivotaltracker.import_blockers = True
+    pivotaltracker.import_blockers = False
 
 Also, if you would like to control how these blockers are created, you can
 specify a template used for converting the story blocker into a more reasonable
