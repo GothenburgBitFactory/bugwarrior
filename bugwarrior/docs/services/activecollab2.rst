@@ -34,7 +34,7 @@ with ActiveCollab 2.x - see above for 3.x and greater.
 ::
 
     [my_bug_tracker]
-    services = activecollab2
+    service = activecollab2
     activecollab2.url = http://ac.example.org/api.php
     activecollab2.key = your-api-key
     activecollab2.user_id = 15
