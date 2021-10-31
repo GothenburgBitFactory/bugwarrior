@@ -154,7 +154,7 @@ class PivotalTrackerService(IssueService, ServiceClient):
         self.import_blockers = self.config.get(
             'import_blockers', default=True, to_type=asbool)
         self.blocker_template = self.config.get(
-            'blocker_template', default='Description: {{description}} Resovled: {{resolved}}\n', to_type=six.text_type)
+            'blocker_template', default='Description: {{description}} State: {{resolved}}\n', to_type=six.text_type)
         self.annotation_template = self.config.get(
             'annotation_template', default='Completed: {{complete}} - {{description}}', to_type=six.text_type)
         self.query = self.config.get('query', default="", to_type=six.text_type)

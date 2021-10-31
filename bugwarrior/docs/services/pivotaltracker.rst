@@ -251,7 +251,7 @@ format.
 
 For example, the default template::
 
-   Description: {{description}} Resolved: {{resolved}}\n
+   Description: {{description}} State: {{resolved}}\n
 
 Which will result in the following output::
 
