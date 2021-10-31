@@ -75,6 +75,13 @@ To force use of the REST interface, ensure you are using a newer version of the 
 
     bugzilla.force_rest = True
 
+More modern bugzilla's require that we specify query_format=advanced along with
+the xmlrpc request (https://bugzilla.redhat.com/show_bug.cgi?id=825370)
+…but older bugzilla's don't know anything about that argument. Here we make it
+possible for the user to specify whether they want to pass that argument or not::
+
+    bugzilla.advanced = True
+
 Provided UDA Fields
 -------------------
 
