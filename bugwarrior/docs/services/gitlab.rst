@@ -187,6 +187,13 @@ If you want to ignore verifying the SSL certificate, set::
 
     gitlab.verify_ssl = False
 
+Including Project Owner in Project Name
++++++++++++++++++++++++++++++++++++++++
+
+By default the taskwarrior ``project`` name will not include the owner. To do so set::
+
+    github.project_owner_prefix = True
+
 
 Provided UDA Fields
 -------------------
