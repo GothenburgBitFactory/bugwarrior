@@ -40,10 +40,12 @@ Service Features
 
 The following default configuration is used::
 
+    jira.body_length = <sys.maxsize>
     jira.import_labels_as_tags = False
     jira.import_sprints_as_tags = False
     jira.label_template = {{label}}
     jira.query = assignee = <jira.username> AND resolution is null
+    jira.use_cookies = False
     jira.verify_ssl = True
     jira.version = 5
 
