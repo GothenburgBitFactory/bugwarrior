@@ -16,12 +16,24 @@ Here's an example of a YouTrack target::
     youtrack.password = 3n1Gm@
 
 The above example is the minimum required to import issues from
-YouTrack.  You can also feel free to use any of the
+YouTrack. You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
 Service Features
 ----------------
+
+Unauthenticated
++++++++++++++++
+
+While the ``login`` and ``password`` fields are still required, bugwarrior
+will not log in to the service if you set::
+
+    youtrack.anonymous = True
+
+.. note::
+
+    This makes no attempt at IP obfuscation.
 
 Customize the YouTrack Connection
 +++++++++++++++++++++++++++++++++
