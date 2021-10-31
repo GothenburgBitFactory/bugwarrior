@@ -107,7 +107,7 @@ Exclude Pull Requests
 +++++++++++++++++++++
 
 If you want bugwarrior to not track pull requests you can disable it altogether
-and ensure bugwarrior only tracks issues.
+and ensure bugwarrior only tracks issues::
 
     github.exclude_pull_requests = True
 

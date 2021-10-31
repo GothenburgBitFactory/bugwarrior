@@ -58,7 +58,7 @@ This won't create tasks for bugs in other states. The default open statuses:
 
 If you're on a more recent Bugzilla install, the NEEDINFO status no longer
 exists, and has been replaced by the "needinfo?" flag. Set
-"bugzilla.include_needinfos" to "True" to have taskwarrior also add bugs where
+``bugzilla.include_needinfos`` to "True" to have taskwarrior also add bugs where
 information is requested of you. The "bugzillaneedinfo" UDA will be filled in
 with the date the needinfo was set.
 

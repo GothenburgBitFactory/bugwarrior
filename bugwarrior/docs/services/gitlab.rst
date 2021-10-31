@@ -95,14 +95,14 @@ For example, you want to include only the repositories ``foo/node`` and
 Filtering Membership
 ^^^^^^^^^^^^^^^^^^^^
 
-If you want to filter repositories that you have a membership.
+If you want to filter repositories that you have a membership::
 
     gitlab.membership = True
 
 Filtering Owned
 ^^^^^^^^^^^^^^^^^^^^
 
-If you want to filter repositories that you own.
+If you want to filter repositories that you own::
 
     gitlab.owned = True
 
