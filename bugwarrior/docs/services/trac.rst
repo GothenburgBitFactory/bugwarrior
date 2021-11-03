@@ -22,6 +22,9 @@ Here's an example of a Trac target::
     trac.scheme = https
     trac.project_template = moksha.{{traccomponent|lower}}
 
+Service Features
+----------------
+
 By default, this service uses the XML-RPC Trac plugin, which must be installed
 on the Trac instance.  If this is not available, the service can use Trac's
 built-in CSV support, but in this mode it cannot add annotations based on
@@ -35,9 +38,6 @@ If your trac instance requires authentication to perform the query, add::
 The above example is the minimum required to import issues from
 Trac.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`.
-
-Service Features
-----------------
 
 Provided UDA Fields
 -------------------

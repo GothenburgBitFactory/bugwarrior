@@ -30,13 +30,13 @@ Specify the Query to Use for Gathering Patchsets
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
 By default, the Gerrit plugin will query patchsets based on this simple
-API query
+API query::
 
     is:open+is:reviewer
 
 You may override this query string through your `bugwarriorrc` file.
 
-For example:
+For example::
 
     gerrit.query = is:open+((reviewer:self+-owner:self+-is:ignored)+OR+assignee:self)
 

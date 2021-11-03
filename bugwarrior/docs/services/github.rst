@@ -107,7 +107,7 @@ Exclude Pull Requests
 +++++++++++++++++++++
 
 If you want bugwarrior to not track pull requests you can disable it altogether
-and ensure bugwarrior only tracks issues.
+and ensure bugwarrior only tracks issues::
 
     github.exclude_pull_requests = True
 
@@ -161,6 +161,13 @@ To limit the amount of content synchronized into TaskWarrior (which can help to 
 
  * ``annotation_comments=False`` (a global configuration) to disable synchronizing comments to annotations; and
  * either ``github.body_length``` to limit the size of the Github Body UDA or include ``githubbody`` in ``static_fields`` in the ``[general]`` section to eliminate the UDA entirely.
+
+Including Project Owner in Project Name
++++++++++++++++++++++++++++++++++++++++
+
+By default the taskwarrior ``project`` name will not include the owner. To do so set::
+
+    github.project_owner_prefix = True
 
 Provided UDA Fields
 -------------------

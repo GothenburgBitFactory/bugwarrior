@@ -74,7 +74,7 @@ For example, to prefix all incoming labels with the string 'pagure_' (perhaps
 to differentiate them from any existing tags you might have), you could
 add the following configuration option::
 
-    pagure.label_template = pagure_{{label}}
+    pagure.tag_template = pagure_{{label}}
 
 In addition to the context variable ``{{label}}``, you also have access
 to all fields on the Taskwarrior task if needed.

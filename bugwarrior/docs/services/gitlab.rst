@@ -95,14 +95,14 @@ For example, you want to include only the repositories ``foo/node`` and
 Filtering Membership
 ^^^^^^^^^^^^^^^^^^^^
 
-If you want to filter repositories that you have a membership.
+If you want to filter repositories that you have a membership::
 
     gitlab.membership = True
 
 Filtering Owned
 ^^^^^^^^^^^^^^^^^^^^
 
-If you want to filter repositories that you own.
+If you want to filter repositories that you own::
 
     gitlab.owned = True
 
@@ -186,6 +186,13 @@ Do Not Verify SSL Certificate
 If you want to ignore verifying the SSL certificate, set::
 
     gitlab.verify_ssl = False
+
+Including Project Owner in Project Name
++++++++++++++++++++++++++++++++++++++++
+
+By default the taskwarrior ``project`` name will not include the owner. To do so set::
+
+    github.project_owner_prefix = True
 
 
 Provided UDA Fields

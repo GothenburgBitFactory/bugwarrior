@@ -138,12 +138,6 @@ class BugzillaService(IssueService):
         self.open_statuses = self.config.get('open_statuses', _open_statuses, to_type=aslist)
         log.debug(" filtering on statuses: %r", self.open_statuses)
 
-        # So more modern bugzilla's require that we specify
-        # query_format=advanced along with the xmlrpc request.
-        # https://bugzilla.redhat.com/show_bug.cgi?id=825370
-        # ...but older bugzilla's don't know anything about that argument.
-        # Here we make it possible for the user to specify whether they want
-        # to pass that argument or not.
         self.advanced = asbool(self.config.get('advanced', 'no'))
 
         force_rest_kwargs = {}

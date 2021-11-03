@@ -337,7 +337,7 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
 	    'pivotalcreated': story_date,
 	    'pivotalupdated': story_date,
         'pivotalurl': 'http://localhost/story/show/561',
-	    'pivotalblockers': 'Description: Set weapons to stun Resovled: False',
+	    'pivotalblockers': 'Description: Set weapons to stun State: False',
 	    'pivotaldescription': 'All your base are belong to us',
 	    'pivotalestimate': 3,
 	    'pivotalid': 561,

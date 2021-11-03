@@ -19,9 +19,20 @@ also feel free to use any of the configuration options described in
 
 Service Features
 ----------------
+
+Include Tasks
++++++++++++++
+
 By default, userstories from taiga are added in taskwarrior. If you like to include taiga tasks as well, set the config option::
 
     taiga.include_tasks = True
+
+Label Template
+++++++++++++++
+
+Use the ``label_template`` option to customize the label. For example::
+
+    taiga.label_template = taiga_{{label}}
 
 Provided UDA Fields
 -------------------

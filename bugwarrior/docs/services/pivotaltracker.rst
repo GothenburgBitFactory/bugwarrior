@@ -12,7 +12,7 @@ Here's an example of a Pivotal Tracker target::
 
     [my_issue_tracker]
     service = pivotaltracker
-    pivotaltracker.user_d = 123456
+    pivotaltracker.user_id = 123456
     pivotaltracker.account_ids = 123456
     pivotaltracker.token = <your account API token>
 
@@ -46,7 +46,7 @@ or described in `Service Features`_ below.
 
     Pivotal Tracker host, default is ``https://www.pivotaltracker.com/services``.
 
-.. describe:: pivotaltracker.excude_projects
+.. describe:: pivotaltracker.exclude_projects
 
     The list of projects to exclude. If omitted, bugwarrior will use all projects
     the authenticated user is a member of. This must be the projects id, In your browser,
@@ -54,7 +54,7 @@ or described in `Service Features`_ below.
     it should be something like https://www.pivotaltracker.com/n/projects/xxxxxxxx:
     copy the part after /b/projects/ in the pivotaltracker.exclude_projects field.
 
-.. describe:: pivotaltracker.excude_stories
+.. describe:: pivotaltracker.exclude_stories
 
     The list of stories to exclude. If omitted, bugwarrior will use all stories
     the authenticated user is assigned to. This must be the story id and Pivotal
@@ -62,7 +62,7 @@ or described in `Service Features`_ below.
     story you wish to exlcude and copy the id next to 'ID' in the story. *Do not
     include the #*
 
-.. describe:: pivotaltracker.excude_tags
+.. describe:: pivotaltracker.exclude_tags
 
     If set, pull all stories except for stories with those tags listed.
 
@@ -212,9 +212,9 @@ Story Tasks
 
 Pivotal Tracker provides the ability to add tasks to stories. Stories pulled in
 by bugwarrior will create an annotation for each "subtask" provided in the
-story. To turn this off, set::
+story. To turn this off, in your main section set::
 
-    pivotaltracker.annotation_comments = False
+    annotation_comments = False
 
 Also, if you would like to control how these blockers are created, you can
 specify a template used for converting the story blocker into a more reasonable
@@ -240,10 +240,10 @@ shown here https://www.pivotaltracker.com/help/api/rest/v5#Story_Tasks.
 Story Blocker
 +++++++++++++
 
-Pivotal Tracker allows you assign blockers to stories. To include blockers in
-the stories pulled by bugwarrior, set::
+Pivotal Tracker allows you assign blockers to stories and bugwarrior pulls
+these in by default. To disable this behavior set::
 
-    pivotaltracker.import_blockers = True
+    pivotaltracker.import_blockers = False
 
 Also, if you would like to control how these blockers are created, you can
 specify a template used for converting the story blocker into a more reasonable
@@ -251,7 +251,7 @@ format.
 
 For example, the default template::
 
-   Description: {{description}} Resolved: {{resolved}}\n
+   Description: {{description}} State: {{resolved}}\n
 
 Which will result in the following output::
 

@@ -16,12 +16,24 @@ Here's an example of a YouTrack target::
     youtrack.password = 3n1Gm@
 
 The above example is the minimum required to import issues from
-YouTrack.  You can also feel free to use any of the
+YouTrack. You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
 Service Features
 ----------------
+
+Unauthenticated
++++++++++++++++
+
+While the ``login`` and ``password`` fields are still required, bugwarrior
+will not log in to the service if you set::
+
+    youtrack.anonymous = True
+
+.. note::
+
+    This makes no attempt at IP obfuscation.
 
 Customize the YouTrack Connection
 +++++++++++++++++++++++++++++++++
@@ -64,9 +76,10 @@ Queries are capped at 100 max results by default, but may be adjusted to meet yo
 Import Issue Tags
 +++++++++++++++++
 
-The YouTrack issue tracker allows you to tag issues. To apply these tags in Taskwarrior, set::
+The YouTrack issue tracker allows you to tag issues and these tags are applied
+to tasks by default. To disable this behavior, set::
 
-    youtrack.import_tags = True
+    youtrack.import_tags = False
 
 If you would like to control how these tags are formatted, you can
 specify a template used for converting the YouTrack tag into a Taskwarrior

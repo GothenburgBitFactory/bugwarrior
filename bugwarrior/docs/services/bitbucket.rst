@@ -72,6 +72,13 @@ by adding the following configuration option::
 
     bitbucket.filter_merge_requests = True
 
+Project Owner Prefix
+++++++++++++++++++++
+
+To include the project owner in the project name::
+
+    bitbucket.project_owner_prefix = True
+
 Provided UDA Fields
 -------------------
 
