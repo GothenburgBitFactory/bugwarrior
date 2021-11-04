@@ -16,7 +16,8 @@ import six
 
 from taskw.task import Task
 
-from bugwarrior.config import asbool, asint, aslist, die, get_service_password, ServiceConfig
+from bugwarrior.config.parse import asbool, asint, aslist, die, ServiceConfig
+from bugwarrior.config.secrets import get_service_password
 from bugwarrior.db import MARKUP, URLShortener
 
 import logging

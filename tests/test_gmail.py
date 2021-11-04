@@ -8,7 +8,8 @@ from unittest.mock import patch
 from dateutil.tz import tzutc
 from google.oauth2.credentials import Credentials
 
-from bugwarrior.config import BugwarriorConfigParser, ServiceConfig
+from bugwarrior.config import ServiceConfig
+from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services import gmail
 from bugwarrior.services.gmail import GmailService
 

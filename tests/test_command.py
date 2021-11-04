@@ -6,7 +6,7 @@ from click.testing import CliRunner
 import pytest
 
 from bugwarrior import command
-from bugwarrior.config import BugwarriorConfigParser
+from bugwarrior.config.load import BugwarriorConfigParser
 
 from .base import ConfigTest
 from .test_github import ARBITRARY_ISSUE, ARBITRARY_EXTRA

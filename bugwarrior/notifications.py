@@ -5,7 +5,7 @@ import os
 import urllib.request, urllib.parse, urllib.error
 import warnings
 
-from bugwarrior.config import asbool
+from bugwarrior.config.parse import asbool
 
 
 cache_dir = os.path.expanduser(os.getenv('XDG_CACHE_HOME', "~/.cache") + "/bugwarrior")

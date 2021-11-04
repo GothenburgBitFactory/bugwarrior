@@ -4,7 +4,8 @@ from unittest import mock
 from dateutil.tz import tzutc
 import responses
 
-from bugwarrior.config import BugwarriorConfigParser, ServiceConfig
+from bugwarrior.config import ServiceConfig
+from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.pivotaltracker import PivotalTrackerService
 
 from .base import ServiceTest, AbstractServiceTest, ConfigTest
