@@ -3,7 +3,8 @@ from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config import ServiceConfig, BugwarriorConfigParser
+from bugwarrior.config import ServiceConfig
+from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.kanboard import KanboardService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest

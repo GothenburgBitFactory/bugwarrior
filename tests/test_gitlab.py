@@ -3,7 +3,8 @@ import datetime
 import pytz
 import responses
 
-from bugwarrior.config import BugwarriorConfigParser, ServiceConfig
+from bugwarrior.config import ServiceConfig
+from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.gitlab import GitlabService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest

@@ -1,6 +1,7 @@
 import unittest
 
-from bugwarrior import config, services
+from bugwarrior.config.load import BugwarriorConfigParser
+from bugwarrior import services
 
 LONG_MESSAGE = """\
 Some message that is over 100 characters. This message is so long it's
@@ -37,7 +38,7 @@ class DumbIssueService(services.IssueService):
 class TestIssueService(unittest.TestCase):
     def setUp(self):
         super(TestIssueService, self).setUp()
-        self.config = config.BugwarriorConfigParser()
+        self.config = BugwarriorConfigParser()
         self.config.add_section('general')
 
     def test_build_annotations_default(self):
@@ -71,7 +72,7 @@ class TestIssueService(unittest.TestCase):
 class TestIssue(unittest.TestCase):
     def setUp(self):
         super(TestIssue, self).setUp()
-        self.config = config.BugwarriorConfigParser()
+        self.config = BugwarriorConfigParser()
         self.config.add_section('general')
 
     def makeIssue(self):

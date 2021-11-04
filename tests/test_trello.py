@@ -3,7 +3,8 @@ from unittest.mock import patch
 from dateutil.parser import parse as parse_date
 import responses
 
-from bugwarrior.config import ServiceConfig, BugwarriorConfigParser
+from bugwarrior.config import ServiceConfig
+from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.trello import TrelloService, TrelloIssue
 
 from .base import ConfigTest, ServiceTest

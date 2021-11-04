@@ -9,7 +9,7 @@ from unittest import mock
 import responses
 
 from bugwarrior import config
-from bugwarrior.data import BugwarriorData
+from bugwarrior.config.data import BugwarriorData
 
 
 class AbstractServiceTest(abc.ABC):

@@ -17,7 +17,7 @@ import six
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
-from bugwarrior.config import asbool, get_taskrc_path, aslist
+from bugwarrior.config.parse import asbool, aslist, get_taskrc_path
 from bugwarrior.notifications import send_notification
 
 import logging

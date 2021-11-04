@@ -4,7 +4,8 @@ from builtins import object
 from unittest import mock
 from collections import namedtuple
 
-from bugwarrior.config import ServiceConfig, BugwarriorConfigParser
+from bugwarrior.config import ServiceConfig
+from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.bz import BugzillaService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
