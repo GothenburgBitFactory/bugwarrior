@@ -1,14 +1,32 @@
 from builtins import str
-import six
 
+import logging
+import typing
+
+import phabricator
+import pydantic
+import typing_extensions
+
+from bugwarrior import config
 from bugwarrior.config import aslist
 from bugwarrior.services import IssueService, Issue
 
-# This comes from PyPI
-import phabricator
-
-import logging
 log = logging.getLogger(__name__)
+
+
+class PhabricatorConfig(config.ServiceConfig, prefix='phabricator'):
+    service: typing_extensions.Literal['phabricator']
+
+    user_phids: config.ConfigList = config.ConfigList([])
+    project_phids: config.ConfigList = config.ConfigList([])
+    host: typing.Optional[pydantic.AnyUrl]
+    ignore_cc: typing.Optional[bool] = None
+    ignore_author: typing.Optional[bool] = None
+    ignore_owner: bool = False
+    ignore_reviewers: bool = False
+
+    # XXX Override common service configuration
+    only_if_assigned: bool = False
 
 
 class PhabricatorIssue(Issue):
@@ -75,6 +93,7 @@ class PhabricatorIssue(Issue):
 class PhabricatorService(IssueService):
     ISSUE_CLASS = PhabricatorIssue
     CONFIG_PREFIX = 'phabricator'
+    CONFIG_SCHEMA = PhabricatorConfig
 
     def __init__(self, *args, **kw):
         super(PhabricatorService, self).__init__(*args, **kw)
@@ -228,11 +247,6 @@ class PhabricatorService(IssueService):
                 #'annotations': self.annotations(phid, issue)
             }
             yield self.get_issue_for_record(diff, extra)
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        # There are no additional required fields.
-        super().validate_config(service_config, target)
 
     def get_owner(self, issue):
         # Issue filtering is implemented as part of issue aggregation.

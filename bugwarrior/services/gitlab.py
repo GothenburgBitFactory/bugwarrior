@@ -8,18 +8,77 @@ try:
     from urllib import quote, urlencode  # Python 2.X
 except ImportError:
     from urllib.parse import quote, urlencode # Python 3+
-from six.moves.configparser import NoOptionError
 import re
 import requests
 import six
+import typing
 
 from jinja2 import Template
+import pydantic
+import typing_extensions
 
-from bugwarrior.config import asbool, aslist, die
+from bugwarrior import config
+from bugwarrior.config import asbool, aslist
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
+
+# Although upstream supports it, pydantic has problems with Literal[None].
+DefaultPriority = typing.Optional[
+    typing_extensions.Literal['L', 'M', 'H', 'unassigned']]
+
+
+class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
+    service: typing_extensions.Literal['gitlab']
+    login: str
+    token: str
+    host: config.NoSchemeUrl
+
+    include_repos: config.ConfigList = config.ConfigList([])
+    exclude_repos: config.ConfigList = config.ConfigList([])
+    include_regex: typing.Optional[typing.Pattern] = None
+    exclude_regex: typing.Optional[typing.Pattern] = None
+    membership: bool = False
+    owned: bool = False
+    import_labels_as_tags: bool = False
+    label_template: str = '{{label}}'
+    filter_merge_requests: bool = False
+    include_todos: bool = False
+    include_all_todos: bool = True
+    only_if_author: str = ''
+    default_issue_priority: DefaultPriority = 'M'
+    default_todo_priority: DefaultPriority = 'M'
+    default_mr_priority: DefaultPriority = 'M'
+    use_https: bool = True
+    verify_ssl: bool = True
+    project_owner_prefix: bool = False
+
+    @pydantic.root_validator
+    def namespace_repo_lists(cls, values):
+        """ Add a default namespace to a repository name.  If the name already
+        contains a namespace, it will be returned unchanged:
+            e.g. "foo/bar" → "foo/bar"
+        otherwise, the loggin will be prepended as namespace:
+            e.g. "bar" → "<login>/bar"
+        """
+        for repolist in ['include_repos', 'exclude_repos']:
+            values[repolist] = [
+                f"{values['login']}/{repo}"
+                if not repo.startswith('id:') and repo.find('/') < 0
+                else repo
+                for repo in values[repolist]]
+        return values
+
+    @pydantic.root_validator
+    def default_priorities(cls, values):
+        for task_type in ['issue', 'todo', 'mr']:
+            priority_field = f'default_{task_type}_priority'
+            values[priority_field] = (
+                values[priority_field]
+                if values[priority_field] != 'unassigned'
+                else values['default_priority'])
+        return values
 
 
 class GitlabIssue(Issue):
@@ -235,6 +294,7 @@ class GitlabIssue(Issue):
 class GitlabService(IssueService, ServiceClient):
     ISSUE_CLASS = GitlabIssue
     CONFIG_PREFIX = 'gitlab'
+    CONFIG_SCHEMA = GitlabConfig
 
     def __init__(self, *args, **kw):
         super(GitlabService, self).__init__(*args, **kw)
@@ -563,16 +623,3 @@ class GitlabService(IssueService, ServiceClient):
                 }
                 todo_obj.update_extra(extra)
                 yield todo_obj
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        if 'host' not in service_config:
-            die("[%s] has no 'gitlab.host'" % target)
-
-        if 'login' not in service_config:
-            die("[%s] has no 'gitlab.login'" % target)
-
-        if 'token' not in service_config:
-            die("[%s] has no 'gitlab.token'" % target)
-
-        super(GitlabService, cls).validate_config(service_config, target)

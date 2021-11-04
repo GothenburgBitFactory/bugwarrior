@@ -1,7 +1,7 @@
 import responses
 
-from bugwarrior.config import ServiceConfig
 from bugwarrior.config.load import BugwarriorConfigParser
+from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.youtrack import YoutrackService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest

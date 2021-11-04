@@ -6,10 +6,11 @@ import unittest
 import configparser
 from unittest import mock
 
+import pytest
 import responses
 
 from bugwarrior import config
-from bugwarrior.config.data import BugwarriorData
+from bugwarrior.config import data, schema
 
 
 class AbstractServiceTest(abc.ABC):
@@ -58,6 +59,26 @@ class ConfigTest(unittest.TestCase):
         shutil.rmtree(self.tempdir, ignore_errors=True)
         os.environ = self.old_environ
 
+    @pytest.fixture(autouse=True)
+    def inject_fixtures(self, caplog):
+        self.caplog = caplog
+
+    def validate(self):
+        conf = schema.validate_config(self.config, 'general', 'configpath')
+        conf['general'].data = data.BugwarriorData(self.lists_path)
+        conf['general'].interactive = False
+        return conf
+
+    def assertValidationError(self, expected):
+
+        with self.assertRaises(SystemExit):
+            self.validate()
+
+        # Only one message should be logged.
+        self.assertEqual(len(self.caplog.records), 1)
+
+        self.assertIn(expected, self.caplog.records[0].message)
+
 
 class ServiceTest(ConfigTest):
     GENERAL_CONFIG = {
@@ -103,7 +124,7 @@ class ServiceTest(ConfigTest):
         config.has_option = mock.Mock(side_effect=has_option)
         config.get = mock.Mock(side_effect=get_option)
         config.getint = mock.Mock(side_effect=get_int)
-        config.data = BugwarriorData(self.lists_path)
+        config.data = data.BugwarriorData(self.lists_path)
 
         service_instance = service_class(config, 'general', section)
 

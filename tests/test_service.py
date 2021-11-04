@@ -3,6 +3,8 @@ import unittest
 from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior import services
 
+from .base import ConfigTest
+
 LONG_MESSAGE = """\
 Some message that is over 100 characters. This message is so long it's
 going to fill up your floppy disk taskwarrior backup. Actually it's not
@@ -35,7 +37,7 @@ class DumbIssueService(services.IssueService):
         raise NotImplementedError
 
 
-class TestIssueService(unittest.TestCase):
+class TestIssueService(ConfigTest):
     def setUp(self):
         super(TestIssueService, self).setUp()
         self.config = BugwarriorConfigParser()

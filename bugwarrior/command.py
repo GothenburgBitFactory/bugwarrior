@@ -8,7 +8,8 @@ from lockfile.pidlockfile import PIDLockFile
 import getpass
 import click
 
-from bugwarrior.config import get_keyring, load_config, ServiceConfig
+from bugwarrior.config import get_keyring, load_config
+from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services import aggregate_issues, get_service
 from bugwarrior.db import (
     get_defined_udas_as_strings,

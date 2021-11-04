@@ -1,14 +1,14 @@
 from collections import namedtuple
-from unittest import mock, TestCase
+from unittest import mock
 
 from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config import ServiceConfig
 from bugwarrior.config.load import BugwarriorConfigParser
+from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.jira import JiraService
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import ConfigTest, ServiceTest, AbstractServiceTest
 
 
 class FakeJiraClient(object):
@@ -23,9 +23,10 @@ class FakeJiraClient(object):
         return None
 
 
-class testJiraService(TestCase):
+class testJiraService(ConfigTest):
 
     def setUp(self):
+        super().setUp()
         self.config = BugwarriorConfigParser()
         self.config.interactive = False
         self.config.add_section('general')

@@ -1,13 +1,29 @@
 import six
 import requests
 import re
+import typing
 
-from bugwarrior.config import die, asbool
-from bugwarrior.services import Issue, IssueService, ServiceClient
 from taskw import TaskWarriorShellout
+import typing_extensions
+
+from bugwarrior import config
+from bugwarrior.config import asbool
+from bugwarrior.services import Issue, IssueService, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class RedMineConfig(config.ServiceConfig, prefix='redmine'):
+    service: typing_extensions.Literal['redmine']
+    url: config.StrippedTrailingSlashUrl
+    key: str
+
+    project_name: str = ''
+    issue_limit: int = 100
+    login: str = ''
+    password: str = ''
+    verify_ssl: bool = True
 
 
 class RedMineClient(ServiceClient):
@@ -227,6 +243,7 @@ class RedMineIssue(Issue):
 class RedMineService(IssueService):
     ISSUE_CLASS = RedMineIssue
     CONFIG_PREFIX = 'redmine'
+    CONFIG_SCHEMA = RedMineConfig
 
     def __init__(self, *args, **kw):
         super(RedMineService, self).__init__(*args, **kw)
@@ -258,14 +275,6 @@ class RedMineService(IssueService):
         url = service_config.get('url')
         login = service_config.get('login')
         return "redmine://%s@%s/" % (login, url)
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for k in ('url', 'key'):
-            if k not in service_config:
-                die("[%s] has no 'redmine.%s'" % (target, k))
-
-        IssueService.validate_config(service_config, target)
 
     def get_owner(self, issue):
         # Issue filtering is implemented as part of the api query.

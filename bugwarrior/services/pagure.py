@@ -4,15 +4,41 @@ import six
 import datetime
 import pytz
 
+import pydantic
 import requests
+import typing_extensions
 
 from jinja2 import Template
 
-from bugwarrior.config import asbool, aslist, die
+from bugwarrior import config
+from bugwarrior.config import asbool, aslist
 from bugwarrior.services import IssueService, Issue
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class PagureConfig(config.ServiceConfig, prefix='pagure'):
+    # strictly required
+    service: typing_extensions.Literal['pagure']
+    base_url: config.StrippedTrailingSlashUrl
+
+    # conditionally required
+    tag: str = ''
+    repo: str = ''
+
+    # optional
+    include_repos: config.ConfigList = config.ConfigList([])
+    exclude_repos: config.ConfigList = config.ConfigList([])
+    import_tags: bool = False
+    tag_template: str = '{{label}}'
+
+    @pydantic.root_validator
+    def require_tag_or_repo(cls, values):
+        if not values['tag'] and not values['repo']:
+            raise ValueError(
+                'section requires one of:\npagure.tag\npagure.repo')
+        return values
 
 
 class PagureIssue(Issue):
@@ -102,6 +128,7 @@ class PagureIssue(Issue):
 class PagureService(IssueService):
     ISSUE_CLASS = PagureIssue
     CONFIG_PREFIX = 'pagure'
+    CONFIG_SCHEMA = PagureConfig
 
     def __init__(self, *args, **kw):
         super(PagureService, self).__init__(*args, **kw)
@@ -214,13 +241,3 @@ class PagureService(IssueService):
             }
             issue_obj.update_extra(extra)
             yield issue_obj
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        if 'tag' not in service_config and 'repo' not in service_config:
-            die("[%s] has no 'pagure.tag' or 'pagure.repo'" % target)
-
-        if 'base_url' not in service_config:
-            die("[%s] has no 'pagure.base_url'" % target)
-
-        super(PagureService, cls).validate_config(service_config, target)

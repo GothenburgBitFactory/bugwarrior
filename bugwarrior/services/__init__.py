@@ -48,6 +48,8 @@ class IssueService(abc.ABC):
     ISSUE_CLASS = None
     # What prefix should we use for this service's configuration values
     CONFIG_PREFIX = ''
+    # Which class defines this service's configuration options?
+    CONFIG_SCHEMA = None
 
     def __init__(self, main_config, main_section, target):
         self.config = ServiceConfig(self.CONFIG_PREFIX, main_config, target)
@@ -162,23 +164,6 @@ class IssueService(abc.ABC):
                     )
                 final.append('@%s - %s' % (author, message))
         return final
-
-    @classmethod
-    @abc.abstractmethod
-    def validate_config(cls, service_config, target):
-        """ Validate generic options for a particular target """
-        if service_config.has_option(target, 'only_if_assigned'):
-            die("[%s] has an 'only_if_assigned' option.  Should be "
-                "'%s.only_if_assigned'." % (target, cls.CONFIG_PREFIX))
-        if service_config.has_option(target, 'also_unassigned'):
-            die("[%s] has an 'also_unassigned' option.  Should be "
-                "'%s.also_unassigned'." % (target, cls.CONFIG_PREFIX))
-        if service_config.has_option(target, 'default_priority'):
-            die("[%s] has a 'default_priority' option.  Should be "
-                "'%s.default_priority'." % (target, cls.CONFIG_PREFIX))
-        if service_config.has_option(target, 'add_tags'):
-            die("[%s] has an 'add_tags' option.  Should be "
-                "'%s.add_tags'." % (target, cls.CONFIG_PREFIX))
 
     def include(self, issue):
         """ Return true if the issue in question should be included """

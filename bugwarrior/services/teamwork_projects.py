@@ -1,17 +1,18 @@
-from builtins import filter
-import re
-import six
-from urllib.parse import urlparse
-
 import requests
-from six.moves.urllib.parse import quote_plus
-from jinja2 import Template
+import typing_extensions
 
-from bugwarrior.config import asbool, aslist, die
+from bugwarrior import config
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class TeamworkConfig(config.ServiceConfig, prefix='teamwork_projects'):
+    service: typing_extensions.Literal['teamwork_projects']
+    host: config.StrippedTrailingSlashUrl
+    token: str
+
 
 class TeamworkClient(ServiceClient):
 
@@ -126,6 +127,7 @@ class TeamworkIssue(Issue):
 class TeamworkService(IssueService):
     ISSUE_CLASS = TeamworkIssue
     CONFIG_PREFIX = 'teamwork_projects'
+    CONFIG_SCHEMA = TeamworkConfig
 
     def __init__(self, *args, **kwargs):
         super(TeamworkService, self).__init__(*args, **kwargs)
@@ -152,13 +154,6 @@ class TeamworkService(IssueService):
                     comment_list.append((author, text))
                 return self.build_annotations(comment_list, None)
         return []
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for field in ['token', 'hosts']:
-            if field not in service_config:
-                die(f"[{target}] has no 'teamwork_projects.{field}'")
-        super().validate_config(service_config, target)
 
     def get_owner(self, issue):
         # TODO

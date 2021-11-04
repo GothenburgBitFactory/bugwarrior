@@ -1,16 +1,36 @@
 from __future__ import absolute_import
 import re
-import six
+import typing
 
-import requests
 from jinja2 import Template
+import requests
+import six
+import typing_extensions
 
-from bugwarrior.config import asbool, die
+from bugwarrior import config
+from bugwarrior.config import asbool
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
 
 log = logging.getLogger(__name__)
+
+
+class YoutrackConfig(config.ServiceConfig, prefix='youtrack'):
+    service: typing_extensions.Literal['youtrack']
+    host: config.NoSchemeUrl
+    login: str
+    password: str
+
+    anonymous: bool = False
+    port: typing.Optional[int] = None
+    use_https: bool = True
+    verify_ssl: bool = True
+    incloud_instance: bool = False
+    query: str = 'for:me #Unresolved'
+    query_limit: int = 100
+    import_tags: bool = True
+    tag_template: str = '{{tag|lower}}'
 
 
 class YoutrackIssue(Issue):
@@ -115,6 +135,7 @@ class YoutrackIssue(Issue):
 class YoutrackService(IssueService, ServiceClient):
     ISSUE_CLASS = YoutrackIssue
     CONFIG_PREFIX = 'youtrack'
+    CONFIG_SCHEMA = YoutrackConfig
 
     def __init__(self, *args, **kw):
         super(YoutrackService, self).__init__(*args, **kw)
@@ -173,14 +194,6 @@ class YoutrackService(IssueService, ServiceClient):
             'import_tags': self.import_tags,
             'tag_template': self.tag_template,
         }
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for k in ('login', 'password', 'host'):
-            if k not in service_config:
-                die("[%s] has no 'youtrack.%s'" % (target, k))
-
-        IssueService.validate_config(service_config, target)
 
     def get_owner(self, issue):
         # TODO

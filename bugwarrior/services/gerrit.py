@@ -2,11 +2,24 @@ from __future__ import absolute_import
 
 import json
 import os
+import pathlib
+import typing
 
 import requests
+import typing_extensions
 
-from bugwarrior.config import die
+from bugwarrior import config
 from bugwarrior.services import IssueService, Issue, ServiceClient
+
+
+class GerritConfig(config.ServiceConfig, prefix='gerrit'):
+    service: typing_extensions.Literal['gerrit']
+    base_uri: config.StrippedTrailingSlashUrl
+    username: str
+    password: str
+
+    ssl_ca_path: typing.Optional[config.ExpandedPath] = None
+    query: str = 'is:open+is:reviewer'
 
 
 class GerritIssue(Issue):
@@ -66,6 +79,7 @@ class GerritIssue(Issue):
 class GerritService(IssueService, ServiceClient):
     ISSUE_CLASS = GerritIssue
     CONFIG_PREFIX = 'gerrit'
+    CONFIG_SCHEMA = GerritConfig
 
     def __init__(self, *args, **kw):
         super(GerritService, self).__init__(*args, **kw)
@@ -105,14 +119,6 @@ class GerritService(IssueService, ServiceClient):
         return {
             'url': self.url,
         }
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for option in ('username', 'password', 'base_uri'):
-            if option not in service_config:
-                die("[%s] has no 'gerrit.%s'" % (target, option))
-
-        IssueService.validate_config(service_config, target)
 
     def get_owner(self, issue):
         # TODO

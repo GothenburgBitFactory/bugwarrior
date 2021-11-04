@@ -1,15 +1,45 @@
-import bugzilla
-
-import time
-import pytz
 import datetime
-import six
+import logging
+import time
+import typing
 
-from bugwarrior.config import die, asbool, aslist
+import bugzilla
+import pydantic
+import pytz
+import six
+import typing_extensions
+
+from bugwarrior import config
+from bugwarrior.config import asbool, aslist
 from bugwarrior.services import IssueService, Issue
 
-import logging
 log = logging.getLogger(__name__)
+
+
+class BugzillaConfig(config.ServiceConfig, prefix='bugzilla'):
+    service: typing_extensions.Literal['bugzilla']
+    username: str
+    base_uri: config.NoSchemeUrl
+
+    password: str = ''
+    api_key: str = ''
+    ignore_cc: bool = False
+    open_statuses: config.ConfigList = config.ConfigList([
+        'NEW',
+        'ASSIGNED',
+        'NEEDINFO',
+        'ON_DEV',
+        'MODIFIED',
+        'POST',
+        'REOPENED',
+        'ON_QA',
+        'FAILS_QA',
+        'PASSES_QA',
+    ])
+    include_needinfos: bool = False
+    query_url: typing.Optional[pydantic.AnyUrl]
+    force_rest: bool = False
+    advanced: bool = False
 
 
 class BugzillaIssue(Issue):
@@ -113,6 +143,7 @@ _open_statuses = [
 class BugzillaService(IssueService):
     ISSUE_CLASS = BugzillaIssue
     CONFIG_PREFIX = 'bugzilla'
+    CONFIG_SCHEMA = BugzillaConfig
 
     COLUMN_LIST = [
         'id',
@@ -162,15 +193,6 @@ class BugzillaService(IssueService):
         username = service_config.get('username')
         base_uri = service_config.get('base_uri')
         return "bugzilla://%s@%s" % (username, base_uri)
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        req = ['username', 'base_uri']
-        for option in req:
-            if option not in service_config:
-                die("[%s] has no 'bugzilla.%s'" % (target, option))
-
-        super(BugzillaService, cls).validate_config(service_config, target)
 
     def get_owner(self, issue):
         return issue['assigned_to']

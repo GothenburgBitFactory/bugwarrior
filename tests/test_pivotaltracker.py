@@ -4,8 +4,8 @@ from unittest import mock
 from dateutil.tz import tzutc
 import responses
 
-from bugwarrior.config import ServiceConfig
 from bugwarrior.config.load import BugwarriorConfigParser
+from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.pivotaltracker import PivotalTrackerService
 
 from .base import ServiceTest, AbstractServiceTest, ConfigTest
@@ -181,47 +181,48 @@ class TestPivotalTrackerServiceConfig(ConfigTest):
         super(TestPivotalTrackerServiceConfig, self).setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
+        self.config.set('general', 'targets', 'pivotal')
         self.config.add_section('pivotal')
+        self.config.set('pivotal', 'service', 'pivotaltracker')
         self.service_config = ServiceConfig(
             PivotalTrackerService.CONFIG_PREFIX, self.config, 'pivotal')
 
-    @mock.patch('bugwarrior.services.pivotaltracker.die')
-    def test_validate_config(self, die):
+    def test_validate_config(self):
         self.config.set('pivotal', 'pivotaltracker.account_ids', '12345')
         self.config.set('pivotal', 'pivotaltracker.user_id', '12345')
         self.config.set('pivotal', 'pivotaltracker.token', '12345')
-        PivotalTrackerService.validate_config(self.service_config, 'pivotal')
-        die.assert_not_called()
 
-    @mock.patch('bugwarrior.services.pivotaltracker.die')
-    def test_validate_config_no_account_ids(self, die):
+        self.validate()
+
+    def test_validate_config_no_account_ids(self):
         self.config.set('pivotal', 'pivotaltracker.token', '123')
         self.config.set('pivotal', 'pivotaltracker.user_id', '12345')
-        PivotalTrackerService.validate_config(self.service_config, 'pivotal')
-        die.assert_called_with("[pivotal] has no 'pivotaltracker.account_ids'")
 
-    @mock.patch('bugwarrior.services.pivotaltracker.die')
-    def test_validate_config_no_user_id(self, die):
+        self.assertValidationError(
+            '[pivotal]\npivotaltracker.account_ids  <- field required')
+
+    def test_validate_config_no_user_id(self):
         self.config.set('pivotal', 'pivotaltracker.account_ids', '12345')
         self.config.set('pivotal', 'pivotaltracker.token', '123')
-        PivotalTrackerService.validate_config(self.service_config, 'pivotal')
-        die.assert_called_with("[pivotal] has no 'pivotaltracker.user_id'")
 
-    @mock.patch('bugwarrior.services.pivotaltracker.die')
-    def test_validate_config_token(self, die):
+        self.assertValidationError(
+            '[pivotal]\npivotaltracker.user_id  <- field required')
+
+    def test_validate_config_token(self):
         self.config.set('pivotal', 'pivotaltracker.account_ids', '12345')
         self.config.set('pivotal', 'pivotaltracker.user_id', '12345')
-        PivotalTrackerService.validate_config(self.service_config, 'pivotal')
-        die.assert_called_with("[pivotal] has no 'pivotaltracker.token'")
 
-    @mock.patch('bugwarrior.services.pivotaltracker.die')
-    def test_validate_config_invalid_endpoint(self, die):
+        self.assertValidationError(
+            '[pivotal]\npivotaltracker.token  <- field required')
+
+    def test_validate_config_invalid_endpoint(self):
         self.config.set('pivotal', 'pivotaltracker.account_ids', '12345')
         self.config.set('pivotal', 'pivotaltracker.token', '123')
         self.config.set('pivotal', 'pivotaltracker.user_id', '12345')
         self.config.set('pivotal', 'pivotaltracker.version', 'v1')
-        PivotalTrackerService.validate_config(self.service_config, 'pivotal')
-        die.assert_called_with("[pivotal] has an invalid 'pivotaltracker.version'")
+
+        self.assertValidationError(
+            '[pivotal]\npivotaltracker.version  <- unexpected value')
 
 
 class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):

@@ -1,18 +1,61 @@
 from builtins import filter
 import re
-import six
 import sys
-from urllib.parse import urlparse
 
-import requests
-from six.moves.urllib.parse import quote_plus
 from jinja2 import Template
+import pydantic
+import requests
+import six
+import typing_extensions
 
-from bugwarrior.config import asbool, aslist, die
+from bugwarrior import config
+from bugwarrior.config import asbool, aslist
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class GithubConfig(config.ServiceConfig, prefix='github'):
+    # strictly required
+    service: typing_extensions.Literal['github']
+    login: str
+
+    # conditionally required
+    token: str = ''
+    password: str = ''
+
+    username: str = ''
+    query: str = ''
+
+    # optional
+    include_user_repos: bool = True
+    include_repos: config.ConfigList = config.ConfigList([])
+    exclude_repos: config.ConfigList = config.ConfigList([])
+    import_labels_as_tags: bool = False
+    label_template: str = '{{label}}'
+    filter_pull_requests: bool = False
+    exclude_pull_requests: bool = False
+    include_user_issues: bool = True
+    involved_issues: bool = False
+    host: config.NoSchemeUrl = config.NoSchemeUrl(
+        'github.com', scheme='https', host='github.com')
+    body_length: int = sys.maxsize
+    project_owner_prefix: bool = False
+
+    @pydantic.root_validator
+    def require_token_or_password(cls, values):
+        if not values['token'] and not values['password']:
+            raise ValueError(
+                'section requires one of:\ngithub.token\ngithub.password')
+        return values
+
+    @pydantic.root_validator
+    def require_username_or_query(cls, values):
+        if not values['username'] and not values['query']:
+            raise ValueError(
+                'section requires one of:\ngithub.username\ngithub.query')
+        return values
 
 
 class GithubClient(ServiceClient):
@@ -258,6 +301,7 @@ class GithubIssue(Issue):
 class GithubService(IssueService):
     ISSUE_CLASS = GithubIssue
     CONFIG_PREFIX = 'github'
+    CONFIG_SCHEMA = GithubConfig
 
     def __init__(self, *args, **kw):
         super(GithubService, self).__init__(*args, **kw)
@@ -482,16 +526,3 @@ class GithubService(IssueService):
             }
             issue_obj.update_extra(extra)
             yield issue_obj
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        if 'login' not in service_config:
-            die("[%s] has no 'github.login'" % target)
-
-        if 'token' not in service_config and 'password' not in service_config:
-            die("[%s] has no 'github.token' or 'github.password'" % target)
-
-        if 'username' not in service_config and 'query' not in service_config:
-            die("[%s] has no 'github.username' or 'github.query'" % target)
-
-        super(GithubService, cls).validate_config(service_config, target)

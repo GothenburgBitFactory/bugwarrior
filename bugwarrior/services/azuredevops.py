@@ -1,9 +1,48 @@
+import base64
+import re
+from urllib.parse import quote
+
+import requests
+import typing_extensions
+
+from bugwarrior import config
 from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue, ServiceClient
-from urllib.parse import quote
-import base64
-import requests
-import re
+
+
+class PersonalAccessToken(str):
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, pat):
+        if pat[0] != ":":
+            pat = f":{pat}"
+        return base64.b64encode(pat.encode("ascii")).decode("ascii")
+
+
+class EscapedStr(str):
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value):
+        return quote(value)
+
+
+class AzureDevopsConfig(config.ServiceConfig, prefix='ado'):
+    service: typing_extensions.Literal['azuredevops']
+    PAT: PersonalAccessToken
+    project: EscapedStr
+    organization: EscapedStr
+
+    host: config.NoSchemeUrl = config.NoSchemeUrl(
+        'dev.azure.com', scheme='https', host='azure.com')
+    wiql_filter: str = ''
 
 
 def striphtml(data):
@@ -147,6 +186,7 @@ class AzureDevopsIssue(Issue):
 class AzureDevopsService(IssueService):
     ISSUE_CLASS = AzureDevopsIssue
     CONFIG_PREFIX = "ado"
+    CONFIG_SCHEMA = AzureDevopsConfig
 
     def __init__(self, *args, **kw):
         super(AzureDevopsService, self).__init__(*args, **kw)
@@ -212,13 +252,6 @@ class AzureDevopsService(IssueService):
             }
             issue_obj.update_extra(extra)
             yield issue_obj
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for option in ("PAT", "project", "organization"):
-            if option not in service_config:
-                die(f"[{target}] has no 'ado.{option}'")
-        super(AzureDevopsService, cls).validate_config(service_config, target)
 
     def get_owner(self, issue):
         # Issue filtering is implemented as part of issue aggregation.

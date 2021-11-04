@@ -2,65 +2,13 @@ import codecs
 import configparser
 import logging
 import os
+import re
 
-from bugwarrior.services import get_service
-
-from .data import BugwarriorData, get_data_path
-from .parse import aslist, die, ServiceConfig
-
-log = logging.getLogger(__name__)
+from . import data, schema
 
 # The name of the environment variable that can be used to ovewrite the path
 # to the bugwarriorrc file
 BUGWARRIORRC = "BUGWARRIORRC"
-
-
-def validate_config(config, main_section):
-    if not config.has_section(main_section):
-        die("No [%s] section found." % main_section)
-
-    logging.basicConfig(
-        level=getattr(logging, config.get(main_section, 'log.level')),
-        filename=config.get(main_section, 'log.file'),
-    )
-
-    # In general, its nice to log "everything", but some of the loggers from
-    # our dependencies are very very spammy.  Here, we silence most of their
-    # noise:
-    spammers = [
-        'bugzilla.base',
-        'bugzilla.bug',
-        'requests.packages.urllib3.connectionpool',
-    ]
-    for spammer in spammers:
-        logging.getLogger(spammer).setLevel(logging.WARN)
-
-    if not config.has_option(main_section, 'targets'):
-        die("No targets= item in [%s] found." % main_section)
-
-    targets = aslist(config.get(main_section, 'targets'))
-    targets = [t for t in targets if len(t)]
-
-    if not targets:
-        die("Empty targets= item in [%s]." % main_section)
-
-    for target in targets:
-        if target not in config.sections():
-            die("No [%s] section found." % target)
-
-    # Validate each target one by one.
-    for target in targets:
-        service = config.get(target, 'service')
-        if not service:
-            die("No 'service' in [%s]" % target)
-
-        if not get_service(service):
-            die("'%s' in [%s] is not a valid service." % (service, target))
-
-        # Call the service-specific validator
-        service = get_service(service)
-        service_config = ServiceConfig(service.CONFIG_PREFIX, config, target)
-        service.validate_config(service_config, target)
 
 
 def get_config_path():
@@ -90,6 +38,14 @@ def get_config_path():
     return paths[0]
 
 
+def remove_inactive_flavors(rawconfig, main_section):
+    if main_section != 'general':
+        rawconfig.remove_section('general')
+    for section in rawconfig.sections():
+        if re.match('^flavor\\..*', section) and main_section != section:
+            rawconfig.remove_section(section)
+
+
 def fix_logging_path(config, main_section):
     """
     Expand environment variables and user home (~) in the log.file and return
@@ -103,15 +59,38 @@ def fix_logging_path(config, main_section):
     return log_file
 
 
+def configure_logging(config, main_section):
+    logging.basicConfig(
+        level=getattr(logging, config.get(main_section, 'log.level')),
+        filename=config.get(main_section, 'log.file'),
+    )
+
+    # In general, its nice to log "everything", but some of the loggers from
+    # our dependencies are very very spammy.  Here, we silence most of their
+    # noise:
+    spammers = [
+        'bugzilla.base',
+        'bugzilla.bug',
+        'requests.packages.urllib3.connectionpool',
+    ]
+    for spammer in spammers:
+        logging.getLogger(spammer).setLevel(logging.WARN)
+
+
 def load_config(main_section, interactive=False):
-    config = BugwarriorConfigParser({'log.level': "INFO", 'log.file': None})
+    config = BugwarriorConfigParser()
     path = get_config_path()
     config.readfp(codecs.open(path, "r", "utf-8",))
+    config.set(main_section, 'log.level', 'INFO')
+    config.set(main_section, 'log.file', None)
+    remove_inactive_flavors(config, main_section)
     config.interactive = interactive
-    config.data = BugwarriorData(get_data_path(config, main_section))
+    config.data = data.BugwarriorData(
+        data.get_data_path(config, main_section))
     config.set(
         main_section, 'log.file', fix_logging_path(config, main_section))
-    validate_config(config, main_section)
+    schema.validate_config(config, main_section, path)
+    configure_logging(config, main_section)
     return config
 
 
@@ -131,3 +110,8 @@ class BugwarriorConfigParser(configparser.ConfigParser, object):
                 raise ValueError(
                     "{section}.{option} must be an integer or empty.".format(
                         section=section, option=option))
+
+    @staticmethod
+    def optionxform(option):
+        """ Do not lowercase key names. """
+        return option

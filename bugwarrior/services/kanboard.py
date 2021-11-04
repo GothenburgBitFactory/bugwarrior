@@ -5,11 +5,21 @@ from urllib.parse import urlparse
 
 from dateutil.tz.tz import tzutc
 from kanboard import Client
+import typing_extensions
 
-from bugwarrior.config import die
+from bugwarrior import config
 from bugwarrior.services import Issue, IssueService
 
 log = logging.getLogger(__name__)
+
+
+class KanboardConfig(config.ServiceConfig, prefix='kanboard'):
+    service: typing_extensions.Literal['kanboard']
+    url: config.StrippedTrailingSlashUrl
+    username: str
+    password: str
+
+    query: str = ''
 
 
 class KanboardIssue(Issue):
@@ -103,6 +113,7 @@ class KanboardIssue(Issue):
 class KanboardService(IssueService):
     ISSUE_CLASS = KanboardIssue
     CONFIG_PREFIX = "kanboard"
+    CONFIG_SCHEMA = KanboardConfig
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -153,14 +164,6 @@ class KanboardService(IssueService):
             extra["annotations"] = self.annotations(task, extra["url"])
 
             yield self.get_issue_for_record(task, extra)
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for option in ("url", "username", "password"):
-            if option not in service_config:
-                die(f"[{target}] has no 'kanboard.{option}'")
-
-        IssueService.validate_config(service_config, target)
 
     def get_owner(self, issue):
         # TODO

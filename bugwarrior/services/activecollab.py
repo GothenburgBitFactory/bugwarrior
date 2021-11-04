@@ -3,11 +3,19 @@ import re
 
 import pypandoc
 from pyac.library import activeCollab
+import typing_extensions
 from bugwarrior.services import IssueService, Issue
-from bugwarrior.config import die
+from bugwarrior import config
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class ActiveCollabConfig(config.ServiceConfig, prefix='activecollab'):
+    service: typing_extensions.Literal['activecollab']
+    url: config.StrippedTrailingSlashUrl
+    key: str
+    user_id: int
 
 
 class ActiveCollabClient(object):
@@ -162,6 +170,7 @@ class ActiveCollabIssue(Issue):
 class ActiveCollabService(IssueService):
     ISSUE_CLASS = ActiveCollabIssue
     CONFIG_PREFIX = 'activecollab'
+    CONFIG_SCHEMA = ActiveCollabConfig
 
     def __init__(self, *args, **kw):
         super(ActiveCollabService, self).__init__(*args, **kw)
@@ -174,14 +183,6 @@ class ActiveCollabService(IssueService):
         )
         self.activecollab = activeCollab(url=self.url, key=self.key,
                                          user_id=self.user_id)
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for k in ('url', 'key', 'user_id'):
-            if k not in service_config:
-                die("[%s] has no 'activecollab.%s'" % (target, k))
-
-        IssueService.validate_config(service_config, target)
 
     def _comments(self, issue):
         comments = self.activecollab.get_comments(
