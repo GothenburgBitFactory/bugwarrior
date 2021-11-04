@@ -5,12 +5,40 @@ import operator
 
 import requests
 from jinja2 import Template
+import typing_extensions
 
-from bugwarrior.config import asbool, aslist, asint, die
+from bugwarrior import config
+from bugwarrior.config import asbool, aslist, asint
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class PivotalTrackerConfig(config.ServiceConfig, prefix='pivotaltracker'):
+    service: typing_extensions.Literal['pivotaltracker']
+    user_id: int
+    account_ids: config.ConfigList
+    token: str
+
+    version: typing_extensions.Literal['v5', 'edge'] = 'v5'
+    host: config.StrippedTrailingSlashUrl = config.StrippedTrailingSlashUrl(
+        'https://www.pivotaltracker.com/services',
+        scheme='https', host='pivotaltracker.com')
+    exclude_projects: config.ConfigList = config.ConfigList([])
+    exclude_stories: config.ConfigList = config.ConfigList([])
+    exclude_tags: config.ConfigList = config.ConfigList([])
+    import_blockers: bool = True
+    blocker_template: str = (
+        'Description: {{description}} State: {{resolved}}\n')
+    import_labels_as_tags: bool = False
+    label_template: str = "{{label|replace(' ', '_')}}"
+    annotation_template: str = 'status: {{complete}} - {{description}}'
+    only_if_author: bool = False
+    query: str = ''
+
+    # XXX Override common configuration option
+    only_if_assigned: bool = True
 
 
 class PivotalTrackerIssue(Issue):
@@ -115,6 +143,7 @@ class PivotalTrackerIssue(Issue):
 class PivotalTrackerService(IssueService, ServiceClient):
     ISSUE_CLASS = PivotalTrackerIssue
     CONFIG_PREFIX = 'pivotaltracker'
+    CONFIG_SCHEMA = PivotalTrackerConfig
 
     def __init__(self, *args, **kwargs):
         super(PivotalTrackerService, self).__init__(*args, **kwargs)
@@ -168,19 +197,6 @@ class PivotalTrackerService(IssueService, ServiceClient):
                 self.query += " -label:{labels}".format(labels=",".join(self.exclude_tags))
             if self.only_if_author:
                 self.query += " requester:{user_id}".format(user_id=self.user_id)
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        required = ['user_id', 'token', 'account_ids']
-
-        for item in required:
-            if item not in service_config:
-                die("[{0}] has no 'pivotaltracker.{1}'".format(target, item))
-
-        if service_config.get('version', default='v5') not in ['v5', 'edge']:
-            die("[%s] has an invalid 'pivotaltracker.version'" % target)
-
-        super(PivotalTrackerService, cls).validate_config(service_config, target)
 
     def get_owner(self, issue):
         # Issue filtering is implemented as part of the api query.

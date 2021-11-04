@@ -3,17 +3,30 @@ standard_library.install_aliases()
 from builtins import filter
 from builtins import map
 from builtins import range
-import offtrac
 import csv
 import io as StringIO
-import requests
-import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 
-from bugwarrior.config import die, asbool
+import offtrac
+import requests
+import typing_extensions
+
+from bugwarrior import config
+from bugwarrior.config import asbool
 from bugwarrior.services import Issue, IssueService
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class TracConfig(config.ServiceConfig, prefix='trac'):
+    service: typing_extensions.Literal['trac']
+    base_uri: config.NoSchemeUrl
+
+    scheme: str = 'https'
+    no_xmlrpc: bool = False
+    username: str = ''
+    password: str = ''
 
 
 class TracIssue(Issue):
@@ -86,6 +99,7 @@ class TracIssue(Issue):
 class TracService(IssueService):
     ISSUE_CLASS = TracIssue
     CONFIG_PREFIX = 'trac'
+    CONFIG_SCHEMA = TracConfig
 
     def __init__(self, *args, **kw):
         super(TracService, self).__init__(*args, **kw)
@@ -111,15 +125,6 @@ class TracService(IssueService):
         username = service_config.get('username')
         base_uri = service_config.get('base_uri')
         return "https://%s@%s/" % (username, base_uri)
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        if 'base_uri' not in service_config:
-            die("[%s] has no 'base_uri'" % target)
-        elif '://' in service_config.get('base_uri'):
-            die("[%s] do not include scheme in 'base_uri'" % target)
-
-        IssueService.validate_config(service_config, target)
 
     def annotations(self, tag, issue, issue_obj):
         annotations = []

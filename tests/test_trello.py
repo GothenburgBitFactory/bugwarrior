@@ -3,8 +3,8 @@ from unittest.mock import patch
 from dateutil.parser import parse as parse_date
 import responses
 
-from bugwarrior.config import ServiceConfig
 from bugwarrior.config.load import BugwarriorConfigParser
+from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.trello import TrelloService, TrelloIssue
 
 from .base import ConfigTest, ServiceTest
@@ -68,7 +68,9 @@ class TestTrelloService(ConfigTest):
         super(TestTrelloService, self).setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
+        self.config.set('general', 'targets', 'mytrello')
         self.config.add_section('mytrello')
+        self.config.set('mytrello', 'service', 'trello')
         self.config.set('mytrello', 'trello.api_key', 'XXXX')
         self.config.set('mytrello', 'trello.token', 'YYYY')
         self.service_config = ServiceConfig(
@@ -200,22 +202,20 @@ class TestTrelloService(ConfigTest):
 
     maxDiff = None
 
-    @patch('bugwarrior.services.trello.die')
-    def test_validate_config(self, die):
-        TrelloService.validate_config(self.service_config, 'mytrello')
-        die.assert_not_called()
+    def test_validate_config(self):
+        self.validate()
 
-    @patch('bugwarrior.services.trello.die')
-    def test_valid_config_no_access_token(self, die):
+    def test_valid_config_no_access_token(self):
         self.config.remove_option('mytrello', 'trello.token')
-        TrelloService.validate_config(self.service_config, 'mytrello')
-        die.assert_called_with("[mytrello] has no 'trello.token'")
 
-    @patch('bugwarrior.services.trello.die')
-    def test_valid_config_no_api_key(self, die):
+        self.assertValidationError(
+            '[mytrello]\ntrello.token  <- field required')
+
+    def test_valid_config_no_api_key(self):
         self.config.remove_option('mytrello', 'trello.api_key')
-        TrelloService.validate_config(self.service_config, 'mytrello')
-        die.assert_called_with("[mytrello] has no 'trello.api_key'")
+
+        self.assertValidationError(
+            '[mytrello]\ntrello.api_key  <- field required')
 
 
     def test_keyring_service(self):

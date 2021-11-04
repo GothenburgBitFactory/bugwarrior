@@ -1,14 +1,44 @@
 from builtins import str
 import debianbts
+import pydantic
 import requests
+import typing_extensions
 
-from bugwarrior.config import die, asbool
+from bugwarrior import config
+from bugwarrior.config import asbool
 from bugwarrior.services import Issue, IssueService, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
 
 UDD_BUGS_SEARCH = "https://udd.debian.org/bugs/"
+
+
+class BTSConfig(config.ServiceConfig, prefix='bts'):
+    service: typing_extensions.Literal['bts']
+
+    email: pydantic.EmailStr = pydantic.EmailStr('')
+    packages: config.ConfigList = config.ConfigList([])
+
+    udd: bool = False
+    ignore_pending: bool = True
+    udd_ignore_sponsor: bool = True
+    ignore_pkg: config.ConfigList = config.ConfigList([])
+    ignore_src: config.ConfigList = config.ConfigList([])
+
+    @pydantic.root_validator
+    def require_email_or_packages(cls, values):
+        if not values['email'] and not values['packages']:
+            raise ValueError(
+                'section requires one of:\nbts.email\nbts.packages')
+        return values
+
+
+    @pydantic.root_validator
+    def udd_needs_email(cls, values):
+        if values['udd'] and not values['email']:
+            raise ValueError("no 'bts.email' but UDD search was requested")
+        return values
 
 
 class BTSIssue(Issue):
@@ -95,6 +125,7 @@ class BTSIssue(Issue):
 class BTSService(IssueService, ServiceClient):
     ISSUE_CLASS = BTSIssue
     CONFIG_PREFIX = 'bts'
+    CONFIG_SCHEMA = BTSConfig
 
     def __init__(self, *args, **kw):
         super(BTSService, self).__init__(*args, **kw)
@@ -108,24 +139,6 @@ class BTSService(IssueService, ServiceClient):
         self.ignore_src = self.config.get('ignore_src', default=None)
         self.ignore_pending = self.config.get(
             'ignore_pending', default=True, to_type=asbool)
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        if ('udd' in service_config and
-                asbool(service_config.get('udd')) and
-                'email' not in service_config):
-            die("[%s] has no 'bts.email' but UDD search was requested" %
-                (target,))
-
-        if 'packages' not in service_config and 'email' not in service_config:
-            die("[%s] has neither 'bts.email' or 'bts.packages'" % (target,))
-
-        if ('udd_ignore_sponsor' in service_config and
-            (not asbool(service_config.get('udd')))):
-            die("[%s] defines settings for UDD search without enabling"
-                " UDD search" % (target,))
-
-        IssueService.validate_config(service_config, target)
 
     def get_owner(self, issue):
         # TODO

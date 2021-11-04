@@ -2,18 +2,46 @@ from __future__ import absolute_import
 from builtins import str
 import sys
 
-
-import six
 from jinja2 import Template
 from jira.client import JIRA as BaseJIRA
+import pydantic
 from requests.cookies import RequestsCookieJar
+import six
+import typing_extensions
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config import asbool, die
+from bugwarrior import config
+from bugwarrior.config import asbool
 from bugwarrior.services import IssueService, Issue
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class JiraConfig(config.ServiceConfig, prefix='jira'):
+    service: typing_extensions.Literal['jira']
+    base_uri: pydantic.AnyUrl
+    username: str
+
+    password: str = ''
+    PAT: str = ''
+
+    body_length: int = sys.maxsize
+    import_labels_as_tags: bool = False
+    import_sprints_as_tags: bool = False
+    label_template: str = '{{label}}'
+    query: str = ''
+    use_cookies: bool = False
+    verify_ssl: bool = True
+    version: int = 5
+
+    @pydantic.root_validator
+    def require_password_xor_PAT(cls, values):
+        if ((values['password'] and values['PAT'])
+                or not (values['password'] or values['PAT'])):
+            raise ValueError(
+                'section requires one of (not both):\njira.password\njira.PAT')
+        return values
 
 
 # The below `ObliviousCookieJar` and `JIRA` classes are MIT Licensed.
@@ -277,6 +305,7 @@ class JiraIssue(Issue):
 class JiraService(IssueService):
     ISSUE_CLASS = JiraIssue
     CONFIG_PREFIX = 'jira'
+    CONFIG_SCHEMA = JiraConfig
 
     def __init__(self, *args, **kw):
         _skip_server = kw.pop('_skip_server', False)
@@ -346,19 +375,6 @@ class JiraService(IssueService):
             'sprint_field_names': self.sprint_field_names,
             'label_template': self.label_template,
         }
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for option in ('username', 'base_uri'):
-            if option not in service_config:
-                die("[%s] has no 'jira.%s'" % (target, option))
-
-        password_set = 'password' in service_config
-        pat_set = 'pat' in service_config
-        if (password_set and pat_set) or not (password_set or pat_set):
-            die("[%s] must set 'jira.password' or 'jira.PAT' (not both)" % target)
-
-        IssueService.validate_config(service_config, target)
 
     def get_owner(self, issue):
         # TODO

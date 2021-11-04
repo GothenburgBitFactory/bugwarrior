@@ -52,10 +52,6 @@ class TestPull(ConfigTest):
 
         self.write_rc(self.config)
 
-    @pytest.fixture(autouse=True)
-    def inject_fixtures(self, caplog):
-        self.caplog = caplog
-
     def write_rc(self, config):
         """
         Write configparser object to temporary bugwarriorrc path.

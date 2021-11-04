@@ -1,9 +1,22 @@
+import pydantic
+import typing_extensions
 from v1pysdk import V1Meta
 from v1pysdk.none_deref import NoneDeref
 from six.moves.urllib import parse
 
+from bugwarrior import config
 from bugwarrior.services import IssueService, Issue, LOCAL_TIMEZONE
-from bugwarrior.config import die
+
+
+class VersionOneConfig(config.ServiceConfig, prefix='versionone'):
+    service: typing_extensions.Literal['versionone']
+    base_uri: pydantic.AnyUrl
+    username: str
+
+    password: str = ''
+    timebox_name: str = ''
+    project_name: str = ''
+    timezone: str = LOCAL_TIMEZONE
 
 
 class VersionOneIssue(Issue):
@@ -151,6 +164,7 @@ class VersionOneIssue(Issue):
 class VersionOneService(IssueService):
     ISSUE_CLASS = VersionOneIssue
     CONFIG_PREFIX = 'versionone'
+    CONFIG_SCHEMA = VersionOneConfig
 
     TASK_COLLECT_DATA = (
         'Name',
@@ -206,18 +220,6 @@ class VersionOneService(IssueService):
         return {
             'timezone': self.timezone
         }
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        options = (
-            'base_uri',
-            'username',
-        )
-        for option in options:
-            if option not in service_config:
-                die("[%s] has no 'versionone.%s'" % (target, option))
-
-        IssueService.validate_config(service_config, target)
 
     def get_meta(self):
         if not hasattr(self, '_meta'):

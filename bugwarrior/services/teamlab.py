@@ -1,11 +1,21 @@
 import six
 import requests
+import typing_extensions
 
-from bugwarrior.config import die
+from bugwarrior import config
 from bugwarrior.services import Issue, IssueService, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class TeamLabConfig(config.ServiceConfig, prefix='teamlab'):
+    service: typing_extensions.Literal['teamlab']
+    hostname: str
+    login: str
+    password: str
+
+    project_name: str = ''
 
 
 class TeamLabClient(ServiceClient):
@@ -103,6 +113,7 @@ class TeamLabIssue(Issue):
 class TeamLabService(IssueService):
     ISSUE_CLASS = TeamLabIssue
     CONFIG_PREFIX = 'teamlab'
+    CONFIG_SCHEMA = TeamLabConfig
 
     def __init__(self, *args, **kw):
         super(TeamLabService, self).__init__(*args, **kw)
@@ -127,14 +138,6 @@ class TeamLabService(IssueService):
             'hostname': self.hostname,
             'project_name': self.project_name,
         }
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for k in ('login', 'password', 'hostname'):
-            if k not in service_config:
-                die("[%s] has no 'teamlab.%s'" % (target, k))
-
-        IssueService.validate_config(service_config, target)
 
     def get_owner(self, issue):
         # TODO

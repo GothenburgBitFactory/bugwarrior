@@ -1,10 +1,10 @@
-import configparser
 import datetime
 from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config import ServiceConfig
+from bugwarrior.config.parse import ServiceConfig
+from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.azuredevops import (
     AzureDevopsService,
     striphtml,
@@ -114,41 +114,42 @@ TEST_ISSUE = {
 class TestAzureDevopsServiceConfig(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = configparser.RawConfigParser()
+        self.config = BugwarriorConfigParser()
         self.config.add_section("general")
+        self.config.set("general", "targets", "test_ado")
         self.config.add_section("test_ado")
+        self.config.set("test_ado", "service", "azuredevops")
         self.service_config = ServiceConfig(
             AzureDevopsService.CONFIG_PREFIX, self.config, "test_ado"
         )
 
-    @mock.patch("bugwarrior.services.azuredevops.die")
-    def test_validate_config_required_fields(self, die):
+    def test_validate_config_required_fields(self):
         self.config.set("test_ado", "ado.organization", "test_organization")
         self.config.set("test_ado", "ado.project", "test_project")
         self.config.set("test_ado", "ado.PAT", "myPAT")
-        AzureDevopsService.validate_config(self.service_config, "test_ado")
-        die.assert_not_called()
+        self.validate()
 
-    @mock.patch("bugwarrior.services.azuredevops.die")
-    def test_validate_config_no_organization(self, die):
+    def test_validate_config_no_organization(self):
         self.config.set("test_ado", "ado.project", "test_project")
         self.config.set("test_ado", "ado.PAT", "myPAT")
-        AzureDevopsService.validate_config(self.service_config, "test_ado")
-        die.assert_called_with("[test_ado] has no 'ado.organization'")
 
-    @mock.patch("bugwarrior.services.azuredevops.die")
-    def test_validate_config_no_project(self, die):
+        self.assertValidationError(
+            '[test_ado]\nado.organization  <- field required')
+
+    def test_validate_config_no_project(self):
         self.config.set("test_ado", "ado.organization", "http://one.com/")
         self.config.set("test_ado", "ado.PAT", "myPAT")
-        AzureDevopsService.validate_config(self.service_config, "test_ado")
-        die.assert_called_with("[test_ado] has no 'ado.project'")
 
-    @mock.patch("bugwarrior.services.azuredevops.die")
-    def test_validate_config_no_PAT(self, die):
+        self.assertValidationError(
+            '[test_ado]\nado.project  <- field required')
+
+    def test_validate_config_no_PAT(self):
         self.config.set("test_ado", "ado.organization", "http://one.com/")
         self.config.set("test_ado", "ado.project", "test_project")
-        AzureDevopsService.validate_config(self.service_config, "test_ado")
-        die.assert_called_with("[test_ado] has no 'ado.PAT'")
+
+        self.assertValidationError(
+            '[test_ado]\nado.PAT  <- field required')
+
 
 class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {

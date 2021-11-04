@@ -4,8 +4,8 @@ from builtins import object
 from unittest import mock
 from collections import namedtuple
 
-from bugwarrior.config import ServiceConfig
 from bugwarrior.config.load import BugwarriorConfigParser
+from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.bz import BugzillaService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -26,32 +26,34 @@ class TestBugzillaServiceConfig(ConfigTest):
         super(TestBugzillaServiceConfig, self).setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
+        self.config.set('general', 'targets', 'mybz')
         self.config.add_section('mybz')
+        self.config.set('mybz', 'service', 'bugzilla')
         self.service_config = ServiceConfig(
             BugzillaService.CONFIG_PREFIX, self.config, 'mybz')
 
-    @mock.patch('bugwarrior.services.bz.die')
-    def test_validate_config_username_password(self, die):
-        self.config.set('mybz', 'bugzilla.base_uri', 'http://one.com/')
+    def test_validate_config_username_password(self):
+        self.config.set('mybz', 'bugzilla.base_uri', 'one.com/')
         self.config.set('mybz', 'bugzilla.username', 'me')
         self.config.set('mybz', 'bugzilla.password', 'mypas')
-        BugzillaService.validate_config(self.service_config, 'mybz')
-        die.assert_not_called()
 
-    @mock.patch('bugwarrior.services.bz.die')
-    def test_validate_config_api_key(self, die):
-        self.config.set('mybz', 'bugzilla.base_uri', 'http://one.com/')
+        # no error expected
+        self.validate()
+
+    def test_validate_config_api_key(self):
+        self.config.set('mybz', 'bugzilla.base_uri', 'one.com/')
         self.config.set('mybz', 'bugzilla.username', 'me')
         self.config.set('mybz', 'bugzilla.api_key', '123')
-        BugzillaService.validate_config(self.service_config, 'mybz')
-        die.assert_not_called()
 
-    @mock.patch('bugwarrior.services.bz.die')
-    def test_validate_config_api_key_no_username(self, die):
-        self.config.set('mybz', 'bugzilla.base_uri', 'http://one.com/')
+        # no error expected
+        self.validate()
+
+    def test_validate_config_api_key_no_username(self):
+        self.config.set('mybz', 'bugzilla.base_uri', 'one.com/')
         self.config.set('mybz', 'bugzilla.api_key', '123')
-        BugzillaService.validate_config(self.service_config, 'mybz')
-        die.assert_called_with("[mybz] has no 'bugzilla.username'")
+
+        self.assertValidationError(
+            '[mybz]\nbugzilla.username  <- field required')
 
 
 class TestBugzillaService(AbstractServiceTest, ServiceTest):

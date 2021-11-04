@@ -31,10 +31,10 @@ class FakeActiveCollabLib(object):
 
 class TestActiveCollabIssues(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
-        'activecollab.url': 'hello',
+        'service': 'activecollab',
+        'activecollab.url': 'https://hello',
         'activecollab.key': 'howdy',
         'activecollab.user_id': '2',
-        'activecollab.projects': '1:one, 2:two'
     }
 
     arbitrary_due_on = (

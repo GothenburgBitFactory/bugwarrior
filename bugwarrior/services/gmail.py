@@ -9,10 +9,21 @@ import time
 import googleapiclient.discovery
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
+import typing_extensions
 
+from bugwarrior import config
 from bugwarrior.services import IssueService, Issue
 
 log = logging.getLogger(__name__)
+
+
+class GmailConfig(config.ServiceConfig, prefix='gmail'):
+    service: typing_extensions.Literal['gmail']
+
+    client_secret_path: config.ExpandedPath = config.ExpandedPath(
+        '~/.gmail_client_secret.json')
+    query: str = 'label:Starred'
+    login_name: str = 'me'
 
 
 class GmailIssue(Issue):
@@ -107,6 +118,7 @@ class GmailService(IssueService):
 
     ISSUE_CLASS = GmailIssue
     CONFIG_PREFIX = 'gmail'
+    CONFIG_SCHEMA = GmailConfig
     AUTHENTICATION_LOCK = multiprocessing.Lock()
 
     def __init__(self, *args, **kw):
@@ -182,11 +194,6 @@ class GmailService(IssueService):
         subj = issue.extra['subject']
         issue_url = issue.get_processed_url(issue.extra['url'])
         return self.build_annotations([(sender, subj)], issue_url)
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        # There are no additional required fields.
-        super().validate_config(service_config, target)
 
     def get_owner(self, issue):
         raise NotImplementedError(

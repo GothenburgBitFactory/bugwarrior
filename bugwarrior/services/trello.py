@@ -8,15 +8,28 @@ Trello API documentation available at https://developers.trello.com/
 from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-from six.moves.configparser import NoOptionError
 
 from jinja2 import Template
 import requests
+import typing_extensions
 
 from bugwarrior.services import IssueService, Issue, ServiceClient
-from bugwarrior.config import die, asbool, aslist
+from bugwarrior import config
+from bugwarrior.config import asbool, aslist
 
 DEFAULT_LABEL_TEMPLATE = "{{label|replace(' ', '_')}}"
+
+
+class TrelloConfig(config.ServiceConfig, prefix='trello'):
+    service: typing_extensions.Literal['trello']
+    api_key: str
+    token: str
+
+    include_boards: config.ConfigList = config.ConfigList([])
+    include_lists: config.ConfigList = config.ConfigList([])
+    exclude_lists: config.ConfigList = config.ConfigList([])
+    import_labels_as_tags: bool = False
+    label_template: str = "{{label|replace(' ', '_')}}"
 
 
 class TrelloIssue(Issue):
@@ -84,16 +97,7 @@ class TrelloService(IssueService, ServiceClient):
     ISSUE_CLASS = TrelloIssue
     # What prefix should we use for this service's configuration values
     CONFIG_PREFIX = 'trello'
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        def check_key(opt):
-            """ Check that the given key exist in the configuration  """
-            if opt not in service_config:
-                die("[{}] has no 'trello.{}'".format(target, opt))
-        super(TrelloService, cls).validate_config(service_config, target)
-        check_key('token')
-        check_key('api_key')
+    CONFIG_SCHEMA = TrelloConfig
 
     def get_owner(self, issue):
         # Issue filtering is implemented as part of the api query.

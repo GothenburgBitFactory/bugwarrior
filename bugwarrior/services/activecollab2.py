@@ -3,12 +3,38 @@ import time
 
 import six
 import requests
+import typing_extensions
 
 from bugwarrior.services import IssueService, Issue, ServiceClient
-from bugwarrior.config import die
+from bugwarrior import config
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class ActiveCollabProjects(frozenset):
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, projects_raw):
+        projects_list = projects_raw.split(',')
+        projects = []
+        for k, v in enumerate(projects_list):
+            project_data = v.strip().split(":")
+            project = dict([(project_data[0], project_data[1])])
+            projects.append(project)
+        return projects
+
+
+class ActiveCollab2Config(config.ServiceConfig, prefix='activecollab2'):
+    service: typing_extensions.Literal['activecollab2']
+    url: config.StrippedTrailingSlashUrl
+    key: str
+    user_id: int
+    projects: ActiveCollabProjects
 
 
 class ActiveCollab2Client(ServiceClient):
@@ -167,6 +193,7 @@ class ActiveCollab2Issue(Issue):
 class ActiveCollab2Service(IssueService):
     ISSUE_CLASS = ActiveCollab2Issue
     CONFIG_PREFIX = 'activecollab2'
+    CONFIG_SCHEMA = ActiveCollab2Config
 
     def __init__(self, *args, **kw):
         super(ActiveCollab2Service, self).__init__(*args, **kw)
@@ -188,19 +215,6 @@ class ActiveCollab2Service(IssueService):
         self.client = ActiveCollab2Client(
             self.url, self.key, self.user_id, self.projects, self.target
         )
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for k in (
-            'url',
-            'key',
-            'projects',
-            'user_id'
-        ):
-            if k not in service_config:
-                die("[%s] has no 'activecollab2.%s'" % (target, k))
-
-        super(ActiveCollab2Service, cls).validate_config(service_config, target)
 
     def get_owner(self, issue):
         # TODO

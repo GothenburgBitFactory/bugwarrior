@@ -2,12 +2,23 @@ from __future__ import absolute_import
 
 import requests
 import six
+import typing_extensions
+
+from bugwarrior import config
 from bugwarrior.db import CACHE_REGION as cache
-from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class TaigaConfig(config.ServiceConfig, prefix='taiga'):
+    service: typing_extensions.Literal['taiga']
+    base_uri: config.StrippedTrailingSlashUrl
+    auth_token: str
+
+    include_tasks: bool = False
+    label_template: str = '{{label}}'
 
 
 class TaigaIssue(Issue):
@@ -58,6 +69,7 @@ class TaigaIssue(Issue):
 class TaigaService(IssueService, ServiceClient):
     ISSUE_CLASS = TaigaIssue
     CONFIG_PREFIX = 'taiga'
+    CONFIG_SCHEMA = TaigaConfig
 
     def __init__(self, *args, **kw):
         super(TaigaService, self).__init__(*args, **kw)
@@ -83,14 +95,6 @@ class TaigaService(IssueService, ServiceClient):
             'url': self.url,
             'label_template': self.label_template,
         }
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        for option in ('auth_token', 'base_uri'):
-            if option not in service_config:
-                die("[%s] has no 'taiga.%s'" % (target, option))
-
-        IssueService.validate_config(service_config, target)
 
     def get_owner(self, issue):
         # TODO

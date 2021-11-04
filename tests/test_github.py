@@ -6,7 +6,7 @@ from six.moves.configparser import RawConfigParser
 import pytz
 import responses
 
-from bugwarrior.config import ServiceConfig
+from bugwarrior.config.parse import ServiceConfig
 from bugwarrior.services.github import GithubService, GithubClient
 
 from .base import ServiceTest, AbstractServiceTest

@@ -2,12 +2,31 @@ from __future__ import unicode_literals
 from builtins import filter
 
 import requests
+import typing_extensions
 
+from bugwarrior import config
 from bugwarrior.services import IssueService, Issue, ServiceClient
-from bugwarrior.config import asbool, aslist, die
+from bugwarrior.config import asbool, aslist
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class BitbucketConfig(config.ServiceConfig, prefix='bitbucket'):
+    service: typing_extensions.Literal['bitbucket']
+
+    username: str
+    login: str
+
+    password: str = ''
+    key: str = ''
+    secret: str = ''
+
+    include_repos: config.ConfigList = config.ConfigList([])
+    exclude_repos: config.ConfigList = config.ConfigList([])
+    filter_merge_requests: bool = False
+    project_owner_prefix: bool = False
+
 
 class BitbucketIssue(Issue):
     TITLE = 'bitbuckettitle'
@@ -61,6 +80,7 @@ class BitbucketIssue(Issue):
 class BitbucketService(IssueService, ServiceClient):
     ISSUE_CLASS = BitbucketIssue
     CONFIG_PREFIX = 'bitbucket'
+    CONFIG_SCHEMA = BitbucketConfig
 
     BASE_API2 = 'https://api.bitbucket.org/2.0'
     BASE_URL = 'https://bitbucket.org/'
@@ -152,15 +172,6 @@ class BitbucketService(IssueService, ServiceClient):
             for value in response['values']:
                 yield value
             url = response.get('next', None)
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        if 'username' not in service_config:
-            die("[%s] has no 'username'" % target)
-        if 'login' not in service_config:
-            die("[%s] has no 'login'" % target)
-
-        IssueService.validate_config(service_config, target)
 
     def fetch_issues(self, tag):
         response = self.get_collection('/repositories/%s/issues/' % (tag))
