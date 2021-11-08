@@ -1,13 +1,16 @@
 import base64
+import logging
 import re
+import sys
 from urllib.parse import quote
 
 import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.config import die
 from bugwarrior.services import IssueService, Issue, ServiceClient
+
+log = logging.getLogger(__name__)
 
 
 class PersonalAccessToken(str):
@@ -88,7 +91,9 @@ class AzureDevopsClient(ServiceClient):
         data = str({"query": query})
         resp = self.session.post(f"{self.base_url}/wiql", data=data, params=self.params)
         if resp.status_code == 400 and resp.json()['typeKey'] == "WorkItemTrackingQueryResultSizeLimitExceededException":
-            die("Too many azure devops results in query, please narrow the search by updating the ado.wiql_filter")
+            log.critical("Too many azure devops results in query, please "
+                         "narrow the search by updating the ado.wiql_filter")
+            sys.exit(1)
         return [workitem['id'] for workitem in resp.json()["workItems"]]
 
     def get_workitem_comments(self, workitem):

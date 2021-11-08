@@ -27,34 +27,6 @@ def asint(value):
     return int(value)
 
 
-def load_example_rc():
-    fname = os.path.join(
-        os.path.dirname(__file__),
-        'docs/configuration.rst'
-    )
-    with open(fname, 'r') as f:
-        readme = f.read()
-    example = readme.split('.. example')[1][4:]
-    return example
-
-
-error_template = """
-*************************************************
-* There was a problem with your bugwarriorrc    *
-*   {error_msg}
-* Here's an example template to help:           *
-*************************************************
-{example}"""
-
-
-def die(error_msg):
-    log.critical(error_template.format(
-        error_msg=error_msg,
-        example=load_example_rc(),
-    ))
-    sys.exit(1)
-
-
 def get_taskrc_path(conf, main_section):
     path = os.getenv('TASKRC', '~/.taskrc')
     if conf.has_option(main_section, 'taskrc'):

@@ -2,7 +2,6 @@ from .load import BUGWARRIORRC, load_config
 from .parse import (asbool,
                     asint,
                     aslist,
-                    die,
                     get_taskrc_path)
 from .schema import (ConfigList,
                      ExpandedPath,
@@ -20,7 +19,6 @@ __all__ = [
     'asbool',
     'asint',
     'aslist',
-    'die',
     'get_taskrc_path',
     # schema
     'ConfigList',
