@@ -457,7 +457,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 tw.task_done(uuid=new_task['uuid'])
         except TaskwarriorError as e:
             log.exception("Unable to add task: %s" % e.stderr)
-        finally:
+        else:
             seen_uuids.add(new_task['uuid'])
 
     log.info("Updating %i tasks", len(issue_updates['changed']))
