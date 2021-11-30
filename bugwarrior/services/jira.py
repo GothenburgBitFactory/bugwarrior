@@ -283,8 +283,6 @@ class JiraService(IssueService):
         super(JiraService, self).__init__(*args, **kw)
         self.username = self.config.get('username')
         self.url = self.config.get('base_uri')
-        password = self.get_password('password', self.username)
-
         default_query = 'assignee="' + \
             self.username.replace("@", "\\u0040") + \
             '" AND resolution is null'
@@ -292,14 +290,18 @@ class JiraService(IssueService):
         self.use_cookies = self.config.get(
             'use_cookies', default=False, to_type=asbool
         )
-
-        if password == '@kerberos':
-            auth = dict(kerberos=True)
+        if 'PAT' in self.config:
+            pat = self.get_password('PAT', self.username)
+            auth = dict(token_auth=pat)
         else:
-            if self.use_cookies:
-                auth = dict(auth=(self.username, password))
+            password = self.get_password('password', self.username)
+            if password == '@kerberos':
+                auth = dict(kerberos=True)
             else:
-                auth = dict(basic_auth=(self.username, password))
+                if self.use_cookies:
+                    auth = dict(auth=(self.username, password))
+                else:
+                    auth = dict(basic_auth=(self.username, password))
         if not _skip_server:
             self.jira = JIRA(
                 options={
@@ -347,9 +349,14 @@ class JiraService(IssueService):
 
     @classmethod
     def validate_config(cls, service_config, target):
-        for option in ('username', 'password', 'base_uri'):
+        for option in ('username', 'base_uri'):
             if option not in service_config:
                 die("[%s] has no 'jira.%s'" % (target, option))
+
+        password_set = 'password' in service_config
+        pat_set = 'pat' in service_config
+        if (password_set and pat_set) or not (password_set or pat_set):
+            die("[%s] must set 'jira.password' or 'jira.PAT' (not both)" % target)
 
         IssueService.validate_config(service_config, target)
 
