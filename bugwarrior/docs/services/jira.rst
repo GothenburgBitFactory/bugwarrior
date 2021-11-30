@@ -150,6 +150,15 @@ Note that if given a correct API token and an incorrect username, Jira will auth
 
 .. _here: https://id.atlassian.com/manage-profile/security/api-tokens
 
+When using Personal Access Token
+++++++++++++++++++++++++++++++++
+
+Some hosts only support Personal Access Tokens (PATs) to authenticate. If so, ``bugwarrior-pull`` will respond with ``Err: 401 Unauthorized``. Create a PAT as described here_.
+
+Put the PAT in the ``jira.PAT`` field and do not set ``jira.password``.
+
+.. _here: https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html
+
 
 Provided UDA Fields
 -------------------
