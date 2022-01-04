@@ -96,6 +96,8 @@ class JiraIssue(Issue):
     CREATED_AT = 'jiracreatedts'
     STATUS = 'jirastatus'
     SUBTASKS = 'jirasubtasks'
+    ASSIGNEE = 'jiraassignee'
+    REPORTER = 'jirareporter'
 
     UDAS = {
         ISSUE_TYPE: {
@@ -138,6 +140,14 @@ class JiraIssue(Issue):
             'type': 'string',
             'label': "Jira Subtasks"
         },
+        ASSIGNEE: {
+            'type': 'string',
+            'label': "Jira Assignee"
+        },
+        REPORTER: {
+            'type': 'string',
+            'label': "Jira Reporter"
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -172,6 +182,8 @@ class JiraIssue(Issue):
             self.FIX_VERSION: self.get_fix_version(),
             self.STATUS: self.get_status(),
             self.SUBTASKS: self.get_subtasks(),
+            self.ASSIGNEE: self.get_assignee(),
+            self.REPORTER: self.get_reporter(),
         }
 
     def get_entry(self):
@@ -298,6 +310,14 @@ class JiraIssue(Issue):
 
     def get_issue_type(self):
         return self.record['fields']['issuetype']['name']
+
+    def get_assignee(self):
+        # email address "better" than accountId (hex) or displayName (with spaces)
+        return self.record['fields']['assignee']['emailAddress']
+
+    def get_reporter(self):
+        # email address "better" than accountId (hex) or displayName (with spaces)
+        return self.record['fields']['reporter']['emailAddress']
 
 
 class JiraService(IssueService):
