@@ -5,9 +5,9 @@ from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
 from bugwarrior.config import load, schema
-from bugwarrior.services.jira import JiraService
+from bugwarrior.services.jira import JiraExtraFields, JiraService
 
-from .base import ConfigTest, ServiceTest, AbstractServiceTest
+from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
 
 class FakeJiraClient(object):
@@ -35,6 +35,8 @@ class testJiraService(ConfigTest):
         self.config.set('myjira', 'jira.base_uri', 'https://example.com')
         self.config.set('myjira', 'jira.username', 'milou')
         self.config.set('myjira', 'jira.password', 't0ps3cr3t')
+        self.config.set('myjira', 'jira.extra_fields',
+                        'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside')
 
     def test_body_length_no_limit(self):
         description = "A very short issue body.  Fixes #828."
@@ -63,12 +65,14 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         'jira.username': 'one',
         'jira.base_uri': 'https://two.org',
         'jira.password': 'three',
+        'jira.extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
     }
 
     arbitrary_estimation = 3600
     arbitrary_id = '10'
     arbitrary_subtask_ids = ['11', '12']
     arbitrary_parent_id = '13'
+    arbitrary_namedfield_valueinside = 77
     arbitrary_project = 'DONUT'
     arbitrary_summary = 'lkjaldsfjaldf'
 
@@ -82,7 +86,9 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'issuetype': {'name': 'Epic'},
             'status': {'name': 'Open'},
             'subtasks': [{'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids],
-            'parent': {'key': f'DONUT-{arbitrary_parent_id}'}
+            'parent': {'key': f'DONUT-{arbitrary_parent_id}'},
+            'customfield_10000': 'foo',
+            'namedfield': {'valueinside': arbitrary_namedfield_valueinside},
         },
         'key': '%s-%s' % (arbitrary_project, arbitrary_id, ),
     }
@@ -106,12 +112,17 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         service.import_sprints_as_tags = True
         return service
 
+    def get_extra_fields(self):
+        return JiraExtraFields.validate(
+            'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside')
+
     def test_to_taskwarrior(self):
         arbitrary_url = 'http://one'
         arbitrary_extra = {
             'jira_version': 5,
             'annotations': ['an annotation'],
             'body': 'issue body',
+            'extra_fields': self.get_extra_fields(),
         }
 
         issue = self.service.get_issue_for_record(
@@ -132,6 +143,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jirastatus': 'Open',
             'jirasubtasks': 'DONUT-11,DONUT-12',
             'jiraparent': 'DONUT-13',
+            'jiraextra1': 'foo',
+            'jiraextra2': 77,
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: self.arbitrary_record['key'],
@@ -160,7 +173,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         arbitrary_extra = {
             'jira_version': 5,
             'annotations': ['an annotation'],
-        }
+            'extra_fields': self.get_extra_fields()}
 
         issue = self.service.get_issue_for_record(
             record_with_goal, arbitrary_extra
@@ -180,6 +193,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jirastatus': 'Open',
             'jirasubtasks': 'DONUT-11,DONUT-12',
             'jiraparent': 'DONUT-13',
+            'jiraextra1': 'foo',
+            'jiraextra2': 77,
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: record_with_goal['key'],
@@ -215,6 +230,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraurl': 'https://two.org/browse/DONUT-10',
             'jirasubtasks': 'DONUT-11,DONUT-12',
             'jiraparent': 'DONUT-13',
+            'jiraextra1': 'foo',
+            'jiraextra2': 77,
             'priority': 'H',
             'project': 'DONUT',
             'tags': []}

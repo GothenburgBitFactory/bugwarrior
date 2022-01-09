@@ -1,19 +1,80 @@
 from __future__ import absolute_import
-from builtins import str
-import sys
-
-from jinja2 import Template
-from jira.client import JIRA as BaseJIRA
-import pydantic
-from requests.cookies import RequestsCookieJar
-import typing_extensions
-from dateutil.tz.tz import tzutc
-
-from bugwarrior import config
-from bugwarrior.services import IssueService, Issue
 
 import logging
+import sys
+import typing
+from builtins import str
+from functools import reduce
+
+import pydantic
+import typing_extensions
+from dateutil.tz.tz import tzutc
+from jinja2 import Template
+from jira.client import JIRA as BaseJIRA
+from requests.cookies import RequestsCookieJar
+
+from bugwarrior import config
+from bugwarrior.services import Issue, IssueService
+
 log = logging.getLogger(__name__)
+
+
+class ExtraFieldConfigError(Exception):
+    def __init__(self, extra_field_raw):
+        self.message = f'Extra field is improperly defined: {extra_field_raw}'
+        super().__init__(self.message)
+
+
+class ExtraFieldNotFoundError(Exception):
+    def __init__(self, label, query):
+        self.message = f'Extra field {label}:{query} not found among Jira issue fields.'
+        super().__init__(self.message)
+
+
+class JiraExtraFields(frozenset):
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, extra_fields_raw):
+        extra_fields_list = extra_fields_raw.split(',')
+        extra_fields = []
+        for extra_field_raw in extra_fields_list:
+            split_extra_field = extra_field_raw.strip().split(":", maxsplit=2)
+
+            try:
+                label, keys = split_extra_field
+            except IndexError:
+                raise ExtraFieldConfigError(extra_field_raw)
+
+            keys = keys.split('.')
+
+            extra_field = JiraExtraField(label, keys)
+            extra_fields.append(extra_field)
+        return extra_fields
+
+
+# NOTE: replace with stdlib dataclasses.dataclass once python-3.6 is dropped
+@pydantic.dataclasses.dataclass
+class JiraExtraField:
+    label: str
+    keys: typing.List[str]
+
+    def extract_value(self, fields):
+        """Extract a field value from a dictionary of Jira issue fields."""
+
+        try:
+            value = reduce(
+                lambda val, key: val.get(key) if val else None,
+                self.keys,
+                fields)
+        except KeyError:
+            raise ExtraFieldNotFoundError(
+                label=self.label, query='.'.join(self.keys))
+
+        return value
 
 
 class JiraConfig(config.ServiceConfig, prefix='jira'):
@@ -25,6 +86,7 @@ class JiraConfig(config.ServiceConfig, prefix='jira'):
     PAT: str = ''
 
     body_length: int = sys.maxsize
+    extra_fields: typing.Optional[JiraExtraFields] = None
     import_labels_as_tags: bool = False
     import_sprints_as_tags: bool = False
     label_template: str = '{{label}}'
@@ -160,7 +222,7 @@ class JiraIssue(Issue):
     }
 
     def to_taskwarrior(self):
-        return {
+        fixed_fields = {
             'project': self.get_project(),
             'priority': self.get_priority(),
             'annotations': self.get_annotations(),
@@ -179,6 +241,16 @@ class JiraIssue(Issue):
             self.SUBTASKS: self.get_subtasks(),
             self.PARENT: self.get_parent(),
         }
+
+        extra_fields = self.get_extra_fields()
+
+        return {**fixed_fields, **extra_fields}
+
+    def get_extra_fields(self):
+        if self.extra['extra_fields'] is None:
+            return {}
+
+        return {extra_field.label: extra_field.extract_value(self.record['fields']) for extra_field in self.extra['extra_fields']}
 
     def get_entry(self):
         created_at = self.record['fields']['created']
@@ -406,7 +478,8 @@ class JiraService(IssueService):
             issue = self.get_issue_for_record(case.raw)
             extra = {
                 'jira_version': self.config.version,
-                'body': self.body(issue)
+                'body': self.body(issue),
+                'extra_fields': self.config.extra_fields,
             }
             if self.config.version > 4:
                 extra.update({
