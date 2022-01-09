@@ -5,7 +5,7 @@ from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
 from bugwarrior.config import load, schema
-from bugwarrior.services.jira import JiraService
+from bugwarrior.services.jira import JiraService, JiraExtraFields
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
 
@@ -35,6 +35,8 @@ class testJiraService(ConfigTest):
         self.config.set('myjira', 'jira.base_uri', 'https://example.com')
         self.config.set('myjira', 'jira.username', 'milou')
         self.config.set('myjira', 'jira.password', 't0ps3cr3t')
+        self.config.set('myjira', 'jira.extrafields',
+                        'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside')
 
     def test_body_length_no_limit(self):
         description = "A very short issue body.  Fixes #828."
@@ -63,11 +65,13 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         'jira.username': 'one',
         'jira.base_uri': 'https://two.org',
         'jira.password': 'three',
+        'jira.extrafields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
     }
 
     arbitrary_estimation = 3600
     arbitrary_id = '10'
     arbitrary_subtask_ids = ['11', '12']
+    arbitrary_namedfield_valueinside = 77
     arbitrary_project = 'DONUT'
     arbitrary_summary = 'lkjaldsfjaldf'
 
@@ -80,14 +84,17 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'fixVersions': [{'name': '1.2.3'}],
             'issuetype': {'name': 'Epic'},
             'status': {'name': 'Open'},
-            'subtasks': [{'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids]
+            'subtasks': [{'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids],
+            'customfield_10000': 'foo',
+            'namedfield': {'valueinside': arbitrary_namedfield_valueinside},
         },
         'key': '%s-%s' % (arbitrary_project, arbitrary_id, ),
     }
 
     arbitrary_record_with_due = arbitrary_record.copy()
-    arbitrary_record_with_due['fields']=arbitrary_record_with_due['fields'].copy()
-    arbitrary_record_with_due['fields']['Sprint']=['com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
+    arbitrary_record_with_due['fields'] = arbitrary_record_with_due['fields'].copy(
+    )
+    arbitrary_record_with_due['fields']['Sprint'] = ['com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
                     state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4\
                     55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]']
 
@@ -103,12 +110,17 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         service.import_sprints_as_tags = True
         return service
 
+    def get_extrafields(self):
+        return JiraExtraFields.validate(
+            'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside')
+
     def test_to_taskwarrior(self):
         arbitrary_url = 'http://one'
         arbitrary_extra = {
             'jira_version': 5,
             'annotations': ['an annotation'],
             'body': 'issue body',
+            'extrafields': self.get_extrafields(),
         }
 
         issue = self.service.get_issue_for_record(
@@ -128,6 +140,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
             'jirasubtasks': 'DONUT-11,DONUT-12',
+            'jiraextra1': 'foo',
+            'jiraextra2': 77,
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: self.arbitrary_record['key'],
@@ -156,7 +170,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         arbitrary_extra = {
             'jira_version': 5,
             'annotations': ['an annotation'],
-        }
+            'extrafields': self.get_extrafields()}
 
         issue = self.service.get_issue_for_record(
             record_with_goal, arbitrary_extra
@@ -175,6 +189,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
             'jirasubtasks': 'DONUT-11,DONUT-12',
+            'jiraextra1': 'foo',
+            'jiraextra2': 77,
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: record_with_goal['key'],
@@ -209,6 +225,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jirasummary': 'lkjaldsfjaldf',
             'jiraurl': 'https://two.org/browse/DONUT-10',
             'jirasubtasks': 'DONUT-11,DONUT-12',
+            'jiraextra1': 'foo',
+            'jiraextra2': 77,
             'priority': 'H',
             'project': 'DONUT',
             'tags': []}
@@ -219,4 +237,5 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         issue = self.service.get_issue_for_record(
             self.arbitrary_record_with_due
         )
-        self.assertEqual(issue.get_due(), datetime.datetime(2016, 9, 23, 16, 8, tzinfo=tzutc()))
+        self.assertEqual(issue.get_due(), datetime.datetime(
+            2016, 9, 23, 16, 8, tzinfo=tzutc()))

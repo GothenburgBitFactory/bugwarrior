@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from builtins import str
 import sys
+from functools import reduce
 
 from jinja2 import Template
 from jira.client import JIRA as BaseJIRA
@@ -14,6 +15,66 @@ from bugwarrior.services import IssueService, Issue
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class ExtraFieldConfigError(Exception):
+    def __init__(self, extrafield_raw):
+        self.message = f'Extra field is improperly defined: {extrafield_raw}'
+        super().__init__(self.message)
+
+
+class ExtraFieldNotFoundError(Exception):
+    def __init__(self, extrafield_id):
+        self.message = f'Extra field id {extrafield_id} not found among Jira issue fields.'
+        super().__init__(self.message)
+
+
+class JiraExtraFields(frozenset):
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @ classmethod
+    def validate(cls, extrafields_raw):
+        extrafields_list = extrafields_raw.split(',')
+        extrafields = []
+        for extrafield_raw in extrafields_list:
+            split_extrafield = extrafield_raw.strip().split(":", maxsplit=2)
+
+            try:
+                label, keys = split_extrafield
+            except IndexError:
+                raise ExtraFieldConfigError(extrafield_raw)
+
+            keys = keys.split('.')
+
+            extrafield = JiraExtraField(label, keys)
+            extrafields.append(extrafield)
+        return extrafields
+
+
+@pydantic.dataclasses.dataclass
+class JiraExtraField:
+    label: str
+    keys: list[str]
+
+    @property
+    def id(self):
+        return self.keys[0]
+
+    def extract_value(self, fields):
+        """Extract a field value from a dictionary of Jira issue fields."""
+
+        try:
+            value = reduce(
+                lambda val, key: val.get(key) if val else None,
+                self.keys,
+                fields)
+        except KeyError:
+            raise ExtraFieldNotFoundError(self.id)
+
+        return value
 
 
 class JiraConfig(config.ServiceConfig, prefix='jira'):
@@ -32,6 +93,8 @@ class JiraConfig(config.ServiceConfig, prefix='jira'):
     use_cookies: bool = False
     verify_ssl: bool = True
     version: int = 5
+
+    extrafields: JiraExtraFields = ''
 
     @pydantic.root_validator
     def require_password_xor_PAT(cls, values):
@@ -155,7 +218,7 @@ class JiraIssue(Issue):
     }
 
     def to_taskwarrior(self):
-        return {
+        fixed_fields = {
             'project': self.get_project(),
             'priority': self.get_priority(),
             'annotations': self.get_annotations(),
@@ -174,10 +237,21 @@ class JiraIssue(Issue):
             self.SUBTASKS: self.get_subtasks(),
         }
 
+        extrafields = self.get_extrafields()
+
+        return {**fixed_fields, **extrafields}
+
+    def get_extrafields(self):
+        if self.extra['extrafields'] is None:
+            return {}
+
+        return {extrafield.label: extrafield.extract_value(self.record['fields']) for extrafield in self.extra['extrafields']}
+
     def get_entry(self):
         created_at = self.record['fields']['created']
         # Convert timestamp to an offset-aware datetime
-        date = self.parse_date(created_at).astimezone(tzutc()).replace(microsecond=0)
+        date = self.parse_date(created_at).astimezone(
+            tzutc()).replace(microsecond=0)
         return date
 
     def get_tags(self):
@@ -345,7 +419,8 @@ class JiraService(IssueService):
                 self.import_sprints_as_tags = False
             else:
                 log.info("Found %i distinct sprint fields." % len(field_names))
-                self.sprint_field_names = [field['id'] for field in field_names]
+                self.sprint_field_names = [field['id']
+                                           for field in field_names]
 
     @staticmethod
     def get_keyring_service(config):
@@ -390,7 +465,8 @@ class JiraService(IssueService):
             issue = self.get_issue_for_record(case.raw)
             extra = {
                 'jira_version': self.config.version,
-                'body': self.body(issue)
+                'body': self.body(issue),
+                'extrafields': self.config.extrafields,
             }
             if self.config.version > 4:
                 extra.update({
