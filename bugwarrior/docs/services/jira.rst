@@ -191,8 +191,8 @@ Provided UDA Fields
 Support for Extra UDA Fields
 +++++++++++++++++++++++++++++
 
-To export additional UDA fields, set ``jira.extrafields`` to comma-separated entries of the form ``uda_tag:field_key[.subkey]``. You can also chain subkeys to extract deeply embedded keys, e.g.::
-    jira.extrafields = jiraextrafield1:customfield_10000, jiraextrafield2:customfield_10001.attributes.description
+To export additional UDA fields, set ``jira.extra_fields`` to comma-separated entries of the form ``uda_tag:field_key[.subkey]``. You can also chain subkeys to extract deeply embedded keys, e.g.::
+    jira.extra_fields = jiraextrafield1:customfield_10000, jiraextrafield2:customfield_10001.attributes.description
 
 The correct key (and subkeys) can be found by inspecting the `fields` attribute of a standard Jira issue response.
 

@@ -5,9 +5,9 @@ from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
 from bugwarrior.config import load, schema
-from bugwarrior.services.jira import JiraService, JiraExtraFields
+from bugwarrior.services.jira import JiraExtraFields, JiraService
 
-from .base import ConfigTest, ServiceTest, AbstractServiceTest
+from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
 
 class FakeJiraClient(object):
@@ -35,7 +35,7 @@ class testJiraService(ConfigTest):
         self.config.set('myjira', 'jira.base_uri', 'https://example.com')
         self.config.set('myjira', 'jira.username', 'milou')
         self.config.set('myjira', 'jira.password', 't0ps3cr3t')
-        self.config.set('myjira', 'jira.extrafields',
+        self.config.set('myjira', 'jira.extra_fields',
                         'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside')
 
     def test_body_length_no_limit(self):
@@ -65,7 +65,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         'jira.username': 'one',
         'jira.base_uri': 'https://two.org',
         'jira.password': 'three',
-        'jira.extrafields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
+        'jira.extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
     }
 
     arbitrary_estimation = 3600
@@ -110,7 +110,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         service.import_sprints_as_tags = True
         return service
 
-    def get_extrafields(self):
+    def get_extra_fields(self):
         return JiraExtraFields.validate(
             'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside')
 
@@ -120,7 +120,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jira_version': 5,
             'annotations': ['an annotation'],
             'body': 'issue body',
-            'extrafields': self.get_extrafields(),
+            'extra_fields': self.get_extra_fields(),
         }
 
         issue = self.service.get_issue_for_record(
@@ -170,7 +170,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         arbitrary_extra = {
             'jira_version': 5,
             'annotations': ['an annotation'],
-            'extrafields': self.get_extrafields()}
+            'extra_fields': self.get_extra_fields()}
 
         issue = self.service.get_issue_for_record(
             record_with_goal, arbitrary_extra
