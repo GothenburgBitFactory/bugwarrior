@@ -1,33 +1,31 @@
 from __future__ import absolute_import
-
-import logging
-import sys
 from builtins import str
+import sys
 from functools import reduce
-from typing import List
 
-import pydantic
-import typing_extensions
-from dateutil.tz.tz import tzutc
 from jinja2 import Template
 from jira.client import JIRA as BaseJIRA
+import pydantic
 from requests.cookies import RequestsCookieJar
+import typing_extensions
+from dateutil.tz.tz import tzutc
 
 from bugwarrior import config
-from bugwarrior.services import Issue, IssueService
+from bugwarrior.services import IssueService, Issue
 
+import logging
 log = logging.getLogger(__name__)
 
 
 class ExtraFieldConfigError(Exception):
-    def __init__(self, extra_field_raw):
-        self.message = f'Extra field is improperly defined: {extra_field_raw}'
+    def __init__(self, extrafield_raw):
+        self.message = f'Extra field is improperly defined: {extrafield_raw}'
         super().__init__(self.message)
 
 
 class ExtraFieldNotFoundError(Exception):
-    def __init__(self, label, query):
-        self.message = f'Extra field {label}:{query} not found among Jira issue fields.'
+    def __init__(self, extrafield_id):
+        self.message = f'Extra field id {extrafield_id} not found among Jira issue fields.'
         super().__init__(self.message)
 
 
@@ -38,29 +36,32 @@ class JiraExtraFields(frozenset):
         yield cls.validate
 
     @ classmethod
-    def validate(cls, extra_fields_raw):
-        extra_fields_list = extra_fields_raw.split(',')
-        extra_fields = []
-        for extra_field_raw in extra_fields_list:
-            split_extra_field = extra_field_raw.strip().split(":", maxsplit=2)
+    def validate(cls, extrafields_raw):
+        extrafields_list = extrafields_raw.split(',')
+        extrafields = []
+        for extrafield_raw in extrafields_list:
+            split_extrafield = extrafield_raw.strip().split(":", maxsplit=2)
 
             try:
-                label, keys = split_extra_field
+                label, keys = split_extrafield
             except IndexError:
-                raise ExtraFieldConfigError(extra_field_raw)
+                raise ExtraFieldConfigError(extrafield_raw)
 
             keys = keys.split('.')
 
-            extra_field = JiraExtraField(label, keys)
-            extra_fields.append(extra_field)
-        return extra_fields
+            extrafield = JiraExtraField(label, keys)
+            extrafields.append(extrafield)
+        return extrafields
 
 
-# NOTE: can replace with stdlib dataclasses.dataclass once support for 3.6 is dropped
 @pydantic.dataclasses.dataclass
 class JiraExtraField:
     label: str
-    keys: List[str]
+    keys: list[str]
+
+    @property
+    def id(self):
+        return self.keys[0]
 
     def extract_value(self, fields):
         """Extract a field value from a dictionary of Jira issue fields."""
@@ -71,8 +72,7 @@ class JiraExtraField:
                 self.keys,
                 fields)
         except KeyError:
-            raise ExtraFieldNotFoundError(
-                label=self.label, query='.'.join(self.keys))
+            raise ExtraFieldNotFoundError(self.id)
 
         return value
 
@@ -94,10 +94,9 @@ class JiraConfig(config.ServiceConfig, prefix='jira'):
     verify_ssl: bool = True
     version: int = 5
 
-    extra_fields: JiraExtraFields = pydantic.Field(
-        default_factory=lambda: JiraExtraFields(''))
+    extrafields: JiraExtraFields = ''
 
-    @ pydantic.root_validator
+    @pydantic.root_validator
     def require_password_xor_PAT(cls, values):
         if ((values['password'] and values['PAT'])
                 or not (values['password'] or values['PAT'])):
@@ -240,11 +239,11 @@ class JiraIssue(Issue):
 
         return {**fixed_fields, **self.get_extra_fields()}
 
-    def get_extra_fields(self):
-        if self.extra['extra_fields'] is None:
+    def get_extrafields(self):
+        if self.extra['extrafields'] is None:
             return {}
 
-        return {extra_field.label: extra_field.extract_value(self.record['fields']) for extra_field in self.extra['extra_fields']}
+        return {extrafield.label: extrafield.extract_value(self.record['fields']) for extrafield in self.extra['extrafields']}
 
     def get_entry(self):
         created_at = self.record['fields']['created']
@@ -421,7 +420,7 @@ class JiraService(IssueService):
                 self.sprint_field_names = [field['id']
                                            for field in field_names]
 
-    @ staticmethod
+    @staticmethod
     def get_keyring_service(config):
         return f"jira://{config.username}@{config.base_uri}"
 
@@ -465,7 +464,7 @@ class JiraService(IssueService):
             extra = {
                 'jira_version': self.config.version,
                 'body': self.body(issue),
-                'extra_fields': self.config.extra_fields,
+                'extrafields': self.config.extrafields,
             }
             if self.config.version > 4:
                 extra.update({
