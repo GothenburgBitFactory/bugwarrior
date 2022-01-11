@@ -1,24 +1,22 @@
 from __future__ import unicode_literals
+import logging
+from bugwarrior.notifications import send_notification
+from taskw.exceptions import TaskwarriorError
+from taskw import TaskWarriorShellout
+import six
+import dogpile.cache
+import requests
+import sys
+import subprocess
+import re
+import os
+import json
+from builtins import object
+from builtins import zip
 from future import standard_library
 standard_library.install_aliases()
-from builtins import zip
-from builtins import object
 
-import json
-import os
-import re
-import subprocess
-import sys
 
-import requests
-import dogpile.cache
-import six
-from taskw import TaskWarriorShellout
-from taskw.exceptions import TaskwarriorError
-
-from bugwarrior.notifications import send_notification
-
-import logging
 log = logging.getLogger(__name__)
 
 
@@ -216,7 +214,7 @@ def replace_left(field, local_task, remote_issue, keep_items=[]):
 
     * Local 'left' entries are suppressed, unless those listed in keep_items.
     * Remote 'left' are appended to task, if not present in local.
-    
+
     :param `field`: Task field to merge.
     :param `local_task`: `taskw.task.Task` object into which to replace
         remote changes.
@@ -235,8 +233,8 @@ def replace_left(field, local_task, remote_issue, keep_items=[]):
     if field not in local_task:
         local_task[field] = []
 
-    #Delete all items in local_task, unless they are in keep_items or in remote_issue
-    #This ensure that the task is not being updated if there is no changes
+    # Delete all items in local_task, unless they are in keep_items or in remote_issue
+    # This ensure that the task is not being updated if there is no changes
     for item in local_field:
         if keep_items.count(item) == 0 and remote_field.count(item) == 0:
             log.debug('found %s to remove' % (item))
@@ -299,8 +297,8 @@ def merge_left(field, local_task, remote_issue, hamming=False):
             new_count, field, len(local_task[field]),))
 
 
-def run_hooks(pre_import):
-    for hook in pre_import:
+def run_hooks(hook_list):
+    for hook in hook_list:
         exit_code = subprocess.call(hook, shell=True)
         if exit_code != 0:
             msg = 'Non-zero exit code %d on hook %s' % exit_code, hook
@@ -373,11 +371,13 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             # De-duplicate issues coming in
             unique_identifier = make_unique_identifier(key_list, issue)
             if unique_identifier in seen:
-                log.debug("Skipping.  Seen %s of %r" % (unique_identifier, issue))
+                log.debug("Skipping.  Seen %s of %r" %
+                          (unique_identifier, issue))
                 continue
             seen.append(unique_identifier)
 
-            existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
+            existing_taskwarrior_uuid = find_taskwarrior_uuid(
+                tw, key_list, issue)
             seen_uuids.add(existing_taskwarrior_uuid)
             _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
 
@@ -398,7 +398,8 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
             if main_config.merge_tags:
                 if main_config.replace_tags:
-                    replace_left('tags', task, issue_dict, main_config.static_tags)
+                    replace_left('tags', task, issue_dict,
+                                 main_config.static_tags)
                 else:
                     merge_left('tags', task, issue_dict)
 
@@ -489,6 +490,8 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             tw.task_done(uuid=issue)
         except TaskwarriorError as e:
             log.exception("Unable to close task: %s" % e.stderr)
+
+    run_hooks(conf['hooks'].post_import)
 
     # Send notifications
     if notify:
