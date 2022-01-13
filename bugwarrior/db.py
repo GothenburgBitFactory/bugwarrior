@@ -495,7 +495,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         updates = (len(issue_updates['new']) +
                    len(issue_updates['changed']) +
                    len(issue_updates['closed']))
-        if not main_config.notifications.only_on_new_tasks or updates > 0:
+        if not conf['notifications'].only_on_new_tasks or updates > 0:
             send_notification(
                 dict(
                     description="New: %d, Changed: %d, Completed: %d" % (
