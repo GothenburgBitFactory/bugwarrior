@@ -505,7 +505,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                     )
                 ),
                 'bw_finished',
-                conf['notificatons'],
+                conf['notifications'],
             )
 
 
