@@ -176,6 +176,8 @@ Provided UDA Fields
 +---------------------+--------------------------------+---------------------+
 | ``jiraestimate``    | Estimate                       | Decimal (numeric)   |
 +---------------------+--------------------------------+---------------------+
+| ``jiraparent``      | ID of Parent Issue             | Text (string)       |
++---------------------+--------------------------------+---------------------+
 | ``jirasubtasks``    | ,-separated subtasks Issue IDs | Text (string)       |
 +---------------------+--------------------------------+---------------------+
 | ``jiraissuetype``   | Issue Type                     | Text (string)       |

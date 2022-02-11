@@ -68,6 +68,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
     arbitrary_estimation = 3600
     arbitrary_id = '10'
     arbitrary_subtask_ids = ['11', '12']
+    arbitrary_parent_id = '13'
     arbitrary_project = 'DONUT'
     arbitrary_summary = 'lkjaldsfjaldf'
 
@@ -80,14 +81,16 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'fixVersions': [{'name': '1.2.3'}],
             'issuetype': {'name': 'Epic'},
             'status': {'name': 'Open'},
-            'subtasks': [{'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids]
+            'subtasks': [{'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids],
+            'parent': {'key': f'DONUT-{arbitrary_parent_id}'}
         },
         'key': '%s-%s' % (arbitrary_project, arbitrary_id, ),
     }
 
     arbitrary_record_with_due = arbitrary_record.copy()
-    arbitrary_record_with_due['fields']=arbitrary_record_with_due['fields'].copy()
-    arbitrary_record_with_due['fields']['Sprint']=['com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
+    arbitrary_record_with_due['fields'] = arbitrary_record_with_due['fields'].copy(
+    )
+    arbitrary_record_with_due['fields']['Sprint'] = ['com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
                     state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4\
                     55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]']
 
@@ -128,6 +131,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
             'jirasubtasks': 'DONUT-11,DONUT-12',
+            'jiraparent': 'DONUT-13',
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: self.arbitrary_record['key'],
@@ -175,6 +179,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
             'jirasubtasks': 'DONUT-11,DONUT-12',
+            'jiraparent': 'DONUT-13',
 
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: record_with_goal['key'],
@@ -209,6 +214,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jirasummary': 'lkjaldsfjaldf',
             'jiraurl': 'https://two.org/browse/DONUT-10',
             'jirasubtasks': 'DONUT-11,DONUT-12',
+            'jiraparent': 'DONUT-13',
             'priority': 'H',
             'project': 'DONUT',
             'tags': []}
@@ -219,4 +225,5 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         issue = self.service.get_issue_for_record(
             self.arbitrary_record_with_due
         )
-        self.assertEqual(issue.get_due(), datetime.datetime(2016, 9, 23, 16, 8, tzinfo=tzutc()))
+        self.assertEqual(issue.get_due(), datetime.datetime(
+            2016, 9, 23, 16, 8, tzinfo=tzutc()))

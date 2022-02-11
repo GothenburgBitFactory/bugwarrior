@@ -96,6 +96,7 @@ class JiraIssue(Issue):
     CREATED_AT = 'jiracreatedts'
     STATUS = 'jirastatus'
     SUBTASKS = 'jirasubtasks'
+    PARENT = 'jiraparent'
 
     UDAS = {
         ISSUE_TYPE: {
@@ -138,6 +139,10 @@ class JiraIssue(Issue):
             'type': 'string',
             'label': "Jira Subtasks"
         },
+        PARENT: {
+            'type': 'string',
+            'label': 'Jira Parent'
+        }
     }
     UNIQUE_KEY = (URL, )
 
@@ -172,12 +177,14 @@ class JiraIssue(Issue):
             self.FIX_VERSION: self.get_fix_version(),
             self.STATUS: self.get_status(),
             self.SUBTASKS: self.get_subtasks(),
+            self.PARENT: self.get_parent(),
         }
 
     def get_entry(self):
         created_at = self.record['fields']['created']
         # Convert timestamp to an offset-aware datetime
-        date = self.parse_date(created_at).astimezone(tzutc()).replace(microsecond=0)
+        date = self.parse_date(created_at).astimezone(
+            tzutc()).replace(microsecond=0)
         return date
 
     def get_tags(self):
@@ -296,6 +303,14 @@ class JiraIssue(Issue):
     def get_subtasks(self):
         return ','.join(task['key'] for task in self.record['fields']['subtasks'])
 
+    def get_parent(self):
+        try:
+            parent = self.record['fields']['parent']['key']
+        except (KeyError, ):
+            return None
+
+        return parent
+
     def get_issue_type(self):
         return self.record['fields']['issuetype']['name']
 
@@ -345,7 +360,8 @@ class JiraService(IssueService):
                 self.import_sprints_as_tags = False
             else:
                 log.info("Found %i distinct sprint fields." % len(field_names))
-                self.sprint_field_names = [field['id'] for field in field_names]
+                self.sprint_field_names = [field['id']
+                                           for field in field_names]
 
     @staticmethod
     def get_keyring_service(config):
