@@ -39,15 +39,11 @@ jobs:
               libffi-dev libssl-dev pandoc python3-pip taskwarrior
             task --version
             pip3 install --upgrade pip
-            pip install taskw
-            pip install responses
-            pip install PySimpleSOAP
-            pip install phabricator
             pip install codecov
             pip install pytest-cov
           run: |
             source $HOME/.cargo/env
-            pip3 install .[jira,activecollab,bts,bugzilla,trac,gmail,kanboard]
+            pip3 install .[all]
             pytest --cov=bugwarrior --cov-branch tests
       - name: Coverage
         uses: codecov/codecov-action@v1

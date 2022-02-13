@@ -1,3 +1,4 @@
+import itertools
 from setuptools import setup, find_packages
 
 version = '1.8.0'
@@ -6,6 +7,19 @@ f = open('bugwarrior/README.rst')
 long_description = f.read().strip()
 long_description = long_description.split('split here', 1)[1]
 f.close()
+
+extras = {
+    "activecollab": ["pypandoc", "pyac>=0.1.5"],
+    "bts": ["PySimpleSOAP", "python-debianbts>=2.6.1"],
+    "bugzilla": ["python-bugzilla>=2.0.0"],
+    "gmail": ["google-api-python-client", "google-auth-oauthlib"],
+    "jira": ["jira>=0.22"],
+    "kanboard": ["kanboard"],
+    "keyring": ["keyring"],
+    "phabricator": ["phabricator"],
+    "test": ["pytest", "responses"],
+    "trac": ["offtrac"],
+}
 
 setup(name='bugwarrior',
       version=version,
@@ -43,28 +57,10 @@ setup(name='bugwarrior',
           "typing-extensions",
       ],
       extras_require={
-          "activecollab": ["pypandoc", "pyac>=0.1.5"],
-          "bts": ["PySimpleSOAP", "python-debianbts>=2.6.1"],
-          "bugzilla": ["python-bugzilla>=2.0.0"],
-          "gmail": ["google-api-python-client", "google-auth-oauthlib"],
-          "jira": ["jira>=0.22"],
-          "kanboard": ["kanboard"],
-          "keyring": ["keyring"],
-          "phabricator": ["phabricator"],
-          "trac": ["offtrac"],
+          'all': list(
+              itertools.chain.from_iterable(extras[key] for key in extras)),
+          **extras
       },
-      tests_require=[
-          "pytest",
-          "responses",
-          "bugwarrior[jira]",
-          "bugwarrior[activecollab]",
-          "bugwarrior[bts]",
-          "bugwarrior[gmail]",
-          "bugwarrior[trac]",
-          "bugwarrior[bugzilla]",
-          "bugwarrior[phabricator]",
-          "bugwarrior[kanboard]",
-      ],
       entry_points="""
       [console_scripts]
       bugwarrior-pull = bugwarrior:pull
