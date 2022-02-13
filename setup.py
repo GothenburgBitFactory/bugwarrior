@@ -17,7 +17,7 @@ extras = {
     "kanboard": ["kanboard"],
     "keyring": ["keyring"],
     "phabricator": ["phabricator"],
-    "test": ["pytest", "responses"],
+    "test": ["pytest", "responses", "sphinx"],
     "trac": ["offtrac"],
 }
 
