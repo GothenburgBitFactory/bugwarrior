@@ -1,8 +1,5 @@
 # coding: utf-8
-try:
-    from urllib import quote, urlencode  # Python 2.X
-except ImportError:
-    from urllib.parse import quote, urlencode # Python 3+
+from urllib.parse import quote, urlencode
 import re
 import requests
 import typing
