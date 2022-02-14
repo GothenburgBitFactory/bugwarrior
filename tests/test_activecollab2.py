@@ -1,4 +1,3 @@
-from builtins import next
 import re
 import datetime
 

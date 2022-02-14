@@ -1,9 +1,6 @@
-from __future__ import absolute_import
-
 import logging
 import sys
 import typing
-from builtins import str
 from functools import reduce
 
 import pydantic

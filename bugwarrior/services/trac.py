@@ -1,8 +1,3 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import filter
-from builtins import map
-from builtins import range
 import csv
 import io as StringIO
 import urllib.parse

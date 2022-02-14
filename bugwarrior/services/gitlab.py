@@ -1,8 +1,4 @@
 # coding: utf-8
-from future import standard_library
-standard_library.install_aliases()
-from builtins import filter
-
 try:
     from urllib import quote, urlencode  # Python 2.X
 except ImportError:

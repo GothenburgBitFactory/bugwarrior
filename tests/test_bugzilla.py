@@ -1,6 +1,4 @@
 import datetime
-from builtins import next
-from builtins import object
 from unittest import mock
 from collections import namedtuple
 
