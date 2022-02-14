@@ -12,7 +12,6 @@ import sys
 
 import requests
 import dogpile.cache
-import six
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
@@ -73,7 +72,7 @@ def get_normalized_annotation(annotation):
     return re.sub(
         r'[\W_]',
         '',
-        six.text_type(annotation)
+        str(annotation)
     )
 
 
@@ -127,7 +126,7 @@ def make_unique_identifier(keys, issue):
     :returns:
     * A single string UUID.
     """
-    for service, key_list in six.iteritems(keys):
+    for service, key_list in keys.items():
         if all([key in issue for key in key_list]):
             subset = dict([(key, issue[key]) for key in key_list])
             return json.dumps(subset, sort_keys=True)
@@ -170,7 +169,7 @@ def find_taskwarrior_uuid(tw, keys, issue):
 
     possibilities = set([])
 
-    for service, key_list in six.iteritems(keys):
+    for service, key_list in keys.items():
         if any([key in issue for key in key_list]):
             results = tw.filter_tasks({
                 'and': [("%s.is" % key, issue[key]) for key in key_list],
@@ -360,7 +359,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             # other encodings in the wild in the future, we can revise the handling
             # here. https://github.com/ralphbean/bugwarrior/issues/350
             for key in issue_dict.keys():
-                if isinstance(issue_dict[key], six.binary_type):
+                if isinstance(issue_dict[key], bytes):
                     try:
                         issue_dict[key] = issue_dict[key].decode('utf-8')
                     except UnicodeDecodeError:
@@ -413,7 +412,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 issue_updates['existing'].append(task)
 
         except MultipleMatches as e:
-            log.exception("Multiple matches: %s", six.text_type(e))
+            log.exception("Multiple matches: %s", str(e))
         except NotFound:
             issue_updates['new'].append(issue_dict)
 
@@ -445,11 +444,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 f=repr(ch[0]),
                 t=repr(ch[1])
             )
-            for field, ch in six.iteritems(issue.get_changes(keep=True))
+            for field, ch in issue.get_changes(keep=True).items()
         ])
         log.info(
             "Updating task %s, %s; %s%s",
-            six.text_type(issue['uuid']),
+            str(issue['uuid']),
             issue['description'],
             changes,
             notreally
@@ -570,7 +569,7 @@ def build_uda_config_overrides(targets):
 
 def convert_override_args_to_taskrc_settings(config, prefix=''):
     args = []
-    for k, v in six.iteritems(config):
+    for k, v in config.items():
         if isinstance(v, dict):
             args.extend(
                 convert_override_args_to_taskrc_settings(
@@ -582,7 +581,7 @@ def convert_override_args_to_taskrc_settings(config, prefix=''):
                 )
             )
         else:
-            v = six.text_type(v)
+            v = str(v)
             left = (prefix + '.' if prefix else '') + k
             args.append('='.join([left, v]))
     return args

@@ -51,7 +51,6 @@ setup(name='bugwarrior',
           "python-dateutil",
           "pytz",
           "requests",
-          "six>=1.9.0",
           "taskw>=0.8",
           # Needed for backwards compatibility with python<=3.7.
           "typing-extensions",

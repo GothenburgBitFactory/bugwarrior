@@ -1,6 +1,5 @@
 from builtins import filter
 import re
-import six
 import datetime
 import pytz
 
@@ -157,7 +156,7 @@ class PagureService(IssueService):
 
         issues = []
         for result in response.json()[key2]:
-            idx = six.text_type(result['id'])
+            idx = str(result['id'])
             result['html_url'] = "/".join([
                 self.config.base_url, repo, key3, idx])
             issues.append((repo, result))

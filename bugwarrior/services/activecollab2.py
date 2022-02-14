@@ -1,7 +1,6 @@
 import itertools
 import time
 
-import six
 import requests
 import typing_extensions
 
@@ -53,8 +52,8 @@ class ActiveCollab2Client(ServiceClient):
             # Load Ticket data
             # @todo Implement threading here.
             ticket_data = self.call_api(
-                "/projects/" + six.text_type(task[u'project_id']) +
-                "/tickets/" + six.text_type(task[u'ticket_id']))
+                "/projects/" + str(task[u'project_id']) +
+                "/tickets/" + str(task[u'ticket_id']))
             assignees = ticket_data[u'assignees']
 
             for assignee in assignees:
@@ -81,7 +80,7 @@ class ActiveCollab2Client(ServiceClient):
         """
 
         user_tasks_data = self.call_api(
-            "/projects/" + six.text_type(project_id) + "/user-tasks")
+            "/projects/" + str(project_id) + "/user-tasks")
 
         for key, task in enumerate(user_tasks_data):
 
