@@ -27,12 +27,12 @@ CACHE_REGION = dogpile.cache.make_region().configure(
 )
 
 
-class URLShortener(object):
+class URLShortener:
     _instance = None
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(URLShortener, cls).__new__(
+            cls._instance = super().__new__(
                 cls, *args, **kwargs
             )
         return cls._instance
@@ -81,7 +81,7 @@ def hamdist(str1, str2):
 
 
 def get_managed_task_uuids(tw, key_list):
-    expected_task_ids = set([])
+    expected_task_ids = set()
     for keys in key_list.values():
         tasks = tw.filter_tasks({
             'and': [('%s.any' % key, None) for key in keys],
@@ -113,7 +113,7 @@ def make_unique_identifier(keys, issue):
     """
     for service, key_list in keys.items():
         if all([key in issue for key in key_list]):
-            subset = dict([(key, issue[key]) for key in key_list])
+            subset = {key: issue[key] for key in key_list}
             return json.dumps(subset, sort_keys=True)
     raise RuntimeError("Could not determine unique identifier for %s" % issue)
 
@@ -152,7 +152,7 @@ def find_taskwarrior_uuid(tw, keys, issue):
     if not issue['description']:
         raise ValueError('Issue %s has no description.' % issue)
 
-    possibilities = set([])
+    possibilities = set()
 
     for service, key_list in keys.items():
         if any([key in issue for key in key_list]):
@@ -326,7 +326,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     }
 
     seen = []
-    seen_uuids = set([])
+    seen_uuids = set()
     for issue in issue_generator:
 
         try:
@@ -351,7 +351,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                         log.warn("Failed to interpret %r as utf-8" % key)
 
             # Blank priority should mean *no* priority
-            if issue_dict['priority'] == u'':
+            if issue_dict['priority'] == '':
                 issue_dict['priority'] = None
 
             # De-duplicate issues coming in
@@ -405,7 +405,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     # Add new issues
     log.info("Adding %i tasks", len(issue_updates['new']))
     for issue in issue_updates['new']:
-        log.info(u"Adding task %s%s", issue['description'], notreally)
+        log.info("Adding task %s%s", issue['description'], notreally)
 
         if dry_run:
             continue
@@ -507,8 +507,7 @@ def get_defined_udas_as_strings(conf, main_section):
     services = set([conf[target].service for target in targets])
     uda_list = build_uda_config_overrides(services)
 
-    for uda in convert_override_args_to_taskrc_settings(uda_list):
-        yield uda
+    yield from convert_override_args_to_taskrc_settings(uda_list)
 
 
 def build_uda_config_overrides(targets):

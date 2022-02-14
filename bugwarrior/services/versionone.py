@@ -191,7 +191,7 @@ class VersionOneService(IssueService):
     )
 
     def __init__(self, *args, **kw):
-        super(VersionOneService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         parsed_address = parse.urlparse(self.config.base_uri)
 

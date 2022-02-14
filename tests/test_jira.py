@@ -10,7 +10,7 @@ from bugwarrior.services.jira import JiraExtraFields, JiraService
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
 
-class FakeJiraClient(object):
+class FakeJiraClient:
     def __init__(self, arbitrary_record):
         self.arbitrary_record = arbitrary_record
 
@@ -101,12 +101,12 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
                     55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]']
 
     def setUp(self):
-        super(TestJiraIssue, self).setUp()
+        super().setUp()
         with mock.patch('jira.client.JIRA._get_json'):
             self.service = self.get_mock_service(JiraService)
 
     def get_mock_service(self, *args, **kwargs):
-        service = super(TestJiraIssue, self).get_mock_service(*args, **kwargs)
+        service = super().get_mock_service(*args, **kwargs)
         service.jira = FakeJiraClient(self.arbitrary_record)
         service.sprint_field_names = ['Sprint']
         service.import_sprints_as_tags = True

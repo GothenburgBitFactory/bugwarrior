@@ -5,7 +5,7 @@ from bugwarrior.services import bts
 from .base import ServiceTest, AbstractServiceTest
 
 
-class FakeBTSBug(object):
+class FakeBTSBug:
     bug_num = 810629
     package = "wnpp"
     subject = ("ITP: bugwarrior -- Pull tickets from github, "
@@ -17,7 +17,7 @@ class FakeBTSBug(object):
     pending = "pending"
 
 
-class FakeBTSLib(object):
+class FakeBTSLib:
     def get_bugs(self, *args, **kwargs):
         return [810629]
 
@@ -37,7 +37,7 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestBTSService, self).setUp()
+        super().setUp()
         self.service = self.get_mock_service(bts.BTSService)
 
     def test_to_taskwarrior(self):
@@ -81,6 +81,6 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
                 'https://bugs.debian.org/810629'),
             'priority': 'L',
             'btsstatus': 'pending',
-            u'tags': []}
+            'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)

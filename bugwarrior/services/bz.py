@@ -141,7 +141,7 @@ class BugzillaService(IssueService):
     ]
 
     def __init__(self, *args, **kw):
-        super(BugzillaService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         log.debug(" filtering on statuses: %r", self.config.open_statuses)
 
         force_rest_kwargs = {}
@@ -248,9 +248,9 @@ class BugzillaService(IssueService):
 
         # Convert to dicts
         bugs = [
-            dict(
-                ((col, _get_bug_attr(bug, col)) for col in self.COLUMN_LIST)
-            ) for bug in bugs
+            {
+                col: _get_bug_attr(bug, col) for col in self.COLUMN_LIST
+            } for bug in bugs
         ]
 
         bugs = filter(self.include, bugs)

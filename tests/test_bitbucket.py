@@ -16,7 +16,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestBitbucketIssue, self).setUp()
+        super().setUp()
         self.service = self.get_mock_service(BitbucketService)
 
     def test_to_taskwarrior(self):
@@ -84,28 +84,28 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
                 'content': {'raw': 'Some comment.'}
             }]})
 
-        issue, pr = [i for i in self.service.issues()]
+        issue, pr = (i for i in self.service.issues())
 
         expected_issue = {
-            'annotations': [u'@nobody - Some comment.'],
+            'annotations': ['@nobody - Some comment.'],
             'bitbucketid': 1,
-            'bitbuckettitle': u'Some Bug',
-            'bitbucketurl': u'example.com',
-            'description': u'(bw)Is#1 - Some Bug .. example.com',
+            'bitbuckettitle': 'Some Bug',
+            'bitbucketurl': 'example.com',
+            'description': '(bw)Is#1 - Some Bug .. example.com',
             'priority': 'M',
-            'project': u'somerepo',
+            'project': 'somerepo',
             'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected_issue)
 
         expected_pr = {
-            'annotations': [u'@nobody - Some comment.'],
+            'annotations': ['@nobody - Some comment.'],
             'bitbucketid': 1,
-            'bitbuckettitle': u'Some Feature',
+            'bitbuckettitle': 'Some Feature',
             'bitbucketurl': 'https://bitbucket.org/',
-            'description': u'(bw)Is#1 - Some Feature .. https://bitbucket.org/',
+            'description': '(bw)Is#1 - Some Feature .. https://bitbucket.org/',
             'priority': 'M',
-            'project': u'somerepo',
+            'project': 'somerepo',
             'tags': []}
 
         self.assertEqual(pr.get_taskwarrior_record(), expected_pr)

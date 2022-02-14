@@ -23,7 +23,7 @@ class TestTrelloIssue(ServiceTest):
         }
 
     def setUp(self):
-        super(TestTrelloIssue, self).setUp()
+        super().setUp()
         origin = {
             'inline_links': True, 'description_length': 31,
             'import_labels_as_tags': True, 'default_priority': 'M',
@@ -66,7 +66,7 @@ class TestTrelloService(ConfigTest):
                  "memberCreator": { "username": "mario" } }
 
     def setUp(self):
-        super(TestTrelloService, self).setUp()
+        super().setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.set('general', 'targets', 'mytrello')
@@ -192,7 +192,7 @@ class TestTrelloService(ConfigTest):
         issues = service.issues()
         expected = {
             'due': parse_date('2018-12-02T12:59:00.000Z'),
-            'description': u'(bw)#1 - Card 1 .. https://trello.com/c/AAaaBBbb',
+            'description': '(bw)#1 - Card 1 .. https://trello.com/c/AAaaBBbb',
             'priority': 'M',
             'project': 'My Board',
             'trelloboard': 'My Board',

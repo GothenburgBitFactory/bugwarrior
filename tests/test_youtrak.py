@@ -8,7 +8,7 @@ from .base import ConfigTest, ServiceTest, AbstractServiceTest
 
 class TestYoutrackService(ConfigTest):
     def setUp(self):
-        super(TestYoutrackService, self).setUp()
+        super().setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.set('general', 'targets', 'myservice')
@@ -63,7 +63,7 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestYoutrackIssue, self).setUp()
+        super().setUp()
         self.service = self.get_mock_service(YoutrackService)
 
     def test_to_taskwarrior(self):
@@ -73,7 +73,7 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
         expected_output = {
             'project': 'TEST',
             'priority': self.service.config.default_priority,
-            'tags': [u'bug', u'new_feature'],
+            'tags': ['bug', 'new_feature'],
             issue.ISSUE: 'TEST-1',
             issue.SUMMARY: 'Hello World',
             issue.URL: 'https://youtrack.example.com:443/issue/TEST-1',
@@ -94,10 +94,10 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'description':
-                u'(bw)Is#TEST-1 - Hello World .. https://youtrack.example.com:443/issue/TEST-1',
+                '(bw)Is#TEST-1 - Hello World .. https://youtrack.example.com:443/issue/TEST-1',
             'project': 'TEST',
             'priority': self.service.config.default_priority,
-            'tags': [u'bug', u'new_feature'],
+            'tags': ['bug', 'new_feature'],
             'youtrackissue': 'TEST-1',
             'youtracksummary': 'Hello World',
             'youtrackurl': 'https://youtrack.example.com:443/issue/TEST-1',

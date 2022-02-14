@@ -189,7 +189,7 @@ class AzureDevopsService(IssueService):
     CONFIG_SCHEMA = AzureDevopsConfig
 
     def __init__(self, *args, **kw):
-        super(AzureDevopsService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.client = AzureDevopsClient(
             pat=self.config.PAT,
             project=self.config.project,

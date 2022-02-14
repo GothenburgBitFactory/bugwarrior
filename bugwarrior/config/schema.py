@@ -91,7 +91,7 @@ class TaskrcPath(ExpandedPath):
     def validate(cls, path):
         expanded_path = super().validate(os.path.normpath(path))
         if not os.path.isfile(expanded_path):
-            raise IOError(f"Unable to find taskrc file at {expanded_path}.")
+            raise OSError(f"Unable to find taskrc file at {expanded_path}.")
         return expanded_path
 
 

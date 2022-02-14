@@ -26,7 +26,7 @@ TEST_CREDENTIAL = {
 class TestGmailService(ConfigTest):
 
     def setUp(self):
-        super(TestGmailService, self).setUp()
+        super().setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.set('general', 'targets', 'myservice')
@@ -111,7 +111,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestGmailIssue, self).setUp()
+        super().setUp()
 
         mock_api = mock.Mock()
         mock_api().users().labels().list().execute.return_value = {'labels': TEST_LABELS}
@@ -142,7 +142,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
             'gmailsubject': 'Regarding Bugwarrior',
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
             'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
-            'priority': u'M',
+            'priority': 'M',
             'gmaillastsenderaddr': 'foobar@example.com'}
 
         taskwarrior = issue.to_taskwarrior()
@@ -159,8 +159,8 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
             'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',
             'gmailsnippet': 'Bugwarrior is great',
             'gmaillastsender': 'Foo Bar',
-            'description': u'(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234',
-            'priority': u'M',
+            'description': '(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234',
+            'priority': 'M',
             'tags': {'added', 'postit', 'sticky'},
             'gmailsubject': 'Regarding Bugwarrior',
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',

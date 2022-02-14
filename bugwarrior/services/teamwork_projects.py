@@ -129,7 +129,7 @@ class TeamworkService(IssueService):
     CONFIG_SCHEMA = TeamworkConfig
 
     def __init__(self, *args, **kwargs):
-        super(TeamworkService, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.client = TeamworkClient(self.config.host, self.config.token)
         user = self.client.authenticate()
         self.user_id = user["account"]["userId"]

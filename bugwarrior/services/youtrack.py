@@ -134,7 +134,7 @@ class YoutrackService(IssueService, ServiceClient):
     CONFIG_SCHEMA = YoutrackConfig
 
     def __init__(self, *args, **kw):
-        super(YoutrackService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         if self.config.use_https:
             scheme = 'https'

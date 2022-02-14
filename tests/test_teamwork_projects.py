@@ -15,7 +15,7 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def setUp(self):
-        super(TestTeamworkIssue, self).setUp()
+        super().setUp()
         self.add_response(
             'https://test.teamwork_projects.com/authenticate.json',
             json={

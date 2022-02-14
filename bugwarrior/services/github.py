@@ -69,7 +69,7 @@ class GithubClient(ServiceClient):
         if self.host == 'github.com':
             baseurl = "https://api.github.com"
         else:
-            baseurl = "https://{}/api/v3".format(self.host)
+            baseurl = f"https://{self.host}/api/v3"
         return baseurl + path.format(**context)
 
     def get_repos(self, username):
@@ -153,12 +153,11 @@ class GithubClient(ServiceClient):
         if not field:
             return dict()
 
-        return dict([
-            (
-                part.split('; ')[1][5:-1],
-                part.split('; ')[0][1:-1],
-            ) for part in field.split(', ')
-        ])
+        return {
+                part.split('; ')[1][5:-1]:
+                part.split('; ')[0][1:-1]
+             for part in field.split(', ')
+        }
 
 
 class GithubIssue(Issue):
@@ -300,7 +299,7 @@ class GithubService(IssueService):
     CONFIG_SCHEMA = GithubConfig
 
     def __init__(self, *args, **kw):
-        super(GithubService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         auth = {}
         if self.config.token:
@@ -361,7 +360,7 @@ class GithubService(IssueService):
             raise ValueError("Issue has no repository url" + str(issue))
         tag = re.match('.*/([^/]*/[^/]*)$', url)
         if tag is None:
-            raise ValueError("Unrecognized URL: {}.".format(url))
+            raise ValueError(f"Unrecognized URL: {url}.")
         return tag.group(1)
 
     def _comments(self, tag, number):
@@ -432,7 +431,7 @@ class GithubService(IssueService):
                 return False
             if not self.config.filter_pull_requests:
                 return True
-        return super(GithubService, self).include(issue)
+        return super().include(issue)
 
     def issues(self):
         issues = {}

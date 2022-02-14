@@ -8,7 +8,7 @@ from ..base import ConfigTest
 
 class TestData(ConfigTest):
     def setUp(self):
-        super(TestData, self).setUp()
+        super().setUp()
         self.data = data.BugwarriorData(self.lists_path)
 
     def assert0600(self):
@@ -41,7 +41,7 @@ class TestData(ConfigTest):
 class TestGetDataPath(ConfigTest):
 
     def setUp(self):
-        super(TestGetDataPath, self).setUp()
+        super().setUp()
         rawconfig = load.BugwarriorConfigParser()
         rawconfig.add_section('general')
         rawconfig.set('general', 'targets', 'my_service')

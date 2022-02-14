@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import copy
 import unittest
 
@@ -122,14 +121,14 @@ class TestSynchronize(ConfigTest):
             self.assertEqual(get_tasks(tw), {
                 'completed': [],
                 'pending': [{
-                    u'project': u'sample_project',
-                    u'priority': u'M',
-                    u'status': u'pending',
-                    u'description': u'Blah blah blah. ☃',
-                    u'githuburl': u'https://example.com',
-                    u'githubtype': u'issue',
-                    u'id': 1,
-                    u'urgency': 4.9,
+                    'project': 'sample_project',
+                    'priority': 'M',
+                    'status': 'pending',
+                    'description': 'Blah blah blah. ☃',
+                    'githuburl': 'https://example.com',
+                    'githubtype': 'issue',
+                    'id': 1,
+                    'urgency': 4.9,
                 }]})
 
         # TEST CHANGED ISSUE.
@@ -143,14 +142,14 @@ class TestSynchronize(ConfigTest):
         self.assertEqual(get_tasks(tw), {
             'completed': [],
             'pending': [{
-                u'priority': u'M',
-                u'project': u'sample_project',
-                u'status': u'pending',
-                u'description': u'Yada yada yada.',
-                u'githuburl': u'https://example.com',
-                u'githubtype': u'issue',
-                u'id': 1,
-                u'urgency': 4.9,
+                'priority': 'M',
+                'project': 'sample_project',
+                'status': 'pending',
+                'description': 'Yada yada yada.',
+                'githuburl': 'https://example.com',
+                'githubtype': 'issue',
+                'id': 1,
+                'urgency': 4.9,
             }]})
 
         # TEST CLOSED ISSUE.
@@ -162,14 +161,14 @@ class TestSynchronize(ConfigTest):
         del tasks['completed'][0]['end']
         self.assertEqual(tasks, {
             'completed': [{
-                u'project': u'sample_project',
-                u'description': u'Yada yada yada.',
-                u'githubtype': u'issue',
-                u'githuburl': u'https://example.com',
-                u'id': 0,
-                u'priority': u'M',
-                u'status': u'completed',
-                u'urgency': 4.9,
+                'project': 'sample_project',
+                'description': 'Yada yada yada.',
+                'githubtype': 'issue',
+                'githuburl': 'https://example.com',
+                'id': 0,
+                'priority': 'M',
+                'status': 'completed',
+                'urgency': 4.9,
             }],
             'pending': []})
 
@@ -185,14 +184,14 @@ class TestSynchronize(ConfigTest):
         self.assertEqual(tasks, {
             'completed': [],
             'pending': [{
-                u'priority': u'M',
-                u'project': u'sample_project',
-                u'status': u'pending',
-                u'description': u'Yada yada yada.',
-                u'githuburl': u'https://example.com',
-                u'githubtype': u'issue',
-                u'id': 1,
-                u'urgency': 4.9,
+                'priority': 'M',
+                'project': 'sample_project',
+                'status': 'pending',
+                'description': 'Yada yada yada.',
+                'githuburl': 'https://example.com',
+                'githubtype': 'issue',
+                'id': 1,
+                'urgency': 4.9,
             }]})
 
 
@@ -211,30 +210,30 @@ class TestUDAs(ConfigTest):
         conf = self.validate()
         udas = sorted(list(db.get_defined_udas_as_strings(conf, 'general')))
         self.assertEqual(udas, [
-            u'uda.githubbody.label=Github Body',
-            u'uda.githubbody.type=string',
-            u'uda.githubclosedon.label=GitHub Closed',
-            u'uda.githubclosedon.type=date',
-            u'uda.githubcreatedon.label=Github Created',
-            u'uda.githubcreatedon.type=date',
-            u'uda.githubmilestone.label=Github Milestone',
-            u'uda.githubmilestone.type=string',
-            u'uda.githubnamespace.label=Github Namespace',
-            u'uda.githubnamespace.type=string',
-            u'uda.githubnumber.label=Github Issue/PR #',
-            u'uda.githubnumber.type=numeric',
-            u'uda.githubrepo.label=Github Repo Slug',
-            u'uda.githubrepo.type=string',
-            u'uda.githubstate.label=GitHub State',
-            u'uda.githubstate.type=string',
-            u'uda.githubtitle.label=Github Title',
-            u'uda.githubtitle.type=string',
-            u'uda.githubtype.label=Github Type',
-            u'uda.githubtype.type=string',
-            u'uda.githubupdatedat.label=Github Updated',
-            u'uda.githubupdatedat.type=date',
-            u'uda.githuburl.label=Github URL',
-            u'uda.githuburl.type=string',
-            u'uda.githubuser.label=Github User',
-            u'uda.githubuser.type=string',
+            'uda.githubbody.label=Github Body',
+            'uda.githubbody.type=string',
+            'uda.githubclosedon.label=GitHub Closed',
+            'uda.githubclosedon.type=date',
+            'uda.githubcreatedon.label=Github Created',
+            'uda.githubcreatedon.type=date',
+            'uda.githubmilestone.label=Github Milestone',
+            'uda.githubmilestone.type=string',
+            'uda.githubnamespace.label=Github Namespace',
+            'uda.githubnamespace.type=string',
+            'uda.githubnumber.label=Github Issue/PR #',
+            'uda.githubnumber.type=numeric',
+            'uda.githubrepo.label=Github Repo Slug',
+            'uda.githubrepo.type=string',
+            'uda.githubstate.label=GitHub State',
+            'uda.githubstate.type=string',
+            'uda.githubtitle.label=Github Title',
+            'uda.githubtitle.type=string',
+            'uda.githubtype.label=Github Type',
+            'uda.githubtype.type=string',
+            'uda.githubupdatedat.label=Github Updated',
+            'uda.githubupdatedat.type=date',
+            'uda.githuburl.label=Github URL',
+            'uda.githuburl.type=string',
+            'uda.githubuser.label=Github User',
+            'uda.githubuser.type=string',
         ])

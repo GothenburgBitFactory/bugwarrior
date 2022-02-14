@@ -1,4 +1,3 @@
-# coding: utf-8
 from urllib.parse import quote, urlencode
 import re
 import requests
@@ -286,7 +285,7 @@ class GitlabService(IssueService, ServiceClient):
     CONFIG_SCHEMA = GitlabConfig
 
     def __init__(self, *args, **kw):
-        super(GitlabService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         token = self.get_password('token', self.config.login)
         self.auth = (self.config.host, token)
@@ -409,7 +408,7 @@ class GitlabService(IssueService, ServiceClient):
         issues = {}
         try:
             repo_issues = self._fetch_paged(tmpl)
-        except IOError:
+        except OSError:
             # Projects may have issues disabled.
             return {}
         for issue in repo_issues:
@@ -421,7 +420,7 @@ class GitlabService(IssueService, ServiceClient):
         issues = {}
         try:
             repo_merge_requests = self._fetch_paged(tmpl)
-        except IOError:
+        except OSError:
             # Projects may have merge requests disabled.
             return {}
         for issue in repo_merge_requests:
@@ -433,7 +432,7 @@ class GitlabService(IssueService, ServiceClient):
         todos = []
         try:
             fetched_todos = self._fetch_paged(tmpl)
-        except IOError:
+        except OSError:
             # Older gitlab versions do not have todo items.
             return {}
         for todo in fetched_todos:
@@ -522,8 +521,7 @@ class GitlabService(IssueService, ServiceClient):
         issues = list(filter(self.include, issues.values()))
         log.debug(" Pruned down to %i issues.", len(issues))
 
-        for issue in self._get_issue_objs(issues, 'issue', repo_map):
-            yield issue
+        yield from self._get_issue_objs(issues, 'issue', repo_map)
 
         if not self.config.filter_merge_requests:
             merge_requests = {}
@@ -536,10 +534,9 @@ class GitlabService(IssueService, ServiceClient):
             merge_requests = list(filter(self.include, merge_requests.values()))
             log.debug(" Pruned down to %i merge requests.", len(merge_requests))
 
-            for issue in self._get_issue_objs(merge_requests,
+            yield from self._get_issue_objs(merge_requests,
                                               'merge_request',
-                                              repo_map):
-                yield issue
+                                              repo_map)
 
         if self.config.include_todos:
             todos = self.get_todos()

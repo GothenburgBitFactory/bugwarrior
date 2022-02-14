@@ -241,7 +241,7 @@ class RedMineService(IssueService):
     CONFIG_SCHEMA = RedMineConfig
 
     def __init__(self, *args, **kw):
-        super(RedMineService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         self.key = self.get_password('key')
 
