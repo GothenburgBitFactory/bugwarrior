@@ -12,7 +12,6 @@ from dateutil.parser import parse as parse_date
 from dateutil.tz import tzlocal
 from jinja2 import Template
 import pytz
-import six
 
 from taskw.task import Task
 
@@ -83,7 +82,7 @@ class IssueService(abc.ABC):
 
         """
         templates = {}
-        for key in six.iterkeys(Task.FIELDS):
+        for key in Task.FIELDS.keys():
             template = getattr(self.config, f'{key}_template')
             if template:
                 templates[key] = template
@@ -347,7 +346,7 @@ class Issue(abc.ABC):
         return context
 
     def refine_record(self, record):
-        for field in six.iterkeys(Task.FIELDS):
+        for field in Task.FIELDS.keys():
             if field in self.origin['templates']:
                 template = Template(self.origin['templates'][field])
                 record[field] = template.render(self.get_template_context())
@@ -357,7 +356,7 @@ class Issue(abc.ABC):
 
     def __iter__(self):
         record = self.get_taskwarrior_record()
-        for key in six.iterkeys(record):
+        for key in record.keys():
             yield key
 
     def keys(self):
@@ -368,11 +367,11 @@ class Issue(abc.ABC):
 
     def items(self):
         record = self.get_taskwarrior_record()
-        return list(six.iteritems(record))
+        return list(record.items())
 
     def iteritems(self):
         record = self.get_taskwarrior_record()
-        for item in six.iteritems(record):
+        for item in record.items():
             yield item
 
     def update(self, *args):

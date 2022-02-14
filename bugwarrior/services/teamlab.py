@@ -1,4 +1,3 @@
-import six
 import requests
 import typing_extensions
 
@@ -26,11 +25,11 @@ class TeamLabClient(ServiceClient):
 
     def authenticate(self, login, password):
         resp = self.call_api("/api/1.0/authentication.json", post={
-            "userName": six.text_type(login),
-            "password": six.text_type(password),
+            "userName": str(login),
+            "password": str(password),
         })
 
-        self.token = six.text_type(resp["token"])
+        self.token = str(resp["token"])
 
     def get_task_list(self):
         resp = self.call_api("/api/1.0/project/task/@self.json")

@@ -2,7 +2,7 @@ import pydantic
 import typing_extensions
 from v1pysdk import V1Meta
 from v1pysdk.none_deref import NoneDeref
-from six.moves.urllib import parse
+from urllib import parse
 
 from bugwarrior import config
 from bugwarrior.services import IssueService, Issue, LOCAL_TIMEZONE

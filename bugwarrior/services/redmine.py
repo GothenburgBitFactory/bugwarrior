@@ -1,4 +1,3 @@
-import six
 import requests
 import re
 import typing
@@ -210,9 +209,7 @@ class RedMineIssue(Issue):
         )
 
     def get_issue_url(self):
-        return (
-            self.origin['url'] + "/issues/" + six.text_type(self.record["id"])
-        )
+        return self.origin['url'] + "/issues/" + str(self.record["id"])
 
     def get_converted_hours(self, estimated_hours):
         tw = TaskWarriorShellout()

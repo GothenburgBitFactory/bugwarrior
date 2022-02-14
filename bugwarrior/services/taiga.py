@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import requests
-import six
 import typing_extensions
 
 from bugwarrior import config
@@ -55,7 +54,7 @@ class TaigaIssue(Issue):
         }
 
     def get_tags(self):
-        return [x if isinstance(x, six.string_types) else x[0] for x in self.record['tags']]
+        return [x if isinstance(x, str) else x[0] for x in self.record['tags']]
 
     def get_default_description(self):
         return self.build_default_description(

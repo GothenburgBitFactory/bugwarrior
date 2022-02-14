@@ -6,7 +6,6 @@ import typing
 import bugzilla
 import pydantic
 import pytz
-import six
 import typing_extensions
 
 from bugwarrior import config
@@ -171,7 +170,7 @@ class BugzillaService(IssueService):
 
     def annotations(self, tag, issue, issue_obj):
         base_url = "https://%s/show_bug.cgi?id=" % self.config.base_uri
-        long_url = base_url + six.text_type(issue['id'])
+        long_url = base_url + str(issue['id'])
         url = issue_obj.get_processed_url(long_url)
 
         if 'comments' in issue:
@@ -263,7 +262,7 @@ class BugzillaService(IssueService):
         for tag, issue in issues:
             issue_obj = self.get_issue_for_record(issue)
             extra = {
-                'url': base_url + six.text_type(issue['id']),
+                'url': base_url + str(issue['id']),
                 'annotations': self.annotations(tag, issue, issue_obj),
             }
 
