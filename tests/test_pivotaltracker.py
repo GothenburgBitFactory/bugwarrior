@@ -176,7 +176,7 @@ EXTRA = {
 class TestPivotalTrackerServiceConfig(ConfigTest):
 
     def setUp(self):
-        super(TestPivotalTrackerServiceConfig, self).setUp()
+        super().setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.set('general', 'targets', 'pivotal')
@@ -232,7 +232,7 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestPivotalTrackerIssue, self).setUp()
+        super().setUp()
         self.service = self.get_mock_service(PivotalTrackerService)
         responses.add(responses.GET,
                       'https://www.pivotaltracker.com/services/v5/projects?account_ids=100',

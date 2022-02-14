@@ -95,7 +95,7 @@ class TracService(IssueService):
     CONFIG_SCHEMA = TracConfig
 
     def __init__(self, *args, **kw):
-        super(TracService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         if self.config.username:
             password = self.get_password('password', self.config.username)
 
@@ -153,7 +153,7 @@ class TracService(IssueService):
             if resp.status_code != 200:
                 raise RuntimeError("Trac responded with %s" % resp)
             # strip Trac's bogus BOM
-            text = resp.text[1:].lstrip(u'\ufeff')
+            text = resp.text[1:].lstrip('\ufeff')
             tickets = list(csv.DictReader(StringIO.StringIO(text.encode('utf-8'))))
             issues = [(self.target, ticket) for ticket in tickets]
             for i in range(len(issues)):

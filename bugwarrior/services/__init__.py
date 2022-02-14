@@ -317,7 +317,7 @@ class Issue(abc.ABC):
         url_separator = ' .. '
         url = url if self.origin['inline_links'] else ''
         desc_len = self.origin['description_length']
-        return u"%s%s#%s - %s%s%s" % (
+        return "%s%s#%s - %s%s%s" % (
             MARKUP,
             cls_markup.get(cls, cls.title()),
             number,
@@ -328,9 +328,9 @@ class Issue(abc.ABC):
 
     def _get_unique_identifier(self):
         record = self.get_taskwarrior_record()
-        return dict([
-            (key, record[key],) for key in self.UNIQUE_KEY
-        ])
+        return {
+            key: record[key] for key in self.UNIQUE_KEY
+        }
 
     def get_template_context(self):
         context = (
@@ -353,8 +353,7 @@ class Issue(abc.ABC):
 
     def __iter__(self):
         record = self.get_taskwarrior_record()
-        for key in record.keys():
-            yield key
+        yield from record.keys()
 
     def keys(self):
         return list(self.__iter__())
@@ -368,8 +367,7 @@ class Issue(abc.ABC):
 
     def iteritems(self):
         record = self.get_taskwarrior_record()
-        for item in record.items():
-            yield item
+        yield from record.items()
 
     def update(self, *args):
         raise AttributeError(
@@ -424,7 +422,7 @@ class ServiceClient:
     def json_response(response):
         # If we didn't get good results, just bail.
         if response.status_code != 200:
-            raise IOError(
+            raise OSError(
                 "Non-200 status code %r; %r; %r" % (
                     response.status_code, response.url, response.text,
                 ))

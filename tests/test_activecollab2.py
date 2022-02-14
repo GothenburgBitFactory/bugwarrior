@@ -44,7 +44,7 @@ class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestActiveCollab2Issue, self).setUp()
+        super().setUp()
         self.service = self.get_mock_service(ActiveCollab2Service)
 
     def test_to_taskwarrior(self):
@@ -73,28 +73,28 @@ class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         self.add_response(
             re.compile(
-                'http://hello/\?(?=.*token=howdy)(?=.*path_info=\%2Fprojects\%2F[1-2]\%2Fuser-tasks)(?=.*format=json)'),
+                r'http://hello/\?(?=.*token=howdy)(?=.*path_info=\%2Fprojects\%2F[1-2]\%2Fuser-tasks)(?=.*format=json)'),
             json=[self.arbitrary_issue])
         self.add_response(
             re.compile(
-                'http://hello/\?(?=.*token=howdy)(?=.*path_info=\%2Fprojects\%2F20\%2Ftickets\%2F10)(?=.*format=json)'),
+                r'http://hello/\?(?=.*token=howdy)(?=.*path_info=\%2Fprojects\%2F20\%2Ftickets\%2F10)(?=.*format=json)'),
             json=self.arbitrary_issue)
 
         issue = next(self.service.issues())
 
         expected = {
-            'ac2body': u'Ticket Body',
-            'ac2createdbyid': u'10',
+            'ac2body': 'Ticket Body',
+            'ac2createdbyid': '10',
             'ac2createdon': self.arbitrary_created_on,
-            'ac2name': u'Anonymous',
-            'ac2permalink': u'http://wherever/',
+            'ac2name': 'Anonymous',
+            'ac2permalink': 'http://wherever/',
             'ac2projectid': 20,
             'ac2ticketid': 10,
-            'ac2type': u'Ticket',
-            'description': u'(bw)Is#10 - Anonymous .. http://wherever/',
+            'ac2type': 'Ticket',
+            'description': '(bw)Is#10 - Anonymous .. http://wherever/',
             'due': self.arbitrary_due_on,
             'priority': 'H',
-            'project': u'something',
+            'project': 'something',
             'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)

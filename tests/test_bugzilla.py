@@ -8,7 +8,7 @@ from bugwarrior.services.bz import BugzillaService
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
 
 
-class FakeBugzillaLib(object):
+class FakeBugzillaLib:
     def __init__(self, records):
         self.records = records
 
@@ -20,7 +20,7 @@ class FakeBugzillaLib(object):
 class TestBugzillaServiceConfig(ConfigTest):
 
     def setUp(self):
-        super(TestBugzillaServiceConfig, self).setUp()
+        super().setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.set('general', 'targets', 'mybz')
@@ -73,12 +73,12 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
     arbitrary_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
 
     def setUp(self):
-        super(TestBugzillaService, self).setUp()
+        super().setUp()
         with mock.patch('bugzilla.Bugzilla'):
             self.service = self.get_mock_service(BugzillaService)
 
     def get_mock_service(self, *args, **kwargs):
-        service = super(TestBugzillaService, self).get_mock_service(
+        service = super().get_mock_service(
             *args, **kwargs)
         service.bz = FakeBugzillaLib([self.arbitrary_record])
         service._get_assigned_date = (

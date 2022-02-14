@@ -22,32 +22,32 @@ def get_data_path(taskrc):
     data_path = data_location[len(line_prefix):].rstrip().decode('utf-8')
 
     if not data_path:
-        raise IOError('Unable to determine the data location.')
+        raise OSError('Unable to determine the data location.')
 
     return os.path.normpath(os.path.expanduser(data_path))
 
 
-class BugwarriorData(object):
+class BugwarriorData:
     def __init__(self, data_path):
         self.datafile = os.path.join(data_path, 'bugwarrior.data')
         self.lockfile = os.path.join(data_path, 'bugwarrior-data.lockfile')
         self.path = data_path
 
     def get_data(self):
-        with open(self.datafile, 'r') as jsondata:
+        with open(self.datafile) as jsondata:
             return json.load(jsondata)
 
     def get(self, key):
         try:
             return self.get_data()[key]
-        except IOError:  # File does not exist.
+        except OSError:  # File does not exist.
             return None
 
     def set(self, key, value):
         with PIDLockFile(self.lockfile):
             try:
                 data = self.get_data()
-            except IOError:  # File does not exist.
+            except OSError:  # File does not exist.
                 with open(self.datafile, 'w') as jsondata:
                     json.dump({key: value}, jsondata)
             else:

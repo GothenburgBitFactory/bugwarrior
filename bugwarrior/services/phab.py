@@ -92,7 +92,7 @@ class PhabricatorService(IssueService):
     CONFIG_SCHEMA = PhabricatorConfig
 
     def __init__(self, *args, **kw):
-        super(PhabricatorService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         # These read login credentials from ~/.arcrc
         if self.config.host:
@@ -246,7 +246,5 @@ class PhabricatorService(IssueService):
         pass
 
     def issues(self):
-        for issue in self.tasks():
-            yield issue
-        for issue in self.revisions():
-            yield issue
+        yield from self.tasks()
+        yield from self.revisions()

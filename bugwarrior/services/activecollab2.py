@@ -48,22 +48,22 @@ class ActiveCollab2Client(ServiceClient):
         assigned_task = {
             'project': project
         }
-        if task[u'type'] == 'Ticket':
+        if task['type'] == 'Ticket':
             # Load Ticket data
             # @todo Implement threading here.
             ticket_data = self.call_api(
-                "/projects/" + str(task[u'project_id']) +
-                "/tickets/" + str(task[u'ticket_id']))
-            assignees = ticket_data[u'assignees']
+                "/projects/" + str(task['project_id']) +
+                "/tickets/" + str(task['ticket_id']))
+            assignees = ticket_data['assignees']
 
             for assignee in assignees:
                 if (
-                    (assignee[u'is_owner'] is True)
-                    and (assignee[u'user_id'] == self.user_id)
+                    (assignee['is_owner'] is True)
+                    and (assignee['user_id'] == self.user_id)
                 ):
                     assigned_task.update(ticket_data)
                     return assigned_task
-        elif task[u'type'] == 'Task':
+        elif task['type'] == 'Task':
             # Load Task data
             assigned_task.update(task)
             return assigned_task
@@ -194,7 +194,7 @@ class ActiveCollab2Service(IssueService):
     CONFIG_SCHEMA = ActiveCollab2Config
 
     def __init__(self, *args, **kw):
-        super(ActiveCollab2Service, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         self.client = ActiveCollab2Client(self.config.url,
                                           self.config.key,

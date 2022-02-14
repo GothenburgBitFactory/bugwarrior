@@ -81,7 +81,7 @@ class BitbucketService(IssueService, ServiceClient):
     BASE_URL = 'https://bitbucket.org/'
 
     def __init__(self, *args, **kw):
-        super(BitbucketService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         auth = {'oauth': (self.config.key, self.config.secret)}
 
@@ -148,8 +148,7 @@ class BitbucketService(IssueService, ServiceClient):
         url = self.BASE_API2 + url
         while url is not None:
             response = self.get_data(url)
-            for value in response['values']:
-                yield value
+            yield from response['values']
             url = response.get('next', None)
 
     def fetch_issues(self, tag):
@@ -186,7 +185,7 @@ class BitbucketService(IssueService, ServiceClient):
             if repo.get('has_issues')
         ]))
 
-        issues = sum([self.fetch_issues(repo) for repo in repo_tags], [])
+        issues = sum((self.fetch_issues(repo) for repo in repo_tags), [])
         log.debug(" Found %i total.", len(issues))
 
         closed = ['resolved', 'duplicate', 'wontfix', 'invalid', 'closed']
@@ -214,7 +213,7 @@ class BitbucketService(IssueService, ServiceClient):
 
         if not self.config.filter_merge_requests:
             pull_requests = sum(
-                [self.fetch_pull_requests(repo) for repo in repo_tags], [])
+                (self.fetch_pull_requests(repo) for repo in repo_tags), [])
             log.debug(" Found %i total.", len(pull_requests))
 
             closed = ['rejected', 'fulfilled']

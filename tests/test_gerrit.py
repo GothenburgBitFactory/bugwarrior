@@ -26,7 +26,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestGerritIssue, self).setUp()
+        super().setUp()
 
         responses.add(
             responses.HEAD,
@@ -69,15 +69,15 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
         issue = next(self.service.issues())
 
         expected = {
-            'annotations': [u'@Iam Author - is is a message'],
-            'description': u'(bw)PR#1 - this is a title .. https://one.com/#/c/1/',
+            'annotations': ['@Iam Author - is is a message'],
+            'description': '(bw)PR#1 - this is a title .. https://one.com/#/c/1/',
             'gerritid': 1,
-            'gerritsummary': u'this is a title',
+            'gerritsummary': 'this is a title',
             'gerriturl': 'https://one.com/#/c/1/',
             'gerritbranch': 'master',
             'gerrittopic': 'test-topic',
             'priority': 'M',
-            'project': u'nova',
+            'project': 'nova',
             'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)

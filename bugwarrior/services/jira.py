@@ -117,7 +117,7 @@ class ObliviousCookieJar(RequestsCookieJar):
 
 class JIRA(BaseJIRA):
     def _create_http_basic_session(self, *args, **kwargs):
-        super(JIRA, self)._create_http_basic_session(*args, **kwargs)
+        super()._create_http_basic_session(*args, **kwargs)
 
         # XXX: JIRA logs the web user out if we send the session cookies we get
         # back from the first request in any subsequent requests. As we don't
@@ -289,10 +289,10 @@ class JiraIssue(Issue):
 
     def __get_sprints(self):
         fields = self.record.get('fields', {})
-        sprints = sum([
+        sprints = sum((
             fields.get(key) or []
             for key in self.origin['sprint_field_names']
-        ], [])
+        ), [])
         for sprint in sprints:
             if isinstance(sprint, dict):
                 yield sprint
@@ -390,7 +390,7 @@ class JiraService(IssueService):
 
     def __init__(self, *args, **kw):
         _skip_server = kw.pop('_skip_server', False)
-        super(JiraService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         default_query = 'assignee="' + \
             self.config.username.replace("@", "\\u0040") + \

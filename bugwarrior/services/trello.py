@@ -150,11 +150,10 @@ class TrelloService(IssueService, ServiceClient):
             for boardid in self.config.include_boards:
                 # Get the board name
                 yield self.api_request(
-                    "/1/boards/{id}".format(id=boardid), fields='name')
+                    f"/1/boards/{boardid}", fields='name')
         else:
             boards = self.api_request("/1/members/me/boards", fields='name')
-            for board in boards:
-                yield board
+            yield from boards
 
     def get_lists(self, board):
         """
@@ -163,7 +162,7 @@ class TrelloService(IssueService, ServiceClient):
         trello.include_lists and trello.exclude_lists.
         """
         lists = self.api_request(
-            "/1/boards/{board_id}/lists/open".format(board_id=board),
+            f"/1/boards/{board}/lists/open",
             fields='name')
 
         if self.config.include_lists:
@@ -185,7 +184,7 @@ class TrelloService(IssueService, ServiceClient):
             params['members'] = 'true'
             params['member_fields'] = 'username'
         cards = self.api_request(
-            "/1/lists/{list_id}/cards/open".format(list_id=list_id),
+            f"/1/lists/{list_id}/cards/open",
             **params)
         for card in cards:
             cardmembers = [m['username'] for m in card['members']]
@@ -198,7 +197,7 @@ class TrelloService(IssueService, ServiceClient):
         """ Returns an iterator for the comments on a certain card. """
         params = {'filter': 'commentCard', 'memberCreator_fields': 'username'}
         comments = self.api_request(
-            "/1/cards/{card_id}/actions".format(card_id=card_id),
+            f"/1/cards/{card_id}/actions",
             **params)
         for comment in comments:
             assert comment['type'] == 'commentCard'

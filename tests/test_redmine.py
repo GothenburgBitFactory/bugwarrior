@@ -56,7 +56,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestRedmineIssue, self).setUp()
+        super().setUp()
         self.service = self.get_mock_service(RedMineService)
 
     def test_to_taskwarrior(self):
@@ -77,7 +77,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
             issue.STATUS: 'New',
             issue.URL: arbitrary_url,
             issue.SUBJECT: self.arbitrary_issue['subject'],
-            issue.TRACKER: u'Task',
+            issue.TRACKER: 'Task',
             issue.CREATED_ON: self.arbitrary_created,
             issue.UPDATED_ON: self.arbitrary_updated,
             issue.ID: self.arbitrary_issue['id'],
@@ -106,9 +106,9 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
             'annotations': [],
             issue.DUEDATE: None,
             'description':
-                u'(bw)Is#363901 - Biscuits .. https://something/issues/363901',
+                '(bw)Is#363901 - Biscuits .. https://something/issues/363901',
             'priority': 'M',
-            'project': u'boiledcabbageyum',
+            'project': 'boiledcabbageyum',
             'redmineid': 363901,
             'redmineprojectname': 'Boiled Cabbage - Yum',
             issue.SPENT_HOURS: None,
@@ -119,11 +119,11 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
             issue.DESCRIPTION: self.arbitrary_issue['description'],
             issue.ESTIMATED_HOURS: None,
             issue.STATUS: 'New',
-            'redminesubject': u'Biscuits',
-            'redminetracker': u'Task',
+            'redminesubject': 'Biscuits',
+            'redminetracker': 'Task',
             issue.CREATED_ON: self.arbitrary_created,
             issue.UPDATED_ON: self.arbitrary_updated,
-            'redmineurl': u'https://something/issues/363901',
+            'redmineurl': 'https://something/issues/363901',
             'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)

@@ -127,7 +127,7 @@ class PagureService(IssueService):
     CONFIG_SCHEMA = PagureConfig
 
     def __init__(self, *args, **kw):
-        super(PagureService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         self.session = requests.Session()
 
@@ -151,7 +151,7 @@ class PagureService(IssueService):
             if code == 'ETRACKERDISABLED':
                 return []
             else:
-                raise IOError('Failed to talk to %r %r' % (url, error))
+                raise OSError('Failed to talk to %r %r' % (url, error))
 
         issues = []
         for result in response.json()[key2]:
@@ -194,7 +194,7 @@ class PagureService(IssueService):
                    "/api/0/projects?tags=" + self.config.tag)
             response = self.session.get(url)
             if not bool(response):
-                raise IOError('Failed to talk to %r %r' % (url, response))
+                raise OSError('Failed to talk to %r %r' % (url, response))
 
             all_repos = [r['name'] for r in response.json()['projects']]
         else:

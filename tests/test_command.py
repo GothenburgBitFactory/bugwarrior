@@ -12,24 +12,22 @@ from .test_github import ARBITRARY_ISSUE, ARBITRARY_EXTRA
 
 
 def fake_github_issues(self):
-    for issue in [self.get_issue_for_record(ARBITRARY_ISSUE, ARBITRARY_EXTRA)]:
-        yield issue
+    yield from [self.get_issue_for_record(ARBITRARY_ISSUE, ARBITRARY_EXTRA)]
 
 
 def fake_bz_issues(self):
-    for issue in [{
+    yield from [{
             'annotations': [],
             'bugzillabugid': 1234567,
             'bugzillastatus': 'NEW',
             'bugzillasummary': 'This is the issue summary',
-            'bugzillaurl': u'https://http://one.com//show_bug.cgi?id=1234567',
+            'bugzillaurl': 'https://http://one.com//show_bug.cgi?id=1234567',
             'bugzillaproduct': 'Product',
             'bugzillacomponent': 'Something',
-            'description': u'(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',
+            'description': '(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',
             'priority': 'H',
             'project': 'Something',
-            'tags': []}]:
-        yield issue
+            'tags': []}]
 
 
 class TestPull(ConfigTest):

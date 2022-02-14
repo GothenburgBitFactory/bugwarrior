@@ -31,7 +31,7 @@ def _get_section_name(flavor):
 def _try_load_config(main_section, interactive=False):
     try:
         return load_config(main_section, interactive)
-    except IOError:
+    except OSError:
         # Our standard logging configuration depends on the bugwarrior
         # configuration file which just failed to load.
         logging.basicConfig()

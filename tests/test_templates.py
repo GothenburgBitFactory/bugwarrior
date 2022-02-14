@@ -4,7 +4,7 @@ from .test_service import DumbIssue
 
 class TestTemplates(ServiceTest):
     def setUp(self):
-        super(TestTemplates, self).setUp()
+        super().setUp()
         self.arbitrary_default_description = 'Construct Library on Terminus'
         self.arbitrary_issue = {
             'project': 'end_of_empire',

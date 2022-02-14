@@ -70,7 +70,7 @@ TYPE_NAME_MAP = {
 if __name__ == '__main__':
     service = sys.argv[1]
     module = import_by_path(
-        'bugwarrior.services.{service}'.format(service=service)
+        f'bugwarrior.services.{service}'
     )
     rows = []
     for name, obj in inspect.getmembers(module):

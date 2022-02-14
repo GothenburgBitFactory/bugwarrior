@@ -76,7 +76,7 @@ def load_config(main_section, interactive):
 
 
 # ConfigParser is not a new-style class, so inherit from object to fix super().
-class BugwarriorConfigParser(configparser.ConfigParser, object):
+class BugwarriorConfigParser(configparser.ConfigParser):
     def __init__(self, *args, allow_no_value=True, **kwargs):
         super().__init__(*args, allow_no_value=allow_no_value, **kwargs)
 
@@ -85,7 +85,7 @@ class BugwarriorConfigParser(configparser.ConfigParser, object):
         try:
             return super().getint(section, option)
         except ValueError:
-            if self.get(section, option) == u'':
+            if self.get(section, option) == '':
                 return None
             else:
                 raise ValueError(

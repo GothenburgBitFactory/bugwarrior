@@ -79,7 +79,7 @@ class GerritService(IssueService, ServiceClient):
     CONFIG_SCHEMA = GerritConfig
 
     def __init__(self, *args, **kw):
-        super(GerritService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.password = self.get_password('password', self.config.username)
         self.session = requests.session()
         self.session.headers.update({

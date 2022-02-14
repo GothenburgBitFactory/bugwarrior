@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Bugwarrior documentation build configuration file, created by
 # sphinx-quickstart on Wed Apr 16 15:09:22 2014.
@@ -49,8 +48,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Bugwarrior'
-copyright = u'2014-2016, Ralph Bean and contributors'
+project = 'Bugwarrior'
+copyright = '2014-2016, Ralph Bean and contributors'
 
 docs_authors = [
     'Adam Coddington',
@@ -227,8 +226,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'Bugwarrior.tex', u'Bugwarrior Documentation',
-   u'Ralph Bean', 'manual'),
+  ('index', 'Bugwarrior.tex', 'Bugwarrior Documentation',
+   'Ralph Bean', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -257,7 +256,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'bugwarrior', u'Bugwarrior Documentation',
+    ('index', 'bugwarrior', 'Bugwarrior Documentation',
      docs_authors, 1)
 ]
 
@@ -271,8 +270,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Bugwarrior', u'Bugwarrior Documentation',
-   u'Ralph Bean', 'Bugwarrior', 'One line description of project.',
+  ('index', 'Bugwarrior', 'Bugwarrior Documentation',
+   'Ralph Bean', 'Bugwarrior', 'One line description of project.',
    'Miscellaneous'),
 ]
 

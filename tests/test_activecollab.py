@@ -12,7 +12,7 @@ from bugwarrior.services.activecollab import (
 from .base import ServiceTest, AbstractServiceTest
 
 
-class FakeActiveCollabLib(object):
+class FakeActiveCollabLib:
     def __init__(self, arbitrary_issue):
         self.arbitrary_issue = arbitrary_issue
 
@@ -73,13 +73,13 @@ class TestActiveCollabIssues(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestActiveCollabIssues, self).setUp()
+        super().setUp()
         self.maxDiff = None
         with mock.patch('pyac.library.activeCollab.call_api'):
             self.service = self.get_mock_service(ActiveCollabService)
 
     def get_mock_service(self, *args, **kwargs):
-        service = super(TestActiveCollabIssues, self).get_mock_service(
+        service = super().get_mock_service(
             *args, **kwargs)
         service.activecollab = FakeActiveCollabLib(self.arbitrary_issue)
         return service
@@ -120,7 +120,7 @@ class TestActiveCollabIssues(AbstractServiceTest, ServiceTest):
         issue = next(self.service.issues())
 
         expected = {
-            'acbody': u'Ticket Body',
+            'acbody': 'Ticket Body',
             'accreatedbyname': 'Tester',
             'accreatedon': self.arbitrary_created_on,
             'acestimatedtime': 1,

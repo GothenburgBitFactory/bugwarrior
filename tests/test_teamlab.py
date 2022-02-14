@@ -25,7 +25,7 @@ class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestTeamlabIssue, self).setUp()
+        super().setUp()
         with mock.patch(
             'bugwarrior.services.teamlab.TeamLabClient.authenticate'
         ):
@@ -63,13 +63,13 @@ class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'description':
-                u'(bw)Is#10 - Hello .. http://something/products/projects/tasks.aspx?prjID=140&id=10',
+                '(bw)Is#10 - Hello .. http://something/products/projects/tasks.aspx?prjID=140&id=10',
             'priority': 'M',
             'project': 'abcdef',
             'tags': [],
             'teamlabid': 10,
             'teamlabprojectownerid': 140,
-            'teamlabtitle': u'Hello',
+            'teamlabtitle': 'Hello',
             'teamlaburl':
                 'http://something/products/projects/tasks.aspx?prjID=140&id=10'}
 

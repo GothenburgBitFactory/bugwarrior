@@ -16,7 +16,7 @@ class TestPhabricatorIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestPhabricatorIssue, self).setUp()
+        super().setUp()
         self.service = self.get_mock_service(PhabricatorService)
         self.arbitrary_created = (
             datetime.datetime.utcnow() - datetime.timedelta(hours=1)

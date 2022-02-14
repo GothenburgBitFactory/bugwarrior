@@ -72,7 +72,7 @@ class TestIssueService(ServiceBase):
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com')
         self.assertEqual(annotations, [
-            u'@some_author - Some message that is over 100 characters. Thi...'
+            '@some_author - Some message that is over 100 characters. Thi...'
         ])
 
     def test_build_annotations_limited(self):
@@ -82,7 +82,7 @@ class TestIssueService(ServiceBase):
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com')
         self.assertEqual(
-            annotations, [u'@some_author - Some message that is...'])
+            annotations, ['@some_author - Some message that is...'])
 
     def test_build_annotations_limitless(self):
         self.config.set('general', 'annotation_length', None)
@@ -91,7 +91,7 @@ class TestIssueService(ServiceBase):
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com')
         self.assertEqual(annotations, [
-            u'@some_author - {message}'.format(message=LONG_MESSAGE)])
+            f'@some_author - {LONG_MESSAGE}'])
 
 
 class TestIssue(ServiceBase):
@@ -101,7 +101,7 @@ class TestIssue(ServiceBase):
 
         description = issue.build_default_description(LONG_MESSAGE)
         self.assertEqual(
-            description, u'(bw)Is# - Some message that is over 100 chara')
+            description, '(bw)Is# - Some message that is over 100 chara')
 
     def test_build_default_description_limited(self):
         self.config.set('general', 'description_length', '20')
@@ -109,7 +109,7 @@ class TestIssue(ServiceBase):
 
         description = issue.build_default_description(LONG_MESSAGE)
         self.assertEqual(
-            description, u'(bw)Is# - Some message that is')
+            description, '(bw)Is# - Some message that is')
 
     def test_build_default_description_limitless(self):
         self.config.set('general', 'description_length', None)
@@ -117,4 +117,4 @@ class TestIssue(ServiceBase):
 
         description = issue.build_default_description(LONG_MESSAGE)
         self.assertEqual(
-            description, u'(bw)Is# - {message}'.format(message=LONG_MESSAGE))
+            description, f'(bw)Is# - {LONG_MESSAGE}')

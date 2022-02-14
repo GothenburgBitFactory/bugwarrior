@@ -68,7 +68,7 @@ class TaigaService(IssueService, ServiceClient):
     CONFIG_SCHEMA = TaigaConfig
 
     def __init__(self, *args, **kw):
-        super(TaigaService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.auth_token = self.get_password('auth_token')
         self.session = requests.session()
         self.session.headers.update({
@@ -120,12 +120,10 @@ class TaigaService(IssueService, ServiceClient):
         # Otherwise, proceed.
         userid = data['id']
 
-        for issue in self._issues(userid, 'userstory', 'userstories', 'us'):
-            yield issue
+        yield from self._issues(userid, 'userstory', 'userstories', 'us')
 
         if self.config.include_tasks:
-            for issue in self._issues(userid, 'task', 'tasks', 'task'):
-                yield issue
+            yield from self._issues(userid, 'task', 'tasks', 'task')
 
     @cache.cache_on_arguments()
     def get_project(self, project_id):

@@ -17,7 +17,7 @@ class ActiveCollabConfig(config.ServiceConfig, prefix='activecollab'):
     user_id: int
 
 
-class ActiveCollabClient(object):
+class ActiveCollabClient:
     def __init__(self, url, key, user_id):
         self.url = url
         self.key = key
@@ -171,7 +171,7 @@ class ActiveCollabService(IssueService):
     CONFIG_SCHEMA = ActiveCollabConfig
 
     def __init__(self, *args, **kw):
-        super(ActiveCollabService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         self.client = ActiveCollabClient(
             self.config.url, self.config.key, self.config.user_id

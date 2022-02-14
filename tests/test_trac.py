@@ -43,11 +43,11 @@ class TestTracIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestTracIssue, self).setUp()
+        super().setUp()
         self.service = self.get_mock_service(TracService)
 
     def get_mock_service(self, *args, **kwargs):
-        service = super(TestTracIssue, self).get_mock_service(*args, **kwargs)
+        service = super().get_mock_service(*args, **kwargs)
         service.trac = FakeTracLib(self.arbitrary_issue)
         return service
 

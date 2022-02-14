@@ -114,7 +114,7 @@ class TeamLabService(IssueService):
     CONFIG_SCHEMA = TeamLabConfig
 
     def __init__(self, *args, **kw):
-        super(TeamLabService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         _password = self.get_password('password', self.config.login)
 

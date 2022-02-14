@@ -129,23 +129,23 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
         issue = next(service.issues())
 
         expected = {
-            'annotations': [u'@arbitrary_login - Arbitrary comment.'],
-            'description': u'(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
+            'annotations': ['@arbitrary_login - Arbitrary comment.'],
+            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'entry': ARBITRARY_CREATED,
             'end': ARBITRARY_CLOSED,
-            'githubbody': u'Something',
+            'githubbody': 'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubclosedon': ARBITRARY_CLOSED,
-            'githubmilestone': u'alpha',
+            'githubmilestone': 'alpha',
             'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
             'githubrepo': 'arbitrary_username/arbitrary_repo',
-            'githubtitle': u'Hallo',
+            'githubtitle': 'Hallo',
             'githubtype': 'issue',
             'githubupdatedat': ARBITRARY_UPDATED,
-            'githuburl': u'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
-            'githubuser': u'arbitrary_login',
-            'githubstate': u'closed',
+            'githuburl': 'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
+            'githubuser': 'arbitrary_login',
+            'githubstate': 'closed',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': []}
@@ -166,7 +166,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestGithubIssueQuery, self).setUp()
+        super().setUp()
         self.service = self.get_mock_service(GithubService)
 
     def test_to_taskwarrior(self):
@@ -188,23 +188,23 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
         issue = list(self.service.issues())[0]
 
         expected = {
-            'annotations': [u'@arbitrary_login - Arbitrary comment.'],
-            'description': u'(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
+            'annotations': ['@arbitrary_login - Arbitrary comment.'],
+            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'entry': ARBITRARY_CREATED,
             'end': ARBITRARY_CLOSED,
-            'githubbody': u'Something',
+            'githubbody': 'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubclosedon': ARBITRARY_CLOSED,
-            'githubmilestone': u'alpha',
+            'githubmilestone': 'alpha',
             'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
             'githubrepo': 'arbitrary_username/arbitrary_repo',
-            'githubtitle': u'Hallo',
+            'githubtitle': 'Hallo',
             'githubtype': 'issue',
             'githubupdatedat': ARBITRARY_UPDATED,
-            'githuburl': u'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
-            'githubuser': u'arbitrary_login',
-            'githubstate': u'closed',
+            'githuburl': 'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
+            'githubuser': 'arbitrary_login',
+            'githubstate': 'closed',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': []}

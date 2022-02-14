@@ -120,7 +120,7 @@ class GmailService(IssueService):
     AUTHENTICATION_LOCK = multiprocessing.Lock()
 
     def __init__(self, *args, **kw):
-        super(GmailService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
         credentials_name = clean_filename(
             self.config.login_name if self.config.login_name != 'me'

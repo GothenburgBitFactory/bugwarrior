@@ -142,9 +142,9 @@ class PivotalTrackerService(IssueService, ServiceClient):
     CONFIG_SCHEMA = PivotalTrackerConfig
 
     def __init__(self, *args, **kwargs):
-        super(PivotalTrackerService, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-        self.path = "{0}/{1}".format(self.config.host, self.config.version)
+        self.path = f"{self.config.host}/{self.config.version}"
 
         self.session = requests.Session()
         self.session.headers.update(
@@ -273,7 +273,7 @@ class PivotalTrackerService(IssueService, ServiceClient):
     def get_query(self, project_id, **params):
         params['subkey'] = 'stories'
         query = self.api_request(
-            "projects/{project_id}/search".format(project_id=project_id),
+            f"projects/{project_id}/search",
             params=params)
 
         return query['stories']

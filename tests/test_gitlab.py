@@ -13,7 +13,7 @@ from .base import ConfigTest, ServiceTest, AbstractServiceTest
 class TestGitlabService(ConfigTest):
 
     def setUp(self):
-        super(TestGitlabService, self).setUp()
+        super().setUp()
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
         self.config.set('general', 'targets', 'myservice')
@@ -96,7 +96,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     }
 
     def setUp(self):
-        super(TestGitlabIssue, self).setUp()
+        super().setUp()
         self.service = self.get_mock_service(GitlabService)
         self.arbitrary_created = (
             datetime.datetime.utcnow() - datetime.timedelta(hours=1)
@@ -504,31 +504,31 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         issue = next(self.service.issues())
 
         expected = {
-            'annotations': [u'@john_smith - Some comment.'],
+            'annotations': ['@john_smith - Some comment.'],
             'description':
-                u'(bw)Is#3 - Add user settings .. example.com/issues/3',
+                '(bw)Is#3 - Add user settings .. example.com/issues/3',
             'due': self.arbitrary_duedate,
             'entry': self.arbitrary_created,
-            'gitlabassignee': u'jack_smith',
-            'gitlabauthor': u'john_smith',
+            'gitlabassignee': 'jack_smith',
+            'gitlabauthor': 'john_smith',
             'gitlabcreatedon': self.arbitrary_created,
-            'gitlabdescription': u'',
+            'gitlabdescription': '',
             'gitlabdownvotes': 0,
-            'gitlabmilestone': u'v1.0',
-            'gitlabnamespace': u'arbitrary_username',
+            'gitlabmilestone': 'v1.0',
+            'gitlabnamespace': 'arbitrary_username',
             'gitlabnumber': '3',
-            'gitlabrepo': u'arbitrary_username/project',
-            'gitlabstate': u'opened',
-            'gitlabtitle': u'Add user settings',
+            'gitlabrepo': 'arbitrary_username/project',
+            'gitlabstate': 'opened',
+            'gitlabtitle': 'Add user settings',
             'gitlabtype': 'issue',
             'gitlabupdatedat': self.arbitrary_updated,
             'gitlabduedate': self.arbitrary_duedate,
             'gitlabupvotes': 0,
-            'gitlaburl': u'example.com/issues/3',
+            'gitlaburl': 'example.com/issues/3',
             'gitlabwip': 1,
             'gitlabweight': 3,
             'priority': 'M',
-            'project': u'arbitrary_username/project',
+            'project': 'arbitrary_username/project',
             'tags': []}
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)
