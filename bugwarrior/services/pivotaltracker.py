@@ -1,4 +1,3 @@
-from builtins import filter, map
 import re
 import operator
 

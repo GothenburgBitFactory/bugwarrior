@@ -5,10 +5,6 @@ Pulls trello cards as tasks.
 
 Trello API documentation available at https://developers.trello.com/
 """
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-
 from jinja2 import Template
 import requests
 import typing_extensions

@@ -44,7 +44,6 @@ setup(name='bugwarrior',
       install_requires=[
           "click",
           "dogpile.cache>=0.5.3",
-          "future",
           "jinja2>=2.7.2",
           "lockfile>=0.9.1",
           "pydantic[email]",

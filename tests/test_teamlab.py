@@ -1,4 +1,3 @@
-from builtins import next
 from unittest import mock
 
 import responses

@@ -1,4 +1,3 @@
-from builtins import next
 import datetime
 from unittest import mock
 

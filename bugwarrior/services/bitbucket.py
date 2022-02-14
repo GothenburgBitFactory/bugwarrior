@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from builtins import filter
-
 import requests
 import typing_extensions
 
