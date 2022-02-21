@@ -32,7 +32,7 @@ def _get_metadata(issue):
     #         int(issue['due'])).strftime('%Y-%m-%d')
     if 'tags' in issue:
         tags = "Tags: " + ', '.join(issue['tags'])
-    if 'priority' in issue:
+    if 'priority' in issue and issue['priority']:
         priority = "Priority: " + issue['priority']
     if project != '':
         metadata += "\n" + project
