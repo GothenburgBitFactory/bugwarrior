@@ -63,7 +63,7 @@ class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'description':
-                '(bw)Is#10 - Hello .. http://something/products/projects/tasks.aspx?prjID=140&id=10',
+            '(bw)Is#10 - Hello .. http://something/products/projects/tasks.aspx?prjID=140&id=10',  # noqa: E501
             'priority': 'M',
             'project': 'abcdef',
             'tags': [],

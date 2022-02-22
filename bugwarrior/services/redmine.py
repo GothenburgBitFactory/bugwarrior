@@ -1,6 +1,5 @@
 import requests
 import re
-import typing
 
 from taskw import TaskWarriorShellout
 import typing_extensions

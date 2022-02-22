@@ -3,7 +3,7 @@ import unittest
 
 import taskw.task
 
-from bugwarrior import config, db
+from bugwarrior import db
 from bugwarrior.config.load import BugwarriorConfigParser
 
 from .base import ConfigTest

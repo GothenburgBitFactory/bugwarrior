@@ -12,7 +12,7 @@ import typing_extensions
 
 from bugwarrior.services import get_service
 
-from .data import BugwarriorData, get_data_path
+from .data import BugwarriorData
 
 log = logging.getLogger(__name__)
 

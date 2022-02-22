@@ -1,5 +1,3 @@
-import unittest
-
 import responses
 
 from bugwarrior.services.bitbucket import BitbucketService
@@ -135,7 +133,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
                     'links': {'html': {'href': 'example.com'}},
                     'id': 1
                 }],
-                'next': 'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/?page=2',
+                'next': 'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/?page=2',  # noqa: E501
             })
         self.add_response(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/?page=2',

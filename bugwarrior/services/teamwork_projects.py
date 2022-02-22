@@ -94,8 +94,6 @@ class TeamworkIssue(Issue):
 
     def to_taskwarrior(self):
         task_url = self.get_task_url()
-        description = self.record.get("content", "")
-        parent_id = self.record["parentTaskId"]
         status = self.record["status"]
 
         due = self.parse_date(self.record.get('due-date'))
@@ -144,7 +142,6 @@ class TeamworkService(IssueService):
                 comments = self.client.call_api("GET", endpoint)
                 comment_list = []
                 for comment in comments["comments"]:
-                    url = self.config.host + "/#/tasks/" + str(issue["id"])
                     author = "{first} {last}".format(
                         first=comment["author-firstname"],
                         last=comment["author-lastname"],

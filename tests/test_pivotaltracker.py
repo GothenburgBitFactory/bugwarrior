@@ -28,7 +28,11 @@ PROJECT = {
     'number_of_done_iterations_to_show': 4,
     'point_scale': '0,1,2,3',
     'point_scale_is_custom': False,
-    'profile_content': "This is a machine of war such as the universe has never known. It's colossal, the size of a class-four moon. And it possesses firepower unequaled in the history of warfare.",
+    'profile_content': """
+This is a machine of war such as the universe has never known.
+It's colossal, the size of a class-four moon.
+And it possesses firepower unequaled in the history of warfare.
+    """,
     'project_type': 'private',
     'public': False,
     'start_date': '2019-01-28',

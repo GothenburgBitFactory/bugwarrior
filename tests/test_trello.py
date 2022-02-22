@@ -1,5 +1,3 @@
-import unittest
-
 from dateutil.parser import parse as parse_date
 import responses
 

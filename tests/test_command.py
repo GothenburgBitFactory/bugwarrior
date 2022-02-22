@@ -24,7 +24,7 @@ def fake_bz_issues(self):
         'bugzillaurl': 'https://http://one.com//show_bug.cgi?id=1234567',
         'bugzillaproduct': 'Product',
         'bugzillacomponent': 'Something',
-        'description': '(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',
+        'description': '(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',  # noqa: E501
         'priority': 'H',
         'project': 'Something',
         'tags': []}]

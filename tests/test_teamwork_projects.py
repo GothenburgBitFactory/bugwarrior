@@ -1,5 +1,5 @@
 from .base import ServiceTest, AbstractServiceTest
-from bugwarrior.services.teamwork_projects import TeamworkService, TeamworkClient
+from bugwarrior.services.teamwork_projects import TeamworkService
 
 import responses
 import datetime
@@ -94,7 +94,6 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
             'entry': datetime.datetime(2018, 12, 12, 10, 6, 31, tzinfo=tzutc()),
             'end': "",
             'modified': datetime.datetime(2019, 1, 16, 11, 0, 44, tzinfo=tzutc()),
-            'annotations': self.arbitrary_extra.get("annotations", ""),
             issue.URL: "https://test.teamwork_projects.com/#/tasks/5",
             issue.TITLE: data["content"],
             issue.DESCRIPTION_LONG: data["description"],
@@ -125,8 +124,7 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
             'entry': datetime.datetime(2018, 12, 12, 10, 6, 31, tzinfo=tzutc()),
             'end': "",
             'modified': datetime.datetime(2019, 1, 16, 11, 0, 44, tzinfo=tzutc()),
-            'annotations': self.arbitrary_extra.get("annotations", ""),
-            'description': '(bw)Is#5 - This is a test issue .. https://test.teamwork_projects.com/#/tasks/5',
+            'description': '(bw)Is#5 - This is a test issue .. https://test.teamwork_projects.com/#/tasks/5',  # noqa: E501
             issue.URL: "https://test.teamwork_projects.com/#/tasks/5",
             issue.TITLE: data["content"],
             issue.DESCRIPTION_LONG: data["description"],

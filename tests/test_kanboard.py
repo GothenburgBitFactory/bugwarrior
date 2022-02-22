@@ -3,7 +3,6 @@ from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
-from bugwarrior import config
 from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.kanboard import KanboardService
 
