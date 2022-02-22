@@ -56,6 +56,10 @@ Please add tests when appropriate and run the test suite before opening a PR::
 
     (bugwarrior)$ pytest
 
+We also maintain our code quality with flake8::
+
+    (bugwarrior)$ flake8
+
 We look forward to your contribution!
 
 Works in progress
