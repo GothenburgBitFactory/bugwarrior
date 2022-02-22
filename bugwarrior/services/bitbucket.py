@@ -217,7 +217,7 @@ class BitbucketService(IssueService, ServiceClient):
             log.debug(" Found %i total.", len(pull_requests))
 
             closed = ['rejected', 'fulfilled']
-            not_resolved = lambda tup: tup[1]['state'] not in closed
+            def not_resolved(tup): return tup[1]['state'] not in closed
             pull_requests = list(filter(not_resolved, pull_requests))
             pull_requests = list(filter(self.include, pull_requests))
             log.debug(" Pruned down to %i", len(pull_requests))

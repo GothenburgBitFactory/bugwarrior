@@ -115,7 +115,8 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
 
         mock_api = mock.Mock()
         mock_api().users().labels().list().execute.return_value = {'labels': TEST_LABELS}
-        mock_api().users().threads().list().execute.return_value = {'threads': [{'id': TEST_THREAD['id']}]}
+        mock_api().users().threads().list().execute.return_value = {
+            'threads': [{'id': TEST_THREAD['id']}]}
         mock_api().users().threads().get().execute.return_value = TEST_THREAD
         gmail.GmailService.build_api = mock_api
         self.service = self.get_mock_service(gmail.GmailService, section='test_section')
@@ -129,8 +130,8 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
     def test_to_taskwarrior(self):
         thread = TEST_THREAD
         issue = self.service.get_issue_for_record(
-                thread,
-                gmail.thread_extras(thread, self.service.get_labels()))
+            thread,
+            gmail.thread_extras(thread, self.service.get_labels()))
         expected = {
             'annotations': [],
             'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=tzutc()),
@@ -174,23 +175,23 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
 
     def test_last_sender(self):
         test_thread = {
-                'messages': [
-                    {
-                        'payload':
+            'messages': [
+                {
+                    'payload':
                         {
                             'headers': [
                                 {'name': 'From', 'value': 'Xyz <xyz@example.com'}
                             ]
                         }
-                    },
-                    {
-                        'payload':
+                },
+                {
+                    'payload':
                         {
                             'headers': [
                                 {'name': 'From', 'value': 'Foo Bar <foobar@example.com'}
                             ]
                         }
-                    },
-                ]
-            }
+                },
+            ]
+        }
         self.assertEqual(gmail.thread_last_sender(test_thread), ('Foo Bar', 'foobar@example.com'))

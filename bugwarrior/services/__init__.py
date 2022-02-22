@@ -27,6 +27,7 @@ SERVICE_FINISHED_ERROR = 1
 # date string to be parsed as if it were in your local timezone
 LOCAL_TIMEZONE = 'LOCAL_TIMEZONE'
 
+
 def get_service(service_name):
     epoint = iter_entry_points(group='bugwarrior.service', name=service_name)
     try:
@@ -257,7 +258,7 @@ class Issue(abc.ABC):
         record = copy.deepcopy(self._taskwarrior_record)
         if refined:
             record = self.refine_record(record)
-        if not 'tags' in record:
+        if 'tags' not in record:
             record['tags'] = []
         if refined:
             record['tags'].extend(self.get_added_tags())

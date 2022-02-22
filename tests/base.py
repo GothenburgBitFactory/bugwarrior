@@ -35,6 +35,7 @@ class ConfigTest(unittest.TestCase):
     """
     Creates config files, configures the environment, and cleans up afterwards.
     """
+
     def setUp(self):
         self.old_environ = os.environ.copy()
         self.tempdir = tempfile.mkdtemp(prefix='bugwarrior')

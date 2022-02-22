@@ -200,13 +200,13 @@ def replace_left(field, local_task, remote_issue, keep_items=[]):
 
     * Local 'left' entries are suppressed, unless those listed in keep_items.
     * Remote 'left' are appended to task, if not present in local.
-    
+
     :param `field`: Task field to merge.
     :param `local_task`: `taskw.task.Task` object into which to replace
         remote changes.
     :param `remote_issue`: `dict` instance from which to add into
         local task.
-    :param `keep_items`: list of items to keep into local_task even if not 
+    :param `keep_items`: list of items to keep into local_task even if not
         present in remote_issue
     """
 
@@ -219,8 +219,8 @@ def replace_left(field, local_task, remote_issue, keep_items=[]):
     if field not in local_task:
         local_task[field] = []
 
-    #Delete all items in local_task, unless they are in keep_items or in remote_issue
-    #This ensure that the task is not being updated if there is no changes
+    # Delete all items in local_task, unless they are in keep_items or in remote_issue
+    # This ensure that the task is not being updated if there is no changes
     for item in local_field:
         if keep_items.count(item) == 0 and remote_field.count(item) == 0:
             log.debug('found %s to remove' % (item))

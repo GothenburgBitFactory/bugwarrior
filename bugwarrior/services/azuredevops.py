@@ -52,6 +52,7 @@ def striphtml(data):
     p = re.compile(r"<.*?>")
     return p.sub("", data)
 
+
 def format_item(item):
     """Removes HTML Elements, splits by line"""
     if item:
@@ -61,6 +62,7 @@ def format_item(item):
         )
         return text
     return
+
 
 class AzureDevopsClient(ServiceClient):
     def __init__(self, pat, org, project, host):
@@ -86,7 +88,8 @@ class AzureDevopsClient(ServiceClient):
     def get_work_items_from_query(self, query):
         data = str({"query": query})
         resp = self.session.post(f"{self.base_url}/wiql", data=data, params=self.params)
-        if resp.status_code == 400 and resp.json()['typeKey'] == "WorkItemTrackingQueryResultSizeLimitExceededException":
+        if resp.status_code == 400 and resp.json(
+        )['typeKey'] == "WorkItemTrackingQueryResultSizeLimitExceededException":
             log.critical("Too many azure devops results in query, please "
                          "narrow the search by updating the ado.wiql_filter")
             sys.exit(1)
@@ -104,6 +107,7 @@ class AzureDevopsClient(ServiceClient):
             return parent_item["fields"]["System.Title"]
         else:
             return None
+
 
 class AzureDevopsIssue(Issue):
     TITLE = "adotitle"
@@ -140,10 +144,9 @@ class AzureDevopsIssue(Issue):
 
     def get_priority(self):
         value = self.record.get("fields").get(
-                "Microsoft.VSTS.Common.Priority", self.origin['default_priority']
-            )
+            "Microsoft.VSTS.Common.Priority", self.origin['default_priority']
+        )
         return self.PRIORITY_MAP.get(value, self.origin['default_priority'])
-
 
     def to_taskwarrior(self):
         return {
@@ -154,7 +157,7 @@ class AzureDevopsIssue(Issue):
                 self.record.get("fields", {}).get("System.CreatedDate")
             ),
             "end": self.parse_date(
-                self.record.get("fields",{}).get("Microsoft.VSTS.Common.ClosedDate")
+                self.record.get("fields", {}).get("Microsoft.VSTS.Common.ClosedDate")
             ),
             self.TITLE: self.record["fields"]["System.Title"],
             self.DESCRIPTION: format_item(

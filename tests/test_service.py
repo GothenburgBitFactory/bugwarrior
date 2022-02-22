@@ -21,6 +21,7 @@ class DumbIssue(services.Issue):
     """
     Implement the required methods but they shouldn't be called.
     """
+
     def get_default_description(self):
         raise NotImplementedError
 

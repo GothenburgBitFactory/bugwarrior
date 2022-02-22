@@ -40,10 +40,11 @@ class TestMergeLeft(unittest.TestCase):
         db.merge_left('annotations', self.issue_dict, remote, hamming=True)
         self.assertEqual(len(self.issue_dict['annotations']), 1)
 
+
 class TestReplaceLeft(unittest.TestCase):
     def setUp(self):
-        self.issue_dict = {'tags': ['test', 'test2'] }
-        self.remote = { 'tags': ['remote_tag1', 'remote_tag2'] }
+        self.issue_dict = {'tags': ['test', 'test2']}
+        self.remote = {'tags': ['remote_tag1', 'remote_tag2']}
 
     def assertReplaced(self, local, remote, **kwargs):
         db.replace_left('tags', local, remote, **kwargs)
@@ -63,9 +64,9 @@ class TestReplaceLeft(unittest.TestCase):
 
     def test_replace_with_keeped_item(self):
         """ When keeped_item is set, all item in this list are keeped """
-        result = {'tags': ['test', 'remote_tag1', 'remote_tag2'] }
+        result = {'tags': ['test', 'remote_tag1', 'remote_tag2']}
         print(self.issue_dict)
-        keeped_items = [ 'test' ]
+        keeped_items = ['test']
         db.replace_left('tags', self.issue_dict, self.remote, keeped_items)
         self.assertEqual(self.issue_dict, result)
 

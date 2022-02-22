@@ -199,7 +199,6 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
         actual_output = issue.to_taskwarrior()
         self.assertEqual(actual_output, expected)
 
-
     def test_issues(self):
         expected = {
             "project": None,

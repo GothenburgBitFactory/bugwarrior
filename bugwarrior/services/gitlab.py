@@ -172,9 +172,9 @@ class GitlabIssue(Issue):
     # Override the method from parent class
     def get_priority(self):
         default_priority_map = {
-        'todo': self.origin['default_todo_priority'],
-        'merge_request': self.origin['default_mr_priority'],
-        'issue': self.origin['default_issue_priority']}
+            'todo': self.origin['default_todo_priority'],
+            'merge_request': self.origin['default_mr_priority'],
+            'issue': self.origin['default_issue_priority']}
 
         type_str = self.extra['type']
         default_priority = self.origin['default_priority']
@@ -220,7 +220,6 @@ class GitlabIssue(Issue):
             author = author['username']
         if assignee:
             assignee = assignee['username']
-
 
         self.title = title
 
@@ -309,11 +308,11 @@ class GitlabService(IssueService, ServiceClient):
         }
 
     def get_owner(self, issue):
-        if issue[1]['assignee'] != None and issue[1]['assignee']['username']:
+        if issue[1]['assignee'] is not None and issue[1]['assignee']['username']:
             return issue[1]['assignee']['username']
 
     def get_author(self, issue):
-        if issue[1]['author'] != None and issue[1]['author']['username']:
+        if issue[1]['author'] is not None and issue[1]['author']['username']:
             return issue[1]['author']['username']
 
     def filter_repos(self, repo):
@@ -500,7 +499,7 @@ class GitlabService(IssueService, ServiceClient):
                 all_repos.append(item)
 
         else:
-            querystring = { 'simple': True }
+            querystring = {'simple': True}
             if self.config.membership:
                 querystring['membership'] = True
             if self.config.owned:
@@ -535,8 +534,8 @@ class GitlabService(IssueService, ServiceClient):
             log.debug(" Pruned down to %i merge requests.", len(merge_requests))
 
             yield from self._get_issue_objs(merge_requests,
-                                              'merge_request',
-                                              repo_map)
+                                            'merge_request',
+                                            repo_map)
 
         if self.config.include_todos:
             todos = self.get_todos()
