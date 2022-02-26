@@ -139,7 +139,7 @@ def _parse_sprint_string(sprint):
         ViewId=1173,state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4
         55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]
     """
-    entries = sprint[sprint.index('[')+1:sprint.index(']')].split('=')
+    entries = sprint[sprint.index('[') + 1:sprint.index(']')].split('=')
     fields = sum((entry.rsplit(',', 1) for entry in entries), [])
     return dict(zip(fields[::2], fields[1::2]))
 
@@ -247,7 +247,8 @@ class JiraIssue(Issue):
         if self.extra['extra_fields'] is None:
             return {}
 
-        return {extra_field.label: extra_field.extract_value(self.record['fields']) for extra_field in self.extra['extra_fields']}
+        return {extra_field.label: extra_field.extract_value(
+            self.record['fields']) for extra_field in self.extra['extra_fields']}
 
     def get_entry(self):
         created_at = self.record['fields']['created']

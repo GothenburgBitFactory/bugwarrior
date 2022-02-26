@@ -28,6 +28,7 @@ class TeamworkClient(ServiceClient):
         response = requests.get(self.host + endpoint, auth=(self.token, ""), params=data)
         return self.json_response(response)
 
+
 class TeamworkIssue(Issue):
     URL = 'teamwork_url'
     TITLE = 'teamwork_title'
@@ -93,8 +94,6 @@ class TeamworkIssue(Issue):
 
     def to_taskwarrior(self):
         task_url = self.get_task_url()
-        description = self.record.get("content", "")
-        parent_id = self.record["parentTaskId"]
         status = self.record["status"]
 
         due = self.parse_date(self.record.get('due-date'))
@@ -124,6 +123,7 @@ class TeamworkIssue(Issue):
             self.ID: int(self.record["id"]),
         }
 
+
 class TeamworkService(IssueService):
     ISSUE_CLASS = TeamworkIssue
     CONFIG_SCHEMA = TeamworkConfig
@@ -142,7 +142,6 @@ class TeamworkService(IssueService):
                 comments = self.client.call_api("GET", endpoint)
                 comment_list = []
                 for comment in comments["comments"]:
-                    url = self.config.host + "/#/tasks/" + str(issue["id"])
                     author = "{first} {last}".format(
                         first=comment["author-firstname"],
                         last=comment["author-lastname"],
@@ -158,7 +157,7 @@ class TeamworkService(IssueService):
             "This service has not implemented support for 'only_if_assigned'.")
 
     def issues(self):
-        response = self.client.call_api("GET", "/tasks.json")#, data= { "responsible-party-ids": self.user_id })
+        response = self.client.call_api("GET", "/tasks.json")
         for issue in response["todo-items"]:
             # Determine if issue is need by if following comments, changes or assigned
             if issue["userFollowingComments"] or issue["userFollowingChanges"]\

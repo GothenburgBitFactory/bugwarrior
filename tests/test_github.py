@@ -4,7 +4,6 @@ from unittest import TestCase
 import pytz
 import responses
 
-from bugwarrior import config
 from bugwarrior.services.github import (
     GithubConfig, GithubService, GithubClient)
 
@@ -119,7 +118,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             json=[ARBITRARY_ISSUE])
 
         self.add_response(
-            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',
+            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',  # noqa: E501
             json=[{
                 'user': {'login': 'arbitrary_login'},
                 'body': 'Arbitrary comment.'
@@ -130,7 +129,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'annotations': ['@arbitrary_login - Arbitrary comment.'],
-            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
+            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',  # noqa: E501
             'entry': ARBITRARY_CREATED,
             'end': ARBITRARY_CLOSED,
             'githubbody': 'Something',
@@ -179,7 +178,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
             json={'items': [ARBITRARY_ISSUE]})
 
         self.add_response(
-            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',
+            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',  # noqa: E501
             json=[{
                 'user': {'login': 'arbitrary_login'},
                 'body': 'Arbitrary comment.'
@@ -189,7 +188,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
 
         expected = {
             'annotations': ['@arbitrary_login - Arbitrary comment.'],
-            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
+            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',  # noqa: E501
             'entry': ARBITRARY_CREATED,
             'end': ARBITRARY_CLOSED,
             'githubbody': 'Something',

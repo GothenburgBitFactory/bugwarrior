@@ -1,5 +1,3 @@
-import unittest
-
 from dateutil.parser import parse as parse_date
 import responses
 
@@ -20,7 +18,7 @@ class TestTrelloIssue(ServiceTest):
         "url": "https://trello.com/c/AAaBBbb/42-so-long",
         "labels": [{'name': "foo"}, {"name": "bar"}],
         "desc": "some description",
-        }
+    }
 
     def setUp(self):
         super().setUp()
@@ -58,12 +56,12 @@ class TestTrelloService(ConfigTest):
     CARD3 = {'id': 'K4rD', 'name': 'Card 3', 'members': []}
     LIST1 = {'id': 'L15T', 'name': 'List 1'}
     LIST2 = {'id': 'ZZZZ', 'name': 'List 2'}
-    COMMENT1 = { "type": "commentCard",
-                 "data": { "text": "Preums" },
-                 "memberCreator": { "username": "luidgi" } }
-    COMMENT2 = { "type": "commentCard",
-                 "data": { "text": "Deuz" },
-                 "memberCreator": { "username": "mario" } }
+    COMMENT1 = {"type": "commentCard",
+                "data": {"text": "Preums"},
+                "memberCreator": {"username": "luidgi"}}
+    COMMENT2 = {"type": "commentCard",
+                "data": {"text": "Deuz"},
+                "memberCreator": {"username": "mario"}}
 
     def setUp(self):
         super().setUp()
@@ -206,7 +204,7 @@ class TestTrelloService(ConfigTest):
             'trellourl': 'https://trello.com/c/AAaBBbb/42-so-long',
             'annotations': [
                 "@luidgi - Preums",
-                "@mario - Deuz" ],
+                "@mario - Deuz"],
             'tags': []}
         actual = next(issues).get_taskwarrior_record()
         self.assertEqual(expected, actual)
@@ -228,10 +226,8 @@ class TestTrelloService(ConfigTest):
         self.assertValidationError(
             '[mytrello]\ntrello.api_key  <- field required')
 
-
     def test_keyring_service(self):
         """ Checks that the keyring service name """
         conf = self.validate()
         keyring_service = TrelloService.get_keyring_service(conf['mytrello'])
         self.assertEqual("trello://XXXX@trello.com", keyring_service)
-

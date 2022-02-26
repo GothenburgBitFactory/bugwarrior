@@ -66,7 +66,7 @@ class BugzillaIssue(Issue):
         BUG_ID: {
             'type': 'numeric',
             'label': 'Bugzilla Bug ID',
-       },
+        },
         NEEDINFO: {
             'type': 'date',
             'label': 'Bugzilla Needinfo',

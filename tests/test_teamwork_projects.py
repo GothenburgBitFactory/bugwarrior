@@ -1,5 +1,5 @@
 from .base import ServiceTest, AbstractServiceTest
-from bugwarrior.services.teamwork_projects import TeamworkService, TeamworkClient
+from bugwarrior.services.teamwork_projects import TeamworkService
 
 import responses
 import datetime
@@ -27,7 +27,7 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
             }
         )
         self.service = self.get_mock_service(TeamworkService)
-        self.arbitrary_issue = { 
+        self.arbitrary_issue = {
             "todo-items": [{
                 "id": 5,
                 "comments-count": 2,
@@ -64,29 +64,28 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
         self.arbitrary_comments = {
             "comments": [
                 {
-                  "project-id": "999",
-                  "author-lastname": "User",
-                  "datetime": "2014-03-31T13:03:29Z",
-                  "author_id": "999",
-                  "id": "999",
-                  "company-name": "Test Company",
-                  "last-changed-on": "",
-                  "company-id": "999",
-                  "project-name": "demo",
-                  "body": "A test comment",
-                  "commentNo": "1",
-                  "author-firstname": "Demo",
-                  "comment-link": "tasks/436523?c=93",
-                  "author-id": "999"
+                    "project-id": "999",
+                    "author-lastname": "User",
+                    "datetime": "2014-03-31T13:03:29Z",
+                    "author_id": "999",
+                    "id": "999",
+                    "company-name": "Test Company",
+                    "last-changed-on": "",
+                    "company-id": "999",
+                    "project-name": "demo",
+                    "body": "A test comment",
+                    "commentNo": "1",
+                    "author-firstname": "Demo",
+                    "comment-link": "tasks/436523?c=93",
+                    "author-id": "999"
                 }
             ]
         }
 
-
-
     @responses.activate
     def test_to_taskwarrior(self):
-        issue = self.service.get_issue_for_record(self.arbitrary_issue["todo-items"][0], self.arbitrary_extra)
+        issue = self.service.get_issue_for_record(
+            self.arbitrary_issue["todo-items"][0], self.arbitrary_extra)
         data = self.arbitrary_issue["todo-items"][0]
         expected_data = {
             'project': data["project-name"],
@@ -95,7 +94,6 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
             'entry': datetime.datetime(2018, 12, 12, 10, 6, 31, tzinfo=tzutc()),
             'end': "",
             'modified': datetime.datetime(2019, 1, 16, 11, 0, 44, tzinfo=tzutc()),
-            'annotations': self.arbitrary_extra.get("annotations", ""),
             issue.URL: "https://test.teamwork_projects.com/#/tasks/5",
             issue.TITLE: data["content"],
             issue.DESCRIPTION_LONG: data["description"],
@@ -126,8 +124,7 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
             'entry': datetime.datetime(2018, 12, 12, 10, 6, 31, tzinfo=tzutc()),
             'end': "",
             'modified': datetime.datetime(2019, 1, 16, 11, 0, 44, tzinfo=tzutc()),
-            'annotations': self.arbitrary_extra.get("annotations", ""),
-            'description': '(bw)Is#5 - This is a test issue .. https://test.teamwork_projects.com/#/tasks/5', 
+            'description': '(bw)Is#5 - This is a test issue .. https://test.teamwork_projects.com/#/tasks/5',  # noqa: E501
             issue.URL: "https://test.teamwork_projects.com/#/tasks/5",
             issue.TITLE: data["content"],
             issue.DESCRIPTION_LONG: data["description"],

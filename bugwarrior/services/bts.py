@@ -31,7 +31,6 @@ class BTSConfig(config.ServiceConfig, prefix='bts'):
                 'section requires one of:\nbts.email\nbts.packages')
         return values
 
-
     @pydantic.root_validator
     def udd_needs_email(cls, values):
         if values['udd'] and not values['email']:
@@ -145,7 +144,7 @@ class BTSService(IssueService, ServiceClient):
             'format': 'json',
             'dmd': 1,
             'email1': self.config.email,
-            }
+        }
         if self.config.udd_ignore_sponsor:
             request_params['nosponsor1'] = "on"
         resp = requests.get(UDD_BUGS_SEARCH, request_params)

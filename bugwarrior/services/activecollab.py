@@ -112,7 +112,7 @@ class ActiveCollabIssue(Issue):
             'annotations': self.extra.get('annotations', []),
             self.NAME: self.record.get('name', ''),
             self.BODY: pypandoc.convert_text(self.record.get('body'),
-                                        'md', format='html').rstrip(),
+                                             'md', format='html').rstrip(),
             self.PERMALINK: self.record['permalink'],
             self.TASK_ID: int(self.record.get('task_id')),
             self.PROJECT_NAME: self.record['project'],

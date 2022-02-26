@@ -12,7 +12,7 @@ import typing_extensions
 
 from bugwarrior.services import get_service
 
-from .data import BugwarriorData, get_data_path
+from .data import BugwarriorData
 
 log = logging.getLogger(__name__)
 
@@ -168,6 +168,7 @@ class SchemaBase(pydantic.BaseSettings):
 
 class ValidationErrorEnhancedMessages(list):
     """ Methods loosely adapted from pydantic.error_wrappers. """
+
     def __init__(self, error: pydantic.ValidationError, targets, main_section):
         self.targets: list = targets
         self.main_section: str = main_section

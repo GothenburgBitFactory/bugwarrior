@@ -1,5 +1,4 @@
 import datetime
-import unittest
 
 import pytz
 import responses
@@ -373,7 +372,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'priority': overrides['gitlab.default_todo_priority'],
             'annotations': [],
             'tags': [],
-            'due': None, # currently not parsed for ToDos
+            'due': None,  # currently not parsed for ToDos
             'entry': self.arbitrary_created.replace(microsecond=0),
             issue.URL: self.arbitrary_todo_extra['issue_url'],
             issue.REPO: 'project',
@@ -384,16 +383,16 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             issue.NUMBER: str(self.arbitrary_todo['id']),
             issue.UPDATED_AT: self.arbitrary_updated.replace(microsecond=0),
             issue.CREATED_AT: self.arbitrary_created.replace(microsecond=0),
-            issue.DUEDATE: None, # Currently not parsed for ToDos
+            issue.DUEDATE: None,  # Currently not parsed for ToDos
             issue.DESCRIPTION: self.arbitrary_todo['body'],
             issue.MILESTONE: None,
             issue.UPVOTES: 0,
             issue.DOWNVOTES: 0,
             issue.WORK_IN_PROGRESS: 0,
             issue.AUTHOR: 'john_smith',
-            issue.ASSIGNEE: None, # Currently not parsed for ToDos
+            issue.ASSIGNEE: None,  # Currently not parsed for ToDos
             issue.NAMESPACE: 'arbitrary_namespace',
-            issue.WEIGHT: None, # Currently not parsed for ToDos
+            issue.WEIGHT: None,  # Currently not parsed for ToDos
         }
         actual_output = issue.to_taskwarrior()
 

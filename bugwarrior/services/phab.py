@@ -84,7 +84,7 @@ class PhabricatorIssue(Issue):
     @property
     def priority(self):
         return self.PRIORITY_MAP.get(self.record.get('priority')) \
-               or self.origin['default_priority']
+            or self.origin['default_priority']
 
 
 class PhabricatorService(IssueService):
@@ -123,10 +123,12 @@ class PhabricatorService(IssueService):
                     tasks_author = self.api.maniphest.query(
                         status='status-open',
                         authorPHIDs=self.config.user_phids)
-                    tasks = list(tasks_owner.items()) + list(tasks_cc.items()) + list(tasks_author.items())
+                    tasks = list(tasks_owner.items()) + list(tasks_cc.items()) + \
+                        list(tasks_author.items())
                     # Delete duplicates
                     seen = set()
-                    tasks = [item for item in tasks if str(item[1]) not in seen and not seen.add(str(item[1]))]
+                    tasks = [item for item in tasks if str(
+                        item[1]) not in seen and not seen.add(str(item[1]))]
                 if self.config.project_phids:
                     tasks = self.api.maniphest.query(
                         status='status-open',
@@ -178,7 +180,7 @@ class PhabricatorService(IssueService):
             extra = {
                 'project': project,
                 'type': 'issue',
-                #'annotations': self.annotations(phid, issue)
+                # 'annotations': self.annotations(phid, issue)
             }
 
             yield self.get_issue_for_record(task, extra)
@@ -237,7 +239,7 @@ class PhabricatorService(IssueService):
             extra = {
                 'project': project,
                 'type': 'pull_request',
-                #'annotations': self.annotations(phid, issue)
+                # 'annotations': self.annotations(phid, issue)
             }
             yield self.get_issue_for_record(diff, extra)
 

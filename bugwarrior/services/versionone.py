@@ -202,7 +202,7 @@ class VersionOneService(IssueService):
     @staticmethod
     def get_keyring_service(config):
         parsed_address = parse.urlparse(config.base_uri)
-        return f"versionone://%s@%s%s" % (
+        return "versionone://%s@%s%s" % (
             config.username,
             parsed_address.netloc,
             parsed_address.path

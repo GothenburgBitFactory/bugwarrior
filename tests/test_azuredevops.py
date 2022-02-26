@@ -3,7 +3,6 @@ from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
-from bugwarrior import config
 from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.azuredevops import (
     AzureDevopsService,
@@ -16,40 +15,40 @@ from .base import AbstractServiceTest, ConfigTest, ServiceTest
 TEST_ISSUE = {
     "_links": {
         "fields": {
-            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/fields"
+            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/fields"  # noqa: E501
         },
         "html": {
-            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1"
+            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1"  # noqa: E501
         },
         "self": {
-            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1"
+            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1"  # noqa: E501
         },
         "workItemComments": {
-            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/comments"
+            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/comments"  # noqa: E501
         },
         "workItemRevisions": {
-            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/revisions"
+            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/revisions"  # noqa: E501
         },
         "workItemType": {
-            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItemTypes/Impediment"
+            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItemTypes/Impediment"  # noqa: E501
         },
         "workItemUpdates": {
-            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/updates"
+            "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/updates"  # noqa: E501
         },
     },
     "fields": {
         "Microsoft.VSTS.Common.ClosedBy": {
             "_links": {
                 "avatar": {
-                    "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"
+                    "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"  # noqa: E501
                 }
             },
             "descriptor": "msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
             "displayName": "testuser1",
             "id": "28ff094b-06b7-6380-98b4-8206587d382b",
-            "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
+            "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",  # noqa: E501
             "uniqueName": "testuser1@example.com",
-            "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",
+            "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",  # noqa: E501
         },
         "Microsoft.VSTS.Common.ClosedDate": "2020-07-08T19:55:46.113Z",
         "Microsoft.VSTS.Common.Priority": 2,
@@ -58,43 +57,43 @@ TEST_ISSUE = {
         "System.AssignedTo": {
             "_links": {
                 "avatar": {
-                    "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"
+                    "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"  # noqa: E501
                 }
             },
             "descriptor": "msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
             "displayName": "testuser1",
             "id": "28ff094b-06b7-6380-98b4-8206587d382b",
-            "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
+            "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",  # noqa: E501
             "uniqueName": "testuser1@example.com",
-            "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",
+            "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",  # noqa: E501
         },
         "System.ChangedBy": {
             "_links": {
                 "avatar": {
-                    "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"
+                    "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"  # noqa: E501
                 }
             },
             "descriptor": "msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
             "displayName": "testuser1",
             "id": "28ff094b-06b7-6380-98b4-8206587d382b",
-            "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
+            "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",  # noqa: E501
             "uniqueName": "testuser1@example.com",
-            "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",
+            "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",  # noqa: E501
         },
         "System.ChangedDate": "2020-07-08T19:55:46.113Z",
         "System.CommentCount": 1,
         "System.CreatedBy": {
             "_links": {
                 "avatar": {
-                    "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MTU2MzZhMTEtZDA2Ny03ZWE5LTllNzItNWQ5ODhjMTYzMWM0"
+                    "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MTU2MzZhMTEtZDA2Ny03ZWE5LTllNzItNWQ5ODhjMTYzMWM0"  # noqa: E501
                 }
             },
             "descriptor": "msa.MTU2MzZhMTEtZDA2Ny03ZWE5LTllNzItNWQ5ODhjMTYzMWM0",
             "displayName": "testuser2",
             "id": "15636a11-d067-6ea9-9e72-5d988c1631c4",
-            "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MTU2MzZhMTEtZDA2Ny03ZWE5LTllNzItNWQ5ODhjMTYzMWM0",
+            "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MTU2MzZhMTEtZDA2Ny03ZWE5LTllNzItNWQ5ODhjMTYzMWM0",  # noqa: E501
             "uniqueName": "testuser2@example.com",
-            "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/15636a11-d067-6ea9-9e72-5d988c1631c4",
+            "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/15636a11-d067-6ea9-9e72-5d988c1631c4",  # noqa: E501
         },
         "System.CreatedDate": "2020-07-08T17:31:46.493Z",
         "System.Description": "<h1> This Description has some html in it </h1>",
@@ -107,7 +106,7 @@ TEST_ISSUE = {
     },
     "id": 1,
     "rev": 4,
-    "url": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1",
+    "url": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1",  # noqa: E501
 }
 
 
@@ -199,7 +198,6 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
         actual_output = issue.to_taskwarrior()
         self.assertEqual(actual_output, expected)
 
-
     def test_issues(self):
         expected = {
             "project": None,
@@ -210,7 +208,7 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "adotitle": "Example Title",
             "adodescription": " This Description has some html in it ",
             "adoid": 1,
-            "adourl": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",
+            "adourl": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",  # noqa: E501
             "adotype": "Impediment",
             "adostate": "Closed",
             "adoactivity": "",
@@ -218,7 +216,7 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "adoremainingwork": None,
             "adoparent": None,
             "adonamespace": "test_organization\\test_project",
-            "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',
+            "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',  # noqa: E501
             "tags": []
         }
         issue = next(self.service.issues())

@@ -154,9 +154,9 @@ class GithubClient(ServiceClient):
             return dict()
 
         return {
-                part.split('; ')[1][5:-1]:
-                part.split('; ')[0][1:-1]
-             for part in field.split(', ')
+            part.split('; ')[1][5:-1]:
+            part.split('; ')[0][1:-1]
+            for part in field.split(', ')
         }
 
 
@@ -475,7 +475,7 @@ class GithubService(IssueService):
             tagParts = tag.split('/')
             projectName = tagParts[1]
             if self.config.project_owner_prefix:
-                projectName = tagParts[0]+"."+projectName
+                projectName = tagParts[0] + "." + projectName
             extra = {
                 'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',

@@ -65,7 +65,9 @@ class TestGmailService(ConfigTest):
             expiry = datetime.utcnow() + timedelta(hours=24)
             grant_response = {"id_token": "idtoken"}
             rapt_token = "reauthprooftoken"
-            mock_refresh_grant.return_value = access_token, refresh_token, expiry, grant_response, rapt_token
+            mock_refresh_grant.return_value = (
+                access_token, refresh_token, expiry, grant_response, rapt_token
+            )
             refreshed_credential = self.service.get_credentials()
         self.assertEqual(refreshed_credential.valid, True)
 
@@ -80,7 +82,7 @@ TEST_THREAD = {
                     {"name": "To", "value": "ct@example.com"},
                     {
                         "name": "Message-ID",
-                        "value": "<CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com>",
+                        "value": "<CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com>",  # noqa: E501
                     },
                 ],
                 "parts": [{}],
@@ -115,7 +117,8 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
 
         mock_api = mock.Mock()
         mock_api().users().labels().list().execute.return_value = {'labels': TEST_LABELS}
-        mock_api().users().threads().list().execute.return_value = {'threads': [{'id': TEST_THREAD['id']}]}
+        mock_api().users().threads().list().execute.return_value = {
+            'threads': [{'id': TEST_THREAD['id']}]}
         mock_api().users().threads().get().execute.return_value = TEST_THREAD
         gmail.GmailService.build_api = mock_api
         self.service = self.get_mock_service(gmail.GmailService, section='test_section')
@@ -129,13 +132,13 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
     def test_to_taskwarrior(self):
         thread = TEST_THREAD
         issue = self.service.get_issue_for_record(
-                thread,
-                gmail.thread_extras(thread, self.service.get_labels()))
+            thread,
+            gmail.thread_extras(thread, self.service.get_labels()))
         expected = {
             'annotations': [],
             'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=tzutc()),
             'gmailthreadid': '1234',
-            'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',
+            'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',  # noqa: E501
             'gmailsnippet': 'Bugwarrior is great',
             'gmaillastsender': 'Foo Bar',
             'tags': {'postit', 'sticky'},
@@ -156,10 +159,10 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
             'annotations': ['@Foo Bar - Regarding Bugwarrior'],
             'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=tzutc()),
             'gmailthreadid': '1234',
-            'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',
+            'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',  # noqa: E501
             'gmailsnippet': 'Bugwarrior is great',
             'gmaillastsender': 'Foo Bar',
-            'description': '(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234',
+            'description': '(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234',  # noqa: E501
             'priority': 'M',
             'tags': {'added', 'postit', 'sticky'},
             'gmailsubject': 'Regarding Bugwarrior',
@@ -174,23 +177,23 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
 
     def test_last_sender(self):
         test_thread = {
-                'messages': [
-                    {
-                        'payload':
+            'messages': [
+                {
+                    'payload':
                         {
                             'headers': [
                                 {'name': 'From', 'value': 'Xyz <xyz@example.com'}
                             ]
                         }
-                    },
-                    {
-                        'payload':
+                },
+                {
+                    'payload':
                         {
                             'headers': [
                                 {'name': 'From', 'value': 'Foo Bar <foobar@example.com'}
                             ]
                         }
-                    },
-                ]
-            }
+                },
+            ]
+        }
         self.assertEqual(gmail.thread_last_sender(test_thread), ('Foo Bar', 'foobar@example.com'))

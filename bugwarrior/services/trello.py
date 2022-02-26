@@ -25,18 +25,6 @@ class TrelloConfig(config.ServiceConfig, prefix='trello'):
     label_template: str = "{{label|replace(' ', '_')}}"
 
 
-class TrelloConfig(config.ServiceConfig, prefix='trello'):
-    service: typing_extensions.Literal['trello']
-    api_key: str
-    token: str
-
-    include_boards: config.ConfigList = config.ConfigList([])
-    include_lists: config.ConfigList = config.ConfigList([])
-    exclude_lists: config.ConfigList = config.ConfigList([])
-    import_labels_as_tags: bool = False
-    label_template: str = "{{label|replace(' ', '_')}}"
-
-
 class TrelloIssue(Issue):
     NAME = 'trellocard'
     CARDID = 'trellocardid'
@@ -116,7 +104,7 @@ class TrelloService(IssueService, ServiceClient):
         return {
             'import_labels_as_tags': self.config.import_labels_as_tags,
             'label_template': self.config.label_template,
-            }
+        }
 
     def issues(self):
         """
@@ -138,7 +126,6 @@ class TrelloService(IssueService, ServiceClient):
             ((c['memberCreator']['username'], c['data']['text']) for c in comments),
             card_json["shortUrl"])
         return annotations
-
 
     def get_boards(self):
         """
