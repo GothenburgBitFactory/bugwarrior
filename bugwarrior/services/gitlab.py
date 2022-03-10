@@ -70,6 +70,191 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
         return values
 
 
+class GitlabClient(ServiceClient):
+    """Abstraction of Gitlab API v4"""
+
+    def __init__(self, host, token, use_https, verify_ssl):
+        if use_https:
+            self.scheme = 'https'
+        else:
+            self.scheme = 'http'
+        self.verify_ssl = verify_ssl
+
+        self.host = host
+        self.token = token
+
+    def _base_url(self):
+        return f"{self.scheme}://{self.host}/api/v4/"
+
+    def _fetch(self, relative_url: str, **kwargs) -> dict:
+        """Perform a fetch operation on the gitlab server
+
+        :param relative_url: This part will be appended to the base api URL for the call
+        :type relative_url: str
+        :param kwargs: will be sent alongside the request.get call
+        :rtype: dict
+        """
+        headers = {'PRIVATE-TOKEN': self.token}
+        url = self._base_url() + relative_url
+
+        if not self.verify_ssl:
+            requests.packages.urllib3.disable_warnings()
+        response = requests.get(
+            url, headers=headers, verify=self.verify_ssl, **kwargs)
+
+        return self.json_response(response)
+
+    def _fetch_paged(self, relative_url: str, page_size: int = 100) -> list:
+        """Make a gitlab REST API call with pagination. Calls will be buffered on pages with size
+        ``page_size``.
+
+        :param relative_url:
+        :type relative_url: str
+        :param page_size: Size of fetch pages. Defaults to 100
+        :type page_size: int
+        :rtype: list
+        """
+        params = {
+            'page': 1,
+            'per_page': page_size,
+        }
+
+        full = []
+        detect_broken_gitlab_pagination = []
+        while True:
+            items = self._fetch(relative_url, params=params)
+            if not items:
+                break
+
+            # XXX: Some gitlab versions have a bug where pagination doesn't
+            # work and instead return the entire result no matter what. Detect
+            # this by seeing if the results are the same as the last time
+            # around and bail if so. Unfortunately, while it is a GitLab bug,
+            # we have to deal with instances where it exists.
+            if items == detect_broken_gitlab_pagination:
+                break
+            detect_broken_gitlab_pagination = items
+
+            full += items
+
+            if len(items) < params['per_page']:
+                break
+            params['page'] += 1
+
+        return full
+
+    def get_repos(self, include_repos: list, only_membership: bool, only_owned: bool) -> list:
+        """Returns a list of repo objects for all repositories accessible. Respects
+        config.include_repos.
+
+        :param include_repos: If set, only those particular repositories will be queried. If a
+        non-empty list is passed, the parameters
+        ``only_membership`` and ``only_owned`` don't have any effect.
+        :type include_repos: list
+        :param only_membership: If set to True, only repos where the user is member to are fetched.
+        :type only_membership: bool
+        :param only_owned: If set to True, only repos the user owns are fetched
+        :type only_owned: bool
+        :rtype: list
+        """
+
+        all_repos = []
+        if include_repos:
+            for repo in include_repos:
+                if repo.startswith("id:"):
+                    repo = repo[3:]
+                indiv_tmpl = 'projects' + '/' + quote(repo, '') + '?simple=true'
+                item = self._fetch(indiv_tmpl)
+                if not item:
+                    break
+
+                all_repos.append(item)
+
+        else:
+            querystring = {'simple': True}
+            if only_membership:
+                querystring['membership'] = True
+            if only_owned:
+                querystring['owned'] = True
+            all_repos = self._fetch_paged('projects' + '?' + urlencode(querystring))
+        return all_repos
+
+    def get_repo(self, repo_id: int) -> dict:
+        """Queries information about a single repository as JSON dictionary
+
+        :param repo_id: Project ID in the Gitlab instance
+        :type repo_id: int
+        :rtype: dict
+        """
+        return self._fetch('projects/' + str(repo_id))
+
+    def get_notes(self, rid: int, issue_type: str, issueid: int) -> list:
+        """Get notes attached to a certain issue / merge_request as list of JSON dictionaries
+
+        :param rid: Project ID in the Gitlab instance
+        :type rid: int
+        :param issue_type: "issues" / "merge_requests / snippets / epics"
+        :type issue_type: str
+        :param issueid: ID of issue
+        :type issueid: int
+        :rtype: list
+        """
+        return self._fetch_paged(f'projects/{rid}/{issue_type}/{issueid}/notes')
+
+    def get_repo_issues(self, rid: int) -> dict:
+        """Get all issues from a repository as JSON dictionary
+
+        :param rid: Project ID in the Gitlab instance
+        :type rid: int
+        :rtype: list
+        """
+        return self.get_issues_from_query('projects/%d/issues?state=opened' % rid)
+
+    def get_repo_merge_requests(self, rid: int) -> dict:
+        """Get all merge_requests from a repository as JSON dictionary
+
+        :param rid: Project ID in the Gitlab instance
+        :type rid: int
+        :rtype: dict
+        """
+        return self.get_issues_from_query('projects/%d/merge_requests?state=opened' % rid)
+
+    def get_issues_from_query(self, query: str) -> dict:
+        """Get objects matching a query. Results will be returned in a dictionary where the key
+        matches their project ID.
+
+        :param query: API query string that should get sent to the server
+        :type query: str
+        :rtype: dict
+        """
+        issues = {}
+        result = []
+        try:
+            result = self._fetch_paged(query)
+        except OSError:
+            # Projects may have this API disabled.
+            pass
+        for issue in result:
+            issues[issue['id']] = (issue['project_id'], issue)
+        return issues
+
+    def get_todos(self) -> list:
+        """Get all todo objects matching a query returned as list of (project_id, todo) tuples
+
+        :rtype: list
+        """
+        query = 'todos?state=pending'
+        todos = []
+        try:
+            fetched_todos = self._fetch_paged(query)
+        except OSError:
+            # Older gitlab versions do not have todo items.
+            return []
+        for todo in fetched_todos:
+            todos.append((todo.get('project'), todo))
+        return todos
+
+
 class GitlabIssue(Issue):
     TITLE = 'gitlabtitle'
     DESCRIPTION = 'gitlabdescription'
@@ -279,7 +464,7 @@ class GitlabIssue(Issue):
         )
 
 
-class GitlabService(IssueService, ServiceClient):
+class GitlabService(IssueService):
     ISSUE_CLASS = GitlabIssue
     CONFIG_SCHEMA = GitlabConfig
 
@@ -287,12 +472,13 @@ class GitlabService(IssueService, ServiceClient):
         super().__init__(*args, **kw)
 
         token = self.get_password('token', self.config.login)
-        self.auth = (self.config.host, token)
-
-        if self.config.use_https:
-            self.scheme = 'https'
-        else:
-            self.scheme = 'http'
+        self.gitlab_client = GitlabClient(
+            host=self.config.host,
+            token=token,
+            use_https=self.config.use_https,
+            verify_ssl=self.config.verify_ssl
+        )
+        self.repo_map = dict()
 
     @staticmethod
     def get_keyring_service(config):
@@ -342,15 +528,11 @@ class GitlabService(IssueService, ServiceClient):
 
         return is_included
 
-    def _get_notes(self, rid, issue_type, issueid):
-        tmpl = '{scheme}://{host}/api/v4/projects/%d/%s/%d/notes' % (rid, issue_type, issueid)
-        return self._fetch_paged(tmpl)
-
     def annotations(self, repo, url, issue_type, issue, issue_obj):
         annotations = []
 
         if self.main_config.annotation_comments:
-            notes = self._get_notes(repo['id'], issue_type, issue['iid'])
+            notes = self.gitlab_client.get_notes(repo['id'], issue_type, issue['iid'])
             annotations = ((
                 n['author']['username'],
                 n['body']
@@ -360,83 +542,6 @@ class GitlabService(IssueService, ServiceClient):
             annotations,
             issue_obj.get_processed_url(url)
         )
-
-    def _fetch(self, tmpl, **kwargs):
-        url = tmpl.format(scheme=self.scheme, host=self.auth[0])
-        headers = {'PRIVATE-TOKEN': self.auth[1]}
-
-        if not self.config.verify_ssl:
-            requests.packages.urllib3.disable_warnings()
-        response = requests.get(
-            url, headers=headers, verify=self.config.verify_ssl, **kwargs)
-
-        return self.json_response(response)
-
-    def _fetch_paged(self, tmpl):
-        params = {
-            'page': 1,
-            'per_page': 100,
-        }
-
-        full = []
-        detect_broken_gitlab_pagination = []
-        while True:
-            items = self._fetch(tmpl, params=params)
-            if not items:
-                break
-
-            # XXX: Some gitlab versions have a bug where pagination doesn't
-            # work and instead return the entire result no matter what. Detect
-            # this by seeing if the results are the same as the last time
-            # around and bail if so. Unfortunately, while it is a GitLab bug,
-            # we have to deal with instances where it exists.
-            if items == detect_broken_gitlab_pagination:
-                break
-            detect_broken_gitlab_pagination = items
-
-            full += items
-
-            if len(items) < params['per_page']:
-                break
-            params['page'] += 1
-
-        return full
-
-    def get_repo_issues(self, rid):
-        tmpl = '{scheme}://{host}/api/v4/projects/%d/issues?state=opened' % rid
-        issues = {}
-        try:
-            repo_issues = self._fetch_paged(tmpl)
-        except OSError:
-            # Projects may have issues disabled.
-            return {}
-        for issue in repo_issues:
-            issues[issue['id']] = (rid, issue)
-        return issues
-
-    def get_repo_merge_requests(self, rid):
-        tmpl = '{scheme}://{host}/api/v4/projects/%d/merge_requests?state=opened' % rid
-        issues = {}
-        try:
-            repo_merge_requests = self._fetch_paged(tmpl)
-        except OSError:
-            # Projects may have merge requests disabled.
-            return {}
-        for issue in repo_merge_requests:
-            issues[issue['id']] = (rid, issue)
-        return issues
-
-    def get_todos(self):
-        tmpl = '{scheme}://{host}/api/v4/todos?state=pending'
-        todos = []
-        try:
-            fetched_todos = self._fetch_paged(tmpl)
-        except OSError:
-            # Older gitlab versions do not have todo items.
-            return {}
-        for todo in fetched_todos:
-            todos.append((todo.get('project'), todo))
-        return todos
 
     def include_todo(self, repos):
         ids = list(r['id'] for r in repos)
@@ -483,30 +588,30 @@ class GitlabService(IssueService, ServiceClient):
 
         return True
 
-    def issues(self):
-        tmpl = '{scheme}://{host}/api/v4/projects'
+    def get_issues_from_projects(self, repos):
+        issues = {}
+        for repo in repos:
+            rid = repo['id']
+            self.repo_map[rid] = repo
+            issues.update(
+                self.gitlab_client.get_repo_issues(rid)
+            )
+        return issues
 
-        all_repos = []
-        if self.config.include_repos and not self.config.include_regex:
-            for repo in self.config.include_repos:
-                if repo.startswith("id:"):
-                    repo = repo[3:]
-                indiv_tmpl = tmpl + '/' + quote(repo, '') + '?simple=true'
-                item = self._fetch(indiv_tmpl)
-                if not item:
-                    break
-
-                all_repos.append(item)
-
-        else:
-            querystring = {'simple': True}
-            if self.config.membership:
-                querystring['membership'] = True
-            if self.config.owned:
-                querystring['owned'] = True
-            all_repos = self._fetch_paged(tmpl + '?' + urlencode(querystring))
-
+    def get_all_repos(self):
+        include_repos = list()
+        if not self.config.include_regex:
+            include_repos = self.config.include_repos
+        all_repos = self.gitlab_client.get_repos(
+            include_repos=include_repos,
+            only_membership=self.config.membership,
+            only_owned=self.config.owned
+        )
         repos = list(filter(self.filter_repos, all_repos))
+        return repos
+
+    def issues(self):
+        repos = self.get_all_repos()
 
         repo_map = {}
         issues = {}
@@ -514,7 +619,7 @@ class GitlabService(IssueService, ServiceClient):
             rid = repo['id']
             repo_map[rid] = repo
             issues.update(
-                self.get_repo_issues(rid)
+                self.gitlab_client.get_repo_issues(rid)
             )
         log.debug(" Found %i issues.", len(issues))
         issues = list(filter(self.include, issues.values()))
@@ -527,7 +632,7 @@ class GitlabService(IssueService, ServiceClient):
             for repo in repos:
                 rid = repo['id']
                 merge_requests.update(
-                    self.get_repo_merge_requests(rid)
+                    self.gitlab_client.get_repo_merge_requests(rid)
                 )
             log.debug(" Found %i merge requests.", len(merge_requests))
             merge_requests = list(filter(self.include, merge_requests.values()))
@@ -538,7 +643,7 @@ class GitlabService(IssueService, ServiceClient):
                                             repo_map)
 
         if self.config.include_todos:
-            todos = self.get_todos()
+            todos = self.gitlab_client.get_todos()
             log.debug(" Found %i todo items.", len(todos))
             if not self.config.include_all_todos:
                 todos = list(filter(self.include_todo(repos), todos))
