@@ -33,6 +33,7 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'
     filter_merge_requests: bool = False
+    include_issues: bool = True
     include_todos: bool = False
     include_all_todos: bool = True
     only_if_author: str = ''
@@ -664,18 +665,19 @@ class GitlabService(IssueService):
         # List of repos will only be queried if needed
         repos = []
 
-        # Issues are always queried
-        if self.config.issue_query:
-            issues = self.gitlab_client.get_issues_from_query(self.config.issue_query)
-        else:
-            if not repos:
-                repos = self.get_all_repos()
-            issues = self.get_issues_from_projects(repos)
+        # Issues
+        if self.config.include_issues:
+            if self.config.issue_query:
+                issues = self.gitlab_client.get_issues_from_query(self.config.issue_query)
+            else:
+                if not repos:
+                    repos = self.get_all_repos()
+                issues = self.get_issues_from_projects(repos)
 
-        log.debug("Found %i issues.", len(issues))
-        issues_filtered = list(filter(self.include, issues.values()))
-        log.debug("Pruned down to %i issues.", len(issues_filtered))
-        yield from self._get_issue_objs(issues_filtered, 'issue')
+            log.debug("Found %i issues.", len(issues))
+            issues_filtered = list(filter(self.include, issues.values()))
+            log.debug("Pruned down to %i issues.", len(issues_filtered))
+            yield from self._get_issue_objs(issues_filtered, 'issue')
 
         # Merge requests
         if self.config.filter_merge_requests:

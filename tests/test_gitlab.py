@@ -805,22 +805,12 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_mrs_from_query(self):
         overrides = {
+            'gitlab.include_issues': 'false',
             'gitlab.include_todos': 'false',
             'gitlab.filter_merge_requests': 'true',
             'gitlab.merge_request_query': 'merge_requests?state=opened'
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
-        self.add_response(
-                'https://my-git.org/api/v4/projects?simple=True&page=1&per_page=100',
-                json=[{
-                    'id': 8,
-                    'path': 'arbitrary_username/project',
-                    'web_url': 'example.com',
-                    "namespace": {
-                        "full_path": "arbitrary_username"
-                    },
-                    'path_with_namespace': 'arbitrary_username/project'
-                }])
         self.add_response(
             'https://my-git.org/api/v4/merge_requests?state=opened&per_page=100&page=1',
             json=[self.data.arbitrary_mr])
@@ -875,22 +865,12 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_todos_from_query(self):
         overrides = {
+            'gitlab.include_issues': 'false',
             'gitlab.filter_merge_requests': 'false',
             'gitlab.include_todos': 'true',
             'gitlab.todo_query': 'todos?state=pending'
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
-        self.add_response(
-                'https://my-git.org/api/v4/projects?simple=True&page=1&per_page=100',
-                json=[{
-                    'id': 8,
-                    'path': 'arbitrary_username/project',
-                    'web_url': 'example.com',
-                    "namespace": {
-                        "full_path": "arbitrary_username"
-                    },
-                    'path_with_namespace': 'arbitrary_username/project'
-                }])
         self.add_response(
             'https://my-git.org/api/v4/todos?state=pending&per_page=100&page=1',
             json=[self.data.arbitrary_todo])
@@ -947,6 +927,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         self.assertEqual(todo.get_taskwarrior_record(), expected)
 
         overrides = {
+            'gitlab.include_issues': 'false',
             'gitlab.filter_merge_requests': 'false',
             'gitlab.include_todos': 'true',
             'gitlab.include_repos': 'arbitrary_namespace/project',
