@@ -133,6 +133,13 @@ to all fields on the Taskwarrior task if needed.
    See :ref:`field_templates` for more details regarding how templates
    are processed.
 
+Include Issues
+++++++++++++++
+
+Issues are included by default, if not configured otherwise. To disable querying of issues, set::
+
+    gitlab.include_issues = False
+
 Include Merge Requests
 ++++++++++++++++++++++
 
