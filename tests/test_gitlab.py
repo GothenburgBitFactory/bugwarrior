@@ -321,7 +321,7 @@ class TestGitlabClient(ServiceTest):
         self.add_response(
             'https://my-git.org/api/v4/projects/8',
             json=self.data.arbitrary_project)
-        result = self.client.get_repo(repo_id=8)
+        result = self.client.get_repo_cached(repo_id=8)
         self.assertEqual(result, self.data.arbitrary_project)
 
     @responses.activate

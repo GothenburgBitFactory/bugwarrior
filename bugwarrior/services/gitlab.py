@@ -83,6 +83,8 @@ class GitlabClient(ServiceClient):
         self.host = host
         self.token = token
 
+        self.repo_cache = {}
+
     def _base_url(self):
         return f"{self.scheme}://{self.host}/api/v4/"
 
@@ -177,9 +179,11 @@ class GitlabClient(ServiceClient):
             if only_owned:
                 querystring['owned'] = True
             all_repos = self._fetch_paged('projects' + '?' + urlencode(querystring))
+        for item in all_repos:
+            self.repo_cache[item['id']] = item
         return all_repos
 
-    def get_repo(self, repo_id: int) -> dict:
+    def _get_repo(self, repo_id: int) -> dict:
         """Queries information about a single repository as JSON dictionary
 
         :param repo_id: Project ID in the Gitlab instance
@@ -187,6 +191,19 @@ class GitlabClient(ServiceClient):
         :rtype: dict
         """
         return self._fetch('projects/' + str(repo_id))
+
+    def get_repo_cached(self, repo_id: int) -> dict:
+        """Get repo information with a repo cache. Repo information will only be fetched the first
+        time information about a certain repository is fetched.
+
+        :param repo_id: numeric id of the project on the Gitlab server
+        :type repo_id: int
+        :rtype: dict
+        """
+        if repo_id not in self.repo_cache:
+            self.repo_cache[repo_id] = self._get_repo(repo_id)
+
+        return self.repo_cache[repo_id]
 
     def get_notes(self, rid: int, issue_type: str, issueid: int) -> list:
         """Get notes attached to a certain issue / merge_request as list of JSON dictionaries
@@ -555,7 +572,7 @@ class GitlabService(IssueService):
         type_plural = issue_type + 's'
 
         for rid, issue in issues:
-            repo = repo_map[rid]
+            repo = self.gitlab_client.get_repo_cached(rid)
             issue['repo'] = repo['path']
             projectName = repo['path']
             if self.config.project_owner_prefix:
@@ -574,6 +591,9 @@ class GitlabService(IssueService):
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
+        if not self.filter_repos(self.gitlab_client.get_repo_cached(issue[0])):
+            return False
+
         if self.config.only_if_assigned:
             owner = self.get_owner(issue)
             include_owners = [self.config.only_if_assigned]
