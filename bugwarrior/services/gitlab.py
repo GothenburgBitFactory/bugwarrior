@@ -42,6 +42,9 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
     use_https: bool = True
     verify_ssl: bool = True
     project_owner_prefix: bool = False
+    issue_query: str = ''
+    merge_request_query: str = ''
+    todo_query: str = ''
 
     @pydantic.root_validator
     def namespace_repo_lists(cls, values):
@@ -255,12 +258,13 @@ class GitlabClient(ServiceClient):
             issues[issue['id']] = (issue['project_id'], issue)
         return issues
 
-    def get_todos(self) -> list:
+    def get_todos(self, query: str) -> list:
         """Get all todo objects matching a query returned as list of (project_id, todo) tuples
 
+        :param query: API query string that should get sent to the server
+        :type query: str
         :rtype: list
         """
-        query = 'todos?state=pending'
         todos = []
         try:
             fetched_todos = self._fetch_paged(query)
@@ -568,7 +572,7 @@ class GitlabService(IssueService):
             return project is None or project['id'] in ids
         return include_todo
 
-    def _get_issue_objs(self, issues, issue_type, repo_map):
+    def _get_issue_objs(self, issues, issue_type):
         type_plural = issue_type + 's'
 
         for rid, issue in issues:
@@ -588,6 +592,31 @@ class GitlabService(IssueService):
             }
             issue_obj.update_extra(extra)
             yield issue_obj
+
+    def _get_todo_objs(self, todos):
+        for project, todo in todos:
+            if project is not None:
+                repo = project
+            else:
+                repo = {
+                    'path': 'the instance',
+                }
+            todo['repo'] = repo['path']
+
+            todo_obj = self.get_issue_for_record(todo)
+            todo_url = todo['target_url']
+            project_name = repo['path']
+            if self.config.project_owner_prefix:
+                project_name = repo['namespace']['path'] + "." + project_name
+            extra = {
+                'issue_url': todo_url,
+                'project': project_name,
+                'namespace': "todo",
+                'type': 'todo',
+                'annotations': [],
+            }
+            todo_obj.update_extra(extra)
+            yield todo_obj
 
     def include(self, issue):
         """ Return true if the issue in question should be included """
@@ -631,64 +660,56 @@ class GitlabService(IssueService):
         return repos
 
     def issues(self):
-        repos = self.get_all_repos()
 
-        repo_map = {}
-        issues = {}
-        for repo in repos:
-            rid = repo['id']
-            repo_map[rid] = repo
-            issues.update(
-                self.gitlab_client.get_repo_issues(rid)
-            )
-        log.debug(" Found %i issues.", len(issues))
-        issues = list(filter(self.include, issues.values()))
-        log.debug(" Pruned down to %i issues.", len(issues))
+        # List of repos will only be queried if needed
+        repos = []
 
-        yield from self._get_issue_objs(issues, 'issue', repo_map)
+        # Issues are always queried
+        if self.config.issue_query:
+            issues = self.gitlab_client.get_issues_from_query(self.config.issue_query)
+        else:
+            if not repos:
+                repos = self.get_all_repos()
+            issues = self.get_issues_from_projects(repos)
 
-        if not self.config.filter_merge_requests:
-            merge_requests = {}
-            for repo in repos:
-                rid = repo['id']
-                merge_requests.update(
-                    self.gitlab_client.get_repo_merge_requests(rid)
-                )
-            log.debug(" Found %i merge requests.", len(merge_requests))
-            merge_requests = list(filter(self.include, merge_requests.values()))
-            log.debug(" Pruned down to %i merge requests.", len(merge_requests))
+        log.debug("Found %i issues.", len(issues))
+        issues_filtered = list(filter(self.include, issues.values()))
+        log.debug("Pruned down to %i issues.", len(issues_filtered))
+        yield from self._get_issue_objs(issues_filtered, 'issue')
 
-            yield from self._get_issue_objs(merge_requests,
-                                            'merge_request',
-                                            repo_map)
+        # Merge requests
+        if self.config.filter_merge_requests:
+            if self.config.merge_request_query:
+                merge_requests = self.gitlab_client.get_issues_from_query(
+                    self.config.merge_request_query)
+            else:
+                if not repos:
+                    repos = self.get_all_repos()
+                merge_requests = {}
+                for repo in repos:
+                    rid = repo['id']
+                    merge_requests.update(
+                        self.gitlab_client.get_repo_merge_requests(rid)
+                    )
+            log.debug("Found %i merge requests.", len(merge_requests))
+            merge_requests_filtered = list(filter(self.include, merge_requests.values()))
+            log.debug("Pruned down to %i merge requests.", len(merge_requests_filtered))
 
+            yield from self._get_issue_objs(merge_requests_filtered, 'merge_request')
+
+        # ToDos
         if self.config.include_todos:
-            todos = self.gitlab_client.get_todos()
+            query = 'todos?state=pending'
+            if self.config.todo_query:
+                query = self.config.todo_query
+
+            todos = self.gitlab_client.get_todos(query)
             log.debug(" Found %i todo items.", len(todos))
             if not self.config.include_all_todos:
-                todos = list(filter(self.include_todo(repos), todos))
-            log.debug(" Pruned down to %i todos.", len(todos))
-
-            for project, todo in todos:
-                if project is not None:
-                    repo = project
-                else:
-                    repo = {
-                        'path': 'the instance',
-                    }
-                todo['repo'] = repo['path']
-
-                todo_obj = self.get_issue_for_record(todo)
-                todo_url = todo['target_url']
-                projectName = repo['path']
-                if self.config.project_owner_prefix:
-                    projectName = repo['namespace']['path'] + "." + projectName
-                extra = {
-                    'issue_url': todo_url,
-                    'project': projectName,
-                    'namespace': "todo",
-                    'type': 'todo',
-                    'annotations': [],
-                }
-                todo_obj.update_extra(extra)
-                yield todo_obj
+                if not repos:
+                    repos = self.get_all_repos()
+                todos_filtered = list(filter(self.include_todo(repos), todos))
+            else:
+                todos_filtered = todos
+            log.debug(" Pruned down to %i todos.", len(todos_filtered))
+            yield from self._get_todo_objs(todos_filtered)
