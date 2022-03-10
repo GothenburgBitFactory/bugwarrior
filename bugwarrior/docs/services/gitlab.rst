@@ -173,6 +173,33 @@ you can configure individual priorities for each::
     gitlab.default_todo_priority = M
     gitlab.default_mr_priority = H
 
+
+Custom query strings
+++++++++++++++++++++
+
+The Gitlab REST API allows many more configuration options than the ones provided
+by the options explained above. If you want to further customize calls, you can set for example::
+
+    gitlab.issue_query = issues?search=foo&in=title
+    gitlab.merge_request_query = merge_requests?state=opened&scope=all&reviewer_username=myusername
+    gitlab.todo_query = todos?state=pending&action=directly_addressed
+
+
+These can be combined with the other configuration options above, but queries are only evaluated if
+the respective category (issue, merge_request, todo) is enabled.
+
+Note: Depending in the scope you are interested in, this query-based approach can be much faster
+than using the "default queries". For example, imagine that you want to query all issues assigned
+to your user.
+
+This can be achieved by leaving the ``gitlab.include_repos`` configuration value empty and
+setting ``gitlab.only_assigned`` to ``True``. This will result in querying all repos your user has
+access to, which might take a very long time.
+
+Alternatively, you could set ``gitlab.issue_query =
+issues?assignee_username=myusername&state=opened&scope=all``, which will fetch the assigned issues
+first and then only fetch the projects for which issues have been found.
+
 Use HTTP
 ++++++++
 
