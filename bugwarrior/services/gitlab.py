@@ -680,7 +680,7 @@ class GitlabService(IssueService):
             yield from self._get_issue_objs(issues_filtered, 'issue')
 
         # Merge requests
-        if self.config.filter_merge_requests:
+        if not self.config.filter_merge_requests:
             if self.config.merge_request_query:
                 merge_requests = self.gitlab_client.get_issues_from_query(
                     self.config.merge_request_query)
