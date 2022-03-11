@@ -19,6 +19,9 @@ DefaultPriority = typing.Optional[
 
 
 class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
+    _DEPRECATE_FILTER_MERGE_REQUESTS = True
+    filter_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
+
     service: typing_extensions.Literal['gitlab']
     login: str
     token: str
@@ -32,7 +35,7 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
     owned: bool = False
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'
-    filter_merge_requests: bool = False
+    include_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
     include_issues: bool = True
     include_todos: bool = False
     include_all_todos: bool = True
@@ -680,7 +683,7 @@ class GitlabService(IssueService):
             yield from self._get_issue_objs(issues_filtered, 'issue')
 
         # Merge requests
-        if not self.config.filter_merge_requests:
+        if self.config.include_merge_requests:
             if self.config.merge_request_query:
                 merge_requests = self.gitlab_client.get_issues_from_query(
                     self.config.merge_request_query)

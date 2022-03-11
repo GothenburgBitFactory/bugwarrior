@@ -313,3 +313,17 @@ class ServiceConfig(_ServiceConfig,  # type: ignore  # (dynamic base class)
         typing_extensions.Literal['L', 'M', 'H']] = 'M'
     add_tags: ConfigList = ConfigList([])
     description_template: str = ''
+
+    @pydantic.root_validator
+    def deprecate_filter_merge_requests(cls, values):
+        if hasattr(cls, '_DEPRECATE_FILTER_MERGE_REQUESTS'):
+            if values['filter_merge_requests'] != 'Undefined':
+                if values['include_merge_requests'] != 'Undefined':
+                    raise ValueError(
+                        'filter_merge_requests and include_merge_requests are incompatible.')
+                values['include_merge_requests'] = not values['filter_merge_requests']
+                log.warning(
+                    'filter_merge_requests is deprecated in favor of include_merge_requests')
+            elif values['include_merge_requests'] == 'Undefined':
+                values['include_merge_requests'] = True
+        return values

@@ -143,11 +143,10 @@ Issues are included by default, if not configured otherwise. To disable querying
 Include Merge Requests
 ++++++++++++++++++++++
 
-Although you can filter issues using :ref:`common_configuration_options`,
-merge requests are not filtered by default.  You can filter merge requests
-by adding the following configuration option::
+Merge requests are included by default. You can exclude them by disabling
+this feature::
 
-    gitlab.filter_merge_requests = True
+    bitbucket.include_merge_requests = False
 
 Include Todo Items
 ++++++++++++++++++

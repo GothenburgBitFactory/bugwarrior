@@ -60,7 +60,7 @@ class TestValidation(ConfigTest):
         super().setUp()
         self.config = load.BugwarriorConfigParser()
         self.config.add_section('general')
-        self.config.set('general', 'targets', 'my_service, my_kan')
+        self.config.set('general', 'targets', 'my_service, my_kan, my_gitlab')
         self.config.add_section('my_service')
         self.config.set('my_service', 'service', 'github')
         self.config.set('my_service', 'github.login', 'ralph')
@@ -72,6 +72,11 @@ class TestValidation(ConfigTest):
             'my_kan', 'kanboard.url', 'https://kanboard.example.org')
         self.config.set('my_kan', 'kanboard.username', 'ralph')
         self.config.set('my_kan', 'kanboard.password', 'abc123')
+        self.config.add_section('my_gitlab')
+        self.config.set('my_gitlab', 'service', 'gitlab')
+        self.config.set('my_gitlab', 'gitlab.host', 'my-git.org')
+        self.config.set('my_gitlab', 'gitlab.login', 'arbitrary_login')
+        self.config.set('my_gitlab', 'gitlab.token', 'arbitrary_token')
 
     def test_valid(self):
         self.validate()
@@ -154,3 +159,17 @@ class TestValidation(ConfigTest):
             'my_kan', 'kanboard.url', 'https://kanboard.example.org/')
         conf = self.validate()
         self.assertEqual(conf['my_kan'].url, 'https://kanboard.example.org')
+
+    def test_deprecated_filter_merge_requests(self):
+        conf = self.validate()
+        self.assertEqual(conf['my_gitlab'].include_merge_requests, True)
+
+        self.config.set('my_gitlab', 'gitlab.filter_merge_requests', 'true')
+        conf = self.validate()
+        self.assertEqual(conf['my_gitlab'].include_merge_requests, False)
+
+    def test_deprecated_filter_merge_requests_and_include_merge_requests(self):
+        self.config.set('my_gitlab', 'gitlab.filter_merge_requests', 'true')
+        self.config.set('my_gitlab', 'gitlab.include_merge_requests', 'true')
+        self.assertValidationError(
+            '[my_gitlab]  <- filter_merge_requests and include_merge_requests are incompatible.')
