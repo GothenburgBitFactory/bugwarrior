@@ -63,14 +63,13 @@ In this example, ``noisy_repository`` is the repository you would
 Please note that the API returns all lowercase names regardless of
 the case of the repository in the web interface.
 
-Filter Merge Requests
-+++++++++++++++++++++
+Include Merge Requests
+++++++++++++++++++++++
 
-Although you can filter issues using :ref:`common_configuration_options`,
-pull requests are not filtered by default.  You can filter pull requests
-by adding the following configuration option::
+Merge requests are included by default. You can exclude them by disabling
+this feature::
 
-    bitbucket.filter_merge_requests = True
+    bitbucket.include_merge_requests = False
 
 Project Owner Prefix
 ++++++++++++++++++++

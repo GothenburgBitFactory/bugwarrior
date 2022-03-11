@@ -807,7 +807,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         overrides = {
             'gitlab.include_issues': 'false',
             'gitlab.include_todos': 'false',
-            'gitlab.filter_merge_requests': 'false',
+            'gitlab.include_merge_requests': 'true',
             'gitlab.merge_request_query': 'merge_requests?state=opened'
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
@@ -866,7 +866,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     def test_todos_from_query(self):
         overrides = {
             'gitlab.include_issues': 'false',
-            'gitlab.filter_merge_requests': 'true',
+            'gitlab.include_merge_requests': 'false',
             'gitlab.include_todos': 'true',
             'gitlab.todo_query': 'todos?state=pending'
         }
@@ -928,7 +928,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
         overrides = {
             'gitlab.include_issues': 'false',
-            'gitlab.filter_merge_requests': 'true',
+            'gitlab.include_merge_requests': 'false',
             'gitlab.include_todos': 'true',
             'gitlab.include_repos': 'arbitrary_namespace/project',
             'gitlab.include_all_todos': 'false'

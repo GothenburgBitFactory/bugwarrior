@@ -1,14 +1,19 @@
+import logging
+import typing
+
 import requests
 import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
-import logging
 log = logging.getLogger(__name__)
 
 
 class BitbucketConfig(config.ServiceConfig, prefix='bitbucket'):
+    _DEPRECATE_FILTER_MERGE_REQUESTS = True
+    filter_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
+
     service: typing_extensions.Literal['bitbucket']
 
     username: str
@@ -20,7 +25,7 @@ class BitbucketConfig(config.ServiceConfig, prefix='bitbucket'):
 
     include_repos: config.ConfigList = config.ConfigList([])
     exclude_repos: config.ConfigList = config.ConfigList([])
-    filter_merge_requests: bool = False
+    include_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
     project_owner_prefix: bool = False
 
 
@@ -211,7 +216,7 @@ class BitbucketService(IssueService, ServiceClient):
             issue_obj.update_extra(extras)
             yield issue_obj
 
-        if not self.config.filter_merge_requests:
+        if self.config.include_merge_requests:
             pull_requests = sum(
                 (self.fetch_pull_requests(repo) for repo in repo_tags), [])
             log.debug(" Found %i total.", len(pull_requests))
