@@ -46,7 +46,7 @@ Optional options include:
 
 In addition to the ``[general]`` section, sections may be named
 ``[flavor.myflavor]`` and may be selected using the ``--flavor`` option to
-``bugwarrior-pull``. This section will then be used rather than the
+``bugwarrior pull``. This section will then be used rather than the
 ``[general]`` section.
 
 A more-detailed example configuration can be found at
@@ -132,7 +132,7 @@ you can enter the following values to control where to gather your password
 from:
 
 ``password = @oracle:use_keyring``
-  Retrieve a password from the system keyring.  The ``bugwarrior-vault``
+  Retrieve a password from the system keyring.  The ``bugwarrior vault``
   command line tool can be used to manage your passwords as stored in your
   keyring (say to reset them or clear them).  Extra dependencies must be
   installed with `pip install bugwarrior[keyring]` to enable this feature.
@@ -147,8 +147,8 @@ from:
 Hooks
 -----
 
-Use hooks to run commands prior to importing from bugwarrior-pull.
-bugwarrior-pull will run the commands in the order that they are specified
+Use hooks to run commands prior to importing from ``bugwarrior pull``.
+``bugwarrior pull`` will run the commands in the order that they are specified
 below.
 
 To use hooks, add a ``[hooks]`` section to your configuration, mapping
@@ -163,7 +163,7 @@ Hook options:
 
 * ``pre_import``: The pre_import hook is invoked after all issues have been pulled
   from remote sources, but before they are synced to the TW db. If your
-  pre_import script has a non-zero exit code, the ``bugwarrior-pull`` command will
+  pre_import script has a non-zero exit code, the ``bugwarrior pull`` command will
   exit early.
 
 
@@ -172,7 +172,7 @@ Notifications
 
 Add a ``[notifications]`` section to your configuration to receive notifications
 when a bugwarrior pull runs, and when issues are created, updated, or deleted
-by ``bugwarrior-pull``::
+by ``bugwarrior pull``::
 
   [notifications]
   notifications = True

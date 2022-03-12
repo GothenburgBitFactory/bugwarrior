@@ -144,7 +144,7 @@ Set ``jira.body_length``` to limit the size of the description UDA or include ``
 When using API token
 ++++++++++++++++++++
 
-Some hosts only support API tokens to authenticate. If so, ``bugwarrior-pull`` will respond with ``Err: 401 Unauthorized``. `Create a token`_. Handle the token like it is a password.
+Some hosts only support API tokens to authenticate. If so, ``bugwarrior pull`` will respond with ``Err: 401 Unauthorized``. `Create a token`_. Handle the token like it is a password.
 
 Note that if given a correct API token and an incorrect username, Jira will authenticate successfully but not allow access to any issues.
 
@@ -153,7 +153,7 @@ Note that if given a correct API token and an incorrect username, Jira will auth
 When using Personal Access Token
 ++++++++++++++++++++++++++++++++
 
-Some hosts only support Personal Access Tokens (PATs) to authenticate. If so, ``bugwarrior-pull`` will respond with ``Err: 401 Unauthorized``. Create a PAT as described `here`_.
+Some hosts only support Personal Access Tokens (PATs) to authenticate. If so, ``bugwarrior pull`` will respond with ``Err: 401 Unauthorized``. Create a PAT as described `here`_.
 
 Put the PAT in the ``jira.PAT`` field and do not set ``jira.password``.
 

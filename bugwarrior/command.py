@@ -43,7 +43,26 @@ def _try_load_config(main_section, interactive=False):
         sys.exit(1)
 
 
-@click.command()
+class AliasedCli(click.Group):
+    """
+    Integrates subcommands into a top-level bugwarrior command.
+
+    By implementing this as an alias, we can maintain backwards compatibility
+    with the old cli api.
+    """
+    def list_commands(self, ctx):
+        return ctx.command.commands.keys()
+
+    def get_command(self, ctx, name):
+        return ctx.command.commands[name]
+
+
+@click.command(cls=AliasedCli)
+def cli():
+    pass
+
+
+@cli.command()
 @click.option('--dry-run', is_flag=True)
 @click.option('--flavor', default=None, help='The flavor to use')
 @click.option('--interactive', is_flag=True)
@@ -83,7 +102,7 @@ def pull(dry_run, flavor, interactive, debug):
         log.exception("Aborted (%s)" % e)
 
 
-@click.group()
+@cli.group()
 def vault():
     """ Password/keyring management for bugwarrior.
 
@@ -140,9 +159,12 @@ def set(target, username):
     print("Password set for %s, %s" % (target, username))
 
 
-@click.command()
+@cli.command()
 @click.option('--flavor', default=None, help='The flavor to use')
 def uda(flavor):
+    """
+    List bugwarrior-managed uda's.
+    """
     main_section = _get_section_name(flavor)
     conf = _try_load_config(main_section)
     print("# Bugwarrior UDAs")

@@ -1,7 +1,8 @@
 #
-from bugwarrior.command import pull, vault, uda
+from bugwarrior.command import cli, pull, vault, uda
 
 __all__ = [
+    'cli',
     'pull',
     'vault',
     'uda',

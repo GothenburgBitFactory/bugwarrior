@@ -37,13 +37,13 @@ Next step -- get the code!
     (bugwarrior)$ git clone git@github.com:ralphbean/bugwarrior.git
     (bugwarrior)$ cd bugwarrior
     (bugwarrior)$ pip install -e .[all]
-    (bugwarrior)$ which bugwarrior-pull
+    (bugwarrior)$ which bugwarrior
 
 This will actually run it.. be careful and back up your task directory!
 
 ::
 
-    (bugwarrior)$ bugwarrior-pull
+    (bugwarrior)$ bugwarrior pull
 
 Making a pull request
 ---------------------
