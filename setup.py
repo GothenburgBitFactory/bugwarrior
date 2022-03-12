@@ -1,12 +1,12 @@
 import itertools
 from setuptools import setup, find_packages
 
-version = '1.8.0'
+with open('VERSION') as version_file:
+    version = version_file.read().strip()
 
-f = open('bugwarrior/README.rst')
-long_description = f.read().strip()
-long_description = long_description.split('split here', 1)[1]
-f.close()
+with open('bugwarrior/README.rst') as readme_file:
+    readme = readme_file.read().strip()
+long_description = readme.split('split here', 1)[1]
 
 extras = {
     "activecollab": ["pypandoc", "pyac>=0.1.5"],
@@ -17,7 +17,7 @@ extras = {
     "kanboard": ["kanboard"],
     "keyring": ["keyring"],
     "phabricator": ["phabricator"],
-    "test": ["flake8", "pytest", "responses", "sphinx"],
+    "test": ["flake8", "pytest", "responses", "sphinx", "sphinx-click"],
     "trac": ["offtrac"],
 }
 

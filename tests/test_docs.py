@@ -15,7 +15,13 @@ class DocsTest(unittest.TestCase):
     def test_docs_build_without_warning(self):
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
-                ['sphinx-build', '-n', '-W', DOCS_PATH, buildDir],
+                ['sphinx-build', '-n', '-W', '-v', DOCS_PATH, buildDir],
+                check=True)
+
+    def test_manpage_build_without_warning(self):
+        with tempfile.TemporaryDirectory() as buildDir:
+            subprocess.run(
+                ['sphinx-build', '-b', 'man', '-n', '-W', '-v', DOCS_PATH, buildDir],
                 check=True)
 
 

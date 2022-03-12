@@ -164,6 +164,24 @@ def set(target, username):
 def uda(flavor):
     """
     List bugwarrior-managed uda's.
+
+    Most services define a set of UDAs in which bugwarrior store extra information
+    about the incoming ticket.  Usually, this includes things like the title
+    of the ticket and its URL, but some services provide an extensive amount of
+    metadata.  See each service's documentation for more information.
+
+    For using this data in reports, it is recommended that you add these UDA
+    definitions to your ``taskrc`` file. You can add the output of this command
+    verbatim to your ``taskrc`` file if you would like Taskwarrior to know the
+    human-readable name and data type for the defined UDAs.
+
+    .. note::
+
+       Not adding those lines to your ``taskrc`` file will have no negative
+       effects aside from Taskwarrior not knowing the human-readable name for the
+       field, but depending on what version of Taskwarrior you are using, it
+       may prevent you from changing the values of those fields or using them
+       in filter expressions.
     """
     main_section = _get_section_name(flavor)
     conf = _try_load_config(main_section)
