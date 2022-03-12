@@ -44,7 +44,7 @@ targets with the same login to share the same authentication token.)
 Authentication
 --------------
 
-When you first run ``bugwarrior-pull``, a browser will be opened and you'll be
+When you first run ``bugwarrior pull``, a browser will be opened and you'll be
 asked to authorise the application to access your e-mail. Once authorised a
 token will be stored in your bugwarrior data directory.
 

@@ -61,6 +61,7 @@ setup(name='bugwarrior',
       },
       entry_points="""
       [console_scripts]
+      bugwarrior = bugwarrior:cli
       bugwarrior-pull = bugwarrior:pull
       bugwarrior-vault = bugwarrior:vault
       bugwarrior-uda = bugwarrior:uda

@@ -23,7 +23,7 @@ to get a list of all tasks you are responsible for in AC. Instead you need to
 look at each ticket that you are subscribed to and check to see if your
 user ID is responsible for the ticket/task. What this means is that if you
 have 5 projects you want to query and each project has 20 tickets, you'll
-make 100 API requests each time you run ``bugwarrior-pull``.
+make 100 API requests each time you run ``bugwarrior pull``.
 
 Example Service
 ---------------
