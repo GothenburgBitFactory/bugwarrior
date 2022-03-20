@@ -1,3 +1,4 @@
+import functools
 import os
 import sys
 
@@ -43,6 +44,21 @@ def _try_load_config(main_section, interactive=False):
         sys.exit(1)
 
 
+def _legacy_cli_deprecation_warning(subcommand_callback):
+    @functools.wraps(subcommand_callback)
+    @click.pass_context
+    def wrapped_subcommand_callback(ctx, *args, **kwargs):
+        if ctx.command_path != 'cli':
+            old_command = f'bugwarrior-{ctx.command_path}'
+            new_command = f'bugwarrior {ctx.command_path}'
+            log.warning(
+                f'Deprecation Warning: `{old_command}` is deprecated and will '
+                'be removed in a future version of bugwarrior. Please use'
+                f'`{new_command}` instead.')
+        return ctx.invoke(subcommand_callback, *args, **kwargs)
+    return wrapped_subcommand_callback
+
+
 class AliasedCli(click.Group):
     """
     Integrates subcommands into a top-level bugwarrior command.
@@ -68,6 +84,7 @@ def cli():
 @click.option('--interactive', is_flag=True)
 @click.option('--debug', is_flag=True,
               help='Do not use multiprocessing (which breaks pdb).')
+@_legacy_cli_deprecation_warning
 def pull(dry_run, flavor, interactive, debug):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.
 
@@ -103,6 +120,7 @@ def pull(dry_run, flavor, interactive, debug):
 
 
 @cli.group()
+@_legacy_cli_deprecation_warning
 def vault():
     """ Password/keyring management for bugwarrior.
 
@@ -161,6 +179,7 @@ def set(target, username):
 
 @cli.command()
 @click.option('--flavor', default=None, help='The flavor to use')
+@_legacy_cli_deprecation_warning
 def uda(flavor):
     """
     List bugwarrior-managed uda's.

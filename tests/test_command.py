@@ -174,6 +174,8 @@ class TestPull(ConfigTest):
     def test_legacy_cli(self):
         """
         Test that invoking the subcommand function directly still works.
+
+        Also test that it logs a deprecation warning.
         """
         with self.caplog.at_level(logging.INFO):
             self.runner.invoke(command.pull, args=('--debug'))
@@ -183,3 +185,9 @@ class TestPull(ConfigTest):
         self.assertIn('Adding 1 tasks', logs)
         self.assertIn('Updating 0 tasks', logs)
         self.assertIn('Closing 0 tasks', logs)
+
+        self.assertIn(
+            'Deprecation Warning: `bugwarrior-pull` is deprecated and will be '
+            'removed in a future version of bugwarrior. Please use`bugwarrior '
+            'pull` instead.',
+            logs)
