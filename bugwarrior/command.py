@@ -74,6 +74,7 @@ class AliasedCli(click.Group):
 
 
 @click.command(cls=AliasedCli)
+@click.version_option()
 def cli():
     pass
 
