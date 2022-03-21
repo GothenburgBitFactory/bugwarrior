@@ -114,7 +114,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             json=[ARBITRARY_ISSUE])
 
         self.add_response(
-            'https://api.github.com/user/issues?per_page=100',
+            'https://api.github.com/issues?per_page=100',
             json=[ARBITRARY_ISSUE])
 
         self.add_response(

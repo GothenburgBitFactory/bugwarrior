@@ -93,11 +93,11 @@ class GithubClient(ServiceClient):
     def get_directly_assigned_issues(self):
         """ Returns all issues assigned to authenticated user.
 
-        This will return all issues assigned to the authenticated user
-        regardless of whether the user owns the repositories in which the
-        issues exist.
+        List issues assigned to the authenticated user across all visible
+        repositories including owned repositories, member repositories, and
+        organization repositories.
         """
-        url = self._api_url("/user/issues?per_page=100")
+        url = self._api_url("/issues?per_page=100")
         return self._getter(url)
 
     def get_comments(self, username, repo, number):
