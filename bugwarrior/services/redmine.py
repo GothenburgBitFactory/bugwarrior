@@ -18,6 +18,7 @@ class RedMineConfig(config.ServiceConfig, prefix='redmine'):
 
     project_name: str = ''
     issue_limit: int = 100
+    query: str = ''
     login: str = ''
     password: str = ''
     verify_ssl: bool = True
@@ -31,16 +32,20 @@ class RedMineClient(ServiceClient):
         self.issue_limit = issue_limit
         self.verify_ssl = verify_ssl
 
-    def find_issues(self, issue_limit, only_if_assigned=False):
+    def find_issues(self, issue_limit, query, only_if_assigned=False):
         args = {}
-        # TODO: if issue_limit is greater than 100, implement pagination to return all issues.
-        # Leave the implementation of this to the unlucky soul with >100 issues assigned to them.
+        url = "/issues.json" + "?" + query
+
+        # TODO: if issue_limit is greater than 100, implement pagination
+        # to return all issues. Leave the implementation of this to
+        # the unlucky soul with >100 issues assigned to them.
         if issue_limit is not None:
             args["limit"] = issue_limit
 
         if only_if_assigned:
             args["assigned_to_id"] = 'me'
-        return self.call_api("/issues.json", args)["issues"]
+
+        return self.call_api(url, args)["issues"]
 
     def call_api(self, uri, params):
         url = self.url.rstrip("/") + uri
@@ -270,7 +275,7 @@ class RedMineService(IssueService):
 
     def issues(self):
         issues = self.client.find_issues(
-            self.config.issue_limit, self.config.only_if_assigned)
+            self.config.issue_limit, self.config.query, self.config.only_if_assigned)
         log.debug(" Found %i total.", len(issues))
         for issue in issues:
             yield self.get_issue_for_record(issue)
