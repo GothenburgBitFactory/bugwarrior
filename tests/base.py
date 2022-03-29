@@ -112,5 +112,10 @@ class ServiceTest(ConfigTest):
         return service_class(service_config, main_config, section)
 
     @staticmethod
-    def add_response(url, **kwargs):
-        responses.add(responses.GET, url, match_querystring=True, **kwargs)
+    def add_response(url, method='GET', **kwargs):
+        responses.add(responses.Response(
+            url=url,
+            method=method,
+            match_querystring=True,
+            **kwargs
+        ))
