@@ -20,8 +20,8 @@ class BitbucketConfig(config.ServiceConfig, prefix='bitbucket'):
     login: str
 
     password: str = ''
-    key: str = ''
-    secret: str = ''
+    key: str
+    secret: str
 
     include_repos: config.ConfigList = config.ConfigList([])
     exclude_repos: config.ConfigList = config.ConfigList([])
@@ -88,40 +88,31 @@ class BitbucketService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        auth = {'oauth': (self.config.key, self.config.secret)}
-
+        oauth = (self.config.key, self.config.secret)
         refresh_token = self.main_config.data.get('bitbucket_refresh_token')
 
-        if not refresh_token:
+        if refresh_token:
+            response = requests.post(
+                self.BASE_URL + 'site/oauth2/access_token',
+                data={'grant_type': 'refresh_token',
+                      'refresh_token': refresh_token},
+                auth=oauth).json()
+        else:
             password = self.get_password('password', self.config.login)
-            auth['basic'] = (self.config.login, password)
 
-        if self.config.key and self.config.secret:
-            if refresh_token:
-                response = requests.post(
-                    self.BASE_URL + 'site/oauth2/access_token',
-                    data={'grant_type': 'refresh_token',
-                          'refresh_token': refresh_token},
-                    auth=auth['oauth']).json()
-            else:
-                response = requests.post(
-                    self.BASE_URL + 'site/oauth2/access_token',
-                    data={'grant_type': 'password',
-                          'username': self.config.login,
-                          'password': password},
-                    auth=auth['oauth']).json()
+            response = requests.post(
+                self.BASE_URL + 'site/oauth2/access_token',
+                data={'grant_type': 'password',
+                      'username': self.config.login,
+                      'password': password},
+                auth=oauth).json()
 
-                self.main_config.data.set('bitbucket_refresh_token',
-                                          response['refresh_token'])
+            import pdb; pdb.set_trace()
+            self.main_config.data.set('bitbucket_refresh_token',
+                                      response['refresh_token'])
 
-            auth['token'] = response['access_token']
-
-        self.requests_kwargs = {}
-        if 'token' in auth:
-            self.requests_kwargs['headers'] = {
-                'Authorization': 'Bearer ' + auth['token']}
-        elif 'basic' in auth:
-            self.requests_kwargs['auth'] = auth['basic']
+        self.requests_kwargs = {
+            'headers': {'Authorization': f"Bearer {response['access_token']}"}}
 
     @staticmethod
     def get_keyring_service(config):

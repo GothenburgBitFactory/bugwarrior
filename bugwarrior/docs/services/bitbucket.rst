@@ -13,7 +13,8 @@ Here's an example of a Bitbucket target::
     service = bitbucket
     bitbucket.username = ralphbean
     bitbucket.login = ralphbean
-    bitbucket.password = mypassword
+    bitbucket.key = mykey
+    bitbucket.secret = mysecret
 
 The above example is the minimum required to import issues from
 Bitbucket.  You can also feel free to use any of the
@@ -27,13 +28,13 @@ set to ralphbean (my account).  But I have some targets with
 ``bitbucket.username`` pointed at organizations or other users to watch issues
 there.
 
-As an alternative to password authentication, there is OAuth. To get a key and secret,
+To get a key and secret,
 go to the "OAuth" section of your profile settings and click "Add consumer". Set the
 "Callback URL" to ``https://localhost/`` and set the appropriate permissions. Then
 assign your consumer's credentials to ``bitbucket.key`` and ``bitbucket.secret``. Note
 that you will have to provide a password (only) the first time you pull, so you may
 want to set ``bitbucket.password = @oracle:ask_password`` and run
-``bugwarrior-pull --interactive`` on your next pull.
+``bugwarrior-pull --interactive`` on your first pull.
 
 Service Features
 ----------------
