@@ -671,7 +671,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     def test_custom_mr_priority(self):
         overrides = {
-            'gitlab.default_mr_priority': None,
+            'gitlab.default_mr_priority': '',
             'gitlab.import_labels_as_tags': True,
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)

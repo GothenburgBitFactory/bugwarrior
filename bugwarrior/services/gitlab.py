@@ -13,9 +13,7 @@ from bugwarrior.services import IssueService, Issue, ServiceClient
 import logging
 log = logging.getLogger(__name__)
 
-# Although upstream supports it, pydantic has problems with Literal[None].
-DefaultPriority = typing.Optional[
-    typing_extensions.Literal['L', 'M', 'H', 'unassigned']]
+DefaultPriority = typing_extensions.Literal['', 'L', 'M', 'H', 'unassigned']
 
 
 class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
@@ -40,9 +38,9 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
     include_todos: bool = False
     include_all_todos: bool = True
     only_if_author: str = ''
-    default_issue_priority: DefaultPriority = 'M'
-    default_todo_priority: DefaultPriority = 'M'
-    default_mr_priority: DefaultPriority = 'M'
+    default_issue_priority: DefaultPriority = 'unassigned'
+    default_todo_priority: DefaultPriority = 'unassigned'
+    default_mr_priority: DefaultPriority = 'unassigned'
     use_https: bool = True
     verify_ssl: bool = True
     project_owner_prefix: bool = False

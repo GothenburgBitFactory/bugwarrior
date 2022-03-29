@@ -70,7 +70,7 @@ The following options are supported:
 * ``SERVICE.also_unassigned``: If set to ``True`` and ``only_if_assigned`` is
   set, then also create tasks for issues that are not assigned to anybody.
   Defaults to ``False``.
-* ``SERVICE.default_priority``: Assign this priority ('L', 'M', or 'H') to
+* ``SERVICE.default_priority``: Assign this priority ('L', 'M', 'H', or '') to
   newly-imported issues. Defaults to ``M``.
 * ``SERVICE.add_tags``: A comma-separated list of tags to add to an issue.  In
   most cases, plain strings will suffice, but you can also specify
