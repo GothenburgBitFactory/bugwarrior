@@ -308,9 +308,7 @@ class ServiceConfig(_ServiceConfig,  # type: ignore  # (dynamic base class)
     # Optional fields shared by all services.
     only_if_assigned: str = ''
     also_unassigned: bool = False
-    # Although upstream supports it, pydantic has problems with Literal[None].
-    default_priority: typing.Optional[
-        typing_extensions.Literal['L', 'M', 'H']] = 'M'
+    default_priority: typing_extensions.Literal['', 'L', 'M', 'H'] = 'M'
     add_tags: ConfigList = ConfigList([])
     description_template: str = ''
 
