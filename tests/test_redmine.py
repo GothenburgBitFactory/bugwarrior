@@ -37,7 +37,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
         "id": 363901,
         "priority": {
             "id": 4,
-            "name": "Normal"
+            "name": "High"
         },
         "project": {
             "id": 27375,
@@ -67,7 +67,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
         expected_output = {
             'annotations': [],
             'project': issue.get_project_name(),
-            'priority': self.service.config.default_priority,
+            'priority': 'H',
             issue.DUEDATE: None,
             issue.ASSIGNED_TO: self.arbitrary_issue['assigned_to']['name'],
             issue.AUTHOR: self.arbitrary_issue['author']['name'],
@@ -107,7 +107,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
             issue.DUEDATE: None,
             'description':
                 '(bw)Is#363901 - Biscuits .. https://something/issues/363901',
-            'priority': 'M',
+            'priority': 'H',
             'project': 'boiledcabbageyum',
             'redmineid': 363901,
             'redmineprojectname': 'Boiled Cabbage - Yum',
