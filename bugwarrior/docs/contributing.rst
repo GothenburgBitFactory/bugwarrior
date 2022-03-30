@@ -24,7 +24,7 @@ your system.
 You should now have a virtualenv in a ``~/virtualenvs/`` directory.
 To use it, you need to "activate" it like this::
 
-    $ source ~/virtualenv/bugwarrior/bin/activate
+    $ source ~/virtualenvs/bugwarrior/bin/activate
     (bugwarrior)$ which python
 
 At any time, you can deactivate it by typing ``deactivate`` at the command
