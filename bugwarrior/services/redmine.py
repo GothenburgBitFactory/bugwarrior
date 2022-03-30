@@ -208,7 +208,7 @@ class RedMineIssue(Issue):
 
     def get_priority(self):
         return self.PRIORITY_MAP.get(
-            self.record.get('priority', {}).get('Name'),
+            self.record.get('priority', {}).get('name'),
             self.origin['default_priority']
         )
 
