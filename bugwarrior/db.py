@@ -325,8 +325,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         'closed': [],
     }
 
-    seen = []
-    seen_uuids = set()
+    issue_map = {}  # unique identifier -> issue dict
     for issue in issue_generator:
 
         try:
@@ -337,6 +336,20 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 continue
             else:
                 raise
+
+        # De-duplicate issues coming in
+        unique_identifier = make_unique_identifier(key_list, issue)
+        if unique_identifier in issue_map:
+            log.debug(
+                f"Merging tags and skipping. Seen {unique_identifier} of {issue}")
+            # Merge and deduplicate tags.
+            issue_map[unique_identifier]['tags'] += issue_dict['tags']
+            issue_map[unique_identifier]['tags'] = list(set(issue_map[unique_identifier]['tags']))
+        else:
+            issue_map[unique_identifier] = issue_dict
+
+    seen_uuids = set()
+    for issue_dict in issue_map.values():
 
         # We received this issue from The Internet, but we're not sure what
         # kind of encoding the service providers may have handed us. Let's try
@@ -353,13 +366,6 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         # Blank priority should mean *no* priority
         if issue_dict['priority'] == '':
             issue_dict['priority'] = None
-
-        # De-duplicate issues coming in
-        unique_identifier = make_unique_identifier(key_list, issue)
-        if unique_identifier in seen:
-            log.debug("Skipping.  Seen %s of %r" % (unique_identifier, issue))
-            continue
-        seen.append(unique_identifier)
 
         try:
             existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
