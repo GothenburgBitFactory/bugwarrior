@@ -53,18 +53,20 @@ may want to pull issues from only a subset of your repositories.  To
 do that, you can use the ``github.include_repos`` option.
 
 For example, if you would like to only pull-in issues from
-your ``project_foo`` and ``project_fox`` repositories, you could add
-this line to your service configuration::
+``some_user/project_foo`` and ``some_user/project_fox`` repositories, you could add
+these lines to your service configuration::
 
+    github.username = some_user
     github.include_repos = project_foo,project_fox
 
 Alternatively, if you have a particularly noisy repository, you can
 instead choose to import all issues excepting it using the
 ``github.exclude_repos`` configuration option.
 
-In this example, ``noisy_repository`` is the repository you would
+In this example, ``some_user/noisy_repository`` is the repository you would
 *not* like issues created for::
 
+    github.username = some_user
     github.exclude_repos = noisy_repository
 
 Import Labels as Tags
