@@ -29,4 +29,4 @@ class ExampleBugwarriorrcTest(ConfigTest):
     def test_example_bugwarriorrc(self):
         os.environ['BUGWARRIORRC'] = os.path.join(
             DOCS_PATH, 'example-bugwarriorrc')
-        config.load_config('general', False)
+        config.load_config('general', False, False)
