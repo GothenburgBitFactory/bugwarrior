@@ -61,7 +61,7 @@ def remove_inactive_flavors(rawconfig, main_section):
             rawconfig.remove_section(section)
 
 
-def load_config(main_section, interactive):
+def load_config(main_section, interactive, quiet):
     configpath = get_config_path()
     rawconfig = BugwarriorConfigParser()
     rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
@@ -71,7 +71,8 @@ def load_config(main_section, interactive):
     main_config.interactive = str(interactive)
     main_config.data = data.BugwarriorData(
         data.get_data_path(config[main_section].taskrc))
-    configure_logging(main_config.log__file, main_config.log__level)
+    configure_logging(main_config.log__file,
+                      'WARNING' if quiet else main_config.log__level)
     return config
 
 

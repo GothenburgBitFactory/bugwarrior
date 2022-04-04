@@ -29,9 +29,9 @@ def _get_section_name(flavor):
     return 'general'
 
 
-def _try_load_config(main_section, interactive=False):
+def _try_load_config(main_section, interactive=False, quiet=False):
     try:
-        return load_config(main_section, interactive)
+        return load_config(main_section, interactive, quiet)
     except OSError:
         # Our standard logging configuration depends on the bugwarrior
         # configuration file which just failed to load.
@@ -85,8 +85,9 @@ def cli():
 @click.option('--interactive', is_flag=True)
 @click.option('--debug', is_flag=True,
               help='Do not use multiprocessing (which breaks pdb).')
+@click.option('--quiet', is_flag=True, help='Set logging level to WARNING.')
 @_legacy_cli_deprecation_warning
-def pull(dry_run, flavor, interactive, debug):
+def pull(dry_run, flavor, interactive, debug, quiet):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.
 
     Relies on configuration in bugwarriorrc
@@ -94,7 +95,7 @@ def pull(dry_run, flavor, interactive, debug):
 
     try:
         main_section = _get_section_name(flavor)
-        config = _try_load_config(main_section, interactive)
+        config = _try_load_config(main_section, interactive, quiet)
 
         lockfile_path = os.path.join(
             config[main_section].data.path, 'bugwarrior.lockfile')
