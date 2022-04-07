@@ -8,13 +8,23 @@ from .base import ServiceTest, AbstractServiceTest
 class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'bitbucket',
-        'bitbucket.login': 'something',
         'bitbucket.username': 'somename',
-        'bitbucket.password': 'something else',
+        'bitbucket.key': 'something',
+        'bitbucket.secret': 'something else',
     }
 
+    @responses.activate
     def setUp(self):
         super().setUp()
+
+        self.add_response(
+            'https://bitbucket.org/site/oauth2/access_token',
+            method='POST',
+            json={
+                'access_token': 'sometoken',
+                'refresh_token': 'anothertoken'
+            }
+        )
         self.service = self.get_mock_service(BitbucketService)
 
     def test_to_taskwarrior(self):

@@ -1,6 +1,7 @@
 import logging
 import typing
 
+import pydantic
 import requests
 import typing_extensions
 
@@ -17,16 +18,26 @@ class BitbucketConfig(config.ServiceConfig, prefix='bitbucket'):
     service: typing_extensions.Literal['bitbucket']
 
     username: str
-    login: str
 
-    password: str = ''
-    key: str = ''
-    secret: str = ''
+    login: str = 'Undefined'
+    password: str = 'Undefined'
+
+    key: str
+    secret: str
 
     include_repos: config.ConfigList = config.ConfigList([])
     exclude_repos: config.ConfigList = config.ConfigList([])
     include_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
     project_owner_prefix: bool = False
+
+    @pydantic.root_validator
+    def deprecate_password_authentication(cls, values):
+        if values['login'] != 'Undefined' or values['password'] != 'Undefined':
+            log.warning(
+                'Bitbucket has disabled password authentication and, as such, '
+                'the bitbucket.login and bitbucket.password options are '
+                'deprecated and should be removed from your bugwarriorrc.')
+        return values
 
 
 class BitbucketIssue(Issue):
@@ -88,44 +99,26 @@ class BitbucketService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        auth = {'oauth': (self.config.key, self.config.secret)}
-
+        oauth = (self.config.key, self.config.secret)
         refresh_token = self.main_config.data.get('bitbucket_refresh_token')
 
-        if not refresh_token:
-            password = self.get_password('password', self.config.login)
-            auth['basic'] = (self.config.login, password)
+        if refresh_token:
+            response = requests.post(
+                self.BASE_URL + 'site/oauth2/access_token',
+                data={'grant_type': 'refresh_token',
+                      'refresh_token': refresh_token},
+                auth=oauth).json()
+        else:
+            response = requests.post(
+                self.BASE_URL + 'site/oauth2/access_token',
+                data={'grant_type': 'client_credentials'},
+                auth=oauth).json()
 
-        if self.config.key and self.config.secret:
-            if refresh_token:
-                response = requests.post(
-                    self.BASE_URL + 'site/oauth2/access_token',
-                    data={'grant_type': 'refresh_token',
-                          'refresh_token': refresh_token},
-                    auth=auth['oauth']).json()
-            else:
-                response = requests.post(
-                    self.BASE_URL + 'site/oauth2/access_token',
-                    data={'grant_type': 'password',
-                          'username': self.config.login,
-                          'password': password},
-                    auth=auth['oauth']).json()
+            self.main_config.data.set('bitbucket_refresh_token',
+                                      response['refresh_token'])
 
-                self.main_config.data.set('bitbucket_refresh_token',
-                                          response['refresh_token'])
-
-            auth['token'] = response['access_token']
-
-        self.requests_kwargs = {}
-        if 'token' in auth:
-            self.requests_kwargs['headers'] = {
-                'Authorization': 'Bearer ' + auth['token']}
-        elif 'basic' in auth:
-            self.requests_kwargs['auth'] = auth['basic']
-
-    @staticmethod
-    def get_keyring_service(config):
-        return f"bitbucket://{config.login}@bitbucket.org/{config.username}"
+        self.requests_kwargs = {
+            'headers': {'Authorization': f"Bearer {response['access_token']}"}}
 
     def filter_repos(self, repo_tag):
         repo = repo_tag.split('/').pop()
