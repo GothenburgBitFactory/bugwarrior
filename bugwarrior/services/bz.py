@@ -1,5 +1,6 @@
 import datetime
 import logging
+import urllib.parse
 import time
 import typing
 
@@ -14,10 +15,27 @@ from bugwarrior.services import IssueService, Issue
 log = logging.getLogger(__name__)
 
 
+class OptionalSchemeUrl(pydantic.AnyUrl):
+    """
+    A temporary type to use during the deprecation period of scheme-less urls.
+    """
+
+    @classmethod
+    def validate(cls, value, field, config):
+        if not urllib.parse.urlparse(value).scheme:
+            value = f'https://{value}'
+            log.warning(
+                'Deprecation Warning: bugzilla.base_uri should include the '
+                f'scheme ("{value}"). In a future version this will be an '
+                'error.'
+            )
+        return super().validate(value.rstrip('/'), field, config)
+
+
 class BugzillaConfig(config.ServiceConfig, prefix='bugzilla'):
     service: typing_extensions.Literal['bugzilla']
     username: str
-    base_uri: config.NoSchemeUrl
+    base_uri: OptionalSchemeUrl
 
     password: str = ''
     api_key: str = ''
@@ -148,15 +166,17 @@ class BugzillaService(IssueService):
         if self.config.force_rest:
             force_rest_kwargs = {"force_rest": True}
 
-        url = 'https://%s' % self.config.base_uri
         if self.config.api_key:
             api_key = self.get_password('api_key')
             try:
-                self.bz = bugzilla.Bugzilla(url=url, api_key=api_key, **force_rest_kwargs)
+                self.bz = bugzilla.Bugzilla(url=self.config.base_uri,
+                                            api_key=api_key,
+                                            **force_rest_kwargs)
             except TypeError:
                 raise Exception("Bugzilla API keys require python-bugzilla>=2.1.0")
         else:
-            self.bz = bugzilla.Bugzilla(url=url, **force_rest_kwargs)
+            self.bz = bugzilla.Bugzilla(url=self.config.base_uri,
+                                        **force_rest_kwargs)
             if self.config.password:
                 password = self.get_password('password', self.config.username)
                 self.bz.login(self.config.username, password)
@@ -169,7 +189,7 @@ class BugzillaService(IssueService):
         return issue['assigned_to']
 
     def annotations(self, tag, issue, issue_obj):
-        base_url = "https://%s/show_bug.cgi?id=" % self.config.base_uri
+        base_url = "%s/show_bug.cgi?id=" % self.config.base_uri
         long_url = base_url + str(issue['id'])
         url = issue_obj.get_processed_url(long_url)
 
@@ -258,7 +278,7 @@ class BugzillaService(IssueService):
         log.debug(" Found %i total.", len(issues))
 
         # Build a url for each issue
-        base_url = "https://%s/show_bug.cgi?id=" % self.config.base_uri
+        base_url = "%s/show_bug.cgi?id=" % self.config.base_uri
         for tag, issue in issues:
             issue_obj = self.get_issue_for_record(issue)
             extra = {
