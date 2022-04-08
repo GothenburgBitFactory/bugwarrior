@@ -28,7 +28,7 @@ class TestBugzillaServiceConfig(ConfigTest):
         self.config.set('mybz', 'service', 'bugzilla')
 
     def test_validate_config_username_password(self):
-        self.config.set('mybz', 'bugzilla.base_uri', 'one.com/')
+        self.config.set('mybz', 'bugzilla.base_uri', 'https://one.com/')
         self.config.set('mybz', 'bugzilla.username', 'me')
         self.config.set('mybz', 'bugzilla.password', 'mypas')
 
@@ -36,7 +36,7 @@ class TestBugzillaServiceConfig(ConfigTest):
         self.validate()
 
     def test_validate_config_api_key(self):
-        self.config.set('mybz', 'bugzilla.base_uri', 'one.com/')
+        self.config.set('mybz', 'bugzilla.base_uri', 'https://one.com/')
         self.config.set('mybz', 'bugzilla.username', 'me')
         self.config.set('mybz', 'bugzilla.api_key', '123')
 
@@ -44,17 +44,25 @@ class TestBugzillaServiceConfig(ConfigTest):
         self.validate()
 
     def test_validate_config_api_key_no_username(self):
-        self.config.set('mybz', 'bugzilla.base_uri', 'one.com/')
+        self.config.set('mybz', 'bugzilla.base_uri', 'https://one.com/')
         self.config.set('mybz', 'bugzilla.api_key', '123')
 
         self.assertValidationError(
             '[mybz]\nbugzilla.username  <- field required')
 
+    def test_validate_legacy_schemeless_uri(self):
+        self.config.set('mybz', 'bugzilla.base_uri', 'one.com/')
+        self.config.set('mybz', 'bugzilla.username', 'me')
+        self.config.set('mybz', 'bugzilla.password', 'mypas')
+
+        # no error expected
+        self.validate()
+
 
 class TestBugzillaService(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'bugzilla',
-        'bugzilla.base_uri': 'one.com/',
+        'bugzilla.base_uri': 'https://one.com/',
         'bugzilla.username': 'hello',
         'bugzilla.password': 'there',
     }
@@ -90,7 +98,7 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             self.service = self.get_mock_service(
                 BugzillaService,
                 config_overrides={
-                    'bugzilla.base_uri': 'one.com/',
+                    'bugzilla.base_uri': 'https://one.com/',
                     'bugzilla.username': 'me',
                     'bugzilla.api_key': '123',
                 })

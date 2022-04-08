@@ -29,7 +29,7 @@ make bugwarrior support more robust!
 
     [my_issue_tracker]
     service = bugzilla
-    bugzilla.base_uri = bugzilla.redhat.com
+    bugzilla.base_uri = https://bugzilla.redhat.com
     bugzilla.username = rbean@redhat.com
     bugzilla.password = OMG_LULZ
 
