@@ -327,12 +327,6 @@ class Issue(abc.ABC):
             url,
         )
 
-    def _get_unique_identifier(self):
-        record = self.get_taskwarrior_record()
-        return {
-            key: record[key] for key in self.UNIQUE_KEY
-        }
-
     def get_template_context(self):
         context = (
             self.get_taskwarrior_record(refined=False).copy()
