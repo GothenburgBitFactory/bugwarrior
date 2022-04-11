@@ -255,6 +255,8 @@ class GitlabClient(ServiceClient):
         result = []
         try:
             result = self._fetch_paged(query)
+        except ConnectionError as err:
+            raise ConnectionError(err)
         except OSError:
             # Projects may have this API disabled.
             pass
@@ -272,6 +274,8 @@ class GitlabClient(ServiceClient):
         todos = []
         try:
             fetched_todos = self._fetch_paged(query)
+        except ConnectionError as err:
+            raise ConnectionError(err)
         except OSError:
             # Older gitlab versions do not have todo items.
             return []
