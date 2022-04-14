@@ -171,6 +171,15 @@ By default the taskwarrior ``project`` name will not include the owner. To do so
 
     github.project_owner_prefix = True
 
+
+Get Specific Issues
++++++++++++++++++++
+
+Specific issues can be pulled in using ``github.issue_urls``::
+
+    github.issue_urls = https://github.com/ralphbean/bugwarrior/issues/516,https://github.com/ralphbean/bugwarrior/pull/898
+
+
 Provided UDA Fields
 -------------------
 

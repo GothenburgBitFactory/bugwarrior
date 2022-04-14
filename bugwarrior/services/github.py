@@ -1,5 +1,6 @@
 import re
 import sys
+import urllib.parse
 
 from jinja2 import Template
 import pydantic
@@ -39,6 +40,7 @@ class GithubConfig(config.ServiceConfig, prefix='github'):
         'github.com', scheme='https', host='github.com')
     body_length: int = sys.maxsize
     project_owner_prefix: bool = False
+    issue_urls: config.ConfigList = config.ConfigList([])
 
     @pydantic.root_validator
     def require_token_or_password(cls, values):
@@ -54,6 +56,21 @@ class GithubConfig(config.ServiceConfig, prefix='github'):
                 'section requires one of:\ngithub.username\ngithub.query')
         return values
 
+    @pydantic.root_validator
+    def issue_urls_consistent_with_host(cls, values):
+        issue_url_paths = []
+        for url in values['issue_urls']:
+            parsed_url = urllib.parse.urlparse(url)
+            if parsed_url.netloc != values['host']:
+                raise ValueError(
+                    f'github.issue_urls: {url} inconsistent with host {values["host"]}')
+            if not re.match(r'^/.*/.*/(issues|pull)/[0-9]*$', parsed_url.path):
+                raise ValueError(
+                    f'github.issue_urls: {parsed_url.path} is not a valid issue path')
+            issue_url_paths.append(parsed_url.path)
+        values['issue_urls'] = issue_url_paths
+        return values
+
 
 class GithubClient(ServiceClient):
     def __init__(self, host, auth):
@@ -63,6 +80,10 @@ class GithubClient(ServiceClient):
         if 'token' in self.auth:
             authorization = 'token ' + self.auth['token']
             self.session.headers['Authorization'] = authorization
+
+        self.kwargs = {}
+        if 'basic' in self.auth:
+            self.kwargs['auth'] = self.auth['basic']
 
     def _api_url(self, path, **context):
         """ Build the full url to the API endpoint """
@@ -100,6 +121,12 @@ class GithubClient(ServiceClient):
         url = self._api_url("/issues?per_page=100")
         return self._getter(url)
 
+    def get_issue_for_url_path(self, url_path):
+        # The pull request url is '/pull/' but the api path is '/pulls/'.
+        api_path = re.sub(r'pull(?=/[0-9]*$)', 'pulls', url_path)
+        url = self._api_url(f'/repos{api_path}')
+        return self.json_response(self._request(url))
+
     def get_comments(self, username, repo, number):
         url = self._api_url(
             "/repos/{username}/{repo}/issues/{number}/comments?per_page=100",
@@ -114,25 +141,11 @@ class GithubClient(ServiceClient):
 
     def _getter(self, url, subkey=None):
         """ Pagination utility.  Obnoxious. """
-
-        kwargs = {}
-        if 'basic' in self.auth:
-            kwargs['auth'] = self.auth['basic']
-
         results = []
         link = dict(next=url)
 
         while 'next' in link:
-            response = self.session.get(link['next'], **kwargs)
-
-            # Warn about the mis-leading 404 error code.  See:
-            # https://github.com/ralphbean/bugwarrior/issues/374
-            if response.status_code == 404 and 'token' in self.auth:
-                log.warn("A '404' from github may indicate an auth "
-                         "failure. Make sure both that your token is correct "
-                         "and that it has 'public_repo' and not 'public "
-                         "access' rights.")
-
+            response = self._request(link['next'])
             json_res = self.json_response(response)
 
             if subkey is not None:
@@ -143,6 +156,19 @@ class GithubClient(ServiceClient):
             link = self._link_field_to_dict(response.headers.get('link', None))
 
         return results
+
+    def _request(self, url):
+        response = self.session.get(url, **self.kwargs)
+
+        # Warn about the mis-leading 404 error code.  See:
+        # https://github.com/ralphbean/bugwarrior/issues/374
+        if response.status_code == 404 and 'token' in self.auth:
+            log.warn("A '404' from github may indicate an auth "
+                     "failure. Make sure both that your token is correct "
+                     "and that it has 'public_repo' and not 'public "
+                     "access' rights.")
+
+        return response
 
     @staticmethod
     def _link_field_to_dict(field):
@@ -344,8 +370,16 @@ class GithubService(IssueService):
     def get_directly_assigned_issues(self):
         issues = {}
         for issue in self.client.get_directly_assigned_issues():
-            repos = self.get_repository_from_issue(issue)
-            issues[issue['url']] = (repos, issue)
+            repo = self.get_repository_from_issue(issue)
+            issues[issue['url']] = (repo, issue)
+        return issues
+
+    def get_issues_by_url(self):
+        issues = {}
+        for url_path in self.config.issue_urls:
+            issue = self.client.get_issue_for_url_path(url_path)
+            repo = re.search(r'(?<=^/)(.*/.*)(?=/(issues|pull)/[0-9]*$)', url_path)[0]
+            issues[url_path] = (repo, issue)
         return issues
 
     @classmethod
@@ -461,6 +495,8 @@ class GithubService(IssueService):
                 filter(self.filter_issues,
                        self.get_directly_assigned_issues().items())
             )
+        if self.config.issue_urls:
+            issues.update(filter(self.filter_issues, self.get_issues_by_url().items()))
 
         log.debug(" Found %i issues.", len(issues))
         issues = list(filter(self.include, issues.values()))
