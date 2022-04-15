@@ -171,6 +171,8 @@ def clear(target, username):
 def set(target, username):
     target_list = lst(targets())
     if target not in target_list:
+        log.warning("You must configure the password to '@oracle:use_keyring' "
+                    "prior to setting the value.")
         raise ValueError("%s must be one of %r" % (target, target_list))
 
     keyring = get_keyring()
