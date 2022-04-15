@@ -185,9 +185,3 @@ class TestPull(ConfigTest):
         self.assertIn('Adding 1 tasks', logs)
         self.assertIn('Updating 0 tasks', logs)
         self.assertIn('Closing 0 tasks', logs)
-
-        self.assertIn(
-            'Deprecation Warning: `bugwarrior-pull` is deprecated and will be '
-            'removed in a future version of bugwarrior. Please use`bugwarrior '
-            'pull` instead.',
-            logs)

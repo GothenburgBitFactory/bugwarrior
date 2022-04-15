@@ -48,12 +48,12 @@ def _legacy_cli_deprecation_warning(subcommand_callback):
     @functools.wraps(subcommand_callback)
     @click.pass_context
     def wrapped_subcommand_callback(ctx, *args, **kwargs):
-        if ctx.command_path != 'cli':
-            old_command = f'bugwarrior-{ctx.command_path}'
-            new_command = f'bugwarrior {ctx.command_path}'
+        if ctx.find_root().command_path != 'bugwarrior':
+            old_command = ctx.command_path
+            new_command = ctx.command_path.replace('-', ' ')
             log.warning(
                 f'Deprecation Warning: `{old_command}` is deprecated and will '
-                'be removed in a future version of bugwarrior. Please use'
+                'be removed in a future version of bugwarrior. Please use '
                 f'`{new_command}` instead.')
         return ctx.invoke(subcommand_callback, *args, **kwargs)
     return wrapped_subcommand_callback
