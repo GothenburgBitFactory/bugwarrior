@@ -28,6 +28,21 @@ If you want to ignore verifying the SSL certificate, set::
 
     redmine.verify_ssl = False
 
+Specify the parameters to filter issues
++++++++++++++++++++++++++++++++++++++++
+
+If you want a finer control over the filtering of issues, you may combine
+`service.only_if_assigned` and `service.issue_limit` with the `redmine.query`
+setting.
+
+    redmine.query = project_id=10&status_id=15
+
+Note that no `&` or `?` character is needed at the beginning of the setting
+value.
+
+You may find documentation about the redmine issue api
+`on this page <https://www.redmine.org/projects/redmine/wiki/Rest_Issues>`_:
+
 Provided UDA Fields
 -------------------
 
