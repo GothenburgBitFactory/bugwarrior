@@ -299,20 +299,45 @@ class TestData():
 class TestGitlabClient(ServiceTest):
     def setUp(self):
         super().setUp()
-        self.client = GitlabClient('my-git.org', 'XXXXXX', use_https=True, verify_ssl=True)
+        self.client = GitlabClient('my-git.org',
+                                   'XXXXXX',
+                                   only_if_assigned='',
+                                   also_unassigned=False,
+                                   use_https=True,
+                                   verify_ssl=True)
         self.data = TestData()
 
     def test_init(self):
-        http_client = GitlabClient('my-git.org', '12345', use_https=False, verify_ssl=False)
+        http_client = GitlabClient('my-git.org',
+                                   '12345',
+                                   only_if_assigned='',
+                                   also_unassigned=False,
+                                   use_https=False,
+                                   verify_ssl=False)
         expected_base_url = 'http://my-git.org/api/v4/'
         self.assertEqual(expected_base_url, http_client._base_url())
-        http_client = GitlabClient('my-git.org', '12345', use_https=False, verify_ssl=True)
+        http_client = GitlabClient('my-git.org',
+                                   '12345',
+                                   only_if_assigned='',
+                                   also_unassigned=False,
+                                   use_https=False,
+                                   verify_ssl=True)
         expected_base_url = 'http://my-git.org/api/v4/'
         self.assertEqual(expected_base_url, http_client._base_url())
-        http_client = GitlabClient('my-git.org', '12345', use_https=True, verify_ssl=False)
+        http_client = GitlabClient('my-git.org',
+                                   '12345',
+                                   only_if_assigned='',
+                                   also_unassigned=False,
+                                   use_https=True,
+                                   verify_ssl=False)
         expected_base_url = 'https://my-git.org/api/v4/'
         self.assertEqual(expected_base_url, http_client._base_url())
-        http_client = GitlabClient('my-git.org', '12345', use_https=True, verify_ssl=True)
+        http_client = GitlabClient('my-git.org',
+                                   '12345',
+                                   only_if_assigned='',
+                                   also_unassigned=False,
+                                   use_https=True,
+                                   verify_ssl=True)
         expected_base_url = 'https://my-git.org/api/v4/'
         self.assertEqual(expected_base_url, http_client._base_url())
 
@@ -402,7 +427,7 @@ class TestGitlabClient(ServiceTest):
                 self.data.arbitrary_issue['project_id'], self.data.arbitrary_issue)}
         )
 
-        client = GitlabClient('old_my-git.org', 'XXXXXX', True, True)
+        client = GitlabClient('old_my-git.org', 'XXXXXX', '', False, True, True)
         self.assertEqual({}, client.get_repo_issues(42))
 
     @responses.activate
@@ -416,7 +441,7 @@ class TestGitlabClient(ServiceTest):
                 self.data.arbitrary_issue['project_id'], self.data.arbitrary_mr)}
         )
 
-        client = GitlabClient('old_my-git.org', 'XXXXXX', True, True)
+        client = GitlabClient('old_my-git.org', 'XXXXXX', '', False, True, True)
         self.assertEqual({}, client.get_repo_merge_requests(42))
 
     @responses.activate
@@ -450,7 +475,7 @@ class TestGitlabClient(ServiceTest):
             []
         )
 
-        client = GitlabClient('old_my-git.org', 'XXXXXX', True, True)
+        client = GitlabClient('old_my-git.org', 'XXXXXX', '', False, True, True)
         self.assertEqual([], client.get_todos('todos?state=pending'))
 
 

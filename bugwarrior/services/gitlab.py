@@ -78,7 +78,7 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
 class GitlabClient(ServiceClient):
     """Abstraction of Gitlab API v4"""
 
-    def __init__(self, host, token, use_https, verify_ssl):
+    def __init__(self, host, token, only_if_assigned, also_unassigned, use_https, verify_ssl):
         if use_https:
             self.scheme = 'https'
         else:
@@ -89,6 +89,14 @@ class GitlabClient(ServiceClient):
         self.token = token
 
         self.repo_cache = {}
+
+        # If we're only fetching assigned issues we can reduce requests by
+        # filtering in the query.
+        assignee_id = (
+            self._fetch(f'users?username={only_if_assigned}')[-1]['id']
+            if only_if_assigned and not also_unassigned else None)
+        self.assignee_query = (
+            f'assignee_id={assignee_id}' if assignee_id else '')
 
     def _base_url(self):
         return f"{self.scheme}://{self.host}/api/v4/"
@@ -230,7 +238,8 @@ class GitlabClient(ServiceClient):
         :type rid: int
         :rtype: list
         """
-        return self.get_issues_from_query('projects/%d/issues?state=opened' % rid)
+        return self.get_issues_from_query(
+            f'projects/{rid}/issues?state=opened&{self.assignee_query}')
 
     def get_repo_merge_requests(self, rid: int) -> dict:
         """Get all merge_requests from a repository as JSON dictionary
@@ -239,7 +248,8 @@ class GitlabClient(ServiceClient):
         :type rid: int
         :rtype: dict
         """
-        return self.get_issues_from_query('projects/%d/merge_requests?state=opened' % rid)
+        return self.get_issues_from_query(
+            f'projects/{rid}/merge_requests?state=opened&{self.assignee_query}')
 
     def get_issues_from_query(self, query: str) -> dict:
         """Get objects matching a query. Results will be returned in a dictionary where the key
@@ -498,6 +508,8 @@ class GitlabService(IssueService):
         self.gitlab_client = GitlabClient(
             host=self.config.host,
             token=token,
+            only_if_assigned=self.config.only_if_assigned,
+            also_unassigned=self.config.also_unassigned,
             use_https=self.config.use_https,
             verify_ssl=self.config.verify_ssl
         )
