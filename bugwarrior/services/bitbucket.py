@@ -99,7 +99,7 @@ class BitbucketService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        oauth = (self.config.key, self.config.secret)
+        oauth = (self.config.key, self.get_password('secret', self.config.key))
         refresh_token = self.main_config.data.get('bitbucket_refresh_token')
 
         if refresh_token:
@@ -119,6 +119,10 @@ class BitbucketService(IssueService, ServiceClient):
 
         self.requests_kwargs = {
             'headers': {'Authorization': f"Bearer {response['access_token']}"}}
+
+    @staticmethod
+    def get_keyring_service(config):
+        return f"bitbucket://{config.key}/{config.username}"
 
     def filter_repos(self, repo_tag):
         repo = repo_tag.split('/').pop()
