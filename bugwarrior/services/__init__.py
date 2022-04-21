@@ -108,6 +108,7 @@ class IssueService(abc.ABC):
             'shorten': self.main_config.shorten,
             'inline_links': self.main_config.inline_links,
             'add_tags': self.config.add_tags,
+            'static_fields': self.config.static_fields,
         }
         origin.update(self.get_service_metadata())
         return self.ISSUE_CLASS(record, origin=origin, extra=extra)
