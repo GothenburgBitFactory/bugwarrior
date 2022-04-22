@@ -81,7 +81,7 @@ class TestSynchronize(ConfigTest):
                     del task['modified']
                     del task['entry']
                     del task['uuid']
-                    task['tags'] = sorted(task['tags'])
+
             return tasks
 
         def get_tasks(tw):
@@ -108,10 +108,7 @@ class TestSynchronize(ConfigTest):
             'githubtype': 'issue',
             'githuburl': 'https://example.com',
             'priority': 'M',
-            'tags': ['foo'],
         }
-        duplicate_issue = copy.deepcopy(issue)
-        duplicate_issue['tags'] = ['bar']
 
         # TEST NEW ISSUE AND EXISTING ISSUE.
         for _ in range(2):
@@ -119,7 +116,7 @@ class TestSynchronize(ConfigTest):
             # These should be de-duplicated in db.synchronize before
             # writing out to taskwarrior.
             # https://github.com/ralphbean/bugwarrior/issues/601
-            issue_generator = iter((issue, duplicate_issue,))
+            issue_generator = iter((issue, issue,))
             db.synchronize(issue_generator, bwconfig, 'general')
 
             self.assertEqual(get_tasks(tw), {
@@ -132,8 +129,7 @@ class TestSynchronize(ConfigTest):
                     'githuburl': 'https://example.com',
                     'githubtype': 'issue',
                     'id': 1,
-                    'tags': ['bar', 'foo'],
-                    'urgency': 5.8,
+                    'urgency': 4.9,
                 }]})
 
         # TEST CHANGED ISSUE.
@@ -154,8 +150,7 @@ class TestSynchronize(ConfigTest):
                 'githuburl': 'https://example.com',
                 'githubtype': 'issue',
                 'id': 1,
-                'tags': ['bar', 'foo'],
-                'urgency': 5.8,
+                'urgency': 4.9,
             }]})
 
         # TEST CLOSED ISSUE.
@@ -174,8 +169,7 @@ class TestSynchronize(ConfigTest):
                 'id': 0,
                 'priority': 'M',
                 'status': 'completed',
-                'tags': ['bar', 'foo'],
-                'urgency': 5.8,
+                'urgency': 4.9,
             }],
             'pending': []})
 
@@ -198,8 +192,7 @@ class TestSynchronize(ConfigTest):
                 'githuburl': 'https://example.com',
                 'githubtype': 'issue',
                 'id': 1,
-                'tags': ['bar', 'foo'],
-                'urgency': 5.8,
+                'urgency': 4.9,
             }]})
 
 
