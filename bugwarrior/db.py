@@ -292,212 +292,217 @@ def run_hooks(pre_import):
             raise RuntimeError(msg)
 
 
-def synchronize(issue_generator, conf, main_section, dry_run=False):
-    main_config = conf[main_section]
+class Synchronizer:
+    def __init__(self, config, main_section):
+        self.config = config
+        self.main_config = config[main_section]
+        self.targets = self.main_config.targets.copy()
+        self.services = set([config[target].service for target in self.targets])
+        self.seen_uuids = set()
+        self.updates = {
+            'new': [],
+            'existing': [],
+            'changed': [],
+            'closed': [],
+        }
 
-    targets = main_config.targets.copy()
-    services = set([conf[target].service for target in targets])
-    key_list = build_key_list(services)
-    uda_list = build_uda_config_overrides(services)
-
-    if uda_list:
-        log.info(
-            'Service-defined UDAs exist: you can optionally use the '
-            '`bugwarrior-uda` command to export a list of UDAs you can '
-            'add to your taskrc file.'
+        uda_list = build_uda_config_overrides(self.services)
+        if uda_list:
+            log.info(
+                'Service-defined UDAs exist: you can optionally use the '
+                '`bugwarrior-uda` command to export a list of UDAs you can '
+                'add to your taskrc file.'
+            )
+        self.tw = TaskWarriorShellout(
+            config_filename=self.main_config.taskrc,
+            config_overrides=uda_list,
+            marshal=True,
         )
 
-    # Before running CRUD operations, call the pre_import hook(s).
-    run_hooks(conf['hooks'].pre_import)
+    def aggregate_updates(self, issue_generator):
+        key_list = build_key_list(self.services)
 
-    notify = conf['notifications'].notifications and not dry_run
+        # Before running CRUD operations, call the pre_import hook(s).
+        run_hooks(self.config['hooks'].pre_import)
 
-    tw = TaskWarriorShellout(
-        config_filename=main_config.taskrc,
-        config_overrides=uda_list,
-        marshal=True,
-    )
+        issue_map = {}  # unique identifier -> issue dict
+        for issue in issue_generator:
+            try:
+                issue_dict = dict(issue)
+            except ValueError:
+                if isinstance(issue, tuple) and issue[0] == 'SERVICE FAILED':
+                    self.targets.remove(issue[1])
+                    continue
 
-    issue_updates = {
-        'new': [],
-        'existing': [],
-        'changed': [],
-        'closed': [],
-    }
-
-    issue_map = {}  # unique identifier -> issue dict
-    for issue in issue_generator:
-
-        try:
-            issue_dict = dict(issue)
-        except ValueError:
-            if isinstance(issue, tuple) and issue[0] == 'SERVICE FAILED':
-                targets.remove(issue[1])
-                continue
+            # De-duplicate issues coming in
+            unique_identifier = make_unique_identifier(key_list, issue)
+            if unique_identifier in issue_map:
+                log.debug(
+                    f"Merging tags and skipping. Seen {unique_identifier} of {issue}")
+                # Merge and deduplicate tags.
+                issue_map[unique_identifier]['tags'] += issue_dict['tags']
+                issue_map[unique_identifier]['tags'] = list(set(
+                    issue_map[unique_identifier]['tags']))
             else:
-                raise
+                issue_map[unique_identifier] = issue_dict
 
-        # De-duplicate issues coming in
-        unique_identifier = make_unique_identifier(key_list, issue)
-        if unique_identifier in issue_map:
-            log.debug(
-                f"Merging tags and skipping. Seen {unique_identifier} of {issue}")
-            # Merge and deduplicate tags.
-            issue_map[unique_identifier]['tags'] += issue_dict['tags']
-            issue_map[unique_identifier]['tags'] = list(set(issue_map[unique_identifier]['tags']))
-        else:
-            issue_map[unique_identifier] = issue_dict
+        for issue_dict in issue_map.values():
 
-    seen_uuids = set()
-    for issue_dict in issue_map.values():
+            # We received this issue from The Internet, but we're not sure what
+            # kind of encoding the service providers may have handed us. Let's try
+            # and decode all byte strings from UTF8 off the bat.  If we encounter
+            # other encodings in the wild in the future, we can revise the handling
+            # here. https://github.com/ralphbean/bugwarrior/issues/350
+            for key in issue_dict.keys():
+                if isinstance(issue_dict[key], bytes):
+                    try:
+                        issue_dict[key] = issue_dict[key].decode('utf-8')
+                    except UnicodeDecodeError:
+                        log.warn("Failed to interpret %r as utf-8" % key)
 
-        # We received this issue from The Internet, but we're not sure what
-        # kind of encoding the service providers may have handed us. Let's try
-        # and decode all byte strings from UTF8 off the bat.  If we encounter
-        # other encodings in the wild in the future, we can revise the handling
-        # here. https://github.com/ralphbean/bugwarrior/issues/350
-        for key in issue_dict.keys():
-            if isinstance(issue_dict[key], bytes):
-                try:
-                    issue_dict[key] = issue_dict[key].decode('utf-8')
-                except UnicodeDecodeError:
-                    log.warn("Failed to interpret %r as utf-8" % key)
+            # Blank priority should mean *no* priority
+            if issue_dict['priority'] == '':
+                issue_dict['priority'] = None
 
-        # Blank priority should mean *no* priority
-        if issue_dict['priority'] == '':
-            issue_dict['priority'] = None
+            try:
+                existing_taskwarrior_uuid = find_taskwarrior_uuid(self.tw, key_list, issue)
+            except MultipleMatches as e:
+                log.exception("Multiple matches: %s", str(e))
+            except NotFound:  # Create new task
+                self.updates['new'].append(issue_dict)
+            else:  # Update existing task.
+                self.seen_uuids.add(existing_taskwarrior_uuid)
+                _, task = self.tw.get_task(uuid=existing_taskwarrior_uuid)
 
-        try:
-            existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue_dict)
-        except MultipleMatches as e:
-            log.exception("Multiple matches: %s", str(e))
-        except NotFound:  # Create new task
-            issue_updates['new'].append(issue_dict)
-        else:  # Update existing task.
-            seen_uuids.add(existing_taskwarrior_uuid)
-            _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
+                if task['status'] == 'completed':
+                    # Reopen task
+                    task['status'] = 'pending'
+                    task['end'] = None
 
-            if task['status'] == 'completed':
-                # Reopen task
-                task['status'] = 'pending'
-                task['end'] = None
+                # Drop static fields from the upstream issue.  We don't want to
+                # overwrite local changes to fields we declare static.
+                for field in self.main_config.static_fields:
+                    if field in issue_dict:
+                        del issue_dict[field]
 
-            # Drop static fields from the upstream issue.  We don't want to
-            # overwrite local changes to fields we declare static.
-            for field in main_config.static_fields:
-                if field in issue_dict:
-                    del issue_dict[field]
+                # Merge annotations & tags from online into our task object
+                if self.main_config.merge_annotations:
+                    merge_left('annotations', task, issue_dict, hamming=True)
 
-            # Merge annotations & tags from online into our task object
-            if main_config.merge_annotations:
-                merge_left('annotations', task, issue_dict, hamming=True)
+                if self.main_config.merge_tags:
+                    if self.main_config.replace_tags:
+                        replace_left('tags', task, issue_dict, self.main_config.static_tags)
+                    else:
+                        merge_left('tags', task, issue_dict)
 
-            if main_config.merge_tags:
-                if main_config.replace_tags:
-                    replace_left('tags', task, issue_dict, main_config.static_tags)
+                issue_dict.pop('annotations', None)
+                issue_dict.pop('tags', None)
+
+                task.update(issue_dict)
+
+                if task.get_changes(keep=True):
+                    self.updates['changed'].append(task)
                 else:
-                    merge_left('tags', task, issue_dict)
+                    self.updates['existing'].append(task)
 
-            issue_dict.pop('annotations', None)
-            issue_dict.pop('tags', None)
+    def commit_updates(self, dry_run=False):
+        notify = self.config['notifications'].notifications and not dry_run
+        notreally = ' (not really)' if dry_run else ''
+        # Add new issues
+        log.info("Adding %i tasks", len(self.updates['new']))
+        for issue in self.updates['new']:
+            log.info("Adding task %s%s", issue['description'], notreally)
 
-            task.update(issue_dict)
+            if dry_run:
+                continue
+            if notify:
+                send_notification(issue, 'Created', self.config['notifications'])
 
-            if task.get_changes(keep=True):
-                issue_updates['changed'].append(task)
+            try:
+                new_task = self.tw.task_add(**issue)
+                if 'end' in issue and issue['end']:
+                    self.tw.task_done(uuid=new_task['uuid'])
+            except TaskwarriorError as e:
+                log.exception("Unable to add task: %s" % e.stderr)
             else:
-                issue_updates['existing'].append(task)
+                self.seen_uuids.add(new_task['uuid'])
 
-    notreally = ' (not really)' if dry_run else ''
-    # Add new issues
-    log.info("Adding %i tasks", len(issue_updates['new']))
-    for issue in issue_updates['new']:
-        log.info("Adding task %s%s", issue['description'], notreally)
-
-        if dry_run:
-            continue
-        if notify:
-            send_notification(issue, 'Created', conf['notifications'])
-
-        try:
-            new_task = tw.task_add(**issue)
-            if 'end' in issue and issue['end']:
-                tw.task_done(uuid=new_task['uuid'])
-        except TaskwarriorError as e:
-            log.exception("Unable to add task: %s" % e.stderr)
-        else:
-            seen_uuids.add(new_task['uuid'])
-
-    log.info("Updating %i tasks", len(issue_updates['changed']))
-    for issue in issue_updates['changed']:
-        changes = '; '.join([
-            '{field}: {f} -> {t}'.format(
-                field=field,
-                f=repr(ch[0]),
-                t=repr(ch[1])
+        log.info("Updating %i tasks", len(self.updates['changed']))
+        for issue in self.updates['changed']:
+            changes = '; '.join([
+                '{field}: {f} -> {t}'.format(
+                    field=field,
+                    f=repr(ch[0]),
+                    t=repr(ch[1])
+                )
+                for field, ch in issue.get_changes(keep=True).items()
+            ])
+            log.info(
+                "Updating task %s, %s; %s%s",
+                str(issue['uuid']),
+                issue['description'],
+                changes,
+                notreally
             )
-            for field, ch in issue.get_changes(keep=True).items()
-        ])
-        log.info(
-            "Updating task %s, %s; %s%s",
-            str(issue['uuid']),
-            issue['description'],
-            changes,
-            notreally
-        )
-        if dry_run:
-            continue
+            if dry_run:
+                continue
 
-        try:
-            _, updated_task = tw.task_update(issue)
-            if 'end' in issue and issue['end']:
-                tw.task_done(uuid=updated_task['uuid'])
-        except TaskwarriorError as e:
-            log.exception("Unable to modify task: %s" % e.stderr)
+            try:
+                _, updated_task = self.tw.task_update(issue)
+                if 'end' in issue and issue['end']:
+                    self.tw.task_done(uuid=updated_task['uuid'])
+            except TaskwarriorError as e:
+                log.exception("Unable to modify task: %s" % e.stderr)
 
-    log.debug(f'Closing tasks for succeeding services: {targets}.')
-    succeeded_service_task_uuids = get_managed_task_uuids(
-        tw,
-        build_key_list(
-            set([conf[target].service for target in targets])))
-    issue_updates['closed'] = succeeded_service_task_uuids - seen_uuids
-    log.info("Closing %i tasks", len(issue_updates['closed']))
-    for issue in issue_updates['closed']:
-        _, task_info = tw.get_task(uuid=issue)
-        log.info(
-            "Completing task %s %s%s",
-            issue,
-            task_info.get('description', ''),
-            notreally
-        )
-        if dry_run:
-            continue
-
-        if notify:
-            send_notification(task_info, 'Completed', conf['notifications'])
-
-        try:
-            tw.task_done(uuid=issue)
-        except TaskwarriorError as e:
-            log.exception("Unable to close task: %s" % e.stderr)
-
-    # Send notifications
-    if notify:
-        updates = (len(issue_updates['new']) +
-                   len(issue_updates['changed']) +
-                   len(issue_updates['closed']))
-        if not conf['notifications'].only_on_new_tasks or updates > 0:
-            send_notification(
-                dict(
-                    description="New: %d, Changed: %d, Completed: %d" % (
-                        len(issue_updates['new']),
-                        len(issue_updates['changed']),
-                        len(issue_updates['closed'])
-                    )
-                ),
-                'bw_finished',
-                conf['notifications'],
+        log.debug(f'Closing tasks for succeeding services: {self.targets}.')
+        succeeded_service_task_uuids = get_managed_task_uuids(
+            self.tw,
+            build_key_list(
+                set([self.config[target].service for target in self.targets])))
+        self.updates['closed'] = succeeded_service_task_uuids - self.seen_uuids
+        log.info("Closing %i tasks", len(self.updates['closed']))
+        for issue in self.updates['closed']:
+            _, task_info = self.tw.get_task(uuid=issue)
+            log.info(
+                "Completing task %s %s%s",
+                issue,
+                task_info.get('description', ''),
+                notreally
             )
+            if dry_run:
+                continue
+
+            if notify:
+                send_notification(task_info, 'Completed', self.config['notifications'])
+
+            try:
+                self.tw.task_done(uuid=issue)
+            except TaskwarriorError as e:
+                log.exception("Unable to close task: %s" % e.stderr)
+
+        # Send notifications
+        if notify:
+            updates = (len(self.updates['new']) +
+                       len(self.updates['changed']) +
+                       len(self.updates['closed']))
+            if not self.config['notifications'].only_on_new_tasks or updates > 0:
+                send_notification(
+                    dict(
+                        description="New: %d, Changed: %d, Completed: %d" % (
+                            len(self.updates['new']),
+                            len(self.updates['changed']),
+                            len(self.updates['closed'])
+                        )
+                    ),
+                    'bw_finished',
+                    self.config['notifications'],
+                )
+
+
+def synchronize(issue_generator, conf, main_section, dry_run=False):
+    synchronizer = Synchronizer(conf, main_section)
+    synchronizer.aggregate_updates(issue_generator)
+    synchronizer.commit_updates(dry_run)
 
 
 def build_key_list(targets):
