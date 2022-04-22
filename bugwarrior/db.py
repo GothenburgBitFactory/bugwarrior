@@ -368,7 +368,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             issue_dict['priority'] = None
 
         try:
-            existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
+            existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue_dict)
         except MultipleMatches as e:
             log.exception("Multiple matches: %s", str(e))
         except NotFound:  # Create new task
