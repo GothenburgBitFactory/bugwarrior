@@ -157,7 +157,7 @@ following configuration option::
     gitlab.include_todos = True
 
 If todo items are included, by default, todo items for all projects are
-included.  To only fetch todo items for projects which are being fetched, you
+included.  To apply the same repository filters to todos as to issues and merge requests, you
 may set::
 
     gitlab.include_all_todos = False
