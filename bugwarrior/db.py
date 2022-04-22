@@ -337,37 +337,31 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 continue
             else:
                 raise
-
-        # We received this issue from The Internet, but we're not sure what
-        # kind of encoding the service providers may have handed us. Let's try
-        # and decode all byte strings from UTF8 off the bat.  If we encounter
-        # other encodings in the wild in the future, we can revise the handling
-        # here. https://github.com/ralphbean/bugwarrior/issues/350
-        for key in issue_dict.keys():
-            if isinstance(issue_dict[key], bytes):
-                try:
-                    issue_dict[key] = issue_dict[key].decode('utf-8')
-                except UnicodeDecodeError:
-                    log.warn("Failed to interpret %r as utf-8" % key)
-
-        # Blank priority should mean *no* priority
-        if issue_dict['priority'] == '':
-            issue_dict['priority'] = None
-
-        # De-duplicate issues coming in
-        unique_identifier = make_unique_identifier(key_list, issue)
-        if unique_identifier in seen:
-            log.debug("Skipping.  Seen %s of %r" % (unique_identifier, issue))
-            continue
-        seen.append(unique_identifier)
-
         try:
+            # We received this issue from The Internet, but we're not sure what
+            # kind of encoding the service providers may have handed us. Let's try
+            # and decode all byte strings from UTF8 off the bat.  If we encounter
+            # other encodings in the wild in the future, we can revise the handling
+            # here. https://github.com/ralphbean/bugwarrior/issues/350
+            for key in issue_dict.keys():
+                if isinstance(issue_dict[key], bytes):
+                    try:
+                        issue_dict[key] = issue_dict[key].decode('utf-8')
+                    except UnicodeDecodeError:
+                        log.warn("Failed to interpret %r as utf-8" % key)
+
+            # Blank priority should mean *no* priority
+            if issue_dict['priority'] == '':
+                issue_dict['priority'] = None
+
+            # De-duplicate issues coming in
+            unique_identifier = make_unique_identifier(key_list, issue)
+            if unique_identifier in seen:
+                log.debug("Skipping.  Seen %s of %r" % (unique_identifier, issue))
+                continue
+            seen.append(unique_identifier)
+
             existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
-        except MultipleMatches as e:
-            log.exception("Multiple matches: %s", str(e))
-        except NotFound:  # Create new task
-            issue_updates['new'].append(issue_dict)
-        else:  # Update existing task.
             seen_uuids.add(existing_taskwarrior_uuid)
             _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
 
@@ -401,6 +395,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                 issue_updates['changed'].append(task)
             else:
                 issue_updates['existing'].append(task)
+
+        except MultipleMatches as e:
+            log.exception("Multiple matches: %s", str(e))
+        except NotFound:
+            issue_updates['new'].append(issue_dict)
 
     notreally = ' (not really)' if dry_run else ''
     # Add new issues
