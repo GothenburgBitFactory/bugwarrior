@@ -97,7 +97,7 @@ def get_managed_task_uuids(tw, key_list):
     return expected_task_ids
 
 
-def make_unique_identifier(keys, issue):
+def make_unique_identifier(keys: list, issue: dict):
     """ For a given issue, make an identifier from its unique keys.
 
     This is not the same as the taskwarrior uuid, which is assigned
@@ -106,7 +106,7 @@ def make_unique_identifier(keys, issue):
     :params:
     * `keys`: A list of lists of keys to use for uniquely identifying
       an issue.
-    * `issue`: An instance of a subclass of `bugwarrior.services.Issue`.
+    * `issue`: A dict of uda's.
 
     :returns:
     * A single string UUID.
@@ -297,7 +297,6 @@ class Synchronizer:
         self.config = config
         self.main_config = config[main_section]
         self.targets = self.main_config.targets.copy()
-        self.services = set([config[target].service for target in self.targets])
         self.seen_uuids = set()
         self.updates = {
             'new': [],
@@ -306,7 +305,9 @@ class Synchronizer:
             'closed': [],
         }
 
-        uda_list = build_uda_config_overrides(self.services)
+        services = set([config[target].service for target in self.targets])
+        self.key_list = build_key_list(services)
+        uda_list = build_uda_config_overrides(services)
         if uda_list:
             log.info(
                 'Service-defined UDAs exist: you can optionally use the '
@@ -319,13 +320,70 @@ class Synchronizer:
             marshal=True,
         )
 
-    def aggregate_updates(self, issue_generator):
-        key_list = build_key_list(self.services)
+    def _issue_to_updates(self, issue: dict):
+        """ Add issue to self.updates """
+        # We received this issue from The Internet, but we're not sure what
+        # kind of encoding the service providers may have handed us. Let's try
+        # and decode all byte strings from UTF8 off the bat.  If we encounter
+        # other encodings in the wild in the future, we can revise the handling
+        # here. https://github.com/ralphbean/bugwarrior/issues/350
+        for key in issue.keys():
+            if isinstance(issue[key], bytes):
+                try:
+                    issue[key] = issue[key].decode('utf-8')
+                except UnicodeDecodeError:
+                    log.warn("Failed to interpret %r as utf-8" % key)
 
+        # Blank priority should mean *no* priority
+        if issue['priority'] == '':
+            issue['priority'] = None
+
+        try:
+            existing_taskwarrior_uuid = find_taskwarrior_uuid(self.tw, self.key_list, issue)
+        except MultipleMatches as e:
+            log.exception("Multiple matches: %s", str(e))
+        except NotFound:  # Create new task
+            self.updates['new'].append(issue)
+        else:  # Update existing task.
+            self.seen_uuids.add(existing_taskwarrior_uuid)
+            _, task = self.tw.get_task(uuid=existing_taskwarrior_uuid)
+
+            if task['status'] == 'completed':
+                # Reopen task
+                task['status'] = 'pending'
+                task['end'] = None
+
+            # Drop static fields from the upstream issue.  We don't want to
+            # overwrite local changes to fields we declare static.
+            for field in self.main_config.static_fields:
+                if field in issue:
+                    del issue[field]
+
+            # Merge annotations & tags from online into our task object
+            if self.main_config.merge_annotations:
+                merge_left('annotations', task, issue, hamming=True)
+
+            if self.main_config.merge_tags:
+                if self.main_config.replace_tags:
+                    replace_left('tags', task, issue, self.main_config.static_tags)
+                else:
+                    merge_left('tags', task, issue)
+
+            issue.pop('annotations', None)
+            issue.pop('tags', None)
+
+            task.update(issue)
+
+            if task.get_changes(keep=True):
+                self.updates['changed'].append(task)
+            else:
+                self.updates['existing'].append(task)
+
+    def aggregate_updates(self, issue_generator):
         # Before running CRUD operations, call the pre_import hook(s).
         run_hooks(self.config['hooks'].pre_import)
 
-        issue_map = {}  # unique identifier -> issue dict
+        issue_map = {}  # unique identifier -> issue
         for issue in issue_generator:
             try:
                 issue_dict = dict(issue)
@@ -335,7 +393,7 @@ class Synchronizer:
                     continue
 
             # De-duplicate issues coming in
-            unique_identifier = make_unique_identifier(key_list, issue)
+            unique_identifier = make_unique_identifier(self.key_list, issue_dict)
             if unique_identifier in issue_map:
                 log.debug(
                     f"Merging tags and skipping. Seen {unique_identifier} of {issue}")
@@ -347,63 +405,7 @@ class Synchronizer:
                 issue_map[unique_identifier] = issue_dict
 
         for issue_dict in issue_map.values():
-
-            # We received this issue from The Internet, but we're not sure what
-            # kind of encoding the service providers may have handed us. Let's try
-            # and decode all byte strings from UTF8 off the bat.  If we encounter
-            # other encodings in the wild in the future, we can revise the handling
-            # here. https://github.com/ralphbean/bugwarrior/issues/350
-            for key in issue_dict.keys():
-                if isinstance(issue_dict[key], bytes):
-                    try:
-                        issue_dict[key] = issue_dict[key].decode('utf-8')
-                    except UnicodeDecodeError:
-                        log.warn("Failed to interpret %r as utf-8" % key)
-
-            # Blank priority should mean *no* priority
-            if issue_dict['priority'] == '':
-                issue_dict['priority'] = None
-
-            try:
-                existing_taskwarrior_uuid = find_taskwarrior_uuid(self.tw, key_list, issue)
-            except MultipleMatches as e:
-                log.exception("Multiple matches: %s", str(e))
-            except NotFound:  # Create new task
-                self.updates['new'].append(issue_dict)
-            else:  # Update existing task.
-                self.seen_uuids.add(existing_taskwarrior_uuid)
-                _, task = self.tw.get_task(uuid=existing_taskwarrior_uuid)
-
-                if task['status'] == 'completed':
-                    # Reopen task
-                    task['status'] = 'pending'
-                    task['end'] = None
-
-                # Drop static fields from the upstream issue.  We don't want to
-                # overwrite local changes to fields we declare static.
-                for field in self.main_config.static_fields:
-                    if field in issue_dict:
-                        del issue_dict[field]
-
-                # Merge annotations & tags from online into our task object
-                if self.main_config.merge_annotations:
-                    merge_left('annotations', task, issue_dict, hamming=True)
-
-                if self.main_config.merge_tags:
-                    if self.main_config.replace_tags:
-                        replace_left('tags', task, issue_dict, self.main_config.static_tags)
-                    else:
-                        merge_left('tags', task, issue_dict)
-
-                issue_dict.pop('annotations', None)
-                issue_dict.pop('tags', None)
-
-                task.update(issue_dict)
-
-                if task.get_changes(keep=True):
-                    self.updates['changed'].append(task)
-                else:
-                    self.updates['existing'].append(task)
+            self._issue_to_updates(issue_dict)
 
     def commit_updates(self, dry_run=False):
         notify = self.config['notifications'].notifications and not dry_run
