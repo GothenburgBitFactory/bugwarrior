@@ -1,8 +1,7 @@
 import os
-import urllib.request
-import urllib.parse
-import urllib.error
 import warnings
+
+import requests
 
 
 cache_dir = os.path.expanduser(os.getenv('XDG_CACHE_HOME', "~/.cache") + "/bugwarrior")
@@ -18,7 +17,9 @@ def _cache_logo():
     if not os.path.isdir(cache_dir):
         os.makedirs(cache_dir)
 
-    urllib.request.urlretrieve(logo_url, logo_path)
+    response = requests.get(logo_url)
+    with open(logo_path, 'wb') as f:
+        f.write(response.content)
 
 
 def _get_metadata(issue):
