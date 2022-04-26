@@ -269,33 +269,4 @@ shown here https://www.pivotaltracker.com/help/api/rest/v5#Blockers.
 Provided UDA Fields
 -------------------
 
-+----------------------------+-------------------+-----------------+
-| Field Name                 | Description       | Type            |
-+============================+===================+=================+
-| ``pivotaldescription``     | Story Description | Text (string)   |
-+----------------------------+-------------------+-----------------+
-| ``pivotalstorytype``       | Story Type        |  Text (string)  |
-|                            |     (story, issue)|                 |
-+----------------------------+-------------------+-----------------+
-| ``pivotalrequesters``      | Story Requested By| Text (string)   |
-+----------------------------+-------------------+-----------------+
-| ``pivotalowners``          | Story Owned By    | Text (string)   |
-+----------------------------+-------------------+-----------------+
-| ``pivotalid``              | Story ID          | Numeric         |
-+----------------------------+-------------------+-----------------+
-| ``pivotalestimate``        | Story Estimate    | Text (string)   |
-+----------------------------+-------------------+-----------------+
-| ``pivotalblockers``        | Story Blockers    | Text (string)   |
-+----------------------------+-------------------+-----------------+
-| ``pivotalcreated``         | Story Created     | Date (date)     |
-+----------------------------+-------------------+-----------------+
-| ``pivotalupdated``         | Story Updated     | Date (date)     |
-+----------------------------+-------------------+-----------------+
-| ``pivotalclosed``          | Story Closed      | Date (date)     |
-+----------------------------+-------------------+-----------------+
-| ``pivotalurl``             | Story URL         | Text (string)   |
-+----------------------------+-------------------+-----------------+
-| ``pivotalprojectid``       | Project ID        | Text (string)   |
-+----------------------------+-------------------+-----------------+
-| ``pivotalprojectname``     | Project Name      | Text (string)   |
-+----------------------------+-------------------+-----------------+
+.. udas:: bugwarrior.services.pivotaltracker.PivotalTrackerIssue
