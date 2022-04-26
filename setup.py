@@ -19,6 +19,7 @@ extras = {
     "phabricator": ["phabricator"],
     "test": ["flake8", "pytest", "responses", "sphinx", "sphinx-click"],
     "trac": ["offtrac"],
+    "versionone": ["v1pysdk"],
 }
 
 setup(name='bugwarrior',

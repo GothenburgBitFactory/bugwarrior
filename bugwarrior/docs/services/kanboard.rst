@@ -44,18 +44,4 @@ configuration option::
 Provided UDA Fields
 -------------------
 
-+-----------------------------+---------------------+---------------------+
-| Field Name                  | Description         | Type                |
-+=============================+=====================+=====================+
-| ``kanboardtaskid``          | Task ID             | Number (numeric)    |
-+-----------------------------+---------------------+---------------------+
-| ``kanboardtasktitle``       | Task Title          | Text (string)       |
-+-----------------------------+---------------------+---------------------+
-| ``kanboardtaskdescription`` | Task Description    | Text (string)       |
-+-----------------------------+---------------------+---------------------+
-| ``kanboardprojectid``       | Project ID          | Number (numeric)    |
-+-----------------------------+---------------------+---------------------+
-| ``kanboardprojectname``     | Project Name        | Text (string)       |
-+-----------------------------+---------------------+---------------------+
-| ``kanboardurl``             | URL                 | Text (string)       |
-+-----------------------------+---------------------+---------------------+
+.. udas:: bugwarrior.services.kanboard.KanboardIssue
