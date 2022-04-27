@@ -73,19 +73,8 @@ class TestReplaceLeft(unittest.TestCase):
 
 class TestSynchronize(ConfigTest):
 
-    def test_synchronize(self):
-
-        def remove_non_deterministic_keys(tasks):
-            for status in ['pending', 'completed']:
-                for task in tasks[status]:
-                    del task['modified']
-                    del task['entry']
-                    del task['uuid']
-                    task['tags'] = sorted(task['tags'])
-            return tasks
-
-        def get_tasks(tw):
-            return remove_non_deterministic_keys(tw.load_tasks())
+    def setUp(self):
+        super().setUp()
 
         self.config = BugwarriorConfigParser()
         self.config.add_section('general')
@@ -97,12 +86,14 @@ class TestSynchronize(ConfigTest):
         self.config.set('my_service', 'github.login', 'ralphbean')
         self.config.set('my_service', 'github.username', 'ralphbean')
         self.config.set('my_service', 'github.password', 'abc123')
-        bwconfig = self.validate()
 
-        tw = taskw.TaskWarrior(self.taskrc)
-        self.assertEqual(tw.load_tasks(), {'completed': [], 'pending': []})
+        self.bwconfig = self.validate()
 
-        issue = {
+        self.tw = taskw.TaskWarrior(self.taskrc)
+
+        self.synchronizer = db.Synchronizer(self.bwconfig, 'general')
+
+        self.issue = {
             'description': 'Blah blah blah. ☃',
             'project': 'sample_project',
             'githubtype': 'issue',
@@ -110,19 +101,38 @@ class TestSynchronize(ConfigTest):
             'priority': 'M',
             'tags': ['foo'],
         }
-        duplicate_issue = copy.deepcopy(issue)
-        duplicate_issue['tags'] = ['bar']
+
+    @staticmethod
+    def remove_non_deterministic_keys(tasks: dict) -> dict:
+        for status in ['pending', 'completed']:
+            for task in tasks[status]:
+                del task['modified']
+                del task['entry']
+                del task['uuid']
+                task['tags'] = sorted(task['tags'])
+        return tasks
+
+    def assertUpdatesEqual(self, updates: dict):
+        # Make tag order deterministic.
+        for key in ['new', 'existing', 'changed', 'closed']:
+            for task in self.synchronizer.updates[key]:
+                task['tags'] = sorted(task['tags'])
+            for task in updates[key]:
+                task['tags'] = sorted(task['tags'])
+
+        self.assertEqual(self.synchronizer.updates, updates)
+
+    def test_synchronize_integration(self):
+        def get_tasks() -> dict:
+            return self.remove_non_deterministic_keys(self.tw.load_tasks())
+
+        self.assertEqual(self.tw.load_tasks(), {'completed': [], 'pending': []})
 
         # TEST NEW ISSUE AND EXISTING ISSUE.
         for _ in range(2):
-            # Use an issue generator with two copies of the same issue.
-            # These should be de-duplicated in db.synchronize before
-            # writing out to taskwarrior.
-            # https://github.com/ralphbean/bugwarrior/issues/601
-            issue_generator = iter((issue, duplicate_issue,))
-            db.synchronize(issue_generator, bwconfig, 'general')
+            db.synchronize(iter((self.issue,)), self.bwconfig, 'general')
 
-            self.assertEqual(get_tasks(tw), {
+            self.assertEqual(get_tasks(), {
                 'completed': [],
                 'pending': [{
                     'project': 'sample_project',
@@ -132,19 +142,19 @@ class TestSynchronize(ConfigTest):
                     'githuburl': 'https://example.com',
                     'githubtype': 'issue',
                     'id': 1,
-                    'tags': ['bar', 'foo'],
-                    'urgency': 5.8,
+                    'tags': ['foo'],
+                    'urgency': 5.7,
                 }]})
 
         # TEST CHANGED ISSUE.
-        issue['description'] = 'Yada yada yada.'
+        self.issue['description'] = 'Yada yada yada.'
 
         # Change static field
-        issue['project'] = 'other_project'
+        self.issue['project'] = 'other_project'
 
-        db.synchronize(iter((issue,)), bwconfig, 'general')
+        db.synchronize(iter((self.issue,)), self.bwconfig, 'general')
 
-        self.assertEqual(get_tasks(tw), {
+        self.assertEqual(get_tasks(), {
             'completed': [],
             'pending': [{
                 'priority': 'M',
@@ -154,16 +164,16 @@ class TestSynchronize(ConfigTest):
                 'githuburl': 'https://example.com',
                 'githubtype': 'issue',
                 'id': 1,
-                'tags': ['bar', 'foo'],
-                'urgency': 5.8,
+                'tags': ['foo'],
+                'urgency': 5.7,
             }]})
 
         # TEST CLOSED ISSUE.
-        db.synchronize(iter(()), bwconfig, 'general')
+        db.synchronize(iter(()), self.bwconfig, 'general')
 
-        completed_tasks = tw.load_tasks()
+        completed_tasks = self.tw.load_tasks()
 
-        tasks = remove_non_deterministic_keys(copy.deepcopy(completed_tasks))
+        tasks = self.remove_non_deterministic_keys(copy.deepcopy(completed_tasks))
         del tasks['completed'][0]['end']
         self.assertEqual(tasks, {
             'completed': [{
@@ -174,20 +184,20 @@ class TestSynchronize(ConfigTest):
                 'id': 0,
                 'priority': 'M',
                 'status': 'completed',
-                'tags': ['bar', 'foo'],
-                'urgency': 5.8,
+                'tags': ['foo'],
+                'urgency': 5.7,
             }],
             'pending': []})
 
         # TEST REOPENED ISSUE
-        db.synchronize(iter((issue,)), bwconfig, 'general')
+        db.synchronize(iter((self.issue,)), self.bwconfig, 'general')
 
-        tasks = tw.load_tasks()
+        tasks = self.tw.load_tasks()
         self.assertEqual(
             completed_tasks['completed'][0]['uuid'],
             tasks['pending'][0]['uuid'])
 
-        tasks = remove_non_deterministic_keys(tasks)
+        tasks = self.remove_non_deterministic_keys(tasks)
         self.assertEqual(tasks, {
             'completed': [],
             'pending': [{
@@ -198,9 +208,36 @@ class TestSynchronize(ConfigTest):
                 'githuburl': 'https://example.com',
                 'githubtype': 'issue',
                 'id': 1,
-                'tags': ['bar', 'foo'],
-                'urgency': 5.8,
+                'tags': ['foo'],
+                'urgency': 5.7,
             }]})
+
+    def test_duplicate_issues(self):
+        """
+        Issues should be deduplicated with their tags merged.
+
+        See https://github.com/ralphbean/bugwarrior/issues/601.
+        """
+        duplicate_issue = copy.deepcopy(self.issue)
+        duplicate_issue['tags'] = ['bar']
+
+        issue_generator = iter((self.issue, duplicate_issue,))
+
+        self.synchronizer.aggregate_updates(issue_generator)
+
+        self.assertUpdatesEqual({
+            'new': [{
+                'project': 'sample_project',
+                'priority': 'M',
+                'description': 'Blah blah blah. ☃',
+                'githuburl': 'https://example.com',
+                'githubtype': 'issue',
+                'tags': ['bar', 'foo'],
+            }],
+            'existing': [],
+            'changed': [],
+            'closed': []
+        })
 
 
 class TestUDAs(ConfigTest):
