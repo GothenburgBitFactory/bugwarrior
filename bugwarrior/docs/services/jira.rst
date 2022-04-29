@@ -20,7 +20,7 @@ Here's an example of a jira project::
     service = jira
     jira.base_uri = https://bug.tasktools.org
     jira.username = ralph
-    jira.password = OMG_LULZ
+    jira.password = 8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903
 
 .. note::
 
@@ -28,7 +28,7 @@ Here's an example of a jira project::
 
 .. note::
 
-   The `jira.password` may contain an `api token <https://confluence.atlassian.com/cloud/api-tokens-938839638.html>`_.
+   Basic authentication with passwords is deprecated. The `jira.password` may contain an `api token <https://confluence.atlassian.com/cloud/api-tokens-938839638.html>`_ or alternatively you can set `jira.PAT` to a Personal Access Token.
 
 The above example is the minimum required to import issues from
 Jira.  You can also feel free to use any of the
