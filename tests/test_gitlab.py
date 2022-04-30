@@ -46,6 +46,16 @@ class TestData():
                 "state": "active",
                 "created_at": "2012-05-23T08:01:01Z"
             },
+            'assignees': [
+                {
+                    "id": 2,
+                    "username": "jack_smith",
+                    "email": "jack@example.com",
+                    "name": "Jack Smith",
+                    "state": "active",
+                    "created_at": "2012-05-23T08:01:01Z"
+                },
+            ],
             "author": {
                 "id": 1,
                 "username": "john_smith",
@@ -495,7 +505,12 @@ class TestGitlabService(ConfigTest):
     @property
     def service(self):
         conf = self.validate()
-        return GitlabService(conf['myservice'], conf['general'], 'myservice')
+        service = GitlabService(conf['myservice'], conf['general'], 'myservice')
+        service.gitlab_client.repo_cache = {1: {
+            'id': 1,
+            'path_with_namespace': 'arbitrary_namespace/arbitrary_project',
+        }}
+        return service
 
     def test_get_keyring_service_default_host(self):
         conf = self.validate()['myservice']
@@ -545,6 +560,13 @@ class TestGitlabService(ConfigTest):
         self.config.set('myservice', 'gitlab.include_repos', 'id:1234')
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         self.assertTrue(self.service.filter_repos(repo))
+
+    def test_include_only_if_assigned(self):
+        self.config.set('myservice', 'gitlab.only_if_assigned', 'jack_smith')
+        data = TestData()
+        self.assertTrue(self.service.include((1, data.arbitrary_issue)))
+        self.config.set('myservice', 'gitlab.only_if_assigned', 'smack_jith')
+        self.assertFalse(self.service.include((1, data.arbitrary_issue)))
 
     def test_default_priorities(self):
         self.config.set('myservice', 'gitlab.default_issue_priority', 'L')
