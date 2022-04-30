@@ -404,6 +404,7 @@ class GitlabIssue(Issue):
         upvotes = self.record.get('upvotes', 0)
         downvotes = self.record.get('downvotes', 0)
         work_in_progress = int(self.record.get('work_in_progress', 0))
+        # FIXME: 'assignee' api column is deprecated in favor of 'assignees'
         assignee = self.record.get('assignee')
         duedate = self.record.get('due_date')
         weight = self.record.get('weight')
@@ -523,8 +524,7 @@ class GitlabService(IssueService):
         }
 
     def get_owner(self, issue):
-        if issue[1]['assignee'] is not None and issue[1]['assignee']['username']:
-            return issue[1]['assignee']['username']
+        return [assignee['username'] for assignee in issue[1]['assignees']]
 
     def get_author(self, issue):
         if issue[1]['author'] is not None and issue[1]['author']['username']:
@@ -632,13 +632,12 @@ class GitlabService(IssueService):
             return False
 
         if self.config.only_if_assigned:
-            owner = self.get_owner(issue)
-            include_owners = [self.config.only_if_assigned]
+            assignees = self.get_owner(issue)
 
-            if self.config.also_unassigned:
-                include_owners.append(None)
+            if self.config.also_unassigned and not assignees:
+                return True
 
-            return owner in include_owners
+            return self.config.only_if_assigned in assignees
 
         if self.config.only_if_author:
             return self.get_author(issue) == self.config.only_if_author
