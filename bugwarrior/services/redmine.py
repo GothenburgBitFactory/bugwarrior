@@ -12,11 +12,13 @@ log = logging.getLogger(__name__)
 
 
 class RedMineConfig(config.ServiceConfig, prefix='redmine'):
+    _DEPRECATE_PROJECT_NAME = True
+    project_name: str = ''
+
     service: typing_extensions.Literal['redmine']
     url: config.StrippedTrailingSlashUrl
     key: str
 
-    project_name: str = ''
     issue_limit: int = 100
     query: str = ''
     login: str = ''
