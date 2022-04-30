@@ -13,7 +13,7 @@ class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
         'teamlab.hostname': 'something',
         'teamlab.login': 'alkjdsf',
         'teamlab.password': 'lkjklj',
-        'teamlab.project_name': 'abcdef',
+        'teamlab.project_template': 'abcdef',
     }
     arbitrary_issue = {
         'title': 'Hello',
@@ -37,7 +37,7 @@ class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
         issue = self.service.get_issue_for_record(self.arbitrary_issue)
 
         expected_output = {
-            'project': self.SERVICE_CONFIG['teamlab.project_name'],
+            'project': self.SERVICE_CONFIG['teamlab.hostname'],
             'priority': self.service.config.default_priority,
             issue.TITLE: self.arbitrary_issue['title'],
             issue.FOREIGN_ID: self.arbitrary_issue['id'],

@@ -9,13 +9,15 @@ from bugwarrior.services import IssueService, Issue, LOCAL_TIMEZONE
 
 
 class VersionOneConfig(config.ServiceConfig, prefix='versionone'):
+    _DEPRECATE_PROJECT_NAME = True
+    project_name: str = ''
+
     service: typing_extensions.Literal['versionone']
     base_uri: pydantic.AnyUrl
     username: str
 
     password: str = ''
     timebox_name: str = ''
-    project_name: str = ''
     timezone: str = LOCAL_TIMEZONE
 
 

@@ -19,16 +19,6 @@ The above example is the minimum required to import issues from
 Teamlab. You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`.
 
-Service Features
-----------------
-
-Project Name
-++++++++++++
-
-By default the project name is set to the hostname. To set a different name::
-
-    teamlab.project_name = example_teamlab
-
 
 Provided UDA Fields
 -------------------

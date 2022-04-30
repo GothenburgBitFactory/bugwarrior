@@ -167,14 +167,12 @@ service = teamlab
 teamlab.hostname = teamlab.example.com
 teamlab.login = alice
 teamlab.password = secret
-teamlab.project_name = example_teamlab
 
 # Here's an example of a redmine target.
 [my_redmine]
 service = redmine
 redmine.url = http://redmine.example.org/
 redmine.key = c0c4c014cafebabe
-redmine.project_name = redmine
 redmine.add_tags = chiliproject
 
 [activecollab]

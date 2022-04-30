@@ -173,3 +173,15 @@ class TestValidation(ConfigTest):
         self.config.set('my_gitlab', 'gitlab.include_merge_requests', 'true')
         self.assertValidationError(
             '[my_gitlab]  <- filter_merge_requests and include_merge_requests are incompatible.')
+
+    def test_deprecated_project_name(self):
+        """ We're just testing that deprecation doesn't break validation. """
+        self.config.set('general', 'targets', 'my_service, my_kan, my_gitlab, my_redmine')
+        self.config.add_section('my_redmine')
+        self.config.set('my_redmine', 'service', 'redmine')
+        self.config.set('my_redmine', 'redmine.url', 'https://example.com')
+        self.config.set('my_redmine', 'redmine.key', 'mykey')
+        self.validate()
+
+        self.config.set('my_redmine', 'redmine.project_name', 'myproject')
+        self.validate()

@@ -15,7 +15,6 @@ Here's an example of a Redmine target::
     service = redmine
     redmine.url = http://redmine.example.org/
     redmine.key = c0c4c014cafebabe
-    redmine.project_name = redmine
     redmine.issue_limit = 100
 
 You can also feel free to use any of the configuration options described in

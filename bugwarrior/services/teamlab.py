@@ -9,12 +9,13 @@ log = logging.getLogger(__name__)
 
 
 class TeamLabConfig(config.ServiceConfig, prefix='teamlab'):
+    _DEPRECATE_PROJECT_NAME = True
+    project_name: str = ''
+
     service: typing_extensions.Literal['teamlab']
     hostname: str
     login: str
     password: str
-
-    project_name: str = ''
 
 
 class TeamLabClient(ServiceClient):

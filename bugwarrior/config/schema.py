@@ -325,3 +325,10 @@ class ServiceConfig(_ServiceConfig,  # type: ignore  # (dynamic base class)
             elif values['include_merge_requests'] == 'Undefined':
                 values['include_merge_requests'] = True
         return values
+
+    @pydantic.root_validator
+    def deprecate_project_name(cls, values):
+        if hasattr(cls, '_DEPRECATE_PROJECT_NAME'):
+            if values['project_name'] != '':
+                log.warning('project_name is deprecated in favor of project_template')
+        return values
