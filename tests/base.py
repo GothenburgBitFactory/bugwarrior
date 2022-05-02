@@ -78,6 +78,9 @@ class ConfigTest(unittest.TestCase):
 
         self.assertIn(expected, self.caplog.records[0].message)
 
+        # We may want to use this assertion more than once per test.
+        self.caplog.clear()
+
 
 class ServiceTest(ConfigTest):
     GENERAL_CONFIG = {

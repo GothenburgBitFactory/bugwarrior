@@ -118,6 +118,7 @@ service = gitlab
 gitlab.login = ralphbean
 gitlab.token = OMG_LULZ
 gitlab.host = gitlab.com
+gitlab.owned = true
 gitlab.default_issue_priority = M
 gitlab.default_todo_priority = M
 gitlab.default_mr_priority = H

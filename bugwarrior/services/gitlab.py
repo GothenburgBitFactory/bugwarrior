@@ -74,6 +74,31 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
                 else values['default_priority'])
         return values
 
+    @pydantic.root_validator
+    def filter_gitlab_dot_com(cls, values):
+        """
+        There must be a repository filter if the host is gitlab.com.
+
+        Otherwise we'll get a 405 error for exceeding gitlab's rate limit by
+        trying to paginate through all public repositories.
+        """
+        if (values['host'] == 'gitlab.com'
+                # Options which automatically apply a filter.
+                and not (values['owned'] or
+                         values['membership'] or
+                         values['include_repos'])
+                # Query options *may* apply a filter.
+                and (
+                    (values['include_issues'] and not values['issue_query'])
+                    or (values['include_merge_requests'] and not values['merge_request_query'])
+                    or (values['include_todos'] and not values['todo_query'])
+                )):
+            raise ValueError(
+                "You must set at least one of the configuration options "
+                "to filter repositories (e.g., 'gitlab.owned') because there "
+                "there are too many on gitlab.com to fetch them all.")
+        return values
+
 
 class GitlabClient(ServiceClient):
     """Abstraction of Gitlab API v4"""
