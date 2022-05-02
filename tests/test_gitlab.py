@@ -502,6 +502,7 @@ class TestGitlabService(ConfigTest):
         self.config.set('myservice', 'gitlab.token', 'XXXXXX')
         self.config.set('myservice', 'gitlab.host', 'gitlab.com')
         self.config.set('myservice', 'gitlab.also_unassigned', 'true')
+        self.config.set('myservice', 'gitlab.owned', 'true')
 
     @property
     def service(self):
@@ -525,6 +526,23 @@ class TestGitlabService(ConfigTest):
         self.assertEqual(
             GitlabService.get_keyring_service(conf),
             'gitlab://foobar@my-git.org')
+
+    def test_filter_gitlab_dot_com(self):
+        self.config.set('myservice', 'gitlab.host', 'gitlab.com')
+        self.config.set('myservice', 'gitlab.owned', 'false')
+        self.assertValidationError('You must set at least one of the '
+                                   'configuration options to filter '
+                                   'repositories')
+
+        self.config.set('myservice', 'gitlab.issue_query', 'arbitrary_query')
+        self.config.set('myservice', 'gitlab.merge_request_query', 'arbitrary_query')
+        self.config.set('myservice', 'gitlab.todo_query', 'arbitrary_query')
+        self.validate()
+
+        self.config.set('myservice', 'gitlab.issue_query', '')
+        self.assertValidationError('You must set at least one of the '
+                                   'configuration options to filter '
+                                   'repositories')
 
     def test_add_default_namespace_to_included_repos(self):
         self.config.set(
