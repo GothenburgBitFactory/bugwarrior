@@ -371,7 +371,7 @@ class JiraIssue(Issue):
         return self.record['fields']['status']['name']
 
     def get_subtasks(self):
-        return ','.join(task['key'] for task in self.record['fields']['subtasks'])
+        return ','.join(task['key'] for task in self.record['fields'].get('subtasks', []))
 
     def get_parent(self):
         try:
