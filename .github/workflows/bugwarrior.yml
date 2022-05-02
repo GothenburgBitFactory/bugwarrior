@@ -10,6 +10,44 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
         jira-version: [1.0.10, 2.0.0]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Set Jira version ${{ matrix.jira-version }}
+        run: echo "JIRAVERSION=${{ matrix.jira-version }}" >> $GITHUB_ENV
+      - name: Run tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y \
+            libffi-dev libssl-dev pandoc python3-pip taskwarrior
+          task --version
+
+          pip3 install --upgrade pip
+          pip install codecov
+          pip install pytest-cov
+
+          pip3 install .[all]
+          pytest --cov=bugwarrior --cov-branch tests
+          flake8
+      - name: Coverage
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./.coverage
+        # Fragile way to only run codecov once.
+        # See https://github.com/codecov/codecov-action/issues/40.
+        if: |
+          matrix.python-version == 3.9 &&
+          matrix.jira-version == '2.0.0'
+  bugwarrior-multiarch-test:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        jira-version: [1.0.10, 2.0.0]
         architecture: [aarch64, ppc64le]
 
     steps:
@@ -39,20 +77,7 @@ jobs:
               libffi-dev libssl-dev pandoc python3-pip taskwarrior
             task --version
             pip3 install --upgrade pip
-            pip install codecov
-            pip install pytest-cov
           run: |
             source $HOME/.cargo/env
             pip3 install .[all]
-            pytest --cov=bugwarrior --cov-branch tests
-            flake8
-      - name: Coverage
-        uses: codecov/codecov-action@v1
-        with:
-          file: ./.coverage
-        # Fragile way to only run codecov once.
-        # See https://github.com/codecov/codecov-action/issues/40.
-        if: |
-          matrix.python-version == 3.8 &&
-          matrix.jira-version == '2.0.0' &&
-          matrix.architecture == 'aarch64'
+            pytest
