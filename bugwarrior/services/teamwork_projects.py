@@ -71,11 +71,10 @@ class TeamworkIssue(Issue):
         "high": "H"
     }
 
-    def get_owner(self, issue):
-        if issue:
-            if self.record.get("responsible-party-ids", ""):
-                if self.user_id in self.record.get("responsible-party-ids", ""):
-                    return self.name
+    def get_owner(self):
+        if (self.record.get("responsible-party-ids", "") and
+                self.user_id in self.record.get("responsible-party-ids", "")):
+            return self.name
 
     def get_author(self, issue):
         if issue:
@@ -152,9 +151,7 @@ class TeamworkService(IssueService):
         return []
 
     def get_owner(self, issue):
-        # TODO
-        raise NotImplementedError(
-            "This service has not implemented support for 'only_if_assigned'.")
+        return issue.get_owner()
 
     def issues(self):
         response = self.client.call_api("GET", "/tasks.json")
