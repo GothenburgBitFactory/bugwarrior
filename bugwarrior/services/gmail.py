@@ -154,6 +154,7 @@ class GmailService(IssueService):
             if os.path.exists(self.credentials_path):
                 with open(self.credentials_path, 'rb') as token:
                     credentials = pickle.load(token)
+                os.chmod(self.credentials_path, 0o600)
 
             # If there are no (valid) credentials available, let the user log in.
             if not credentials or not credentials.valid:
