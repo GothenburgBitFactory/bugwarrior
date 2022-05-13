@@ -199,8 +199,8 @@ than using the "default queries". For example, imagine that you want to query al
 to your user.
 
 This can be achieved by leaving the ``gitlab.include_repos`` configuration value empty and
-setting ``gitlab.only_assigned`` to ``True``. This will result in querying all repos your user has
-access to, which might take a very long time.
+setting ``gitlab.only_if_assigned`` to ``True``. This will result in querying all repos your user
+has access to, which might take a very long time.
 
 Alternatively, you could set ``gitlab.issue_query =
 issues?assignee_username=myusername&state=opened&scope=all``, which will fetch the assigned issues
