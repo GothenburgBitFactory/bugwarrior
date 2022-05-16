@@ -36,6 +36,9 @@ class DumbIssueService(services.IssueService):
     ISSUE_CLASS = DumbIssue
     CONFIG_SCHEMA = DumbConfig
 
+    def get_service_metadata(self):
+        return {'import_labels_as_tags': True, 'label_template': '{{ label }}'}
+
     def get_owner(self, issue):
         raise NotImplementedError
 
@@ -62,7 +65,7 @@ class ServiceBase(ConfigTest):
 
     def makeIssue(self):
         service = self.makeService()
-        return service.get_issue_for_record(None)
+        return service.get_issue_for_record({})
 
 
 class TestIssueService(ServiceBase):
@@ -119,3 +122,9 @@ class TestIssue(ServiceBase):
         description = issue.build_default_description(LONG_MESSAGE)
         self.assertEqual(
             description, f'(bw)Is# - {LONG_MESSAGE}')
+
+    def test_get_tags_from_labels_normalization(self):
+        issue = self.makeIssue()
+
+        self.assertEqual(issue.get_tags_from_labels(['needs work']),
+                         ['needs_work'])

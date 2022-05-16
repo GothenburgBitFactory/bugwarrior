@@ -5,7 +5,6 @@ Pulls trello cards as tasks.
 
 Trello API documentation available at https://developers.trello.com/
 """
-from jinja2 import Template
 import requests
 import typing_extensions
 
@@ -59,16 +58,16 @@ class TrelloIssue(Issue):
             cls='task',
         )
 
-    def get_tags(self, twdict):
-        tmpl = Template(self.origin['label_template'])
-        return [tmpl.render(twdict, label=label['name'])
-                for label in self.record['labels']]
+    def get_tags(self):
+        return self.get_tags_from_labels(
+            [label['name'] for label in self.record['labels']])
 
     def to_taskwarrior(self):
-        twdict = {
+        return {
             'project': self.extra['boardname'],
             'due': self.parse_date(self.record['due']),
             'priority': self.origin['default_priority'],
+            'tags': self.get_tags(),
             self.NAME: self.record['name'],
             self.CARDID: self.record['id'],
             self.SHORTCARDID: self.record['idShort'],
@@ -80,9 +79,6 @@ class TrelloIssue(Issue):
             self.URL: self.record['url'],
             'annotations': self.extra.get('annotations', []),
         }
-        if self.origin['import_labels_as_tags']:
-            twdict['tags'] = self.get_tags(twdict)
-        return twdict
 
 
 class TrelloService(IssueService, ServiceClient):

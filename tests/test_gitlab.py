@@ -611,14 +611,6 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
         self.data = TestData()
 
-    def test_normalize_label_to_tag(self):
-        issue = self.service.get_issue_for_record(
-            self.data.arbitrary_issue,
-            self.data.arbitrary_extra
-        )
-        self.assertEqual(issue._normalize_label_to_tag('needs work'),
-                         'needs_work')
-
     def test_to_taskwarrior(self):
         issue = self.service.get_issue_for_record(
             self.data.arbitrary_issue,

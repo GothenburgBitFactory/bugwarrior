@@ -51,15 +51,6 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
         'github.username': 'arbitrary_username',
     }
 
-    def test_normalize_label_to_tag(self):
-        service = self.get_mock_service(GithubService)
-        issue = service.get_issue_for_record(
-            ARBITRARY_ISSUE,
-            ARBITRARY_EXTRA
-        )
-        self.assertEqual(issue._normalize_label_to_tag('needs work'),
-                         'needs_work')
-
     def test_to_taskwarrior(self):
         service = self.get_mock_service(GithubService, config_overrides={
             'github.import_labels_as_tags': True})

@@ -1,6 +1,7 @@
 import abc
 import copy
 import multiprocessing
+import re
 import time
 
 from pkg_resources import iter_entry_points
@@ -242,6 +243,26 @@ class Issue(abc.ABC):
 
         """
         raise NotImplementedError()
+
+    def get_tags_from_labels(self,
+                             labels,
+                             toggle_option='import_labels_as_tags',
+                             template_option='label_template',
+                             template_variable='label'):
+        tags = []
+
+        if not self.origin[toggle_option]:
+            return tags
+
+        context = self.record.copy()
+        label_template = Template(self.origin[template_option])
+
+        for label in labels:
+            normalized_label = re.sub(r'[^a-zA-Z0-9]', '_', label)
+            context.update({template_variable: normalized_label})
+            tags.append(label_template.render(context))
+
+        return tags
 
     def get_added_tags(self):
         added_tags = []

@@ -50,6 +50,7 @@ class TestTrelloService(ConfigTest):
              'idShort': 1,
              'shortLink': 'abcd',
              'shortUrl': 'https://trello.com/c/AAaaBBbb',
+             'labels': [{'name': 'foo'}, {'name': 'bar'}],
              'desc': 'some description',
              'url': 'https://trello.com/c/AAaBBbb/42-so-long'}
     CARD2 = {'id': 'kard', 'name': 'Card 2', 'members': [{'username': 'mario'}]}
