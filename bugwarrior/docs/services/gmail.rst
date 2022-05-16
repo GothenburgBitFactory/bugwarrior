@@ -48,6 +48,12 @@ When you first run ``bugwarrior pull``, a browser will be opened and you'll be
 asked to authorise the application to access your e-mail. Once authorised a
 token will be stored in your bugwarrior data directory.
 
+.. note::
+
+   A limitation of the current implementation is that the browser must be
+   available on the same machine as bugwarrior is invoked from. This precludes
+   usage of the gmail service on a headless server.
+
 Provided UDA Fields
 -------------------
 
