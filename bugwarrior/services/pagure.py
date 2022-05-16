@@ -1,12 +1,9 @@
-import re
 import datetime
 import pytz
 
 import pydantic
 import requests
 import typing_extensions
-
-from jinja2 import Template
 
 from bugwarrior import config
 from bugwarrior.services import IssueService, Issue
@@ -74,9 +71,6 @@ class PagureIssue(Issue):
     }
     UNIQUE_KEY = (URL, TYPE,)
 
-    def _normalize_label_to_tag(self, label):
-        return re.sub(r'[^a-zA-Z0-9]', '_', label)
-
     def to_taskwarrior(self):
         if self.extra['type'] == 'pull_request':
             priority = 'H'
@@ -99,19 +93,9 @@ class PagureIssue(Issue):
         }
 
     def get_tags(self):
-        tags = []
-
-        if not self.origin['import_tags']:
-            return tags
-
-        context = self.record.copy()
-        tag_template = Template(self.origin['tag_template'])
-
-        for tagname in self.record.get('tags', []):
-            context.update({'label': self._normalize_label_to_tag(tagname)})
-            tags.append(tag_template.render(context))
-
-        return tags
+        return self.get_tags_from_labels(self.record.get('tags', []),
+                                         toggle_option='import_tags',
+                                         template_option='tag_template')
 
     def get_default_description(self):
         return self.build_default_description(

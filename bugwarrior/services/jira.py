@@ -6,7 +6,6 @@ from functools import reduce
 import pydantic
 import typing_extensions
 from dateutil.tz.tz import tzutc
-from jinja2 import Template
 from jira.client import JIRA as BaseJIRA
 from requests.cookies import RequestsCookieJar
 
@@ -258,7 +257,14 @@ class JiraIssue(Issue):
         return date
 
     def get_tags(self):
-        return self._get_tags_from_labels() + self._get_tags_from_sprints()
+        labels = self.record.get('fields', {}).get('labels', [])
+        label_tags = self.get_tags_from_labels(labels)
+
+        sprints = [sprint['name'] for sprint in self.__get_sprints()]
+        sprint_tags = self.get_tags_from_labels(
+            sprints, toggle_option='import_sprints_as_tags')
+
+        return label_tags + sprint_tags
 
     def get_due(self):
         # If the duedate is explicitly set on the issue, then use that.
@@ -270,23 +276,6 @@ class JiraIssue(Issue):
             endDate = sprint['endDate']
             if endDate != '<null>':
                 return self.parse_date(endDate)
-
-    def _get_tags_from_sprints(self):
-        tags = []
-
-        if not self.origin['import_sprints_as_tags']:
-            return tags
-
-        context = self.record.copy()
-        label_template = Template(self.origin['label_template'])
-
-        sprints = self.__get_sprints()
-        for sprint in sprints:
-            # Extract the name and render it into a label
-            context.update({'label': sprint['name'].replace(' ', '')})
-            tags.append(label_template.render(context))
-
-        return tags
 
     def __get_sprints(self):
         fields = self.record.get('fields', {})
@@ -302,21 +291,6 @@ class JiraIssue(Issue):
                 # python-jira is not able to parse the sprint and returns a
                 # string
                 yield _parse_sprint_string(sprint)
-
-    def _get_tags_from_labels(self):
-        tags = []
-
-        if not self.origin['import_labels_as_tags']:
-            return tags
-
-        context = self.record.copy()
-        label_template = Template(self.origin['label_template'])
-
-        for label in self.record.get('fields', {}).get('labels', []):
-            context.update({'label': label})
-            tags.append(label_template.render(context))
-
-        return tags
 
     def get_annotations(self):
         return self.extra.get('annotations', [])

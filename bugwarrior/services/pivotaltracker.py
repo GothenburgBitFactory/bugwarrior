@@ -71,9 +71,6 @@ class PivotalTrackerIssue(Issue):
 
     UNIQUE_KEY = (URL,)
 
-    def _normalize_label_to_tag(self, label):
-        return re.sub(r'[^a-zA-Z0-9]', '_', label)
-
     def get_owner(self, issue):
         _, issue = issue
         return issue.get('pivotalowners')
@@ -89,7 +86,8 @@ class PivotalTrackerIssue(Issue):
         closed = self.parse_date(self.record.get('accepted_at'))
 
         return {
-            'project': self._normalize_label_to_tag(self.extra['project_name']).lower(),
+            'project': re.sub(
+                r'[^a-zA-Z0-9]', '_', self.extra['project_name']).lower(),
             'priority': self.origin['default_priority'],
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
@@ -110,23 +108,8 @@ class PivotalTrackerIssue(Issue):
         }
 
     def get_tags(self):
-        tags = []
-
-        if not self.origin['import_labels_as_tags']:
-            return tags
-
-        context = self.record.copy()
-        label_template = Template(self.origin['label_template'])
-
-        for label in map(operator.itemgetter('name'), self.record.get('labels', [])):
-            context.update({
-                'label': self._normalize_label_to_tag(label)
-            })
-            tags.append(
-                label_template.render(context)
-            )
-
-        return tags
+        labels = [label['name'] for label in self.record.get('labels', [])]
+        return self.get_tags_from_labels(labels)
 
     def get_default_description(self):
         return self.build_default_description(

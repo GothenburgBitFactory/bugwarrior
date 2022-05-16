@@ -187,7 +187,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             ),
             'annotations': arbitrary_extra['annotations'],
             'due': datetime.datetime(2016, 9, 23, 16, 8, tzinfo=tzutc()),
-            'tags': ['Sprint1'],
+            'tags': ['Sprint_1'],
             'entry': datetime.datetime(2016, 6, 6, 13, 7, 8, tzinfo=tzutc()),
             'jirafixversion': '1.2.3',
             'jiraissuetype': 'Epic',

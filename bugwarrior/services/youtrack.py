@@ -1,7 +1,5 @@
-import re
 import typing
 
-from jinja2 import Template
 import requests
 import typing_extensions
 
@@ -110,23 +108,12 @@ class YoutrackIssue(Issue):
         )
 
     def get_tags(self):
-        tags = []
-
-        if not self.origin['import_tags']:
-            return tags
-
-        context = self.record.copy()
-        tag_template = Template(self.origin['tag_template'])
-
-        for tag_dict in self.record.get('tag', []):
-            context.update({
-                'tag': re.sub(r'[^a-zA-Z0-9]', '_', tag_dict['value'])
-            })
-            tags.append(
-                tag_template.render(context)
-            )
-
-        return tags
+        return self.get_tags_from_labels(
+            [tag['value'] for tag in self.record.get('tag', [])],
+            toggle_option='import_tags',
+            template_option='tag_template',
+            template_variable='tag',
+        )
 
 
 class YoutrackService(IssueService, ServiceClient):

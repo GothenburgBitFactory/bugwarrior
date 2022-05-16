@@ -1,7 +1,6 @@
 import re
 import sys
 
-from jinja2 import Template
 import pydantic
 import requests
 import typing_extensions
@@ -231,9 +230,6 @@ class GithubIssue(Issue):
     }
     UNIQUE_KEY = (URL, TYPE,)
 
-    def _normalize_label_to_tag(self, label):
-        return re.sub(r'[^a-zA-Z0-9]', '_', label)
-
     def to_taskwarrior(self):
         milestone = self.record['milestone']
         if milestone:
@@ -267,23 +263,8 @@ class GithubIssue(Issue):
         }
 
     def get_tags(self):
-        tags = []
-
-        if not self.origin['import_labels_as_tags']:
-            return tags
-
-        context = self.record.copy()
-        label_template = Template(self.origin['label_template'])
-
-        for label_dict in self.record.get('labels', []):
-            context.update({
-                'label': self._normalize_label_to_tag(label_dict['name'])
-            })
-            tags.append(
-                label_template.render(context)
-            )
-
-        return tags
+        labels = [label['name'] for label in self.record.get('labels', [])]
+        return self.get_tags_from_labels(labels)
 
     def get_default_description(self):
         return self.build_default_description(

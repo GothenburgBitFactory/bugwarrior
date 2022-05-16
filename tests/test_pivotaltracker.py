@@ -252,10 +252,6 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
                       'https://www.pivotaltracker.com/services/v5/projects/99/memberships',
                       json=USER)
 
-    def test_normalize_label_to_tag(self):
-        story = self.service.get_issue_for_record(STORY, EXTRA)
-        self.assertEqual(story._normalize_label_to_tag('needs work'), 'needs_work')
-
     def test_to_taskwarrior(self):
         story = self.service.get_issue_for_record(
             STORY, EXTRA
