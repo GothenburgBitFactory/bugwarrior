@@ -71,6 +71,13 @@ class GithubConfig(config.ServiceConfig, prefix='github'):
         values['issue_urls'] = issue_url_paths
         return values
 
+    @pydantic.root_validator
+    def require_username_if_include_user_repos(cls, values):
+        if values['include_user_repos'] and not values['username']:
+            raise ValueError(
+                'username required when include_user_repos is True (default)')
+        return values
+
 
 class GithubClient(ServiceClient):
     def __init__(self, host, auth):
