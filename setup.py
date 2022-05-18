@@ -20,6 +20,7 @@ extras = {
     "test": ["flake8", "pytest", "responses", "sphinx", "sphinx-click"],
     "trac": ["offtrac"],
     "versionone": ["v1pysdk"],
+    "jitamin": ["beautifulsoup4"],
 }
 
 setup(name='bugwarrior',
@@ -90,5 +91,6 @@ setup(name='bugwarrior',
       teamworks_projects=bugwarrior.services.teamworks_projects:TeamworksService
       pivotaltracker=bugwarrior.services.pivotaltracker:PivotalTrackerService
       azuredevops=bugwarrior.services.azuredevops:AzureDevopsService
+      jitamin=bugwarrior.services.jitamin:JitaminService
       """,
       )
