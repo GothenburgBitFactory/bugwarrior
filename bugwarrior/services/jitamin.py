@@ -1,17 +1,18 @@
 import requests
 import logging
 import typing_extensions
+import pydantic
 
 from bs4 import BeautifulSoup
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import IssueService, Issue
 
 log = logging.getLogger(__name__)
 
 class JitaminConfig(config.ServiceConfig, prefix="jitamin"):
     service: typing_extensions.Literal["jitamin"]
-    base_uri: config.StrippedTrailingSlashUrl
+    base_uri: pydantic.AnyHttpUrl
     username: str
     password: str
 
@@ -47,6 +48,9 @@ class JitaminIssue(Issue):
     }
     UNIQUE_KEY = (URL,)
 
+    # jitamin has 4 mandatory priorities, Taskwarrior has 3 optional priorities.
+    # Map the thre higher prio to taskwarriors priorities and skipt the default
+    # lowest priority
     PRIORITY_MAP = {"P3": "H", "P2": "M", "P1": "L", "P0": ""}
 
     def to_taskwarrior(self):
