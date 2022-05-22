@@ -47,9 +47,7 @@ class Task:
             return default
 
     def fetch_data(self) -> None:
-        response = self._instance.session.get(self._url)
-
-        soup = BeautifulSoup(response.content, "html.parser")
+        soup = self._instance.get_page_as_soup(self._url)
 
         self._data["title"] = soup.find("h2").text.strip()
 
@@ -125,13 +123,18 @@ class Jitamin:
     ):
         self.session = requests.session()
         self.base_uri = url
+        self._username = username
+        self._password = password
 
         if not verify_ssl:
             self.session.verify = False
             requests.packages.urllib3.disable_warnings()
 
-        response = self.session.get(self.base_uri + "/check")
-        if response.headers.get("Location") is None:
+
+    def get_page_as_soup(self, page: str) -> BeautifulSoup:
+        response = self.session.get(page)
+
+        if response.url.endswith("/login"):
             log.info("Logging into %s", self.base_uri)
             soup = BeautifulSoup(response.content, "html.parser")
             token = soup.find("input", attrs={"name": "csrf_token"})
@@ -141,8 +144,8 @@ class Jitamin:
             response = self.session.post(
                 self.base_uri + "/check",
                 data={
-                    "username": username,
-                    "password": password,
+                    "username": self._username,
+                    "password": self._password,
                     "remember_me": "1",
                     "csrf_token": token,
                 },
@@ -153,6 +156,11 @@ class Jitamin:
 
             if error is not None:
                 raise ValueError(error.text)
+            response = self.session.get(page)
+
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        return soup
 
     def search(self, query: str):
         # jitamin does not like empty queries
@@ -160,49 +168,39 @@ class Jitamin:
             query = "created:>1970-01-01"
         i = 1
         while True:
-            tasklist = self._get_task_list_page(
-                "?controller=SearchController&action=index&q="
+            soup = self.get_page_as_soup(self.base_uri
+                + "?controller=SearchController&action=index&q="
                 + query
                 + "&order=tasks.id&direction=DESC&page="
-                + str(i)
-            )
+                + str(i))
             i = i + 1
 
-            if len(tasklist) == 0:
+            for entry in soup.find_all("tr"):
+                number = entry.td
+                # the first table row has no entries
+                if number is None:
+                    continue
+                task_url = number.a["href"]
+                entries = [
+                    "number",
+                    "project",
+                    "swimlane",
+                    "column",
+                    "category",
+                    "title",
+                    "assignee",
+                    "due_date",
+                    "status",
+                ]
+                data = {}
+                for name, child in zip(entries, entry.find_all("td")):
+                    temp = child.text.strip()
+                    if len(temp) > 0:
+                        data[name] = temp
+                yield Task(self, self.base_uri + task_url, data)
+            # if the "next" button has no link, then stop
+            if soup.find("span", attrs={"class": "pagination-next"}).a is None:
                 break
-
-            for task in tasklist:
-                yield task
-
-    def _get_task_list_page(self, url) -> array:
-        response = self.session.get(self.base_uri + url)
-
-        soup = BeautifulSoup(response.content, "html.parser")
-        tasklist = []
-        for entry in soup.find_all("tr"):
-            number = entry.td
-            # the first table row has no entries
-            if number is None:
-                continue
-            task_url = number.a["href"]
-            entries = [
-                "number",
-                "project",
-                "swimlane",
-                "column",
-                "category",
-                "title",
-                "assignee",
-                "due_date",
-                "status",
-            ]
-            data = {}
-            for name, child in zip(entries, entry.find_all("td")):
-                temp = child.text.strip()
-                if len(temp) > 0:
-                    data[name] = temp
-            tasklist.append(Task(self, self.base_uri + task_url, data))
-        return tasklist
 
 
 ### Temporary stuff END
