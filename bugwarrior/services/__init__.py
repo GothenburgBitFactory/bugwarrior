@@ -161,9 +161,6 @@ class IssueService(abc.ABC):
     def issues(self):
         """ Returns a list of dicts representing issues from a remote service.
 
-        This is the main place to begin if you are implementing a new service
-        for bugwarrior.  Override this to gather issues for each service.
-
         Each item in the list should be a dict that looks something like this:
 
             {
