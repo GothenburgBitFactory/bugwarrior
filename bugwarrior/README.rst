@@ -16,6 +16,7 @@ It currently supports the following remote resources:
 - `Bugzilla <https://www.bugzilla.org/>`_
 - `Debian Bug Tracking System (BTS) <https://bugs.debian.org/>`_
 - `Gerrit <https://www.gerritcodereview.com/>`_
+- `Git-Bug <https://github.com/MichaelMure/git-bug>`_
 - `Github <https://github.com>`_
 - `Gitlab <https://gitlab.com>`_
 - `Gmail <https://www.google.com/gmail/about/>`_

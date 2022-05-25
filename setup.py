@@ -90,5 +90,6 @@ setup(name='bugwarrior',
       teamwork_projects=bugwarrior.services.teamwork_projects:TeamworkService
       pivotaltracker=bugwarrior.services.pivotaltracker:PivotalTrackerService
       azuredevops=bugwarrior.services.azuredevops:AzureDevopsService
+      gitbug=bugwarrior.services.gitbug:GitBugService
       """,
       )
