@@ -113,9 +113,9 @@ class IssueService(abc.ABC):
         origin.update(self.get_service_metadata())
         return self.ISSUE_CLASS(record, origin=origin, extra=extra)
 
-    def build_annotations(self, annotations, url):
+    def build_annotations(self, annotations, url=None):
         final = []
-        if self.main_config.annotation_links:
+        if url and self.main_config.annotation_links:
             final.append(url)
         if self.main_config.annotation_comments:
             for author, message in annotations:
