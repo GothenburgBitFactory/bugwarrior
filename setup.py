@@ -87,7 +87,7 @@ setup(name='bugwarrior',
       trello=bugwarrior.services.trello:TrelloService
       youtrack=bugwarrior.services.youtrack:YoutrackService
       gmail=bugwarrior.services.gmail:GmailService
-      teamworks_projects=bugwarrior.services.teamworks_projects:TeamworksService
+      teamwork_projects=bugwarrior.services.teamwork_projects:TeamworkService
       pivotaltracker=bugwarrior.services.pivotaltracker:PivotalTrackerService
       azuredevops=bugwarrior.services.azuredevops:AzureDevopsService
       """,

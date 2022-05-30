@@ -7,26 +7,31 @@ bugwarrior - Pull tickets from github, bitbucket, bugzilla, jira, trac, and othe
 
 It currently supports the following remote resources:
 
- - `activecollab <https://www.activecollab.com>`_ (2.x and 4.x)
- - `bitbucket <https://bitbucket.org>`_
- - `bugzilla <https://www.bugzilla.org/>`_
- - `Debian BTS <https://bugs.debian.org/>`_
- - `gerrit <https://www.gerritcodereview.com/>`_
- - `github <https://github.com>`_ (api v3)
- - `gitlab <https://gitlab.com>`_ (api v3)
- - `gmail <https://www.google.com/gmail/about/>`_
- - `jira <https://www.atlassian.com/software/jira/overview>`_
- - `kanboard <https://kanboard.org/>`_
- - `pagure <https://pagure.io/>`_
- - `phabricator <http://phabricator.org/>`_
- - `Pivotal Tracker <https://www.pivotaltracker.com/>`_
- - `redmine <https://www.redmine.org/>`_
- - `taiga <https://taiga.io>`_
- - `teamlab <https://www.teamlab.com/>`_
- - `trac <https://trac.edgewall.org/>`_
- - `trello <https://trello.com/>`_
- - `versionone <http://www.versionone.com/>`_
- - `youtrack <https://www.jetbrains.com/youtrack/>`_
+.. class:: services
+
+- `ActiveCollab 2 <https://www.activecollab.com>`_
+- `ActiveCollab 4 <https://www.activecollab.com>`_
+- `Azure DevOps <https://azure.microsoft.com/en-us/services/devops/>`_
+- `Bitbucket <https://bitbucket.org>`_
+- `Bugzilla <https://www.bugzilla.org/>`_
+- `Debian Bug Tracking System (BTS) <https://bugs.debian.org/>`_
+- `Gerrit <https://www.gerritcodereview.com/>`_
+- `Github <https://github.com>`_
+- `Gitlab <https://gitlab.com>`_
+- `Gmail <https://www.google.com/gmail/about/>`_
+- `Jira <https://www.atlassian.com/software/jira/overview>`_
+- `Kanboard <https://kanboard.org/>`_
+- `Pagure <https://pagure.io/>`_
+- `Phabricator <http://phabricator.org/>`_
+- `Pivotal Tracker <https://www.pivotaltracker.com/>`_
+- `Redmine <https://www.redmine.org/>`_
+- `Taiga <https://taiga.io>`_
+- `Teamlab <https://www.teamlab.com/>`_
+- `Teamwork Projects <https://www.teamwork.com/>`_
+- `Trac <https://trac.edgewall.org/>`_
+- `Trello <https://trello.com/>`_
+- `VersionOne <http://www.versionone.com/>`_
+- `YouTrack <https://www.jetbrains.com/youtrack/>`_
 
 Documentation
 -------------

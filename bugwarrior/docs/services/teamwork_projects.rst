@@ -1,4 +1,4 @@
-Teamworks Project
+Teamwork Projects
 =================
 
 You can import tasks from Teamwork Projects using
