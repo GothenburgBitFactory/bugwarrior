@@ -352,13 +352,15 @@ class TestGitlabClient(ServiceTest):
     @responses.activate
     def test_get_repos(self):
         self.add_response(
-            'https://my-git.org/api/v4/projects?simple=True&page=1&per_page=100',
+            'https://my-git.org/api/v4/projects?simple=True&archived=False&page=1&per_page=100',
             json=[self.data.arbitrary_project])
         self.add_response(
-            'https://my-git.org/api/v4/projects?simple=True&membership=True&page=1&per_page=100',
+            'https://my-git.org/api/v4/projects' +
+            '?simple=True&archived=False&membership=True&page=1&per_page=100',
             json=[self.data.arbitrary_project])
         self.add_response(
-            'https://my-git.org/api/v4/projects?simple=True&owned=True&page=1&per_page=100',
+            'https://my-git.org/api/v4/projects' +
+            '?simple=True&archived=False&owned=True&page=1&per_page=100',
             json=[])
         self.add_response(
             'https://my-git.org/api/v4/projects/' +
@@ -376,7 +378,7 @@ class TestGitlabClient(ServiceTest):
             json=[self.data.arbitrary_project])
         self.add_response(
             'https://my-git.org/api/v4/projects' +
-            '?simple=True&membership=True&owned=True&page=1&per_page=100',
+            '?simple=True&archived=False&membership=True&owned=True&page=1&per_page=100',
             json=[])
 
         result = self.client.get_repos(include_repos=[], only_membership=False, only_owned=False)
@@ -965,7 +967,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         self.add_response(
-            'https://my-git.org/api/v4/projects?simple=True&per_page=100&page=1',
+            'https://my-git.org/api/v4/projects?simple=True&archived=False&per_page=100&page=1',
             json=[{
                 'id': 8,
                 'path': 'arbitrary_username/project',
