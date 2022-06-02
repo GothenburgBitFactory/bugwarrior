@@ -209,7 +209,7 @@ class GitlabClient(ServiceClient):
                 all_repos.append(item)
 
         else:
-            querystring = {'simple': True}
+            querystring = {'simple': True, 'archived': False}
             if only_membership:
                 querystring['membership'] = True
             if only_owned:
