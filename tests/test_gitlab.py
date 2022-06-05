@@ -501,6 +501,7 @@ class TestGitlabService(ConfigTest):
         self.config.set('myservice', 'gitlab.login', 'foobar')
         self.config.set('myservice', 'gitlab.token', 'XXXXXX')
         self.config.set('myservice', 'gitlab.host', 'gitlab.com')
+        self.config.set('myservice', 'gitlab.also_unassigned', 'true')
 
     @property
     def service(self):
