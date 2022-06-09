@@ -2,7 +2,6 @@ import codecs
 import configparser
 import logging
 import os
-import re
 
 from . import data, schema
 
@@ -53,19 +52,10 @@ def get_config_path():
     return paths[0]
 
 
-def remove_inactive_flavors(rawconfig, main_section):
-    if main_section != 'general':
-        rawconfig.remove_section('general')
-    for section in rawconfig.sections():
-        if re.match('^flavor\\..*', section) and main_section != section:
-            rawconfig.remove_section(section)
-
-
 def load_config(main_section, interactive, quiet):
     configpath = get_config_path()
     rawconfig = BugwarriorConfigParser()
     rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
-    remove_inactive_flavors(rawconfig, main_section)
     config = schema.validate_config(rawconfig, main_section, configpath)
     main_config = config[main_section]
     main_config.interactive = str(interactive)

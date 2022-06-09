@@ -118,13 +118,6 @@ class TestValidation(ConfigTest):
             "[my_service]\nfake.also_unassigned  <- "
             "expected prefix 'github': did you mean 'github.also_unassigned'?")
 
-    def test_main_section_missing_targets_value(self):
-        self.config.set('general', 'targets', '')
-
-        self.assertValidationError(
-            "[my_service]  <- Unrecognized section 'my_service'. Did you "
-            "forget to add it to 'targets' in the [general] section?")
-
     def test_extra_field(self):
         """ Undeclared fields are forbidden. """
         self.config.set('my_service', 'github.undeclared_field', 'extra')
