@@ -158,7 +158,9 @@ class Notifications(pydantic.BaseModel):
 
 
 class SchemaBase(pydantic.BaseSettings):
-    Config = PydanticConfig
+    class Config(PydanticConfig):
+        # Allow extra top-level sections so all targets don't have to be selected.
+        extra = 'ignore'
 
     DEFAULT: dict  # configparser feature
 
@@ -192,13 +194,7 @@ class ValidationErrorEnhancedMessages(list):
     def display_error(self, e, error, model):
         if e['type'] == 'value_error.extra':
             e['msg'] = 'unrecognized option'
-            if len(e['loc']) == 1:  # Error is in section
-                if e['loc'][0] not in self.targets:
-                    e['msg'] = (
-                        f"Unrecognized section '{e['loc'][0]}'. Did you forget"
-                        f" to add it to 'targets' in the [{self.main_section}]"
-                        " section?")
-            elif len(e['loc']) == 2:  # Error is in option
+            if len(e['loc']) == 2:  # Error is in option
                 option = e['loc'][-1].split('.').pop()
                 try:
                     scoped = f"{model._PREFIX}.{option}"
