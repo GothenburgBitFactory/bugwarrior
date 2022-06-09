@@ -96,7 +96,7 @@ class TestSynchronize(ConfigTest):
         self.config.set('my_service', 'service', 'github')
         self.config.set('my_service', 'github.login', 'ralphbean')
         self.config.set('my_service', 'github.username', 'ralphbean')
-        self.config.set('my_service', 'github.password', 'abc123')
+        self.config.set('my_service', 'github.token', 'abc123')
         bwconfig = self.validate()
 
         tw = taskw.TaskWarrior(self.taskrc)
@@ -212,7 +212,7 @@ class TestUDAs(ConfigTest):
         self.config.set('my_service', 'service', 'github')
         self.config.set('my_service', 'github.login', 'ralphbean')
         self.config.set('my_service', 'github.username', 'ralphbean')
-        self.config.set('my_service', 'github.password', 'abc123')
+        self.config.set('my_service', 'github.token', 'abc123')
         self.config.set('my_service', 'service', 'github')
 
         conf = self.validate()

@@ -48,7 +48,7 @@ class TestGetDataPath(ConfigTest):
         rawconfig.add_section('my_service')
         rawconfig.set('my_service', 'service', 'github')
         rawconfig.set('my_service', 'github.login', 'ralphbean')
-        rawconfig.set('my_service', 'github.password', 'abc123')
+        rawconfig.set('my_service', 'github.token', 'abc123')
         rawconfig.set('my_service', 'github.username', 'ralphbean')
         self.config = schema.validate_config(
             rawconfig, 'general', 'configpath')

@@ -15,14 +15,14 @@ log = logging.getLogger(__name__)
 
 
 class GithubConfig(config.ServiceConfig, prefix='github'):
+    password: str = 'Deprecated'
+
     # strictly required
     service: typing_extensions.Literal['github']
     login: str
+    token: str
 
     # conditionally required
-    token: str = ''
-    password: str = ''
-
     username: str = ''
     query: str = ''
 
@@ -43,10 +43,11 @@ class GithubConfig(config.ServiceConfig, prefix='github'):
     issue_urls: config.ConfigList = config.ConfigList([])
 
     @pydantic.root_validator
-    def require_token_or_password(cls, values):
-        if not values['token'] and not values['password']:
-            raise ValueError(
-                'section requires one of:\ngithub.token\ngithub.password')
+    def deprecate_password(cls, values):
+        if values['password'] != 'Deprecated':
+            log.warning(
+                'Basic auth is no longer supported. Please remove '
+                'github.password in favor of github.token.')
         return values
 
     @pydantic.root_validator
@@ -327,14 +328,7 @@ class GithubService(IssueService):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        auth = {}
-        if self.config.token:
-            token = self.get_password('token', self.config.login)
-            auth['token'] = token
-        else:
-            password = self.get_password('password', self.config.login)
-            auth['basic'] = (self.config.login, password)
-
+        auth = {'token': self.get_password('token', self.config.login)}
         self.client = GithubClient(self.config.host, auth)
 
     @staticmethod

@@ -47,7 +47,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'github',
         'github.login': 'arbitrary_login',
-        'github.password': 'arbitrary_password',
+        'github.token': 'arbitrary_token',
         'github.username': 'arbitrary_username',
     }
 
@@ -157,7 +157,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'github',
         'github.login': 'arbitrary_login',
-        'github.password': 'arbitrary_password',
+        'github.token': 'arbitrary_token',
         'github.username': 'arbitrary_username',
         'github.query': 'is:open reviewer:octocat',
         'github.include_user_repos': 'False',
@@ -216,14 +216,13 @@ class TestGithubService(ServiceTest):
         'service': 'github',
         'github.login': 'tintin',
         'github.username': 'milou',
-        'github.password': 't0ps3cr3t',
+        'github.token': 't0ps3cr3t',
 
     }
 
     def test_token_authorization_header(self):
         service = self.get_mock_service(GithubService)
         service = self.get_mock_service(GithubService, config_overrides={
-            'github.password': '',
             'github.token': '@oracle:eval:echo 1234567890ABCDEF'})
         self.assertEqual(service.client.session.headers['Authorization'],
                          "token 1234567890ABCDEF")
