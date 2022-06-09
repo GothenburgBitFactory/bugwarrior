@@ -65,7 +65,7 @@ class TestValidation(ConfigTest):
         self.config.set('my_service', 'service', 'github')
         self.config.set('my_service', 'github.login', 'ralph')
         self.config.set('my_service', 'github.username', 'ralph')
-        self.config.set('my_service', 'github.password', 'abc123')
+        self.config.set('my_service', 'github.token', 'abc123')
         self.config.add_section('my_kan')
         self.config.set('my_kan', 'service', 'kanboard')
         self.config.set(
@@ -127,11 +127,11 @@ class TestValidation(ConfigTest):
             'github.undeclared_field  <- unrecognized option')
 
     def test_root_validator(self):
-        self.config.remove_option('my_service', 'github.password')
+        self.config.remove_option('my_service', 'github.username')
 
         self.assertValidationError(
-            '[my_service]  <- section requires one of:'
-            '\ngithub.token\ngithub.password')
+            '[my_service]  <- '
+            'section requires one of:\ngithub.username\ngithub.query')
 
     def test_no_scheme_url_validator_default(self):
         conf = self.validate()

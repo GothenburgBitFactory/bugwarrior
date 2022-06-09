@@ -45,7 +45,7 @@ class TestPull(ConfigTest):
         self.config.add_section('my_service')
         self.config.set('my_service', 'service', 'github')
         self.config.set('my_service', 'github.login', 'ralphbean')
-        self.config.set('my_service', 'github.password', 'abc123')
+        self.config.set('my_service', 'github.token', 'abc123')
         self.config.set('my_service', 'github.username', 'ralphbean')
 
         self.write_rc(self.config)

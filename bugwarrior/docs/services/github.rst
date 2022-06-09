@@ -12,7 +12,7 @@ Here's an example of a Github target::
     [my_issue_tracker]
     service = github
     github.login = ralphbean
-    github.password = OMG_LULZ
+    github.token = 123456
     github.username = ralphbean
 
 The above example is the minimum required to import issues from
@@ -21,10 +21,9 @@ configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
 ``github.login`` is used to specify what account bugwarrior should use to login
-to github, combined with ``github.password``.
+to github, combined with ``github.token``.
 
-If two-factor authentication is used, ``github.token`` must be given rather
-than ``github.password``. To get a token, go to the "Personal access tokens" section of
+To get a token, go to the "Personal access tokens" section of
 your profile settings. Only the ``public_repo`` scope is required, but access
 to private repos can be gained with ``repo`` as well.
 

@@ -96,7 +96,7 @@ github.include_repos = project_foo,project_foz
 # - 'github.username' is the github entity you want to pull
 #   issues for.  It could be you, or some other user entirely.
 github.login = ralphbean
-github.password = OMG_LULZ
+github.token = 123456
 
 
 # Here's an example of a trac target.
