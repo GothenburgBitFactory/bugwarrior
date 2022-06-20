@@ -90,7 +90,7 @@ class TestPull(ConfigTest):
         self.assertNotEqual(self.caplog.records, [])
         self.assertEqual(len(self.caplog.records), 1)
         self.assertEqual(self.caplog.records[0].message,
-                         "Aborted my_service due to critical error.")
+                         "Aborted [my_service] due to critical error.")
 
     @mock.patch(
         'bugwarrior.services.github.GithubService.issues',
@@ -122,7 +122,7 @@ class TestPull(ConfigTest):
 
         logs = [rec.message for rec in self.caplog.records]
         self.assertIn(
-            'Aborted my_broken_service due to critical error.', logs)
+            'Aborted [my_broken_service] due to critical error.', logs)
         self.assertIn('Adding 0 tasks', logs)
 
     @mock.patch(
@@ -162,7 +162,7 @@ class TestPull(ConfigTest):
         logs = [rec.message for rec in self.caplog.records]
 
         # Make sure my_broken_service failed while my_service succeeded.
-        self.assertIn('Aborted my_broken_service due to critical error.', logs)
+        self.assertIn('Aborted [my_broken_service] due to critical error.', logs)
         self.assertNotIn('Aborted my_service due to critical error.', logs)
 
         # Assert that issues weren't closed or marked complete.

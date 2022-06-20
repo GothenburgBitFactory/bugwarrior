@@ -463,7 +463,7 @@ def _aggregate_issues(conf, main_section, target, queue):
             queue.put(issue)
             issue_count += 1
     except SystemExit as e:
-        log.critical(str(e))
+        log.critical(f"Worker for [{target}] exited: {e}")
         queue.put((SERVICE_FINISHED_ERROR, (target, e)))
     except BaseException as e:
         if hasattr(e, 'request') and e.request:
@@ -472,13 +472,14 @@ def _aggregate_issues(conf, main_section, target, queue):
             # to it, and we need to remove them, as there can be unpickleable
             # methods. There is no one left to call these hooks anyway.
             e.request.hooks = {}
-        log.exception("Worker for [%s] failed: %s" % (target, e))
+        log.exception(f"Worker for [{target}] failed: {e}")
         queue.put((SERVICE_FINISHED_ERROR, (target, e)))
     else:
+        log.debug(f"Worker for [{target}] finished ok.")
         queue.put((SERVICE_FINISHED_OK, (target, issue_count, )))
     finally:
         duration = time.time() - start
-        log.info("Done with [%s] in %fs" % (target, duration))
+        log.info(f"Done with [{target}] in {duration}.")
 
 
 def aggregate_issues(conf, main_section, debug):
@@ -513,13 +514,12 @@ def aggregate_issues(conf, main_section, debug):
     while currently_running > 0:
         issue = queue.get(True)
         if isinstance(issue, tuple):
+            currently_running -= 1
             completion_type, args = issue
             if completion_type == SERVICE_FINISHED_ERROR:
                 target, e = args
-                log.exception(f"Aborted {target} due to critical error.")
-                currently_running -= 1
+                log.error(f"Aborted [{target}] due to critical error.")
                 yield ('SERVICE FAILED', target)
-            currently_running -= 1
             continue
         yield issue
 
