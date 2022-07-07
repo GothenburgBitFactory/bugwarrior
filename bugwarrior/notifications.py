@@ -91,6 +91,36 @@ def send_notification(issue, op, conf):
             priority=1,
         )
         return
+    elif notify_backend == 'applescript':
+        import subprocess
+        if op == 'bw_finished':
+            description = 'Finished querying for new issues.\n{}'.format(
+                issue['description']
+            )
+            subprocess.call(
+                [
+                    'osascript',
+                    '-e',
+                    'display notification "{}" with title "Bugwarrior"'.format(
+                        description
+                    ),
+                ]
+            )
+            return
+
+        message = '%s task: %s' % (op, issue['description'])
+        metadata = _get_metadata(issue)
+        if metadata is not None:
+            message += metadata
+
+        subprocess.call(
+            [
+                'osascript',
+                '-e',
+                'display notification "{}" with title "Bugwarrior"'.format(message),
+            ]
+        )
+        return
     elif notify_backend == 'gobject':
         _cache_logo()
 

@@ -151,7 +151,7 @@ class Notifications(pydantic.BaseModel):
     notifications: bool = False
     # Although upstream supports it, pydantic has problems with Literal[None].
     backend: typing.Optional[typing_extensions.Literal[
-        ('gobject', 'growlnotify')]] = None
+        ('gobject', 'growlnotify', 'applescript')]] = None
     finished_querying_sticky: bool = True
     task_crud_sticky: bool = True
     only_on_new_tasks: bool = False
