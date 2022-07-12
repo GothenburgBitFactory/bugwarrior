@@ -94,28 +94,13 @@ def send_notification(issue, op, conf):
         )
         return
     elif notify_backend == 'applescript':
-        if op == 'bw_finished':
-            description = 'Finished querying for new issues.\n{}'.format(
-                issue['description']
-            )
-            subprocess.call(
-                [
-                    'osascript',
-                    '-e',
-                    'display notification "{}" with title "Bugwarrior"'.format(
-                        description
-                    ),
-                ]
-            )
-            return
-
-        subprocess.call(
-            [
-                'osascript',
-                '-e',
-                'display notification "{}" with title "Bugwarrior"'.format(message),
-            ]
-        )
+        description = 'Finished querying for new issues.\n{}'.format(issue['description'])
+        notification = description if op == 'bw_finished' else message
+        subprocess.call([
+            'osascript',
+            '-e',
+            'display notification "{}" with title "Bugwarrior"'.format(notification)
+        ])
         return
     elif notify_backend == 'gobject':
         _cache_logo()
