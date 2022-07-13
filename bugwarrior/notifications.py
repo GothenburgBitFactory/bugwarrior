@@ -96,10 +96,11 @@ def send_notification(issue, op, conf):
     elif notify_backend == 'applescript':
         description = 'Finished querying for new issues.\n{}'.format(issue['description'])
         notification = description if op == 'bw_finished' else message
+        escaped = notification.replace('"', '\\"')
         subprocess.call([
             'osascript',
             '-e',
-            'display notification "{}" with title "Bugwarrior"'.format(notification)
+            'display notification "{}" with title "Bugwarrior"'.format(escaped)
         ])
         return
     elif notify_backend == 'gobject':
