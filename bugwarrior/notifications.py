@@ -1,4 +1,5 @@
 import os
+import subprocess
 import warnings
 
 import requests
@@ -56,6 +57,11 @@ def send_notification(issue, op, conf):
                       "See https://github.com/ralphbean/bugwarrior/issues/336")
         notify_backend = 'gobject'
 
+    message = "%s task: %s" % (op, issue['description'])
+    metadata = _get_metadata(issue)
+    if metadata is not None:
+        message += metadata
+
     # Notifications for growlnotify on Mac OS X
     if notify_backend == 'growlnotify':
         import gntp.notifier
@@ -77,10 +83,6 @@ def send_notification(issue, op, conf):
                 priority=1,
             )
             return
-        message = "%s task: %s" % (op, issue['description'])
-        metadata = _get_metadata(issue)
-        if metadata is not None:
-            message += metadata
         growl.notify(
             noteType="New Messages",
             title="Bugwarrior",
@@ -90,6 +92,16 @@ def send_notification(issue, op, conf):
             "en/5/59/Taskwarrior_logo.png",
             priority=1,
         )
+        return
+    elif notify_backend == 'applescript':
+        description = 'Finished querying for new issues.\n{}'.format(issue['description'])
+        notification = description if op == 'bw_finished' else message
+        escaped = notification.replace('"', '\\"')
+        subprocess.call([
+            'osascript',
+            '-e',
+            'display notification "{}" with title "Bugwarrior"'.format(escaped)
+        ])
         return
     elif notify_backend == 'gobject':
         _cache_logo()

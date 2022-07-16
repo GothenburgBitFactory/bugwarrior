@@ -52,6 +52,7 @@ pre_import = /home/someuser/backup.sh, /home/someuser/sometask.sh
 # and when issues are created, updated, or deleted by `bugwarrior pull`.
 # Three backends are currently supported:
 #
+#  - applescript        macOS      no external dependencies
 #  - growlnotify (v2)   Mac OS X   "gntp" must be installed
 #  - gobject            Linux      python gobject must be installed
 #
