@@ -286,9 +286,9 @@ class GitlabClient(ServiceClient):
         result = []
         try:
             result = self._fetch_paged(query)
-        except ConnectionError as err:
-            # ConnectionError inherits from OSError and the service should fail without internet.
-            raise ConnectionError(err)
+        except (ConnectionError, requests.exceptions.ConnectionError) as err:
+            # ConnectionErrors inherit from OSError and the service should fail without internet.
+            raise err
         except OSError:
             # Projects may have this API disabled.
             pass
@@ -306,9 +306,9 @@ class GitlabClient(ServiceClient):
         todos = []
         try:
             fetched_todos = self._fetch_paged(query)
-        except ConnectionError as err:
-            # ConnectionError inherits from OSError and the service should fail without internet.
-            raise ConnectionError(err)
+        except (ConnectionError, requests.exceptions.ConnectionError) as err:
+            # ConnectionErrors inherit from OSError and the service should fail without internet.
+            raise err
         except OSError:
             # Older gitlab versions do not have todo items.
             return []

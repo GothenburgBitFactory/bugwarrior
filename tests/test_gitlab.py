@@ -439,9 +439,6 @@ class TestGitlabClient(ServiceTest):
                 self.data.arbitrary_issue['project_id'], self.data.arbitrary_issue)}
         )
 
-        client = GitlabClient('old_my-git.org', 'XXXXXX', '', False, True, True)
-        self.assertEqual({}, client.get_repo_issues(42))
-
     @responses.activate
     def test_get_repo_merge_requests(self):
         self.add_response(
@@ -452,9 +449,6 @@ class TestGitlabClient(ServiceTest):
             {self.data.arbitrary_mr['id']: (
                 self.data.arbitrary_issue['project_id'], self.data.arbitrary_mr)}
         )
-
-        client = GitlabClient('old_my-git.org', 'XXXXXX', '', False, True, True)
-        self.assertEqual({}, client.get_repo_merge_requests(42))
 
     @responses.activate
     def test_get_issues_from_query(self):
@@ -467,10 +461,6 @@ class TestGitlabClient(ServiceTest):
             {self.data.arbitrary_issue['id']: (
                 self.data.arbitrary_issue['project_id'], self.data.arbitrary_issue)}
         )
-        self.assertEqual(
-            self.client.get_issues_from_query('issues?assignee_id=42&state=opened&scope=all'),
-            {}
-        )
 
     @responses.activate
     def test_get_todos(self):
@@ -481,14 +471,6 @@ class TestGitlabClient(ServiceTest):
             self.client.get_todos('todos?state=pending'),
             [(self.data.arbitrary_todo['project'], self.data.arbitrary_todo)]
         )
-        # completely unappropriate URL
-        self.assertEqual(
-            self.client.get_todos('hello'),
-            []
-        )
-
-        client = GitlabClient('old_my-git.org', 'XXXXXX', '', False, True, True)
-        self.assertEqual([], client.get_todos('todos?state=pending'))
 
 
 class TestGitlabService(ConfigTest):
