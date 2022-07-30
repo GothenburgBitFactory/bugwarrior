@@ -283,15 +283,7 @@ class GitlabClient(ServiceClient):
         :rtype: dict
         """
         issues = {}
-        result = []
-        try:
-            result = self._fetch_paged(query)
-        except (ConnectionError, requests.exceptions.ConnectionError) as err:
-            # ConnectionErrors inherit from OSError and the service should fail without internet.
-            raise err
-        except OSError:
-            # Projects may have this API disabled.
-            pass
+        result = self._fetch_paged(query)
         for issue in result:
             issues[issue['id']] = (issue['project_id'], issue)
         return issues
@@ -304,14 +296,7 @@ class GitlabClient(ServiceClient):
         :rtype: list
         """
         todos = []
-        try:
-            fetched_todos = self._fetch_paged(query)
-        except (ConnectionError, requests.exceptions.ConnectionError) as err:
-            # ConnectionErrors inherit from OSError and the service should fail without internet.
-            raise err
-        except OSError:
-            # Older gitlab versions do not have todo items.
-            return []
+        fetched_todos = self._fetch_paged(query)
         for todo in fetched_todos:
             todos.append((todo.get('project'), todo))
         return todos
