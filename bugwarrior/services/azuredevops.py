@@ -211,7 +211,7 @@ class AzureDevopsService(IssueService):
 
         # Adding The User Added Query
         if self.config.wiql_filter:
-            default_query += self.wiql_filter
+            default_query += self.config.wiql_filter
 
         # Adding logic for common configuration items
         if self.config.only_if_assigned:

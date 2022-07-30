@@ -155,12 +155,16 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
         "ado.PAT": "myPAT",
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(AzureDevopsService)
-        self.service.client.get_parent_name.return_value = None
-        self.service.client.get_work_items_from_query.return_value = [1]
-        self.service.client.get_work_item.return_value = TEST_ISSUE
+    @property
+    def service(self):
+        return self.get_service()
+
+    def get_service(self, *args, **kwargs):
+        service = self.get_mock_service(AzureDevopsService, *args, **kwargs)
+        service.client.get_parent_name.return_value = None
+        service.client.get_work_items_from_query.return_value = [1]
+        service.client.get_work_item.return_value = TEST_ISSUE
+        return service
 
     def get_mock_service(self, *args, **kwargs):
         service = super().get_mock_service(*args, **kwargs)
@@ -220,4 +224,29 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "tags": []
         }
         issue = next(self.service.issues())
+        self.assertEqual(issue.get_taskwarrior_record(), expected)
+
+    def test_issues_wiql_filter(self):
+        expected = {
+            "project": None,
+            "priority": "M",
+            "annotations": [],
+            "entry": datetime.datetime(2020, 7, 8, 17, 31, 46, 493000, tzinfo=tzutc()),
+            "end": datetime.datetime(2020, 7, 8, 19, 55, 46, 113000, tzinfo=tzutc()),
+            "adotitle": "Example Title",
+            "adodescription": " This Description has some html in it ",
+            "adoid": 1,
+            "adourl": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",  # noqa: E501
+            "adotype": "Impediment",
+            "adostate": "Closed",
+            "adoactivity": "",
+            "adopriority": 2,
+            "adoremainingwork": None,
+            "adoparent": None,
+            "adonamespace": "test_organization\\test_project",
+            "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',  # noqa: E501
+            "tags": []
+        }
+        service = self.get_service(config_overrides={'ado.wiql_filter': 'something'})
+        issue = next(service.issues())
         self.assertEqual(issue.get_taskwarrior_record(), expected)
