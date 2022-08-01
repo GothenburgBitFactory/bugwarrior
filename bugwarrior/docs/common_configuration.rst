@@ -175,9 +175,7 @@ by ``bugwarrior pull``::
 
   [notifications]
   notifications = True
-  backend = growlnotify
-  finished_querying_sticky = False
-  task_crud_sticky = True
+  backend = gobject
   only_on_new_tasks = True
 
 Backend options:
@@ -185,15 +183,7 @@ Backend options:
 +------------------+------------------+-------------------------+
 | Backend Name     | Operating System | Required Python Modules |
 +==================+==================+=========================+
-| ``growlnotify``  | MacOS X          | ``gntp``                |
-+------------------+------------------+-------------------------+
 | ``gobject``      | Linux            | ``gobject``             |
 +------------------+------------------+-------------------------+
 | ``applescript``  | MacOS X          |                         |
 +------------------+------------------+-------------------------+
-
-.. note::
-
-   The ``finished_querying_sticky`` and ``task_crud_sticky`` options
-   have no effect if you are using a notification backend other than
-   ``growlnotify``.
