@@ -64,6 +64,9 @@ def send_notification(issue, op, conf):
 
     # Notifications for growlnotify on Mac OS X
     if notify_backend == 'growlnotify':
+        warnings.warn(
+            'Deprecation Warning: The growlnotify project is deprecated upstream. We recommend '
+            'using the applescript backend instead.')
         import gntp.notifier
         growl = gntp.notifier.GrowlNotifier(
             applicationName="Bugwarrior",

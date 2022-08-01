@@ -53,17 +53,11 @@ pre_import = /home/someuser/backup.sh, /home/someuser/sometask.sh
 # Three backends are currently supported:
 #
 #  - applescript        macOS      no external dependencies
-#  - growlnotify (v2)   Mac OS X   "gntp" must be installed
 #  - gobject            Linux      python gobject must be installed
 #
-# To configure, adjust the settings below.  Note that neither of the #
-# "sticky" options have any effect on Linux.  They only work for
-# growlnotify.
 #[notifications]
 # notifications = True
-# backend = growlnotify
-# finished_querying_sticky = False
-# task_crud_sticky = True
+# backend = gobject
 # only_on_new_tasks = True
 
 
