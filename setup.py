@@ -91,5 +91,6 @@ setup(name='bugwarrior',
       pivotaltracker=bugwarrior.services.pivotaltracker:PivotalTrackerService
       azuredevops=bugwarrior.services.azuredevops:AzureDevopsService
       gitbug=bugwarrior.services.gitbug:GitBugService
+      deck=bugwarrior.services.deck:NextcloudDeckService
       """,
       )
