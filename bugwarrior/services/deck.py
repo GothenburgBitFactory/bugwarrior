@@ -1,10 +1,6 @@
 import datetime
 import logging
-import pathlib
-import base64
 
-import pydantic
-from typing import List
 import requests
 import typing_extensions
 from dateutil.tz import tzutc
@@ -17,11 +13,11 @@ log = logging.getLogger(__name__)
 
 class NextcloudDeckConfig(config.ServiceConfig, prefix='deck'):
     service: typing_extensions.Literal['deck']
-    base_uri: pydantic.AnyUrl
+    base_uri: config.StrippedTrailingSlashUrl
     username: str
 
     # can be a password or an app-password
-    password: str = ''
+    password: str
 
     include_board_ids: config.ConfigList = config.ConfigList([])
     exclude_board_ids: config.ConfigList = config.ConfigList([])
@@ -136,7 +132,8 @@ class NextcloudDeckIssue(Issue):
             self.TITLE: self.record['title'],
             self.DESCRIPTION: self.record['description'],
             self.ORDER: self.record['order'],
-            self.ASSIGNEE: ([assignee['participant']['uid'] for assignee in self.record['assignedUsers']] or [None])[0],
+            self.ASSIGNEE:
+                self.record['assignedUsers'][0]['participant']['uid'] if self.record['assignedUsers'] else None,
         }
 
     def get_tags(self):
@@ -169,10 +166,18 @@ class NextcloudDeckService(IssueService):
     def get_owner(self, issue):
         return issue[issue.ASSIGNEE]
 
+    def filter_boards(self, board):
+        # include_board_ids takes precedence over exclude_board_ids
+        if self.config.include_board_ids:
+            return str(board['id']) in self.config.include_board_ids
+        if self.config.exclude_board_ids:
+            return str(board['id']) not in self.config.exclude_board_ids
+        # no filters defined: then it's included
+        return True
+
     def issues(self):
         for board in self.client.get_boards():
-            if ((not self.config.include_board_ids) or (str(board['id']) in self.config.include_board_ids)) and \
-                    ((not self.config.exclude_board_ids) or (str(board['id']) not in self.config.exclude_board_ids)):
+            if self.filter_boards(board):
                 for stack in self.client.get_stacks(board['id']):
                     for card in stack.get('cards', []):
                         extra = {

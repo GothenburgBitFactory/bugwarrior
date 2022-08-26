@@ -1,12 +1,10 @@
 import datetime
 from unittest import mock
 
-import dateutil
 import pydantic
 from dateutil.tz import tzutc
 
 from bugwarrior.services.deck import NextcloudDeckClient, NextcloudDeckService
-
 from .base import AbstractServiceTest, ServiceTest
 
 
@@ -95,8 +93,9 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             #'annotations': [],
-            'entry': datetime.datetime(2022, 8, 17, 22, 16, 22),
+            'entry': datetime.datetime(2022, 8, 17, 20, 16, 22, tzinfo=tzutc()),
             'due': datetime.datetime(2022, 11, 20, 23, 0, tzinfo=tzutc()),
+            'nextclouddeckassignee': 'rainbow',
             'nextclouddeckauthor': 'unicorn',
             'nextclouddeckboardid': 5,
             'nextclouddeckboardtitle': 'testboard',
@@ -119,9 +118,10 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             #'annotations': [],
-            'entry': datetime.datetime(2022, 8, 17, 22, 16, 22),
+            'entry': datetime.datetime(2022, 8, 17, 20, 16, 22, tzinfo=tzutc()),
             'due': datetime.datetime(2022, 11, 20, 23, 0, tzinfo=tzutc()),
             'description': '(bw)Is# - check that nextcloud deck integration works',
+            'nextclouddeckassignee': 'rainbow',
             'nextclouddeckauthor': 'unicorn',
             'nextclouddeckboardid': 5,
             'nextclouddeckboardtitle': 'testboard',

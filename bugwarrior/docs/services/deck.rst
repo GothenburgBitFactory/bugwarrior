@@ -53,7 +53,8 @@ You can filter for cards assigned to a specific user::
 
     deck.only_if_assigned = my_user
 
-``only_if_assigned`` can be set to a username, then only issues assigned to that user will be taken into account. Attention, deck can assign multiple users, and this plugin has no support for multiple assignees - it will always only take the first assignee into account.
+.. note::
+    ``only_if_assigned`` can be set to a username, then only issues assigned to that user will be taken into account. Attention, deck can assign multiple users, and this plugin has no support for multiple assignees - it will always only take the first assignee into account.
 
 Exclude / include board IDs
 +++++++++++++++++++++++++++
@@ -63,9 +64,11 @@ You can explicitly exclude or include specific boards::
     deck.exclude_board_ids = 5,6
     deck.include_board_ids = 4
 
-``exclude_board_ids`` can explicitly exclude specific boards from importing;
-``include_board_ids`` can explicitly include specific boards from importing.
-Use them to filter what cards you want to have imported.
+.. note::
+    ``include_board_ids`` can explicitly include specific boards from importing;
+    ``exclude_board_ids`` can explicitly exclude specific boards from importing.
+    Use them to filter what cards you want to have imported.
+    If both are defined, ``include_board_ids`` will be used.
 
 Provided UDA Fields
 -------------------
