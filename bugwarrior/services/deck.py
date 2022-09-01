@@ -53,7 +53,9 @@ class NextcloudDeckClient(ServiceClient):
 
     # see https://deck.readthedocs.io/en/latest/API/#stacks for API docs
     def get_stacks(self, board_id):
-        response = self.session.get(f'{self.base_uri}/{self.api_base_path}/boards/{board_id}/stacks')
+        response = self.session.get(
+            f'{self.base_uri}/{self.api_base_path}/boards/{board_id}/stacks'
+        )
         return response.json()
 
 
@@ -133,7 +135,8 @@ class NextcloudDeckIssue(Issue):
             self.DESCRIPTION: self.record['description'],
             self.ORDER: self.record['order'],
             self.ASSIGNEE:
-                self.record['assignedUsers'][0]['participant']['uid'] if self.record['assignedUsers'] else None,
+                self.record['assignedUsers'][0]['participant']['uid']
+                if self.record['assignedUsers'] else None,
         }
 
     def get_tags(self):

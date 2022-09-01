@@ -92,7 +92,7 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
             })
 
         expected = {
-            #'annotations': [],
+            # 'annotations': [],
             'entry': datetime.datetime(2022, 8, 17, 20, 16, 22, tzinfo=tzutc()),
             'due': datetime.datetime(2022, 11, 20, 23, 0, tzinfo=tzutc()),
             'nextclouddeckassignee': 'rainbow',
@@ -117,7 +117,7 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
         issue = next(self.service.issues())
 
         expected = {
-            #'annotations': [],
+            # 'annotations': [],
             'entry': datetime.datetime(2022, 8, 17, 20, 16, 22, tzinfo=tzutc()),
             'due': datetime.datetime(2022, 11, 20, 23, 0, tzinfo=tzutc()),
             'description': '(bw)Is# - check that nextcloud deck integration works',
