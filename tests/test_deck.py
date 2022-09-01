@@ -4,6 +4,7 @@ from unittest import mock
 import pydantic
 from dateutil.tz import tzutc
 
+from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.deck import NextcloudDeckClient, NextcloudDeckService
 from .base import AbstractServiceTest, ServiceTest
 
@@ -74,15 +75,30 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
 
     def setUp(self):
         super().setUp()
+        self.config = BugwarriorConfigParser()
+        self.config.add_section('general')
+        self.config.set('general', 'targets', 'deck')
+        # would otherwise cut the title short
+        self.config.set('general', 'description_length', '45')
+        self.config.add_section('deck')
+        self.config.set('deck', 'service', 'deck')
+        self.config.set('deck', 'deck.base_uri', 'http://localhost:8080')
+        self.config.set('deck', 'deck.username', 'testuser')
+        self.config.set('deck', 'deck.password', 'testpassword')
+        self.config.set('deck', 'deck.import_labels_as_tags', 'true')
 
         self.data = TestData()
 
-        self.service = self.get_mock_service(NextcloudDeckService)
-        self.service.client = mock.MagicMock(spec=NextcloudDeckClient)
-        self.service.client.get_boards = mock.MagicMock(
+    @property
+    def service(self):
+        conf = self.validate()
+        service = NextcloudDeckService(conf['deck'], conf['general'], 'deck')
+        service.client = mock.MagicMock(spec=NextcloudDeckClient)
+        service.client.get_boards = mock.MagicMock(
             return_value=[{'id': 5, 'title': 'testboard'}])
-        self.service.client.get_stacks = mock.MagicMock(
+        service.client.get_stacks = mock.MagicMock(
             return_value=[{'id': 13, 'title': 'teststack', 'cards': [self.data.arbitrary_card]}])
+        return service
 
     def test_to_taskwarrior(self):
         issue = self.service.get_issue_for_record(
@@ -137,3 +153,13 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
         }
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)
+
+    def test_filter_boards_include(self):
+        self.config.set('deck', 'deck.include_board_ids', '5')
+        self.assertTrue(self.service.filter_boards({'title': 'testboard', 'id': 5}))
+        self.assertFalse(self.service.filter_boards({'title': 'testboard', 'id': 6}))
+
+    def test_filter_boards_exclude(self):
+        self.config.set('deck', 'deck.exclude_board_ids', '5')
+        self.assertFalse(self.service.filter_boards({'title': 'testboard', 'id': 5}))
+        self.assertTrue(self.service.filter_boards({'title': 'testboard', 'id': 6}))
