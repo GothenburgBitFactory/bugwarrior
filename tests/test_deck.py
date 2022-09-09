@@ -98,6 +98,8 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
             return_value=[{'id': 5, 'title': 'testboard'}])
         service.client.get_stacks = mock.MagicMock(
             return_value=[{'id': 13, 'title': 'teststack', 'cards': [self.data.arbitrary_card]}])
+        service.client.get_comments = mock.MagicMock(
+            return_value={'ocs': {'data': [{'actorDisplayName': 'Lena', 'message': 'testcomment'}]}})
         return service
 
     def test_to_taskwarrior(self):
@@ -105,10 +107,11 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
             self.data.arbitrary_card, {
                 'board': {'title': 'testboard', 'id': 5},
                 'stack': {'title': 'teststack', 'id': 13},
+                'annotations': ['@Lena - testcomment'],
             })
 
         expected = {
-            # 'annotations': [],
+            'annotations': ['@Lena - testcomment'],
             'entry': datetime.datetime(2022, 8, 17, 20, 16, 22, tzinfo=tzutc()),
             'due': datetime.datetime(2022, 11, 20, 23, 0, tzinfo=tzutc()),
             'nextclouddeckassignee': 'rainbow',
@@ -133,7 +136,7 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
         issue = next(self.service.issues())
 
         expected = {
-            # 'annotations': [],
+            'annotations': ['@Lena - testcomment'],
             'entry': datetime.datetime(2022, 8, 17, 20, 16, 22, tzinfo=tzutc()),
             'due': datetime.datetime(2022, 11, 20, 23, 0, tzinfo=tzutc()),
             'description': '(bw)Is# - check that nextcloud deck integration works',

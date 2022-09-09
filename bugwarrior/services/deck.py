@@ -24,7 +24,6 @@ class NextcloudDeckConfig(config.ServiceConfig, prefix='deck'):
 
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'
-    only_if_assigned: str = None
 
 
 # relevant API docs can be found here: https://deck.readthedocs.io/en/latest/API/
@@ -55,6 +54,13 @@ class NextcloudDeckClient(ServiceClient):
     def get_stacks(self, board_id):
         response = self.session.get(
             f'{self.base_uri}/{self.api_base_path}/boards/{board_id}/stacks'
+        )
+        return response.json()
+
+    # see https://deck.readthedocs.io/en/latest/API/#comments for API docs
+    def get_comments(self, card_id):
+        response = self.session.get(
+            f'{self.base_uri}/ocs/v2.php/apps/deck/api/v1.0/cards/{card_id}/comments?limit=100&offset=0'
         )
         return response.json()
 
@@ -120,7 +126,7 @@ class NextcloudDeckIssue(Issue):
         return {
             'project': self.extra['board']['title'].lower().replace(' ', '_'),
             'priority': self.get_priority(),
-            # 'annotations': self.record.get('annotations', []),
+            'annotations': self.extra['annotations'],
             'tags': self.get_tags(),
             'entry': datetime.datetime.fromtimestamp(self.record.get('createdAt'), tz=tzutc()),
             'due': self.parse_date(self.record.get('duedate')),
@@ -178,6 +184,14 @@ class NextcloudDeckService(IssueService):
         # no filters defined: then it's included
         return True
 
+    def annotations(self, card):
+        comments = [comment for comment in self.client.get_comments(card['id'])['ocs']['data']]
+        return self.build_annotations(
+            ((
+                comment['actorDisplayName'],
+                comment['message'],
+            ) for comment in comments))
+
     def issues(self):
         for board in self.client.get_boards():
             if self.filter_boards(board):
@@ -186,6 +200,7 @@ class NextcloudDeckService(IssueService):
                         extra = {
                             'board': board,
                             'stack': stack,
+                            'annotations': self.annotations(card)
                         }
                         issue = self.get_issue_for_record(card, extra)
                         if self.include(issue):
