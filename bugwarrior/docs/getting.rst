@@ -65,7 +65,20 @@ download the latest tarball::
 Installing from Distribution Packages
 -------------------------------------
 
+bugwarrior has been packaged for various operating system distributions. You can install it your distributions package
+manager
+
+- Fedora
+
 bugwarrior has been packaged for Fedora.  You can install it with the standard
 :command:`dnf` (:command:`yum`) package management tools as follows::
 
     $ sudo dnf install bugwarrior
+    
+    
+- Debian and its Derivatives like Ubuntu
+
+bugwarrior has been packaged for Debian and Debian Derivatives like Ubuntu.  You can install it with the standard
+:command:`apt` package management tools as follows::
+
+    $ sudo apt install bugwarrior
