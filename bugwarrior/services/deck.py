@@ -183,7 +183,8 @@ class NextcloudDeckService(IssueService):
         return True
 
     def annotations(self, card):
-        comments = [comment for comment in self.client.get_comments(card['id'])['ocs']['data']]
+        comments = (self.client.get_comments(card['id'])['ocs']['data']
+                    if self.main_config.annotation_comments else [])
         return self.build_annotations(
             ((
                 comment['actorDisplayName'],
