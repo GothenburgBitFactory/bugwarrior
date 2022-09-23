@@ -98,8 +98,8 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
             return_value=[{'id': 5, 'title': 'testboard'}])
         service.client.get_stacks = mock.MagicMock(
             return_value=[{'id': 13, 'title': 'teststack', 'cards': [self.data.arbitrary_card]}])
-        service.client.get_comments = mock.MagicMock(
-            return_value={'ocs': {'data': [{'actorDisplayName': 'Lena', 'message': 'testcomment'}]}})
+        service.client.get_comments = mock.MagicMock(return_value={
+            'ocs': {'data': [{'actorDisplayName': 'Lena', 'message': 'testcomment'}]}})
         return service
 
     def test_to_taskwarrior(self):

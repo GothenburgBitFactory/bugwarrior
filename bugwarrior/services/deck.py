@@ -33,13 +33,11 @@ class NextcloudDeckConfig(config.ServiceConfig, prefix='deck'):
 # * Labels will be mapped to tags
 class NextcloudDeckClient(ServiceClient):
     def __init__(self, base_uri, username, password):
-        self.base_uri = base_uri
-        self.username = username
-        self.password = password
-        self.api_base_path = 'index.php/apps/deck/api/v1.0'
+        self.api_base_path = f'{base_uri}/index.php/apps/deck/api/v1.0'
+        self.ocs_base_path = f'{base_uri}/ocs/v2.php/apps/deck/api/v1.0'
 
         self.session = requests.session()
-        self.session.auth = (self.username, self.password)
+        self.session.auth = (username, password)
         self.session.headers.update({
             'Accept': 'application/json',
             'OCS-APIRequest': 'true',
@@ -47,20 +45,20 @@ class NextcloudDeckClient(ServiceClient):
 
     # see https://deck.readthedocs.io/en/latest/API/#boards for API docs
     def get_boards(self):
-        response = self.session.get(f'{self.base_uri}/{self.api_base_path}/boards')
+        response = self.session.get(f'{self.api_base_path}/boards')
         return response.json()
 
     # see https://deck.readthedocs.io/en/latest/API/#stacks for API docs
     def get_stacks(self, board_id):
         response = self.session.get(
-            f'{self.base_uri}/{self.api_base_path}/boards/{board_id}/stacks'
+            f'{self.api_base_path}/boards/{board_id}/stacks'
         )
         return response.json()
 
     # see https://deck.readthedocs.io/en/latest/API/#comments for API docs
     def get_comments(self, card_id):
         response = self.session.get(
-            f'{self.base_uri}/ocs/v2.php/apps/deck/api/v1.0/cards/{card_id}/comments?limit=100&offset=0'
+            f'{self.ocs_base_path}/cards/{card_id}/comments?limit=100&offset=0'
         )
         return response.json()
 
