@@ -9,9 +9,10 @@ Major Changes
 
 New and Removed Services
 
-- Added Kanboard service. (https://github.com/ralphbean/bugwarrior/pull/794)
 - Added Azure Devops service. (https://github.com/ralphbean/bugwarrior/pull/808)
 - Added Git-Bug service. (https://github.com/ralphbean/bugwarrior/pull/934)
+- Added Kanboard service. (https://github.com/ralphbean/bugwarrior/pull/794)
+- Added Nextcloud Deck service. (https://github.com/ralphbean/bugwarrior/pull/954)
 - Removed Megaplan service. (https://github.com/ralphbean/bugwarrior/pull/844)
 
 Notable Changes
