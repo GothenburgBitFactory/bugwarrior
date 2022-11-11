@@ -85,10 +85,16 @@ Feel free to use any of the configuration options described in
    Getting your API key and access token
 
    To get your API key, go to https://trello.com/app-key and copy the given
-   key (this is your ``trello.api_key``). Next, go to
+   key (this is your ``trello.api_key``).
+
+   To get your ``trello.token``, in https://trello.com/app-key click the link "Token" seen bellow:
+       .. image:: pictures/trello_url.png
+          :height: 1cm
+   Copy the given toke (this is your ``trello.token``).
+
+   Alternatively, go to 
    https://trello.com/1/connect?key=TRELLO_API_KEY&name=bugwarrior&response_type=token&scope=read,write&expiration=never
-   replacing ``TRELLO_API_KEY`` by the key you got on the last step. Copy the
-   given toke (this is your ``trello.token``).
+   replacing ``TRELLO_API_KEY`` by the key you got on the last step. 
 
 Service Features
 ----------------
