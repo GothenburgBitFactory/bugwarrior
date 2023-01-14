@@ -36,6 +36,7 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
     include_todos: bool = False
     include_all_todos: bool = True
     only_if_author: str = ''
+    only_if_reaction: str = ''
     default_issue_priority: DefaultPriority = 'unassigned'
     default_todo_priority: DefaultPriority = 'unassigned'
     default_mr_priority: DefaultPriority = 'unassigned'
@@ -101,7 +102,7 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
 class GitlabClient(ServiceClient):
     """Abstraction of Gitlab API v4"""
 
-    def __init__(self, host, token, only_if_assigned, also_unassigned, use_https, verify_ssl):
+    def __init__(self, host, token, only_if_assigned, only_if_reaction, also_unassigned, use_https, verify_ssl):
         if use_https:
             self.scheme = 'https'
         else:
@@ -120,6 +121,10 @@ class GitlabClient(ServiceClient):
             if only_if_assigned and not also_unassigned else None)
         self.assignee_query = (
             f'assignee_id={assignee_id}' if assignee_id else '')
+        self.query_extra = ''
+        if only_if_reaction:
+            self.query_extra += f'&my_reaction_emoji={only_if_reaction}'
+        
 
     def _base_url(self):
         return f"{self.scheme}://{self.host}/api/v4/"
@@ -262,7 +267,7 @@ class GitlabClient(ServiceClient):
         :rtype: list
         """
         return self.get_issues_from_query(
-            f'projects/{rid}/issues?state=opened&{self.assignee_query}')
+            f'projects/{rid}/issues?state=opened&{self.assignee_query}{self.query_extra}')
 
     def get_repo_merge_requests(self, rid: int) -> dict:
         """Get all merge_requests from a repository as JSON dictionary
@@ -505,6 +510,7 @@ class GitlabService(IssueService):
             host=self.config.host,
             token=token,
             only_if_assigned=self.config.only_if_assigned,
+            only_if_reaction=self.config.only_if_reaction,
             also_unassigned=self.config.also_unassigned,
             use_https=self.config.use_https,
             verify_ssl=self.config.verify_ssl
