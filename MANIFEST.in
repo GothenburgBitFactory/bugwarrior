@@ -1,5 +1,6 @@
 include bugwarrior/README.rst
 include README.rst
+include VERSION
 include LICENSE.txt
 recursive-include docs *
 recursive-include bugwarrior/docs *.rst
