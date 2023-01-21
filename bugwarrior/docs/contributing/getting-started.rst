@@ -45,6 +45,13 @@ This will actually run it.. be careful and back up your task directory!
 
     (bugwarrior)$ bugwarrior pull
 
+To run the tests, use ``pytest``, and also check your code quality with ``flake8``:
+
+::
+
+    (bugwarrior)$ pytest
+    (bugwarrior)$ flake8
+
 Making a pull request
 ---------------------
 
@@ -52,13 +59,8 @@ Create a new branch for each pull request based off the ``develop`` branch::
 
     (bugwarrior)$ git checkout -b my-shiny-new-feature develop
 
-Please add tests when appropriate and run the test suite before opening a PR::
-
-    (bugwarrior)$ pytest
-
-We also maintain our code quality with flake8::
-
-    (bugwarrior)$ flake8
+Make your changes, push your branch to your fork of the repository, and create
+a new PR using the normal GitHub flow.
 
 We look forward to your contribution!
 
