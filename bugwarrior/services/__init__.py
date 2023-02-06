@@ -24,10 +24,6 @@ log = logging.getLogger(__name__)
 SERVICE_FINISHED_OK = 0
 SERVICE_FINISHED_ERROR = 1
 
-# Used by `parse_date` as a timezone when you would like a naive
-# date string to be parsed as if it were in your local timezone
-LOCAL_TIMEZONE = 'LOCAL_TIMEZONE'
-
 
 def get_service(service_name):
     epoint = iter_entry_points(group='bugwarrior.service', name=service_name)
@@ -314,7 +310,7 @@ class Issue(abc.ABC):
         if date:
             date = parse_date(date)
             if not date.tzinfo:
-                if timezone == LOCAL_TIMEZONE:
+                if timezone == '':
                     tzinfo = tzlocal()
                 else:
                     tzinfo = pytz.timezone(timezone)
