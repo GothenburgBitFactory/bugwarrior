@@ -5,7 +5,7 @@ from v1pysdk.none_deref import NoneDeref
 from urllib import parse
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, LOCAL_TIMEZONE
+from bugwarrior.services import IssueService, Issue
 
 
 class VersionOneConfig(config.ServiceConfig, prefix='versionone'):
@@ -18,7 +18,7 @@ class VersionOneConfig(config.ServiceConfig, prefix='versionone'):
 
     password: str = ''
     timebox_name: str = ''
-    timezone: str = LOCAL_TIMEZONE
+    timezone: str = ''
 
 
 class VersionOneIssue(Issue):
