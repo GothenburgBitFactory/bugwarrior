@@ -1,4 +1,3 @@
-import configparser
 import logging
 import os
 import pathlib
@@ -236,16 +235,31 @@ def raise_validation_error(msg, config_path, no_errors=1):
 
 
 def validate_config(config, main_section, config_path):
-    # Construct Service Models
+    # Pre-validate the minimum requirements to build our pydantic models.
     try:
-        targets = ConfigList.validate(config.get(main_section, 'targets'))
-        target_schemas = {target: (
-            get_service(config.get(target, 'service')).CONFIG_SCHEMA, ...)
-            for target in targets}
-    except configparser.NoSectionError as e:
-        raise_validation_error(str(e), config_path)
-    except configparser.NoOptionError as e:
-        raise_validation_error(str(e), config_path)
+        main = config[main_section]
+    except KeyError:
+        raise_validation_error(f"No section: '{main_section}'", config_path)
+    try:
+        targets = ConfigList.validate(main['targets'])
+    except KeyError:
+        raise_validation_error(
+            f"No option 'targets' in section: '{main_section}'", config_path)
+    try:
+        configmap = {target: config[target] for target in targets}
+    except KeyError as e:
+        raise_validation_error(f"No section: '{e.args[0]}'", config_path)
+    servicemap = {}
+    for target, serviceconfig in configmap.items():
+        try:
+            servicemap[target] = serviceconfig['service']
+        except KeyError:
+            raise_validation_error(
+                f"No option 'service' in section: '{target}'", config_path)
+
+    # Construct Service Models
+    target_schemas = {target: (get_service(service).CONFIG_SCHEMA, ...)
+                      for target, service in servicemap.items()}
 
     # Construct Validation Model
     bugwarrior_config_model = pydantic.create_model(
