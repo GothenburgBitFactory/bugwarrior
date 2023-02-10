@@ -28,10 +28,8 @@ class TestGmailService(ConfigTest):
     def setUp(self):
         super().setUp()
         self.config = BugwarriorConfigParser()
-        self.config.add_section('general')
-        self.config.set('general', 'targets', 'myservice')
-        self.config.add_section('myservice')
-        self.config.set('myservice', 'service', 'gmail')
+        self.config['general'] = {'targets': 'myservice'}
+        self.config['myservice'] = {'service': 'gmail'}
 
         mock_data = mock.Mock()
         mock_data.path = self.tempdir

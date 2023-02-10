@@ -43,13 +43,13 @@ class TestGetDataPath(ConfigTest):
     def setUp(self):
         super().setUp()
         rawconfig = load.BugwarriorConfigParser()
-        rawconfig.add_section('general')
-        rawconfig.set('general', 'targets', 'my_service')
-        rawconfig.add_section('my_service')
-        rawconfig.set('my_service', 'service', 'github')
-        rawconfig.set('my_service', 'github.login', 'ralphbean')
-        rawconfig.set('my_service', 'github.token', 'abc123')
-        rawconfig.set('my_service', 'github.username', 'ralphbean')
+        rawconfig['general'] = {'targets': 'my_service'}
+        rawconfig['my_service'] = {
+            'service': 'github',
+            'github.login': 'ralphbean',
+            'github.token': 'abc123',
+            'github.username': 'ralphbean',
+        }
         self.config = schema.validate_config(
             rawconfig, 'general', 'configpath')
 

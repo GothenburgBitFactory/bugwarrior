@@ -73,10 +73,11 @@ class TestGetConfigPath(ConfigTest):
 class TestBugwarriorConfigParser(TestCase):
     def setUp(self):
         self.config = load.BugwarriorConfigParser()
-        self.config.add_section('general')
-        self.config.set('general', 'someint', '4')
-        self.config.set('general', 'somenone', '')
-        self.config.set('general', 'somechar', 'somestring')
+        self.config['general'] = {
+            'someint': '4',
+            'somenone': '',
+            'somechar': 'somestring',
+        }
 
     def test_getint(self):
         self.assertEqual(self.config.getint('general', 'someint'), 4)

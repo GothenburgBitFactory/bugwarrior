@@ -478,15 +478,15 @@ class TestGitlabService(ConfigTest):
     def setUp(self):
         super().setUp()
         self.config = BugwarriorConfigParser()
-        self.config.add_section('general')
-        self.config.set('general', 'targets', 'myservice')
-        self.config.add_section('myservice')
-        self.config.set('myservice', 'service', 'gitlab')
-        self.config.set('myservice', 'gitlab.login', 'foobar')
-        self.config.set('myservice', 'gitlab.token', 'XXXXXX')
-        self.config.set('myservice', 'gitlab.host', 'gitlab.com')
-        self.config.set('myservice', 'gitlab.also_unassigned', 'true')
-        self.config.set('myservice', 'gitlab.owned', 'true')
+        self.config['general'] = {'targets': 'myservice'}
+        self.config['myservice'] = {
+            'service': 'gitlab',
+            'gitlab.login': 'foobar',
+            'gitlab.token': 'XXXXXX',
+            'gitlab.host': 'gitlab.com',
+            'gitlab.also_unassigned': 'true',
+            'gitlab.owned': 'true',
+        }
 
     @property
     def service(self):
@@ -505,38 +505,40 @@ class TestGitlabService(ConfigTest):
             'gitlab://foobar@gitlab.com')
 
     def test_get_keyring_service_custom_host(self):
-        self.config.set('myservice', 'gitlab.host', 'my-git.org')
+        self.config['myservice']['gitlab.host'] = 'my-git.org'
         conf = self.validate()['myservice']
         self.assertEqual(
             GitlabService.get_keyring_service(conf),
             'gitlab://foobar@my-git.org')
 
     def test_filter_gitlab_dot_com(self):
-        self.config.set('myservice', 'gitlab.host', 'gitlab.com')
-        self.config.set('myservice', 'gitlab.owned', 'false')
+        self.config['myservice'].update({
+            'gitlab.host': 'gitlab.com',
+            'gitlab.owned': 'false',
+        })
         self.assertValidationError('You must set at least one of the '
                                    'configuration options to filter '
                                    'repositories')
 
-        self.config.set('myservice', 'gitlab.issue_query', 'arbitrary_query')
-        self.config.set('myservice', 'gitlab.merge_request_query', 'arbitrary_query')
-        self.config.set('myservice', 'gitlab.todo_query', 'arbitrary_query')
+        self.config['myservice'].update({
+            'gitlab.issue_query': 'arbitrary_query',
+            'gitlab.merge_request_query': 'arbitrary_query',
+            'gitlab.todo_query': 'arbitrary_query',
+        })
         self.validate()
 
-        self.config.set('myservice', 'gitlab.issue_query', '')
+        self.config['myservice']['gitlab.issue_query'] = ''
         self.assertValidationError('You must set at least one of the '
                                    'configuration options to filter '
                                    'repositories')
 
     def test_add_default_namespace_to_included_repos(self):
-        self.config.set(
-            'myservice', 'gitlab.include_repos', 'baz, banana/tree')
+        self.config['myservice']['gitlab.include_repos'] = 'baz, banana/tree'
         self.assertEqual(self.service.config.include_repos,
                          ['foobar/baz', 'banana/tree'])
 
     def test_add_default_namespace_to_excluded_repos(self):
-        self.config.set(
-            'myservice', 'gitlab.exclude_repos', 'baz, banana/tree')
+        self.config['myservice']['gitlab.exclude_repos'] = 'baz, banana/tree'
         self.assertEqual(self.service.config.exclude_repos,
                          ['foobar/baz', 'banana/tree'])
 
@@ -545,36 +547,38 @@ class TestGitlabService(ConfigTest):
         self.assertTrue(self.service.filter_repos(repo))
 
     def test_filter_repos_exclude(self):
-        self.config.set('myservice', 'gitlab.exclude_repos', 'foobar/baz')
+        self.config['myservice']['gitlab.exclude_repos'] = 'foobar/baz'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         self.assertFalse(self.service.filter_repos(repo))
 
     def test_filter_repos_exclude_id(self):
-        self.config.set('myservice', 'gitlab.exclude_repos', 'id:1234')
+        self.config['myservice']['gitlab.exclude_repos'] = 'id:1234'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         self.assertFalse(self.service.filter_repos(repo))
 
     def test_filter_repos_include(self):
-        self.config.set('myservice', 'gitlab.include_repos', 'foobar/baz')
+        self.config['myservice']['gitlab.include_repos'] = 'foobar/baz'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         self.assertTrue(self.service.filter_repos(repo))
 
     def test_filter_repos_include_id(self):
-        self.config.set('myservice', 'gitlab.include_repos', 'id:1234')
+        self.config['myservice']['gitlab.include_repos'] = 'id:1234'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         self.assertTrue(self.service.filter_repos(repo))
 
     def test_include_only_if_assigned(self):
-        self.config.set('myservice', 'gitlab.only_if_assigned', 'jack_smith')
+        self.config['myservice']['gitlab.only_if_assigned'] = 'jack_smith'
         data = TestData()
         self.assertTrue(self.service.include((1, data.arbitrary_issue)))
-        self.config.set('myservice', 'gitlab.only_if_assigned', 'smack_jith')
+        self.config['myservice']['gitlab.only_if_assigned'] = 'smack_jith'
         self.assertFalse(self.service.include((1, data.arbitrary_issue)))
 
     def test_default_priorities(self):
-        self.config.set('myservice', 'gitlab.default_issue_priority', 'L')
-        self.config.set('myservice', 'gitlab.default_mr_priority', 'M')
-        self.config.set('myservice', 'gitlab.default_todo_priority', 'H')
+        self.config['myservice'].update({
+            'gitlab.default_issue_priority': 'L',
+            'gitlab.default_mr_priority': 'M',
+            'gitlab.default_todo_priority': 'H',
+        })
         self.assertEqual('L', self.service.config.default_issue_priority)
         self.assertEqual('M', self.service.config.default_mr_priority)
         self.assertEqual('H', self.service.config.default_todo_priority)

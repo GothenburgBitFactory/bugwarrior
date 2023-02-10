@@ -10,15 +10,15 @@ class TestYoutrackService(ConfigTest):
     def setUp(self):
         super().setUp()
         self.config = BugwarriorConfigParser()
-        self.config.add_section('general')
-        self.config.set('general', 'targets', 'myservice')
-        self.config.add_section('myservice')
-        self.config.set('myservice', 'service', 'youtrack')
-        self.config.set('myservice', 'youtrack.login', 'foobar')
-        self.config.set('myservice', 'youtrack.password', 'XXXXXX')
+        self.config['general'] = {'targets': 'myservice'}
+        self.config['myservice'] = {
+            'service': 'youtrack',
+            'youtrack.login': 'foobar',
+            'youtrack.password': 'XXXXXX',
+        }
 
     def test_get_keyring_service(self):
-        self.config.set('myservice', 'youtrack.host', 'youtrack.example.com')
+        self.config['myservice']['youtrack.host'] = 'youtrack.example.com'
         service_config = self.validate()['myservice']
         self.assertEqual(
             YoutrackService.get_keyring_service(service_config),
