@@ -67,12 +67,12 @@ class TestTrelloService(ConfigTest):
     def setUp(self):
         super().setUp()
         self.config = BugwarriorConfigParser()
-        self.config.add_section('general')
-        self.config.set('general', 'targets', 'mytrello')
-        self.config.add_section('mytrello')
-        self.config.set('mytrello', 'service', 'trello')
-        self.config.set('mytrello', 'trello.api_key', 'XXXX')
-        self.config.set('mytrello', 'trello.token', 'YYYY')
+        self.config['general'] = {'targets': 'mytrello'}
+        self.config['mytrello'] = {
+            'service': 'trello',
+            'trello.api_key': 'XXXX',
+            'trello.token': 'YYYY',
+        }
         responses.add(responses.GET,
                       'https://api.trello.com/1/lists/L15T/cards/open',
                       json=[self.CARD1, self.CARD2, self.CARD3])
@@ -94,7 +94,7 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_get_boards_config(self):
-        self.config.set('mytrello', 'trello.include_boards', 'F00, B4R')
+        self.config['mytrello']['trello.include_boards'] = 'F00, B4R'
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         boards = service.get_boards()
@@ -117,7 +117,7 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_get_lists_include(self):
-        self.config.set('mytrello', 'trello.include_lists', 'List 1')
+        self.config['mytrello']['trello.include_lists'] = 'List 1'
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         lists = service.get_lists('B04RD')
@@ -125,7 +125,7 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_get_lists_exclude(self):
-        self.config.set('mytrello', 'trello.exclude_lists', 'List 1')
+        self.config['mytrello']['trello.exclude_lists'] = 'List 1'
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         lists = service.get_lists('B04RD')
@@ -140,7 +140,7 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_get_cards_assigned(self):
-        self.config.set('mytrello', 'trello.only_if_assigned', 'tintin')
+        self.config['mytrello']['trello.only_if_assigned'] = 'tintin'
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         cards = service.get_cards('L15T')
@@ -148,8 +148,10 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_get_cards_assigned_unassigned(self):
-        self.config.set('mytrello', 'trello.only_if_assigned', 'tintin')
-        self.config.set('mytrello', 'trello.also_unassigned', 'true')
+        self.config['mytrello'].update({
+            'trello.only_if_assigned': 'tintin',
+            'trello.also_unassigned': 'true',
+        })
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         cards = service.get_cards('L15T')
@@ -172,7 +174,7 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_annotations_with_link(self):
-        self.config.set('general', 'annotation_links', 'true')
+        self.config['general']['annotation_links'] = 'true'
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         annotations = service.annotations(self.CARD1)
@@ -184,8 +186,10 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_issues(self):
-        self.config.set('mytrello', 'trello.include_lists', 'List 1')
-        self.config.set('mytrello', 'trello.only_if_assigned', 'tintin')
+        self.config['mytrello'].update({
+            'trello.include_lists': 'List 1',
+            'trello.only_if_assigned': 'tintin',
+        })
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         issues = service.issues()
@@ -216,13 +220,13 @@ class TestTrelloService(ConfigTest):
         self.validate()
 
     def test_valid_config_no_access_token(self):
-        self.config.remove_option('mytrello', 'trello.token')
+        del self.config['mytrello']['trello.token']
 
         self.assertValidationError(
             '[mytrello]\ntrello.token  <- field required')
 
     def test_valid_config_no_api_key(self):
-        self.config.remove_option('mytrello', 'trello.api_key')
+        del self.config['mytrello']['trello.api_key']
 
         self.assertValidationError(
             '[mytrello]\ntrello.api_key  <- field required')

@@ -22,38 +22,44 @@ class TestBugzillaServiceConfig(ConfigTest):
     def setUp(self):
         super().setUp()
         self.config = BugwarriorConfigParser()
-        self.config.add_section('general')
-        self.config.set('general', 'targets', 'mybz')
-        self.config.add_section('mybz')
-        self.config.set('mybz', 'service', 'bugzilla')
+        self.config['general'] = {'targets': 'mybz'}
+        self.config['mybz'] = {'service': 'bugzilla'}
 
     def test_validate_config_username_password(self):
-        self.config.set('mybz', 'bugzilla.base_uri', 'https://one.com/')
-        self.config.set('mybz', 'bugzilla.username', 'me')
-        self.config.set('mybz', 'bugzilla.password', 'mypas')
+        self.config['mybz'].update({
+            'bugzilla.base_uri': 'https://one.com/',
+            'bugzilla.username': 'me',
+            'bugzilla.password': 'mypas',
+        })
 
         # no error expected
         self.validate()
 
     def test_validate_config_api_key(self):
-        self.config.set('mybz', 'bugzilla.base_uri', 'https://one.com/')
-        self.config.set('mybz', 'bugzilla.username', 'me')
-        self.config.set('mybz', 'bugzilla.api_key', '123')
+        self.config['mybz'].update({
+            'bugzilla.base_uri': 'https://one.com/',
+            'bugzilla.username': 'me',
+            'bugzilla.api_key': '123',
+        })
 
         # no error expected
         self.validate()
 
     def test_validate_config_api_key_no_username(self):
-        self.config.set('mybz', 'bugzilla.base_uri', 'https://one.com/')
-        self.config.set('mybz', 'bugzilla.api_key', '123')
+        self.config['mybz'].update({
+            'bugzilla.base_uri': 'https://one.com/',
+            'bugzilla.api_key': '123',
+        })
 
         self.assertValidationError(
             '[mybz]\nbugzilla.username  <- field required')
 
     def test_validate_legacy_schemeless_uri(self):
-        self.config.set('mybz', 'bugzilla.base_uri', 'one.com/')
-        self.config.set('mybz', 'bugzilla.username', 'me')
-        self.config.set('mybz', 'bugzilla.password', 'mypas')
+        self.config['mybz'].update({
+            'bugzilla.base_uri': 'one.com/',
+            'bugzilla.username': 'me',
+            'bugzilla.password': 'mypas',
+        })
 
         # no error expected
         self.validate()

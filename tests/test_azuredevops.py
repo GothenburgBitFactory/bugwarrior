@@ -114,34 +114,40 @@ class TestAzureDevopsServiceConfig(ConfigTest):
     def setUp(self):
         super().setUp()
         self.config = BugwarriorConfigParser()
-        self.config.add_section("general")
-        self.config.set("general", "targets", "test_ado")
-        self.config.add_section("test_ado")
-        self.config.set("test_ado", "service", "azuredevops")
+        self.config["general"] = {"targets": "test_ado"}
+        self.config["test_ado"] = {"service": "azuredevops"}
 
     def test_validate_config_required_fields(self):
-        self.config.set("test_ado", "ado.organization", "test_organization")
-        self.config.set("test_ado", "ado.project", "test_project")
-        self.config.set("test_ado", "ado.PAT", "myPAT")
+        self.config["test_ado"].update({
+            "ado.organization": "test_organization",
+            "ado.project": "test_project",
+            "ado.PAT": "myPAT",
+        })
         self.validate()
 
     def test_validate_config_no_organization(self):
-        self.config.set("test_ado", "ado.project", "test_project")
-        self.config.set("test_ado", "ado.PAT", "myPAT")
+        self.config["test_ado"].update({
+            "ado.project": "test_project",
+            "ado.PAT": "myPAT",
+        })
 
         self.assertValidationError(
             '[test_ado]\nado.organization  <- field required')
 
     def test_validate_config_no_project(self):
-        self.config.set("test_ado", "ado.organization", "http://one.com/")
-        self.config.set("test_ado", "ado.PAT", "myPAT")
+        self.config["test_ado"].update({
+            "ado.organization": "http://one.com/",
+            "ado.PAT": "myPAT",
+        })
 
         self.assertValidationError(
             '[test_ado]\nado.project  <- field required')
 
     def test_validate_config_no_PAT(self):
-        self.config.set("test_ado", "ado.organization", "http://one.com/")
-        self.config.set("test_ado", "ado.project", "test_project")
+        self.config["test_ado"].update({
+            "ado.organization": "http://one.com/",
+            "ado.project": "test_project",
+        })
 
         self.assertValidationError(
             '[test_ado]\nado.PAT  <- field required')

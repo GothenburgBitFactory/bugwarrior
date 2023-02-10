@@ -38,15 +38,17 @@ class TestPull(ConfigTest):
         self.runner = CliRunner()
         self.config = BugwarriorConfigParser()
 
-        self.config.add_section('general')
-        self.config.set('general', 'targets', 'my_service')
-        self.config.set('general', 'static_fields', 'project, priority')
-        self.config.set('general', 'taskrc', self.taskrc)
-        self.config.add_section('my_service')
-        self.config.set('my_service', 'service', 'github')
-        self.config.set('my_service', 'github.login', 'ralphbean')
-        self.config.set('my_service', 'github.token', 'abc123')
-        self.config.set('my_service', 'github.username', 'ralphbean')
+        self.config['general'] = {
+            'targets': 'my_service',
+            'static_fields': 'project, priority',
+            'taskrc': self.taskrc,
+        }
+        self.config['my_service'] = {
+            'service': 'github',
+            'github.login': 'ralphbean',
+            'github.token': 'abc123',
+            'github.username': 'ralphbean',
+        }
 
         self.write_rc(self.config)
 
@@ -107,13 +109,12 @@ class TestPull(ConfigTest):
         Synchronization should work for succeeding services even if one service
         fails.  See https://github.com/ralphbean/bugwarrior/issues/279.
         """
-        self.config.set('general', 'targets', 'my_service,my_broken_service')
-        self.config.add_section('my_broken_service')
-        self.config.set('my_broken_service', 'service', 'bugzilla')
-        self.config.set(
-            'my_broken_service', 'bugzilla.base_uri', 'bugzilla.redhat.com')
-        self.config.set(
-            'my_broken_service', 'bugzilla.username', 'rbean@redhat.com')
+        self.config['general']['targets'] = 'my_service,my_broken_service'
+        self.config['my_broken_service'] = {
+            'service': 'bugzilla',
+            'bugzilla.base_uri': 'bugzilla.redhat.com',
+            'bugzilla.username': 'rbean@redhat.com',
+        }
 
         self.write_rc(self.config)
 
@@ -135,13 +136,12 @@ class TestPull(ConfigTest):
         See https://github.com/ralphbean/bugwarrior/issues/821.
         """
         # Add the broken service to the configuration.
-        self.config.set('general', 'targets', 'my_service,my_broken_service')
-        self.config.add_section('my_broken_service')
-        self.config.set('my_broken_service', 'service', 'bugzilla')
-        self.config.set(
-            'my_broken_service', 'bugzilla.base_uri', 'bugzilla.redhat.com')
-        self.config.set(
-            'my_broken_service', 'bugzilla.username', 'rbean@redhat.com')
+        self.config['general']['targets'] = 'my_service,my_broken_service'
+        self.config['my_broken_service'] = {
+            'service': 'bugzilla',
+            'bugzilla.base_uri': 'bugzilla.redhat.com',
+            'bugzilla.username': 'rbean@redhat.com',
+        }
         self.write_rc(self.config)
 
         # Add a task to each service.

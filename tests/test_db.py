@@ -88,15 +88,17 @@ class TestSynchronize(ConfigTest):
             return remove_non_deterministic_keys(tw.load_tasks())
 
         self.config = BugwarriorConfigParser()
-        self.config.add_section('general')
-        self.config.set('general', 'targets', 'my_service')
-        self.config.set('general', 'taskrc', self.taskrc)
-        self.config.set('general', 'static_fields', 'project, priority')
-        self.config.add_section('my_service')
-        self.config.set('my_service', 'service', 'github')
-        self.config.set('my_service', 'github.login', 'ralphbean')
-        self.config.set('my_service', 'github.username', 'ralphbean')
-        self.config.set('my_service', 'github.token', 'abc123')
+        self.config['general'] = {
+            'targets': 'my_service',
+            'taskrc': self.taskrc,
+            'static_fields': 'project, priority',
+        }
+        self.config['my_service'] = {
+            'service': 'github',
+            'github.login': 'ralphbean',
+            'github.username': 'ralphbean',
+            'github.token': 'abc123',
+        }
         bwconfig = self.validate()
 
         tw = taskw.TaskWarrior(self.taskrc)
@@ -206,14 +208,13 @@ class TestSynchronize(ConfigTest):
 class TestUDAs(ConfigTest):
     def test_udas(self):
         self.config = BugwarriorConfigParser()
-        self.config.add_section('general')
-        self.config.set('general', 'targets', 'my_service')
-        self.config.add_section('my_service')
-        self.config.set('my_service', 'service', 'github')
-        self.config.set('my_service', 'github.login', 'ralphbean')
-        self.config.set('my_service', 'github.username', 'ralphbean')
-        self.config.set('my_service', 'github.token', 'abc123')
-        self.config.set('my_service', 'service', 'github')
+        self.config['general'] = {'targets': 'my_service'}
+        self.config['my_service'] = {
+            'service': 'github',
+            'github.login': 'ralphbean',
+            'github.username': 'ralphbean',
+            'github.token': 'abc123',
+        }
 
         conf = self.validate()
         udas = sorted(list(db.get_defined_udas_as_strings(conf, 'general')))

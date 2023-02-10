@@ -51,11 +51,11 @@ class ServiceBase(ConfigTest):
     def setUp(self):
         super().setUp()
         self.config = load.BugwarriorConfigParser()
-        self.config.add_section('general')
-        self.config.set('general', 'targets', 'test')
-        self.config.set('general', 'interactive', 'false')
-        self.config.add_section('test')
-        self.config.set('test', 'service', 'test')
+        self.config['general'] = {
+            'targets': 'test',
+            'interactive': 'false',
+        }
+        self.config['test'] = {'service': 'test'}
 
     def makeService(self):
         with unittest.mock.patch('bugwarrior.config.schema.get_service',
@@ -80,7 +80,7 @@ class TestIssueService(ServiceBase):
         ])
 
     def test_build_annotations_limited(self):
-        self.config.set('general', 'annotation_length', '20')
+        self.config['general']['annotation_length'] = '20'
         service = self.makeService()
 
         annotations = service.build_annotations(
@@ -89,7 +89,7 @@ class TestIssueService(ServiceBase):
             annotations, ['@some_author - Some message that is...'])
 
     def test_build_annotations_limitless(self):
-        self.config.set('general', 'annotation_length', None)
+        self.config['general']['annotation_length'] = None
         service = self.makeService()
 
         annotations = service.build_annotations(
@@ -108,7 +108,7 @@ class TestIssue(ServiceBase):
             description, '(bw)Is# - Some message that is over 100 chara')
 
     def test_build_default_description_limited(self):
-        self.config.set('general', 'description_length', '20')
+        self.config['general']['description_length'] = '20'
         issue = self.makeIssue()
 
         description = issue.build_default_description(LONG_MESSAGE)
@@ -116,7 +116,7 @@ class TestIssue(ServiceBase):
             description, '(bw)Is# - Some message that is')
 
     def test_build_default_description_limitless(self):
-        self.config.set('general', 'description_length', None)
+        self.config['general']['description_length'] = None
         issue = self.makeIssue()
 
         description = issue.build_default_description(LONG_MESSAGE)

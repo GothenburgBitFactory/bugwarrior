@@ -27,20 +27,21 @@ class testJiraService(ConfigTest):
     def setUp(self):
         super().setUp()
         self.config = load.BugwarriorConfigParser()
-        self.config.add_section('general')
-        self.config.set('general', 'targets', 'myjira')
-        self.config.set('general', 'interactive', 'false')
-        self.config.add_section('myjira')
-        self.config.set('myjira', 'service', 'jira')
-        self.config.set('myjira', 'jira.base_uri', 'https://example.com')
-        self.config.set('myjira', 'jira.username', 'milou')
-        self.config.set('myjira', 'jira.password', 't0ps3cr3t')
-        self.config.set('myjira', 'jira.extra_fields',
-                        'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside')
+        self.config['general'] = {
+            'targets': 'myjira',
+            'interactive': 'false',
+        }
+        self.config['myjira'] = {
+            'service': 'jira',
+            'jira.base_uri': 'https://example.com',
+            'jira.username': 'milou',
+            'jira.password': 't0ps3cr3t',
+            'jira.extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
+        }
 
     def test_body_length_no_limit(self):
         description = "A very short issue body.  Fixes #828."
-        self.config.set('myjira', 'jira.body_length', '5')
+        self.config['myjira']['jira.body_length'] = '5'
         conf = schema.validate_config(self.config, 'general', 'configpath')
         service = JiraService(
             conf['myjira'], conf['general'], 'myjira', _skip_server=True)
