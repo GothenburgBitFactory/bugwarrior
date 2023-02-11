@@ -3,6 +3,11 @@ import os
 import textwrap
 from unittest import TestCase
 
+try:
+    import tomllib  # python>=3.11
+except ImportError:
+    import tomli as tomllib  # backport
+
 from bugwarrior.config import load
 
 from ..base import ConfigTest
@@ -50,7 +55,7 @@ class TestGetConfigPath(LoadTest):
         """
         self.assertEqual(
             load.get_config_path(),
-            os.path.join(self.tempdir, '.config/bugwarrior/bugwarriorrc'))
+            os.path.join(self.tempdir, '.config/bugwarrior/bugwarrior.toml'))
 
     def test_BUGWARRIORRC(self):
         """
@@ -94,6 +99,27 @@ class TestBugwarriorConfigParser(TestCase):
 
 
 class TestParseFile(LoadTest):
+    def test_toml(self):
+        config_path = self.create('.bugwarrior.toml')
+        with open(config_path, 'w') as fout:
+            fout.write(textwrap.dedent("""
+                [general]
+                foo = "bar"
+            """))
+
+        load.parse_file(config_path)
+
+    def test_toml_invalid(self):
+        config_path = self.create('.bugwarrior.toml')
+        with open(config_path, 'w') as fout:
+            fout.write(textwrap.dedent("""
+                [general
+                foo = "bar"
+            """))
+
+        with self.assertRaises(tomllib.TOMLDecodeError):
+            load.parse_file(config_path)
+
     def test_ini(self):
         config_path = self.create('.bugwarriorrc')
         with open(config_path, 'w') as fout:
@@ -101,9 +127,9 @@ class TestParseFile(LoadTest):
                 [general]
                 foo = bar
             """))
-        config = load.parse_file(config_path, 'general')
+        config = load.parse_file(config_path)
 
-        self.assertEqual(config, {'general': {'foo': 'bar'}})
+        self.assertEqual(config, {'flavor': {}, 'general': {'foo': 'bar'}})
 
     def test_ini_invalid(self):
         config_path = self.create('.bugwarriorrc')
@@ -114,7 +140,7 @@ class TestParseFile(LoadTest):
             """))
 
         with self.assertRaises(configparser.MissingSectionHeaderError):
-            load.parse_file(config_path, 'general')
+            load.parse_file(config_path)
 
     def test_ini_options_renamed(self):
         """
@@ -131,10 +157,20 @@ class TestParseFile(LoadTest):
                 service = 'qux'
                 prefix.optionname
             """))
-        config = load.parse_file(config_path, 'general')
+        config = load.parse_file(config_path)
 
         self.assertIn('optionname', config['baz'])
         self.assertNotIn('prefix.optionname', config['baz'])
 
         self.assertIn('log_level', config['general'])
         self.assertNotIn('log.level', config['general'])
+
+
+class TestConfig(TestCase):
+    def test_getitem(self):
+        config = load.Config(foo='bar')
+        self.assertEqual(config['foo'], 'bar')
+
+    def test_getitem_nested(self):
+        config = load.Config(foo={'bar': {'baz': 'qux'}})
+        self.assertEqual(config['foo.bar.baz'], 'qux')

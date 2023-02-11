@@ -36,7 +36,8 @@ class testJiraService(ConfigTest):
                 'base_uri': 'https://example.com',
                 'username': 'milou',
                 'password': 't0ps3cr3t',
-                'extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
+                'extra_fields': [
+                    'jiraextra1:customfield_10000', 'jiraextra2:namedfield.valueinside'],
             },
         }
 
@@ -67,7 +68,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         'username': 'one',
         'base_uri': 'https://two.org',
         'password': 'three',
-        'extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
+        'extra_fields': ['jiraextra1:customfield_10000', 'jiraextra2:namedfield.valueinside'],
     }
 
     arbitrary_estimation = 3600
@@ -117,7 +118,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
 
     def get_extra_fields(self):
         return JiraExtraFields.validate(
-            'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside')
+            ['jiraextra1:customfield_10000', 'jiraextra2:namedfield.valueinside'])
 
     def test_to_taskwarrior(self):
         arbitrary_url = 'http://one'

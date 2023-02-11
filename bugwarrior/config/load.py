@@ -3,6 +3,11 @@ import configparser
 import logging
 import os
 
+try:
+    import tomllib  # python>=3.11
+except ImportError:
+    import tomli as tomllib  # backport
+
 from . import data, schema
 
 # The name of the environment variable that can be used to ovewrite the path
@@ -30,10 +35,13 @@ def get_config_path():
     Determine the path to the config file. This will return, in this order of
     precedence:
     - the value of $BUGWARRIORRC if set
+    - $XDG_CONFIG_HOME/bugwarrior/bugwarrior.toml if exists
     - $XDG_CONFIG_HOME/bugwarrior/bugwarriorc if exists
+    - ~/.bugwarrior.toml if exists
     - ~/.bugwarriorrc if exists
+    - <dir>/bugwarrior/bugwarrior.toml if exists, for dir in $XDG_CONFIG_DIRS
     - <dir>/bugwarrior/bugwarriorc if exists, for dir in $XDG_CONFIG_DIRS
-    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorc otherwise
+    - $XDG_CONFIG_HOME/bugwarrior/bugwarrior.toml otherwise
     """
     if os.environ.get(BUGWARRIORRC):
         return os.environ[BUGWARRIORRC]
@@ -42,8 +50,12 @@ def get_config_path():
     xdg_config_dirs = (
         (os.environ.get('XDG_CONFIG_DIRS') or '/etc/xdg').split(':'))
     paths = [
+        os.path.join(xdg_config_home, 'bugwarrior', 'bugwarrior.toml'),
         os.path.join(xdg_config_home, 'bugwarrior', 'bugwarriorrc'),
+        os.path.expanduser("~/.bugwarrior.toml"),
         os.path.expanduser("~/.bugwarriorrc")]
+    paths += [
+        os.path.join(d, 'bugwarrior', 'bugwarrior.toml') for d in xdg_config_dirs]
     paths += [
         os.path.join(d, 'bugwarrior', 'bugwarriorrc') for d in xdg_config_dirs]
     for path in paths:
@@ -52,28 +64,64 @@ def get_config_path():
     return paths[0]
 
 
-def parse_file(configpath: str, main_section: str) -> dict:
-    rawconfig = BugwarriorConfigParser()
-    rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
-    config = {}
-    for section in rawconfig.sections():
-        if section == main_section:  # log.* -> log_*
-            config[section] = {k.replace('.', '_'): v
-                               for k, v in rawconfig[section].items()}
-        else:  # <prefix>.<option> -> <option>
-            config[section] = {k.split('.')[-1]: v
-                               for k, v in rawconfig[section].items()}
+def parse_file(configpath: str) -> dict:
+    if os.path.splitext(configpath)[-1] == '.toml':
+        with open(configpath, 'rb') as f:
+            config = tomllib.load(f)
+    else:
+        rawconfig = BugwarriorConfigParser()
+        rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
+
+        config = {'flavor': {}}
+        for section in rawconfig.sections():
+            if section == 'general':  # log.* -> log_*
+                config[section] = {k.replace('.', '_'): v
+                                   for k, v in rawconfig[section].items()}
+            elif section.startswith('flavor.'):  # log.* -> log_*
+                config['flavor'][section.split('.')[-1]] = {
+                    k.replace('.', '_'): v
+                    for k, v in rawconfig[section].items()}
+            else:  # <prefix>.<option> -> <option>
+                config[section] = {k.split('.')[-1]: v
+                                   for k, v in rawconfig[section].items()}
     return config
+
+
+class Config(dict):
+    def __getitem__(self, key):
+        """
+        Treat keys containing dots as paths to sub-dictionaries.
+
+        In toml, table names containing dots are parsed as nested tables. E.g.:
+
+        >>> import tomllib
+        >>> tomllib.loads("[foo.bar]")
+        {'foo': {'bar': {}}}
+
+        This override method allows us to continue accessing these nested
+        dictionaries with a single string. (e.g.: `config['foo.bar']`)
+
+        While this will universally apply to table names, at the time of this
+        writing it is only useful for configuration "flavors".
+        """
+        if '.' not in key:
+            return super().__getitem__(key)
+        obj = self
+        while '.' in key:
+            nestkey, key = key.split('.', maxsplit=1)
+            obj = obj[nestkey]
+        return obj.__getitem__(key)
 
 
 def load_config(main_section, interactive, quiet):
     configpath = get_config_path()
-    rawconfig = parse_file(configpath, main_section)
-    config = schema.validate_config(rawconfig, main_section, configpath)
+    rawconfig = parse_file(configpath)
+    config_dict = schema.validate_config(rawconfig, main_section, configpath)
+    config = Config(**config_dict)
     main_config = config[main_section]
     main_config.interactive = interactive
     main_config.data = data.BugwarriorData(
-        data.get_data_path(config[main_section].taskrc))
+        data.get_data_path(main_config.taskrc))
     configure_logging(main_config.log_file,
                       'WARNING' if quiet else main_config.log_level)
     return config

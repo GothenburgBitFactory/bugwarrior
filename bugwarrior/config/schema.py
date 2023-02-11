@@ -56,7 +56,7 @@ class ConfigList(frozenset):
 
     @classmethod
     def validate(cls, value):
-        """ Cast config values to lists of strings """
+        """ Cast ini string to a list of strings """
         try:
             return [
                 item.strip() for item in re.split(",(?![^{]*})", value.strip())
@@ -247,7 +247,9 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
     bugwarrior_config_model = pydantic.create_model(
         'bugwarriorrc',
         __base__=SchemaBase,
-        **{main_section: (MainSectionConfig, ...)},
+        general=(MainSectionConfig, ...),
+        flavor={flavor: (MainSectionConfig, ...)
+                for flavor in config.get('flavor', {}).values()},
         **target_schemas)
 
     # Validate
