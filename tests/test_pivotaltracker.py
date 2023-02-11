@@ -177,9 +177,10 @@ class TestPivotalTrackerServiceConfig(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config['general'] = {'targets': ['pivotal']}
-        self.config['pivotal'] = {'service': 'pivotaltracker'}
+        self.config = {
+            'general': {'targets': ['pivotal']},
+            'pivotal': {'service': 'pivotaltracker'},
+        }
 
     def test_validate_config(self):
         self.config['pivotal'].update({
