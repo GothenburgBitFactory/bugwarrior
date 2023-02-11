@@ -12,7 +12,7 @@ class TestPhabricatorIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'phabricator',
-        'phabricator.host': 'https://phabricator.example.com',
+        'host': 'https://phabricator.example.com',
     }
 
     def setUp(self):

@@ -8,8 +8,8 @@ from .base import ServiceTest, AbstractServiceTest
 class TestTaigaIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'taiga',
-        'taiga.base_uri': 'https://one',
-        'taiga.auth_token': 'two',
+        'base_uri': 'https://one',
+        'auth_token': 'two',
     }
     record = {
         'id': 400,

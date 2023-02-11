@@ -11,7 +11,7 @@ from bugwarrior.services import IssueService, Issue, ServiceClient
 log = logging.getLogger(__name__)
 
 
-class BitbucketConfig(config.ServiceConfig, prefix='bitbucket'):
+class BitbucketConfig(config.ServiceConfig):
     _DEPRECATE_FILTER_MERGE_REQUESTS = True
     filter_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
 
@@ -35,8 +35,8 @@ class BitbucketConfig(config.ServiceConfig, prefix='bitbucket'):
         if values['login'] != 'Undefined' or values['password'] != 'Undefined':
             log.warning(
                 'Bitbucket has disabled password authentication and, as such, '
-                'the bitbucket.login and bitbucket.password options are '
-                'deprecated and should be removed from your bugwarriorrc.')
+                'the "login" and "password" options are deprecated and should '
+                'be removed from your configuration file.')
         return values
 
 

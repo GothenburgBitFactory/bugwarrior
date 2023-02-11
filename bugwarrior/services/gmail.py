@@ -17,7 +17,7 @@ from bugwarrior.services import IssueService, Issue
 log = logging.getLogger(__name__)
 
 
-class GmailConfig(config.ServiceConfig, prefix='gmail'):
+class GmailConfig(config.ServiceConfig):
     service: typing_extensions.Literal['gmail']
 
     client_secret_path: config.ExpandedPath = config.ExpandedPath(

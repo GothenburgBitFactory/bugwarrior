@@ -13,7 +13,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class TracConfig(config.ServiceConfig, prefix='trac'):
+class TracConfig(config.ServiceConfig):
     service: typing_extensions.Literal['trac']
     base_uri: config.NoSchemeUrl
 

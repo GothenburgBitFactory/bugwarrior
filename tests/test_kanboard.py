@@ -3,7 +3,6 @@ from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.kanboard import KanboardService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -12,51 +11,51 @@ from .base import AbstractServiceTest, ConfigTest, ServiceTest
 class TestKanboardServiceConfig(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = BugwarriorConfigParser()
-        self.config["general"] = {"targets": "kb"}
+        self.config = {}
+        self.config["general"] = {"targets": ["kb"]}
         self.config["kb"] = {"service": "kanboard"}
 
     def test_validate_config_required_fields(self):
         self.config["kb"].update({
-            "kanboard.url": "http://example.com/",
-            "kanboard.username": "myuser",
-            "kanboard.password": "mypass",
+            "url": "http://example.com/",
+            "username": "myuser",
+            "password": "mypass",
         })
 
         self.validate()
 
     def test_validate_config_no_url(self):
         self.config["kb"].update({
-            "kanboard.username": "myuser",
-            "kanboard.password": "mypass",
+            "username": "myuser",
+            "password": "mypass",
         })
 
         self.assertValidationError(
-            '[kb]\nkanboard.url  <- field required')
+            '[kb]\nurl  <- field required')
 
     def test_validate_config_no_username(self):
         self.config["kb"].update({
-            "kanboard.url": "http://one.com/",
-            "kanboard.password": "mypass",
+            "url": "http://one.com/",
+            "password": "mypass",
         })
 
         self.assertValidationError(
-            '[kb]\nkanboard.username  <- field required')
+            '[kb]\nusername  <- field required')
 
     def test_validate_config_no_password(self):
         self.config["kb"].update({
-            "kanboard.url": "http://one.com/",
-            "kanboard.username": "myuser",
+            "url": "http://one.com/",
+            "username": "myuser",
         })
 
         self.assertValidationError(
-            '[kb]\nkanboard.password  <- field required')
+            '[kb]\npassword  <- field required')
 
     def test_get_keyring_service(self):
         self.config["kb"].update({
-            "kanboard.url": "http://example.com/",
-            "kanboard.username": "myuser",
-            "kanboard.password": "mypass",
+            "url": "http://example.com/",
+            "username": "myuser",
+            "password": "mypass",
         })
         service_config = self.validate()['kb']
         self.assertEqual(
@@ -68,9 +67,9 @@ class TestKanboardServiceConfig(ConfigTest):
 class TestKanboardService(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         "service": "kanboard",
-        "kanboard.url": "http://example.com",
-        "kanboard.username": "myuser",
-        "kanboard.password": "mypass",
+        "url": "http://example.com",
+        "username": "myuser",
+        "password": "mypass",
     }
 
     def setUp(self):

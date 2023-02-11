@@ -161,8 +161,6 @@ class SchemaBase(pydantic.BaseSettings):
         # Allow extra top-level sections so all targets don't have to be selected.
         extra = 'ignore'
 
-    DEFAULT: dict  # configparser feature
-
     hooks: Hooks = Hooks()
     notifications: Notifications = Notifications()
 
@@ -191,16 +189,6 @@ class ValidationErrorEnhancedMessages(list):
     def display_error(self, e, error, model):
         if e['type'] == 'value_error.extra':
             e['msg'] = 'unrecognized option'
-            if len(e['loc']) == 2:  # Error is in option
-                option = e['loc'][-1].split('.').pop()
-                try:
-                    scoped = f"{model._PREFIX}.{option}"
-                except AttributeError:  # not a service model
-                    pass
-                else:
-                    if scoped in model.schema()['properties'].keys():
-                        e['msg'] = (f"expected prefix '{model._PREFIX}': "
-                                    f"did you mean '{scoped}'?")
         return f'{self.display_error_loc(e)}  <- {e["msg"]}\n'
 
     def flatten(self, err, loc=None):
@@ -234,7 +222,7 @@ def raise_validation_error(msg, config_path, no_errors=1):
     sys.exit(1)
 
 
-def validate_config(config, main_section, config_path):
+def validate_config(config: dict, main_section: str, config_path: str) -> dict:
     # Pre-validate the minimum requirements to build our pydantic models.
     try:
         main = config[main_section]
@@ -286,32 +274,9 @@ _ServiceConfig = pydantic.create_model(
 )
 
 
-class ServiceConfigMetaclass(pydantic.main.ModelMetaclass):
-    """
-    Dynamically insert alias_generator with prefix.
-
-    Pydantic parses the schema in ModelMetaclass so we have to insert the
-    alias prior to that.
-    """
-    def __new__(mcs, name, bases, namespace, prefix, **kwargs):
-        if prefix is not None:
-
-            class PydanticServiceConfig(PydanticConfig):
-                @staticmethod
-                def alias_generator(string: str) -> str:
-                    """ Add prefixes. """
-                    return (string if string == 'service'
-                            else f'{prefix}.{string}')
-
-            namespace['Config'] = PydanticServiceConfig
-        cls = super().__new__(mcs, name, bases, namespace, **kwargs)
-        cls._PREFIX = prefix
-        return cls
-
-
-class ServiceConfig(_ServiceConfig,  # type: ignore  # (dynamic base class)
-                    metaclass=ServiceConfigMetaclass, prefix=None):
+class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
     """ Base class for service configurations. """
+    Config = PydanticConfig
 
     # added during validation (computed field support will land in pydantic-2)
     templates: dict = {}

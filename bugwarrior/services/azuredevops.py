@@ -37,7 +37,7 @@ class EscapedStr(str):
         return quote(value)
 
 
-class AzureDevopsConfig(config.ServiceConfig, prefix='ado'):
+class AzureDevopsConfig(config.ServiceConfig):
     service: typing_extensions.Literal['azuredevops']
     PAT: PersonalAccessToken
     project: EscapedStr

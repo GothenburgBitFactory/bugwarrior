@@ -10,7 +10,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class ActiveCollabConfig(config.ServiceConfig, prefix='activecollab'):
+class ActiveCollabConfig(config.ServiceConfig):
     service: typing_extensions.Literal['activecollab']
     url: config.StrippedTrailingSlashUrl
     key: str

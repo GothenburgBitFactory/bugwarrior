@@ -12,7 +12,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class PivotalTrackerConfig(config.ServiceConfig, prefix='pivotaltracker'):
+class PivotalTrackerConfig(config.ServiceConfig):
     service: typing_extensions.Literal['pivotaltracker']
     user_id: int
     account_ids: config.ConfigList

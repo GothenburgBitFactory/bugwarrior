@@ -3,7 +3,6 @@ import datetime
 import pytz
 import responses
 
-from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.gitlab import GitlabService, GitlabClient
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -477,15 +476,15 @@ class TestGitlabService(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = BugwarriorConfigParser()
-        self.config['general'] = {'targets': 'myservice'}
+        self.config = {}
+        self.config['general'] = {'targets': ['myservice']}
         self.config['myservice'] = {
             'service': 'gitlab',
-            'gitlab.login': 'foobar',
-            'gitlab.token': 'XXXXXX',
-            'gitlab.host': 'gitlab.com',
-            'gitlab.also_unassigned': 'true',
-            'gitlab.owned': 'true',
+            'login': 'foobar',
+            'token': 'XXXXXX',
+            'host': 'gitlab.com',
+            'also_unassigned': 'true',
+            'owned': 'true',
         }
 
     @property
@@ -505,7 +504,7 @@ class TestGitlabService(ConfigTest):
             'gitlab://foobar@gitlab.com')
 
     def test_get_keyring_service_custom_host(self):
-        self.config['myservice']['gitlab.host'] = 'my-git.org'
+        self.config['myservice']['host'] = 'my-git.org'
         conf = self.validate()['myservice']
         self.assertEqual(
             GitlabService.get_keyring_service(conf),
@@ -513,32 +512,32 @@ class TestGitlabService(ConfigTest):
 
     def test_filter_gitlab_dot_com(self):
         self.config['myservice'].update({
-            'gitlab.host': 'gitlab.com',
-            'gitlab.owned': 'false',
+            'host': 'gitlab.com',
+            'owned': 'false',
         })
         self.assertValidationError('You must set at least one of the '
                                    'configuration options to filter '
                                    'repositories')
 
         self.config['myservice'].update({
-            'gitlab.issue_query': 'arbitrary_query',
-            'gitlab.merge_request_query': 'arbitrary_query',
-            'gitlab.todo_query': 'arbitrary_query',
+            'issue_query': 'arbitrary_query',
+            'merge_request_query': 'arbitrary_query',
+            'todo_query': 'arbitrary_query',
         })
         self.validate()
 
-        self.config['myservice']['gitlab.issue_query'] = ''
+        self.config['myservice']['issue_query'] = ''
         self.assertValidationError('You must set at least one of the '
                                    'configuration options to filter '
                                    'repositories')
 
     def test_add_default_namespace_to_included_repos(self):
-        self.config['myservice']['gitlab.include_repos'] = 'baz, banana/tree'
+        self.config['myservice']['include_repos'] = 'baz, banana/tree'
         self.assertEqual(self.service.config.include_repos,
                          ['foobar/baz', 'banana/tree'])
 
     def test_add_default_namespace_to_excluded_repos(self):
-        self.config['myservice']['gitlab.exclude_repos'] = 'baz, banana/tree'
+        self.config['myservice']['exclude_repos'] = 'baz, banana/tree'
         self.assertEqual(self.service.config.exclude_repos,
                          ['foobar/baz', 'banana/tree'])
 
@@ -547,37 +546,37 @@ class TestGitlabService(ConfigTest):
         self.assertTrue(self.service.filter_repos(repo))
 
     def test_filter_repos_exclude(self):
-        self.config['myservice']['gitlab.exclude_repos'] = 'foobar/baz'
+        self.config['myservice']['exclude_repos'] = 'foobar/baz'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         self.assertFalse(self.service.filter_repos(repo))
 
     def test_filter_repos_exclude_id(self):
-        self.config['myservice']['gitlab.exclude_repos'] = 'id:1234'
+        self.config['myservice']['exclude_repos'] = 'id:1234'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         self.assertFalse(self.service.filter_repos(repo))
 
     def test_filter_repos_include(self):
-        self.config['myservice']['gitlab.include_repos'] = 'foobar/baz'
+        self.config['myservice']['include_repos'] = 'foobar/baz'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         self.assertTrue(self.service.filter_repos(repo))
 
     def test_filter_repos_include_id(self):
-        self.config['myservice']['gitlab.include_repos'] = 'id:1234'
+        self.config['myservice']['include_repos'] = 'id:1234'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         self.assertTrue(self.service.filter_repos(repo))
 
     def test_include_only_if_assigned(self):
-        self.config['myservice']['gitlab.only_if_assigned'] = 'jack_smith'
+        self.config['myservice']['only_if_assigned'] = 'jack_smith'
         data = TestData()
         self.assertTrue(self.service.include((1, data.arbitrary_issue)))
-        self.config['myservice']['gitlab.only_if_assigned'] = 'smack_jith'
+        self.config['myservice']['only_if_assigned'] = 'smack_jith'
         self.assertFalse(self.service.include((1, data.arbitrary_issue)))
 
     def test_default_priorities(self):
         self.config['myservice'].update({
-            'gitlab.default_issue_priority': 'L',
-            'gitlab.default_mr_priority': 'M',
-            'gitlab.default_todo_priority': 'H',
+            'default_issue_priority': 'L',
+            'default_mr_priority': 'M',
+            'default_todo_priority': 'H',
         })
         self.assertEqual('L', self.service.config.default_issue_priority)
         self.assertEqual('M', self.service.config.default_mr_priority)
@@ -588,9 +587,9 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'gitlab',
-        'gitlab.host': 'my-git.org',
-        'gitlab.login': 'arbitrary_login',
-        'gitlab.token': 'arbitrary_token',
+        'host': 'my-git.org',
+        'login': 'arbitrary_login',
+        'token': 'arbitrary_token',
     }
 
     def setUp(self):
@@ -637,7 +636,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     def test_custom_issue_priority(self):
         overrides = {
-            'gitlab.default_issue_priority': 'L',
+            'default_issue_priority': 'L',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         issue = service.get_issue_for_record(
@@ -676,7 +675,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     def test_custom_todo_priority(self):
         overrides = {
-            'gitlab.default_todo_priority': 'H',
+            'default_todo_priority': 'H',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         service.import_labels_as_tags = True
@@ -686,7 +685,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         )
         expected_output = {
             'project': self.data.arbitrary_todo_extra['project'],
-            'priority': overrides['gitlab.default_todo_priority'],
+            'priority': overrides['default_todo_priority'],
             'annotations': [],
             'tags': [],
             'due': None,  # currently not parsed for ToDos
@@ -717,8 +716,8 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     def test_custom_mr_priority(self):
         overrides = {
-            'gitlab.default_mr_priority': '',
-            'gitlab.import_labels_as_tags': True,
+            'default_mr_priority': '',
+            'import_labels_as_tags': True,
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         issue = service.get_issue_for_record(
@@ -727,7 +726,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         )
         expected_output = {
             'project': self.data.arbitrary_mr_extra['project'],
-            'priority': overrides['gitlab.default_mr_priority'],
+            'priority': overrides['default_mr_priority'],
             'annotations': [],
             'tags': ['feature'],
             'due': self.data.arbitrary_duedate.replace(microsecond=0),
@@ -795,7 +794,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues_from_query(self):
         overrides = {
-            'gitlab.issue_query': 'issues?state=opened',
+            'issue_query': 'issues?state=opened',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         self.add_response(
@@ -851,10 +850,10 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_mrs_from_query(self):
         overrides = {
-            'gitlab.include_issues': 'false',
-            'gitlab.include_todos': 'false',
-            'gitlab.include_merge_requests': 'true',
-            'gitlab.merge_request_query': 'merge_requests?state=opened'
+            'include_issues': 'false',
+            'include_todos': 'false',
+            'include_merge_requests': 'true',
+            'merge_request_query': 'merge_requests?state=opened'
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         self.add_response(
@@ -911,10 +910,10 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_todos_from_query(self):
         overrides = {
-            'gitlab.include_issues': 'false',
-            'gitlab.include_merge_requests': 'false',
-            'gitlab.include_todos': 'true',
-            'gitlab.todo_query': 'todos?state=pending'
+            'include_issues': 'false',
+            'include_merge_requests': 'false',
+            'include_todos': 'true',
+            'todo_query': 'todos?state=pending'
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         self.add_response(
@@ -973,11 +972,11 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         self.assertEqual(todo.get_taskwarrior_record(), expected)
 
         overrides = {
-            'gitlab.include_issues': 'false',
-            'gitlab.include_merge_requests': 'false',
-            'gitlab.include_todos': 'true',
-            'gitlab.include_repos': 'arbitrary_namespace/project',
-            'gitlab.include_all_todos': 'false'
+            'include_issues': 'false',
+            'include_merge_requests': 'false',
+            'include_todos': 'true',
+            'include_repos': 'arbitrary_namespace/project',
+            'include_all_todos': 'false'
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         todo = next(service.issues())

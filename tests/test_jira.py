@@ -4,7 +4,7 @@ from unittest import mock
 from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config import load, schema
+from bugwarrior.config import schema
 from bugwarrior.services.jira import JiraExtraFields, JiraService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -26,22 +26,22 @@ class testJiraService(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = load.BugwarriorConfigParser()
+        self.config = {}
         self.config['general'] = {
-            'targets': 'myjira',
+            'targets': ['myjira'],
             'interactive': 'false',
         }
         self.config['myjira'] = {
             'service': 'jira',
-            'jira.base_uri': 'https://example.com',
-            'jira.username': 'milou',
-            'jira.password': 't0ps3cr3t',
-            'jira.extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
+            'base_uri': 'https://example.com',
+            'username': 'milou',
+            'password': 't0ps3cr3t',
+            'extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
         }
 
     def test_body_length_no_limit(self):
         description = "A very short issue body.  Fixes #828."
-        self.config['myjira']['jira.body_length'] = '5'
+        self.config['myjira']['body_length'] = '5'
         conf = schema.validate_config(self.config, 'general', 'configpath')
         service = JiraService(
             conf['myjira'], conf['general'], 'myjira', _skip_server=True)
@@ -63,10 +63,10 @@ class testJiraService(ConfigTest):
 class TestJiraIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'jira',
-        'jira.username': 'one',
-        'jira.base_uri': 'https://two.org',
-        'jira.password': 'three',
-        'jira.extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
+        'username': 'one',
+        'base_uri': 'https://two.org',
+        'password': 'three',
+        'extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
     }
 
     arbitrary_estimation = 3600

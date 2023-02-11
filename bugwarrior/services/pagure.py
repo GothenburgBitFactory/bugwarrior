@@ -12,7 +12,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class PagureConfig(config.ServiceConfig, prefix='pagure'):
+class PagureConfig(config.ServiceConfig):
     # strictly required
     service: typing_extensions.Literal['pagure']
     base_url: config.StrippedTrailingSlashUrl
@@ -31,7 +31,7 @@ class PagureConfig(config.ServiceConfig, prefix='pagure'):
     def require_tag_or_repo(cls, values):
         if not values['tag'] and not values['repo']:
             raise ValueError(
-                'section requires one of:\npagure.tag\npagure.repo')
+                'section requires one of:\n    tag\n    repo')
         return values
 
 

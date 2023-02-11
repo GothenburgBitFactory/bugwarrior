@@ -12,7 +12,7 @@ from bugwarrior.services import IssueService, Issue, ServiceClient
 from bugwarrior import config
 
 
-class TrelloConfig(config.ServiceConfig, prefix='trello'):
+class TrelloConfig(config.ServiceConfig):
     service: typing_extensions.Literal['trello']
     api_key: str
     token: str

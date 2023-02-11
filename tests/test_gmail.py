@@ -8,7 +8,6 @@ from unittest.mock import patch
 from dateutil.tz import tzutc
 from google.oauth2.credentials import Credentials
 
-from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services import gmail
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -27,8 +26,8 @@ class TestGmailService(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = BugwarriorConfigParser()
-        self.config['general'] = {'targets': 'myservice'}
+        self.config = {}
+        self.config['general'] = {'targets': ['myservice']}
         self.config['myservice'] = {'service': 'gmail'}
 
         mock_data = mock.Mock()
@@ -106,8 +105,8 @@ TEST_LABELS = [
 class TestGmailIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'gmail',
-        'gmail.add_tags': 'added',
-        'gmail.login_name': 'test@example.com',
+        'add_tags': 'added',
+        'login_name': 'test@example.com',
     }
 
     def setUp(self):

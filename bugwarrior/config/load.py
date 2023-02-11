@@ -52,10 +52,37 @@ def get_config_path():
     return paths[0]
 
 
-def load_config(main_section, interactive, quiet):
-    configpath = get_config_path()
+def parse_file(configpath: str) -> dict:
     rawconfig = BugwarriorConfigParser()
     rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
+    # strip off prefixes
+    config = {}
+    for section in rawconfig.sections():
+        if (section in ['hooks', 'notifications', 'general'] or
+                section.startswith('flavor.')):
+            config[section] = dict(rawconfig[section])
+        else:
+            service = rawconfig[section].pop('service')
+            service_prefix = 'ado' if service == 'azuredevops' else service
+            config[section] = {'service': service}
+            for k, v in rawconfig[section].items():
+                try:
+                    prefix, key = k.split('.')
+                except ValueError:  # missing prefix
+                    prefix = None
+                    key = k
+                if prefix != service_prefix:
+                    raise SystemExit(
+                        f"[{section}]\n{k} <-expected prefix "
+                        f"'{service_prefix}': did you mean "
+                        f"'{service_prefix}.{key}'?")
+                config[section][key] = v
+    return config
+
+
+def load_config(main_section, interactive, quiet):
+    configpath = get_config_path()
+    rawconfig = parse_file(configpath)
     config = schema.validate_config(rawconfig, main_section, configpath)
     main_config = config[main_section]
     main_config.interactive = interactive

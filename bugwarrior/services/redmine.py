@@ -11,7 +11,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class RedMineConfig(config.ServiceConfig, prefix='redmine'):
+class RedMineConfig(config.ServiceConfig):
     _DEPRECATE_PROJECT_NAME = True
     project_name: str = ''
 

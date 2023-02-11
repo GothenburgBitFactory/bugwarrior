@@ -73,7 +73,7 @@ class JiraExtraField:
         return value
 
 
-class JiraConfig(config.ServiceConfig, prefix='jira'):
+class JiraConfig(config.ServiceConfig):
     service: typing_extensions.Literal['jira']
     base_uri: pydantic.AnyUrl
     username: str
@@ -96,7 +96,7 @@ class JiraConfig(config.ServiceConfig, prefix='jira'):
         if ((values['password'] and values['PAT'])
                 or not (values['password'] or values['PAT'])):
             raise ValueError(
-                'section requires one of (not both):\njira.password\njira.PAT')
+                'section requires one of (not both):\n    password\n    PAT')
         return values
 
 

@@ -9,7 +9,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class TaigaConfig(config.ServiceConfig, prefix='taiga'):
+class TaigaConfig(config.ServiceConfig):
     service: typing_extensions.Literal['taiga']
     base_uri: config.StrippedTrailingSlashUrl
     auth_token: str

@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 DefaultPriority = typing_extensions.Literal['', 'L', 'M', 'H', 'unassigned']
 
 
-class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
+class GitlabConfig(config.ServiceConfig):
     _DEPRECATE_FILTER_MERGE_REQUESTS = True
     filter_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
 
@@ -51,7 +51,7 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
         """ Add a default namespace to a repository name.  If the name already
         contains a namespace, it will be returned unchanged:
             e.g. "foo/bar" → "foo/bar"
-        otherwise, the loggin will be prepended as namespace:
+        otherwise, the login will be prepended as namespace:
             e.g. "bar" → "<login>/bar"
         """
         for repolist in ['include_repos', 'exclude_repos']:
@@ -93,7 +93,7 @@ class GitlabConfig(config.ServiceConfig, prefix='gitlab'):
                 )):
             raise ValueError(
                 "You must set at least one of the configuration options "
-                "to filter repositories (e.g., 'gitlab.owned') because there "
+                "to filter repositories (e.g., 'owned') because there "
                 "there are too many on gitlab.com to fetch them all.")
         return values
 
