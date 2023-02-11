@@ -65,12 +65,13 @@ class TestTrelloService(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config['general'] = {'targets': ['mytrello']}
-        self.config['mytrello'] = {
-            'service': 'trello',
-            'api_key': 'XXXX',
-            'token': 'YYYY',
+        self.config = {
+            'general': {'targets': ['mytrello']},
+            'mytrello': {
+                'service': 'trello',
+                'api_key': 'XXXX',
+                'token': 'YYYY',
+            },
         }
         responses.add(responses.GET,
                       'https://api.trello.com/1/lists/L15T/cards/open',

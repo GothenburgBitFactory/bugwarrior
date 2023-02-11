@@ -26,17 +26,18 @@ class testJiraService(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config['general'] = {
-            'targets': ['myjira'],
-            'interactive': 'false',
-        }
-        self.config['myjira'] = {
-            'service': 'jira',
-            'base_uri': 'https://example.com',
-            'username': 'milou',
-            'password': 't0ps3cr3t',
-            'extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
+        self.config = {
+            'general': {
+                'targets': ['myjira'],
+                'interactive': 'false',
+            },
+            'myjira': {
+                'service': 'jira',
+                'base_uri': 'https://example.com',
+                'username': 'milou',
+                'password': 't0ps3cr3t',
+                'extra_fields': 'jiraextra1:customfield_10000,jiraextra2:namedfield.valueinside',
+            },
         }
 
     def test_body_length_no_limit(self):

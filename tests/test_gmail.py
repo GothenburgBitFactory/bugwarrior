@@ -26,9 +26,10 @@ class TestGmailService(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config['general'] = {'targets': ['myservice']}
-        self.config['myservice'] = {'service': 'gmail'}
+        self.config = {
+            'general': {'targets': ['myservice']},
+            'myservice': {'service': 'gmail'},
+        }
 
         mock_data = mock.Mock()
         mock_data.path = self.tempdir

@@ -20,9 +20,10 @@ class TestBugzillaServiceConfig(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config['general'] = {'targets': ['mybz']}
-        self.config['mybz'] = {'service': 'bugzilla'}
+        self.config = {
+            'general': {'targets': ['mybz']},
+            'mybz': {'service': 'bugzilla'},
+        }
 
     def test_validate_config_username_password(self):
         self.config['mybz'].update({

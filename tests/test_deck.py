@@ -74,18 +74,19 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
 
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config['general'] = {
-            'targets': ['deck'],
-            # would otherwise cut the title short
-            'description_length': '45'
-        }
-        self.config['deck'] = {
-            'service': 'deck',
-            'base_uri': 'http://localhost:8080',
-            'username': 'testuser',
-            'password': 'testpassword',
-            'import_labels_as_tags': 'true',
+        self.config = {
+            'general': {
+                'targets': ['deck'],
+                # would otherwise cut the title short
+                'description_length': '45'
+            },
+            'deck': {
+                'service': 'deck',
+                'base_uri': 'http://localhost:8080',
+                'username': 'testuser',
+                'password': 'testpassword',
+                'import_labels_as_tags': 'true',
+            },
         }
 
         self.data = TestData()

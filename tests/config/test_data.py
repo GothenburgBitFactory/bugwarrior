@@ -42,13 +42,14 @@ class TestGetDataPath(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        rawconfig = {}
-        rawconfig['general'] = {'targets': ['my_service']}
-        rawconfig['my_service'] = {
-            'service': 'github',
-            'login': 'ralphbean',
-            'token': 'abc123',
-            'username': 'ralphbean',
+        rawconfig = {
+            'general': {'targets': ['my_service']},
+            'my_service': {
+                'service': 'github',
+                'login': 'ralphbean',
+                'token': 'abc123',
+                'username': 'ralphbean',
+            },
         }
         self.config = schema.validate_config(
             rawconfig, 'general', 'configpath')

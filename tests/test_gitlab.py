@@ -478,15 +478,16 @@ class TestGitlabService(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config['general'] = {'targets': ['myservice']}
-        self.config['myservice'] = {
-            'service': 'gitlab',
-            'login': 'foobar',
-            'token': 'XXXXXX',
-            'host': 'gitlab.com',
-            'also_unassigned': 'true',
-            'owned': 'true',
+        self.config = {
+            'general': {'targets': ['myservice']},
+            'myservice': {
+                'service': 'gitlab',
+                'login': 'foobar',
+                'token': 'XXXXXX',
+                'host': 'gitlab.com',
+                'also_unassigned': 'true',
+                'owned': 'true',
+            },
         }
 
     @property
