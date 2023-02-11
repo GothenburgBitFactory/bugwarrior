@@ -58,25 +58,26 @@ class TestConfigList(unittest.TestCase):
 class TestValidation(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config['general'] = {'targets': ['my_service', 'my_kan', 'my_gitlab']}
-        self.config['my_service'] = {
-            'service': 'github',
-            'login': 'ralph',
-            'username': 'ralph',
-            'token': 'abc123',
-        }
-        self.config['my_kan'] = {
-            'service': 'kanboard',
-            'url': 'https://kanboard.example.org',
-            'username': 'ralph',
-            'password': 'abc123',
-        }
-        self.config['my_gitlab'] = {
-            'service': 'gitlab',
-            'host': 'my-git.org',
-            'login': 'arbitrary_login',
-            'token': 'arbitrary_token',
+        self.config = {
+            'general': {'targets': ['my_service', 'my_kan', 'my_gitlab']},
+            'my_service': {
+                'service': 'github',
+                'login': 'ralph',
+                'username': 'ralph',
+                'token': 'abc123',
+            },
+            'my_kan': {
+                'service': 'kanboard',
+                'url': 'https://kanboard.example.org',
+                'username': 'ralph',
+                'password': 'abc123',
+            },
+            'my_gitlab': {
+                'service': 'gitlab',
+                'host': 'my-git.org',
+                'login': 'arbitrary_login',
+                'token': 'arbitrary_token',
+            },
         }
 
     def test_valid(self):

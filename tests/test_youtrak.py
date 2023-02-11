@@ -8,12 +8,13 @@ from .base import ConfigTest, ServiceTest, AbstractServiceTest
 class TestYoutrackService(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config['general'] = {'targets': ['myservice']}
-        self.config['myservice'] = {
-            'service': 'youtrack',
-            'login': 'foobar',
-            'password': 'XXXXXX',
+        self.config = {
+            'general': {'targets': ['myservice']},
+            'myservice': {
+                'service': 'youtrack',
+                'login': 'foobar',
+                'password': 'XXXXXX',
+            },
         }
 
     def test_get_keyring_service(self):

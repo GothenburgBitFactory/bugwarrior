@@ -11,9 +11,10 @@ from .base import AbstractServiceTest, ConfigTest, ServiceTest
 class TestKanboardServiceConfig(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config["general"] = {"targets": ["kb"]}
-        self.config["kb"] = {"service": "kanboard"}
+        self.config = {
+            "general": {"targets": ["kb"]},
+            "kb": {"service": "kanboard"},
+        }
 
     def test_validate_config_required_fields(self):
         self.config["kb"].update({

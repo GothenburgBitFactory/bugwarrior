@@ -112,9 +112,10 @@ TEST_ISSUE = {
 class TestAzureDevopsServiceConfig(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config["general"] = {"targets": ["test_ado"]}
-        self.config["test_ado"] = {"service": "azuredevops"}
+        self.config = {
+            "general": {"targets": ["test_ado"]},
+            "test_ado": {"service": "azuredevops"},
+        }
 
     def test_validate_config_required_fields(self):
         self.config["test_ado"].update({

@@ -50,12 +50,13 @@ class ServiceBase(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = {}
-        self.config['general'] = {
-            'targets': ['test'],
-            'interactive': 'false',
+        self.config = {
+            'general': {
+                'targets': ['test'],
+                'interactive': 'false',
+            },
+            'test': {'service': 'test'},
         }
-        self.config['test'] = {'service': 'test'}
 
     def makeService(self):
         with unittest.mock.patch('bugwarrior.config.schema.get_service',
