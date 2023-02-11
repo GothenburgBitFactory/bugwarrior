@@ -32,8 +32,8 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
 
     SERVICE_CONFIG = {
         'service': 'bts',
-        'bts.email': 'irl@debian.org',
-        'bts.packages': 'bugwarrior',
+        'email': 'irl@debian.org',
+        'packages': 'bugwarrior',
     }
 
     def setUp(self):

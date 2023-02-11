@@ -100,7 +100,7 @@ class ServiceTest(ConfigTest):
         config_overrides=None, general_overrides=None
     ):
         options = {
-            'general': {**self.GENERAL_CONFIG, 'targets': section},
+            'general': {**self.GENERAL_CONFIG, 'targets': [section]},
             section: self.SERVICE_CONFIG.copy(),
         }
         if config_overrides:

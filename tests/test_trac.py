@@ -30,9 +30,9 @@ class FakeTracLib:
 class TestTracIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'trac',
-        'trac.base_uri': 'ljlkajsdfl.com',
-        'trac.username': 'something',
-        'trac.password': 'somepwd',
+        'base_uri': 'ljlkajsdfl.com',
+        'username': 'something',
+        'password': 'somepwd',
     }
     arbitrary_issue = {
         'url': 'http://some/url.com/',

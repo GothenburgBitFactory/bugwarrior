@@ -1,6 +1,5 @@
 import responses
 
-from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.youtrack import YoutrackService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -9,16 +8,16 @@ from .base import ConfigTest, ServiceTest, AbstractServiceTest
 class TestYoutrackService(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = BugwarriorConfigParser()
-        self.config['general'] = {'targets': 'myservice'}
+        self.config = {}
+        self.config['general'] = {'targets': ['myservice']}
         self.config['myservice'] = {
             'service': 'youtrack',
-            'youtrack.login': 'foobar',
-            'youtrack.password': 'XXXXXX',
+            'login': 'foobar',
+            'password': 'XXXXXX',
         }
 
     def test_get_keyring_service(self):
-        self.config['myservice']['youtrack.host'] = 'youtrack.example.com'
+        self.config['myservice']['host'] = 'youtrack.example.com'
         service_config = self.validate()['myservice']
         self.assertEqual(
             YoutrackService.get_keyring_service(service_config),
@@ -29,10 +28,10 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'youtrack',
-        'youtrack.host': 'youtrack.example.com',
-        'youtrack.login': 'arbitrary_login',
-        'youtrack.password': 'arbitrary_password',
-        'youtrack.anonymous': True,
+        'host': 'youtrack.example.com',
+        'login': 'arbitrary_login',
+        'password': 'arbitrary_password',
+        'anonymous': True,
     }
     arbitrary_issue = {
         "id": "TEST-1",

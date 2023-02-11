@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 UDD_BUGS_SEARCH = "https://udd.debian.org/bugs/"
 
 
-class BTSConfig(config.ServiceConfig, prefix='bts'):
+class BTSConfig(config.ServiceConfig):
     service: typing_extensions.Literal['bts']
 
     email: pydantic.EmailStr = pydantic.EmailStr('')
@@ -28,13 +28,13 @@ class BTSConfig(config.ServiceConfig, prefix='bts'):
     def require_email_or_packages(cls, values):
         if not values['email'] and not values['packages']:
             raise ValueError(
-                'section requires one of:\nbts.email\nbts.packages')
+                'section requires one of:\n    email\n    packages')
         return values
 
     @pydantic.root_validator
     def udd_needs_email(cls, values):
         if values['udd'] and not values['email']:
-            raise ValueError("no 'bts.email' but UDD search was requested")
+            raise ValueError("no 'email' but UDD search was requested")
         return values
 
 

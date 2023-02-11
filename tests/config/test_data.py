@@ -1,7 +1,7 @@
 import os
 import json
 
-from bugwarrior.config import data, load, schema
+from bugwarrior.config import data, schema
 
 from ..base import ConfigTest
 
@@ -42,13 +42,13 @@ class TestGetDataPath(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        rawconfig = load.BugwarriorConfigParser()
-        rawconfig['general'] = {'targets': 'my_service'}
+        rawconfig = {}
+        rawconfig['general'] = {'targets': ['my_service']}
         rawconfig['my_service'] = {
             'service': 'github',
-            'github.login': 'ralphbean',
-            'github.token': 'abc123',
-            'github.username': 'ralphbean',
+            'login': 'ralphbean',
+            'token': 'abc123',
+            'username': 'ralphbean',
         }
         self.config = schema.validate_config(
             rawconfig, 'general', 'configpath')

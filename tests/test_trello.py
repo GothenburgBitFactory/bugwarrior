@@ -1,7 +1,6 @@
 from dateutil.parser import parse as parse_date
 import responses
 
-from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.trello import TrelloService, TrelloIssue
 
 from .base import ConfigTest, ServiceTest
@@ -66,12 +65,12 @@ class TestTrelloService(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = BugwarriorConfigParser()
-        self.config['general'] = {'targets': 'mytrello'}
+        self.config = {}
+        self.config['general'] = {'targets': ['mytrello']}
         self.config['mytrello'] = {
             'service': 'trello',
-            'trello.api_key': 'XXXX',
-            'trello.token': 'YYYY',
+            'api_key': 'XXXX',
+            'token': 'YYYY',
         }
         responses.add(responses.GET,
                       'https://api.trello.com/1/lists/L15T/cards/open',
@@ -94,7 +93,7 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_get_boards_config(self):
-        self.config['mytrello']['trello.include_boards'] = 'F00, B4R'
+        self.config['mytrello']['include_boards'] = 'F00, B4R'
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         boards = service.get_boards()
@@ -117,7 +116,7 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_get_lists_include(self):
-        self.config['mytrello']['trello.include_lists'] = 'List 1'
+        self.config['mytrello']['include_lists'] = 'List 1'
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         lists = service.get_lists('B04RD')
@@ -125,7 +124,7 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_get_lists_exclude(self):
-        self.config['mytrello']['trello.exclude_lists'] = 'List 1'
+        self.config['mytrello']['exclude_lists'] = 'List 1'
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         lists = service.get_lists('B04RD')
@@ -140,7 +139,7 @@ class TestTrelloService(ConfigTest):
 
     @responses.activate
     def test_get_cards_assigned(self):
-        self.config['mytrello']['trello.only_if_assigned'] = 'tintin'
+        self.config['mytrello']['only_if_assigned'] = 'tintin'
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
         cards = service.get_cards('L15T')
@@ -149,8 +148,8 @@ class TestTrelloService(ConfigTest):
     @responses.activate
     def test_get_cards_assigned_unassigned(self):
         self.config['mytrello'].update({
-            'trello.only_if_assigned': 'tintin',
-            'trello.also_unassigned': 'true',
+            'only_if_assigned': 'tintin',
+            'also_unassigned': 'true',
         })
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
@@ -187,8 +186,8 @@ class TestTrelloService(ConfigTest):
     @responses.activate
     def test_issues(self):
         self.config['mytrello'].update({
-            'trello.include_lists': 'List 1',
-            'trello.only_if_assigned': 'tintin',
+            'include_lists': 'List 1',
+            'only_if_assigned': 'tintin',
         })
         conf = self.validate()
         service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
@@ -220,16 +219,16 @@ class TestTrelloService(ConfigTest):
         self.validate()
 
     def test_valid_config_no_access_token(self):
-        del self.config['mytrello']['trello.token']
+        del self.config['mytrello']['token']
 
         self.assertValidationError(
-            '[mytrello]\ntrello.token  <- field required')
+            '[mytrello]\ntoken  <- field required')
 
     def test_valid_config_no_api_key(self):
-        del self.config['mytrello']['trello.api_key']
+        del self.config['mytrello']['api_key']
 
         self.assertValidationError(
-            '[mytrello]\ntrello.api_key  <- field required')
+            '[mytrello]\napi_key  <- field required')
 
     def test_keyring_service(self):
         """ Checks that the keyring service name """

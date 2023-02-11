@@ -3,7 +3,6 @@ import datetime
 from dateutil.tz import tzutc
 import responses
 
-from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.pivotaltracker import PivotalTrackerService
 
 from .base import ServiceTest, AbstractServiceTest, ConfigTest
@@ -178,66 +177,66 @@ class TestPivotalTrackerServiceConfig(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = BugwarriorConfigParser()
-        self.config['general'] = {'targets': 'pivotal'}
+        self.config = {}
+        self.config['general'] = {'targets': ['pivotal']}
         self.config['pivotal'] = {'service': 'pivotaltracker'}
 
     def test_validate_config(self):
         self.config['pivotal'].update({
-            'pivotaltracker.account_ids': '12345',
-            'pivotaltracker.user_id': '12345',
-            'pivotaltracker.token': '12345',
+            'account_ids': '12345',
+            'user_id': '12345',
+            'token': '12345',
         })
 
         self.validate()
 
     def test_validate_config_no_account_ids(self):
         self.config['pivotal'].update({
-            'pivotaltracker.token': '123',
-            'pivotaltracker.user_id': '12345',
+            'token': '123',
+            'user_id': '12345',
         })
 
         self.assertValidationError(
-            '[pivotal]\npivotaltracker.account_ids  <- field required')
+            '[pivotal]\naccount_ids  <- field required')
 
     def test_validate_config_no_user_id(self):
         self.config['pivotal'].update({
-            'pivotaltracker.account_ids': '12345',
-            'pivotaltracker.token': '123',
+            'account_ids': '12345',
+            'token': '123',
         })
 
         self.assertValidationError(
-            '[pivotal]\npivotaltracker.user_id  <- field required')
+            '[pivotal]\nuser_id  <- field required')
 
     def test_validate_config_token(self):
         self.config['pivotal'].update({
-            'pivotaltracker.account_ids': '12345',
-            'pivotaltracker.user_id': '12345',
+            'account_ids': '12345',
+            'user_id': '12345',
         })
 
         self.assertValidationError(
-            '[pivotal]\npivotaltracker.token  <- field required')
+            '[pivotal]\ntoken  <- field required')
 
     def test_validate_config_invalid_endpoint(self):
         self.config['pivotal'].update({
-            'pivotaltracker.account_ids': '12345',
-            'pivotaltracker.token': '123',
-            'pivotaltracker.user_id': '12345',
-            'pivotaltracker.version': 'v1',
+            'account_ids': '12345',
+            'token': '123',
+            'user_id': '12345',
+            'version': 'v1',
         })
 
         self.assertValidationError(
-            '[pivotal]\npivotaltracker.version  <- unexpected value')
+            '[pivotal]\nversion  <- unexpected value')
 
 
 class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'pivotaltracker',
-        'pivotaltracker.token': '123456',
-        'pivotaltracker.user_id': 106,
-        'pivotaltracker.account_ids': '100',
-        'pivotaltracker.import_labels_as_tags': True,
-        'pivotaltracker.import_blockers': True
+        'token': '123456',
+        'user_id': 106,
+        'account_ids': '100',
+        'import_labels_as_tags': True,
+        'import_blockers': True
     }
 
     def setUp(self):

@@ -11,7 +11,7 @@ from bugwarrior.services import IssueService, Issue
 log = logging.getLogger(__name__)
 
 
-class PhabricatorConfig(config.ServiceConfig, prefix='phabricator'):
+class PhabricatorConfig(config.ServiceConfig):
     service: typing_extensions.Literal['phabricator']
 
     user_phids: config.ConfigList = config.ConfigList([])

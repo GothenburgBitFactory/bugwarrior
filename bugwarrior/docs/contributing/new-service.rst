@@ -56,7 +56,7 @@ Now define an initial configuration schema as follows. Don't worry, we're about 
 
 .. code:: python
 
-  class GitbugConfig(config.ServiceConfig, prefix='gitbug'):
+  class GitbugConfig(config.ServiceConfig):
       service: typing_extensions.Literal['gitbug']
 
       path: pathlib.Path
@@ -73,8 +73,6 @@ The ``service`` attribute is how bugwarrior will know to assign a given section 
 
   [my_gitbug]
   service = gitbug
-
-The ``prefix`` is the beginning of the configuration field names that users will put in this section of their ``bugwarriorrc`` (e.g., ``gitbug.host = http://127.0.0.1:12345``).
 
 The ``path`` is the only particular detail required to access our local git-bug instance. You'll likely need additional details such as a username and token to authenticate to the service. Look at how you accessed the API in step 1 and ask yourself which components need to be configurable.
 
@@ -246,7 +244,7 @@ Create a test file and implement at least the minimal service tests by inheritin
   class TestGitBugIssue(AbstractServiceTest, ServiceTest):
       SERVICE_CONFIG = {
           'service': 'gitbug',
-          'gitbug.path': '/dev/null',
+          'path': '/dev/null',
       }
 
       def setUp(self):

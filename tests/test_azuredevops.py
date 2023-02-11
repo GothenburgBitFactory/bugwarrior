@@ -3,7 +3,6 @@ from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
-from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.azuredevops import (
     AzureDevopsService,
     striphtml,
@@ -113,52 +112,52 @@ TEST_ISSUE = {
 class TestAzureDevopsServiceConfig(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = BugwarriorConfigParser()
-        self.config["general"] = {"targets": "test_ado"}
+        self.config = {}
+        self.config["general"] = {"targets": ["test_ado"]}
         self.config["test_ado"] = {"service": "azuredevops"}
 
     def test_validate_config_required_fields(self):
         self.config["test_ado"].update({
-            "ado.organization": "test_organization",
-            "ado.project": "test_project",
-            "ado.PAT": "myPAT",
+            "organization": "test_organization",
+            "project": "test_project",
+            "PAT": "myPAT",
         })
         self.validate()
 
     def test_validate_config_no_organization(self):
         self.config["test_ado"].update({
-            "ado.project": "test_project",
-            "ado.PAT": "myPAT",
+            "project": "test_project",
+            "PAT": "myPAT",
         })
 
         self.assertValidationError(
-            '[test_ado]\nado.organization  <- field required')
+            '[test_ado]\norganization  <- field required')
 
     def test_validate_config_no_project(self):
         self.config["test_ado"].update({
-            "ado.organization": "http://one.com/",
-            "ado.PAT": "myPAT",
+            "organization": "http://one.com/",
+            "PAT": "myPAT",
         })
 
         self.assertValidationError(
-            '[test_ado]\nado.project  <- field required')
+            '[test_ado]\nproject  <- field required')
 
     def test_validate_config_no_PAT(self):
         self.config["test_ado"].update({
-            "ado.organization": "http://one.com/",
-            "ado.project": "test_project",
+            "organization": "http://one.com/",
+            "project": "test_project",
         })
 
         self.assertValidationError(
-            '[test_ado]\nado.PAT  <- field required')
+            '[test_ado]\nPAT  <- field required')
 
 
 class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         "service": "azuredevops",
-        "ado.organization": "test_organization",
-        "ado.project": "test_project",
-        "ado.PAT": "myPAT",
+        "organization": "test_organization",
+        "project": "test_project",
+        "PAT": "myPAT",
     }
 
     @property
@@ -253,6 +252,6 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',  # noqa: E501
             "tags": []
         }
-        service = self.get_service(config_overrides={'ado.wiql_filter': 'something'})
+        service = self.get_service(config_overrides={'wiql_filter': 'something'})
         issue = next(service.issues())
         self.assertEqual(issue.get_taskwarrior_record(), expected)

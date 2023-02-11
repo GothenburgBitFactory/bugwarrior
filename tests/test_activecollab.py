@@ -30,9 +30,9 @@ class FakeActiveCollabLib:
 class TestActiveCollabIssues(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'activecollab',
-        'activecollab.url': 'https://hello',
-        'activecollab.key': 'howdy',
-        'activecollab.user_id': '2',
+        'url': 'https://hello',
+        'key': 'howdy',
+        'user_id': '2',
     }
 
     arbitrary_due_on = (

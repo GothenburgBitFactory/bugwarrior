@@ -32,7 +32,7 @@ class OptionalSchemeUrl(pydantic.AnyUrl):
         return super().validate(value.rstrip('/'), field, config)
 
 
-class BugzillaConfig(config.ServiceConfig, prefix='bugzilla'):
+class BugzillaConfig(config.ServiceConfig):
     service: typing_extensions.Literal['bugzilla']
     username: str
     base_uri: OptionalSchemeUrl

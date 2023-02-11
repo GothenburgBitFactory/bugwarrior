@@ -12,10 +12,10 @@ from .base import ServiceTest, AbstractServiceTest
 class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'activecollab2',
-        'activecollab2.url': 'http://hello',
-        'activecollab2.key': 'howdy',
-        'activecollab2.user_id': 0,
-        'activecollab2.projects': '1:one, 2:two'
+        'url': 'http://hello',
+        'key': 'howdy',
+        'user_id': 0,
+        'projects': '1:one, 2:two'
     }
 
     arbitrary_due_on = (
@@ -37,7 +37,7 @@ class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
         'body': 'Ticket Body',
         'name': 'Anonymous',
         'assignees': [
-            {'user_id': SERVICE_CONFIG['activecollab2.user_id'],
+            {'user_id': SERVICE_CONFIG['user_id'],
              'is_owner': True}
         ],
         'description': 'Further detail.',

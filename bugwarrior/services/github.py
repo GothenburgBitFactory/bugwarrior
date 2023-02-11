@@ -13,7 +13,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class GithubConfig(config.ServiceConfig, prefix='github'):
+class GithubConfig(config.ServiceConfig):
     password: str = 'Deprecated'
 
     # strictly required
@@ -46,14 +46,14 @@ class GithubConfig(config.ServiceConfig, prefix='github'):
         if values['password'] != 'Deprecated':
             log.warning(
                 'Basic auth is no longer supported. Please remove '
-                'github.password in favor of github.token.')
+                '"password" in favor of "token".')
         return values
 
     @pydantic.root_validator
     def require_username_or_query(cls, values):
         if not values['username'] and not values['query']:
             raise ValueError(
-                'section requires one of:\ngithub.username\ngithub.query')
+                'section requires one of:\n    username\n    query')
         return values
 
     @pydantic.root_validator
@@ -63,10 +63,10 @@ class GithubConfig(config.ServiceConfig, prefix='github'):
             parsed_url = urllib.parse.urlparse(url)
             if parsed_url.netloc != values['host']:
                 raise ValueError(
-                    f'github.issue_urls: {url} inconsistent with host {values["host"]}')
+                    f'issue_urls: {url} inconsistent with host {values["host"]}')
             if not re.match(r'^/.*/.*/(issues|pull)/[0-9]*$', parsed_url.path):
                 raise ValueError(
-                    f'github.issue_urls: {parsed_url.path} is not a valid issue path')
+                    f'issue_urls: {parsed_url.path} is not a valid issue path')
             issue_url_paths.append(parsed_url.path)
         values['issue_urls'] = issue_url_paths
         return values

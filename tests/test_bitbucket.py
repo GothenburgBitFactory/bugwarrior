@@ -8,9 +8,9 @@ from .base import ServiceTest, AbstractServiceTest
 class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'bitbucket',
-        'bitbucket.username': 'somename',
-        'bitbucket.key': 'something',
-        'bitbucket.secret': 'something else',
+        'username': 'somename',
+        'key': 'something',
+        'secret': 'something else',
     }
 
     @responses.activate
