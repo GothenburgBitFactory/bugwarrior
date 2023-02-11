@@ -3,7 +3,7 @@ import unittest.mock
 import typing_extensions
 
 from bugwarrior import config, services
-from bugwarrior.config import load, schema
+from bugwarrior.config import schema
 
 from .base import ConfigTest
 
@@ -13,7 +13,7 @@ going to fill up your floppy disk taskwarrior backup. Actually it's not
 that long.""".replace('\n', ' ')
 
 
-class DumbConfig(config.ServiceConfig, prefix='dumb'):
+class DumbConfig(config.ServiceConfig):
     service: typing_extensions.Literal['test']
 
 
@@ -50,9 +50,9 @@ class ServiceBase(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = load.BugwarriorConfigParser()
+        self.config = {}
         self.config['general'] = {
-            'targets': 'test',
+            'targets': ['test'],
             'interactive': 'false',
         }
         self.config['test'] = {'service': 'test'}

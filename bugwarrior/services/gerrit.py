@@ -8,7 +8,7 @@ from bugwarrior import config
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
 
-class GerritConfig(config.ServiceConfig, prefix='gerrit'):
+class GerritConfig(config.ServiceConfig):
     service: typing_extensions.Literal['gerrit']
     base_uri: config.StrippedTrailingSlashUrl
     username: str

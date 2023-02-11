@@ -2,7 +2,6 @@ import datetime
 from unittest import mock
 from collections import namedtuple
 
-from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.bz import BugzillaService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -21,15 +20,15 @@ class TestBugzillaServiceConfig(ConfigTest):
 
     def setUp(self):
         super().setUp()
-        self.config = BugwarriorConfigParser()
-        self.config['general'] = {'targets': 'mybz'}
+        self.config = {}
+        self.config['general'] = {'targets': ['mybz']}
         self.config['mybz'] = {'service': 'bugzilla'}
 
     def test_validate_config_username_password(self):
         self.config['mybz'].update({
-            'bugzilla.base_uri': 'https://one.com/',
-            'bugzilla.username': 'me',
-            'bugzilla.password': 'mypas',
+            'base_uri': 'https://one.com/',
+            'username': 'me',
+            'password': 'mypas',
         })
 
         # no error expected
@@ -37,9 +36,9 @@ class TestBugzillaServiceConfig(ConfigTest):
 
     def test_validate_config_api_key(self):
         self.config['mybz'].update({
-            'bugzilla.base_uri': 'https://one.com/',
-            'bugzilla.username': 'me',
-            'bugzilla.api_key': '123',
+            'base_uri': 'https://one.com/',
+            'username': 'me',
+            'api_key': '123',
         })
 
         # no error expected
@@ -47,18 +46,18 @@ class TestBugzillaServiceConfig(ConfigTest):
 
     def test_validate_config_api_key_no_username(self):
         self.config['mybz'].update({
-            'bugzilla.base_uri': 'https://one.com/',
-            'bugzilla.api_key': '123',
+            'base_uri': 'https://one.com/',
+            'api_key': '123',
         })
 
         self.assertValidationError(
-            '[mybz]\nbugzilla.username  <- field required')
+            '[mybz]\nusername  <- field required')
 
     def test_validate_legacy_schemeless_uri(self):
         self.config['mybz'].update({
-            'bugzilla.base_uri': 'one.com/',
-            'bugzilla.username': 'me',
-            'bugzilla.password': 'mypas',
+            'base_uri': 'one.com/',
+            'username': 'me',
+            'password': 'mypas',
         })
 
         # no error expected
@@ -68,9 +67,9 @@ class TestBugzillaServiceConfig(ConfigTest):
 class TestBugzillaService(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'bugzilla',
-        'bugzilla.base_uri': 'https://one.com/',
-        'bugzilla.username': 'hello',
-        'bugzilla.password': 'there',
+        'base_uri': 'https://one.com/',
+        'username': 'hello',
+        'password': 'there',
     }
 
     arbitrary_record = {
@@ -104,9 +103,9 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             self.service = self.get_mock_service(
                 BugzillaService,
                 config_overrides={
-                    'bugzilla.base_uri': 'https://one.com/',
-                    'bugzilla.username': 'me',
-                    'bugzilla.api_key': '123',
+                    'base_uri': 'https://one.com/',
+                    'username': 'me',
+                    'api_key': '123',
                 })
 
     def test_to_taskwarrior(self):
@@ -162,7 +161,7 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             self.service = self.get_mock_service(
                 BugzillaService,
                 config_overrides={
-                    'bugzilla.only_if_assigned': 'hello',
+                    'only_if_assigned': 'hello',
                 })
 
         assigned_records = [
@@ -216,8 +215,8 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             self.service = self.get_mock_service(
                 BugzillaService,
                 config_overrides={
-                    'bugzilla.only_if_assigned': 'hello',
-                    'bugzilla.also_unassigned': True,
+                    'only_if_assigned': 'hello',
+                    'also_unassigned': True,
                 })
 
         assigned_records = [

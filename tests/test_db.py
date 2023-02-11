@@ -4,7 +4,6 @@ import unittest
 import taskw.task
 
 from bugwarrior import db
-from bugwarrior.config.load import BugwarriorConfigParser
 
 from .base import ConfigTest
 
@@ -87,17 +86,17 @@ class TestSynchronize(ConfigTest):
         def get_tasks(tw):
             return remove_non_deterministic_keys(tw.load_tasks())
 
-        self.config = BugwarriorConfigParser()
+        self.config = {}
         self.config['general'] = {
-            'targets': 'my_service',
+            'targets': ['my_service'],
             'taskrc': self.taskrc,
             'static_fields': 'project, priority',
         }
         self.config['my_service'] = {
             'service': 'github',
-            'github.login': 'ralphbean',
-            'github.username': 'ralphbean',
-            'github.token': 'abc123',
+            'login': 'ralphbean',
+            'username': 'ralphbean',
+            'token': 'abc123',
         }
         bwconfig = self.validate()
 
@@ -207,13 +206,13 @@ class TestSynchronize(ConfigTest):
 
 class TestUDAs(ConfigTest):
     def test_udas(self):
-        self.config = BugwarriorConfigParser()
-        self.config['general'] = {'targets': 'my_service'}
+        self.config = {}
+        self.config['general'] = {'targets': ['my_service']}
         self.config['my_service'] = {
             'service': 'github',
-            'github.login': 'ralphbean',
-            'github.username': 'ralphbean',
-            'github.token': 'abc123',
+            'login': 'ralphbean',
+            'username': 'ralphbean',
+            'token': 'abc123',
         }
 
         conf = self.validate()

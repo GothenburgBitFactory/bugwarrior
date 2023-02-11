@@ -52,10 +52,18 @@ def get_config_path():
     return paths[0]
 
 
-def load_config(main_section, interactive, quiet):
-    configpath = get_config_path()
+def parse_file(configpath: str) -> dict:
     rawconfig = BugwarriorConfigParser()
     rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
+    # strip off prefixes
+    return {section: {
+        k.split('.')[-1]: v for k, v in rawconfig[section].items()
+    } for section in rawconfig.sections()}
+
+
+def load_config(main_section, interactive, quiet):
+    configpath = get_config_path()
+    rawconfig = parse_file(configpath)
     config = schema.validate_config(rawconfig, main_section, configpath)
     main_config = config[main_section]
     main_config.interactive = interactive

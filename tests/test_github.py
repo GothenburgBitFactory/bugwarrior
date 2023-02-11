@@ -46,14 +46,14 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'github',
-        'github.login': 'arbitrary_login',
-        'github.token': 'arbitrary_token',
-        'github.username': 'arbitrary_username',
+        'login': 'arbitrary_login',
+        'token': 'arbitrary_token',
+        'username': 'arbitrary_username',
     }
 
     def test_to_taskwarrior(self):
         service = self.get_mock_service(GithubService, config_overrides={
-            'github.import_labels_as_tags': True})
+            'import_labels_as_tags': True})
         issue = service.get_issue_for_record(
             ARBITRARY_ISSUE,
             ARBITRARY_EXTRA
@@ -147,12 +147,12 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'github',
-        'github.login': 'arbitrary_login',
-        'github.token': 'arbitrary_token',
-        'github.username': 'arbitrary_username',
-        'github.query': 'is:open reviewer:octocat',
-        'github.include_user_repos': 'False',
-        'github.include_user_issues': 'False',
+        'login': 'arbitrary_login',
+        'token': 'arbitrary_token',
+        'username': 'arbitrary_username',
+        'query': 'is:open reviewer:octocat',
+        'include_user_repos': 'False',
+        'include_user_issues': 'False',
     }
 
     def setUp(self):
@@ -205,28 +205,28 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
 class TestGithubService(ServiceTest):
     SERVICE_CONFIG = {
         'service': 'github',
-        'github.login': 'tintin',
-        'github.username': 'milou',
-        'github.token': 't0ps3cr3t',
+        'login': 'tintin',
+        'username': 'milou',
+        'token': 't0ps3cr3t',
 
     }
 
     def test_token_authorization_header(self):
         service = self.get_mock_service(GithubService)
         service = self.get_mock_service(GithubService, config_overrides={
-            'github.token': '@oracle:eval:echo 1234567890ABCDEF'})
+            'token': '@oracle:eval:echo 1234567890ABCDEF'})
         self.assertEqual(service.client.session.headers['Authorization'],
                          "token 1234567890ABCDEF")
 
     def test_default_host(self):
-        """ Check that if github.host is not set, we default to github.com """
+        """ Check that if host is not set, we default to github.com """
         service = self.get_mock_service(GithubService)
         self.assertEqual("github.com", service.config.host)
 
     def test_overwrite_host(self):
-        """ Check that if github.host is set, we use its value as host """
+        """ Check that if host is set, we use its value as host """
         service = self.get_mock_service(GithubService, config_overrides={
-            'github.host': 'github.example.com'})
+            'host': 'github.example.com'})
         self.assertEqual("github.example.com", service.config.host)
 
     def test_keyring_service(self):
@@ -237,7 +237,7 @@ class TestGithubService(ServiceTest):
 
     def test_keyring_service_host(self):
         """ Checks that the keyring key depends on the github host. """
-        service_config = GithubConfig(**{'github.host': 'github.example.com'},
+        service_config = GithubConfig(**{'host': 'github.example.com'},
                                       **self.SERVICE_CONFIG)
         keyring_service = GithubService.get_keyring_service(service_config)
         self.assertEqual("github://tintin@github.example.com/milou", keyring_service)
@@ -269,7 +269,7 @@ class TestGithubService(ServiceTest):
 
     def test_body_length_limit(self):
         service = self.get_mock_service(GithubService, config_overrides={
-            'github.body_length': 5
+            'body_length': 5
         })
         issue = dict(body="A very short issue body.  Fixes #42.")
         self.assertEqual(issue["body"][:5], service.body(issue))

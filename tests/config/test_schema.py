@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from bugwarrior.config import schema, load
+from bugwarrior.config import schema
 
 from ..base import ConfigTest
 
@@ -58,25 +58,25 @@ class TestConfigList(unittest.TestCase):
 class TestValidation(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = load.BugwarriorConfigParser()
-        self.config['general'] = {'targets': 'my_service, my_kan, my_gitlab'}
+        self.config = {}
+        self.config['general'] = {'targets': ['my_service', 'my_kan', 'my_gitlab']}
         self.config['my_service'] = {
             'service': 'github',
-            'github.login': 'ralph',
-            'github.username': 'ralph',
-            'github.token': 'abc123',
+            'login': 'ralph',
+            'username': 'ralph',
+            'token': 'abc123',
         }
         self.config['my_kan'] = {
             'service': 'kanboard',
-            'kanboard.url': 'https://kanboard.example.org',
-            'kanboard.username': 'ralph',
-            'kanboard.password': 'abc123',
+            'url': 'https://kanboard.example.org',
+            'username': 'ralph',
+            'password': 'abc123',
         }
         self.config['my_gitlab'] = {
             'service': 'gitlab',
-            'gitlab.host': 'my-git.org',
-            'gitlab.login': 'arbitrary_login',
-            'gitlab.token': 'arbitrary_token',
+            'host': 'my-git.org',
+            'login': 'arbitrary_login',
+            'token': 'arbitrary_token',
         }
 
     def test_valid(self):
@@ -103,53 +103,37 @@ class TestValidation(ConfigTest):
         self.assertValidationError(
             "No option 'service' in section: 'my_service'")
 
-    def test_missing_prefix(self):
-        # set improperly scoped field
-        self.config['my_service']['also_unassigned'] = 'True'
-
-        self.assertValidationError(
-            "[my_service]\nalso_unassigned  <- "
-            "expected prefix 'github': did you mean 'github.also_unassigned'?")
-
-    def test_wrong_prefix(self):
-        # set improperly scoped field
-        self.config['my_service']['fake.also_unassigned'] = 'True'
-
-        self.assertValidationError(
-            "[my_service]\nfake.also_unassigned  <- "
-            "expected prefix 'github': did you mean 'github.also_unassigned'?")
-
     def test_extra_field(self):
         """ Undeclared fields are forbidden. """
-        self.config['my_service']['github.undeclared_field'] = 'extra'
+        self.config['my_service']['undeclared_field'] = 'extra'
 
         self.assertValidationError(
             '[my_service]\n'
-            'github.undeclared_field  <- unrecognized option')
+            'undeclared_field  <- unrecognized option')
 
     def test_root_validator(self):
-        del self.config['my_service']['github.username']
+        del self.config['my_service']['username']
 
         self.assertValidationError(
             '[my_service]  <- '
-            'section requires one of:\ngithub.username\ngithub.query')
+            'section requires one of:\n    username\n    query')
 
     def test_no_scheme_url_validator_default(self):
         conf = self.validate()
         self.assertEqual(conf['my_service'].host, 'github.com')
 
     def test_no_scheme_url_validator_set(self):
-        self.config['my_service']['github.host'] = 'github.com'
+        self.config['my_service']['host'] = 'github.com'
         conf = self.validate()
         self.assertEqual(conf['my_service'].host, 'github.com')
 
     def test_no_scheme_url_validator_scheme(self):
-        self.config['my_service']['github.host'] = 'https://github.com'
+        self.config['my_service']['host'] = 'https://github.com'
         self.assertValidationError(
-            "github.host  <- URL should not include scheme ('https')")
+            "host  <- URL should not include scheme ('https')")
 
     def test_stripped_trailing_slash_url(self):
-        self.config['my_kan']['kanboard.url'] = 'https://kanboard.example.org/'
+        self.config['my_kan']['url'] = 'https://kanboard.example.org/'
         conf = self.validate()
         self.assertEqual(conf['my_kan'].url, 'https://kanboard.example.org')
 
@@ -157,25 +141,25 @@ class TestValidation(ConfigTest):
         conf = self.validate()
         self.assertEqual(conf['my_gitlab'].include_merge_requests, True)
 
-        self.config['my_gitlab']['gitlab.filter_merge_requests'] = 'true'
+        self.config['my_gitlab']['filter_merge_requests'] = 'true'
         conf = self.validate()
         self.assertEqual(conf['my_gitlab'].include_merge_requests, False)
 
     def test_deprecated_filter_merge_requests_and_include_merge_requests(self):
-        self.config['my_gitlab']['gitlab.filter_merge_requests'] = 'true'
-        self.config['my_gitlab']['gitlab.include_merge_requests'] = 'true'
+        self.config['my_gitlab']['filter_merge_requests'] = 'true'
+        self.config['my_gitlab']['include_merge_requests'] = 'true'
         self.assertValidationError(
             '[my_gitlab]  <- filter_merge_requests and include_merge_requests are incompatible.')
 
     def test_deprecated_project_name(self):
         """ We're just testing that deprecation doesn't break validation. """
-        self.config['general']['targets'] = 'my_service, my_kan, my_gitlab, my_redmine'
+        self.config['general']['targets'] = ['my_service', 'my_kan', 'my_gitlab', 'my_redmine']
         self.config['my_redmine'] = {
             'service': 'redmine',
-            'redmine.url': 'https://example.com',
-            'redmine.key': 'mykey',
+            'url': 'https://example.com',
+            'key': 'mykey',
         }
         self.validate()
 
-        self.config['my_redmine']['redmine.project_name'] = 'myproject'
+        self.config['my_redmine']['project_name'] = 'myproject'
         self.validate()

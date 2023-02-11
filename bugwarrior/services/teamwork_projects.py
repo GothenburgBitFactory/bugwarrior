@@ -8,7 +8,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class TeamworkConfig(config.ServiceConfig, prefix='teamwork_projects'):
+class TeamworkConfig(config.ServiceConfig):
     service: typing_extensions.Literal['teamwork_projects']
     host: config.StrippedTrailingSlashUrl
     token: str

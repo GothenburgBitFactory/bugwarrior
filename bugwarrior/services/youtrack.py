@@ -11,7 +11,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class YoutrackConfig(config.ServiceConfig, prefix='youtrack'):
+class YoutrackConfig(config.ServiceConfig):
     service: typing_extensions.Literal['youtrack']
     host: config.NoSchemeUrl
     login: str

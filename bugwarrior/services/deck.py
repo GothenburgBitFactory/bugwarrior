@@ -11,7 +11,7 @@ from bugwarrior.services import IssueService, Issue, ServiceClient
 log = logging.getLogger(__name__)
 
 
-class NextcloudDeckConfig(config.ServiceConfig, prefix='deck'):
+class NextcloudDeckConfig(config.ServiceConfig):
     service: typing_extensions.Literal['deck']
     base_uri: config.StrippedTrailingSlashUrl
     username: str

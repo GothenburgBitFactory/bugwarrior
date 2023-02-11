@@ -13,9 +13,9 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'redmine',
-        'redmine.url': 'https://something',
-        'redmine.key': 'something_else',
-        'redmine.issue_limit': '100',
+        'url': 'https://something',
+        'key': 'something_else',
+        'issue_limit': '100',
     }
     arbitrary_created = datetime.datetime.utcnow().replace(
         tzinfo=dateutil.tz.tz.tzutc(), microsecond=0) - datetime.timedelta(1)

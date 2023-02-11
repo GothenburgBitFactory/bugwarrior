@@ -9,9 +9,9 @@ from .base import ServiceTest, AbstractServiceTest
 class TestGerritIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'gerrit',
-        'gerrit.base_uri': 'https://one.com',
-        'gerrit.username': 'two',
-        'gerrit.password': 'three',
+        'base_uri': 'https://one.com',
+        'username': 'two',
+        'password': 'three',
     }
 
     record = {
@@ -30,7 +30,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
 
         responses.add(
             responses.HEAD,
-            self.SERVICE_CONFIG['gerrit.base_uri'] + '/a/',
+            self.SERVICE_CONFIG['base_uri'] + '/a/',
             headers={'www-authenticate': 'digest'})
         with responses.mock:
             self.service = self.get_mock_service(GerritService)

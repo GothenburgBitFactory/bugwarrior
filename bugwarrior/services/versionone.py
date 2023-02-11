@@ -8,7 +8,7 @@ from bugwarrior import config
 from bugwarrior.services import IssueService, Issue
 
 
-class VersionOneConfig(config.ServiceConfig, prefix='versionone'):
+class VersionOneConfig(config.ServiceConfig):
     _DEPRECATE_PROJECT_NAME = True
     project_name: str = ''
 

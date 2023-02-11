@@ -30,7 +30,7 @@ class TestData:
 class TestGitBugIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'gitbug',
-        'gitbug.path': '/dev/null',
+        'path': '/dev/null',
     }
 
     def setUp(self):

@@ -14,7 +14,7 @@ from bugwarrior.services import IssueService, Issue, ServiceClient
 log = logging.getLogger(__name__)
 
 
-class GitBugConfig(config.ServiceConfig, prefix='gitbug'):
+class GitBugConfig(config.ServiceConfig):
     service: typing_extensions.Literal['gitbug']
 
     path: pathlib.Path

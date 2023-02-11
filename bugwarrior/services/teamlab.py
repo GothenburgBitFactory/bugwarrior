@@ -8,7 +8,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class TeamLabConfig(config.ServiceConfig, prefix='teamlab'):
+class TeamLabConfig(config.ServiceConfig):
     _DEPRECATE_PROJECT_NAME = True
     project_name: str = ''
 

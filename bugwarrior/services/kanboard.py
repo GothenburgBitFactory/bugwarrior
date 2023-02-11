@@ -13,7 +13,7 @@ from bugwarrior.services import Issue, IssueService
 log = logging.getLogger(__name__)
 
 
-class KanboardConfig(config.ServiceConfig, prefix='kanboard'):
+class KanboardConfig(config.ServiceConfig):
     service: typing_extensions.Literal['kanboard']
     url: config.StrippedTrailingSlashUrl
     username: str

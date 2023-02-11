@@ -10,10 +10,10 @@ from .base import ServiceTest, AbstractServiceTest
 class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'teamlab',
-        'teamlab.hostname': 'something',
-        'teamlab.login': 'alkjdsf',
-        'teamlab.password': 'lkjklj',
-        'teamlab.project_template': 'abcdef',
+        'hostname': 'something',
+        'login': 'alkjdsf',
+        'password': 'lkjklj',
+        'project_template': 'abcdef',
     }
     arbitrary_issue = {
         'title': 'Hello',
@@ -37,7 +37,7 @@ class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
         issue = self.service.get_issue_for_record(self.arbitrary_issue)
 
         expected_output = {
-            'project': self.SERVICE_CONFIG['teamlab.hostname'],
+            'project': self.SERVICE_CONFIG['hostname'],
             'priority': self.service.config.default_priority,
             issue.TITLE: self.arbitrary_issue['title'],
             issue.FOREIGN_ID: self.arbitrary_issue['id'],

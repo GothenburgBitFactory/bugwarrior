@@ -4,7 +4,6 @@ from unittest import mock
 import pydantic
 from dateutil.tz import tzutc
 
-from bugwarrior.config.load import BugwarriorConfigParser
 from bugwarrior.services.deck import NextcloudDeckClient, NextcloudDeckService
 from .base import AbstractServiceTest, ServiceTest
 
@@ -67,26 +66,26 @@ class TestData:
 class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
     SERVICE_CONFIG = {
         'service': 'deck',
-        'deck.base_uri': 'http://localhost:8080',
-        'deck.username': 'testuser',
-        'deck.password': 'testpassword',
-        'deck.import_labels_as_tags': True,
+        'base_uri': 'http://localhost:8080',
+        'username': 'testuser',
+        'password': 'testpassword',
+        'import_labels_as_tags': True,
     }
 
     def setUp(self):
         super().setUp()
-        self.config = BugwarriorConfigParser()
+        self.config = {}
         self.config['general'] = {
-            'targets': 'deck',
+            'targets': ['deck'],
             # would otherwise cut the title short
             'description_length': '45'
         }
         self.config['deck'] = {
             'service': 'deck',
-            'deck.base_uri': 'http://localhost:8080',
-            'deck.username': 'testuser',
-            'deck.password': 'testpassword',
-            'deck.import_labels_as_tags': 'true',
+            'base_uri': 'http://localhost:8080',
+            'username': 'testuser',
+            'password': 'testpassword',
+            'import_labels_as_tags': 'true',
         }
 
         self.data = TestData()
@@ -160,11 +159,11 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
         self.assertEqual(issue.get_taskwarrior_record(), expected)
 
     def test_filter_boards_include(self):
-        self.config['deck']['deck.include_board_ids'] = '5'
+        self.config['deck']['include_board_ids'] = '5'
         self.assertTrue(self.service.filter_boards({'title': 'testboard', 'id': 5}))
         self.assertFalse(self.service.filter_boards({'title': 'testboard', 'id': 6}))
 
     def test_filter_boards_exclude(self):
-        self.config['deck']['deck.exclude_board_ids'] = '5'
+        self.config['deck']['exclude_board_ids'] = '5'
         self.assertFalse(self.service.filter_boards({'title': 'testboard', 'id': 5}))
         self.assertTrue(self.service.filter_boards({'title': 'testboard', 'id': 6}))

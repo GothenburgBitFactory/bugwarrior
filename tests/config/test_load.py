@@ -1,4 +1,6 @@
+import configparser
 import os
+import textwrap
 from unittest import TestCase
 
 from bugwarrior.config import load
@@ -6,8 +8,7 @@ from bugwarrior.config import load
 from ..base import ConfigTest
 
 
-class TestGetConfigPath(ConfigTest):
-
+class LoadTest(ConfigTest):
     def create(self, path):
         """
         Create an empty file in the temporary directory, return the full path.
@@ -18,6 +19,8 @@ class TestGetConfigPath(ConfigTest):
         open(fpath, 'a').close()
         return fpath
 
+
+class TestGetConfigPath(LoadTest):
     def test_default(self):
         """
         If it exists, use the file at $XDG_CONFIG_HOME/bugwarrior/bugwarriorrc
@@ -62,7 +65,7 @@ class TestGetConfigPath(ConfigTest):
 
     def test_BUGWARRIORRC_empty(self):
         """
-        If $BUGWARRIORRC is set but emty, it is not used and the default file
+        If $BUGWARRIORRC is set but empty, it is not used and the default file
         is used instead.
         """
         os.environ['BUGWARRIORRC'] = ''
@@ -88,3 +91,42 @@ class TestBugwarriorConfigParser(TestCase):
     def test_getint_valueerror(self):
         with self.assertRaises(ValueError):
             self.config.getint('general', 'somechar')
+
+
+class TestParseFile(LoadTest):
+    def test_ini(self):
+        config_path = self.create('.bugwarriorrc')
+        with open(config_path, 'w') as fout:
+            fout.write(textwrap.dedent("""
+                [general]
+                foo = bar
+            """))
+        config = load.parse_file(config_path)
+
+        self.assertEqual(config, {'general': {'foo': 'bar'}})
+
+    def test_ini_invalid(self):
+        config_path = self.create('.bugwarriorrc')
+        with open(config_path, 'w') as fout:
+            fout.write(textwrap.dedent("""
+                [general
+                foo = bar
+            """))
+
+        with self.assertRaises(configparser.MissingSectionHeaderError):
+            load.parse_file(config_path)
+
+    def test_ini_prefix_removal(self):
+        config_path = self.create('.bugwarriorrc')
+        with open(config_path, 'w') as fout:
+            fout.write(textwrap.dedent("""
+                [general]
+                foo = bar
+                [baz]
+                service = 'qux'
+                prefix.optionname
+            """))
+        config = load.parse_file(config_path)
+
+        self.assertIn('optionname', config['baz'])
+        self.assertNotIn('prefix.optionname', config['baz'])

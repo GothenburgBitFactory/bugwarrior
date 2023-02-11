@@ -28,7 +28,7 @@ class ActiveCollabProjects(frozenset):
         return projects
 
 
-class ActiveCollab2Config(config.ServiceConfig, prefix='activecollab2'):
+class ActiveCollab2Config(config.ServiceConfig):
     service: typing_extensions.Literal['activecollab2']
     url: config.StrippedTrailingSlashUrl
     key: str
