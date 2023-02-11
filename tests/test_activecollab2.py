@@ -15,7 +15,7 @@ class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
         'url': 'http://hello',
         'key': 'howdy',
         'user_id': 0,
-        'projects': '1:one, 2:two'
+        'projects': {1: 'one', 2: 'two'},
     }
 
     arbitrary_due_on = (

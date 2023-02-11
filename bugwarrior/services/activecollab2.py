@@ -19,7 +19,10 @@ class ActiveCollabProjects(dict):
 
     @classmethod
     def validate(cls, projects_raw):
-        projects_list = projects_raw.split(',')
+        try:  # ini
+            projects_list = projects_raw.split(',')
+        except AttributeError:  # toml (already a dict)
+            return projects_raw
         projects = {}
         for project in projects_list:
             project_data = project.strip().split(":")

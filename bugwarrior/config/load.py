@@ -3,6 +3,11 @@ import configparser
 import logging
 import os
 
+try:
+    import tomllib  # python>=3.11
+except ImportError:
+    import tomli as tomllib  # backport
+
 from . import data, schema
 
 # The name of the environment variable that can be used to ovewrite the path
@@ -30,10 +35,13 @@ def get_config_path():
     Determine the path to the config file. This will return, in this order of
     precedence:
     - the value of $BUGWARRIORRC if set
-    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorc if exists
+    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorrc if exists
+    - $XDG_CONFIG_HOME/bugwarrior/bugwarrior.toml if exists
     - ~/.bugwarriorrc if exists
-    - <dir>/bugwarrior/bugwarriorc if exists, for dir in $XDG_CONFIG_DIRS
-    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorc otherwise
+    - ~/.bugwarrior.toml if exists
+    - <dir>/bugwarrior/bugwarriorrc if exists, for dir in $XDG_CONFIG_DIRS
+    - <dir>/bugwarrior/bugwarrior.toml if exists, for dir in $XDG_CONFIG_DIRS
+    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorrc otherwise
     """
     if os.environ.get(BUGWARRIORRC):
         return os.environ[BUGWARRIORRC]
@@ -43,9 +51,13 @@ def get_config_path():
         (os.environ.get('XDG_CONFIG_DIRS') or '/etc/xdg').split(':'))
     paths = [
         os.path.join(xdg_config_home, 'bugwarrior', 'bugwarriorrc'),
-        os.path.expanduser("~/.bugwarriorrc")]
+        os.path.join(xdg_config_home, 'bugwarrior', 'bugwarrior.toml'),
+        os.path.expanduser("~/.bugwarriorrc"),
+        os.path.expanduser("~/.bugwarrior.toml")]
     paths += [
         os.path.join(d, 'bugwarrior', 'bugwarriorrc') for d in xdg_config_dirs]
+    paths += [
+        os.path.join(d, 'bugwarrior', 'bugwarrior.toml') for d in xdg_config_dirs]
     for path in paths:
         if os.path.exists(path):
             return path
@@ -53,31 +65,39 @@ def get_config_path():
 
 
 def parse_file(configpath: str) -> dict:
-    rawconfig = BugwarriorConfigParser()
-    rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
-    config = {}
-    for section in rawconfig.sections():
-        if section in ['hooks', 'notifications']:
-            config[section] = rawconfig[section].items()
-        elif section == 'general' or section.startswith('flavor.'):
-            config[section] = {k.replace('log.', 'log_'): v
-                               for k, v in rawconfig[section].items()}
-        else:
-            service = rawconfig[section].pop('service')
-            service_prefix = 'ado' if service == 'azuredevops' else service
-            config[section] = {'service': service}
-            for k, v in rawconfig[section].items():
-                try:
-                    prefix, key = k.split('.')
-                except ValueError:  # missing prefix
-                    prefix = None
-                    key = k
-                if prefix != service_prefix:
-                    raise SystemExit(
-                        f"[{section}]\n{k} <-expected prefix "
-                        f"'{service_prefix}': did you mean "
-                        f"'{service_prefix}.{key}'?")
-                config[section][key] = v
+    if os.path.splitext(configpath)[-1] == '.toml':
+        with open(configpath, 'rb') as f:
+            config = tomllib.load(f)
+    else:
+        rawconfig = BugwarriorConfigParser()
+        rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
+        config = {}
+        for section in rawconfig.sections():
+            if section in ['hooks', 'notifications']:
+                config[section] = rawconfig[section].items()
+            elif section == 'general':
+                config[section] = {k.replace('log.', 'log_'): v
+                                   for k, v in rawconfig[section].items()}
+            elif section.startswith('flavor.'):
+                config['flavor'][section.split('.')[-1]] = {
+                    k.replace('.', '_'): v
+                    for k, v in rawconfig[section].items()}
+            else:
+                service = rawconfig[section].pop('service')
+                service_prefix = 'ado' if service == 'azuredevops' else service
+                config[section] = {'service': service}
+                for k, v in rawconfig[section].items():
+                    try:
+                        prefix, key = k.split('.')
+                    except ValueError:  # missing prefix
+                        prefix = None
+                        key = k
+                    if prefix != service_prefix:
+                        raise SystemExit(
+                            f"[{section}]\n{k} <-expected prefix "
+                            f"'{service_prefix}': did you mean "
+                            f"'{service_prefix}.{key}'?")
+                    config[section][key] = v
     return config
 
 
@@ -88,7 +108,7 @@ def load_config(main_section, interactive, quiet):
     main_config = config[main_section]
     main_config.interactive = interactive
     main_config.data = data.BugwarriorData(
-        data.get_data_path(config[main_section].taskrc))
+        data.get_data_path(main_config.taskrc))
     configure_logging(main_config.log_file,
                       'WARNING' if quiet else main_config.log_level)
     return config
