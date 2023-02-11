@@ -35,7 +35,10 @@ class JiraExtraFields(frozenset):
 
     @classmethod
     def validate(cls, extra_fields_raw):
-        extra_fields_list = extra_fields_raw.split(',')
+        try:  # ini
+            extra_fields_list = extra_fields_raw.split(',')
+        except AttributeError:  # toml
+            extra_fields_list = extra_fields_raw
         extra_fields = []
         for extra_field_raw in extra_fields_list:
             split_extra_field = extra_field_raw.strip().split(":", maxsplit=2)

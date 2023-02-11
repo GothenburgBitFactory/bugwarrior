@@ -3,6 +3,11 @@ import os
 import textwrap
 from unittest import TestCase
 
+try:
+    import tomllib  # python>=3.11
+except ImportError:
+    import tomli as tomllib  # backport
+
 from bugwarrior.config import load
 
 from ..base import ConfigTest
@@ -50,7 +55,7 @@ class TestGetConfigPath(LoadTest):
         """
         self.assertEqual(
             load.get_config_path(),
-            os.path.join(self.tempdir, '.config/bugwarrior/bugwarriorrc'))
+            os.path.join(self.tempdir, '.config/bugwarrior/bugwarrior.toml'))
 
     def test_BUGWARRIORRC(self):
         """
@@ -94,6 +99,27 @@ class TestBugwarriorConfigParser(TestCase):
 
 
 class TestParseFile(LoadTest):
+    def test_toml(self):
+        config_path = self.create('.bugwarrior.toml')
+        with open(config_path, 'w') as fout:
+            fout.write(textwrap.dedent("""
+                [general]
+                foo = "bar"
+            """))
+
+        load.parse_file(config_path)
+
+    def test_toml_invalid(self):
+        config_path = self.create('.bugwarrior.toml')
+        with open(config_path, 'w') as fout:
+            fout.write(textwrap.dedent("""
+                [general
+                foo = "bar"
+            """))
+
+        with self.assertRaises(tomllib.TOMLDecodeError):
+            load.parse_file(config_path)
+
     def test_ini(self):
         config_path = self.create('.bugwarriorrc')
         with open(config_path, 'w') as fout:
