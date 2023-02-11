@@ -4,6 +4,7 @@ import os.path
 import pathlib
 import pkg_resources
 import re
+import socket
 import subprocess
 import tempfile
 import unittest
@@ -13,6 +14,12 @@ from bugwarrior import config
 from .base import ConfigTest
 
 DOCS_PATH = pathlib.Path(__file__).parent / '../bugwarrior/docs'
+
+try:
+    socket.create_connection(('1.1.1.1', 80))
+    INTERNET = True
+except OSError:
+    INTERNET = False
 
 
 class ReadmeTest(unittest.TestCase):
@@ -49,12 +56,14 @@ class ReadmeTest(unittest.TestCase):
 
 
 class DocsTest(unittest.TestCase):
+    @unittest.skipIf(not INTERNET, 'no internet')
     def test_docs_build_without_warning(self):
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
                 ['sphinx-build', '-n', '-W', '-v', str(DOCS_PATH), buildDir],
                 check=True)
 
+    @unittest.skipIf(not INTERNET, 'no internet')
     def test_manpage_build_without_warning(self):
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
