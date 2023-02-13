@@ -1,4 +1,5 @@
 import configparser
+import itertools
 import os
 import textwrap
 from unittest import TestCase
@@ -26,26 +27,39 @@ class LoadTest(ConfigTest):
 
 
 class TestGetConfigPath(LoadTest):
-    def test_default(self):
-        """
-        If it exists, use the file at $XDG_CONFIG_HOME/bugwarrior/bugwarriorrc
-        """
-        rc = self.create('.config/bugwarrior/bugwarriorrc')
-        self.assertEqual(load.get_config_path(), rc)
+    def test_path_precedence(self):
+        # We're going to manually setup and teardown each subTest.
+        self.tearDown()
+
+        config_paths = [  # ordered by precedence
+            '.config/bugwarrior/bugwarrior.toml',
+            '.config/bugwarrior/bugwarriorrc',
+            '.bugwarrior.toml',
+            '.bugwarriorrc',
+        ]
+
+        # https://docs.python.org/3/library/itertools.html#itertools.combinations
+        # > The combination tuples are emitted in lexicographic ordering
+        # > according to the order of the input iterable. So, if the input
+        # > iterable is sorted, the output tuples will be produced in sorted
+        # > order.
+        # So as long as the path list is in the correct order, path1 should have
+        # precedence.
+        for path1, path2 in itertools.combinations(config_paths, 2):
+            with self.subTest(path1=path1, path2=path2):
+                self.setUp()
+                try:
+                    config1 = self.create(path1)
+                    self.create(path2)
+                    self.assertEqual(load.get_config_path(), config1)
+                finally:
+                    self.tearDown()
 
     def test_legacy(self):
         """
         Falls back on .bugwarriorrc if it exists
         """
         rc = self.create('.bugwarriorrc')
-        self.assertEqual(load.get_config_path(), rc)
-
-    def test_xdg_first(self):
-        """
-        If both files above exist, the one in $XDG_CONFIG_HOME takes precedence
-        """
-        self.create('.bugwarriorrc')
-        rc = self.create('.config/bugwarrior/bugwarriorrc')
         self.assertEqual(load.get_config_path(), rc)
 
     def test_no_file(self):
