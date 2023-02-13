@@ -175,14 +175,12 @@ class RedMineIssue(Issue):
             updated_on = self.parse_date(updated_on).replace(microsecond=0)
         if created_on:
             created_on = self.parse_date(created_on).replace(microsecond=0)
-        if not spent_hours:
-            spent_hours = 0
-        spent_hours = str(spent_hours) + ' hours'
-        spent_hours = self.get_converted_hours(spent_hours)
-        if not estimated_hours:
-            estimated_hours = 0
-        estimated_hours = str(estimated_hours) + ' hours'
-        estimated_hours = self.get_converted_hours(estimated_hours)
+        if spent_hours or spent_hours == 0.0:
+            spent_hours = str(spent_hours) + ' hours'
+            spent_hours = self.get_converted_hours(spent_hours)
+        if estimated_hours or estimated_hours == 0.0:
+            estimated_hours = str(estimated_hours) + ' hours'
+            estimated_hours = self.get_converted_hours(estimated_hours)
         if category:
             category = category['name']
         if assigned_to:
