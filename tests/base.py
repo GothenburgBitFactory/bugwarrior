@@ -49,9 +49,9 @@ class ConfigTest(unittest.TestCase):
 
         # Configure environment.
         os.environ['HOME'] = self.tempdir
+        os.environ['XDG_CONFIG_HOME'] = os.path.join(self.tempdir, '.config')
         os.environ.pop(config.BUGWARRIORRC, None)
         os.environ.pop('TASKRC', None)
-        os.environ.pop('XDG_CONFIG_HOME', None)
         os.environ.pop('XDG_CONFIG_DIRS', None)
 
     def tearDown(self):
