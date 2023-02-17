@@ -24,7 +24,8 @@ extras = {
         "pytest-subtests",
         "responses",
         "sphinx",
-        "sphinx-click"
+        "sphinx-click",
+        "tomli-w",
     ],
     "trac": ["offtrac"],
     "versionone": ["v1pysdk"],

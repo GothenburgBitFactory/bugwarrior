@@ -3,9 +3,9 @@ import logging
 from unittest import mock
 
 from click.testing import CliRunner
+import tomli_w
 
 from bugwarrior import command
-from bugwarrior.config.load import BugwarriorConfigParser
 
 from .base import ConfigTest
 from .test_github import ARBITRARY_ISSUE, ARBITRARY_EXTRA
@@ -36,32 +36,32 @@ class TestPull(ConfigTest):
         super().setUp()
 
         self.runner = CliRunner()
-        self.config = BugwarriorConfigParser()
-
-        self.config['general'] = {
-            'targets': 'my_service',
-            'static_fields': 'project, priority',
-            'taskrc': self.taskrc,
+        self.config = {
+            'general': {
+                'targets': ['my_service'],
+                'static_fields': ['project', 'priority'],
+                'taskrc': self.taskrc,
+            },
+            'my_service': {
+                'service': 'github',
+                'login': 'ralphbean',
+                'token': 'abc123',
+                'username': 'ralphbean',
+            },
         }
-        self.config['my_service'] = {
-            'service': 'github',
-            'github.login': 'ralphbean',
-            'github.token': 'abc123',
-            'github.username': 'ralphbean',
-        }
 
-        self.write_rc(self.config)
+        self.write_toml(self.config)
 
-    def write_rc(self, conf):
+    def write_toml(self, conf: dict):
         """
-        Write configparser object to temporary bugwarriorrc path.
+        Write toml to temporary bugwarriorrc path.
         """
-        rcfile = os.path.join(self.tempdir, '.config/bugwarrior/bugwarriorrc')
-        if not os.path.exists(os.path.dirname(rcfile)):
-            os.makedirs(os.path.dirname(rcfile))
-        with open(rcfile, 'w') as configfile:
-            conf.write(configfile)
-        return rcfile
+        configfile = os.path.join(self.tempdir, '.config/bugwarrior/bugwarrior.toml')
+        if not os.path.exists(os.path.dirname(configfile)):
+            os.makedirs(os.path.dirname(configfile))
+        with open(configfile, 'wb') as f:
+            tomli_w.dump(conf, f)
+        return configfile
 
     @mock.patch(
         'bugwarrior.services.github.GithubService.issues', fake_github_issues)
@@ -109,14 +109,14 @@ class TestPull(ConfigTest):
         Synchronization should work for succeeding services even if one service
         fails.  See https://github.com/ralphbean/bugwarrior/issues/279.
         """
-        self.config['general']['targets'] = 'my_service,my_broken_service'
+        self.config['general']['targets'] = ['my_service', 'my_broken_service']
         self.config['my_broken_service'] = {
             'service': 'bugzilla',
-            'bugzilla.base_uri': 'bugzilla.redhat.com',
-            'bugzilla.username': 'rbean@redhat.com',
+            'base_uri': 'bugzilla.redhat.com',
+            'username': 'rbean@redhat.com',
         }
 
-        self.write_rc(self.config)
+        self.write_toml(self.config)
 
         with self.caplog.at_level(logging.INFO):
             self.runner.invoke(command.cli, args=('pull'))
@@ -136,13 +136,13 @@ class TestPull(ConfigTest):
         See https://github.com/ralphbean/bugwarrior/issues/821.
         """
         # Add the broken service to the configuration.
-        self.config['general']['targets'] = 'my_service,my_broken_service'
+        self.config['general']['targets'] = ['my_service', 'my_broken_service']
         self.config['my_broken_service'] = {
             'service': 'bugzilla',
-            'bugzilla.base_uri': 'bugzilla.redhat.com',
-            'bugzilla.username': 'rbean@redhat.com',
+            'base_uri': 'bugzilla.redhat.com',
+            'username': 'rbean@redhat.com',
         }
-        self.write_rc(self.config)
+        self.write_toml(self.config)
 
         # Add a task to each service.
         with self.caplog.at_level(logging.DEBUG):
