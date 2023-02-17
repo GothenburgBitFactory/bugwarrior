@@ -28,10 +28,10 @@ make bugwarrior support more robust!
 ::
 
     [my_issue_tracker]
-    service = bugzilla
-    bugzilla.base_uri = https://bugzilla.redhat.com
-    bugzilla.username = rbean@redhat.com
-    bugzilla.password = OMG_LULZ
+    service = "bugzilla"
+    base_uri = "https://bugzilla.redhat.com"
+    username = "rbean@redhat.com"
+    password = "OMG_LULZ"
 
 Alternately, if you are using a version of python-bugzilla newer than 2.1.0,
 you can specify an API key instead of a password. Note that the username is
@@ -39,7 +39,7 @@ still required in this case, in order to identify bugs belonging to you.
 
 ::
 
-    bugzilla.api_key = 4f4d475f4c554c5a4f4d475f4c554c5a
+    api_key = "4f4d475f4c554c5a4f4d475f4c554c5a"
 
 The above example is the minimum required to import issues from
 Bugzilla.  You can also feel free to use any of the
@@ -47,40 +47,40 @@ configuration options described in :ref:`common_configuration_options`.
 
 There is also an option to ignore bugs that you are only cc'd on::
 
-    bugzilla.ignore_cc = True
+    ignore_cc = true
 
 If your bugzilla "actionable" bugs only include ON_QA, FAILS_QA, PASSES_QA, and POST::
 
-    bugzilla.open_statuses = ON_QA,FAILS_QA,PASSES_QA,POST
+    open_statuses = ["ON_QA", "FAILS_QA", "PASSES_QA", "POST"]
 
 This won't create tasks for bugs in other states. The default open statuses:
-"NEW,ASSIGNED,NEEDINFO,ON_DEV,MODIFIED,POST,REOPENED,ON_QA,FAILS_QA,PASSES_QA"
+``[ "NEW", "ASSIGNED", "NEEDINFO", "ON_DEV", "MODIFIED", "POST", "REOPENED", "ON_QA", "FAILS_QA", "PASSES_QA"]``
 
 If you're on a more recent Bugzilla install, the NEEDINFO status no longer
 exists, and has been replaced by the "needinfo?" flag. Set
-``bugzilla.include_needinfos`` to "True" to have taskwarrior also add bugs where
+``include_needinfos`` to `true` to have taskwarrior also add bugs where
 information is requested of you. The "bugzillaneedinfo" UDA will be filled in
 with the date the needinfo was set.
 
-To see all your needinfo bugs, you can use "task bugzillaneedinfo.any: list".
+To see all your needinfo bugs, you can use ``task bugzillaneedinfo.any: list``.
 
 If the filtering options are not sufficient to find the set of bugs you'd like,
 you can tell Bugwarrior exactly which bugs to sync by pasting a full query URL
-from your browser into the ``bugzilla.query_url`` option::
+from your browser into the ``query_url`` option::
 
-    bugzilla.query_url = https://bugzilla.mozilla.org/query.cgi?bug_status=ASSIGNED&email1=myname%40mozilla.com&emailassigned_to1=1&emailtype1=exact
+    query_url = "https://bugzilla.mozilla.org/query.cgi?bug_status=ASSIGNED&email1=myname%40mozilla.com&emailassigned_to1=1&emailtype1=exact"
 
 Note that versions of Python-Bugzilla newer than 2.3.0 support the Bugzilla REST interface, but prefer the XMLRPC interface if both are configured.
 To force use of the REST interface, ensure you are using a newer version of the library and add::
 
-    bugzilla.force_rest = True
+    force_rest = true
 
 More modern bugzilla's require that we specify query_format=advanced along with
 the xmlrpc request (https://bugzilla.redhat.com/show_bug.cgi?id=825370)
 …but older bugzilla's don't know anything about that argument. Here we make it
 possible for the user to specify whether they want to pass that argument or not::
 
-    bugzilla.advanced = True
+    advanced = true
 
 Provided UDA Fields
 -------------------

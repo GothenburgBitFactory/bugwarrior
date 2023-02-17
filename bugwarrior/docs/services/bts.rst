@@ -22,8 +22,8 @@ Example Service
 Here's an example of a Debian BTS target::
 
     [debian_bts]
-    service = bts
-    bts.email = username@debian.org
+    service = "bts"
+    email = "username@debian.org"
 
 The above example is the minimum required to import issues from
 the Debian BTS.  You can also feel free to use any of the configuration options
@@ -37,14 +37,12 @@ Include all bugs for packages
 +++++++++++++++++++++++++++++
 
 If you would like more bugs than just those you are the owner of, you can specify
-the ``bts.packages`` option.
+the ``packages`` option.
 
 For example if you wanted to include bugs on the ``hello`` package, you can add
 this line to your service configuration::
 
-    bts.packages = hello
-
-More packages can be specified seperated by commas.
+    packages = ["hello"]
 
 Ultimate Debian Database (UDD) Bugs Search
 ++++++++++++++++++++++++++++++++++++++++++
@@ -56,7 +54,7 @@ you can enable the use of the `UDD Bugs Search <https://udd.debian.org/bugs/>`_.
 This will peform a search and include the bugs from the result. To enable this
 feature, you can add this line to your service configuration::
 
-    bts.udd = True
+    udd = true
 
 Excluding bugs marked pending
 +++++++++++++++++++++++++++++
@@ -70,7 +68,7 @@ This is the default behaviour, but if you feel you would like to include bugs th
 are marked as pending in the BTS, you can disable this by adding this line to your
 service configuration::
 
-    bts.ignore_pending = False
+    ignore_pending = false
 
 Including sponsored and NMU'd packages
 ++++++++++++++++++++++++++++++++++++++
@@ -79,7 +77,7 @@ By default, packages that you have sponsored or have uploaded as a non-maintaine
 upload or team upload will be excluded. You can include tasks from these packages
 by disabling this feature::
 
-    bts.udd_ignore_sponsor = False
+    udd_ignore_sponsor = false
 
 .. note:: This will only affect the bugs returned by the UDD bugs search service
           and will not exclude bugs that are discovered due to ownership or due
@@ -94,8 +92,8 @@ are still listed as Maintainer or Uploader in stable suites, you can explicitly
 ignore bugs based on their binary or source package names. To do this add one
 of the following lines to your service configuration::
 
-    bts.ignore_pkg = hello,anarchism
-    bts.ignore_src = linux
+    ignore_pkg = ["hello", "anarchism"]
+    ignore_src = ["linux"]
 
 .. note:: The ``src:`` prefix that is commonly seen in the Debian BTS interface
           is not required when specifying source packages to exclude.

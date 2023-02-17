@@ -16,10 +16,10 @@ Example Service
 Here's an example of a Kanboard project::
 
     [my_issue_tracker]
-    service = kanboard
-    kanboard.url = https://kanboard.example.org
-    kanboard.username = ralph
-    kanboard.password = my_api_token
+    service = "kanboard"
+    url = "https://kanboard.example.org"
+    username = "ralph"
+    password = "my_api_token"
 
 The above example is the minimum required to import issues from Kanboard. It is
 recommended to use a personal API token instead of a password, which can be
@@ -33,12 +33,12 @@ Specify the Query to Use for Gathering Issues
 +++++++++++++++++++++++++++++++++++++++++++++
 
 By default, all open issues assigned to the specified username are imported.
-One may use the `kanboard.query` parameter to modify the search query.
+One may use the `query` parameter to modify the search query.
 
 For example, to import all open issues assigned to 'frank', use the following
 configuration option::
 
-    kanboard.query = status:open assignee:frank
+    query = "status:open assignee:frank"
 
 
 Provided UDA Fields

@@ -9,10 +9,10 @@ Example Service
 Here's an example of a gerrit project::
 
     [my_issue_tracker]
-    service = gerrit
-    gerrit.base_uri = https://yourhomebase.xyz/gerrit/
-    gerrit.username = your_username
-    gerrit.password = your_http_digest_password
+    service = "gerrit"
+    base_uri = "https://yourhomebase.xyz/gerrit/"
+    username = "your_username"
+    password = "your_http_digest_password"
 
 The above example is the minimum required to import issues from Gerrit.
 
@@ -20,7 +20,7 @@ The above example is the minimum required to import issues from Gerrit.
 the "HTTP Password" section in your account settings to generate/retrieve this
 password.
 
-You can also pass an optional ``gerrit.ssl_ca_path`` option which will use an
+You can also pass an optional ``ssl_ca_path`` option which will use an
 alternative certificate authority to verify the connection.
 
 You can also feel free to use any of the configuration options described in
@@ -38,7 +38,7 @@ You may override this query string through your `bugwarriorrc` file.
 
 For example::
 
-    gerrit.query = is:open+((reviewer:self+-owner:self+-is:ignored)+OR+assignee:self)
+    query = "is:open+((reviewer:self+-owner:self+-is:ignored)+OR+assignee:self)"
 
 Provided UDA Fields
 -------------------

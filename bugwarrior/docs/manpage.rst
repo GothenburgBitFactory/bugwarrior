@@ -21,9 +21,9 @@ Configuration files
 Bugwarrior will look at the following paths and read its configuration from the
 first existing file in this order:
 
-* :file:`~/.config/bugwarrior/bugwarriorrc`
-* :file:`~/.bugwarriorrc`
-* :file:`/etc/xdg/bugwarrior/bugwarriorrc`
+* :file:`~/.config/bugwarrior/bugwarrior.toml`
+* :file:`~/.bugwarrior.toml`
+* :file:`/etc/xdg/bugwarrior/bugwarrior.toml`
 
 The default paths can be altered using the environment variables below.
 
@@ -33,21 +33,21 @@ Environment Variables
 
 .. envvar:: BUGWARRIORRC
 
-This overrides the default RC file.
+This overrides the default configuration file.
 
 .. envvar:: XDG_CONFIG_HOME
 
 By default, :program:`bugwarrior` looks for a configuration file named
-``$XDG_CONFIG_HOME/bugwarrior/bugwarriorrc``.  If ``$XDG_CONFIG_HOME`` is
+``$XDG_CONFIG_HOME/bugwarrior/bugwarrior.toml``.  If ``$XDG_CONFIG_HOME`` is
 either not set or empty, a default equal to ``$HOME/.config`` is used.
 
 .. envvar:: XDG_CONFIG_DIRS
 
 If it can't find a user-specific configuration file (either
-``$XDG_CONFIG_HOME/bugwarrior/bugwarriorrc`` or ``$HOME/.bugwarriorrc``),
+``$XDG_CONFIG_HOME/bugwarrior/bugwarrior.toml`` or ``$HOME/.bugwarrior.toml``),
 :program:`bugwarrior` looks through the directories in
 ``$XDG_CONFIG_DIRS`` for a configuration file named
-``bugwarrior/bugwarriorrc``.
+``bugwarrior/bugwarrior.toml``.
 The directories in ``$XDG_CONFIG_DIRS`` should be separated with a colon ':'.
 If ``$XDG_CONFIG_DIRS`` is either not set or empty, a value equal to
 ``/etc/xdg`` is used.

@@ -85,7 +85,7 @@ class DocsTest(unittest.TestCase):
 
 
 class ExampleBugwarriorrcTest(ConfigTest):
-    def test_example_bugwarriorrc(self):
+    def test_example_bugwarrior_config(self):
         os.environ['BUGWARRIORRC'] = os.path.join(
             DOCS_PATH, 'example-bugwarriorrc')
         config.load_config('general', False, False)

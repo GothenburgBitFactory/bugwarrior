@@ -11,42 +11,42 @@ Example Service
 Here's an example of a Pivotal Tracker target::
 
     [my_issue_tracker]
-    service = pivotaltracker
-    pivotaltracker.user_id = 123456
-    pivotaltracker.account_ids = 123456
-    pivotaltracker.token = <your account API token>
+    service = "pivotaltracker"
+    user_id = "123456"
+    account_ids = "123456"
+    token = "<your account API token>"
 
 The above example is the minimum required to import stories from
 Pivotal Tracker.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
-.. describe:: pivotaltracker.user_id
+.. describe:: user_id
 
     Your Pivotal Tracker user account.
 
     You can get your user_id by going to https://www.pivotaltracker.com/services/v5/me. It's the id field in the JSON response.
 
-.. describe:: pivotaltracker.token
+.. describe:: token
 
     Pivotal Tracker offers API keys for accounts to access resources through their
-    API. You will need to provide ``pivotaltracker.token`` to allow bugwarrior to
+    API. You will need to provide ``token`` to allow bugwarrior to
     pull stories.
 
-.. describe:: pivotaltracker.account_ids
+.. describe:: account_ids
 
     Pivotal Tracker account ids to specify which accounts to pull stories.
 
-.. describe:: pivotaltracker.version
+.. describe:: version
 
     Pivotal Tracker api version to access. The options are ``v5`` and ``edge``.
     Default is ``v5``.
 
-.. describe:: pivotaltracker.host
+.. describe:: host
 
     Pivotal Tracker host, default is ``https://www.pivotaltracker.com/services``.
 
-.. describe:: pivotaltracker.exclude_projects
+.. describe:: exclude_projects
 
     The list of projects to exclude. If omitted, bugwarrior will use all projects
     the authenticated user is a member of. This must be the projects id, In your browser,
@@ -54,7 +54,7 @@ or described in `Service Features`_ below.
     it should be something like https://www.pivotaltracker.com/n/projects/xxxxxxxx:
     copy the part after /b/projects/ in the pivotaltracker.exclude_projects field.
 
-.. describe:: pivotaltracker.exclude_stories
+.. describe:: exclude_stories
 
     The list of stories to exclude. If omitted, bugwarrior will use all stories
     the authenticated user is assigned to. This must be the story id and Pivotal
@@ -62,15 +62,15 @@ or described in `Service Features`_ below.
     story you wish to exlcude and copy the id next to 'ID' in the story. *Do not
     include the #*
 
-.. describe:: pivotaltracker.exclude_tags
+.. describe:: exclude_tags
 
     If set, pull all stories except for stories with those tags listed.
 
-.. describe:: pivotaltracker.import_blockers
+.. describe:: import_blockers
 
     A boolean that indicates whether to include blockers when listed in a story.
 
-.. describe:: pivotaltracker.blocker_template
+.. describe:: blocker_template
 
    Template used to convert Pivotal Trcker story blockers to a template defined
    before being pushed to UDA.
@@ -78,19 +78,19 @@ or described in `Service Features`_ below.
    are processed.
    The default value is ``Description: {{description}} State: {{resolved}}\n``.
 
-.. describe:: pivotaltracker.import_labels_as_tags
+.. describe:: import_labels_as_tags
 
     A boolean that indicates whether the Pivotal Tracker labels should be imported as
     tags in taskwarrior. (Defaults to false.)
 
-.. describe:: pivotaltracker.label_template
+.. describe:: label_template
 
    Template used to convert Pivotal Tracker labels to taskwarrior tags.
    See :ref:`field_templates` for more details regarding how templates
    are processed.
    The default value is ``{{label|replace(' ', '_')}}``.
 
-.. describe:: pivotaltracker.annotation_template
+.. describe:: annotation_template
 
    Template used to convert Pivotal Tracker story tasks to a template defined
    before being added as task annotations.
@@ -111,16 +111,16 @@ Exclude Certain Projects
 
 If you happen to be working with a large number of projects, you
 may want to pull stories from only a subset of your projects.  To
-do that, you can use the ``pivotaltracker.exclude_projects`` option.
+do that, you can use the ``exclude_projects`` option.
 
 For example, if you have a particularly noisy project, you can
 instead choose to import all stories except for the project listed
-using the ``pivotaltracker.exclude_projects`` configuration option.
+using the ``exclude_projects`` configuration option.
 
 In this example, ``noisy_project`` is the project you would
 *not* like stories created for::
 
-    pivotaltracker.exclude_projects = noisy_project
+    exclude_projects = ["noisy_project"]
 
 Exclude Certain Stories
 +++++++++++++++++++++++
@@ -129,21 +129,21 @@ If you want bugwarrior to not track specific stories you can ignore those
 stories and ensure bugwarrior only tracks the stories you want. To do
 this, you need to set::
 
-    pivotaltracker.exclude_stories = 123456
+    exclude_stories = [123456]
 
 For example, if you have stories #123 and #344, you do not wish to pull anymore
 you can add them like so::
 
-    pivotaltracker.exclude_stories = 123,344
+    exclude_stories = [123, 344]
 
 Import Labels as Tags
 +++++++++++++++++++++
 
 Pivotal Tracker allows you to attach labels to stories; to
 use those labels as tags, you can use the
-``pivotaltracker.import_labels_as_tags`` option::
+``import_labels_as_tags`` option::
 
-    pivotaltracker.import_labels_as_tags = True
+    import_labels_as_tags = true
 
 Also, if you would like to control how these labels are created, you can
 specify a template used for converting the Pivotal Tracker label into a
@@ -153,7 +153,7 @@ For example, to prefix all incoming labels with the string `pivotal_` (perhaps
 to differentiate them from any existing tags you might have), you could
 add the following configuration option::
 
-    pivotaltracker.label_template = pivotal_{{label}}
+    label_template = "pivotal_{{label}}"
 
 In addition to the context variable ``{{label}}``, you also have access
 to all fields on the Taskwarrior task, if needed.
@@ -166,21 +166,21 @@ to all fields on the Taskwarrior task, if needed.
 Get involved stories
 ++++++++++++++++++++
 
-By default, stories from all projects assigned to ``pivotaltracker.user_id``
+By default, stories from all projects assigned to ``user_id``
 are tracked. To turn this off, set::
 
-    pivotaltracker.only_if_assigned = False
+    only_if_assigned = false
 
-Instead of fetching stories on ``pivotaltracker.user_id``'s assigned
+Instead of fetching stories on ``user_id``'s assigned
 stories, you may instead get those that are not assigned to
-``pivotaltracker.user_id``. This includes all stories in all projects
+``user_id``. This includes all stories in all projects
 the user has access to. To pull stories, use::
 
-    pivotaltracker.also_unassigned = True
+    also_unassigned = true
 
 To only pull stories where ``{{user_id}}`` is the requestor of the story, use::
 
-    pivotaltracker.only_if_author = True
+    only_if_author = true
 
 
 Queries
@@ -190,7 +190,7 @@ Pivotal Traker provides a decent search feature in their API. If you want
 to write your own query, as described at
 https://www.pivotaltracker.com/help/articles/advanced_search/ you will need to use::
 
-    pivotaltracker.query = mywork:1234
+    query = "mywork:1234"
 
 .. note::
    Search is limited by project and will be used in each
@@ -199,7 +199,7 @@ https://www.pivotaltracker.com/help/articles/advanced_search/ you will need to u
 To disable the pre-defined query described above and synchronize only the
 issues matched by a query, set::
 
-   pivotaltracker.query = <Your customer query>
+   query = "<Your customer query>"
 
 .. note::
    Setting a custom query will pull everything that is returned from the result.
@@ -214,7 +214,7 @@ Pivotal Tracker provides the ability to add tasks to stories. Stories pulled in
 by bugwarrior will create an annotation for each "subtask" provided in the
 story. To turn this off, in your main section set::
 
-    annotation_comments = False
+    annotation_comments = false
 
 Also, if you would like to control how these blockers are created, you can
 specify a template used for converting the story blocker into a more reasonable
@@ -230,7 +230,7 @@ Which will result in the following output::
 
 add the following configuration option::
 
-    pivotaltracker.annotation_template = {{description}} #{{id}} S{{complete}}
+    annotation_template = "{{description}} #{{id}} S{{complete}}"
 
 In addition to the context variable listed above, you also have access
 to all fields on the Taskwarrior task and all fields of the blocking object as
@@ -243,7 +243,7 @@ Story Blocker
 Pivotal Tracker allows you assign blockers to stories and bugwarrior pulls
 these in by default. To disable this behavior set::
 
-    pivotaltracker.import_blockers = False
+    import_blockers = false
 
 Also, if you would like to control how these blockers are created, you can
 specify a template used for converting the story blocker into a more reasonable
@@ -255,11 +255,11 @@ For example, the default template::
 
 Which will result in the following output::
 
-   Description: You cant do this stoy yet! Resovled: False
+   Description: You cant do this stoy yet! State: False
 
 add the following configuration option::
 
-    pivotaltracker.blocker_template = {{description}} #{{id}} S{{resolved}}
+    blocker_template = "{{description}} #{{id}} S{{resolved}}"
 
 In addition to the context variable listed above, you also have access
 to all fields on the Taskwarrior task and all fields of the blocking object as

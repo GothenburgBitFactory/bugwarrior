@@ -9,9 +9,9 @@ Example Service
 Here's an example of a taiga project::
 
     [my_issue_tracker]
-    service = taiga
-    taiga.base_uri = http://taiga.fedorainfracloud.org
-    taiga.auth_token = ayJ1c4VyX2F1dGhlbnQpY2F0aW9uX2lmIjo1fQ:2a2LPT:qscLbfQC_jyejQsICET5KgYNPLM
+    service = "taiga"
+    base_uri = "http://taiga.fedorainfracloud.org"
+    auth_token = "ayJ1c4VyX2F1dGhlbnQpY2F0aW9uX2lmIjo1fQ:2a2LPT:qscLbfQC_jyejQsICET5KgYNPLM"
 
 The above example is the minimum required to import issues from Taiga.  You can
 also feel free to use any of the configuration options described in
@@ -25,14 +25,14 @@ Include Tasks
 
 By default, userstories from taiga are added in taskwarrior. If you like to include taiga tasks as well, set the config option::
 
-    taiga.include_tasks = True
+    include_tasks = true
 
 Label Template
 ++++++++++++++
 
 Use the ``label_template`` option to customize the label. For example::
 
-    taiga.label_template = taiga_{{label}}
+    label_template = "taiga_{{label}}"
 
 Provided UDA Fields
 -------------------

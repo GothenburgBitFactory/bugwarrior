@@ -1,3 +1,5 @@
+:orphan:
+
 .. _example_configuration:
 
 Example Configuration

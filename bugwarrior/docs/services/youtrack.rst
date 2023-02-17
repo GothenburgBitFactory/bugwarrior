@@ -10,10 +10,10 @@ Example Service
 Here's an example of a YouTrack target::
 
     [my_issue_tracker]
-    service = youtrack
-    youtrack.host = youtrack.example.com
-    youtrack.login = turing
-    youtrack.password = 3n1Gm@
+    service = "youtrack"
+    host = "youtrack.example.com"
+    login = "turing"
+    password = "3n1Gm@"
 
 The above example is the minimum required to import issues from
 YouTrack. You can also feel free to use any of the
@@ -29,7 +29,7 @@ Unauthenticated
 While the ``login`` and ``password`` fields are still required, bugwarrior
 will not log in to the service if you set::
 
-    youtrack.anonymous = True
+    anonymous = true
 
 .. note::
 
@@ -38,32 +38,32 @@ will not log in to the service if you set::
 Customize the YouTrack Connection
 +++++++++++++++++++++++++++++++++
 
-The ``youtrack.host`` field is used to construct a URL for
+The ``host`` field is used to construct a URL for
 the YouTrack server. It defaults to a secure connection scheme (HTTPS)
 on the standard port (443).
 
 To connect on a different port, set::
 
-    youtrack.port = 8443
+    port = 8443
 
 If your YouTrack instance is only available over HTTP, set::
 
-    youtrack.use_https = False
+    use_https = false
 
 If you want to ignore verifying the SSL certificate, set::
 
-    youtrack.verify_ssl = False
+    verify_ssl = false
 
 For YouTrack InCloud instances set::
 
-    youtrack.incloud_instance = True
+    incloud_instance = true
 
 Specify the Query to Use for Gathering Issues
 +++++++++++++++++++++++++++++++++++++++++++++
 
 The default option selects unresolved issues assigned to the login user::
 
-    youtrack.query = for:me #Unresolved
+    query = "for:me #Unresolved"
 
 Reference the
 `YouTrack Search Query Grammar <https://www.jetbrains.com/help/youtrack/standalone/7.0/Search-Query-Grammar.html>`_
@@ -71,7 +71,7 @@ for additional examples.
 
 Queries are capped at 100 max results by default, but may be adjusted to meet your needs::
 
-    youtrack.query_limit = 100
+    query_limit = 100
 
 Import Issue Tags
 +++++++++++++++++
@@ -79,7 +79,7 @@ Import Issue Tags
 The YouTrack issue tracker allows you to tag issues and these tags are applied
 to tasks by default. To disable this behavior, set::
 
-    youtrack.import_tags = False
+    import_tags = false
 
 If you would like to control how these tags are formatted, you can
 specify a template used for converting the YouTrack tag into a Taskwarrior
@@ -89,7 +89,7 @@ For example, to prefix all incoming tags with the string 'yt\_' (perhaps
 to differentiate them from any existing tags you might have), you could
 add the following configuration option::
 
-    youtrack.tag_template = yt_{{tag|lower}}
+    tag_template = "yt_{{tag|lower}}"
 
 In addition to the context variable ``{{tag}}``, you also have access
 to all fields on the Taskwarrior task if needed.

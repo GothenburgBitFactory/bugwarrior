@@ -14,6 +14,8 @@ from . import data, schema
 # to the bugwarriorrc file
 BUGWARRIORRC = "BUGWARRIORRC"
 
+log = logging.getLogger(__name__)
+
 
 def configure_logging(logfile, loglevel):
     logging.basicConfig(filename=logfile, level=loglevel)
@@ -69,6 +71,8 @@ def parse_file(configpath: str) -> dict:
         with open(configpath, 'rb') as f:
             config = tomllib.load(f)
     else:
+        log.warning('Deprecation Warning: ini configuration is deprecated in '
+                    'favor of toml.')
         rawconfig = BugwarriorConfigParser()
         rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
 

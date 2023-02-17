@@ -13,10 +13,11 @@ You can obtain your user ID and API url by logging into ActiveCollab and
 clicking on "Profile" and then "API Settings". When on that page, look
 at the URL. The integer that appears after "/user/" is your user ID.
 
-Projects should be entered in a comma-separated list, with the project
+Projects should be entered in an inline table, with the project
 id as the key and the name you'd like to use for the project in Taskwarrior
 entered as the value. For example, if the project ID is 8 and the project's
-name in ActiveCollab is "Amazing Website" then you might enter 8:amazing_website
+name in ActiveCollab is "Amazing Website" then you might enter
+``{8: "amazing_website"}``.
 
 Note that due to limitations in the ActiveCollab API, there is no simple way
 to get a list of all tasks you are responsible for in AC. Instead you need to
@@ -34,11 +35,11 @@ with ActiveCollab 2.x - see above for 3.x and greater.
 ::
 
     [my_bug_tracker]
-    service = activecollab2
-    activecollab2.url = http://ac.example.org/api.php
-    activecollab2.key = your-api-key
-    activecollab2.user_id = 15
-    activecollab2.projects = 1:first_project, 5:another_project
+    service = "activecollab2"
+    url = "http://ac.example.org/api.php"
+    key = "your-api-key"
+    user_id = 15
+    projects = { 1 = "first_project", 5 = "another_project" }
 
 The above example is the minimum required to import issues from
 ActiveCollab 2.  You can also feel free to use any of the

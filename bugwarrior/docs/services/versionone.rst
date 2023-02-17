@@ -16,10 +16,10 @@ Example Service
 Here's an example of a VersionOne project::
 
     [my_issue_tracker]
-    service = versionone
-    versionone.base_uri = https://www3.v1host.com/MyVersionOneInstance/
-    versionone.usermame = somebody
-    versionone.password = hunter5
+    service = "versionone"
+    base_uri = "https://www3.v1host.com/MyVersionOneInstance/"
+    usermame = "somebody"
+    password = "hunter5"
 
 The above example is the minimum required to import issues from VersionOne.
 You can also feel free to use any of the configuration options
@@ -43,10 +43,10 @@ Restrict Task Imports to a Specific Timebox (Sprint)
 
 You can restrict imported tasks to a specific Timebox (VersionOne's
 internal generic name for a Sprint) -- in this example named
-'Sprint 2014-09-22' -- by using the ``versionone.timebox_name`` option;
+'Sprint 2014-09-22' -- by using the ``timebox_name`` option;
 for example::
 
-    versionone.timebox_name = Sprint 2014-09-22
+    timebox_name = "Sprint 2014-09-22"
 
 Set a Global Project Name
 +++++++++++++++++++++++++
@@ -54,19 +54,19 @@ Set a Global Project Name
 By default, this importer does not set a project name on imported tasks.
 Although you can gain more flexibility by using :ref:`field_templates`
 to generate a project name, if all you need is to set a predictable
-project name, you can use the ``versionone.project_name`` option; in this
+project name, you can use the ``project_name`` option; in this
 example, to add imported tasks to the project 'important_project'::
 
-    versionone.project_name = important_project
+    project_name = "important_project"
 
 Set the Timezone Used for Due Dates
 +++++++++++++++++++++++++++++++++++
 
 You can configure the timezone used for setting your tasks' due dates
-by setting the ``versionone.timezone`` option.  By default, your local
+by setting the ``timezone`` option.  By default, your local
 timezone will be used.  For example::
 
-    versionone.timezone = America/Los_Angeles
+    timezone = "America/Los_Angeles"
 
 Provided UDA Fields
 -------------------

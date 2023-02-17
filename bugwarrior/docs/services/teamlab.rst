@@ -10,10 +10,10 @@ Example Service
 Here's an example of a Teamlab target::
 
     [my_issue_tracker]
-    service = teamlab
-    teamlab.hostname = teamlab.example.com
-    teamlab.login = alice
-    teamlab.password = secret
+    service = "teamlab"
+    hostname = "teamlab.example.com"
+    login = "alice"
+    password = "secret"
 
 The above example is the minimum required to import issues from
 Teamlab. You can also feel free to use any of the

@@ -46,10 +46,10 @@ see :ref:`activecollab2` for activeCollab2.x.
 ::
 
     [my_bug_tracker]
-    service = activecollab
-    activecollab.url = https://ac.example.org/api.php
-    activecollab.key = your-api-key
-    activecollab.user_id = 15
+    service = "activecollab"
+    url = "https://ac.example.org/api.php"
+    key = "your-api-key"
+    user_id = 15
 
 The above example is the minimum required to import issues from
 ActiveCollab 4.  You can also feel free to use any of the
