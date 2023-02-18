@@ -52,25 +52,30 @@ def get_config_path():
     return paths[0]
 
 
-def parse_file(configpath: str) -> dict:
+def parse_file(configpath: str, main_section: str) -> dict:
     rawconfig = BugwarriorConfigParser()
     rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
-    # strip off prefixes
-    return {section: {
-        k.split('.')[-1]: v for k, v in rawconfig[section].items()
-    } for section in rawconfig.sections()}
+    config = {}
+    for section in rawconfig.sections():
+        if section == main_section:  # log.* -> log_*
+            config[section] = {k.replace('.', '_'): v
+                               for k, v in rawconfig[section].items()}
+        else:  # <prefix>.<option> -> <option>
+            config[section] = {k.split('.')[-1]: v
+                               for k, v in rawconfig[section].items()}
+    return config
 
 
 def load_config(main_section, interactive, quiet):
     configpath = get_config_path()
-    rawconfig = parse_file(configpath)
+    rawconfig = parse_file(configpath, main_section)
     config = schema.validate_config(rawconfig, main_section, configpath)
     main_config = config[main_section]
     main_config.interactive = interactive
     main_config.data = data.BugwarriorData(
         data.get_data_path(config[main_section].taskrc))
-    configure_logging(main_config.log__file,
-                      'WARNING' if quiet else main_config.log__level)
+    configure_logging(main_config.log_file,
+                      'WARNING' if quiet else main_config.log_level)
     return config
 
 

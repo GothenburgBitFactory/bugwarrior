@@ -26,13 +26,13 @@ annotation_comments = True
 # Setting this to False will strip newlines from comment annotations
 annotation_newlines = False
 
-# log.level specifies the verbosity.  The default is DEBUG.
-# log.level can be one of DEBUG, INFO, WARNING, ERROR, CRITICAL, DISABLED
-#log.level = DEBUG
+# log_level specifies the verbosity.  The default is DEBUG.
+# log_level can be one of DEBUG, INFO, WARNING, ERROR, CRITICAL, DISABLED
+log_level = DEBUG
 
-# If log.file is specified, output will be redirected there.  If it remains
+# If log_file is specified, output will be redirected there.  If it remains
 # unspecified, output is sent to sys.stderr
-#log.file = /var/log/bugwarrior.log
+log_file = /var/log/bugwarrior.log
 
 # Configure the default description or annotation length.
 #annotation_length = 45

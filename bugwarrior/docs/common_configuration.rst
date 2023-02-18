@@ -20,10 +20,10 @@ Optional options include:
   annotations. Defaults to ``True``.
 * ``annotation_newlines``: When ``False`` strips newlines from comments in
   annotations. Defaults to ``False``.
-* ``log.level``: Set to one of ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``,
+* ``log_level``: Set to one of ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``,
   ``CRITICAL``, or ``DISABLED`` to control the logging verbosity.  By
   default, this is set to ``INFO``.
-* ``log.file``: Set to the path at which you would like logging messages
+* ``log_file``: Set to the path at which you would like logging messages
   written.  By default, logging messages will be written to stderr.
 * ``annotation_length``: Import maximally this number of characters
   of incoming annotations.  Default: 45.
