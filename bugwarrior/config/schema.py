@@ -171,9 +171,7 @@ class SchemaBase(pydantic.BaseSettings):
 class ValidationErrorEnhancedMessages(list):
     """ Methods loosely adapted from pydantic.error_wrappers. """
 
-    def __init__(self, error: pydantic.ValidationError, targets, main_section):
-        self.targets: list = targets
-        self.main_section: str = main_section
+    def __init__(self, error: pydantic.ValidationError):
         super().__init__(self.flatten(error))
 
     def __str__(self):
@@ -262,7 +260,7 @@ def validate_config(config, main_section, config_path):
         # a bunch of calls to getattr(config, target) inhibits readability.
         return dict(bugwarrior_config_model(**config))
     except pydantic.ValidationError as e:
-        errors = ValidationErrorEnhancedMessages(e, targets, main_section)
+        errors = ValidationErrorEnhancedMessages(e)
         raise_validation_error(
             str(errors), config_path, no_errors=len(errors))
 
