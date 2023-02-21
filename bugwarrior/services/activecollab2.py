@@ -11,7 +11,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class ActiveCollabProjects(frozenset):
+class ActiveCollabProjects(dict):
 
     @classmethod
     def __get_validators__(cls):
@@ -20,11 +20,10 @@ class ActiveCollabProjects(frozenset):
     @classmethod
     def validate(cls, projects_raw):
         projects_list = projects_raw.split(',')
-        projects = []
-        for k, v in enumerate(projects_list):
-            project_data = v.strip().split(":")
-            project = dict([(project_data[0], project_data[1])])
-            projects.append(project)
+        projects = {}
+        for project in projects_list:
+            project_data = project.strip().split(":")
+            projects[project_data[0]] = project_data[1]
         return projects
 
 
@@ -211,17 +210,13 @@ class ActiveCollab2Service(IssueService):
         # Loop through each project
         start = time.time()
         issue_generators = []
-        projects = self.config.projects
-        for project in projects:
-            for project_id, project_name in project.items():
-                log.debug(
-                    " Getting tasks for #" + project_id +
-                    " " + project_name + '"')
-                issue_generators.append(
-                    self.client.get_issue_generator(
-                        self.config.user_id, project_id, project_name
-                    )
+        for project_id, project_name in self.config.projects.items():
+            log.debug(f"Getting tasks for #{project_id} {project_name}")
+            issue_generators.append(
+                self.client.get_issue_generator(
+                    self.config.user_id, project_id, project_name
                 )
+            )
 
         log.debug(" Elapsed Time: %s" % (time.time() - start))
 
