@@ -13,6 +13,7 @@ extras = {
     "bts": ["PySimpleSOAP", "python-debianbts>=2.6.1"],
     "bugzilla": ["python-bugzilla>=2.0.0"],
     "gmail": ["google-api-python-client", "google-auth-oauthlib"],
+    "ini2toml": ["ini2toml[full]"],
     "jira": ["jira>=0.22"],
     "kanboard": ["kanboard"],
     "keyring": ["keyring"],
@@ -105,5 +106,7 @@ setup(name='bugwarrior',
       azuredevops=bugwarrior.services.azuredevops:AzureDevopsService
       gitbug=bugwarrior.services.gitbug:GitBugService
       deck=bugwarrior.services.deck:NextcloudDeckService
+      [ini2toml.processing]
+      bugwarrior = bugwarrior.config.ini2toml_plugin:activate
       """,
       )
