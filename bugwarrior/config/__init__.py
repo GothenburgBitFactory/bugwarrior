@@ -1,4 +1,4 @@
-from .load import BUGWARRIORRC, load_config
+from .load import BUGWARRIORRC, get_config_path, load_config
 from .schema import (ConfigList,
                      ExpandedPath,
                      NoSchemeUrl,
@@ -9,6 +9,7 @@ from .secrets import get_keyring, get_service_password
 __all__ = [
     # load
     'BUGWARRIORRC',
+    'get_config_path',
     'load_config',
     # schema
     'ConfigList',

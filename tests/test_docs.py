@@ -9,10 +9,6 @@ import subprocess
 import tempfile
 import unittest
 
-from bugwarrior import config
-
-from .base import ConfigTest
-
 DOCS_PATH = pathlib.Path(__file__).parent / '../bugwarrior/docs'
 
 try:
@@ -82,10 +78,3 @@ class DocsTest(unittest.TestCase):
                 documented_services.add(re.sub(r'\.rst$', '', p))
 
         self.assertEqual(registered_services, documented_services)
-
-
-class ExampleBugwarriorrcTest(ConfigTest):
-    def test_example_bugwarriorrc(self):
-        os.environ['BUGWARRIORRC'] = os.path.join(
-            DOCS_PATH, 'example-bugwarriorrc')
-        config.load_config('general', False, False)

@@ -1,6 +1,7 @@
 import configparser
 import itertools
 import os
+import pathlib
 import textwrap
 from unittest import TestCase
 
@@ -12,6 +13,22 @@ except ImportError:
 from bugwarrior.config import load
 
 from ..base import ConfigTest
+
+
+class ExampleTest(ConfigTest):
+    def setUp(self):
+        self.basedir = pathlib.Path(__file__).parent
+        super().setUp()
+
+    def test_example_bugwarriorrc(self):
+        os.environ['BUGWARRIORRC'] = str(
+            self.basedir / 'example-bugwarriorrc')
+        load.load_config('general', False, False)
+
+    def test_example_bugwarrior_toml(self):
+        os.environ['BUGWARRIORRC'] = str(
+            self.basedir / 'example-bugwarrior.toml')
+        load.load_config('general', False, False)
 
 
 class LoadTest(ConfigTest):

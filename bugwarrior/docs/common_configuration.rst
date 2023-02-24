@@ -1,6 +1,24 @@
 How to Configure
 ================
 
+Bugwarrior's configuration file is written in `toml <https://toml.io>`_.
+
+A basic configuration might look like this:
+
+.. code:: toml
+
+    [general]
+    targets = my_github
+
+    [my_github]
+    service = github
+    github.login = ralphbean
+    github.token = 123456
+    github.username = ralphbean
+
+Main Section
+------------
+
 Your :ref:`configuration file <configuration-files>` must include at least a ``[general]`` section including the
 following option:
 
@@ -47,9 +65,6 @@ In addition to the ``[general]`` section, sections may be named
 ``[flavor.myflavor]`` and may be selected using the ``--flavor`` option to
 ``bugwarrior pull``. This section will then be used rather than the
 ``[general]`` section.
-
-A more-detailed example configuration can be found at
-:ref:`example_configuration`.
 
 
 .. _common_configuration_options:

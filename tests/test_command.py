@@ -1,6 +1,7 @@
 import os
 import logging
-from unittest import mock
+import pathlib
+from unittest import mock, TestCase
 
 from click.testing import CliRunner
 
@@ -185,3 +186,21 @@ class TestPull(ConfigTest):
         self.assertIn('Adding 1 tasks', logs)
         self.assertIn('Updating 0 tasks', logs)
         self.assertIn('Closing 0 tasks', logs)
+
+
+class TestIni2Toml(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.runner = CliRunner()
+
+    def test_bugwarriorrc(self):
+        basedir = pathlib.Path(__file__).parent
+        result = self.runner.invoke(
+            command.cli,
+            args=('ini2toml', str(basedir / 'config/example-bugwarriorrc')))
+
+        self.assertEqual(result.exit_code, 0)
+
+        self.maxDiff = None
+        with open(basedir / 'config/example-bugwarrior.toml', 'r') as f:
+            self.assertEqual(result.stdout, f.read())
