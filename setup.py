@@ -54,6 +54,7 @@ setup(name='bugwarrior',
       install_requires=[
           "click",
           "dogpile.cache>=0.5.3",
+          "ini2toml[full]",
           "jinja2>=2.7.2",
           "lockfile>=0.9.1",
           "pydantic[email]",
@@ -103,5 +104,7 @@ setup(name='bugwarrior',
       azuredevops=bugwarrior.services.azuredevops:AzureDevopsService
       gitbug=bugwarrior.services.gitbug:GitBugService
       deck=bugwarrior.services.deck:NextcloudDeckService
+      [ini2toml.processing]
+      bugwarrior = bugwarrior.config.ini2toml_plugin:activate
       """,
       )

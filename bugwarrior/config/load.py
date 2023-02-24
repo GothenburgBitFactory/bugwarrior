@@ -71,8 +71,10 @@ def parse_file(configpath: str) -> dict:
         with open(configpath, 'rb') as f:
             config = tomllib.load(f)
     else:
-        log.warning('Deprecation Warning: ini configuration is deprecated in '
-                    'favor of toml.')
+        log.warning(
+            'Deprecation Warning: ini configuration is deprecated in favor of '
+            'toml. You can easily convert your bugwarriorrc with `bugwarrior '
+            'ini2toml > ' + os.path.dirname(configpath) + '/bugwarrior.toml`.')
         rawconfig = BugwarriorConfigParser()
         rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
 

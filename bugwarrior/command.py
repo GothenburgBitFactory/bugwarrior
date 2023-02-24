@@ -7,8 +7,9 @@ from lockfile.pidlockfile import PIDLockFile
 
 import getpass
 import click
+from ini2toml.api import Translator
 
-from bugwarrior.config import get_keyring, load_config
+from bugwarrior.config import get_keyring, get_config_path, load_config
 from bugwarrior.services import aggregate_issues, get_service
 from bugwarrior.db import (
     get_defined_udas_as_strings,
@@ -212,3 +213,15 @@ def uda(flavor):
     for uda in get_defined_udas_as_strings(conf, main_section):
         print(uda)
     print("# END Bugwarrior UDAs")
+
+
+@cli.command()
+@click.argument('rcfile', required=False, default=get_config_path(),
+                type=click.Path(exists=True))
+def ini2toml(rcfile):
+    """ Convert ini bugwarriorrc to toml and print result to stdout. """
+    if os.path.splitext(rcfile)[-1] == '.toml':
+        raise SystemExit(f'{rcfile} is already toml!')
+    with open(rcfile, 'r') as f:
+        bugwarriorrc = f.read()
+    print(Translator().translate(bugwarriorrc, 'bugwarriorrc'))

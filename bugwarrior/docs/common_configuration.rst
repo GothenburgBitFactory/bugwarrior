@@ -7,8 +7,8 @@ Bugwarrior's configuration file is written in `toml <https://toml.io>`_.
 
    Bugwarrior's configuration was previously
    `ini <https://en.wikipedia.org/wiki/INI_file>`_, and this format is still
-   supported on a legacy basis, though not recommended. See this
-   :doc:`this example configuration <configuration>` for syntax.
+   supported on a legacy basis, though not recommended. You can automatically
+   upgrade your bugwarriorrc to toml by running ``bugwarrior ini2toml``.
 
 A basic configuration might look like this:
 

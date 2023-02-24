@@ -11,7 +11,7 @@ targets = activecollab, activecollab2, gitlab_config, jira_project, my_github, m
 #taskrc = /path/to/.taskrc
 
 # Setting this to true will shorten links with http://da.gd/
-#shorten = False
+shorten = False
 
 # Setting this to True will include a link to the ticket in the description
 inline_links = False
@@ -202,9 +202,9 @@ pivotaltracker.only_if_author = False
 pivotaltracker.import_labels_as_tags = True
 pivotaltracker.label_template = pivotal_{{label}}
 pivotaltracker.import_blockers = True
-pivotaltracker.blocker_template = "Description: {{description}} State: {{resolved}}\n"
-pivotaltracker.annotation_template = "status: {{completed}} - MYDESC {{description}}"
+pivotaltracker.blocker_template = Description: {{description}} State: {{resolved}}\n
+pivotaltracker.annotation_template = status: {{completed}} - MYDESC {{description}}
 pivotaltracker.exclude_projects = first_project_id,second_project_id
 pivotaltracker.exclude_stories = first_story_id,second_story_id
-pivotaltracker.exclude_tags = "wont fix", "should fix"
+pivotaltracker.exclude_tags = wont fix, should fix
 pivotaltracker.query = mywork:1234 -has:label
