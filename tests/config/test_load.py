@@ -109,26 +109,6 @@ class TestGetConfigPath(LoadTest):
         self.assertEqual(load.get_config_path(), rc)
 
 
-class TestBugwarriorConfigParser(TestCase):
-    def setUp(self):
-        self.config = load.BugwarriorConfigParser()
-        self.config['general'] = {
-            'someint': '4',
-            'somenone': '',
-            'somechar': 'somestring',
-        }
-
-    def test_getint(self):
-        self.assertEqual(self.config.getint('general', 'someint'), 4)
-
-    def test_getint_none(self):
-        self.assertEqual(self.config.getint('general', 'somenone'), None)
-
-    def test_getint_valueerror(self):
-        with self.assertRaises(ValueError):
-            self.config.getint('general', 'somechar')
-
-
 class TestParseFile(LoadTest):
     def test_toml(self):
         config_path = self.create('.bugwarrior.toml')
@@ -160,7 +140,7 @@ class TestParseFile(LoadTest):
             """))
         config = load.parse_file(config_path)
 
-        self.assertEqual(config, {'flavor': {}, 'general': {'foo': 'bar'}})
+        self.assertEqual(config, {'general': {'foo': 'bar'}})
 
     def test_ini_invalid(self):
         config_path = self.create('.bugwarriorrc')
@@ -184,14 +164,14 @@ class TestParseFile(LoadTest):
                 [general]
                 foo = bar
                 log.level = DEBUG
-                [baz]
-                service = 'qux'
-                prefix.optionname
+                [github]
+                service = github
+                github.optionname = something
             """))
         config = load.parse_file(config_path)
 
-        self.assertIn('optionname', config['baz'])
-        self.assertNotIn('prefix.optionname', config['baz'])
+        self.assertIn('optionname', config['github'])
+        self.assertNotIn('prefix.optionname', config['github'])
 
         self.assertIn('log_level', config['general'])
         self.assertNotIn('log.level', config['general'])

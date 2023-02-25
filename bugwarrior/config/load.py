@@ -1,5 +1,3 @@
-import codecs
-import configparser
 import logging
 import os
 
@@ -7,6 +5,8 @@ try:
     import tomllib  # python>=3.11
 except ImportError:
     import tomli as tomllib  # backport
+
+from ini2toml.api import Translator
 
 from . import data, schema
 
@@ -75,21 +75,10 @@ def parse_file(configpath: str) -> dict:
             'Deprecation Warning: ini configuration is deprecated in favor of '
             'toml. You can easily convert your bugwarriorrc with `bugwarrior '
             'ini2toml > ' + os.path.dirname(configpath) + '/bugwarrior.toml`.')
-        rawconfig = BugwarriorConfigParser()
-        rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
-
-        config = {'flavor': {}}
-        for section in rawconfig.sections():
-            if section == 'general':  # log.* -> log_*
-                config[section] = {k.replace('.', '_'): v
-                                   for k, v in rawconfig[section].items()}
-            elif section.startswith('flavor.'):  # log.* -> log_*
-                config['flavor'][section.split('.')[-1]] = {
-                    k.replace('.', '_'): v
-                    for k, v in rawconfig[section].items()}
-            else:  # <prefix>.<option> -> <option>
-                config[section] = {k.split('.')[-1]: v
-                                   for k, v in rawconfig[section].items()}
+        with open(configpath, 'r') as f:
+            bugwarriorrc = f.read()
+        toml = Translator().translate(bugwarriorrc, 'bugwarriorrc')
+        config = tomllib.loads(toml)
     return config
 
 
@@ -131,26 +120,3 @@ def load_config(main_section, interactive, quiet):
     configure_logging(main_config.log_file,
                       'WARNING' if quiet else main_config.log_level)
     return config
-
-
-# ConfigParser is not a new-style class, so inherit from object to fix super().
-class BugwarriorConfigParser(configparser.ConfigParser):
-    def __init__(self, *args, allow_no_value=True, **kwargs):
-        super().__init__(*args, allow_no_value=allow_no_value, **kwargs)
-
-    def getint(self, section, option):
-        """ Accepts both integers and empty values. """
-        try:
-            return super().getint(section, option)
-        except ValueError:
-            if self.get(section, option) == '':
-                return None
-            else:
-                raise ValueError(
-                    "{section}.{option} must be an integer or empty.".format(
-                        section=section, option=option))
-
-    @staticmethod
-    def optionxform(option):
-        """ Do not lowercase key names. """
-        return option
