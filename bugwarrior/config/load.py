@@ -58,7 +58,7 @@ def load_config(main_section, interactive, quiet):
     rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
     config = schema.validate_config(rawconfig, main_section, configpath)
     main_config = config[main_section]
-    main_config.interactive = str(interactive)
+    main_config.interactive = interactive
     main_config.data = data.BugwarriorData(
         data.get_data_path(config[main_section].taskrc))
     configure_logging(main_config.log__file,
