@@ -11,7 +11,7 @@ import typing_extensions
 
 from bugwarrior.services import get_service
 
-from .data import BugwarriorData
+from .data import BugwarriorData, get_data_path
 
 log = logging.getLogger(__name__)
 
@@ -103,16 +103,21 @@ class PydanticConfig(pydantic.BaseConfig):
 class MainSectionConfig(pydantic.BaseModel):
 
     class Config(PydanticConfig):
-        # To set BugwarriorData based on taskrc:
-        allow_mutation = True
         arbitrary_types_allowed = True
 
     # required
     targets: ConfigList
 
-    # mutated after validation
+    # added during configuration loading
+    interactive: bool
+
+    # added during validation (computed field support will land in pydantic-2)
     data: typing.Optional[BugwarriorData] = None
-    interactive: typing.Optional[bool] = None
+
+    @pydantic.root_validator
+    def compute_data(cls, values):
+        values['data'] = BugwarriorData(get_data_path(values['taskrc']))
+        return values
 
     # optional
     taskrc: TaskrcPath = pydantic.Field(

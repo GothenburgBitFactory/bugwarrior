@@ -8,7 +8,7 @@ try:
 except ImportError:
     import tomli as tomllib  # backport
 
-from . import data, schema
+from . import schema
 
 # The name of the environment variable that can be used to ovewrite the path
 # to the bugwarriorrc file
@@ -101,16 +101,13 @@ def parse_file(configpath: str) -> dict:
     return config
 
 
-def load_config(main_section, interactive, quiet):
+def load_config(main_section, interactive, quiet) -> dict:
     configpath = get_config_path()
     rawconfig = parse_file(configpath)
+    rawconfig[main_section]['interactive'] = interactive
     config = schema.validate_config(rawconfig, main_section, configpath)
-    main_config = config[main_section]
-    main_config.interactive = interactive
-    main_config.data = data.BugwarriorData(
-        data.get_data_path(main_config.taskrc))
-    configure_logging(main_config.log_file,
-                      'WARNING' if quiet else main_config.log_level)
+    configure_logging(config[main_section].log_file,
+                      'WARNING' if quiet else config[main_section].log_level)
     return config
 
 

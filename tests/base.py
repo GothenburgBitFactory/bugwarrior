@@ -8,7 +8,7 @@ import pytest
 import responses
 
 from bugwarrior import config
-from bugwarrior.config import data, schema
+from bugwarrior.config import schema
 
 
 class AbstractServiceTest(abc.ABC):
@@ -63,10 +63,9 @@ class ConfigTest(unittest.TestCase):
         self.caplog = caplog
 
     def validate(self):
-        conf = schema.validate_config(self.config, 'general', 'configpath')
-        conf['general'].data = data.BugwarriorData(self.lists_path)
-        conf['general'].interactive = False
-        return conf
+        self.config['general'] = self.config.get('general', {})
+        self.config['general']['interactive'] = False
+        return schema.validate_config(self.config, 'general', 'configpath')
 
     def assertValidationError(self, expected):
 
@@ -110,7 +109,6 @@ class ServiceTest(ConfigTest):
 
         service_config = service_class.CONFIG_SCHEMA(**options[section])
         main_config = schema.MainSectionConfig(**options['general'])
-        main_config.data = data.BugwarriorData(self.lists_path)
 
         return service_class(service_config, main_config, section)
 
