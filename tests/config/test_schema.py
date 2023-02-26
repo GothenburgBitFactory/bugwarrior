@@ -87,7 +87,11 @@ class TestValidation(ConfigTest):
     def test_main_section_required(self):
         del self.config['general']
 
-        self.assertValidationError("No section: 'general'")
+        with self.assertRaises(SystemExit):
+            schema.validate_config(self.config, 'general', 'configpath')
+
+        self.assertEqual(len(self.caplog.records), 1)
+        self.assertIn("No section: 'general'", self.caplog.records[0].message)
 
     def test_main_section_missing_targets_option(self):
         del self.config['general']['targets']
