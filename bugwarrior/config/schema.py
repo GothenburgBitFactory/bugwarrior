@@ -221,6 +221,17 @@ def raise_validation_error(msg, config_path, no_errors=1):
     sys.exit(1)
 
 
+def get_target_validator(targets):
+
+    @pydantic.root_validator(pre=True, allow_reuse=True)
+    def compute_target(cls, values):
+        for target in targets:
+            values[target]['target'] = target
+        return values
+
+    return compute_target
+
+
 def validate_config(config: dict, main_section: str, config_path: str) -> dict:
     # Pre-validate the minimum requirements to build our pydantic models.
     try:
@@ -252,6 +263,7 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
     bugwarrior_config_model = pydantic.create_model(
         'bugwarriorrc',
         __base__=SchemaBase,
+        __validators__={'compute_target': get_target_validator(targets)},
         general=(MainSectionConfig, ...),
         flavor={flavor: (MainSectionConfig, ...)
                 for flavor in config.get('flavor', {}).values()},
@@ -280,8 +292,9 @@ class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
     """ Base class for service configurations. """
     Config = PydanticConfig
 
-    # added during validation (computed field support will land in pydantic-2)
+    # Added during validation (computed field support will land in pydantic-2)
     templates: dict = {}
+    target: typing.Optional[str] = None
 
     # Optional fields shared by all services.
     only_if_assigned: str = ''

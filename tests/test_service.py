@@ -62,7 +62,7 @@ class ServiceBase(ConfigTest):
         with unittest.mock.patch('bugwarrior.config.schema.get_service',
                                  lambda x: DumbIssueService):
             conf = schema.validate_config(self.config, 'general', 'configpath')
-        return DumbIssueService(conf['test'], conf['general'], 'test')
+        return DumbIssueService(conf['test'], conf['general'])
 
     def makeIssue(self):
         service = self.makeService()

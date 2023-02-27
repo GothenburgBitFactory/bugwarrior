@@ -493,7 +493,7 @@ class TestGitlabService(ConfigTest):
     @property
     def service(self):
         conf = self.validate()
-        service = GitlabService(conf['myservice'], conf['general'], 'myservice')
+        service = GitlabService(conf['myservice'], conf['general'])
         service.gitlab_client.repo_cache = {1: {
             'id': 1,
             'path_with_namespace': 'arbitrary_namespace/arbitrary_project',

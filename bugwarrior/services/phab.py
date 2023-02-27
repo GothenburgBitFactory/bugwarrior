@@ -145,7 +145,7 @@ class PhabricatorService(IssueService):
 
         for phid, task in tasks:
 
-            project = self.target  # a sensible default
+            project = self.config.target  # a sensible default
 
             this_task_matches = False
 
@@ -198,7 +198,7 @@ class PhabricatorService(IssueService):
 
         for diff in diffs:
 
-            project = self.target  # a sensible default
+            project = self.config.target  # a sensible default
 
             this_diff_matches = False
 

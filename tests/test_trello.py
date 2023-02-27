@@ -96,7 +96,7 @@ class TestTrelloService(ConfigTest):
     def test_get_boards_config(self):
         self.config['mytrello']['include_boards'] = 'F00, B4R'
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         boards = service.get_boards()
         self.assertEqual(list(boards), [{'id': 'F00', 'name': 'Foo Board'},
                                         {'id': 'B4R', 'name': 'Bar Board'}])
@@ -104,14 +104,14 @@ class TestTrelloService(ConfigTest):
     @responses.activate
     def test_get_boards_api(self):
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         boards = service.get_boards()
         self.assertEqual(list(boards), [self.BOARD])
 
     @responses.activate
     def test_get_lists(self):
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         lists = service.get_lists('B04RD')
         self.assertEqual(list(lists), [self.LIST1, self.LIST2])
 
@@ -119,7 +119,7 @@ class TestTrelloService(ConfigTest):
     def test_get_lists_include(self):
         self.config['mytrello']['include_lists'] = 'List 1'
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         lists = service.get_lists('B04RD')
         self.assertEqual(list(lists), [self.LIST1])
 
@@ -127,14 +127,14 @@ class TestTrelloService(ConfigTest):
     def test_get_lists_exclude(self):
         self.config['mytrello']['exclude_lists'] = 'List 1'
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         lists = service.get_lists('B04RD')
         self.assertEqual(list(lists), [self.LIST2])
 
     @responses.activate
     def test_get_cards(self):
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         cards = service.get_cards('L15T')
         self.assertEqual(list(cards), [self.CARD1, self.CARD2, self.CARD3])
 
@@ -142,7 +142,7 @@ class TestTrelloService(ConfigTest):
     def test_get_cards_assigned(self):
         self.config['mytrello']['only_if_assigned'] = 'tintin'
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         cards = service.get_cards('L15T')
         self.assertEqual(list(cards), [self.CARD1])
 
@@ -153,21 +153,21 @@ class TestTrelloService(ConfigTest):
             'also_unassigned': 'true',
         })
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         cards = service.get_cards('L15T')
         self.assertEqual(list(cards), [self.CARD1, self.CARD3])
 
     @responses.activate
     def test_get_comments(self):
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         comments = service.get_comments('C4RD')
         self.assertEqual(list(comments), [self.COMMENT1, self.COMMENT2])
 
     @responses.activate
     def test_annotations(self):
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         annotations = service.annotations(self.CARD1)
         self.assertEqual(
             list(annotations), ["@luidgi - Preums", "@mario - Deuz"])
@@ -176,7 +176,7 @@ class TestTrelloService(ConfigTest):
     def test_annotations_with_link(self):
         self.config['general']['annotation_links'] = 'true'
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         annotations = service.annotations(self.CARD1)
         self.assertEqual(
             list(annotations),
@@ -191,7 +191,7 @@ class TestTrelloService(ConfigTest):
             'only_if_assigned': 'tintin',
         })
         conf = self.validate()
-        service = TrelloService(conf['mytrello'], conf['general'], 'mytrello')
+        service = TrelloService(conf['mytrello'], conf['general'])
         issues = service.issues()
         expected = {
             'due': parse_date('2018-12-02T12:59:00.000Z'),

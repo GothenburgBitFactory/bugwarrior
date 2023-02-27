@@ -38,8 +38,7 @@ class TestGmailService(ConfigTest):
         gmail.GmailService.build_api = mock_api
 
         conf = self.validate()
-        self.service = gmail.GmailService(
-            conf['myservice'], conf['general'], 'myservice')
+        self.service = gmail.GmailService(conf['myservice'], conf['general'])
 
     def test_get_credentials_exists_and_valid(self):
         expected = Credentials(**copy(TEST_CREDENTIAL))
