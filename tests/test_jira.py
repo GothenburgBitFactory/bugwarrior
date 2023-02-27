@@ -46,7 +46,7 @@ class testJiraService(ConfigTest):
         self.config['myjira']['body_length'] = '5'
         conf = schema.validate_config(self.config, 'general', 'configpath')
         service = JiraService(
-            conf['myjira'], conf['general'], 'myjira', _skip_server=True)
+            conf['myjira'], conf['general'], _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
         self.assertEqual(description[:5], service.body(issue))
@@ -55,7 +55,7 @@ class testJiraService(ConfigTest):
         description = "A very short issue body.  Fixes #828."
         conf = schema.validate_config(self.config, 'general', 'configpath')
         service = JiraService(
-            conf['myjira'], conf['general'], 'myjira', _skip_server=True)
+            conf['myjira'], conf['general'], _skip_server=True)
         issue = mock.Mock()
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))

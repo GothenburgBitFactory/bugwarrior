@@ -137,7 +137,7 @@ class TracService(IssueService):
         if self.trac:
             tickets = self.trac.query_tickets('status!=closed&max=0')
             tickets = list(map(self.trac.get_ticket, tickets))
-            issues = [(self.target, ticket[3]) for ticket in tickets]
+            issues = [(self.config.target, ticket[3]) for ticket in tickets]
             for i in range(len(issues)):
                 issues[i][1]['url'] = "%s/ticket/%i" % (base_url, tickets[i][0])
                 issues[i][1]['number'] = tickets[i][0]
@@ -155,7 +155,7 @@ class TracService(IssueService):
             # strip Trac's bogus BOM
             text = resp.text[1:].lstrip('\ufeff')
             tickets = list(csv.DictReader(StringIO.StringIO(text.encode('utf-8'))))
-            issues = [(self.target, ticket) for ticket in tickets]
+            issues = [(self.config.target, ticket) for ticket in tickets]
             for i in range(len(issues)):
                 issues[i][1]['url'] = "%s/ticket/%s" % (base_url, tickets[i]['id'])
                 issues[i][1]['number'] = int(tickets[i]['id'])

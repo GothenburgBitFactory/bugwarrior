@@ -101,7 +101,7 @@ class ServiceTest(ConfigTest):
     ):
         options = {
             'general': {**self.GENERAL_CONFIG, 'targets': [section]},
-            section: self.SERVICE_CONFIG.copy(),
+            section: {**self.SERVICE_CONFIG.copy(), 'target': section},
         }
         if config_overrides:
             options[section].update(config_overrides)
@@ -112,7 +112,7 @@ class ServiceTest(ConfigTest):
         main_config = schema.MainSectionConfig(**options['general'])
         main_config.data = data.BugwarriorData(self.lists_path)
 
-        return service_class(service_config, main_config, section)
+        return service_class(service_config, main_config)
 
     @staticmethod
     def add_response(url, method='GET', **kwargs):

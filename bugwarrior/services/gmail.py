@@ -125,7 +125,7 @@ class GmailService(IssueService):
 
         credentials_name = clean_filename(
             self.config.login_name if self.config.login_name != 'me'
-            else self.target)
+            else self.config.target)
         self.credentials_path = os.path.join(
             self.main_config.data.path,
             'gmail_credentials_%s.pickle' % (credentials_name,))
@@ -146,7 +146,7 @@ class GmailService(IssueService):
             Credentials, the obtained credential.
         """
         with self.AUTHENTICATION_LOCK:
-            log.info('Starting authentication for %s', self.target)
+            log.info('Starting authentication for %s', self.config.target)
             credentials = None
             # The self.credentials_path file stores the user's access and refresh
             # tokens as a pickle, and is created automatically when the

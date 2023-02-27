@@ -202,7 +202,7 @@ class ActiveCollab2Service(IssueService):
                                           self.config.key,
                                           self.config.user_id,
                                           self.config.projects,
-                                          self.target)
+                                          self.config.target)
 
     def get_owner(self, issue):
         # TODO

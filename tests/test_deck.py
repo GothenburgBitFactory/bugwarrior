@@ -94,7 +94,7 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
     @property
     def service(self):
         conf = self.validate()
-        service = NextcloudDeckService(conf['deck'], conf['general'], 'deck')
+        service = NextcloudDeckService(conf['deck'], conf['general'])
         service.client = mock.MagicMock(spec=NextcloudDeckClient)
         service.client.get_boards = mock.MagicMock(
             return_value=[{'id': 5, 'title': 'testboard'}])

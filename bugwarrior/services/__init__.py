@@ -42,12 +42,11 @@ class IssueService(abc.ABC):
     # Which class defines this service's configuration options?
     CONFIG_SCHEMA = None
 
-    def __init__(self, config, main_config, target):
+    def __init__(self, config, main_config):
         self.config = config
         self.main_config = main_config
-        self.target = target
 
-        log.info("Working on [%s]", self.target)
+        log.info("Working on [%s]", self.config.target)
 
     def get_password(self, key, login='nousername'):
         password = getattr(self.config, key)
@@ -67,7 +66,7 @@ class IssueService(abc.ABC):
             'default_priority': self.config.default_priority,
             'description_length': self.main_config.description_length,
             'templates': self.config.templates,
-            'target': self.target,
+            'target': self.config.target,
             'shorten': self.main_config.shorten,
             'inline_links': self.main_config.inline_links,
             'add_tags': self.config.add_tags,
@@ -419,7 +418,7 @@ def _aggregate_issues(conf, main_section, target, queue):
 
     try:
         service = get_service(conf[target].service)(
-            conf[target], conf[main_section], target)
+            conf[target], conf[main_section])
         issue_count = 0
         for issue in service.issues():
             queue.put(issue)

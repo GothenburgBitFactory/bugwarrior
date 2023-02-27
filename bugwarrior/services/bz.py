@@ -275,7 +275,7 @@ class BugzillaService(IssueService):
         ]
 
         bugs = filter(self.include, bugs)
-        issues = [(self.target, bug) for bug in bugs]
+        issues = [(self.config.target, bug) for bug in bugs]
         log.debug(" Found %i total.", len(issues))
 
         # Build a url for each issue
