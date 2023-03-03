@@ -1,6 +1,8 @@
 from .base import ServiceTest
 from .test_service import DumbIssue
 
+from bugwarrior.config.schema import ServiceConfig, MainSectionConfig
+
 
 class TestTemplates(ServiceTest):
     def setUp(self):
@@ -15,16 +17,14 @@ class TestTemplates(ServiceTest):
         self, templates=None, issue=None, description=None, add_tags=None
     ):
         templates = {} if templates is None else templates
-        origin = {
-            'annotation_length': 100,  # Arbitrary
-            'default_priority': 'H',  # Arbitrary
-            'description_length': 100,  # Arbitrary
-            'templates': templates,
-            'shorten': False,  # Arbitrary
-            'add_tags': add_tags if add_tags else [],
-        }
+        config = ServiceConfig(
+            target='dummy',
+            templates=templates,
+            add_tags=add_tags if add_tags else [],
+        )
+        main_config = MainSectionConfig(interactive=False, targets=[])
 
-        issue = DumbIssue({}, origin)
+        issue = DumbIssue({}, config, main_config)
         issue.to_taskwarrior = lambda: (
             self.arbitrary_issue if description is None else description
         )

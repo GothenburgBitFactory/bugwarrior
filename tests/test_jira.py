@@ -113,7 +113,6 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         service = super().get_mock_service(*args, **kwargs)
         service.jira = FakeJiraClient(self.arbitrary_record)
         service.sprint_field_names = ['Sprint']
-        service.import_sprints_as_tags = True
         return service
 
     def get_extra_fields(self):
@@ -177,7 +176,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         arbitrary_extra = {
             'jira_version': 5,
             'annotations': ['an annotation'],
-            'extra_fields': self.get_extra_fields()}
+            'extra_fields': self.get_extra_fields()
+        }
 
         issue = self.service.get_issue_for_record(
             record_with_goal, arbitrary_extra
@@ -190,7 +190,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             ),
             'annotations': arbitrary_extra['annotations'],
             'due': datetime.datetime(2016, 9, 23, 16, 8, tzinfo=tzutc()),
-            'tags': ['Sprint_1'],
+            'tags': [],
             'entry': datetime.datetime(2016, 6, 6, 13, 7, 8, tzinfo=tzutc()),
             'jirafixversion': '1.2.3',
             'jiraissuetype': 'Epic',

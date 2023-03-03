@@ -163,13 +163,6 @@ class NextcloudDeckService(IssueService):
             password=self.config.password
         )
 
-    def get_service_metadata(self):
-        return {
-            'import_labels_as_tags': self.config.import_labels_as_tags,
-            'label_template': self.config.label_template,
-            'only_if_assigned': self.config.only_if_assigned,
-        }
-
     def get_owner(self, issue):
         return issue[issue.ASSIGNEE]
 

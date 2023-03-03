@@ -1,7 +1,8 @@
 from dateutil.parser import parse as parse_date
 import responses
 
-from bugwarrior.services.trello import TrelloService, TrelloIssue
+from bugwarrior.services.trello import TrelloConfig, TrelloService, TrelloIssue
+from bugwarrior.config.schema import MainSectionConfig
 
 from .base import ConfigTest, ServiceTest
 
@@ -21,13 +22,16 @@ class TestTrelloIssue(ServiceTest):
 
     def setUp(self):
         super().setUp()
-        origin = {
-            'inline_links': True, 'description_length': 31,
-            'import_labels_as_tags': True, 'default_priority': 'M',
-            'label_template': 'trello_{{label}}'}
+        config = TrelloConfig(
+            service='trello', api_key='abc123', token='def456',
+            import_labels_as_tags=True, default_priority='M',
+            label_template='trello_{{label}}')
+        main_config = MainSectionConfig(
+            interactive=False, targets=[], inline_links=True,
+            description_length=31)
         extra = {'boardname': 'Hyperspatial express route',
                  'listname': 'Something'}
-        self.issue = TrelloIssue(self.JSON, origin, extra)
+        self.issue = TrelloIssue(self.JSON, config, main_config, extra)
 
     def test_default_description(self):
         """ Test the generated description """

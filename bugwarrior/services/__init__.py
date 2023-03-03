@@ -57,22 +57,9 @@ class IssueService(abc.ABC):
                 interactive=self.main_config.interactive)
         return password
 
-    def get_service_metadata(self):
-        return {}
-
     def get_issue_for_record(self, record, extra=None):
-        origin = {
-            'annotation_length': self.main_config.annotation_length,
-            'default_priority': self.config.default_priority,
-            'description_length': self.main_config.description_length,
-            'templates': self.config.templates,
-            'target': self.config.target,
-            'shorten': self.main_config.shorten,
-            'inline_links': self.main_config.inline_links,
-            'add_tags': self.config.add_tags,
-        }
-        origin.update(self.get_service_metadata())
-        return self.ISSUE_CLASS(record, origin=origin, extra=extra)
+        return self.ISSUE_CLASS(
+            record, self.config, self.main_config, extra=extra)
 
     def build_annotations(self, annotations, url=None):
         final = []
@@ -176,9 +163,10 @@ class Issue(abc.ABC):
     # system and the string values 'H', 'M' or 'L'.
     PRIORITY_MAP = {}
 
-    def __init__(self, foreign_record, origin=None, extra=None):
+    def __init__(self, foreign_record, config, main_config, extra=None):
         self._foreign_record = foreign_record
-        self._origin = origin if origin else {}
+        self.config = config
+        self.main_config = main_config
         self._extra = extra if extra else {}
 
     def update_extra(self, extra):
@@ -209,11 +197,11 @@ class Issue(abc.ABC):
                              template_variable='label'):
         tags = []
 
-        if not self.origin[toggle_option]:
+        if not getattr(self.config, toggle_option):
             return tags
 
         context = self.record.copy()
-        label_template = Template(self.origin[template_option])
+        label_template = Template(getattr(self.config, template_option))
 
         for label in labels:
             normalized_label = re.sub(r'[^a-zA-Z0-9]', '_', label)
@@ -224,7 +212,7 @@ class Issue(abc.ABC):
 
     def get_added_tags(self):
         added_tags = []
-        for tag in self.origin['add_tags']:
+        for tag in self.config.add_tags:
             tag = Template(tag).render(self.get_template_context())
             if tag:
                 added_tags.append(tag)
@@ -246,7 +234,7 @@ class Issue(abc.ABC):
     def get_priority(self):
         return self.PRIORITY_MAP.get(
             self.record.get('priority'),
-            self.origin['default_priority']
+            self.config.default_priority
         )
 
     def get_processed_url(self, url):
@@ -259,7 +247,7 @@ class Issue(abc.ABC):
         returns a shortened URL; otherwise returns the URL unaltered.
 
         """
-        if self.origin['shorten']:
+        if self.main_config.shorten:
             return URLShortener().shorten(url)
         return url
 
@@ -295,8 +283,8 @@ class Issue(abc.ABC):
             'subtask': 'Subtask #',
         }
         url_separator = ' .. '
-        url = url if self.origin['inline_links'] else ''
-        desc_len = self.origin['description_length']
+        url = url if self.main_config.inline_links else ''
+        desc_len = self.main_config.description_length
         return "%s%s#%s - %s%s%s" % (
             MARKUP,
             cls_markup.get(cls, cls.title()),
@@ -318,8 +306,8 @@ class Issue(abc.ABC):
 
     def refine_record(self, record):
         for field in Task.FIELDS.keys():
-            if field in self.origin['templates']:
-                template = Template(self.origin['templates'][field])
+            if field in self.config.templates:
+                template = Template(self.config.templates[field])
                 record[field] = template.render(self.get_template_context())
             elif hasattr(self, 'get_default_%s' % field):
                 record[field] = getattr(self, 'get_default_%s' % field)()
@@ -376,13 +364,9 @@ class Issue(abc.ABC):
     def extra(self):
         return self._extra
 
-    @property
-    def origin(self):
-        return self._origin
-
     def __str__(self):
         return '%s: %s' % (
-            self.origin['target'],
+            self.config.target,
             self.get_taskwarrior_record()['description']
         )
 

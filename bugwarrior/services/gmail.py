@@ -84,7 +84,7 @@ class GmailIssue(Issue):
             'annotations': self.get_annotations(),
             'entry': self.get_entry(),
             'tags': [label for label in self.extra['labels'] if label not in self.EXCLUDE_LABELS],
-            'priority': self.origin['default_priority'],
+            'priority': self.config.default_priority,
             self.THREAD_ID: self.record['id'],
             self.SUBJECT: self.extra['subject'],
             self.URL: self.extra['url'],

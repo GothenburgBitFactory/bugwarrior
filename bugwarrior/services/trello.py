@@ -66,7 +66,7 @@ class TrelloIssue(Issue):
         return {
             'project': self.extra['boardname'],
             'due': self.parse_date(self.record['due']),
-            'priority': self.origin['default_priority'],
+            'priority': self.config.default_priority,
             'tags': self.get_tags(),
             self.NAME: self.record['name'],
             self.CARDID: self.record['id'],
@@ -92,15 +92,6 @@ class TrelloService(IssueService, ServiceClient):
     @staticmethod
     def get_keyring_service(config):
         return f"trello://{config.api_key}@trello.com"
-
-    def get_service_metadata(self):
-        """
-        Return extra config options to be passed to the TrelloIssue class
-        """
-        return {
-            'import_labels_as_tags': self.config.import_labels_as_tags,
-            'label_template': self.config.label_template,
-        }
 
     def issues(self):
         """

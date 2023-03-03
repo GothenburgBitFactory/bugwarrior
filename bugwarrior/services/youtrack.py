@@ -1,5 +1,6 @@
 import typing
 
+import pydantic
 import requests
 import typing_extensions
 
@@ -26,6 +27,24 @@ class YoutrackConfig(config.ServiceConfig):
     query_limit: int = 100
     import_tags: bool = True
     tag_template: str = '{{tag|lower}}'
+
+    # added during validation (computed field support will land in pydantic-2)
+    base_url: str = ''
+
+    @pydantic.root_validator
+    def compute_base_url(cls, values):
+        if values['use_https']:
+            scheme = 'https'
+            port = 443
+        else:
+            scheme = 'http'
+            port = 80
+        port = values['port'] or port
+        values['base_url'] = f'{scheme}://{values["host"]}:{port}'
+        if values['incloud_instance']:
+            values['base_url'] += '/youtrack'
+
+        return values
 
 
 class YoutrackIssue(Issue):
@@ -80,7 +99,7 @@ class YoutrackIssue(Issue):
 
     def get_issue_url(self):
         return "%s/issue/%s" % (
-            self.origin['base_url'], self.get_issue()
+            self.config.base_url, self.get_issue()
         )
 
     def get_project(self):
@@ -113,17 +132,7 @@ class YoutrackService(IssueService, ServiceClient):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        if self.config.use_https:
-            scheme = 'https'
-            port = 443
-        else:
-            scheme = 'http'
-            port = 80
-        port = self.config.port or port
-        self.base_url = f'{scheme}://{self.config.host}:{port}'
-        if self.config.incloud_instance:
-            self.base_url += '/youtrack'
-        self.rest_url = self.base_url + '/api'
+        self.rest_url = self.config.base_url + '/api'
 
         self.session = requests.Session()
         self.session.headers['Accept'] = 'application/json'
@@ -137,13 +146,6 @@ class YoutrackService(IssueService, ServiceClient):
     @staticmethod
     def get_keyring_service(config):
         return f"youtrack://{config.login}@{config.host}"
-
-    def get_service_metadata(self):
-        return {
-            'base_url': self.base_url,
-            'import_tags': self.config.import_tags,
-            'tag_template': self.config.tag_template,
-        }
 
     def get_owner(self, issue):
         # TODO
