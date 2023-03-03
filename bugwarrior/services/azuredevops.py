@@ -136,9 +136,9 @@ class AzureDevopsIssue(Issue):
 
     def get_priority(self):
         value = self.record.get("fields").get(
-            "Microsoft.VSTS.Common.Priority", self.origin['default_priority']
+            "Microsoft.VSTS.Common.Priority", self.config.default_priority
         )
-        return self.PRIORITY_MAP.get(value, self.origin['default_priority'])
+        return self.PRIORITY_MAP.get(value, self.config.default_priority)
 
     def to_taskwarrior(self):
         return {
@@ -161,7 +161,7 @@ class AzureDevopsIssue(Issue):
             self.STATE: self.record["fields"]["System.State"],
             self.ACTIVITY: self.record.get("fields").get("System.Activity", ""),
             self.PRIORITY: self.record.get("fields").get(
-                "Microsoft.VSTS.Common.Priority", self.origin['default_priority']
+                "Microsoft.VSTS.Common.Priority", self.config.default_priority
             ),
             self.REMAINING_WORK: self.record.get("fields").get(
                 "Microsoft.VSTS.Scheduling.RemainingWork"

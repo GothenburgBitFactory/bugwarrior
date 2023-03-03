@@ -88,7 +88,7 @@ class PivotalTrackerIssue(Issue):
         return {
             'project': re.sub(
                 r'[^a-zA-Z0-9]', '_', self.extra['project_name']).lower(),
-            'priority': self.origin['default_priority'],
+            'priority': self.config.default_priority,
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
 
@@ -155,15 +155,6 @@ class PivotalTrackerService(IssueService, ServiceClient):
     def get_owner(self, issue):
         # Issue filtering is implemented as part of the api query.
         pass
-
-    def get_service_metadata(self):
-        return {
-            'import_labels_as_tags': self.config.import_labels_as_tags,
-            'label_template': self.config.label_template,
-            'annotation_template': self.config.annotation_template,
-            'import_blockers': self.config.import_blockers,
-            'blocker_template': self.config.blocker_template
-        }
 
     def annotations(self, annotations, story):
         final_annotations = []

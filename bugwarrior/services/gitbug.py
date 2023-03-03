@@ -125,8 +125,8 @@ class GitBugIssue(Issue):
 
     def to_taskwarrior(self):
         return {
-            'project': self.origin['target'],
-            'priority': self.origin['default_priority'],
+            'project': self.config.target,
+            'priority': self.config.default_priority,
             'annotations': self.record.get('annotations', []),
             'tags': self.get_tags(),
             'entry': self.parse_date(self.record.get('createdAt')),
@@ -157,12 +157,6 @@ class GitBugService(IssueService):
             path=self.config.path,
             port=self.config.port,
             annotation_comments=self.main_config.annotation_comments)
-
-    def get_service_metadata(self):
-        return {
-            'import_labels_as_tags': self.config.import_labels_as_tags,
-            'label_template': self.config.label_template,
-        }
 
     def get_owner(self, issue):
         # Issue assignment hasn't been implemented in upstream git-bug yet.

@@ -45,7 +45,7 @@ class TaigaIssue(Issue):
             'annotations': self.extra['annotations'],
             self.URL: self.extra['url'],
 
-            'priority': self.origin['default_priority'],
+            'priority': self.config.default_priority,
             'tags': self.get_tags(),
             self.FOREIGN_ID: self.record['ref'],
             self.SUMMARY: self.record['subject'],
@@ -79,12 +79,6 @@ class TaigaService(IssueService, ServiceClient):
     @staticmethod
     def get_keyring_service(config):
         return f"taiga://{config.base_uri}"
-
-    def get_service_metadata(self):
-        return {
-            'url': self.config.base_uri,
-            'label_template': self.config.label_template,
-        }
 
     def get_owner(self, issue):
         # TODO

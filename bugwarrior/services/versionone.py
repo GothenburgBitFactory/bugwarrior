@@ -123,10 +123,10 @@ class VersionOneIssue(Issue):
     def to_taskwarrior(self):
         return {
             'project': self.extra['project'],
-            'priority': self.origin['default_priority'],
+            'priority': self.config.default_priority,
             'due': self.parse_date(
                 self.record['timebox']['EndDate'],
-                self.origin['timezone']
+                self.config.timezone
             ),
 
             self.TASK_NAME: self.record['task']['Name'],
@@ -209,11 +209,6 @@ class VersionOneService(IssueService):
             parsed_address.netloc,
             parsed_address.path
         )
-
-    def get_service_metadata(self):
-        return {
-            'timezone': self.config.timezone
-        }
 
     def get_meta(self):
         if not hasattr(self, '_meta'):

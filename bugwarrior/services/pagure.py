@@ -75,7 +75,7 @@ class PagureIssue(Issue):
         if self.extra['type'] == 'pull_request':
             priority = 'H'
         else:
-            priority = self.origin['default_priority']
+            priority = self.config.default_priority
 
         return {
             'project': self.extra['project'],
@@ -114,12 +114,6 @@ class PagureService(IssueService):
         super().__init__(*args, **kw)
 
         self.session = requests.Session()
-
-    def get_service_metadata(self):
-        return {
-            'import_tags': self.config.import_tags,
-            'tag_template': self.config.tag_template,
-        }
 
     def get_issues(self, repo, keys):
         """ Grab all the issues """

@@ -55,7 +55,7 @@ class GerritIssue(Issue):
             'annotations': self.extra['annotations'],
             self.URL: self.extra['url'],
 
-            'priority': self.origin['default_priority'],
+            'priority': self.config.default_priority,
             'tags': [],
             self.FOREIGN_ID: self.record['_number'],
             self.SUMMARY: self.record['subject'],
@@ -103,11 +103,6 @@ class GerritService(IssueService, ServiceClient):
     @staticmethod
     def get_keyring_service(config):
         return f"gerrit://{config.base_uri}"
-
-    def get_service_metadata(self):
-        return {
-            'url': self.config.base_uri,
-        }
 
     def get_owner(self, issue):
         # TODO

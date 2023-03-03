@@ -275,7 +275,7 @@ class GithubIssue(Issue):
 
         return {
             'project': self.extra['project'],
-            'priority': self.origin['default_priority'],
+            'priority': self.config.default_priority,
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
             'entry': created,
@@ -322,12 +322,6 @@ class GithubService(IssueService):
     @staticmethod
     def get_keyring_service(config):
         return f"github://{config.login}@{config.host}/{config.username}"
-
-    def get_service_metadata(self):
-        return {
-            'import_labels_as_tags': self.config.import_labels_as_tags,
-            'label_template': self.config.label_template,
-        }
 
     def get_owned_repo_issues(self, tag):
         """ Grab all the issues """

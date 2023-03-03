@@ -86,7 +86,7 @@ class TracIssue(Issue):
     def get_priority(self):
         return self.PRIORITY_MAP.get(
             self.record.get('priority'),
-            self.origin['default_priority']
+            self.config.default_priority
         )
 
 

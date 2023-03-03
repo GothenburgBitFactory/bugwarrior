@@ -284,7 +284,7 @@ class JiraIssue(Issue):
         fields = self.record.get('fields', {})
         sprints = sum((
             fields.get(key) or []
-            for key in self.origin['sprint_field_names']
+            for key in self.extra['sprint_field_names']
         ), [])
         for sprint in sprints:
             if isinstance(sprint, dict):
@@ -305,7 +305,7 @@ class JiraIssue(Issue):
         return self.record['key'].rsplit('-', 1)[1]
 
     def get_url(self):
-        return self.origin['url'] + '/browse/' + self.record['key']
+        return self.config.base_uri + '/browse/' + self.record['key']
 
     def get_summary(self):
         if self.extra.get('jira_version') == 4:
@@ -328,7 +328,7 @@ class JiraIssue(Issue):
             value = str(value)
         # priority.name format: "1 - Critical"
         map_key = value.strip().split()[-1]
-        return self.PRIORITY_MAP.get(map_key, self.origin['default_priority'])
+        return self.PRIORITY_MAP.get(map_key, self.config.default_priority)
 
     def get_default_description(self):
         return self.build_default_description(
@@ -396,15 +396,14 @@ class JiraService(IssueService):
                 },
                 **auth
             )
-        self.import_sprints_as_tags = self.config.import_sprints_as_tags
 
         self.sprint_field_names = []
-        if self.import_sprints_as_tags:
+        if self.config.import_sprints_as_tags:
             field_names = [field for field in self.jira.fields()
                            if field['name'] == 'Sprint']
             if len(field_names) < 1:
                 log.warn("No sprint custom field found.  Ignoring sprints.")
-                self.import_sprints_as_tags = False
+                self.config.import_sprints_as_tags = False
             else:
                 log.info("Found %i distinct sprint fields." % len(field_names))
                 self.sprint_field_names = [field['id']
@@ -413,15 +412,6 @@ class JiraService(IssueService):
     @staticmethod
     def get_keyring_service(config):
         return f"jira://{config.username}@{config.base_uri}"
-
-    def get_service_metadata(self):
-        return {
-            'url': self.config.base_uri,
-            'import_labels_as_tags': self.config.import_labels_as_tags,
-            'import_sprints_as_tags': self.import_sprints_as_tags,
-            'sprint_field_names': self.sprint_field_names,
-            'label_template': self.config.label_template,
-        }
 
     def get_owner(self, issue):
         # TODO
@@ -445,6 +435,12 @@ class JiraService(IssueService):
             ) for comment in comments),
             issue_obj.get_processed_url(issue_obj.get_url())
         )
+
+    def get_issue_for_record(self, record, extra=None):
+        if extra is None:
+            extra = {}
+        extra.setdefault('sprint_field_names', self.sprint_field_names)
+        return super().get_issue_for_record(record, extra=extra)
 
     def issues(self):
         cases = self.jira.search_issues(self.query, maxResults=None)

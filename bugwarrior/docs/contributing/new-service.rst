@@ -138,7 +138,7 @@ We will now implement an ``Issue`` class, which is essentially a wrapper for eac
       def to_taskwarrior(self):
           return {
               'project': self.extra['project'],
-              'priority': self.origin['default_priority'],
+              'priority': self.config.default_priority,
               'annotations': self.record.get('annotations', []),
               'tags': self.get_tags(),
               'entry': self.parse_date(self.record.get('createdAt')),
@@ -187,12 +187,6 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
 
           self.client = GitBugClient(path=self.config.path, port=self.config.port)
 
-      def get_service_metadata(self):
-          return {
-              'import_labels_as_tags': self.config.import_labels_as_tags,
-              'label_template': self.config.label_template,
-          }
-
       def get_owner(self, issue):
           # Issue assignment hasn't been implemented in upstream git-bug yet.
           # See https://github.com/MichaelMure/git-bug/issues/112.
@@ -214,8 +208,6 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
               yield self.get_issue_for_record(issue)
 
 Here we see two required class attributes (pointing to the classes we previously defined) and two required methods.
-
-The ``get_service_metadata`` method is not required, but can be used to expose additional data in the ``Issue.origin`` attribute.
 
 The ``get_owner`` method takes an individual issue and returns the "assigned" user, so that bugwarrior can filter issues on this basis. In this case git-bug has not yet implemented this feature, but it generally will just involve returning a value from the ``issue`` dictionary.
 

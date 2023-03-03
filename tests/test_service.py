@@ -16,6 +16,9 @@ that long.""".replace('\n', ' ')
 class DumbConfig(config.ServiceConfig):
     service: typing_extensions.Literal['test']
 
+    import_labels_as_tags: bool = False
+    label_template: str = '{{label}}'
+
 
 class DumbIssue(services.Issue):
     """
@@ -35,9 +38,6 @@ class DumbIssueService(services.IssueService):
     """
     ISSUE_CLASS = DumbIssue
     CONFIG_SCHEMA = DumbConfig
-
-    def get_service_metadata(self):
-        return {'import_labels_as_tags': True, 'label_template': '{{ label }}'}
 
     def get_owner(self, issue):
         raise NotImplementedError
@@ -125,6 +125,7 @@ class TestIssue(ServiceBase):
             description, f'(bw)Is# - {LONG_MESSAGE}')
 
     def test_get_tags_from_labels_normalization(self):
+        self.config['test']['import_labels_as_tags'] = True
         issue = self.makeIssue()
 
         self.assertEqual(issue.get_tags_from_labels(['needs work']),

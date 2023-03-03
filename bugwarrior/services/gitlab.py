@@ -433,12 +433,12 @@ class GitlabIssue(Issue):
     # Override the method from parent class
     def get_priority(self):
         default_priority_map = {
-            'todo': self.origin['default_todo_priority'],
-            'merge_request': self.origin['default_mr_priority'],
-            'issue': self.origin['default_issue_priority']}
+            'todo': self.config.default_todo_priority,
+            'merge_request': self.config.default_mr_priority,
+            'issue': self.config.default_issue_priority}
 
         type_str = self.extra['type']
-        default_priority = self.origin['default_priority']
+        default_priority = self.config.default_priority
 
         return default_priority_map.get(type_str, default_priority)
 
@@ -546,15 +546,6 @@ class GitlabService(IssueService):
     @staticmethod
     def get_keyring_service(config):
         return f"gitlab://{config.login}@{config.host}"
-
-    def get_service_metadata(self):
-        return {
-            'import_labels_as_tags': self.config.import_labels_as_tags,
-            'label_template': self.config.label_template,
-            'default_issue_priority': self.config.default_issue_priority,
-            'default_todo_priority': self.config.default_todo_priority,
-            'default_mr_priority': self.config.default_mr_priority,
-        }
 
     def get_owner(self, issue):
         return [assignee['username'] for assignee in issue[1]['assignees']]

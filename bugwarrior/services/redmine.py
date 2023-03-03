@@ -211,11 +211,11 @@ class RedMineIssue(Issue):
     def get_priority(self):
         return self.PRIORITY_MAP.get(
             self.record.get('priority', {}).get('name'),
-            self.origin['default_priority']
+            self.config.default_priority
         )
 
     def get_issue_url(self):
-        return self.origin['url'] + "/issues/" + str(self.record["id"])
+        return self.config.url + "/issues/" + str(self.record["id"])
 
     def get_converted_hours(self, estimated_hours):
         tw = TaskWarriorShellout()
@@ -225,8 +225,8 @@ class RedMineIssue(Issue):
         )
 
     def get_project_name(self):
-        if self.origin['project_name']:
-            return self.origin['project_name']
+        if self.config.project_name:
+            return self.config.project_name
         # TODO: It would be nice to use the project slug (if the Redmine
         # instance supports it), but this would require (1) an API call
         # to get the list of projects, and then a look up between the
@@ -260,12 +260,6 @@ class RedMineService(IssueService):
                                     auth,
                                     self.config.issue_limit,
                                     self.config.verify_ssl)
-
-    def get_service_metadata(self):
-        return {
-            'project_name': self.config.project_name,
-            'url': self.config.url,
-        }
 
     @staticmethod
     def get_keyring_service(config):

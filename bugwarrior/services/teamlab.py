@@ -1,3 +1,4 @@
+import pydantic
 import requests
 import typing_extensions
 
@@ -16,6 +17,12 @@ class TeamLabConfig(config.ServiceConfig):
     hostname: str
     login: str
     password: str
+
+    @pydantic.root_validator
+    def default_project_name(cls, values):
+        if values['project_name'] == '':
+            values['project_name'] = values['hostname']
+        return values
 
 
 class TeamLabClient(ServiceClient):
@@ -95,11 +102,11 @@ class TeamLabIssue(Issue):
         )
 
     def get_project(self):
-        return self.origin['project_name']
+        return self.config.project_name
 
     def get_issue_url(self):
         return "http://%s/products/projects/tasks.aspx?prjID=%d&id=%d" % (
-            self.origin['hostname'],
+            self.config.hostname,
             self.record["projectOwner"]["id"],
             self.record["id"]
         )
@@ -107,7 +114,7 @@ class TeamLabIssue(Issue):
     def get_priority(self):
         if self.record.get("priority") == 1:
             return "H"
-        return self.origin['default_priority']
+        return self.config.default_priority
 
 
 class TeamLabService(IssueService):
@@ -122,17 +129,9 @@ class TeamLabService(IssueService):
         self.client = TeamLabClient(self.config.hostname)
         self.client.authenticate(self.config.login, _password)
 
-        self.project_name = self.config.project_name or self.config.hostname
-
     @staticmethod
     def get_keyring_service(config):
         return f"teamlab://{config.login}@{config.hostname}"
-
-    def get_service_metadata(self):
-        return {
-            'hostname': self.config.hostname,
-            'project_name': self.project_name,
-        }
 
     def get_owner(self, issue):
         # TODO

@@ -84,7 +84,7 @@ class PhabricatorIssue(Issue):
     @property
     def priority(self):
         return self.PRIORITY_MAP.get(self.record.get('priority')) \
-            or self.origin['default_priority']
+            or self.config.default_priority
 
 
 class PhabricatorService(IssueService):
