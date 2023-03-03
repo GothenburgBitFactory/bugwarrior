@@ -53,40 +53,6 @@ class IssueService(abc.ABC):
 
         log.info("Working on [%s]", self.target)
 
-    def get_templates(self):
-        """ Get any defined templates for configuration values.
-
-        Users can override the value of any Taskwarrior field using
-        this feature on a per-key basis.  The key should be the name of
-        the field to you would like to configure the value of, followed
-        by '_template', and the value should be a Jinja template
-        generating the field's value.  As context variables, all fields
-        on the taskwarrior record are available.
-
-        For example, to prefix the returned
-        project name for tickets returned by a service with 'workproject_',
-        you could add an entry reading:
-
-            project_template = workproject_{{project}}
-
-        Or, if you'd simply like to override the returned project name
-        for all tickets incoming from a specific service, you could add
-        an entry like:
-
-            project_template = myprojectname
-
-        The above would cause all issues to recieve a project name
-        of 'myprojectname', regardless of what the project name of the
-        generated issue was.
-
-        """
-        templates = {}
-        for key in Task.FIELDS.keys():
-            template = getattr(self.config, f'{key}_template')
-            if template:
-                templates[key] = template
-        return templates
-
     def get_password(self, key, login='nousername'):
         password = getattr(self.config, key)
         keyring_service = self.get_keyring_service(self.config)
@@ -104,7 +70,7 @@ class IssueService(abc.ABC):
             'annotation_length': self.main_config.annotation_length,
             'default_priority': self.config.default_priority,
             'description_length': self.main_config.description_length,
-            'templates': self.get_templates(),
+            'templates': self.config.templates,
             'target': self.target,
             'shorten': self.main_config.shorten,
             'inline_links': self.main_config.inline_links,

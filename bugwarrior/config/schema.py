@@ -301,12 +301,49 @@ class ServiceConfig(_ServiceConfig,  # type: ignore  # (dynamic base class)
                     metaclass=ServiceConfigMetaclass, prefix=None):
     """ Base class for service configurations. """
 
+    # added during validation (computed field support will land in pydantic-2)
+    templates: dict = {}
+
     # Optional fields shared by all services.
     only_if_assigned: str = ''
     also_unassigned: bool = False
     default_priority: typing_extensions.Literal['', 'L', 'M', 'H'] = 'M'
     add_tags: ConfigList = ConfigList([])
     description_template: str = ''
+
+    @pydantic.root_validator
+    def compute_templates(cls, values):
+        """ Get any defined templates for configuration values.
+
+        Users can override the value of any Taskwarrior field using
+        this feature on a per-key basis.  The key should be the name of
+        the field to you would like to configure the value of, followed
+        by '_template', and the value should be a Jinja template
+        generating the field's value.  As context variables, all fields
+        on the taskwarrior record are available.
+
+        For example, to prefix the returned
+        project name for tickets returned by a service with 'workproject_',
+        you could add an entry reading:
+
+            project_template = workproject_{{project}}
+
+        Or, if you'd simply like to override the returned project name
+        for all tickets incoming from a specific service, you could add
+        an entry like:
+
+            project_template = myprojectname
+
+        The above would cause all issues to recieve a project name
+        of 'myprojectname', regardless of what the project name of the
+        generated issue was.
+
+        """
+        for key in taskw.task.Task.FIELDS.keys():
+            template = values.get(f'{key}_template')
+            if template:
+                values['templates'][key] = template
+        return values
 
     @pydantic.root_validator
     def deprecate_filter_merge_requests(cls, values):
