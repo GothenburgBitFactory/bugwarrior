@@ -15,7 +15,7 @@ class YoutrackConfig(config.ServiceConfig):
     service: typing_extensions.Literal['youtrack']
     host: config.NoSchemeUrl
     login: str
-    password: str
+    token: str
 
     anonymous: bool = False
     port: typing.Optional[int] = None
@@ -59,16 +59,6 @@ class YoutrackIssue(Issue):
     }
     UNIQUE_KEY = (URL,)
 
-    def _get_record_field(self, field_name):
-        for field in self.record['field']:
-            if field['name'] == field_name:
-                return field
-
-    def _get_record_field_value(self, field_name, field_value='value'):
-        field = self._get_record_field(field_name)
-        if field:
-            return field[field_value]
-
     def to_taskwarrior(self):
         return {
             'project': self.get_project(),
@@ -83,10 +73,10 @@ class YoutrackIssue(Issue):
         }
 
     def get_issue(self):
-        return self.record['id']
+        return self.get_project() + '-' + str(self.get_number_in_project())
 
     def get_issue_summary(self):
-        return self._get_record_field_value('summary')
+        return self.record.get('summary')
 
     def get_issue_url(self):
         return "%s/issue/%s" % (
@@ -94,10 +84,10 @@ class YoutrackIssue(Issue):
         )
 
     def get_project(self):
-        return self._get_record_field_value('projectShortName')
+        return self.record.get('project').get('shortName')
 
     def get_number_in_project(self):
-        return int(self._get_record_field_value('numberInProject'))
+        return self.record.get('numberInProject')
 
     def get_default_description(self):
         return self.build_default_description(
@@ -109,7 +99,7 @@ class YoutrackIssue(Issue):
 
     def get_tags(self):
         return self.get_tags_from_labels(
-            [tag['value'] for tag in self.record.get('tag', [])],
+            [tag['name'] for tag in self.record.get('tags', [])],
             toggle_option='import_tags',
             template_option='tag_template',
             template_variable='tag',
@@ -133,7 +123,7 @@ class YoutrackService(IssueService, ServiceClient):
         self.base_url = f'{scheme}://{self.config.host}:{port}'
         if self.config.incloud_instance:
             self.base_url += '/youtrack'
-        self.rest_url = self.base_url + '/rest'
+        self.rest_url = self.base_url + '/api'
 
         self.session = requests.Session()
         self.session.headers['Accept'] = 'application/json'
@@ -141,16 +131,8 @@ class YoutrackService(IssueService, ServiceClient):
             requests.packages.urllib3.disable_warnings()
             self.session.verify = False
 
-        password = self.get_password('password', self.config.login)
-        if not self.config.anonymous:
-            self._login(self.config.login, password)
-
-    def _login(self, login, password):
-        params = {'login': login, 'password': password}
-        resp = self.session.post(self.rest_url + "/user/login", params)
-        if resp.status_code != 200:
-            raise RuntimeError("YouTrack responded with %s" % resp)
-        self.session.headers['Cookie'] = resp.headers['set-cookie']
+        token = self.config.token
+        self.session.headers['Authorization'] = f'Bearer {token}'
 
     @staticmethod
     def get_keyring_service(config):
@@ -169,9 +151,9 @@ class YoutrackService(IssueService, ServiceClient):
             "This service has not implemented support for 'only_if_assigned'.")
 
     def issues(self):
-        params = {'filter': self.config.query, 'max': self.config.query_limit}
-        resp = self.session.get(self.rest_url + '/issue', params=params)
-        issues = self.json_response(resp)['issue']
+        params = {'query': self.config.query, 'max': self.config.query_limit, 'fields': 'id,summary,project(shortName),numberInProject,tags(name)'}
+        resp = self.session.get(self.rest_url + '/issues', params=params)
+        issues = self.json_response(resp)
         log.debug(" Found %i total.", len(issues))
 
         for issue in issues:

@@ -13,7 +13,7 @@ class TestYoutrackService(ConfigTest):
             'myservice': {
                 'service': 'youtrack',
                 'login': 'foobar',
-                'password': 'XXXXXX',
+                'token': 'XXXXXX',
             },
         }
 
@@ -31,31 +31,27 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
         'service': 'youtrack',
         'host': 'youtrack.example.com',
         'login': 'arbitrary_login',
-        'password': 'arbitrary_password',
+        'token': 'arbitrary_token',
         'anonymous': True,
     }
+
     arbitrary_issue = {
-        "id": "TEST-1",
-        "field": [
+        "id": "2-1",
+        "$type": "Issue",
+        "numberInProject": 1,
+        "summary": "Hello World",
+        "project": {
+            "shortName": "TEST",
+            "$type": "Project"
+        },
+        "tags": [
             {
-                "name": "projectShortName",
-                "value": "TEST"
+                "$type": "IssueTag",
+                "name": "bug"
             },
             {
-                "name": "numberInProject",
-                "value": "1"
-            },
-            {
-                "name": "summary",
-                "value": "Hello World"
-            },
-        ],
-        "tag": [
-            {
-                "value": "bug",
-            },
-            {
-                "value": "New Feature",
+                "$type": "IssueTag",
+                "name": "New Feature"
             }
         ]
     }
@@ -87,8 +83,8 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         self.add_response(
-            'https://youtrack.example.com:443/rest/issue?filter=for%3Ame+%23Unresolved&max=100',
-            json={'issue': [self.arbitrary_issue]})
+            'https://youtrack.example.com:443/api/issues?query=for%3Ame+%23Unresolved&max=100&fields=id,summary,project(shortName),numberInProject,tags(name)',
+            json=[self.arbitrary_issue])
 
         issue = next(self.service.issues())
 
