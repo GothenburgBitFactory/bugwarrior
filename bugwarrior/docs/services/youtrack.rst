@@ -15,7 +15,7 @@ Here's an example of a YouTrack target:
     service = youtrack
     youtrack.host = youtrack.example.com
     youtrack.login = turing
-    youtrack.password = 3n1Gm@
+    youtrack.token = perm:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 The above example is the minimum required to import issues from
 YouTrack. You can also feel free to use any of the
@@ -24,6 +24,11 @@ or described in `Service Features`_ below.
 
 Service Features
 ----------------
+
+Token
++++++
+
+To access the YouTrack rest api, you need a `permanent token <https://www.jetbrains.com/help/youtrack/server/Manage-Permanent-Token.html#obtain-permanent-token>`_.
 
 Unauthenticated
 +++++++++++++++
