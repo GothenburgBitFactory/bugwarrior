@@ -83,7 +83,7 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         self.add_response(
-            'https://youtrack.example.com:443/api/issues?query=for%3Ame+%23Unresolved&max=100&fields=id,summary,project(shortName),numberInProject,tags(name)',
+            'https://youtrack.example.com:443/api/issues?query=for%3Ame+%23Unresolved&max=100&fields=id,summary,project(shortName),numberInProject,tags(name)',  # noqa: E501
             json=[self.arbitrary_issue])
 
         issue = next(self.service.issues())
