@@ -151,7 +151,11 @@ class YoutrackService(IssueService, ServiceClient):
             "This service has not implemented support for 'only_if_assigned'.")
 
     def issues(self):
-        params = {'query': self.config.query, 'max': self.config.query_limit, 'fields': 'id,summary,project(shortName),numberInProject,tags(name)'}
+        params = {
+            'query': self.config.query,
+            'max': self.config.query_limit,
+            'fields': 'id,summary,project(shortName),numberInProject,tags(name)'
+        }
         resp = self.session.get(self.rest_url + '/issues', params=params)
         issues = self.json_response(resp)
         log.debug(" Found %i total.", len(issues))
