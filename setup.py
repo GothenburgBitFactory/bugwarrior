@@ -26,6 +26,7 @@ extras = {
         "responses",
         "sphinx>=1.0",
         "sphinx-click",
+        "sphinx-inline-tabs",
 
         # Workaround https://github.com/python/importlib_metadata/issues/406
         "importlib-metadata<5",

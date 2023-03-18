@@ -16,7 +16,9 @@ Install the following package using ``pip``:
 Example Service
 ---------------
 
-Here's an example of a Phabricator target::
+Here's an example of a Phabricator target:
+
+.. config::
 
     [my_issue_tracker]
     service = phabricator
@@ -44,22 +46,28 @@ If you have dozens of users and projects, you might want to
 pull the tasks and code review requests only for the specific ones.
 
 If you want to show only the tasks related to a specific user,
-you just need to add its PHID to the service configuration like this::
+you just need to add its PHID to the service configuration like this:
+
+.. config::
+    :fragment: phabricator
 
     phabricator.user_phids = PHID-USER-ab12c3defghi45jkl678
 
 If you want to show only the tasks and diffs related to a specific project or a repository,
-just add their PHIDs to the service configuration::
+just add their PHIDs to the service configuration:
+
+.. config::
+    :fragment: phabricator
 
     phabricator.project_phids = PHID-PROJ-ab12c3defghi45jkl678,PHID-REPO-ab12c3defghi45jkl678
 
-Both ``phabricator.user_phids`` and ``phabricator.project_phids`` accept
-a comma-separated (no spaces) list of PHIDs.
+Both ``user_phids`` and ``project_phids`` accept
+a list of PHIDs.
 
 If you specify both, you will get tasks and diffs that match one **or** the other.
 
 When working on a Phabricator installations with a huge number of users or projects,
-it is recommended that you specify ``phabricator.user_phids`` and/or ``phabricator.project_phids``,
+it is recommended that you specify ``user_phids`` and/or ``project_phids``,
 as the Phabricator API may return a timeout for a query with too many results.
 
 If you do not know PHID of a user, project or repository,
@@ -72,7 +80,10 @@ Selecting a Phabricator Host
 ............................
 
 If your ``~/.arcrc`` includes credentials for multiple Phabricator instances,
-it is undefined which one will be used. To make it explicit, you can use::
+it is undefined which one will be used. To make it explicit, you can use:
+
+.. config::
+    :fragment: phabricator
 
     phabricator.host = https://YOUR_PHABRICATOR_HOST
 
@@ -84,18 +95,21 @@ Ignoring Some Items
 
 By default, any Task or Revision relating to any of the given users or projects
 will be included.  This is likely more than you want!  You can ignore some user
-relationships with the following configuration::
+relationships with the following configuration:
 
-    phabricator.ignore_cc = True        # ignore CC field
-    phabricator.ignore_author = True    # ignore Author field
-    phabricator.ignore_owner = True     # ignore Owner field (Tasks only)
-    phabricator.ignore_reviewers = True # ignore Reviewers field (Revisions only)
+.. config::
+    :fragment: phabricator
+
+    phabricator.ignore_cc = True
+    phabricator.ignore_author = True
+    phabricator.ignore_owner = True
+    phabricator.ignore_reviewers = True
 
 Note that there is no way to filter by the reviewer's response (for example, to
 exclude Revisions you have already reviewed). Phabricator does not provide the
 necessary information in the Conduit API.
 
-Furthermore, setting `phabricator.only_if_assigned` to something other than False
+Furthermore, setting `only_if_assigned` to something other than False
 will default to ignoring the CC and Author fields as reported in phabricator.
 
 Provided UDA Fields

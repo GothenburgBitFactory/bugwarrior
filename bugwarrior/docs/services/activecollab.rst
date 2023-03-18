@@ -43,7 +43,7 @@ Here's an example of an activecollab target.
 This is only valid for activeCollab 4.x and greater,
 see :ref:`activecollab2` for activeCollab2.x.
 
-::
+.. config::
 
     [my_bug_tracker]
     service = activecollab

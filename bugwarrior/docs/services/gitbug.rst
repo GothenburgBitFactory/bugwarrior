@@ -8,7 +8,9 @@ This service requires `git-bug <https://github.com/MichaelMure/git-bug#installat
 Example Service
 ---------------
 
-Here's an example of a Git-Bug target::
+Here's an example of a Git-Bug target:
+
+.. config::
 
    [my_issue_tracker]
    service = gitbug
@@ -25,13 +27,19 @@ Service Features
 Import Labels as Tags
 +++++++++++++++++++++
 
-The Git-Bug issue tracker allows you to attach labels to bugs to use those labels as tags, you can use the ``gitbug.import_labels_as_tags`` option::
+The Git-Bug issue tracker allows you to attach labels to bugs to use those labels as tags, you can use the ``import_labels_as_tags`` option:
+
+.. config::
+    :fragment: gitbug
 
     gitbug.import_labels_as_tags = True
 
 Also, if you would like to control how these labels are created, you can specify a template used for converting the Git-Bug label into a Taskwarrior tag.
 
-For example, to prefix all incoming labels with the string 'gitbug\_' (perhaps to differentiate them from any existing tags you might have), you could add the following configuration option::
+For example, to prefix all incoming labels with the string 'gitbug\_' (perhaps to differentiate them from any existing tags you might have), you could add the following configuration option:
+
+.. config::
+    :fragment: gitbug
 
     gitbug.label_template = gitbug_{{label}}
 
@@ -46,7 +54,10 @@ to all fields on the Taskwarrior task if needed.
 Port
 ++++
 
-By default, this service will spin up a git-bug instance served on port 43915. To change the port, assign::
+By default, this service will spin up a git-bug instance served on port 43915. To change the port, assign:
+
+.. config::
+    :fragment: gitbug
 
     gitbug.port = 12345
 

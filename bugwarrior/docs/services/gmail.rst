@@ -27,7 +27,7 @@ Example Service
 
 Here's an example of a gmail target:
 
-::
+.. config::
 
     [my_gmail]
     service = gmail

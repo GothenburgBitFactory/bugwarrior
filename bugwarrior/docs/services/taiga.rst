@@ -6,7 +6,9 @@ You can import tasks from a Taiga instance using the ``taiga`` service name.
 Example Service
 ---------------
 
-Here's an example of a taiga project::
+Here's an example of a taiga project:
+
+.. config::
 
     [my_issue_tracker]
     service = taiga
@@ -23,14 +25,20 @@ Service Features
 Include Tasks
 +++++++++++++
 
-By default, userstories from taiga are added in taskwarrior. If you like to include taiga tasks as well, set the config option::
+By default, userstories from taiga are added in taskwarrior. If you like to include taiga tasks as well, set the config option:
+
+.. config::
+    :fragment: taiga
 
     taiga.include_tasks = True
 
 Label Template
 ++++++++++++++
 
-Use the ``label_template`` option to customize the label. For example::
+Use the ``label_template`` option to customize the label. For example:
+
+.. config::
+    :fragment: taiga
 
     taiga.label_template = taiga_{{label}}
 

@@ -7,7 +7,9 @@ the ``github`` service name.
 Example Service
 ---------------
 
-Here's an example of a Github target::
+Here's an example of a Github target:
+
+.. config::
 
     [my_issue_tracker]
     service = github
@@ -20,8 +22,8 @@ Github.  You can also feel free to use any of the
 configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
-``github.login`` is used to specify what account bugwarrior should use to login
-to github, combined with ``github.token``.
+``login`` is used to specify what account bugwarrior should use to login
+to github, combined with ``token``.
 
 To get a token, go to the "Personal access tokens" section of
 your profile settings. Only the ``public_repo`` scope is required, but access
@@ -33,37 +35,46 @@ Service Features
 Repo Owner
 ++++++++++
 
-``github.username`` indicates which repositories should be scraped.  For
-instance, I always have ``github.login`` set to ralphbean (my account).  But I
-have some targets with ``github.username`` pointed at organizations or other
+``username`` indicates which repositories should be scraped.  For
+instance, I always have ``login`` set to ralphbean (my account).  But I
+have some targets with ``username`` pointed at organizations or other
 users to watch issues there.  This parameter is required unless
-``github.query`` is provided.
+``query`` is provided.
 
 Include and Exclude Certain Repositories
 ++++++++++++++++++++++++++++++++++++++++
 
-By default, issues from all repos belonging to ``github.username`` are
-included. To turn this off, set::
+By default, issues from all repos belonging to ``username`` are
+included. To turn this off, set:
+
+.. config::
+    :fragment: github
 
     github.include_user_repos = False
 
 If you happen to be working with a large number of projects, you
 may want to pull issues from only a subset of your repositories.  To
-do that, you can use the ``github.include_repos`` option.
+do that, you can use the ``include_repos`` option.
 
 For example, if you would like to only pull-in issues from
 ``some_user/project_foo`` and ``some_user/project_fox`` repositories, you could add
-these lines to your service configuration::
+these lines to your service configuration:
+
+.. config::
+    :fragment: github
 
     github.username = some_user
     github.include_repos = project_foo,project_fox
 
 Alternatively, if you have a particularly noisy repository, you can
 instead choose to import all issues excepting it using the
-``github.exclude_repos`` configuration option.
+``exclude_repos`` configuration option.
 
 In this example, ``some_user/noisy_repository`` is the repository you would
-*not* like issues created for::
+*not* like issues created for:
+
+.. config::
+    :fragment: github
 
     github.username = some_user
     github.exclude_repos = noisy_repository
@@ -72,8 +83,11 @@ Import Labels as Tags
 +++++++++++++++++++++
 
 The Github issue tracker allows you to attach labels to issues; to
-use those labels as tags, you can use the ``github.import_labels_as_tags``
-option::
+use those labels as tags, you can use the ``import_labels_as_tags``
+option:
+
+.. config::
+    :fragment: github
 
     github.import_labels_as_tags = True
 
@@ -83,7 +97,10 @@ tag.
 
 For example, to prefix all incoming labels with the string 'github_' (perhaps
 to differentiate them from any existing tags you might have), you could
-add the following configuration option::
+add the following configuration option:
+
+.. config::
+    :fragment: github
 
     github.label_template = github_{{label}}
 
@@ -100,7 +117,10 @@ Filter Pull Requests
 
 Although you can filter issues using :ref:`common_configuration_options`,
 pull requests are not filtered by default.  You can filter pull requests
-by adding the following configuration option::
+by adding the following configuration option:
+
+.. config::
+    :fragment: github
 
     github.filter_pull_requests = True
 
@@ -108,7 +128,10 @@ Exclude Pull Requests
 +++++++++++++++++++++
 
 If you want bugwarrior to not track pull requests you can disable it altogether
-and ensure bugwarrior only tracks issues::
+and ensure bugwarrior only tracks issues:
+
+.. config::
+    :fragment: github
 
     github.exclude_pull_requests = True
 
@@ -116,7 +139,10 @@ Get involved issues
 +++++++++++++++++++
 
 By default, bugwarrior pulls all issues across owned and member repositories
-assigned to the authenticated user.  To disable this behavior, use::
+assigned to the authenticated user.  To disable this behavior, use:
+
+.. config::
+    :fragment: github
 
     github.include_user_issues = False
 
@@ -124,14 +150,20 @@ Instead of fetching issues and pull requests based on ``{{username}}``'s owned
 repositories, you may instead get those that ``{{username}}`` is involved in.
 This includes all issues and pull requests where the user is the author, the
 assignee, mentioned in, or has commented on.  To do so, add the following
-configuration option::
+configuration option:
+
+.. config::
+    :fragment: github
 
     github.involved_issues = True
 
 Queries
 +++++++
 
-If you want to write your own github query, as described at https://help.github.com/articles/searching-issues/::
+If you want to write your own github query, as described at https://help.github.com/articles/searching-issues/:
+
+.. config::
+    :fragment: github
 
     github.query = assignee:octocat is:open
 
@@ -139,7 +171,10 @@ Note that this search covers both issues and pull requests, which github treats
 as a special kind of issue.
 
 To disable the pre-defined queries described above and synchronize only the
-issues matched by the query, set::
+issues matched by the query, set:
+
+.. config::
+    :fragment: github
 
     github.include_user_issues = False
     github.include_user_repos = False
@@ -148,7 +183,10 @@ GitHub Enterprise Instance
 ++++++++++++++++++++++++++
 
 If you're using GitHub Enterprise, the on-premises version of GitHub, you can
-point bugwarrior to it with the ``github.host`` configuration option. E.g.::
+point bugwarrior to it with the ``host`` configuration option. E.g.:
+
+.. config::
+    :fragment: github
 
     github.host = github.acme.biz
 
@@ -161,12 +199,15 @@ Comments are synchronized as annotations.
 To limit the amount of content synchronized into TaskWarrior (which can help to avoid issues with synchronization), use
 
  * ``annotation_comments=False`` (a global configuration) to disable synchronizing comments to annotations; and
- * either ``github.body_length``` to limit the size of the Github Body UDA or include ``githubbody`` in ``static_fields`` in the ``[general]`` section to eliminate the UDA entirely.
+ * either ``body_length``` to limit the size of the Github Body UDA or include ``githubbody`` in ``static_fields`` in the ``[general]`` section to eliminate the UDA entirely.
 
 Including Project Owner in Project Name
 +++++++++++++++++++++++++++++++++++++++
 
-By default the taskwarrior ``project`` name will not include the owner. To do so set::
+By default the taskwarrior ``project`` name will not include the owner. To do so set:
+
+.. config::
+    :fragment: github
 
     github.project_owner_prefix = True
 
@@ -174,7 +215,10 @@ By default the taskwarrior ``project`` name will not include the owner. To do so
 Get Specific Issues
 +++++++++++++++++++
 
-Specific issues can be pulled in using ``github.issue_urls``::
+Specific issues can be pulled in using ``issue_urls``:
+
+.. config::
+    :fragment: github
 
     github.issue_urls = https://github.com/ralphbean/bugwarrior/issues/516,https://github.com/ralphbean/bugwarrior/pull/898
 

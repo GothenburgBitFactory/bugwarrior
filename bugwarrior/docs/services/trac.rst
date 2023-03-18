@@ -14,7 +14,9 @@ Install packages needed for Trac support with::
 Example Service
 ---------------
 
-Here's an example of a Trac target::
+Here's an example of a Trac target:
+
+.. config::
 
     [my_issue_tracker]
     service = trac
@@ -28,9 +30,12 @@ Service Features
 By default, this service uses the XML-RPC Trac plugin, which must be installed
 on the Trac instance.  If this is not available, the service can use Trac's
 built-in CSV support, but in this mode it cannot add annotations based on
-ticket comments.  To enable this mode, add ``trac.no_xmlrpc = true``.
+ticket comments.  To enable this mode, add ``no_xmlrpc = true``.
 
-If your trac instance requires authentication to perform the query, add::
+If your trac instance requires authentication to perform the query, add:
+
+.. config::
+    :fragment: trac
 
     trac.username = ralph
     trac.password = OMG_LULZ

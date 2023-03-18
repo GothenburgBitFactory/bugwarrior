@@ -14,7 +14,9 @@ Install the following package using ``pip``:
 Example Service
 ---------------
 
-Here's an example of a jira project::
+Here's an example of a jira project:
+
+.. config::
 
     [my_issue_tracker]
     service = jira
@@ -28,7 +30,7 @@ Here's an example of a jira project::
 
 .. note::
 
-   Basic authentication with passwords is deprecated. The `jira.password` may contain an `api token <https://confluence.atlassian.com/cloud/api-tokens-938839638.html>`_ or alternatively you can set `jira.PAT` to a Personal Access Token.
+   Basic authentication with passwords is deprecated. The `password` may contain an `api token <https://confluence.atlassian.com/cloud/api-tokens-938839638.html>`_ or alternatively you can set `PAT` to a Personal Access Token.
 
 The above example is the minimum required to import issues from
 Jira.  You can also feel free to use any of the
@@ -38,9 +40,12 @@ or described in `Service Features`_ below.
 Service Features
 ----------------
 
-The following default configuration is used::
+The following default configuration is used:
 
-    jira.body_length = <sys.maxsize>
+.. config::
+    :fragment: jira
+
+    # jira.body_length = <sys.maxsize>
     jira.import_labels_as_tags = False
     jira.import_sprints_as_tags = False
     jira.label_template = {{label}}
@@ -55,16 +60,22 @@ Specify the Query to Use for Gathering Issues
 
 By default, the JIRA plugin will include any issues that are assigned to you
 but do not yet have a resolution set, but you can fine-tune the query used
-for gathering issues by setting the ``jira.query`` parameter.
+for gathering issues by setting the ``query`` parameter.
 
 For example, to select issues assigned to 'ralph' having a status that is
 not 'closed' and is not 'resolved', you could add the following
-configuration option::
+configuration option:
+
+.. config::
+    :fragment: jira
 
     jira.query = assignee = ralph and status != closed and status != resolved
 
 This query needs to be modified accordingly to the literal values of your Jira
-instance; if the name contains any character, just put it in quotes, e.g.::
+instance; if the name contains any character, just put it in quotes, e.g.:
+
+.. config::
+    :fragment: jira
 
     jira.query = assignee = 'firstname.lastname' and status != Closed and status != Resolved and status != Done
 
@@ -72,14 +83,20 @@ Jira v4 Support
 +++++++++++++++
 
 If you happen to be using a very old version of Jira, add the following
-configuration option to your service configuration::
+configuration option to your service configuration:
+
+.. config::
+    :fragment: jira
 
     jira.version = 4
 
 Do Not Verify SSL Certificate
 +++++++++++++++++++++++++++++
 
-If you want to ignore verifying the SSL certificate, set::
+If you want to ignore verifying the SSL certificate, set:
+
+.. config::
+    :fragment: jira
 
     jira.verify_ssl = False
 
@@ -87,13 +104,19 @@ Import Labels and Sprints as Tags
 +++++++++++++++++++++++++++++++++
 
 The Jira issue tracker allows you to attach labels to issues; to
-use those labels as tags, you can use the ``jira.import_labels_as_tags``
-option::
+use those labels as tags, you can use the ``import_labels_as_tags``
+option:
+
+.. config::
+    :fragment: jira
 
     jira.import_labels_as_tags = True
 
 You can also import the names of any sprints associated with an issue as tags,
-by setting the ``jira.import_sprints_as_tags`` option::
+by setting the ``import_sprints_as_tags`` option:
+
+.. config::
+    :fragment: jira
 
     jira.import_sprints_as_tags = True
 
@@ -102,7 +125,10 @@ template used for converting the Jira label into a Taskwarrior tag.
 
 For example, to prefix all incoming labels with the string 'jira_' (perhaps
 to differentiate them from any existing tags you might have), you could
-add the following configuration option::
+add the following configuration option:
+
+.. config::
+    :fragment: jira
 
     jira.label_template = jira_{{label}}
 
@@ -139,7 +165,7 @@ By default, this service synchronizes the description of the Jira issue as ``jir
 In some cases, this is not required.
 It also risks triggering bugs in Taskwarrior around unicode encodings.
 
-Set ``jira.body_length``` to limit the size of the description UDA or include ``jiradescription`` in ``static_fields`` in the ``[general]`` section to eliminate the UDA entirely.
+Set ``body_length``` to limit the size of the description UDA or include ``jiradescription`` in ``static_fields`` in the ``[general]`` section to eliminate the UDA entirely.
 
 When using API token
 ++++++++++++++++++++
@@ -155,7 +181,7 @@ When using Personal Access Token
 
 Some hosts only support Personal Access Tokens (PATs) to authenticate. If so, ``bugwarrior pull`` will respond with ``Err: 401 Unauthorized``. Create a PAT as described `here`_.
 
-Put the PAT in the ``jira.PAT`` field and do not set ``jira.password``.
+Put the PAT in the ``PAT`` field and do not set ``password``.
 
 .. _here: https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html
 
@@ -168,7 +194,11 @@ Provided UDA Fields
 Support for Extra UDA Fields
 +++++++++++++++++++++++++++++
 
-To export additional UDA fields, set ``jira.extra_fields`` to comma-separated entries of the form ``uda_tag:field_key[.subkey]``. You can also chain subkeys to extract deeply embedded keys, e.g.::
+To export additional UDA fields, set ``extra_fields`` to comma-separated entries of the form ``uda_tag:field_key[.subkey]``. You can also chain subkeys to extract deeply embedded keys, e.g.:
+
+.. config::
+    :fragment: jira
+
     jira.extra_fields = jiraextrafield1:customfield_10000, jiraextrafield2:customfield_10001.attributes.description
 
 The correct key (and subkeys) can be found by inspecting the `fields` attribute of a standard Jira issue response.

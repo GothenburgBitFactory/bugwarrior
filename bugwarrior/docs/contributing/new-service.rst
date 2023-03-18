@@ -69,7 +69,7 @@ This class is a `pydantic <https://pydantic-docs.helpmanual.io/>`_ model which w
 
 The ``service`` attribute is how bugwarrior will know to assign a given section of the ``bugwarriorrc`` file to your service, for example:
 
-.. code:: ini
+.. config::
 
   [my_gitbug]
   service = gitbug
@@ -297,10 +297,13 @@ Copy and complete the following template:
    Example Service
    ---------------
 
-   Here's an example of a SERVICE_NAME target::
+   Here's an example of a SERVICE_NAME target:
+
+   .. config::
+
        [my_issue_tracker]
        service = SERVICE
-       ADDITIONAL REQUIRED CONFIGURATION OPTIONS
+       ADDITIONAL REQUIRED CONFIGURATION OPTIONS, IN INI FORMAT
 
 
    The above example is the minimum required to import issues from SERVICE_NAME.

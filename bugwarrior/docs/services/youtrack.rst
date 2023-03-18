@@ -7,7 +7,9 @@ the ``youtrack`` service name.
 Example Service
 ---------------
 
-Here's an example of a YouTrack target::
+Here's an example of a YouTrack target:
+
+.. config::
 
     [my_issue_tracker]
     service = youtrack
@@ -27,7 +29,10 @@ Unauthenticated
 +++++++++++++++
 
 While the ``login`` and ``password`` fields are still required, bugwarrior
-will not log in to the service if you set::
+will not log in to the service if you set:
+
+.. config::
+    :fragment: youtrack
 
     youtrack.anonymous = True
 
@@ -38,30 +43,45 @@ will not log in to the service if you set::
 Customize the YouTrack Connection
 +++++++++++++++++++++++++++++++++
 
-The ``youtrack.host`` field is used to construct a URL for
+The ``host`` field is used to construct a URL for
 the YouTrack server. It defaults to a secure connection scheme (HTTPS)
 on the standard port (443).
 
-To connect on a different port, set::
+To connect on a different port, set:
+
+.. config::
+    :fragment: youtrack
 
     youtrack.port = 8443
 
-If your YouTrack instance is only available over HTTP, set::
+If your YouTrack instance is only available over HTTP, set:
+
+.. config::
+    :fragment: youtrack
 
     youtrack.use_https = False
 
-If you want to ignore verifying the SSL certificate, set::
+If you want to ignore verifying the SSL certificate, set:
+
+.. config::
+    :fragment: youtrack
 
     youtrack.verify_ssl = False
 
-For YouTrack InCloud instances set::
+For YouTrack InCloud instances set:
+
+.. config::
+    :fragment: youtrack
 
     youtrack.incloud_instance = True
 
 Specify the Query to Use for Gathering Issues
 +++++++++++++++++++++++++++++++++++++++++++++
 
-The default option selects unresolved issues assigned to the login user::
+The default option selects unresolved issues assigned to the login user:
+
+.. config::
+    :fragment: youtrack
 
     youtrack.query = for:me #Unresolved
 
@@ -69,7 +89,10 @@ Reference the
 `YouTrack Search Query Grammar <https://www.jetbrains.com/help/youtrack/standalone/7.0/Search-Query-Grammar.html>`_
 for additional examples.
 
-Queries are capped at 100 max results by default, but may be adjusted to meet your needs::
+Queries are capped at 100 max results by default, but may be adjusted to meet your needs:
+
+.. config::
+    :fragment: youtrack
 
     youtrack.query_limit = 100
 
@@ -77,7 +100,10 @@ Import Issue Tags
 +++++++++++++++++
 
 The YouTrack issue tracker allows you to tag issues and these tags are applied
-to tasks by default. To disable this behavior, set::
+to tasks by default. To disable this behavior, set:
+
+.. config::
+    :fragment: youtrack
 
     youtrack.import_tags = False
 
@@ -87,7 +113,10 @@ tag.
 
 For example, to prefix all incoming tags with the string 'yt\_' (perhaps
 to differentiate them from any existing tags you might have), you could
-add the following configuration option::
+add the following configuration option:
+
+.. config::
+    :fragment: youtrack
 
     youtrack.tag_template = yt_{{tag|lower}}
 
