@@ -13,7 +13,9 @@ Install the following package using ``pip``:
 Example Service
 ---------------
 
-Here's an example of a Kanboard project::
+Here's an example of a Kanboard project:
+
+.. config::
 
     [my_issue_tracker]
     service = kanboard
@@ -33,10 +35,13 @@ Specify the Query to Use for Gathering Issues
 +++++++++++++++++++++++++++++++++++++++++++++
 
 By default, all open issues assigned to the specified username are imported.
-One may use the `kanboard.query` parameter to modify the search query.
+One may use the ``query`` parameter to modify the search query.
 
 For example, to import all open issues assigned to 'frank', use the following
-configuration option::
+configuration option:
+
+.. config::
+    :fragment: kanboard
 
     kanboard.query = status:open assignee:frank
 

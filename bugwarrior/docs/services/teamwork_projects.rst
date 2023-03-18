@@ -7,7 +7,9 @@ the ``teamwork_projects`` service name.
 Example Service
 ---------------
 
-Here's an example of a Teamwork Projects target::
+Here's an example of a Teamwork Projects target:
+
+.. config::
 
     [my_issue_tracker]
     service = teamwork_projects

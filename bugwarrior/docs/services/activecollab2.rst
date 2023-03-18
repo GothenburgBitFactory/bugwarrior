@@ -31,7 +31,7 @@ Example Service
 Here's an example of an activecollab2 target. Note that this will only work
 with ActiveCollab 2.x - see above for 3.x and greater.
 
-::
+.. config::
 
     [my_bug_tracker]
     service = activecollab2

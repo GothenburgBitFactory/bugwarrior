@@ -19,7 +19,9 @@ You will need to install the following additional packages via ``pip``:
 Example Service
 ---------------
 
-Here's an example of a Debian BTS target::
+Here's an example of a Debian BTS target:
+
+.. config::
 
     [debian_bts]
     service = bts
@@ -37,10 +39,13 @@ Include all bugs for packages
 +++++++++++++++++++++++++++++
 
 If you would like more bugs than just those you are the owner of, you can specify
-the ``bts.packages`` option.
+the ``packages`` option.
 
 For example if you wanted to include bugs on the ``hello`` package, you can add
-this line to your service configuration::
+this line to your service configuration:
+
+.. config::
+    :fragment: bts
 
     bts.packages = hello
 
@@ -54,7 +59,10 @@ packages where you are listed as a Maintainer or an Uploader in the Debian archi
 you can enable the use of the `UDD Bugs Search <https://udd.debian.org/bugs/>`_.
 
 This will peform a search and include the bugs from the result. To enable this
-feature, you can add this line to your service configuration::
+feature, you can add this line to your service configuration:
+
+.. config::
+    :fragment: bts
 
     bts.udd = True
 
@@ -68,7 +76,10 @@ with the pending tag in the BTS.
 
 This is the default behaviour, but if you feel you would like to include bugs that
 are marked as pending in the BTS, you can disable this by adding this line to your
-service configuration::
+service configuration:
+
+.. config::
+    :fragment: bts
 
     bts.ignore_pending = False
 
@@ -77,7 +88,10 @@ Including sponsored and NMU'd packages
 
 By default, packages that you have sponsored or have uploaded as a non-maintainer
 upload or team upload will be excluded. You can include tasks from these packages
-by disabling this feature::
+by disabling this feature:
+
+.. config::
+    :fragment: bts
 
     bts.udd_ignore_sponsor = False
 
@@ -92,7 +106,10 @@ If you would like to exclude a particularly noisy package, that is perhaps team
 maintained, or a package that you have orphaned and no longer have interest in but
 are still listed as Maintainer or Uploader in stable suites, you can explicitly
 ignore bugs based on their binary or source package names. To do this add one
-of the following lines to your service configuration::
+of the following lines to your service configuration:
+
+.. config::
+    :fragment: bts
 
     bts.ignore_pkg = hello,anarchism
     bts.ignore_src = linux

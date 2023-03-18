@@ -13,7 +13,9 @@ Install the following package using ``pip``:
 Example Service
 ---------------
 
-Here's an example of a VersionOne project::
+Here's an example of a VersionOne project:
+
+.. config::
 
     [my_issue_tracker]
     service = versionone
@@ -43,8 +45,11 @@ Restrict Task Imports to a Specific Timebox (Sprint)
 
 You can restrict imported tasks to a specific Timebox (VersionOne's
 internal generic name for a Sprint) -- in this example named
-'Sprint 2014-09-22' -- by using the ``versionone.timebox_name`` option;
-for example::
+'Sprint 2014-09-22' -- by using the ``timebox_name`` option;
+for example:
+
+.. config::
+    :fragment: versionone
 
     versionone.timebox_name = Sprint 2014-09-22
 
@@ -54,8 +59,11 @@ Set a Global Project Name
 By default, this importer does not set a project name on imported tasks.
 Although you can gain more flexibility by using :ref:`field_templates`
 to generate a project name, if all you need is to set a predictable
-project name, you can use the ``versionone.project_name`` option; in this
-example, to add imported tasks to the project 'important_project'::
+project name, you can use the ``project_name`` option; in this
+example, to add imported tasks to the project 'important_project':
+
+.. config::
+    :fragment: versionone
 
     versionone.project_name = important_project
 
@@ -63,8 +71,11 @@ Set the Timezone Used for Due Dates
 +++++++++++++++++++++++++++++++++++
 
 You can configure the timezone used for setting your tasks' due dates
-by setting the ``versionone.timezone`` option.  By default, your local
-timezone will be used.  For example::
+by setting the ``timezone`` option.  By default, your local
+timezone will be used.  For example:
+
+.. config::
+    :fragment: versionone
 
     versionone.timezone = America/Los_Angeles
 

@@ -8,7 +8,9 @@ This service requires `deck <https://github.com/nextcloud/deck#installationupdat
 Example Service
 ---------------
 
-Here's an example of a Nextcloud Deck target::
+Here's an example of a Nextcloud Deck target:
+
+.. config::
 
    [my_nextcloud_deck]
    service = deck
@@ -28,13 +30,19 @@ Service Features
 Import Labels as Tags
 +++++++++++++++++++++
 
-The Deck allows you to attach labels to cards. To use those labels as tags, you can use the ``deck.import_labels_as_tags`` option::
+The Deck allows you to attach labels to cards. To use those labels as tags, you can use the ``import_labels_as_tags`` option:
+
+.. config::
+    :fragment: deck
 
     deck.import_labels_as_tags = True
 
 Also, if you would like to control how these labels are created, you can specify a template used for converting the Deck label into a Taskwarrior tag.
 
-For example, to prefix all incoming labels with the string 'deck\_' (perhaps to differentiate them from any existing tags you might have), you could add the following configuration option::
+For example, to prefix all incoming labels with the string 'deck\_' (perhaps to differentiate them from any existing tags you might have), you could add the following configuration option:
+
+.. config::
+    :fragment: deck
 
     deck.label_template = deck_{{label}}
 
@@ -49,7 +57,10 @@ to all fields on the Taskwarrior task if needed.
 Only if assigned
 ++++++++++++++++
 
-You can filter for cards assigned to a specific user::
+You can filter for cards assigned to a specific user:
+
+.. config::
+    :fragment: deck
 
     deck.only_if_assigned = my_user
 
@@ -59,7 +70,10 @@ You can filter for cards assigned to a specific user::
 Exclude / include board IDs
 +++++++++++++++++++++++++++
 
-You can explicitly exclude or include specific boards::
+You can explicitly exclude or include specific boards:
+
+.. config::
+    :fragment: deck
 
     deck.exclude_board_ids = 5,6
     deck.include_board_ids = 4

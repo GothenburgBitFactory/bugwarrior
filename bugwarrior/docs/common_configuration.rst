@@ -1,11 +1,11 @@
 How to Configure
 ================
 
-Bugwarrior's configuration file is written in `toml <https://toml.io>`_.
+Bugwarrior's configuration file can be written either in `ini <https://en.wikipedia.org/wiki/INI_file#Format>`_ or `toml <https://toml.io>`_ format.
 
 A basic configuration might look like this:
 
-.. code:: toml
+.. config::
 
     [general]
     targets = my_github
@@ -22,44 +22,64 @@ Main Section
 Your :ref:`configuration file <configuration-files>` must include at least a ``[general]`` section including the
 following option:
 
-* ``targets``: A comma-separated list of *other* section names to use
+* ``targets``: A list of *other* section names to use
   as task sources.
 
-Optional options include:
+Optional options and their defaults include:
 
-* ``taskrc``: Specify which TaskRC configuration file to use.  By default,
-  will use the system default (usually ``~/.taskrc``).
-* ``shorten``: Set to ``True`` to shorten links.
-* ``inline_links``: When ``False``, links are appended as an annotation.
-  Defaults to ``True``.
-* ``annotation_links``: When ``True`` will include a link to the ticket as an
-  annotation. Defaults to ``False``.
-* ``annotation_comments``: When ``False`` skips putting issue comments into
-  annotations. Defaults to ``True``.
-* ``annotation_newlines``: When ``False`` strips newlines from comments in
-  annotations. Defaults to ``False``.
-* ``log.level``: Set to one of ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``,
-  ``CRITICAL``, or ``DISABLED`` to control the logging verbosity.  By
-  default, this is set to ``INFO``.
-* ``log.file``: Set to the path at which you would like logging messages
-  written.  By default, logging messages will be written to stderr.
-* ``annotation_length``: Import maximally this number of characters
-  of incoming annotations.  Default: 45.
-* ``description_length``: Use maximally this number of characters in the
-  description. Default: 35.
-* ``merge_annotations``: If ``False``, bugwarrior won't bother with adding
-  annotations to your tasks at all.  Default: ``True``.
-* ``merge_tags``: If ``False``, bugwarrior won't bother with adding
-  tags to your tasks at all.  Default: ``True``.
-* ``replace_tags``: If ``True``, bugwarrior will delete all tags prior to
-  fetching new ones, except those listed in ``static_tags``. Only work if
-  merge_tags is ``True``. Default: ``False``.
-* ``static_tags``: A comma separated list of tags that shouldn't be *removed* by
-  bugwarrior. Use for tags that you want to keep when replace_tags is set to
-  ``True``.
-* ``static_fields``: A comma separated list of attributes that shouldn't be
-  *updated* by bugwarrior.  Use for values that you want to tune manually.
-  Note that service-specific UDAs can be included here.  Default: ``priority``.
+.. config::
+
+    [general]
+
+    # Specify which TaskRC configuration file to use.
+    taskrc = <system default, which is usually ~/.taskrc>
+
+    # Set to true to shorten links.
+    shorten = False
+
+    # When false, links are appended as an annotation.
+    inline_links = True
+
+    # When true will include a link to the ticket as an annotation.
+    annotation_links = False
+
+    # When false skips putting issue comments into annotations.
+    annotation_comments = True
+
+    # When false strips newlines from comments in annotations.
+    annotation_newlines = False
+
+    # Set to one of DEBUG, INFO, WARNING, ERROR, CRITICAL, or DISABLED to
+    # control the logging verbosity.
+    log.level = INFO
+
+    # Set to the path at which you would like logging messages written.
+    log.file = <by default messages are written to stderr>
+
+    # Import maximally this number of characters of incoming annotations.
+    annotation_length = 45
+
+    # Use maximally this number of characters in the description.
+    description_length = 35
+
+    # If false, bugwarrior won't bother with adding annotations to your tasks at all.
+    merge_annotations = True
+
+    # If false, bugwarrior won't bother with adding tags to your tasks at all.
+    merge_tags = True
+
+    # If true, bugwarrior will delete all tags prior to fetching new ones,
+    # except those listed in static_tags. Only work if merge_tags is true.
+    replace_tags = False
+
+    # A list of tags that shouldn't be *removed* by bugwarrior. Use for tags
+    # that you want to keep when replace_tags is set to true.
+    static_tags =
+
+    # A list of attributes that shouldn't be *updated* by bugwarrior.  Use for
+    # values that you want to tune manually. Note that service-specific UDAs
+    # can be included here.
+    static_fields = priority
 
 In addition to the ``[general]`` section, sections may be named
 ``[flavor.myflavor]`` and may be selected using the ``--flavor`` option to
@@ -74,19 +94,21 @@ Common Service Configuration Options
 
 All services support common configuration options in addition
 to their service-specific features.
-These configuration options are meant to be prefixed with the service name,
-e.g. ``github.add_tags``, or ``gitlab.default_priority``.
+
+.. note::
+    If using INI format, these configuration options must be prefixed with the service name,
+    e.g. ``github.add_tags``, or ``github.default_priority``.
 
 The following options are supported:
 
-* ``SERVICE.only_if_assigned``: If set to a username, only import issues
+* ``only_if_assigned``: If set to a username, only import issues
   assigned to the specified user.
-* ``SERVICE.also_unassigned``: If set to ``True`` and ``only_if_assigned`` is
+* ``also_unassigned``: If set to ``true`` and ``only_if_assigned`` is
   set, then also create tasks for issues that are not assigned to anybody.
-  Defaults to ``False``.
-* ``SERVICE.default_priority``: Assign this priority ('L', 'M', 'H', or '') to
+  Defaults to ``false``.
+* ``default_priority``: Assign this priority ('L', 'M', 'H', or '') to
   newly-imported issues. Defaults to ``M``.
-* ``SERVICE.add_tags``: A comma-separated list of tags to add to an issue.  In
+* ``add_tags``: A list of tags to add to an issue.  In
   most cases, plain strings will suffice, but you can also specify
   templates.  See the section `Field Templates`_ for more information.
 
@@ -104,7 +126,7 @@ but depending upon your workflow, the information presented may not be
 useful to you.
 
 To help users build descriptions that suit their needs, all services allow
-one to specify a ``SERVICE.description_template`` configuration option, in
+one to specify a ``description_template`` configuration option, in
 which one can enter a one-line Jinja template.  The context available includes
 all Taskwarrior fields and all UDAs (see section named 'Provided UDA Fields'
 for each service) defined for the relevant service.
@@ -118,7 +140,9 @@ for each service) defined for the relevant service.
 For example, to pull-in Github issues assigned to
 `@ralphbean <https://github.com/ralphbean>`_, setting the issue description
 such that it is composed of only the Github issue number and title, you could
-create a service entry like this::
+create a service entry like this:
+
+.. config::
 
     [ralphs_github_account]
     service = github
@@ -128,20 +152,26 @@ create a service entry like this::
 You can also use this tool for altering the generated value of any other
 Taskwarrior record field by using the same kind of template.
 
-Uppercasing the project name for imported issues::
+Uppercasing the project name for imported issues:
 
-    SERVICE.project_template = {{project|upper}}
+.. config::
+   :fragment: github
+
+   github.project_template = {{project|upper}}
 
 You can also use this feature to override the generated value of any field.
 This example causes imported issues to be assigned to the 'Office' project
-regardless of what project was assigned by the service itself::
+regardless of what project was assigned by the service itself:
 
-    SERVICE.project_template = Office
+.. config::
+   :fragment: github
+
+   github.project_template = Office
 
 Password Management
 -------------------
 
-You need not store your password in plain text in your `bugwarriorrc` file; 
+You need not store your password in plain text in your `bugwarriorrc` file;
 you can enter the following values to control where to gather your password
 from:
 
@@ -166,12 +196,12 @@ Use hooks to run commands prior to importing from ``bugwarrior pull``.
 below.
 
 To use hooks, add a ``[hooks]`` section to your configuration, mapping
-the hook you'd like to use with a comma-separated list of scripts to execute.
+the hook you'd like to use with a list of scripts to execute.
 
-::
+.. config::
 
-  [hooks]
-  pre_import = /home/someuser/backup.sh, /home/someuser/sometask.sh
+      [hooks]
+      pre_import = /home/someuser/backup.sh, /home/someuser/sometask.sh
 
 Hook options:
 
@@ -186,12 +216,14 @@ Notifications
 
 Add a ``[notifications]`` section to your configuration to receive notifications
 when a bugwarrior pull runs, and when issues are created, updated, or deleted
-by ``bugwarrior pull``::
+by ``bugwarrior pull``
 
-  [notifications]
-  notifications = True
-  backend = gobject
-  only_on_new_tasks = True
+.. config::
+
+      [notifications]
+      notifications = true
+      backend = gobject
+      only_on_new_tasks = true
 
 Backend options:
 
