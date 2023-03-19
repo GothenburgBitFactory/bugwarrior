@@ -103,11 +103,6 @@ class PydanticConfig(pydantic.BaseConfig):
 class MainSectionConfig(pydantic.BaseModel):
 
     class Config(PydanticConfig):
-        @staticmethod
-        def alias_generator(string: str) -> str:
-            """ Handle fields with a period in the name. """
-            return string.replace('__', '.')
-
         # To set BugwarriorData based on taskrc:
         allow_mutation = True
         arbitrary_types_allowed = True
@@ -135,11 +130,10 @@ class MainSectionConfig(pydantic.BaseModel):
     static_tags: ConfigList = ConfigList([])
     static_fields: ConfigList = ConfigList(['priority'])
 
-    # Fields with a period in the name (fixed by alias)
-    log__level: typing_extensions.Literal[
+    log_level: typing_extensions.Literal[
         ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', 'DISABLED')
     ] = 'INFO'
-    log__file: typing.Optional[LoggingPath] = None
+    log_file: typing.Optional[LoggingPath] = None
 
 
 class Hooks(pydantic.BaseModel):
