@@ -55,12 +55,13 @@ def get_config_path():
 def parse_file(configpath: str) -> dict:
     rawconfig = BugwarriorConfigParser()
     rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
-    # strip off prefixes
     config = {}
     for section in rawconfig.sections():
-        if (section in ['hooks', 'notifications', 'general'] or
-                section.startswith('flavor.')):
-            config[section] = dict(rawconfig[section])
+        if section in ['hooks', 'notifications']:
+            config[section] = rawconfig[section].items()
+        elif section == 'general' or section.startswith('flavor.'):
+            config[section] = {k.replace('log.', 'log_'): v
+                               for k, v in rawconfig[section].items()}
         else:
             service = rawconfig[section].pop('service')
             service_prefix = 'ado' if service == 'azuredevops' else service
@@ -88,8 +89,8 @@ def load_config(main_section, interactive, quiet):
     main_config.interactive = interactive
     main_config.data = data.BugwarriorData(
         data.get_data_path(config[main_section].taskrc))
-    configure_logging(main_config.log__file,
-                      'WARNING' if quiet else main_config.log__level)
+    configure_logging(main_config.log_file,
+                      'WARNING' if quiet else main_config.log_level)
     return config
 
 

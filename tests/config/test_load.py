@@ -116,12 +116,17 @@ class TestParseFile(LoadTest):
         with self.assertRaises(configparser.MissingSectionHeaderError):
             load.parse_file(config_path)
 
-    def test_ini_prefix_removal(self):
+    def test_ini_options_renamed(self):
+        """
+        Prefixes are removed and log.* are renamed log_* in main section.
+        """
+
         config_path = self.create('.bugwarriorrc')
         with open(config_path, 'w') as fout:
             fout.write(textwrap.dedent("""
                 [general]
                 foo = bar
+                log.level = DEBUG
                 [baz]
                 service = qux
                 qux.optionname
@@ -130,6 +135,9 @@ class TestParseFile(LoadTest):
 
         self.assertIn('optionname', config['baz'])
         self.assertNotIn('prefix.optionname', config['baz'])
+
+        self.assertIn('log_level', config['general'])
+        self.assertNotIn('log.level', config['general'])
 
     def test_ini_missing_prefix(self):
         config_path = self.create('.bugwarriorrc')
