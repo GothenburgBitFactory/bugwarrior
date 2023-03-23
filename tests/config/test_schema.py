@@ -163,3 +163,23 @@ class TestValidation(ConfigTest):
 
         self.config['my_redmine']['project_name'] = 'myproject'
         self.validate()
+
+
+class TestComputeTemplates(unittest.TestCase):
+    def test_template(self):
+        raw_values = {'templates': {}, 'project_template': 'foo'}
+        computed_values = schema.ServiceConfig().compute_templates(raw_values)
+        self.assertEqual(computed_values['templates'], {'project': 'foo'})
+
+    def test_empty_template(self):
+        """
+        Respect setting field templates to an empty string.
+
+        This should not be ignored but should make the corresponding task field
+        an empty string.
+
+        https://github.com/ralphbean/bugwarrior/issues/970
+        """
+        raw_values = {'templates': {}, 'project_template': ''}
+        computed_values = schema.ServiceConfig().compute_templates(raw_values)
+        self.assertEqual(computed_values['templates'], {'project': ''})

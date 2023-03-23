@@ -270,7 +270,8 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
 # Dynamically add template fields to model.
 _ServiceConfig = pydantic.create_model(
     '_ServiceConfig',
-    **{f'{key}_template': '' for key in taskw.task.Task.FIELDS}
+    **{f'{key}_template': (typing.Optional[str], None)
+       for key in taskw.task.Task.FIELDS}
 )
 
 
@@ -286,7 +287,7 @@ class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
     also_unassigned: bool = False
     default_priority: typing_extensions.Literal['', 'L', 'M', 'H'] = 'M'
     add_tags: ConfigList = ConfigList([])
-    description_template: str = ''
+    description_template: typing.Optional[str] = None
 
     @pydantic.root_validator
     def compute_templates(cls, values):
@@ -318,7 +319,7 @@ class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
         """
         for key in taskw.task.Task.FIELDS.keys():
             template = values.get(f'{key}_template')
-            if template:
+            if template is not None:
                 values['templates'][key] = template
         return values
 
