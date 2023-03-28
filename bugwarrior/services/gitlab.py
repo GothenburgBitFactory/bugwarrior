@@ -126,11 +126,14 @@ class GitlabClient(ServiceClient):
     def _base_url(self):
         return f"{self.scheme}://{self.host}/api/v4/"
 
-    def _fetch(self, relative_url: str, **kwargs) -> dict:
+    def _fetch(self, relative_url: str, skip_403: bool = False, **kwargs) -> dict:
         """Perform a fetch operation on the gitlab server
 
         :param relative_url: This part will be appended to the base api URL for the call
         :type relative_url: str
+        :param skip_403: Do not raise an exception if a 403 is returned because
+        it may simply indicate a disabled feature.
+        :type skip_403: bool
         :param kwargs: will be sent alongside the request.get call
         :rtype: dict
         """
@@ -142,9 +145,17 @@ class GitlabClient(ServiceClient):
         response = requests.get(
             url, headers=headers, verify=self.verify_ssl, **kwargs)
 
+        if skip_403 and response.status_code == 403:
+            log.debug(f'Skipping {relative_url}. (Is feature disabled?)')
+            return {}
         return self.json_response(response)
 
-    def _fetch_paged(self, relative_url: str, page_size: int = 100) -> list:
+    def _fetch_paged(
+            self,
+            relative_url: str,
+            page_size: int = 100,
+            skip_403: bool = False
+            ) -> list:
         """Make a gitlab REST API call with pagination. Calls will be buffered on pages with size
         ``page_size``.
 
@@ -162,7 +173,7 @@ class GitlabClient(ServiceClient):
         full = []
         detect_broken_gitlab_pagination = []
         while True:
-            items = self._fetch(relative_url, params=params)
+            items = self._fetch(relative_url, skip_403=skip_403, params=params)
             if not items:
                 break
 
@@ -274,9 +285,11 @@ class GitlabClient(ServiceClient):
         :rtype: dict
         """
         return self.get_issues_from_query(
-            f'projects/{rid}/merge_requests?state=opened&{self.assignee_query}')
+            f'projects/{rid}/merge_requests?state=opened&{self.assignee_query}',
+            skip_403=True)
 
-    def get_issues_from_query(self, query: str) -> dict:
+    def get_issues_from_query(
+            self, query: str, skip_403: bool = False) -> dict:
         """Get objects matching a query. Results will be returned in a dictionary where the key
         matches their project ID.
 
@@ -285,7 +298,7 @@ class GitlabClient(ServiceClient):
         :rtype: dict
         """
         issues = {}
-        result = self._fetch_paged(query)
+        result = self._fetch_paged(query, skip_403=skip_403)
         for issue in result:
             issues[issue['id']] = (issue['project_id'], issue)
         return issues
@@ -702,7 +715,7 @@ class GitlabService(IssueService):
         if self.config.include_merge_requests:
             if self.config.merge_request_query:
                 merge_requests = self.gitlab_client.get_issues_from_query(
-                    self.config.merge_request_query)
+                    self.config.merge_request_query, skip_403=True)
             else:
                 if not repos:
                     repos = self.get_all_repos()
