@@ -64,7 +64,7 @@ jobs:
       - name: Set Jira version ${{ matrix.jira-version }}
         run: echo "JIRAVERSION=${{ matrix.jira-version }}" >> $GITHUB_ENV
       - name: Run tests on given architecture
-        uses: uraimo/run-on-arch-action@v2.2.0
+        uses: uraimo/run-on-arch-action@v2.5.0
         with:
           arch: ${{ matrix.architecture }}
           distro: ubuntu20.04
@@ -86,5 +86,6 @@ jobs:
             pip3 install --upgrade pip
           run: |
             source $HOME/.cargo/env
+            apt-get install -qq -y pkg-config libssl-dev
             pip3 install .[all]
             pytest
