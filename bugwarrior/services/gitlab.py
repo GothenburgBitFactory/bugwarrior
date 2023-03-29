@@ -29,7 +29,7 @@ class GitlabConfig(config.ServiceConfig):
     include_regex: typing.Optional[typing.Pattern] = None
     exclude_regex: typing.Optional[typing.Pattern] = None
     membership: bool = False
-    owned: bool = False
+    owned: typing.Optional[bool] = None
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'
     include_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
@@ -98,6 +98,23 @@ class GitlabConfig(config.ServiceConfig):
                 "to filter repositories (e.g., 'owned') because there "
                 "there are too many on gitlab.com to fetch them all.")
         return values
+
+    @pydantic.validator('owned', always=True)
+    def require_owned(cls, v):
+        """
+        Migrate 'owned' field from default False to default True.
+
+        Migration plan:
+            - [X] Warning if 'owned' is undefined.
+            - [ ] Next major version: validation error if 'owned' is undefined.
+            - [ ] Subsequent major version: 'owned' defaults to True.
+        """
+        if v is None:
+            log.warning(
+                "WARNING: Gitlab's 'owned' configuration field should be set "
+                "explicitly. In a future release, this will be an error.")
+            v = False
+        return v
 
 
 class GitlabClient(ServiceClient):
