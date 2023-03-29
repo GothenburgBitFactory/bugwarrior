@@ -599,6 +599,16 @@ class TestGitlabService(ConfigTest):
         issue = dict(description="A very short issue body.  Fixes #42.")
         self.assertEqual(issue["description"], self.service.description(issue))
 
+    def test_undefined_owned_warning(self):
+        self.config['myservice'].pop('owned')
+        self.config['myservice']['membership'] = 'true'
+        self.validate()
+        self.assertEqual(len(self.caplog.records), 1)
+        self.assertIn(
+            "WARNING: Gitlab's 'owned' configuration field should be set "
+            "explicitly. In a future release, this will be an error.",
+            self.caplog.records[0].message)
+
 
 class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     maxDiff = None

@@ -77,6 +77,7 @@ class TestValidation(ConfigTest):
             'host': 'my-git.org',
             'login': 'arbitrary_login',
             'token': 'arbitrary_token',
+            'owned': 'false',
         }
 
     def test_valid(self):
