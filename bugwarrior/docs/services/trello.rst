@@ -9,11 +9,18 @@ Options
 
 .. describe:: trello.api_key
 
-   Your Trello API key, available from https://trello.com/app-key
+   Your Trello API key, available from https://trello.com/app-key.
 
 .. describe:: trello.token
 
-   Trello token, see below for how to get it.
+   Your Trello token, available from https://trello.com/app-key.
+
+   To get your token, click the link "Token" seen bellow:
+       .. image:: pictures/trello_token.png
+
+   Alternatively, go to
+   https://trello.com/1/connect?key=TRELLO_API_KEY&name=bugwarrior&response_type=token&scope=read,write&expiration=never
+   replacing ``TRELLO_API_KEY`` by the key you got on the last step.
 
 .. describe:: trello.include_boards
 
@@ -80,21 +87,6 @@ if they belong to the right lists..
 
 Feel free to use any of the configuration options described in
 :ref:`common_configuration_options` or described in `Service Features`_ below.
-
-.. HINT:
-   Getting your API key and access token
-
-   To get your API key, go to https://trello.com/app-key and copy the given
-   key (this is your ``trello.api_key``).
-
-   To get your ``trello.token``, in https://trello.com/app-key click the link "Token" seen bellow:
-       .. image:: pictures/trello_url.png
-          :height: 1cm
-   Copy the given toke (this is your ``trello.token``).
-
-   Alternatively, go to 
-   https://trello.com/1/connect?key=TRELLO_API_KEY&name=bugwarrior&response_type=token&scope=read,write&expiration=never
-   replacing ``TRELLO_API_KEY`` by the key you got on the last step. 
 
 Service Features
 ----------------
