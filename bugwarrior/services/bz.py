@@ -3,6 +3,7 @@ import logging
 import urllib.parse
 import time
 import typing
+import xmlrpc.client
 
 import bugzilla
 import pydantic
@@ -294,11 +295,7 @@ class BugzillaService(IssueService):
             )]
             if needinfos:
                 last_mod = needinfos[0]['modification_date']
-                # convert from RPC DateTime string to datetime.datetime object
-                mod_date = datetime.datetime.fromtimestamp(
-                    time.mktime(last_mod.timetuple()))
-
-                extra['needinfo_since'] = pytz.UTC.localize(mod_date).isoformat()
+                extra['needinfo_since'] = _ensure_datetime(last_mod).isoformat()
 
             if issue['status'] == 'ASSIGNED':
                 extra['assigned_on'] = self._get_assigned_date(issue)
@@ -309,8 +306,6 @@ class BugzillaService(IssueService):
             yield issue_obj
 
     def _get_assigned_date(self, issue):
-        assigned_date = None
-
         bug = self.bz.getbug(issue['id'])
         history = bug.get_history_raw()['bugs'][0]['history']
 
@@ -318,15 +313,7 @@ class BugzillaService(IssueService):
         for h in reversed(history):
             for change in h['changes']:
                 if change['field_name'] == 'status' and change['added'] == 'ASSIGNED':
-                    assigned_date = h['when']
-
-                    # messy conversion :(
-                    # TODO: create method that's used here and in needinfos time conv above
-                    assigned_date_datetime = datetime.datetime.fromtimestamp(
-                        time.mktime(assigned_date.timetuple()))
-                    assigned_date_str = pytz.UTC.localize(assigned_date_datetime).isoformat()
-
-                    return assigned_date_str
+                    return _ensure_datetime(h['when']).isoformat()
 
 
 def _get_bug_attr(bug, attr):
@@ -334,3 +321,34 @@ def _get_bug_attr(bug, attr):
     if attr in ("longdescs", "flags"):
         return getattr(bug, attr, [])
     return getattr(bug, attr)
+
+
+def _ensure_datetime(
+    timestamp: typing.Union[
+        datetime.datetime,
+        str,
+        xmlrpc.client.DateTime,
+    ],
+) -> datetime.datetime:
+    """Convert "timestamp" into native `datetime.datetime` object.
+
+    Arguments:
+        timestamp: The source time data.
+            * `datetime.datetime`: No-op.
+            * `str`: Assumed to be ISO8601 string timestamp and parsed as such.
+            * `xmlrpc.client.DateTime`: Lacks timezone info. Assuming this is in UTC.
+
+    Returns:
+        Native equivalent of the source date and time.
+    """
+
+    if isinstance(timestamp, datetime.datetime):
+        return timestamp
+    elif isinstance(timestamp, str):
+        return datetime.datetime.fromisoformat(timestamp)
+    elif isinstance(timestamp, xmlrpc.client.DateTime):
+        structured = time.mktime(timestamp.timetuple())
+        naive = datetime.datetime.fromtimestamp(structured)
+        return pytz.UTC.localize(naive)
+    else:
+        raise TypeError("Timestamp conversion from `{0!r}` is not supported.".format(timestamp))
