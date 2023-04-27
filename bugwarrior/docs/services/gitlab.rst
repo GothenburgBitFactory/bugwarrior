@@ -225,8 +225,16 @@ Including Project Owner in Project Name
 
 By default the taskwarrior ``project`` name will not include the owner. To do so set::
 
-    github.project_owner_prefix = True
+    gitlab.project_owner_prefix = True
 
+Synchronizing Issue Content
++++++++++++++++++++++++++++
+
+This service synchronizes most Gitlab fields to UDAs, as described below.
+
+To limit the amount of content synchronized into TaskWarrior (which can help to avoid issues with synchronization), use
+
+ * ``gitlab.body_length=0``` to disable synchronizing the Gitlab Description UDA (or set it to a small value to limit size).
 
 Provided UDA Fields
 -------------------

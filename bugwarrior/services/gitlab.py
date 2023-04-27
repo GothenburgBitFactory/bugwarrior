@@ -3,6 +3,7 @@ import requests
 import typing
 
 import pydantic
+import sys
 import typing_extensions
 
 from bugwarrior import config
@@ -41,6 +42,7 @@ class GitlabConfig(config.ServiceConfig):
     default_mr_priority: DefaultPriority = 'unassigned'
     use_https: bool = True
     verify_ssl: bool = True
+    body_length: int = sys.maxsize
     project_owner_prefix: bool = False
     issue_query: str = ''
     merge_request_query: str = ''
@@ -432,7 +434,7 @@ class GitlabIssue(Issue):
             if self.extra['type'] == 'todo' else self.record['title'])
         description = (
             self.record['body'] if self.extra['type'] == 'todo'
-            else self.record['description'])
+            else self.extra['description'])
 
         if milestone and (
                 self.extra['type'] == 'issue' or
@@ -597,7 +599,8 @@ class GitlabService(IssueService):
                 'project': repo['path'],
                 'namespace': repo['namespace']['full_path'],
                 'type': issue_type,
-                'annotations': self.annotations(repo, issue_url, type_plural, issue, issue_obj)
+                'annotations': self.annotations(repo, issue_url, type_plural, issue, issue_obj),
+                'description': self.description(issue),
             }
             issue_obj.update_extra(extra)
             yield issue_obj
@@ -666,6 +669,15 @@ class GitlabService(IssueService):
         )
         repos = list(filter(self.filter_repos, all_repos))
         return repos
+
+    def description(self, issue):
+        description = issue['description']
+
+        if description:
+            max_length = self.config.body_length
+            description = description[:max_length]
+
+        return description
 
     def issues(self):
 
