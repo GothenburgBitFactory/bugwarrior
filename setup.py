@@ -17,7 +17,7 @@ extras = {
     "kanboard": ["kanboard"],
     "keyring": ["keyring"],
     "phabricator": ["phabricator"],
-    "test": ["flake8", "pytest", "responses", "sphinx", "sphinx-click", "docutils"],
+    "test": ["flake8", "pytest", "responses", "sphinx>=1.0", "sphinx-click", "docutils"],
     "trac": ["offtrac"],
     "versionone": ["v1pysdk"],
 }
