@@ -17,7 +17,10 @@ extras = {
     "kanboard": ["kanboard"],
     "keyring": ["keyring"],
     "phabricator": ["phabricator"],
-    "test": ["flake8", "pytest", "responses", "sphinx", "sphinx-click", "docutils"],
+    "test": ["flake8", "pytest", "responses", "sphinx>=1.0", "sphinx-click", "docutils",
+             # Workaround https://github.com/python/importlib_metadata/issues/406
+             "importlib-metadata<5"
+             ],
     "trac": ["offtrac"],
     "versionone": ["v1pysdk"],
 }
