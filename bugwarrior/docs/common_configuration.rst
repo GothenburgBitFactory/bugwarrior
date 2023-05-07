@@ -40,8 +40,8 @@ Optional options include:
   bugwarrior. Use for tags that you want to keep when replace_tags is set to
   ``True``.
 * ``static_fields``: A comma separated list of attributes that shouldn't be
-  *updated* by bugwarrior.  Use for values that you want to tune manually.
-  Note that service-specific UDAs can be included here.  Default: ``priority``.
+  *updated* by bugwarrior for all services. Use for values that you want to tune
+  manually. Default: ``priority``.
 
 In addition to the ``[general]`` section, sections may be named
 ``[flavor.myflavor]`` and may be selected using the ``--flavor`` option to
@@ -74,6 +74,8 @@ The following options are supported:
 * ``SERVICE.add_tags``: A comma-separated list of tags to add to an issue.  In
   most cases, plain strings will suffice, but you can also specify
   templates.  See the section `Field Templates`_ for more information.
+* ``SERVICE.static_fields``: A comma separated list of attributes that shouldn't be
+  *updated* by bugwarrior. Use for values that you want to tune manually.
 
 .. _field_templates:
 

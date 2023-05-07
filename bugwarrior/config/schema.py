@@ -287,6 +287,7 @@ class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
     default_priority: typing_extensions.Literal['', 'L', 'M', 'H'] = 'M'
     add_tags: ConfigList = ConfigList([])
     description_template: str = ''
+    static_fields = ConfigList([])
 
     @pydantic.root_validator
     def compute_templates(cls, values):

@@ -1,3 +1,4 @@
+import itertools
 import json
 import os
 import re
@@ -384,7 +385,8 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
             # Drop static fields from the upstream issue.  We don't want to
             # overwrite local changes to fields we declare static.
-            for field in main_config.static_fields:
+            for field in itertools.chain(main_config.static_fields,
+                                         issue.origin['static_fields']):
                 if field in issue_dict:
                     del issue_dict[field]
 
