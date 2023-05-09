@@ -150,12 +150,14 @@ class GitlabIssue(Issue):
             self.record['id'] if self.extra['type'] == 'todo'
             else self.record['iid'])
         priority = self.get_priority()
-        title = (
-            'Todo from %s for %s' % (author['name'], self.extra['project'])
-            if self.extra['type'] == 'todo' else self.record['title'])
+        # title = (
+        #     'Todo from %s for %s' % (author['name'], self.extra['project'])
+        #     if self.extra['type'] == 'todo' else self.record['title'])
         description = (
             self.record['body'] if self.extra['type'] == 'todo'
             else self.record['description'])
+
+        title = ( description if self.extra['type'] == 'todo' else self.record['title'])
 
         if milestone and (
                 self.extra['type'] == 'issue' or
