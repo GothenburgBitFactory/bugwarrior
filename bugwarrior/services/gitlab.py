@@ -12,6 +12,7 @@ from six.moves.configparser import NoOptionError
 import re
 import requests
 import six
+import os
 
 from jinja2 import Template
 

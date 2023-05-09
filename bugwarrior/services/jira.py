@@ -54,7 +54,8 @@ def _parse_sprint_string(sprint):
     fields = sum((entry.rsplit(',', 1) for entry in entries), [])
     return dict(zip(fields[::2], fields[1::2]))
 
-
+import re
+regex = re.compile('Sprint\d*')
 class JiraIssue(Issue):
     ISSUE_TYPE = 'jiraissuetype'
     SUMMARY = 'jirasummary'
@@ -66,10 +67,18 @@ class JiraIssue(Issue):
     CREATED_AT = 'jiracreatedts'
     STATUS = 'jirastatus'
     SUBTASKS = 'jirasubtasks'
-    ASSIGNEE = 'jiraassignee'
-    REPORTER = 'jirareporter'
+    EPIC = 'jiraparent'
+    POINTS = 'estimate'
 
     UDAS = {
+        EPIC: {
+            'type': 'string',
+            'label': 'Epic Parent'
+        },
+        POINTS: {
+            'type': 'string',
+            'label': 'Story Points'
+        },
         ISSUE_TYPE: {
             'type': 'string',
             'label': 'Issue Type'
@@ -154,6 +163,8 @@ class JiraIssue(Issue):
             self.SUBTASKS: self.get_subtasks(),
             self.ASSIGNEE: self.get_assignee(),
             self.REPORTER: self.get_reporter(),
+            self.EPIC: self.extra.get('jiraparent'),
+            self.POINTS: self.extra.get('jirapoints'),
         }
 
     def get_entry(self):
@@ -188,7 +199,10 @@ class JiraIssue(Issue):
         sprints = self.__get_sprints()
         for sprint in sprints:
             # Extract the name and render it into a label
-            context.update({'label': sprint['name'].replace(' ', '')})
+            NAME = sprint['name'].replace(' ', '')
+            if MATCH := regex.findall(NAME):
+                NAME = MATCH[0]
+            context.update({'label': NAME})
             tags.append(label_template.render(context))
 
         return tags
@@ -377,6 +391,22 @@ class JiraService(IssueService):
             issue_obj.get_processed_url(issue_obj.get_url())
         )
 
+
+    def get_parent(self, iss):
+        if p := getattr(iss.fields, 'parent', None):
+            return next(self.jira.search_issues(f'KEY={p.key}'))
+
+
+    def find_parent(self, iss):
+        parentType = None
+        parent = iss
+        while parentType != 'Epic':
+            if parent := self.get_parent(parent):
+                parentType = parent.fields.issuetype.name
+            else:
+                return
+        return parent
+
     def issues(self):
         cases = self.jira.search_issues(self.query, maxResults=None)
 
@@ -385,9 +415,12 @@ class JiraService(IssueService):
             jira_version = self.config.getint(self.target, 'jira.version')
 
         for case in cases:
+
             issue = self.get_issue_for_record(case.raw)
             extra = {
                 'jira_version': jira_version,
+                'jiraparent': getattr(self.find_parent(case), 'key', None),
+                'jirapoints': getattr(case.fields, 'customfield_10002', None),
             }
             if jira_version > 4:
                 extra.update({
