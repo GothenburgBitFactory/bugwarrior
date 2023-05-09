@@ -69,6 +69,8 @@ class JiraIssue(Issue):
     SUBTASKS = 'jirasubtasks'
     EPIC = 'jiraparent'
     POINTS = 'estimate'
+    ASSIGNEE = 'jiraassignee'
+    REPORTER = 'jirareporter'
 
     UDAS = {
         EPIC: {
@@ -297,11 +299,13 @@ class JiraIssue(Issue):
 
     def get_assignee(self):
         # email address "better" than accountId (hex) or displayName (with spaces)
-        return self.record['fields']['assignee']['emailAddress']
+        record = self.record['fields']['assignee']
+        return record.get('emailAddress') or record.get('displayName')
 
     def get_reporter(self):
         # email address "better" than accountId (hex) or displayName (with spaces)
-        return self.record['fields']['reporter']['emailAddress']
+        record = self.record['fields']['reporter']
+        return record.get('emailAddress') or record.get('displayName')
 
 
 class JiraService(IssueService):
