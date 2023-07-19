@@ -3,9 +3,10 @@ release-next
 
 Major Changes
 
-- Top-level bugwarrior command (https://github.com/ralphbean/bugwarrior/pull/882)
+- Top-level bugwarrior command. (https://github.com/ralphbean/bugwarrior/pull/882)
 - Enhanced configuration validation. (https://github.com/ralphbean/bugwarrior/pull/849)
 - Survive service failue. (https://github.com/ralphbean/bugwarrior/pull/825)
+- TOML configuration. (https://github.com/ralphbean/bugwarrior/issues/873)
 
 New and Removed Services
 
