@@ -1,11 +1,13 @@
 release-next
 ------------
 
+*NOTE: In addition to these changes there are a number of new validation warnings and errors that should be minded when upgrading.*
+
 Major Changes
 
 - Top-level bugwarrior command. (https://github.com/ralphbean/bugwarrior/pull/882)
 - Enhanced configuration validation. (https://github.com/ralphbean/bugwarrior/pull/849)
-- Survive service failue. (https://github.com/ralphbean/bugwarrior/pull/825)
+- Survive service failure. (https://github.com/ralphbean/bugwarrior/pull/825)
 - TOML configuration. (https://github.com/ralphbean/bugwarrior/issues/873)
 
 New and Removed Services
@@ -18,16 +20,16 @@ New and Removed Services
 
 Notable Changes
 
+- bitbucket: Remove basic auth and update oauth2 workflow. (https://github.com/ralphbean/bugwarrior/pull/888)
 - gitlab: Merge requests and todo's will respect default_priority setting rather than being set to 'H'. (https://github.com/ralphbean/bugwarrior/pull/816)
 - gitlab: Added distinct default priorities for issues, merge requests, and todo's. (https://github.com/ralphbean/bugwarrior/pull/816)
 - gitlab: Query support. (https://github.com/ralphbean/bugwarrior/pull/876)
 - gitlab: Exclude archived projects by default. (https://github.com/ralphbean/bugwarrior/pull/938)
-- gitlab,bitbucket: Deprecate filter_merge_requests in favor of inverse include_merge_requests.(https://github.com/ralphbean/bugwarrior/pull/881)
-- bitbucket: Remove basic auth and update oauth2 workflow. (https://github.com/ralphbean/bugwarrior/pull/888)
 - jira: Personal Access Token (PAT) authentication support. (https://github.com/ralphbean/bugwarrior/pull/853)
 - redmine: Query support. (https://github.com/ralphbean/bugwarrior/pull/886)
 - github: Pull issues by URL. (https://github.com/ralphbean/bugwarrior/pull/898)
 - notifications: Add applescript backend. (https://github.com/ralphbean/bugwarrior/pull/948)
+- youtrack: Replace password with token. (https://github.com/ralphbean/bugwarrior/pull/982)
 
 1.7.0
 -----
