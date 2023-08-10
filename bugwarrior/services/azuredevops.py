@@ -12,20 +12,6 @@ from bugwarrior.services import IssueService, Issue, ServiceClient
 
 log = logging.getLogger(__name__)
 
-
-class PersonalAccessToken(str):
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, pat):
-        if pat[0] != ":":
-            pat = f":{pat}"
-        return base64.b64encode(pat.encode("ascii")).decode("ascii")
-
-
 class EscapedStr(str):
 
     @classmethod
@@ -39,7 +25,7 @@ class EscapedStr(str):
 
 class AzureDevopsConfig(config.ServiceConfig):
     service: typing_extensions.Literal['azuredevops']
-    PAT: PersonalAccessToken
+    PAT: str
     project: EscapedStr
     organization: EscapedStr
 
@@ -66,7 +52,9 @@ def format_item(item):
 
 class AzureDevopsClient(ServiceClient):
     def __init__(self, pat, org, project, host):
-        self.pat = pat
+        if pat[0] != ":":
+            pat = f":{pat}"
+        self.pat = base64.b64encode(pat.encode("ascii")).decode("ascii")
         self.organization = org
         self.project = project
         self.host = host
@@ -88,6 +76,9 @@ class AzureDevopsClient(ServiceClient):
     def get_work_items_from_query(self, query):
         data = str({"query": query})
         resp = self.session.post(f"{self.base_url}/wiql", data=data, params=self.params)
+        if resp.status_code == 401:
+            log.critical(f"HTTP 401 - Error autrenticating! Please check your PAT in the configuration")
+            sys.exit(1)        
         if resp.status_code == 400 and resp.json(
         )['typeKey'] == "WorkItemTrackingQueryResultSizeLimitExceededException":
             log.critical("Too many azure devops results in query, please "
@@ -194,7 +185,7 @@ class AzureDevopsService(IssueService):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self.client = AzureDevopsClient(
-            pat=self.config.PAT,
+            pat=self.get_password('PAT'),
             project=self.config.project,
             org=self.config.organization,
             host=self.config.host
@@ -260,3 +251,7 @@ class AzureDevopsService(IssueService):
     def get_owner(self, issue):
         # Issue filtering is implemented as part of issue aggregation.
         pass
+
+    @staticmethod
+    def get_keyring_service(config):
+        return f"azuredevops://{config.organization}@{config.host}"
