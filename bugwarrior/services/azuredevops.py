@@ -12,6 +12,7 @@ from bugwarrior.services import IssueService, Issue, ServiceClient
 
 log = logging.getLogger(__name__)
 
+
 class EscapedStr(str):
 
     @classmethod
@@ -77,8 +78,8 @@ class AzureDevopsClient(ServiceClient):
         data = str({"query": query})
         resp = self.session.post(f"{self.base_url}/wiql", data=data, params=self.params)
         if resp.status_code == 401:
-            log.critical(f"HTTP 401 - Error authenticating! Please check your PAT in the configuration")
-            sys.exit(1)        
+            log.critical("HTTP 401 - Error authenticating! Please check 'PAT' in the configuration")
+            sys.exit(1)
         if resp.status_code == 400 and resp.json(
         )['typeKey'] == "WorkItemTrackingQueryResultSizeLimitExceededException":
             log.critical("Too many azure devops results in query, please "
