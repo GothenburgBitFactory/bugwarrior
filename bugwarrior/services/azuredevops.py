@@ -77,7 +77,7 @@ class AzureDevopsClient(ServiceClient):
         data = str({"query": query})
         resp = self.session.post(f"{self.base_url}/wiql", data=data, params=self.params)
         if resp.status_code == 401:
-            log.critical(f"HTTP 401 - Error autrenticating! Please check your PAT in the configuration")
+            log.critical(f"HTTP 401 - Error authenticating! Please check your PAT in the configuration")
             sys.exit(1)        
         if resp.status_code == 400 and resp.json(
         )['typeKey'] == "WorkItemTrackingQueryResultSizeLimitExceededException":
