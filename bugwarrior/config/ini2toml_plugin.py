@@ -67,6 +67,7 @@ CONFIGLIST = {
     'deck': ['include_board_ids', 'exclude_board_ids'],
     'bugzilla': ['open_statuses'],
     'pagure': ['include_repos', 'exclude_repos'],
+    'jira': ['start_states'],
 }
 
 

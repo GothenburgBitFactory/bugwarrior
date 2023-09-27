@@ -90,6 +90,7 @@ class JiraConfig(config.ServiceConfig):
     import_sprints_as_tags: bool = False
     label_template: str = '{{label}}'
     query: str = ''
+    start_states: config.ConfigList = config.ConfigList([])
     use_cookies: bool = False
     verify_ssl: bool = True
     version: int = 5
@@ -243,7 +244,9 @@ class JiraIssue(Issue):
 
         extra_fields = self.get_extra_fields()
 
-        return {**fixed_fields, **extra_fields}
+        status_field = self.get_started_field()
+
+        return {**fixed_fields, **extra_fields, **status_field}
 
     def get_extra_fields(self):
         if self.extra['extra_fields'] is None:
@@ -251,6 +254,12 @@ class JiraIssue(Issue):
 
         return {extra_field.label: extra_field.extract_value(
             self.record['fields']) for extra_field in self.extra['extra_fields']}
+
+    def get_started_field(self):
+        if self.extra['start_states'] is []:
+            return {}
+
+        return {'_started': self.get_status() in self.extra['start_states']}
 
     def get_entry(self):
         created_at = self.record['fields']['created']
@@ -370,6 +379,9 @@ class JiraService(IssueService):
         _skip_server = kw.pop('_skip_server', False)
         super().__init__(*args, **kw)
 
+        if len(self.config.start_states) > 0:
+            log.info("Will manage start/stop state for issues based on Jira states: %r", self.config.start_states)
+
         default_query = 'assignee="' + \
             self.config.username.replace("@", "\\u0040") + \
             '" AND resolution is null'
@@ -453,6 +465,7 @@ class JiraService(IssueService):
             issue = self.get_issue_for_record(case.raw)
             extra = {
                 'jira_version': self.config.version,
+                'start_states': self.config.start_states,
                 'body': self.body(issue),
                 'extra_fields': self.config.extra_fields,
             }

@@ -140,6 +140,30 @@ to all fields on the Taskwarrior task if needed.
    See :ref:`field_templates` for more details regarding how templates
    are processed.
 
+Reflect Jira status in start/stop state
++++++++++++++++++++++++++++++++++++++++
+
+You can instruct Jira issue tracker to start/stop Taskwarrior tasks based on the Jira issue state.
+
+.. config::
+    :fragment: jira
+
+    jira.start_states = In Progress,Review
+
+Now if tracker is pulling issue that is in `In Progress` or `Review` state in Jira, it will make sure it is started in Taskwarrior, otherwise it will stop it. So if you configure this, Jira works as a source of truth: if you stop the task in Taskwarrior, but it is still in `In Progress` in Jira, on next Bugwarrior pull it will be automatically started again.
+
+.. note::
+
+   Note that status names are case sensitive and although they might be displayed in upper case in Jira UI, in API the value might be different. Take a look at some task synchronized from Jira like `task 123` at a `jirastatus` UDA field. It will help to determine correct name of the state.
+
+.. note::
+
+   Note different Jira projects you might have issues in might be using different state names, so if they are not compatible, you might need more Jira config sections.
+
+.. warning::
+
+   If you configure the state names incorrectly (e.g. because of this case sensitivity mentione above), all your Jira tasks will be stopped. This is because `start_states` is not null (i.e. you enabled status management) and Jira status did not matched your settings (i.e. task will be stopped).
+
 Kerberos authentication
 +++++++++++++++++++++++
 

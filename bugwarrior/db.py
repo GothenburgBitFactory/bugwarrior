@@ -377,6 +377,24 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             seen_uuids.add(existing_taskwarrior_uuid)
             _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
 
+            # Manage task start/stop state if we are supposed to
+            if '_started' in issue_dict:
+                if issue_dict['_started']:
+                    if 'start' not in task or task['start'] is None:
+                        log.debug("Starting task %s: %s", task['uuid'], task['description'])
+                        try:
+                            task = tw.task_start(uuid=existing_taskwarrior_uuid)
+                        except TaskwarriorError as e:
+                            log.exception("Unable to start task: %s" % e.stderr)
+                else:
+                    if 'start' in task and task['start'] is not None:
+                        log.debug("Stopping task %s: %s", task['uuid'], task['description'])
+                        try:
+                            task = tw.task_stop(uuid=existing_taskwarrior_uuid)
+                        except TaskwarriorError as e:
+                            log.exception("Unable to start task: %s" % e.stderr)
+                del(issue_dict['_started'])
+
             if task['status'] == 'completed':
                 # Reopen task
                 task['status'] = 'pending'
@@ -419,14 +437,26 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         if notify:
             send_notification(issue, 'Created', conf['notifications'])
 
+        _started = None
+        if '_started' in issue:
+            _started = issue['_started']
+            del(issue['_started'])
+
         try:
             new_task = tw.task_add(**issue)
             if 'end' in issue and issue['end']:
                 tw.task_done(uuid=new_task['uuid'])
+            else:
+                # Start the task if we are supposed to
+                if _started is not None:
+                    if _started:
+                        log.debug("Starting task %s: %s", new_task['uuid'], new_task['description'])
+                        tw.task_start(uuid=new_task['uuid'])
         except TaskwarriorError as e:
             log.exception("Unable to add task: %s" % e.stderr)
         else:
             seen_uuids.add(new_task['uuid'])
+
 
     log.info("Updating %i tasks", len(issue_updates['changed']))
     for issue in issue_updates['changed']:
