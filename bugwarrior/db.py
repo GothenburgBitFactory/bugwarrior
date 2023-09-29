@@ -8,6 +8,7 @@ import dogpile.cache
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
+from bugwarrior.collect import get_service
 from bugwarrior.notifications import send_notification
 
 import logging
@@ -501,8 +502,6 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
 
 def build_key_list(targets):
-    from bugwarrior.services import get_service
-
     keys = {}
     for target in targets:
         keys[target] = get_service(target).ISSUE_CLASS.UNIQUE_KEY
@@ -547,9 +546,6 @@ def build_uda_config_overrides(targets):
         }
 
     """
-
-    from bugwarrior.services import get_service
-
     targets_udas = {}
     for target in targets:
         targets_udas.update(get_service(target).ISSUE_CLASS.UDAS)

@@ -9,7 +9,7 @@ import getpass
 import click
 
 from bugwarrior.config import get_keyring, get_config_path, load_config
-from bugwarrior.services import aggregate_issues, get_service
+from bugwarrior.collect import aggregate_issues, get_service
 from bugwarrior.db import (
     get_defined_udas_as_strings,
     synchronize,

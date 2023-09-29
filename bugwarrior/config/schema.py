@@ -9,7 +9,7 @@ import pydantic.error_wrappers
 import taskw
 import typing_extensions
 
-from bugwarrior.services import get_service
+from bugwarrior.collect import get_service
 
 from .data import BugwarriorData, get_data_path
 
