@@ -41,7 +41,7 @@ class GitlabConfig(config.ServiceConfig):
     default_todo_priority: DefaultPriority = 'unassigned'
     default_mr_priority: DefaultPriority = 'unassigned'
     use_https: bool = True
-    verify_ssl: bool = True
+    verify_ssl: typing.Union[bool, config.ExpandedPath] = True
     body_length: int = sys.maxsize
     project_owner_prefix: bool = False
     issue_query: str = ''

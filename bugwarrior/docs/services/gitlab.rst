@@ -269,10 +269,20 @@ If your Gitlab instance is only available over HTTP, set:
 
     gitlab.use_https = False
 
-Do Not Verify SSL Certificate
-+++++++++++++++++++++++++++++
+SSL Certificate Verification
+++++++++++++++++++++++++++++
 
-If you want to ignore verifying the SSL certificate, set:
+For secure connections using certificates signed by public certificate
+authorities, verification is performed automatically. For non-public CAs or
+self-signed certificates, the ``verify_ssl`` setting can be set to the path to
+a certificate file:
+
+.. config::
+   :fragment: gitlab
+
+   gitlab.verify_ssl = ~/certs/local-CA.pem
+
+If you just want to ignore any problems verifying the SSL certificate, set:
 
 .. config::
     :fragment: gitlab
