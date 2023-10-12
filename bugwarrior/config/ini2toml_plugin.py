@@ -3,6 +3,7 @@ import re
 import typing
 
 from ini2toml.types import IntermediateRepr, Translator
+import pydantic
 from pydantic import BaseModel
 
 from .schema import ConfigList
@@ -27,7 +28,7 @@ BOOLS = {
     'gitlab': ['filter_merge_requests', 'membership', 'owned',
                'import_labels_as_tags', 'include_merge_requests',
                'include_issues', 'include_todos', 'include_all_todos',
-               'use_https', 'verify_ssl', 'project_owner_prefix'],
+               'use_https', 'project_owner_prefix'],
     'jira': ['import_labels_as_tags', 'import_sprints_as_tags', 'use_cookies',
              'verify_ssl'],
     'pagure': ['import_tags'],
@@ -143,6 +144,12 @@ def process_values(doc: IntermediateRepr) -> IntermediateRepr:
                     to_list(section, k)
                 for k in BOOLS.get(service, []):
                     to_bool(section, k)
+                if service == 'gitlab' and 'verify_ssl' in section.keys():
+                    try:
+                        to_bool(section, 'verify_ssl')
+                    except pydantic.error_wrappers.ValidationError:
+                        # verify_ssl is allowed to be a path
+                        pass
 
             if name == 'activecollab2' and 'projects' in section:
                 section['projects'] = ActiveCollabProjects.validate(
