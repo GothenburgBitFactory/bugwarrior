@@ -70,7 +70,7 @@ def parse_file(configpath: str) -> dict:
             config = tomllib.load(f)
     else:
         rawconfig = BugwarriorConfigParser()
-        rawconfig.readfp(codecs.open(configpath, "r", "utf-8",))
+        rawconfig.read_file(codecs.open(configpath, "r", "utf-8",))
         config = {}
         for section in rawconfig.sections():
             if section in ['hooks', 'notifications']:
