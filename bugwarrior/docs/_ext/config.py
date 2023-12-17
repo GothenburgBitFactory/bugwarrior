@@ -36,9 +36,11 @@ class Config(SphinxDirective):
         tomllines = tomltext.split('\n')
         for i in range(0, len(self.content)):  # mutate self.content
             # ini2toml removes newlines within sections, so we leave them as is
-            if self.content[i] == '' and tomllines != '':
+            if self.content[i] == '' and tomllines[0] != '':
                 continue
             self.content[i] = tomllines.pop(0)
+        if any(tomllines):
+            raise ValueError(f'Unconsumed toml: {tomllines}')
 
         toml = self._make_tab('toml')
 
