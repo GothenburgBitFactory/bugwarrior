@@ -1,6 +1,8 @@
 release-next
 ------------
 
+Bugwarrior has a new home! The [Bugwarrior repository](https://github.com/GothenburgBitFactory/bugwarrior) has been graciously transferred by [@ralphbean](https://github.com/ralphbean), the original author, to the [GothenburgBitFactory](https://gothenburgbitfactory.org/) organization which also maintains Taskwarrior.
+
 *NOTE: In addition to these changes there are a number of new validation warnings and errors that should be minded when upgrading.*
 
 Major Changes
