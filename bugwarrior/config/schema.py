@@ -216,7 +216,7 @@ def raise_validation_error(msg, config_path, no_errors=1):
         ('Validation error' if no_errors == 1
          else f'{no_errors} validation errors') +
         f' found in {config_path}\n'
-        f'See https://bugwarrior-docs.readthedocs.io\n\n{msg}'
+        f'See https://bugwarrior.readthedocs.io\n\n{msg}'
     )
     sys.exit(1)
 

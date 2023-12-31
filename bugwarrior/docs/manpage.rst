@@ -55,4 +55,4 @@ If ``$XDG_CONFIG_DIRS`` is either not set or empty, a value equal to
 See Also
 --------
 
-https://bugwarrior-docs.readthedocs.io
+https://bugwarrior.readthedocs.io
