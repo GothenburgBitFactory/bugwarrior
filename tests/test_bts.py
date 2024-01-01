@@ -1,4 +1,10 @@
-from unittest import mock
+import sys
+from unittest import mock, SkipTest
+
+if sys.version_info >= (3, 11):
+    raise SkipTest(
+        "Python-3.11+ not supported. "
+        "See <https://github.com/venthur/python-debianbts/issues/59>.")
 
 from bugwarrior.services import bts
 

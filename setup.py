@@ -10,7 +10,7 @@ long_description = readme.split('split here', 1)[1]
 
 extras = {
     "activecollab": ["pypandoc", "pyac>=0.1.5"],
-    "bts": ["PySimpleSOAP", "python-debianbts>=2.6.1"],
+    "bts": ["python-debianbts>=2.6.1"],
     "bugzilla": ["python-bugzilla>=2.0.0"],
     "gmail": ["google-api-python-client", "google-auth-oauthlib"],
     "ini2toml": ["ini2toml[full]"],
