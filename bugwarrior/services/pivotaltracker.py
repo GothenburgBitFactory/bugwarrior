@@ -75,10 +75,6 @@ class PivotalTrackerIssue(Issue):
         _, issue = issue
         return issue.get('pivotalowners')
 
-    def get_author(self, issue):
-        _, issue = issue
-        return issue.get('pivotalrequesters')
-
     def to_taskwarrior(self):
         description = self.record.get('description')
         created = self.parse_date(self.record.get('created_at'))
