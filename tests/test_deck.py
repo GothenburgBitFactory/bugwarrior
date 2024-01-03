@@ -1,7 +1,7 @@
+import dataclasses
 import datetime
 from unittest import mock
 
-import pydantic
 from dateutil.tz import tzutc
 
 from bugwarrior.collect import TaskConstructor
@@ -10,8 +10,7 @@ from bugwarrior.services.deck import NextcloudDeckClient, NextcloudDeckService
 from .base import AbstractServiceTest, ServiceTest
 
 
-# NOTE: replace with stdlib dataclasses.dataclass once python-3.6 is dropped
-@pydantic.dataclasses.dataclass
+@dataclasses.dataclass
 class TestData:
     arbitrary_card = {
         "title": "check that nextcloud deck integration works",
