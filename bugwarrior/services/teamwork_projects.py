@@ -76,11 +76,6 @@ class TeamworkIssue(Issue):
                 self.user_id in self.record.get("responsible-party-ids", "")):
             return self.name
 
-    def get_author(self, issue):
-        if issue:
-            author = self.record["creator-firstname"] + " " + self.record["creator-lastname"]
-            return author
-
     def get_task_url(self):
         return self.extra["host"] + "/#/tasks/" + str(self.record["id"])
 

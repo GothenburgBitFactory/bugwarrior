@@ -138,4 +138,3 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
         issue.name = "Greg McCoy"
         self.assertEqual(issue.get_taskwarrior_record(), expected_data)
         self.assertEqual(issue.get_owner(), "Greg McCoy")
-        self.assertEqual(issue.get_author(issue), "Greg McCoy")

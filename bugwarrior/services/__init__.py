@@ -82,10 +82,6 @@ class IssueService(abc.ABC):
         """ Override this for filtering on tickets """
         raise NotImplementedError()
 
-    def get_author(self, issue):
-        """ Override this for filtering on tickets """
-        raise NotImplementedError()
-
     @abc.abstractmethod
     def issues(self):
         """ Returns a list of dicts representing issues from a remote service.
