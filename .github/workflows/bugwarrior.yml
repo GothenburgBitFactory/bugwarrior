@@ -81,7 +81,7 @@ jobs:
             source $HOME/.cargo/env
 
             apt-get install -qq -y \
-              git libffi-dev libssl-dev pandoc python3-pip taskwarrior
+              git libffi-dev libjpeg-dev libssl-dev pandoc python3-pip taskwarrior
             task --version
             pip3 install --upgrade pip
           run: |
