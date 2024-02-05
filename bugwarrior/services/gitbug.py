@@ -1,6 +1,5 @@
 import logging
 import os
-import pathlib
 import signal
 import subprocess
 import sys
@@ -17,7 +16,7 @@ log = logging.getLogger(__name__)
 class GitBugConfig(config.ServiceConfig):
     service: typing_extensions.Literal['gitbug']
 
-    path: pathlib.Path
+    path: config.ExpandedPath
 
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'
