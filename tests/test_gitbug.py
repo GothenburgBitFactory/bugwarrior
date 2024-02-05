@@ -4,9 +4,9 @@ from unittest import mock
 import dateutil
 import pydantic
 
-from bugwarrior.services.gitbug import GitBugClient, GitBugService
+from bugwarrior.services.gitbug import GitBugClient, GitBugConfig, GitBugService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
 
 # NOTE: replace with stdlib dataclasses.dataclass once python-3.6 is dropped
@@ -83,3 +83,13 @@ class TestGitBugIssue(AbstractServiceTest, ServiceTest):
         }
 
         self.assertEqual(issue.get_taskwarrior_record(), expected)
+
+
+class TestGitBugConfig(ConfigTest):
+    def setUp(self):
+        super().setUp()
+        self.config = GitBugConfig(service="gitbug", path="~/custom-gitbug-repo")
+
+    def test_home_path_expansion(self):
+        expected = self.tempdir + "/custom-gitbug-repo"
+        self.assertEqual(self.config.path, expected)
