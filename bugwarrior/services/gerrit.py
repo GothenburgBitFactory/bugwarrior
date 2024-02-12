@@ -24,6 +24,8 @@ class GerritIssue(Issue):
     FOREIGN_ID = 'gerritid'
     BRANCH = 'gerritbranch'
     TOPIC = 'gerrittopic'
+    STATUS = 'gerritstatus'
+    WIP = 'gerritwip'
 
     UDAS = {
         SUMMARY: {
@@ -46,6 +48,14 @@ class GerritIssue(Issue):
             'type': 'string',
             'label': 'Gerrit Topic',
         },
+        STATUS: {
+            'type': 'string',
+            'label': 'Gerrit Status',
+        },
+        WIP: {
+            'type': 'string',
+            'label': 'Gerrit Work in Progress',
+        },
     }
     UNIQUE_KEY = (URL, )
 
@@ -61,6 +71,8 @@ class GerritIssue(Issue):
             self.SUMMARY: self.record['subject'],
             self.BRANCH: self.record['branch'],
             self.TOPIC: self.record.get('topic', 'notopic'),
+            self.STATUS: self.record.get('status', ''),
+            self.WIP: 'wip' if self.record.get('work_in_progress', False) else '',
         }
 
     def get_default_description(self):

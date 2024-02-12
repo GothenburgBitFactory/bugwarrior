@@ -207,6 +207,7 @@ class GithubIssue(Issue):
     USER = 'githubuser'
     NAMESPACE = 'githubnamespace'
     STATE = 'githubstate'
+    DRAFT = 'githubdraft'
 
     UDAS = {
         TITLE: {
@@ -260,7 +261,11 @@ class GithubIssue(Issue):
         STATE: {
             'type': 'string',
             'label': 'GitHub State',
-        }
+        },
+        DRAFT: {
+            'type': 'string',
+            'label': 'GitHub Draft',
+        },
     }
     UNIQUE_KEY = (URL, TYPE,)
 
@@ -293,7 +298,8 @@ class GithubIssue(Issue):
             self.UPDATED_AT: updated,
             self.CLOSED_AT: closed,
             self.NAMESPACE: self.extra['namespace'],
-            self.STATE: self.record.get('state', '')
+            self.STATE: self.record.get('state', ''),
+            self.DRAFT: 'draft' if self.record.get('draft', False) else '',
         }
 
     def get_tags(self):
