@@ -41,6 +41,17 @@ You do not need to specify the ``login_name``, but it can be useful to avoid
 accidentally fetching data from the wrong account. (This also allows multiple
 targets with the same login to share the same authentication token.)
 
+Thread Limit
+-----------------
+
+Gmail search results are capped at 100 max results by default, but may be
+adjusted to meet your needs by specifying ``email_limit``:
+
+.. config::
+    :fragment: gmail
+
+    gmail.thread_limit = 1000
+
 Authentication
 --------------
 

@@ -24,6 +24,7 @@ class GmailConfig(config.ServiceConfig):
         '~/.gmail_client_secret.json')
     query: str = 'label:Starred'
     login_name: str = 'me'
+    thread_limit: int = 100
 
 
 class GmailIssue(Issue):
@@ -178,12 +179,24 @@ class GmailService(IssueService):
 
     def get_threads(self):
         thread_service = self.gmail_api.users().threads()
+        threads = []
 
-        result = thread_service.list(
-            userId=self.config.login_name, q=self.config.query).execute()
-        return [
-            thread_service.get(userId='me', id=thread['id']).execute()
-            for thread in result.get('threads', [])]
+        pageToken = None
+
+        while len(threads) < self.config.thread_limit:
+            maxResults = min(100, self.config.thread_limit - len(threads))
+
+            result = thread_service.list(userId=self.config.login_name, q=self.config.query,
+                                         maxResults=maxResults, pageToken=pageToken).execute()
+
+            for thread in result.get('threads', []):
+                threads.append(thread_service.get(userId='me', id=thread['id']).execute())
+
+            pageToken = result.get('nextPageToken', None)
+            if not pageToken:
+                break
+
+        return threads
 
     def annotations(self, issue):
         sender = issue.extra['last_sender_name']
