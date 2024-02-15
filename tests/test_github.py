@@ -31,7 +31,8 @@ ARBITRARY_ISSUE = {
     'closed_at': ARBITRARY_CLOSED.isoformat(),
     'updated_at': ARBITRARY_UPDATED.isoformat(),
     'repo': 'arbitrary_username/arbitrary_repo',
-    'state': 'closed'
+    'state': 'closed',
+    'draft': True,
 }
 ARBITRARY_EXTRA = {
     'project': 'one',
@@ -79,6 +80,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             issue.USER: ARBITRARY_ISSUE['user']['login'],
             issue.NAMESPACE: 'arbitrary_username',
             issue.STATE: 'closed',
+            issue.DRAFT: 'draft',
         }
         actual_output = issue.to_taskwarrior()
 
@@ -126,6 +128,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'githubbody': 'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubclosedon': ARBITRARY_CLOSED,
+            'githubdraft': 'draft',
             'githubmilestone': 'alpha',
             'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
@@ -185,6 +188,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
             'githubbody': 'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubclosedon': ARBITRARY_CLOSED,
+            'githubdraft': 'draft',
             'githubmilestone': 'alpha',
             'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,

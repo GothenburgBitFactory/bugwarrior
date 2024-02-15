@@ -19,6 +19,8 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
         '_number': 1,
         'branch': 'master',
         'topic': 'test-topic',
+        'status': 'new',
+        'work_in_progress': True,
         'subject': 'this is a title',
         'messages': [{'author': {'username': 'Iam Author'},
                       'message': 'this is a message',
@@ -50,10 +52,12 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'priority': 'M',
             'project': 'nova',
             'gerritid': 1,
+            'gerritstatus': 'new',
             'gerritsummary': 'this is a title',
             'gerriturl': 'this is a url',
             'gerritbranch': 'master',
             'gerrittopic': 'test-topic',
+            'gerritwip': 'wip',
             'tags': [],
         }
 
@@ -73,9 +77,11 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'description': '(bw)PR#1 - this is a title .. https://one.com/#/c/1/',
             'gerritid': 1,
             'gerritsummary': 'this is a title',
+            'gerritstatus': 'new',
             'gerriturl': 'https://one.com/#/c/1/',
             'gerritbranch': 'master',
             'gerrittopic': 'test-topic',
+            'gerritwip': 'wip',
             'priority': 'M',
             'project': 'nova',
             'tags': []}
