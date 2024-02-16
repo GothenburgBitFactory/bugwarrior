@@ -25,7 +25,7 @@ class GerritIssue(Issue):
     BRANCH = 'gerritbranch'
     TOPIC = 'gerrittopic'
     STATUS = 'gerritstatus'
-    WIP = 'gerritwip'
+    WORK_IN_PROGRESS = 'gerritwip'
 
     UDAS = {
         SUMMARY: {
@@ -52,8 +52,8 @@ class GerritIssue(Issue):
             'type': 'string',
             'label': 'Gerrit Status',
         },
-        WIP: {
-            'type': 'string',
+        WORK_IN_PROGRESS: {
+            'type': 'numeric',
             'label': 'Gerrit Work in Progress',
         },
     }
@@ -72,7 +72,7 @@ class GerritIssue(Issue):
             self.BRANCH: self.record['branch'],
             self.TOPIC: self.record.get('topic', 'notopic'),
             self.STATUS: self.record.get('status', ''),
-            self.WIP: 'wip' if self.record.get('work_in_progress', False) else '',
+            self.WORK_IN_PROGRESS: int(self.record.get('work_in_progress', 0)),
         }
 
     def get_default_description(self):

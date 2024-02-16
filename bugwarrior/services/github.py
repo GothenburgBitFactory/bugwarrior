@@ -263,7 +263,7 @@ class GithubIssue(Issue):
             'label': 'GitHub State',
         },
         DRAFT: {
-            'type': 'string',
+            'type': 'numeric',
             'label': 'GitHub Draft',
         },
     }
@@ -299,7 +299,7 @@ class GithubIssue(Issue):
             self.CLOSED_AT: closed,
             self.NAMESPACE: self.extra['namespace'],
             self.STATE: self.record.get('state', ''),
-            self.DRAFT: 'draft' if self.record.get('draft', False) else '',
+            self.DRAFT: int(self.record.get('draft', 0)),
         }
 
     def get_tags(self):
