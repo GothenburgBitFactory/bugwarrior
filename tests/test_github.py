@@ -32,7 +32,7 @@ ARBITRARY_ISSUE = {
     'updated_at': ARBITRARY_UPDATED.isoformat(),
     'repo': 'arbitrary_username/arbitrary_repo',
     'state': 'closed',
-    'draft': True,
+    'draft': False,
 }
 ARBITRARY_EXTRA = {
     'project': 'one',
@@ -52,6 +52,41 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
         'username': 'arbitrary_username',
     }
 
+    def test_draft(self):
+        service = self.get_mock_service(GithubService)
+        draft = dict(ARBITRARY_ISSUE)
+        draft['draft'] = True
+        issue = service.get_issue_for_record(
+            draft,
+            ARBITRARY_EXTRA
+        )
+
+        expected = {
+            'annotations': [],
+            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',  # noqa: E501
+            'entry': ARBITRARY_CREATED,
+            'end': ARBITRARY_CLOSED,
+            'githubbody': draft['body'],
+            'githubcreatedon': ARBITRARY_CREATED,
+            'githubclosedon': ARBITRARY_CLOSED,
+            'githubdraft': int(draft['draft']),
+            'githubmilestone': draft['milestone']['title'],
+            'githubnamespace': draft['repo'].split('/')[0],
+            'githubnumber': draft['number'],
+            'githubrepo': draft['repo'],
+            'githubtitle': draft['title'],
+            'githubtype': 'issue',
+            'githubupdatedat': ARBITRARY_UPDATED,
+            'githuburl': draft['html_url'],
+            'githubuser': draft['user']['login'],
+            'githubstate': draft['state'],
+            'priority': 'M',
+            'project': ARBITRARY_EXTRA['project'],
+            'tags': []
+        }
+
+        self.assertEqual(issue.get_taskwarrior_record(), expected)
+
     def test_to_taskwarrior(self):
         service = self.get_mock_service(GithubService, config_overrides={
             'import_labels_as_tags': True})
@@ -69,6 +104,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'end': ARBITRARY_CLOSED,
             issue.URL: ARBITRARY_ISSUE['html_url'],
             issue.REPO: ARBITRARY_ISSUE['repo'],
+            issue.DRAFT: ARBITRARY_ISSUE['draft'],
             issue.TYPE: ARBITRARY_EXTRA['type'],
             issue.TITLE: ARBITRARY_ISSUE['title'],
             issue.NUMBER: ARBITRARY_ISSUE['number'],
@@ -80,7 +116,6 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             issue.USER: ARBITRARY_ISSUE['user']['login'],
             issue.NAMESPACE: 'arbitrary_username',
             issue.STATE: 'closed',
-            issue.DRAFT: 'draft',
         }
         actual_output = issue.to_taskwarrior()
 
@@ -128,7 +163,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'githubbody': 'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubclosedon': ARBITRARY_CLOSED,
-            'githubdraft': 'draft',
+            'githubdraft': 0,
             'githubmilestone': 'alpha',
             'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,
@@ -188,7 +223,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
             'githubbody': 'Something',
             'githubcreatedon': ARBITRARY_CREATED,
             'githubclosedon': ARBITRARY_CLOSED,
-            'githubdraft': 'draft',
+            'githubdraft': 0,
             'githubmilestone': 'alpha',
             'githubnamespace': 'arbitrary_username',
             'githubnumber': 10,

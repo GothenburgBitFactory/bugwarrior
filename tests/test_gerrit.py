@@ -20,11 +20,18 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
         'branch': 'master',
         'topic': 'test-topic',
         'status': 'new',
-        'work_in_progress': True,
+        'work_in_progress': False,
         'subject': 'this is a title',
         'messages': [{'author': {'username': 'Iam Author'},
                       'message': 'this is a message',
                       '_revision_number': 1}],
+    }
+
+    extra = {
+        'annotations': [
+            # TODO - test annotations?
+        ],
+        'url': 'https://one.com/#/c/1/',
     }
 
     def setUp(self):
@@ -38,14 +45,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             self.service = self.get_mock_service(GerritService)
 
     def test_to_taskwarrior(self):
-        extra = {
-            'annotations': [
-                # TODO - test annotations?
-            ],
-            'url': 'this is a url',
-        }
-
-        issue = self.service.get_issue_for_record(self.record, extra)
+        issue = self.service.get_issue_for_record(self.record, self.extra)
         actual = issue.to_taskwarrior()
         expected = {
             'annotations': [],
@@ -54,14 +54,35 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'gerritid': 1,
             'gerritstatus': 'new',
             'gerritsummary': 'this is a title',
-            'gerriturl': 'this is a url',
+            'gerriturl': 'https://one.com/#/c/1/',
             'gerritbranch': 'master',
             'gerrittopic': 'test-topic',
-            'gerritwip': 'wip',
+            'gerritwip': 0,
             'tags': [],
         }
 
         self.assertEqual(actual, expected)
+
+    def test_work_in_progress(self):
+        wip_record = dict(self.record)  # make a copy of the dict
+        wip_record['work_in_progress'] = True
+        issue = self.service.get_issue_for_record(wip_record, self.extra)
+
+        expected = {
+            'annotations': [],
+            'description': '(bw)PR#1 - this is a title .. https://one.com/#/c/1/',
+            'gerritid': 1,
+            'gerritsummary': 'this is a title',
+            'gerritstatus': 'new',
+            'gerriturl': 'https://one.com/#/c/1/',
+            'gerritbranch': 'master',
+            'gerrittopic': 'test-topic',
+            'gerritwip': 1,
+            'priority': 'M',
+            'project': 'nova',
+            'tags': []}
+
+        self.assertEqual(issue.get_taskwarrior_record(), expected)
 
     @responses.activate
     def test_issues(self):
@@ -81,7 +102,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'gerriturl': 'https://one.com/#/c/1/',
             'gerritbranch': 'master',
             'gerrittopic': 'test-topic',
-            'gerritwip': 'wip',
+            'gerritwip': 0,
             'priority': 'M',
             'project': 'nova',
             'tags': []}

@@ -227,7 +227,7 @@ class TestUDAs(ConfigTest):
             'uda.githubcreatedon.label=Github Created',
             'uda.githubcreatedon.type=date',
             'uda.githubdraft.label=GitHub Draft',
-            'uda.githubdraft.type=string',
+            'uda.githubdraft.type=numeric',
             'uda.githubmilestone.label=Github Milestone',
             'uda.githubmilestone.type=string',
             'uda.githubnamespace.label=Github Namespace',
