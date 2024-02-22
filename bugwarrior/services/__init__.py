@@ -290,49 +290,6 @@ class Issue(abc.ABC):
                 record[field] = getattr(self, 'get_default_%s' % field)()
         return record
 
-    def __iter__(self):
-        record = self.get_taskwarrior_record()
-        yield from record.keys()
-
-    def keys(self):
-        return list(self.__iter__())
-
-    def iterkeys(self):
-        return self.__iter__()
-
-    def items(self):
-        record = self.get_taskwarrior_record()
-        return list(record.items())
-
-    def iteritems(self):
-        record = self.get_taskwarrior_record()
-        yield from record.items()
-
-    def update(self, *args):
-        raise AttributeError(
-            "You cannot set attributes on issues."
-        )
-
-    def get(self, attribute, default=None):
-        try:
-            return self[attribute]
-        except KeyError:
-            return default
-
-    def __getitem__(self, attribute):
-        record = self.get_taskwarrior_record()
-        return record[attribute]
-
-    def __setitem__(self, attribute, value):
-        raise AttributeError(
-            "You cannot set attributes on issues."
-        )
-
-    def __delitem__(self, attribute):
-        raise AttributeError(
-            "You cannot delete attributes from issues."
-        )
-
     @property
     def record(self):
         return self._foreign_record
