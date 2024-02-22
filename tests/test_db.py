@@ -121,7 +121,7 @@ class TestSynchronize(ConfigTest):
             # These should be de-duplicated in db.synchronize before
             # writing out to taskwarrior.
             # https://github.com/ralphbean/bugwarrior/issues/601
-            issue_generator = iter((issue, duplicate_issue,))
+            issue_generator = iter((copy.deepcopy(issue), duplicate_issue,))
             db.synchronize(issue_generator, bwconfig, 'general')
 
             self.assertEqual(get_tasks(tw), {
@@ -144,7 +144,7 @@ class TestSynchronize(ConfigTest):
         # Change static field
         issue['project'] = 'other_project'
 
-        db.synchronize(iter((issue,)), bwconfig, 'general')
+        db.synchronize(iter((copy.deepcopy(issue),)), bwconfig, 'general')
 
         self.assertEqual(get_tasks(tw), {
             'completed': [],
@@ -182,7 +182,7 @@ class TestSynchronize(ConfigTest):
             'pending': []})
 
         # TEST REOPENED ISSUE
-        db.synchronize(iter((issue,)), bwconfig, 'general')
+        db.synchronize(iter((copy.deepcopy(issue),)), bwconfig, 'general')
 
         tasks = tw.load_tasks()
         self.assertEqual(
