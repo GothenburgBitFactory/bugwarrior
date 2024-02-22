@@ -38,7 +38,7 @@ def _aggregate_issues(conf, main_section, target, queue):
             issue_count += 1
     except SystemExit as e:
         log.critical(f"Worker for [{target}] exited: {e}")
-        queue.put((SERVICE_FINISHED_ERROR, (target, e)))
+        queue.put((SERVICE_FINISHED_ERROR, target))
     except BaseException as e:
         if hasattr(e, 'request') and e.request:
             # Exceptions raised by requests library have the HTTP request
@@ -47,10 +47,10 @@ def _aggregate_issues(conf, main_section, target, queue):
             # methods. There is no one left to call these hooks anyway.
             e.request.hooks = {}
         log.exception(f"Worker for [{target}] failed: {e}")
-        queue.put((SERVICE_FINISHED_ERROR, (target, e)))
+        queue.put((SERVICE_FINISHED_ERROR, target))
     else:
         log.debug(f"Worker for [{target}] finished ok.")
-        queue.put((SERVICE_FINISHED_OK, (target, issue_count, )))
+        queue.put((SERVICE_FINISHED_OK, target))
     finally:
         duration = time.time() - start
         log.info(f"Done with [{target}] in {duration}.")
@@ -89,9 +89,8 @@ def aggregate_issues(conf, main_section, debug):
         issue = queue.get(True)
         if isinstance(issue, tuple):
             currently_running -= 1
-            completion_type, args = issue
+            completion_type, target = issue
             if completion_type == SERVICE_FINISHED_ERROR:
-                target, e = args
                 log.error(f"Aborted [{target}] due to critical error.")
                 yield ('SERVICE FAILED', target)
             continue
