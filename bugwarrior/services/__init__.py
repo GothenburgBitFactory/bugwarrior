@@ -84,7 +84,7 @@ class IssueService(abc.ABC):
 
     @abc.abstractmethod
     def issues(self):
-        """ Returns a list of dicts representing issues from a remote service.
+        """ Returns a list of Issue instances representing issues from a remote service.
 
         Each item in the list should be a dict that looks something like this:
 
@@ -196,7 +196,7 @@ class Issue(abc.ABC):
 
         return added_tags
 
-    def get_taskwarrior_record(self, refined=True):
+    def get_taskwarrior_record(self, refined=True) -> dict:
         if not getattr(self, '_taskwarrior_record', None):
             self._taskwarrior_record = self.to_taskwarrior()
         record = copy.deepcopy(self._taskwarrior_record)

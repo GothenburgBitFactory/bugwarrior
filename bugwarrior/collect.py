@@ -87,13 +87,16 @@ def aggregate_issues(conf, main_section, debug):
     currently_running = len(targets)
     while currently_running > 0:
         issue = queue.get(True)
-        if isinstance(issue, tuple):
-            currently_running -= 1
-            completion_type, target = issue
-            if completion_type == SERVICE_FINISHED_ERROR:
-                log.error(f"Aborted [{target}] due to critical error.")
-                yield ('SERVICE FAILED', target)
-            continue
-        yield issue
+        try:
+            yield issue.get_taskwarrior_record()
+        except AttributeError:
+            if isinstance(issue, tuple):
+                currently_running -= 1
+                completion_type, target = issue
+                if completion_type == SERVICE_FINISHED_ERROR:
+                    log.error(f"Aborted [{target}] due to critical error.")
+                    yield ('SERVICE FAILED', target)
+                continue
+            yield issue
 
     log.info("Done aggregating remote issues.")

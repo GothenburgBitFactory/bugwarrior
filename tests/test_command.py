@@ -17,18 +17,20 @@ def fake_github_issues(self):
 
 
 def fake_bz_issues(self):
-    yield from [{
-        'annotations': [],
-        'bugzillabugid': 1234567,
-        'bugzillastatus': 'NEW',
-        'bugzillasummary': 'This is the issue summary',
-        'bugzillaurl': 'https://http://one.com//show_bug.cgi?id=1234567',
-        'bugzillaproduct': 'Product',
-        'bugzillacomponent': 'Something',
-        'description': '(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',  # noqa: E501
-        'priority': 'H',
-        'project': 'Something',
-        'tags': []}]
+    yield from [self.get_issue_for_record(
+        {
+            'id': 1234567,
+            'status': 'NEW',
+            'summary': 'This is the issue summary',
+            'product': 'Product',
+            'component': 'Something',
+            'description': '(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',  # noqa: E501
+            'priority': 'H',
+            'project': 'Something',
+            'tags': []
+        }, {
+            'url': 'https://http://one.com//show_bug.cgi?id=1234567',
+        })]
 
 
 class TestPull(ConfigTest):

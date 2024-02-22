@@ -98,19 +98,11 @@ def get_managed_task_uuids(tw, key_list):
     return expected_task_ids
 
 
-def make_unique_identifier(keys, issue):
+def make_unique_identifier(keys: dict, issue: dict) -> str:
     """ For a given issue, make an identifier from its unique keys.
 
     This is not the same as the taskwarrior uuid, which is assigned
     only once the task is created.
-
-    :params:
-    * `keys`: A list of lists of keys to use for uniquely identifying
-      an issue.
-    * `issue`: An instance of a subclass of `bugwarrior.services.Issue`.
-
-    :returns:
-    * A single string UUID.
     """
     for service, key_list in keys.items():
         if all([key in issue for key in key_list]):
@@ -326,17 +318,11 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         'closed': [],
     }
 
-    issue_map = {}  # unique identifier -> issue dict
+    issue_map = {}  # unique identifier -> issue
     for issue in issue_generator:
-
-        try:
-            issue_dict = dict(issue)
-        except ValueError:
-            if isinstance(issue, tuple) and issue[0] == 'SERVICE FAILED':
-                targets.remove(issue[1])
-                continue
-            else:
-                raise
+        if isinstance(issue, tuple) and issue[0] == 'SERVICE FAILED':
+            targets.remove(issue[1])
+            continue
 
         # De-duplicate issues coming in
         unique_identifier = make_unique_identifier(key_list, issue)
@@ -344,36 +330,35 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             log.debug(
                 f"Merging tags and skipping. Seen {unique_identifier} of {issue}")
             # Merge and deduplicate tags.
-            issue_map[unique_identifier]['tags'] += issue_dict['tags']
+            issue_map[unique_identifier]['tags'] += issue['tags']
             issue_map[unique_identifier]['tags'] = list(set(issue_map[unique_identifier]['tags']))
         else:
-            issue_map[unique_identifier] = issue_dict
+            issue_map[unique_identifier] = issue
 
     seen_uuids = set()
-    for issue_dict in issue_map.values():
-
+    for issue in issue_map.values():
         # We received this issue from The Internet, but we're not sure what
         # kind of encoding the service providers may have handed us. Let's try
         # and decode all byte strings from UTF8 off the bat.  If we encounter
         # other encodings in the wild in the future, we can revise the handling
         # here. https://github.com/ralphbean/bugwarrior/issues/350
-        for key in issue_dict.keys():
-            if isinstance(issue_dict[key], bytes):
+        for key in issue.keys():
+            if isinstance(issue[key], bytes):
                 try:
-                    issue_dict[key] = issue_dict[key].decode('utf-8')
+                    issue[key] = issue[key].decode('utf-8')
                 except UnicodeDecodeError:
                     log.warn("Failed to interpret %r as utf-8" % key)
 
         # Blank priority should mean *no* priority
-        if issue_dict['priority'] == '':
-            issue_dict['priority'] = None
+        if issue['priority'] == '':
+            issue['priority'] = None
 
         try:
-            existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue_dict)
+            existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
         except MultipleMatches as e:
             log.exception("Multiple matches: %s", str(e))
         except NotFound:  # Create new task
-            issue_updates['new'].append(issue_dict)
+            issue_updates['new'].append(issue)
         else:  # Update existing task.
             seen_uuids.add(existing_taskwarrior_uuid)
             _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
@@ -386,23 +371,23 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             # Drop static fields from the upstream issue.  We don't want to
             # overwrite local changes to fields we declare static.
             for field in main_config.static_fields:
-                if field in issue_dict:
-                    del issue_dict[field]
+                if field in issue:
+                    del issue[field]
 
             # Merge annotations & tags from online into our task object
             if main_config.merge_annotations:
-                merge_left('annotations', task, issue_dict, hamming=True)
+                merge_left('annotations', task, issue, hamming=True)
 
             if main_config.merge_tags:
                 if main_config.replace_tags:
-                    replace_left('tags', task, issue_dict, main_config.static_tags)
+                    replace_left('tags', task, issue, main_config.static_tags)
                 else:
-                    merge_left('tags', task, issue_dict)
+                    merge_left('tags', task, issue)
 
-            issue_dict.pop('annotations', None)
-            issue_dict.pop('tags', None)
+            issue.pop('annotations', None)
+            issue.pop('tags', None)
 
-            task.update(issue_dict)
+            task.update(issue)
 
             if task.get_changes(keep=True):
                 issue_updates['changed'].append(task)
