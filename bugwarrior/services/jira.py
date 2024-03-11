@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 import sys
 import typing
@@ -55,8 +56,7 @@ class JiraExtraFields(frozenset):
         return extra_fields
 
 
-# NOTE: replace with stdlib dataclasses.dataclass once python-3.6 is dropped
-@pydantic.dataclasses.dataclass
+@dataclasses.dataclass
 class JiraExtraField:
     label: str
     keys: typing.List[str]

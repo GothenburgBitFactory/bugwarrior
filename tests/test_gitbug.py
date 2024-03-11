@@ -1,16 +1,15 @@
+import dataclasses
 import datetime
 from unittest import mock
 
 import dateutil
-import pydantic
 
 from bugwarrior.services.gitbug import GitBugClient, GitBugConfig, GitBugService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
 
-# NOTE: replace with stdlib dataclasses.dataclass once python-3.6 is dropped
-@pydantic.dataclasses.dataclass
+@dataclasses.dataclass
 class TestData:
     arbitrary_bug = {
         'author': {'name': 'ryneeverett'},
