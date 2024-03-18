@@ -6,6 +6,9 @@ import requests
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class GerritConfig(config.ServiceConfig):
     service: typing.Literal['gerrit']
@@ -15,6 +18,7 @@ class GerritConfig(config.ServiceConfig):
 
     ssl_ca_path: typing.Optional[config.ExpandedPath] = None
     query: str = 'is:open+is:reviewer'
+    ignore_user_comments: config.ConfigList = config.ConfigList([])
 
 
 class GerritIssue(Issue):
@@ -145,6 +149,9 @@ class GerritService(Service, Client):
             else:
                 username = item['author']['_account_id']
             # Gerrit messages are really messy
+            if username in self.config.ignore_user_comments:
+                log.debug(" ignoring comment from %s", username)
+                continue
             message = item['message']\
                 .lstrip('Patch Set ')\
                 .lstrip("%s:" % item['_revision_number'])\

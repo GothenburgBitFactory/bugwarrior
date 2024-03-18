@@ -40,6 +40,7 @@ class GithubConfig(config.ServiceConfig):
     body_length: int = sys.maxsize
     project_owner_prefix: bool = False
     issue_urls: config.ConfigList = config.ConfigList([])
+    ignore_user_comments: config.ConfigList = config.ConfigList([])
 
     @pydantic.v1.root_validator
     def deprecate_password(cls, values):
@@ -389,11 +390,20 @@ class GithubService(Service):
         if self.main_config.annotation_comments:
             comments = self._comments(tag, issue['number'])
             log.debug(" got comments for %s", issue['html_url'])
-            annotations = ((
-                c['user']['login'],
-                c['body'],
-            ) for c in comments)
-        return self.build_annotations(annotations, url)
+            annotations = []
+            for c in comments:
+                login = c['user']['login']
+                if login in self.config.ignore_user_comments:
+                    log.debug(" ignoring comment from %s", login)
+                    continue
+                annotations.append((
+                    login,
+                    c['body'],
+                ))
+        return self.build_annotations(
+            annotations,
+            url
+        )
 
     def body(self, issue):
         body = issue['body']
