@@ -82,6 +82,7 @@ setup(name='bugwarrior',
       bugwarrior-vault = bugwarrior:vault
       bugwarrior-uda = bugwarrior:uda
       [bugwarrior.service]
+      gitea=bugwarrior.services.gitea:GiteaService
       github=bugwarrior.services.github:GithubService
       gitlab=bugwarrior.services.gitlab:GitlabService
       bitbucket=bugwarrior.services.bitbucket:BitbucketService
