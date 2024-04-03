@@ -8,7 +8,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient, get_processed_url
+from bugwarrior.services import IssueService, Issue, ServiceClient
 
 log = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ class AzureDevopsIssue(Issue):
                 self.record.get("fields").get("System.Description")
             ),
             self.ID: self.record["id"],
-            self.URL: get_processed_url(self.main_config, self.record["_links"]["html"]["href"]),
+            self.URL: self.record["_links"]["html"]["href"],
             self.TYPE: self.record["fields"]["System.WorkItemType"],
             self.STATE: self.record["fields"]["System.State"],
             self.ACTIVITY: self.record.get("fields").get("System.Activity", ""),
