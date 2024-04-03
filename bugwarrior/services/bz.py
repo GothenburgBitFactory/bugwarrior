@@ -137,7 +137,7 @@ class BugzillaIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.record['summary'],
-            url=self.get_processed_url(self.extra['url']),
+            url=self.extra['url'],
             number=self.record['id'],
             cls='issue',
         )
@@ -189,10 +189,10 @@ class BugzillaService(IssueService):
     def get_owner(self, issue):
         return issue['assigned_to']
 
-    def annotations(self, tag, issue, issue_obj):
+    def annotations(self, tag, issue):
         base_url = "%s/show_bug.cgi?id=" % self.config.base_uri
         long_url = base_url + str(issue['id'])
-        url = issue_obj.get_processed_url(long_url)
+        url = long_url
 
         if 'comments' in issue:
             comments = issue.get('comments', [])
@@ -284,7 +284,7 @@ class BugzillaService(IssueService):
             issue_obj = self.get_issue_for_record(issue)
             extra = {
                 'url': base_url + str(issue['id']),
-                'annotations': self.annotations(tag, issue, issue_obj),
+                'annotations': self.annotations(tag, issue),
             }
 
             username = self.config.username

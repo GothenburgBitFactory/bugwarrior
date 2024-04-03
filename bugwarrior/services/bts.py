@@ -126,7 +126,7 @@ class BTSIssue(Issue):
 
         return self.build_default_description(
             title=self.record['subject'],
-            url=self.get_processed_url(self.record['url']),
+            url=self.record['url'],
             number=self.record['number'],
             cls='issue'
         )
@@ -169,10 +169,10 @@ class BTSService(IssueService, ServiceClient):
         resp = requests.get(UDD_BUGS_SEARCH, request_params)
         return self.json_response(resp)
 
-    def annotations(self, issue, issue_obj):
+    def annotations(self, issue):
         return self.build_annotations(
             [],
-            issue_obj.get_processed_url(issue['url'])
+            issue['url']
         )
 
     def issues(self):
@@ -226,7 +226,7 @@ class BTSService(IssueService, ServiceClient):
         for issue in issues:
             issue_obj = self.get_issue_for_record(issue)
             extra = {
-                'annotations': self.annotations(issue, issue_obj)
+                'annotations': self.annotations(issue)
             }
             issue_obj.update_extra(extra)
             yield issue_obj

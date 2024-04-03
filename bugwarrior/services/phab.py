@@ -76,7 +76,7 @@ class PhabricatorIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.record['title'],
-            url=self.get_processed_url(self.record['uri']),
+            url=self.record['uri'],
             number=self.record['uri'].split('/')[-1],
             cls=self.extra['type'],
         )

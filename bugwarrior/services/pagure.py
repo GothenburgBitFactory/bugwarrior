@@ -100,7 +100,7 @@ class PagureIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.record['title'],
-            url=self.get_processed_url(self.record['html_url']),
+            url=self.record['html_url'],
             number=self.record['id'],
             cls=self.extra['type'],
         )
@@ -140,14 +140,14 @@ class PagureService(IssueService):
 
         return issues
 
-    def annotations(self, issue, issue_obj):
+    def annotations(self, issue):
         url = issue['html_url']
         return self.build_annotations(
             ((
                 c['user']['name'],
                 c['comment'],
             ) for c in issue['comments']),
-            issue_obj.get_processed_url(url)
+            url
         )
 
     def get_owner(self, issue):
@@ -198,7 +198,7 @@ class PagureService(IssueService):
             extra = {
                 'project': repo,
                 'type': 'pull_request' if 'branch' in issue else 'issue',
-                'annotations': self.annotations(issue, issue_obj)
+                'annotations': self.annotations(issue)
             }
             issue_obj.update_extra(extra)
             yield issue_obj

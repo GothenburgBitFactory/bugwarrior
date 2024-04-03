@@ -519,7 +519,7 @@ class GitlabIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.title,
-            url=self.get_processed_url(self.extra['issue_url']),
+            url=self.extra['issue_url'],
             number=self.record.get('iid', ''),
             cls=self.extra['type'],
         )
@@ -581,7 +581,7 @@ class GitlabService(IssueService):
 
         return is_included
 
-    def annotations(self, repo, url, issue_type, issue, issue_obj):
+    def annotations(self, repo, url, issue_type, issue):
         annotations = []
 
         if self.main_config.annotation_comments:
@@ -591,10 +591,7 @@ class GitlabService(IssueService):
                 n['body']
             ) for n in notes)
 
-        return self.build_annotations(
-            annotations,
-            issue_obj.get_processed_url(url)
-        )
+        return self.build_annotations(annotations, url)
 
     def include_todo(self, repos):
         ids = list(r['id'] for r in repos)
@@ -620,7 +617,7 @@ class GitlabService(IssueService):
                 'project': repo['path'],
                 'namespace': repo['namespace']['full_path'],
                 'type': issue_type,
-                'annotations': self.annotations(repo, issue_url, type_plural, issue, issue_obj),
+                'annotations': self.annotations(repo, issue_url, type_plural, issue),
                 'description': self.description(issue),
             }
             issue_obj.update_extra(extra)

@@ -160,7 +160,7 @@ class ActiveCollabIssue(Issue):
                 if self.record.get('name')
                 else self.record.get('body')
             ),
-            url=self.get_processed_url(self.record['permalink']),
+            url=self.record['permalink'],
             number=self.record['id'],
             cls=self.record.get('type', 'subtask').lower(),
         )
@@ -210,7 +210,7 @@ class ActiveCollabService(IssueService):
                 c['user'],
                 pypandoc.convert_text(c['body'], 'md', format='html').rstrip()
             ) for c in comments),
-            issue_obj.get_processed_url(issue_obj.record['permalink']),
+            issue_obj.record['permalink'],
         )
 
     def issues(self):

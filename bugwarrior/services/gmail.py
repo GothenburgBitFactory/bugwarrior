@@ -99,7 +99,7 @@ class GmailIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.extra['subject'],
-            url=self.get_processed_url(self.extra['url']),
+            url=self.extra['url'],
             number=self.record['id'],
             cls='issue',
         )
@@ -201,7 +201,7 @@ class GmailService(IssueService):
     def annotations(self, issue):
         sender = issue.extra['last_sender_name']
         subj = issue.extra['subject']
-        issue_url = issue.get_processed_url(issue.extra['url'])
+        issue_url = issue.extra['url']
         return self.build_annotations([(sender, subj)], issue_url)
 
     def get_owner(self, issue):
