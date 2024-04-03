@@ -309,7 +309,7 @@ class GithubIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.record['title'],
-            url=self.get_processed_url(self.record['html_url']),
+            url=self.record['html_url'],
             number=self.record['number'],
             cls=self.extra['type'],
         )
@@ -383,7 +383,7 @@ class GithubService(IssueService):
         user, repo = tag.split('/')
         return self.client.get_comments(user, repo, number)
 
-    def annotations(self, tag, issue, issue_obj):
+    def annotations(self, tag, issue):
         url = issue['html_url']
         annotations = []
         if self.main_config.annotation_comments:
@@ -393,10 +393,7 @@ class GithubService(IssueService):
                 c['user']['login'],
                 c['body'],
             ) for c in comments)
-        return self.build_annotations(
-            annotations,
-            issue_obj.get_processed_url(url)
-        )
+        return self.build_annotations(annotations, url)
 
     def body(self, issue):
         body = issue['body']
@@ -497,7 +494,7 @@ class GithubService(IssueService):
             extra = {
                 'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',
-                'annotations': self.annotations(tag, issue, issue_obj),
+                'annotations': self.annotations(tag, issue),
                 'body': self.body(issue),
                 'namespace': self.config.username,
             }

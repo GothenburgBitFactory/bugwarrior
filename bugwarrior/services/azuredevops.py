@@ -8,7 +8,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import IssueService, Issue, ServiceClient, get_processed_url
 
 log = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ class AzureDevopsIssue(Issue):
                 self.record.get("fields").get("System.Description")
             ),
             self.ID: self.record["id"],
-            self.URL: self.get_processed_url(self.record["_links"]["html"]["href"]),
+            self.URL: get_processed_url(self.main_config, self.record["_links"]["html"]["href"]),
             self.TYPE: self.record["fields"]["System.WorkItemType"],
             self.STATE: self.record["fields"]["System.State"],
             self.ACTIVITY: self.record.get("fields").get("System.Activity", ""),
@@ -173,7 +173,7 @@ class AzureDevopsIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.record["fields"]["System.Title"],
-            url=self.get_processed_url(self.record["_links"]["html"]["href"]),
+            url=self.record["_links"]["html"]["href"],
             number=self.record["id"],
             cls=self.record["fields"]["System.WorkItemType"].lower(),
         )
@@ -217,7 +217,7 @@ class AzureDevopsService(IssueService):
         list_of_items = self.client.get_work_items_from_query(default_query)
         return list_of_items
 
-    def annotations(self, issue, issue_obj):
+    def annotations(self, issue):
         # Build Annotations based on comments by commenter and comment text
         url = issue["_links"]["html"]["href"]
         annotations = []
@@ -231,7 +231,7 @@ class AzureDevopsService(IssueService):
                         name = comment["modifiedBy"]["displayName"]
                     text = format_item(comment["text"])
                     annotations.append((name, text))
-        return self.build_annotations(annotations, issue_obj.get_processed_url(url))
+        return self.build_annotations(annotations, url)
 
     def issues(self):
         issue_ids = self.get_query()
@@ -242,7 +242,7 @@ class AzureDevopsService(IssueService):
             issue_obj = self.get_issue_for_record(issue)
             extra = {
                 "project": issue["ParentTitle"],
-                "annotations": self.annotations(issue, issue_obj),
+                "annotations": self.annotations(issue),
                 "namespace": (
                     f"{self.config.organization}\\{self.config.project}"),
             }

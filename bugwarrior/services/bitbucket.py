@@ -83,7 +83,7 @@ class BitbucketIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.record['title'],
-            url=self.get_processed_url(self.extra['url']),
+            url=self.extra['url'],
             number=self.record['id'],
             cls='issue'
         )
@@ -170,7 +170,7 @@ class BitbucketService(IssueService, ServiceClient):
                 comment['user']['username'],
                 comment['content']['raw'],
             ) for comment in response),
-            issue_obj.get_processed_url(url)
+            url
         )
 
     def get_owner(self, issue):

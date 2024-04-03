@@ -185,7 +185,7 @@ class ActiveCollab2Issue(Issue):
                 if self.record['name']
                 else self.record['body']
             ),
-            url=self.get_processed_url(self.record['permalink']),
+            url=self.record['permalink'],
             number=self.record['ticket_id'],
             cls=record_type,
         )

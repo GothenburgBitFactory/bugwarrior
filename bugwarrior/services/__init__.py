@@ -9,11 +9,26 @@ import pytz
 
 from taskw.task import Task
 
-from bugwarrior.config.secrets import get_service_password
+from bugwarrior.config import schema, secrets
 from bugwarrior.db import MARKUP, URLShortener
 
 import logging
 log = logging.getLogger(__name__)
+
+
+def get_processed_url(main_config: schema.MainSectionConfig, url: str):
+    """ Returns a URL with conditional processing.
+
+    If the following config key are set:
+
+    - [general]shorten
+
+    returns a shortened URL; otherwise returns the URL unaltered.
+
+    """
+    if main_config.shorten:
+        return URLShortener().shorten(url)
+    return url
 
 
 class IssueService(abc.ABC):
@@ -33,7 +48,7 @@ class IssueService(abc.ABC):
         password = getattr(self.config, key)
         keyring_service = self.get_keyring_service(self.config)
         if not password or password.startswith("@oracle:"):
-            password = get_service_password(
+            password = secrets.get_service_password(
                 keyring_service, login, oracle=password,
                 interactive=self.main_config.interactive)
         return password
@@ -45,7 +60,7 @@ class IssueService(abc.ABC):
     def build_annotations(self, annotations, url=None):
         final = []
         if url and self.main_config.annotation_links:
-            final.append(url)
+            final.append(get_processed_url(self.main_config, url))
         if self.main_config.annotation_comments:
             for author, message in annotations:
                 message = message.strip()
@@ -214,20 +229,6 @@ class Issue(abc.ABC):
             self.config.default_priority
         )
 
-    def get_processed_url(self, url):
-        """ Returns a URL with conditional processing.
-
-        If the following config key are set:
-
-        - [general]shorten
-
-        returns a shortened URL; otherwise returns the URL unaltered.
-
-        """
-        if self.main_config.shorten:
-            return URLShortener().shorten(url)
-        return url
-
     def parse_date(self, date, timezone='UTC'):
         """ Parse a date string into a datetime object.
 
@@ -260,7 +261,7 @@ class Issue(abc.ABC):
             'subtask': 'Subtask #',
         }
         url_separator = ' .. '
-        url = url if self.main_config.inline_links else ''
+        url = get_processed_url(self.main_config, url) if self.main_config.inline_links else ''
         desc_len = self.main_config.description_length
         return "%s%s#%s - %s%s%s" % (
             MARKUP,
