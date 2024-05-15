@@ -34,7 +34,7 @@ Next step -- get the code!
 
 ::
 
-    (bugwarrior)$ git clone git@github.com:ralphbean/bugwarrior.git
+    (bugwarrior)$ git clone git@github.com:GothenburgBitFactory/bugwarrior.git
     (bugwarrior)$ cd bugwarrior
     (bugwarrior)$ pip install -e .[all]
     (bugwarrior)$ which bugwarrior
