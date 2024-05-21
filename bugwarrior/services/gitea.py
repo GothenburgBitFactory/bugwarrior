@@ -1,4 +1,4 @@
-# coding: utf-8
+#/home/joybuke/Documents/ComputerScience/Projects/Personal/bugwarrior/bugwarrior/services coding: utf-8
 # gitea.py
 """Bugwarrior service support class for Gitea
 
@@ -12,20 +12,44 @@ Todo:
     * Flesh out more features offered by gitea api
 """
 from builtins import filter
+import logging
+import pathlib
 import re
 import six
+import sys
 from urllib.parse import urlparse
 from urllib.parse import quote_plus
 
 import requests
 from six.moves.urllib.parse import quote_plus
+import typing_extensions
 from jinja2 import Template
 
-from bugwarrior.config import asbool, aslist, die
+from bugwarrior import config
 from bugwarrior.services import IssueService, Issue, ServiceClient
 
-import logging
 log = logging.getLogger(__name__)  # pylint: disable-msg=C0103
+
+class GiteaConfig(config.ServiceConfig):
+    service: typing_extensions.Literal['gitea']
+
+    host = "gitea.com"
+    login: str
+    token: str
+    login: str
+    username: str
+    password: str
+    exclude_repos = []
+    include_repos = []
+
+    def get(self, key, default=None, to_type=None):
+        try:
+            value = self.config_parser.get(self.service_target, self._get_key(key))
+            if to_type:
+                return to_type(value)
+            return value
+        except:
+            return default
 
 
 class GiteaClient(ServiceClient):
@@ -95,9 +119,9 @@ class GiteaClient(ServiceClient):
         regardless of whether the user owns the repositories in which the
         issues exist.
         """
-        url = self._api_url('/users/{username}/issues',
-                            username=username)
-        return self._getter(url)
+        url = self._api_url('/repos/issues/search',
+                            username=username, assignee=True)
+        return self._getter(url, passedParams={'assigned': True, 'limit': 100}) #TODO: make the limit configurable
 
     # TODO close to gitea format: /comments/{id}
     def get_comments(self, username, repo, number):
@@ -112,7 +136,7 @@ class GiteaClient(ServiceClient):
             username=username, repo=repo)
         return self._getter(url)
 
-    def _getter(self, url, subkey=None):
+    def _getter(self, url, subkey=None, passedParams={}):
         """ Pagination utility.  Obnoxious. """
 
         kwargs = {}
@@ -123,7 +147,7 @@ class GiteaClient(ServiceClient):
         link = dict(next=url)
 
         while 'next' in link:
-            response = self.session.get(link['next'], **kwargs)
+            response = self.session.get(link['next'], params=passedParams, **kwargs)
 
             # Warn about the mis-leading 404 error code.  See:
             # https://gitea.com/ralphbean/bugwarrior/issues/374
@@ -253,14 +277,14 @@ class GiteaIssue(Issue):
 
         return {
             'project': self.extra['project'],
-            'priority': self.origin['default_priority'],
+            'priority': self.config.default_priority,
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
             'entry': created,
             'end': closed,
 
             self.URL: self.record['url'],
-            self.REPO: self.record['repo'],
+            self.REPO: self.record['repository'],
             self.TYPE: self.extra['type'],
             self.USER: self.record['user']['login'],
             self.TITLE: self.record['title'],
@@ -277,11 +301,11 @@ class GiteaIssue(Issue):
     def get_tags(self):
         tags = []
 
-        if not self.origin['import_labels_as_tags']:
+        if not self.config.get('import_labels_as_tags'):
             return tags
 
         context = self.record.copy()
-        label_template = Template(self.origin['label_template'])
+        label_template = Template(self.config.get('label_template'))
 
         for label_dict in self.record.get('labels', []):
             context.update({
@@ -305,46 +329,51 @@ class GiteaIssue(Issue):
 
 class GiteaService(IssueService):
     ISSUE_CLASS = GiteaIssue
+    CONFIG_SCHEMA = GiteaConfig
     CONFIG_PREFIX = 'gitea'
 
     def __init__(self, *args, **kw):
         super(GiteaService, self).__init__(*args, **kw)
 
-        self.host = self.config.get('host', 'gitea.com')
-        self.login = self.config.get('login')
-
         auth = {}
-        token = self.config.get('token')
-        if 'token' in self.config:
-            token = self.get_password('token', self.login)
+        token = self.config.token
+        self.login = self.config.login
+        if hasattr(self.config, 'token'):
+            token = self.get_password('token', login=self.login)
             auth['token'] = token
-        else:
-            password = self.get_password('password', self.login)
+        elif hasattr(self.config.hasattr, 'password'):
+            password = self.get_password('password', login=self.login)
             auth['basic'] = (self.login, password)
+        else:
+            #Probably should be called by validate_config, but I don't care to fix that.
+            logging.critical("ERROR! Neither token or password was provided in config!")
+            sys.exit(1)
 
-        self.client = GiteaClient(self.host, auth)
+        self.client = GiteaClient(host=self.config.host, auth=auth)
 
-        self.exclude_repos = self.config.get('exclude_repos', [], aslist)
-        self.include_repos = self.config.get('include_repos', [], aslist)
+        self.host = self.config.host
 
-        self.username = self.config.get('username')
+        self.exclude_repos = self.config.exclude_repos
+        self.include_repos = self.config.include_repos
+
+        self.username = self.config.username
         self.filter_pull_requests = self.config.get(
-            'filter_pull_requests', default=False, to_type=asbool
+            'filter_pull_requests', default=False, to_type=bool
         )
         self.exclude_pull_requests = self.config.get(
-            'exclude_pull_requests', default=False, to_type=asbool
+            'exclude_pull_requests', default=False, to_type=bool
         )
         self.involved_issues = self.config.get(
-            'involved_issues', default=False, to_type=asbool
+            'involved_issues', default=False, to_type=bool
         )
         self.import_labels_as_tags = self.config.get(
-            'import_labels_as_tags', default=False, to_type=asbool
+            'import_labels_as_tags', default=False, to_type=bool
         )
         self.label_template = self.config.get(
             'label_template', default='{{label}}', to_type=six.text_type
         )
         self.project_owner_prefix = self.config.get(
-            'project_owner_prefix', default=False, to_type=asbool
+            'project_owner_prefix', default=False, to_type=bool
         )
 
         self.query = self.config.get(
@@ -357,9 +386,9 @@ class GiteaService(IssueService):
     @staticmethod
     def get_keyring_service(service_config):
         #TODO grok this
-        login = service_config.get('login')
-        username = service_config.get('username')
-        host = service_config.get('host', default='gitea.com')
+        login = service_config.login
+        username = service_config.username
+        host = service_config.host
         return 'gitea://{login}@{host}/{username}'.format(
             login=login, username=username, host=host)
 
@@ -399,18 +428,17 @@ class GiteaService(IssueService):
 
     @classmethod
     def get_repository_from_issue(cls, issue):
-        if 'repo' in issue:
-            return issue['repo']
-        if 'repos_url' in issue:
-            url = issue['repos_url']
-        elif 'repository_url' in issue:
-            url = issue['repository_url']
+        if 'repository' in issue:
+            url = issueloc=issue["html_url"]
         else:
             raise ValueError('Issue has no repository url' + str(issue))
+
+        #Literal cargo-cult crap, idk if this should be kept
         tag = re.match('.*/([^/]*/[^/]*)$', url)
         if tag is None:
             raise ValueError('Unrecognized URL: {}.'.format(url))
-        return tag.group(1)
+        
+        return url.rsplit("/",2)[0]
 
     def _comments(self, tag, number):
         user, repo = tag.split('/')
@@ -482,7 +510,7 @@ class GiteaService(IssueService):
         if self.query:
             issues.update(self.get_query(self.query))
 
-        if self.config.get('include_user_repos', True, asbool):
+        if self.config.get('include_user_repos', True, bool):
             # Only query for all repos if an explicit
             # include_repos list is not specified.
             if self.include_repos:
@@ -510,13 +538,11 @@ class GiteaService(IssueService):
         for tag, issue in issues:
             # Stuff this value into the upstream dict for:
             # https://gitea.com/ralphbean/bugwarrior/issues/159
-            issue['repo'] = tag
+            projectName = issue['repository']["name"]
 
             issue_obj = self.get_issue_for_record(issue)
-            tagParts = tag.split('/')
-            projectName = tagParts[1]
             if self.project_owner_prefix:
-                projectName = tagParts[0]+'.'+projectName
+                projectName = issue['repository']["owner"] +'.'+projectName
             extra = {
                 'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',
@@ -529,8 +555,10 @@ class GiteaService(IssueService):
     @classmethod
     def validate_config(cls, service_config, target):
         if 'login' not in service_config:
-            die('[%s] has no \'gitea.login\'' % target)
+            log.critical('[%s] has no \'gitea.login\'' % target)
+            sys.exit(1)
 
         if 'token' not in service_config and 'password' not in service_config:
-            die('[%s] has no \'gitea.token\' or \'gitea.password\'' % target)
+            log.critical('[%s] has no \'gitea.token\' or \'gitea.password\'' % target)
+            sys.exit(1)
 
