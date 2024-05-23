@@ -29,16 +29,28 @@ from bugwarrior.services import IssueService, Issue, ServiceClient
 
 log = logging.getLogger(__name__)  # pylint: disable-msg=C0103
 
+#TODO: Document this with docstrings
 class GiteaConfig(config.ServiceConfig):
     service: typing_extensions.Literal['gitea']
-
     host = "gitea.com"
-    login: str
     token: str
     username: str
-    password: str
-    exclude_repos = config.ConfigList([])
-    include_repos = config.ConfigList([])
+    include_assigned_issues: bool = False
+    include_created_issues: bool = False
+    include_mentioned_issues: bool = False
+    include_review_requested_issues: bool = False
+    import_labels_as_tags: bool = True
+    involved_issues: bool = False
+    project_owner_prefix: bool = False
+    include_repos: config.ConfigList = config.ConfigList([])
+    exclude_repos: config.ConfigList = config.ConfigList([])
+    label_template = str = '{{label}}'
+    filter_pull_requests: bool = False
+    exclude_pull_requests: bool = False
+    """
+    The maximum number of issues the API may get from the host
+    """
+    issue_limit: int = 100
 
     def get(self, key, default=None, to_type=None):
         try:
@@ -65,7 +77,7 @@ class GiteaClient(ServiceClient):
     - get_repos:
     - get_query:
     - get_issues:
-    - get_directly_assigned_issues:
+    - get_special_issues:
     - get_comments:
     - get_pulls:
     """
@@ -79,16 +91,8 @@ class GiteaClient(ServiceClient):
 
     def _api_url(self, path, **context):
         """ Build the full url to the API endpoint """
-        # TODO add token support
-        if 'basic' in self.auth:
-            (username, password) = self.auth['basic']
-            baseurl = 'https://{user}:{secret}@{host}/api/v1'.format(
-                host=self.host,
-                user=username,
-                secret=quote_plus(password))
-        if 'token' in self.auth:
-            baseurl = 'https://{host}/api/v1'.format(
-                host=self.host)
+        baseurl = 'https://{host}/api/v1'.format(
+            host=self.host)
         return baseurl + path.format(**context)
 
     # TODO Modify these for gitea support
@@ -109,17 +113,17 @@ class GiteaClient(ServiceClient):
             '/repos/{username}/{repo}/issues?per_page=100',
             username=username, repo=repo)
         return self._getter(url)
+    
+    def get_special_issues(self, username, query: str):
+        """ Returns all issues assigned to authenticated user given a specific query.
 
-    def get_directly_assigned_issues(self, username):
-        """ Returns all issues assigned to authenticated user.
-
-        This will return all issues assigned to the authenticated user
-        regardless of whether the user owns the repositories in which the
-        issues exist.
+        This will return all issues this authenticated user has access to and then
+        filter the issues with the query that the user supplied.
         """
-        url = self._api_url('/repos/issues/search',
-                            username=username, assignee=True)
-        return self._getter(url, passedParams={'assigned': True, 'limit': 100}) #TODO: make the limit configurable
+        logging.info("Querying /repos/issues/search with query: " + query)
+        url = self._api_url('/repos/issues/search?{query}',
+                            username=username, query=query)
+        return self._getter(url) 
 
     # TODO close to gitea format: /comments/{id}
     def get_comments(self, username, repo, number):
@@ -134,7 +138,7 @@ class GiteaClient(ServiceClient):
             username=username, repo=repo)
         return self._getter(url)
 
-    def _getter(self, url, subkey=None, passedParams={}):
+    def _getter(self, url, subkey=None):
         """ Pagination utility.  Obnoxious. """
 
         kwargs = {}
@@ -145,7 +149,7 @@ class GiteaClient(ServiceClient):
         link = dict(next=url)
 
         while 'next' in link:
-            response = self.session.get(link['next'], params=passedParams, **kwargs)
+            response = self.session.get(link['next'], **kwargs)
 
             # Warn about the mis-leading 404 error code.  See:
             # https://gitea.com/ralphbean/bugwarrior/issues/374
@@ -269,6 +273,9 @@ class GiteaIssue(Issue):
         if body:
             body = body.replace('\r\n', '\n')
 
+        if len(body) < 1:
+            body = "No annotation was provided."
+
         created = self.parse_date(self.record.get('created_at'))
         updated = self.parse_date(self.record.get('updated_at'))
         closed = self.parse_date(self.record.get('closed_at'))
@@ -295,25 +302,19 @@ class GiteaIssue(Issue):
             self.NAMESPACE: self.extra['namespace'],
             self.STATE: self.record.get('state', '')
         }
-
     def get_tags(self):
-        tags = []
+        labels = [label['name'] for label in self.record.get('labels', [])] 
+        return self.get_tags_from_labels(labels)
 
-        if not self.config.get('import_labels_as_tags'):
-            return tags
+    def get_default_description(self):
+        log.info('In get_default_description')
+        return self.build_default_description(
+            title=self.record['title'],
+            url=self.get_processed_url(self.record['url']),
+            number=self.record['number'],
+            cls=self.extra['type'],
+        )
 
-        context = self.record.copy()
-        label_template = Template(self.config.get('label_template'))
-
-        for label_dict in self.record.get('labels', []):
-            context.update({
-                'label': self._normalize_label_to_tag(label_dict['name'])
-            })
-            tags.append(
-                label_template.render(context)
-            )
-
-        return tags
 
     def get_default_description(self):
         log.info('In get_default_description')
@@ -335,44 +336,42 @@ class GiteaService(IssueService):
 
         auth = {}
         token = self.config.token
-        self.login = self.config.login
         if hasattr(self.config, 'token'):
-            token = self.get_password('token', login=self.login)
+            token = self.get_password('token', login=self.config.username)
             auth['token'] = token
-        elif hasattr(self.config.hasattr, 'password'):
-            password = self.get_password('password', login=self.login)
-            auth['basic'] = (self.login, password)
         else:
             #Probably should be called by validate_config, but I don't care to fix that.
-            logging.critical("ERROR! Neither token or password was provided in config!")
+            logging.critical("ERROR! No token was provided in config!")
             sys.exit(1)
 
+        #TODO: document these with docstrings
         self.client = GiteaClient(host=self.config.host, auth=auth)
 
         self.host = self.config.host
 
         self.exclude_repos = self.config.exclude_repos
+        
         self.include_repos = self.config.include_repos
 
         self.username = self.config.username
-        self.filter_pull_requests = self.config.get(
-            'filter_pull_requests', default=False, to_type=bool
-        )
-        self.exclude_pull_requests = self.config.get(
-            'exclude_pull_requests', default=False, to_type=bool
-        )
-        self.involved_issues = self.config.get(
-            'involved_issues', default=False, to_type=bool
-        )
-        self.import_labels_as_tags = self.config.get(
-            'import_labels_as_tags', default=False, to_type=bool
-        )
-        self.label_template = self.config.get(
-            'label_template', default='{{label}}', to_type=bool
-        )
-        self.project_owner_prefix = self.config.get(
-            'project_owner_prefix', default=False, to_type=bool
-        )
+
+        self.filter_pull_requests = self.config.filter_pull_requests
+        
+        self.exclude_pull_requests = self.config.exclude_pull_requests
+
+        self.involved_issues = self.config.involved_issues
+
+        self.project_owner_prefix = self.config.project_owner_prefix
+        
+        self.include_assigned_issues = self.config.include_assigned_issues
+        
+        self.include_created_issues = self.config.include_created_issues
+
+        self.include_review_requested_issues = self.config.include_review_requested_issues
+
+        self.import_labels_as_tags = self.config.import_labels_as_tags
+        
+        self.label_template = self.config.label_template
 
         self.query = self.config.get(
             'query',
@@ -384,11 +383,10 @@ class GiteaService(IssueService):
     @staticmethod
     def get_keyring_service(service_config):
         #TODO grok this
-        login = service_config.login
         username = service_config.username
         host = service_config.host
-        return 'gitea://{login}@{host}/{username}'.format(
-            login=login, username=username, host=host)
+        return 'gitea://{username}@{host}/{username}'.format(
+            username=username, host=host)
 
     def get_service_metadata(self):
         return {
@@ -417,9 +415,9 @@ class GiteaService(IssueService):
                 issues[url] = (repo, issue)
         return issues
 
-    def get_directly_assigned_issues(self, username):
+    def get_special_issues(self, username, query):
         issues = {}
-        for issue in self.client.get_directly_assigned_issues(self.username):
+        for issue in self.client.get_special_issues(self.username, query):
             repos = self.get_repository_from_issue(issue)
             issues[issue['url']] = (repos, issue)
         return issues
@@ -524,10 +522,38 @@ class GiteaService(IssueService):
                     self.get_owned_repo_issues(
                         self.username + '/' + repo)
                 )
-            issues.update(
-                filter(self.filter_issues,
-                       self.get_directly_assigned_issues(self.username).items())
-            )
+
+            '''
+            A variable used to represent the attachable HTTP query that can be attached to the /repos/issues/search API end.
+
+            if httpQuery is set to "review_requested=True?mentioned=True" for example, then the /repos/issues/search API end will be told to search for all issues where a review is requested AND where the user is mentioned.
+            '''
+            httpQuery = "limit=" + str(self.config.issue_limit) + "&"
+
+            if self.config.get('include_assigned_issues', True, bool):
+                log.info("assigned was true")
+                issues.update(
+                    filter(self.filter_issues,
+                        self.get_special_issues(self.username, httpQuery + "assigned=true&").items())
+                )
+            if self.config.get('include_created_issues', True, bool):
+                log.info("created was true")
+                issues.update(
+                    filter(self.filter_issues,
+                        self.get_special_issues(self.username, httpQuery + "created=true&").items())
+                )
+            if self.config.get('include_mentioned_issues', True, bool):
+                log.info("mentioned was true")
+                issues.update(
+                    filter(self.filter_issues,
+                        self.get_special_issues(self.username, httpQuery + "mentioned=true&").items())
+                )
+            if self.config.get('include_review_requested_issues', True, bool):
+                log.info("review request was true")
+                issues.update(
+                    filter(self.filter_issues,
+                        self.get_special_issues(self.username, httpQuery + "review_requested=true&").items())
+                )
 
         log.info(' Found %i issues.', len(issues))  # these were debug logs
         issues = list(filter(self.include, issues.values()))
