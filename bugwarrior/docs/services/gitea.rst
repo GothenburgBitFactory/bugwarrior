@@ -13,11 +13,9 @@ Here's an example of a Gitea target:
 
 	[user_gitea]
 	service = gitea
-	gitea.login = ralphbean
 	gitea.username = ralphbean
 	gitea.host = git.bean.com #Note: the lack of https, the service will assume HTTPS by default.
-	gitea.password = @oracle:eval:pass show 'git.bean.com'
-	gitea.token = 0000000000000000000000000000000
+	gitea.token = @oracle:eval:pass show 'git.bean.com token'
 
 The above example is the minimum required to import issues from
 Gitea.  You can also feel free to use any of the
@@ -117,6 +115,33 @@ to all fields on the Taskwarrior task if needed:
    See :ref:`field_templates` for more details regarding how templates
    are processed.
 
+Limit Issues Imported
++++++++++++++++++++++
+Gitea lets system administrators configure the amount of objects that any given API request will return. 
+You may configure the amount to tell Gitea to give to you using the ``issue_limit`` option:
+
+.. config::
+   :fragment: gitea
+   
+    gitea.issue_limit = 200
+
+Do note, this will not overwrite what the gitea instance limits you to, it merely lets you set the amount of issues you will import.
+
+
+Including various types of issues
++++++++++++++++++++++
+
+Gitea has metadata attached to each issue, primarily: If you are assigned to an issue, if you created an issue, if an issue mentions you, and if an issue has a review reqest for you. You may set if each of these traits is worth importing by using the various ``include_*_issues`` options:
+
+.. config::
+   :fragment: gitea
+    
+    gitea.include_assigned_issues = true
+    gitea.include_created_issues = true
+    gitea.include_mentioned_issues = true
+    gitea.include_review_requested_issues = true
+
+Each setting will query the API for that trait alone and then add it to your Taskwarrior task list. For example, if you have created issues and mentioned issues off, but assigned issues and review requested issues on: You will only recieve new tasks for the issues you are assigned to do or requested to review, but not for issues you've created or mentioned. Issues that have been assigned to you and created by you would be included though, as these settings merely mark inclusion, not exclusion.
 
 Provided UDA Fields
 -------------------
