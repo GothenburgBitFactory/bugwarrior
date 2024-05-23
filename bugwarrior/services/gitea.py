@@ -15,7 +15,6 @@ from builtins import filter
 import logging
 import pathlib
 import re
-import six
 import sys
 from urllib.parse import urlparse
 from urllib.parse import quote_plus
@@ -36,11 +35,10 @@ class GiteaConfig(config.ServiceConfig):
     host = "gitea.com"
     login: str
     token: str
-    login: str
     username: str
     password: str
-    exclude_repos = []
-    include_repos = []
+    exclude_repos = config.ConfigList([])
+    include_repos = config.ConfigList([])
 
     def get(self, key, default=None, to_type=None):
         try:
@@ -370,7 +368,7 @@ class GiteaService(IssueService):
             'import_labels_as_tags', default=False, to_type=bool
         )
         self.label_template = self.config.get(
-            'label_template', default='{{label}}', to_type=six.text_type
+            'label_template', default='{{label}}', to_type=bool
         )
         self.project_owner_prefix = self.config.get(
             'project_owner_prefix', default=False, to_type=bool
@@ -380,7 +378,7 @@ class GiteaService(IssueService):
             'query',
             default='involves:{user} state:open'.format(
                 user=self.username) if self.involved_issues else '',
-            to_type=six.text_type
+            to_type=str
         )
 
     @staticmethod
@@ -551,14 +549,4 @@ class GiteaService(IssueService):
             }
             issue_obj.update_extra(extra)
             yield issue_obj
-
-    @classmethod
-    def validate_config(cls, service_config, target):
-        if 'login' not in service_config:
-            log.critical('[%s] has no \'gitea.login\'' % target)
-            sys.exit(1)
-
-        if 'token' not in service_config and 'password' not in service_config:
-            log.critical('[%s] has no \'gitea.token\' or \'gitea.password\'' % target)
-            sys.exit(1)
 
