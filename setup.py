@@ -107,6 +107,7 @@ setup(name='bugwarrior',
       azuredevops=bugwarrior.services.azuredevops:AzureDevopsService
       gitbug=bugwarrior.services.gitbug:GitBugService
       deck=bugwarrior.services.deck:NextcloudDeckService
+      logseq=bugwarrior.services.logseq:LogseqService
       [ini2toml.processing]
       bugwarrior = bugwarrior.config.ini2toml_plugin:activate
       """,

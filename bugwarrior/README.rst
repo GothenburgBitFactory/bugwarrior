@@ -22,6 +22,7 @@ It currently supports the following remote resources:
 - `Gmail <https://www.google.com/gmail/about/>`_
 - `Jira <https://www.atlassian.com/software/jira/overview>`_
 - `Kanboard <https://kanboard.org/>`_
+- `Logseq <https://logseq.com/>`_
 - `Nextcloud Deck <https://github.com/nextcloud/deck>`_
 - `Pagure <https://pagure.io/>`_
 - `Phabricator <http://phabricator.org/>`_
@@ -74,3 +75,4 @@ Contributors
 - Andrew Demas (contributed support for PivotalTracker)
 - Florian Preinstorfer (contributed support for Kanboard)
 - Lena Brüder (contributed support for Nextcloud Deck)
+- Stephen Cross (contributed support for Logseq)
