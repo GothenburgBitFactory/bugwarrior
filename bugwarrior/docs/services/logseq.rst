@@ -71,7 +71,25 @@ Task state mapping
 
 ``DONE`` is mapped to the ``completed`` state.
 
+``CANCELED`` and ``CANCELLED`` are mapped to the ``deleted`` state.
 
+Character replacement
++++++++++++++++++++++
+
+taskwarrior encodes the `[` and `]` characters commonly used in Logseq as ``&open;`` and ``&close;``. To
+avoid display issues ``[[`` and ``]]`` are replaced by ``【`` and ``】`` for page links, and single
+``[`` and ``]`` are replaced by ``〈`` and ``〉``. 
+
+You can override behaviour and use customer characters by setting the ``logseq.char_*`` options in your
+``bugwarriorrc`` config.
+
+.. config::
+    :fragment: logseq
+
+    logseq.char_open_link = 〖
+    logseq.char_close_link = 〗
+    logseq.char_open_bracket = (
+    logseq.char_close_bracket = )
 
 Troubleshooting
 ---------------

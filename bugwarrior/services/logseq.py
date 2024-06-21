@@ -18,6 +18,10 @@ class LogseqConfig(config.ServiceConfig):
     port: int = 12315
     token: str = ""
     task_state: str = "DOING, TODO, NOW, LATER, IN-PROGRESS, WAIT, WAITING"
+    char_open_link: str = "【"
+    char_close_link: str = "】"
+    char_open_bracket: str = "〈"
+    char_close_bracket: str = "〉"
 
 
 class LogseqClient(ServiceClient):
@@ -145,11 +149,10 @@ class LogseqIssue(Issue):
     def _unescape_content(self, content):
         return (
             content.replace('"', "'")  # prevent &dquote; in task details
-            .replace("#[[", "【")  # use alternate brackets for linked items
-            .replace("[[", "【")  # use alternate brackets for linked items
-            .replace("]]", "】")
-            .replace("[", "〈")  # use alternate bracket to prevent &open; and &close;
-            .replace("]", "〉")
+            .replace("[[", self.config.char_open_link)  # alternate brackets for linked items
+            .replace("]]", self.config.char_close_link)
+            .replace("[", self.config.char_open_bracket)  # prevent &open; and &close;
+            .replace("]", self.config.char_close_bracket)
         )
 
     # get a optimized and
@@ -166,8 +169,10 @@ class LogseqIssue(Issue):
 
     # get a list of tags from the task content
     def get_tags_from_content(self):
-        # TODO this misses tags that are in the #[[reference]] format
-        tags = re.findall(r"[#][^\s]*", self.get_formated_title())
+        # this includes #tagname, but ignores tags that are in the #[[tag name]] format
+        tags = re.findall(
+            r"(#[^" + self.config.char_open_link + r"^\s]+)", self.get_formated_title()
+        )
         return tags
 
     # get a list of annotations form the content
@@ -273,7 +278,6 @@ class LogseqService(IssueService):
 
     def get_owner(self, issue):
         # Issue assignment hasn't been implemented yet.
-        # TODO pull from assignee property field
         raise NotImplementedError(
             "This service has not implemented support for 'only_if_assigned'."
         )
