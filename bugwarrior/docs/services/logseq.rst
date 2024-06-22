@@ -59,15 +59,18 @@ Priority mapping
 Logseq task priorities ``A``, ``B``, and ``C`` mapped to the taskwarroior priorities
 ``H``, ``M``, and ``L`` respectively.
 
-Date and time mapping
-+++++++++++++++++++++
 
-The Logseq task SCHEDULED: and DEADLINE: fields are mapped to the ``scheduled`` and ``due`` date fields.
+Task state and data/time mappings
++++++++++++++++++++++++++++++++++
 
-Task state mapping
-++++++++++++++++++
+``DOING``, ``TODO``, ``NOW``, ``IN-PROGRESS`` are mapped to the default ``pending`` state.
+The Logseq task ``SCHEDULED:`` and ``DEADLINE:`` fields are mapped to the ``scheduled`` and ``due`` date fields.
 
-``DOING``,``TODO``, ``NOW``, ``IN-PROGRESS`` are mapped to the default ``pending`` state.
+``LATER``, ``WAITING``, ``WAIT`` are mapped to the ``waiting`` state. 
+The ``SHEDULED:`` date or ``DEADLINE`` date is used to set the ``wait`` date on the task.
+If no scheduled or deadlines date is available then the wait date is set to ``someday`` 
+(see ``Date and Time Synonyms <https://taskwarrior.org/docs/dates/#synonyms-hahahugoshortcode30s0hbhb/>``_).
+Waiting tasks can be listed using `task waiting`
 
 ``DONE`` is mapped to the ``completed`` state.
 
@@ -90,6 +93,36 @@ You can override behaviour and use customer characters by setting the ``logseq.c
     logseq.char_close_link = 〗
     logseq.char_open_bracket = (
     logseq.char_close_bracket = )
+
+Logseq URI links
+++++++++++++++++
+
+A ``logseq://`` URI is generated for each task to enable easy navigation directly to the specific task in
+the Logseq application. 
+
+By default bugwarrior incorporates the links into task description. To disable this behaviour either 
+modify the ``inline_links`` option to affect all services, or to modify for the logseg sevice only you can 
+set the ``logseq.inline_links`` option to False in your ``bugwarriorrc``.
+
+.. config::
+    :fragment: logseq
+
+    inline_links = True
+    logseq.inline_links = False
+
+Unlike regular ``http://`` links, most terminals do not make application specific URIs clickable. 
+A simple way to quickly open a a task in Logseq from the command line is to add a helper function to your 
+shell that extacts the Logseq URI and opens it using the system specific launcher. For example, to open the
+Logseq URI in MacOS add the following to your ``~/..zshrc``
+
+.. code-block:: bash
+
+    # open a specific taskwarrior task in Logseq
+    function taskopen() {
+        open $(task $1 | grep "Logseq URI" | sed -r 's/^Logseq URI//')
+    }
+
+From the command line you can open a specific task using taskwarior task id, e.g. ``taskopen 1234``.
 
 Troubleshooting
 ---------------

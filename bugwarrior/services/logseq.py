@@ -22,6 +22,7 @@ class LogseqConfig(config.ServiceConfig):
     char_close_link: str = "】"
     char_open_bracket: str = "〈"
     char_close_bracket: str = "〉"
+    inline_links = True  # set to False to override bugwarrior config
 
 
 class LogseqClient(ServiceClient):
@@ -88,6 +89,11 @@ class LogseqIssue(Issue):
     DONE = "logseqdone"
     URI = "logsequri"
 
+    # Local 2038-01-18, with time 00:00:00.
+    # A date far away, with semantically meaningful to GTD users.
+    # see https://taskwarrior.org/docs/dates/
+    SOMEDAY = datetime(2038, 1, 18)
+
     UDAS = {
         ID: {
             "type": "string",
@@ -137,7 +143,7 @@ class LogseqIssue(Issue):
         "DOING": "pending",
         "TODO": "pending",
         "NOW": "pending",
-        "LATER": "pending",
+        "LATER": "waiting",
         "WAIT": "waiting",
         "WAITING": "waiting",
         "DONE": "completed",
@@ -230,8 +236,12 @@ class LogseqIssue(Issue):
             log.warning(f"Could not parse date {date} from {scheduled}")
         return None
 
+    def _is_waiting(self):
+        return self.STATE_MAP[self.get_logseq_state()] == "waiting"
+
     def to_taskwarrior(self):
         annotations, scheduled_date, deadline_date = self.get_annotations_from_content()
+        wait_date = min([d for d in [scheduled_date, deadline_date, self.SOMEDAY] if d is not None])
         return {
             "project": self.extra["graph"],
             "priority": (
@@ -243,6 +253,7 @@ class LogseqIssue(Issue):
             "tags": self.get_tags_from_content(),
             "due": deadline_date,
             "scheduled": scheduled_date,
+            "wait": wait_date if self._is_waiting() else None,
             "status": self.STATE_MAP[self.get_logseq_state()],
             self.ID: self.record["id"],
             self.UUID: self.record["uuid"],
@@ -256,7 +267,7 @@ class LogseqIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.get_formated_title(),
-            url=self.get_url(),
+            url=self.get_url() if self.config.inline_links else '',
             number=self.record["id"],
             cls="issue",
         )
