@@ -56,21 +56,21 @@ comma separated list of required task states.
 Priority mapping
 ++++++++++++++++
 
-Logseq task priorities ``A``, ``B``, and ``C`` mapped to the taskwarroior priorities
+Logseq task priorities ``A``, ``B``, and ``C`` mapped to the taskwarrior priorities
 ``H``, ``M``, and ``L`` respectively.
-
 
 Task state and data/time mappings
 +++++++++++++++++++++++++++++++++
 
 ``DOING``, ``TODO``, ``NOW``, ``IN-PROGRESS`` are mapped to the default ``pending`` state.
-The Logseq task ``SCHEDULED:`` and ``DEADLINE:`` fields are mapped to the ``scheduled`` and ``due`` date fields.
+The Logseq task ``SCHEDULED:`` and ``DEADLINE:`` fields are mapped to the ``scheduled`` and 
+``due`` date fields.
 
-``LATER``, ``WAITING``, ``WAIT`` are mapped to the ``waiting`` state. 
+``LATER``, ``WAITING``, ``WAIT`` are mapped to the ``waiting`` state.
 The ``SHEDULED:`` date or ``DEADLINE`` date is used to set the ``wait`` date on the task.
 If no scheduled or deadlines date is available then the wait date is set to ``someday`` 
 (see ``Date and Time Synonyms <https://taskwarrior.org/docs/dates/#synonyms-hahahugoshortcode30s0hbhb/>``_).
-Waiting tasks can be listed using `task waiting`
+Waiting tasks can be listed using ``task waiting``
 
 ``DONE`` is mapped to the ``completed`` state.
 
@@ -79,7 +79,7 @@ Waiting tasks can be listed using `task waiting`
 Character replacement
 +++++++++++++++++++++
 
-taskwarrior encodes the `[` and `]` characters commonly used in Logseq as ``&open;`` and ``&close;``. To
+taskwarrior encodes the ``[`` and ``]`` characters commonly used in Logseq as ``&open;`` and ``&close;``. To
 avoid display issues ``[[`` and ``]]`` are replaced by ``【`` and ``】`` for page links, and single
 ``[`` and ``]`` are replaced by ``〈`` and ``〉``. 
 
@@ -106,8 +106,7 @@ set the ``logseq.inline_links`` option to False in your ``bugwarriorrc``.
 
 .. config::
     :fragment: logseq
-
-    inline_links = True
+    
     logseq.inline_links = False
 
 Unlike regular ``http://`` links, most terminals do not make application specific URIs clickable. 
@@ -124,8 +123,7 @@ Logseq URI in MacOS add the following to your ``~/..zshrc``
 
 From the command line you can open a specific task using taskwarior task id, e.g. ``taskopen 1234``.
 
-Troubleshooting
----------------
+Troubleshooting---------------
 
 Logseq graph re-index
 +++++++++++++++++++++
