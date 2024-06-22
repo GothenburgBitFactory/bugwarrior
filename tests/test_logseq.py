@@ -82,7 +82,9 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             "annotations": [],
-            "description": f"(bw)Is#{self.test_record['id']} - DOING Do something .. logseq://graph/Test?block-id=66699a83-3ee0-4edc-81c6-a24c9b80bec6",
+            "description": f"(bw)Is#{self.test_record['id']}"
+            + " - DOING Do something"
+            + " .. logseq://graph/Test?block-id=66699a83-3ee0-4edc-81c6-a24c9b80bec6",
             "due": None,
             "scheduled": None,
             "wait": None,
