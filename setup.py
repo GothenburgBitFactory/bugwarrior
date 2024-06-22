@@ -52,7 +52,7 @@ setup(name='bugwarrior',
       author_email='ralph.bean@gmail.com',
       url='http://github.com/ralphbean/bugwarrior',
       license='GPLv3+',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      packages=find_packages(exclude=['ez_setup', 'examples', 'tests', 'tests.*']),
       include_package_data=True,
       zip_safe=False,
       install_requires=[
