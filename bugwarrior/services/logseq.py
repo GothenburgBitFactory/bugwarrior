@@ -16,13 +16,13 @@ class LogseqConfig(config.ServiceConfig):
     service: typing_extensions.Literal["logseq"]
     host: str = "localhost"
     port: int = 12315
-    token: str = ""
+    token: str
     task_state: str = "DOING, TODO, NOW, LATER, IN-PROGRESS, WAIT, WAITING"
     char_open_link: str = "【"
     char_close_link: str = "】"
     char_open_bracket: str = "〈"
     char_close_bracket: str = "〉"
-    inline_links = True  # set to False to override bugwarrior config
+    inline_links: bool = True
 
 
 class LogseqClient(ServiceClient):
@@ -49,7 +49,7 @@ class LogseqClient(ServiceClient):
             return self.json_response(response)
         except requests.exceptions.ConnectionError as ce:
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
-            exit()
+            exit(1)
 
     def _get_current_graph(self):
         try:
@@ -61,7 +61,7 @@ class LogseqClient(ServiceClient):
             return self.json_response(response)
         except requests.exceptions.ConnectionError as ce:
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
-            exit()
+            exit(1)
 
     def get_graph_name(self):
         graph = self._get_current_graph()
@@ -181,7 +181,7 @@ class LogseqIssue(Issue):
         )
         return tags
 
-    # get a list of annotations form the content
+    # get a list of annotations from the content
     def get_annotations_from_content(self):
         annotations = []
         scheduled_date = None
@@ -212,8 +212,6 @@ class LogseqIssue(Issue):
             .replace(">", "")
             .split(" ")
         )
-        date = ""
-        date_format = ""
         if len(date_split) == 2:  # <date day>
             date = date_split[0]
             date_format = "%Y-%m-%d"
@@ -296,6 +294,5 @@ class LogseqService(IssueService):
     def issues(self):
         graph_name = self.client.get_graph_name()
         for issue in self.client.get_issues():
-            extra = {}
-            extra["graph"] = graph_name
+            extra = {"graph": graph_name}
             yield self.get_issue_for_record(issue[0], extra)
