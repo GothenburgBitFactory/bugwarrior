@@ -17,7 +17,10 @@ class LogseqConfig(config.ServiceConfig):
     host: str = "localhost"
     port: int = 12315
     token: str
-    task_state: str = "DOING, TODO, NOW, LATER, IN-PROGRESS, WAIT, WAITING"
+    task_state: config.ConfigList = [
+        "DOING", "TODO", "NOW", "LATER", "IN-PROGRESS", "WAIT", "WAITING"
+        # states DONE and CANCELED/CANCELLED are skipped by default
+    ]
     char_open_link: str = "【"
     char_close_link: str = "】"
     char_open_bracket: str = "〈"
@@ -36,8 +39,6 @@ class LogseqClient(ServiceClient):
             "Authorization": "Bearer " + self.token,
             "content-type": "application/json; charset=utf-8",
         }
-
-        self.project = None
 
     def _datascript_query(self, query):
         try:
@@ -68,15 +69,17 @@ class LogseqClient(ServiceClient):
         return graph["name"] if graph else None
 
     def get_issues(self):
-        task_filter = self.filter.replace(" ", "").replace(",", '" "')
-        return self._datascript_query(
-            f"""
+        query = f"""
             [:find (pull ?b [*])
                 :where [?b :block/marker ?marker]
-                [(contains? #{{\"{task_filter}\"}} ?marker)]
+                [(contains? #{{{self.filter}}} ?marker)]
             ]
         """
-        )
+        result = self._datascript_query(query)
+        if "error" in result:
+            log.fatal("Error querying Logseq: %s using query %s", result["error"], query)
+            exit(1)
+        return result
 
 
 class LogseqIssue(Issue):
@@ -84,8 +87,6 @@ class LogseqIssue(Issue):
     UUID = "logsequuid"
     STATE = "logseqstate"
     TITLE = "logseqtitle"
-    SCHEDULED = "logseqscheduled"
-    DEADLINE = "logseqdeadline"
     DONE = "logseqdone"
     URI = "logsequri"
 
@@ -111,14 +112,6 @@ class LogseqIssue(Issue):
             "type": "string",
             "label": "Logseq Title",
         },
-        SCHEDULED: {
-            "type": "date",
-            "label": "Logseq Scheduled",
-        },
-        DEADLINE: {
-            "type": "date",
-            "label": "Logseq Deadline",
-        },
         DONE: {
             "type": "date",
             "label": "Logseq Done",
@@ -138,14 +131,16 @@ class LogseqIssue(Issue):
         "C": "L",
     }
 
+    # `pending` is the defuault state. Taskwarrior will dynamcily change task to `waiting`
+    # state if wait date is set to a future date.
     STATE_MAP = {
         "IN-PROGRESS": "pending",
         "DOING": "pending",
         "TODO": "pending",
         "NOW": "pending",
-        "LATER": "waiting",
-        "WAIT": "waiting",
-        "WAITING": "waiting",
+        "LATER": "pending",
+        "WAIT": "pending",
+        "WAITING": "pending",
         "DONE": "completed",
         "CANCELED": "deleted",
         "CANCELLED": "deleted",
@@ -161,13 +156,13 @@ class LogseqIssue(Issue):
             .replace("]", self.config.char_close_bracket)
         )
 
-    # get a optimized and
+    # get an optimized and formatted title
     def get_formated_title(self):
         # use first line only and remove priority
         first_line = (
             self.record["content"]
             .split("\n")[0]  # only use first line
-            .replace("[#A] ", "")
+            .replace("[#A] ", "")  # remove priority markers
             .replace("[#B] ", "")
             .replace("[#C] ", "")
         )
@@ -235,7 +230,7 @@ class LogseqIssue(Issue):
         return None
 
     def _is_waiting(self):
-        return self.STATE_MAP[self.get_logseq_state()] == "waiting"
+        return self.get_logseq_state() in ["WAIT", "WAITING"]
 
     def to_taskwarrior(self):
         annotations, scheduled_date, deadline_date = self.get_annotations_from_content()
@@ -257,8 +252,6 @@ class LogseqIssue(Issue):
             self.UUID: self.record["uuid"],
             self.STATE: self.record["marker"],
             self.TITLE: self.get_formated_title(),
-            self.SCHEDULED: scheduled_date,
-            self.DEADLINE: deadline_date,
             self.URI: self.get_url(),
         }
 
@@ -277,12 +270,12 @@ class LogseqService(IssueService):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        filter = '"' + '" "'.join(self.config.task_state) + '"'
         self.client = LogseqClient(
             host=self.config.host,
             port=self.config.port,
             token=self.config.token,
-            filter=self.config.task_state,
+            filter=filter,
         )
 
     def get_owner(self, issue):

@@ -7,8 +7,6 @@ You can import `tasks <https://docs.logseq.com/#/page/tasks>`_ from `Logseq <htt
 Additional Requirements
 -----------------------
 
-Logseq application must active with the HTTP API server running for bugwarrior to connect.
-
 To use bugwarrior to pull tickets from Logseq you need to enable the Logseq HTTP APIs server.
 In Logseq go to **Settings** > **Features** and toggle the **HTTP APIs server** option.
 
@@ -26,8 +24,6 @@ Here's an example of a Logseq target:
 
     [my_logseq_graph]
     service = logseq
-    logseq.host = localhost
-    logseq.port = 12315
     logseq.token = mybugwarrioraccesstoken
 
 The above example is the minimum required to import issues from Logseq.
@@ -36,6 +32,31 @@ You can also feel free to use any of the configuration options described in
 
 Service Features
 ----------------
+
+Host and port
++++++++++++++
+
+By default the service connects to Logseq on your local machine at `localhost:12315`. If you have
+Logseq on another host or using a different port you can change the setting using:
+
+.. config::
+    :fragment: logseq
+
+    logseq.host = anotherhost.home.lan
+    logseq.port = 12315
+
+
+Authorization Token
++++++++++++++++++++
+
+The authorization token is used to authenticate with Logseq. This value is required and must match
+the one of the authorization tokens set in Logseq HTTP APIs server settings.
+
+.. config::
+    :fragment: logseq
+
+    logseq.token = mybugwarrioraccesstoken
+
 
 Task filters
 ++++++++++++
@@ -53,28 +74,28 @@ comma separated list of required task states.
 
     logseq.task_state = DOING, NOW, IN-PROGRESS
 
+Task state and data/time mappings
++++++++++++++++++++++++++++++++++
+
+``DOING``, ``TODO``, ``NOW``, ``LATER``, and ``IN-PROGRESS`` are mapped to the default ``pending`` state.
+The Logseq task ``SCHEDULED:`` and ``DEADLINE:`` fields are mapped to the ``scheduled`` and 
+``due`` date fields.
+
+``WAITING`` and ``WAIT`` are dynamically mapped to either ``pending`` or ``waiting`` states based on 
+the ``wait`` date. The ``SCHEDULED:`` date or ``DEADLINE`` date is used to set the ``wait`` date on the
+task. If no scheduled or deadlines date is available then the wait date is set to ``someday`` 
+(see ``Date and Time Synonyms <https://taskwarrior.org/docs/dates/#synonyms-hahahugoshortcode30s0hbhb/>``_).
+Future dated waiting tasks can be listed using ``task waiting``
+
+``DONE`` is mapped to the ``completed`` state.
+
+``CANCELED`` and ``CANCELLED`` are mapped to the ``deleted`` state.
+
 Priority mapping
 ++++++++++++++++
 
 Logseq task priorities ``A``, ``B``, and ``C`` are mapped to the taskwarrior priorities
 ``H``, ``M``, and ``L`` respectively.
-
-Task state and data/time mappings
-+++++++++++++++++++++++++++++++++
-
-``DOING``, ``TODO``, ``NOW``, ``IN-PROGRESS`` are mapped to the default ``pending`` state.
-The Logseq task ``SCHEDULED:`` and ``DEADLINE:`` fields are mapped to the ``scheduled`` and 
-``due`` date fields.
-
-``LATER``, ``WAITING``, ``WAIT`` are mapped to the ``waiting`` state.
-The ``SCHEDULED:`` date or ``DEADLINE`` date is used to set the ``wait`` date on the task.
-If no scheduled or deadlines date is available then the wait date is set to ``someday`` 
-(see ``Date and Time Synonyms <https://taskwarrior.org/docs/dates/#synonyms-hahahugoshortcode30s0hbhb/>``_).
-Waiting tasks can be listed using ``task waiting``
-
-``DONE`` is mapped to the ``completed`` state.
-
-``CANCELED`` and ``CANCELLED`` are mapped to the ``deleted`` state.
 
 Character replacement
 +++++++++++++++++++++
@@ -83,8 +104,7 @@ Taskwarrior encodes the ``[`` and ``]`` characters commonly used in Logseq as ``
 avoid display issues ``[[`` and ``]]`` are replaced by ``【`` and ``】`` for page links, and single
 ``[`` and ``]`` are replaced by ``〈`` and ``〉``. 
 
-You can override behaviour and use customer characters by setting the ``char_*`` options in your
-``bugwarriorrc`` config.
+You can override behaviour and use customer characters by setting the ``char_*`` options.
 
 .. config::
     :fragment: logseq
