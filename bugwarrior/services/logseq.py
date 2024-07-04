@@ -147,6 +147,7 @@ class LogseqIssue(Issue):
     }
 
     # replace characters that cause escaping issues like [] and "
+    # this is a workaround for https://github.com/ralphbean/taskw/issues/172
     def _unescape_content(self, content):
         return (
             content.replace('"', "'")  # prevent &dquote; in task details

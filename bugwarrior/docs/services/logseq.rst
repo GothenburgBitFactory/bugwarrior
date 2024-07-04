@@ -100,11 +100,14 @@ Logseq task priorities ``A``, ``B``, and ``C`` are mapped to the taskwarrior pri
 Character replacement
 +++++++++++++++++++++
 
-Taskwarrior encodes the ``[`` and ``]`` characters commonly used in Logseq as ``&open;`` and ``&close;``. To
-avoid display issues ``[[`` and ``]]`` are replaced by ``【`` and ``】`` for page links, and single
+This capability is in part to workaround ``ralphbean/taskw#172 <https://github.com/ralphbean/taskw/issues/172>``_
+which causes the ``[`` and ``]`` characters commonly used in Logseq to be over escaped as ``&open;`` and ``&close;``
+when they are synced using bugwarrior.
+
+To avoid display issues ``[[`` and ``]]`` are replaced by ``【`` and ``】`` for page links, and single
 ``[`` and ``]`` are replaced by ``〈`` and ``〉``. 
 
-You can override behaviour and use customer characters by setting the ``char_*`` options.
+You can override this default behaviour to use alternative custom characters by setting the ``char_*`` options.
 
 .. config::
     :fragment: logseq
