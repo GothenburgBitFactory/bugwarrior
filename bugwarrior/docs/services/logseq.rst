@@ -45,7 +45,7 @@ By default the service will import all tasks in an active tasks states
 
     DOING, TODO, NOW, LATER, IN-PROGRESS, WAIT, WAITING
 
-You can override this filter by setting the ``logseq.task_state`` option to a 
+You can override this filter by setting the ``task_state`` option to a 
 comma separated list of required task states.
 
 .. config::
@@ -56,7 +56,7 @@ comma separated list of required task states.
 Priority mapping
 ++++++++++++++++
 
-Logseq task priorities ``A``, ``B``, and ``C`` mapped to the taskwarrior priorities
+Logseq task priorities ``A``, ``B``, and ``C`` are mapped to the taskwarrior priorities
 ``H``, ``M``, and ``L`` respectively.
 
 Task state and data/time mappings
@@ -67,7 +67,7 @@ The Logseq task ``SCHEDULED:`` and ``DEADLINE:`` fields are mapped to the ``sche
 ``due`` date fields.
 
 ``LATER``, ``WAITING``, ``WAIT`` are mapped to the ``waiting`` state.
-The ``SHEDULED:`` date or ``DEADLINE`` date is used to set the ``wait`` date on the task.
+The ``SCHEDULED:`` date or ``DEADLINE`` date is used to set the ``wait`` date on the task.
 If no scheduled or deadlines date is available then the wait date is set to ``someday`` 
 (see ``Date and Time Synonyms <https://taskwarrior.org/docs/dates/#synonyms-hahahugoshortcode30s0hbhb/>``_).
 Waiting tasks can be listed using ``task waiting``
@@ -79,11 +79,11 @@ Waiting tasks can be listed using ``task waiting``
 Character replacement
 +++++++++++++++++++++
 
-taskwarrior encodes the ``[`` and ``]`` characters commonly used in Logseq as ``&open;`` and ``&close;``. To
+Taskwarrior encodes the ``[`` and ``]`` characters commonly used in Logseq as ``&open;`` and ``&close;``. To
 avoid display issues ``[[`` and ``]]`` are replaced by ``【`` and ``】`` for page links, and single
 ``[`` and ``]`` are replaced by ``〈`` and ``〉``. 
 
-You can override behaviour and use customer characters by setting the ``logseq.char_*`` options in your
+You can override behaviour and use customer characters by setting the ``char_*`` options in your
 ``bugwarriorrc`` config.
 
 .. config::
@@ -101,8 +101,8 @@ A ``logseq://`` URI is generated for each task to enable easy navigation directl
 the Logseq application. 
 
 By default bugwarrior incorporates the links into task description. To disable this behaviour either 
-modify the ``inline_links`` option to affect all services, or to modify for the logseg sevice only you can 
-set the ``logseq.inline_links`` option to False in your ``bugwarriorrc``.
+modify the ``inline_links`` option in the main section to affect all services, or to modify for the logseg sevice only you can 
+set it in your Logseq section.
 
 .. config::
     :fragment: logseq
@@ -141,8 +141,8 @@ If you get the following error when running bugwarrior:
 
 - Check that the LogSeq application is running
 - Check that the HTTP APIs server is started
-- Check that authorization token is set the APIs server settings and matches the 
-  ``logseq.token`` in your ``bugwarriorrc`` 
+- Check that authorization token is set in the API server settings and matches the 
+  ``token``.
 
 Provided UDA Fields
 -------------------
