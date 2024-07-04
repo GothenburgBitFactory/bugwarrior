@@ -66,8 +66,6 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             issue.UUID: self.test_record["uuid"],
             issue.STATE: self.test_record["marker"],
             issue.TITLE: "DOING Do something",
-            issue.DEADLINE: None,
-            issue.SCHEDULED: None,
             issue.URI: "logseq://graph/Test?block-id=66699a83-3ee0-4edc-81c6-a24c9b80bec6",
         }
 
@@ -96,8 +94,6 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             issue.UUID: self.test_record["uuid"],
             issue.STATE: self.test_record["marker"],
             issue.TITLE: "DOING Do something",
-            issue.DEADLINE: None,
-            issue.SCHEDULED: None,
             issue.URI: "logseq://graph/Test?block-id=66699a83-3ee0-4edc-81c6-a24c9b80bec6",
         }
 
