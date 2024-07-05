@@ -157,6 +157,15 @@ class LogseqIssue(Issue):
             .replace("]", self.config.char_close_bracket)
         )
 
+    # remove brackets and spaces to compress display format of mutli work tags
+    # e.g from #[[Multi Word]] to #MultiWord
+    def _compress_tag_format(self, tag):
+        return (
+            tag.replace(self.config.char_open_link, "")
+            .replace(" ", "")
+            .replace(self.config.char_close_link, "")
+        )
+
     # get an optimized and formatted title
     def get_formated_title(self):
         # use first line only and remove priority
@@ -173,8 +182,16 @@ class LogseqIssue(Issue):
     def get_tags_from_content(self):
         # this includes #tagname, but ignores tags that are in the #[[tag name]] format
         tags = re.findall(
-            r"(#[^" + self.config.char_open_link + r"^\s]+)", self.get_formated_title()
+            r"(#[^" + self.config.char_open_link + r"^\s]+)",
+            self.get_formated_title()
         )
+        # and this add teh #[[multi word]] formated tags
+        tags.extend(re.findall(
+            r"(#[" + self.config.char_open_link + r"].*[" + self.config.char_close_link + r"])",
+            self.get_formated_title()
+        ))
+        # compress format to single words
+        tags = [self._compress_tag_format(t) for t in tags]
         return tags
 
     # get a list of annotations from the content
