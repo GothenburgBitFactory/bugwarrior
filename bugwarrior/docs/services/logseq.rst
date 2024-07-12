@@ -83,7 +83,7 @@ The Logseq task ``SCHEDULED:`` and ``DEADLINE:`` fields are mapped to the ``sche
 
 ``WAITING`` and ``WAIT`` are dynamically mapped to either ``pending`` or ``waiting`` states based on 
 the ``wait`` date. The ``SCHEDULED:`` date or ``DEADLINE`` date is used to set the ``wait`` date on the
-task. If no scheduled or deadlines date is available then the wait date is set to ``someday`` 
+task. If no scheduled or deadline date is available then the wait date is set to ``someday`` 
 (see ``Date and Time Synonyms <https://taskwarrior.org/docs/dates/#synonyms-hahahugoshortcode30s0hbhb/>``_).
 Future dated waiting tasks can be listed using ``task waiting``
 

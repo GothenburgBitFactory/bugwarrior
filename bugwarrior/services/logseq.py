@@ -167,7 +167,7 @@ class LogseqIssue(Issue):
         )
 
     # get an optimized and formatted title
-    def get_formated_title(self):
+    def get_formatted_title(self):
         # use first line only and remove priority
         first_line = (
             self.record["content"]
@@ -183,12 +183,12 @@ class LogseqIssue(Issue):
         # this includes #tagname, but ignores tags that are in the #[[tag name]] format
         tags = re.findall(
             r"(#[^" + self.config.char_open_link + r"^\s]+)",
-            self.get_formated_title()
+            self.get_formatted_title()
         )
-        # and this add teh #[[multi word]] formated tags
+        # and this adds the #[[multi word]] formatted tags
         tags.extend(re.findall(
             r"(#[" + self.config.char_open_link + r"].*[" + self.config.char_close_link + r"])",
-            self.get_formated_title()
+            self.get_formatted_title()
         ))
         # compress format to single words
         tags = [self._compress_tag_format(t) for t in tags]
@@ -269,13 +269,13 @@ class LogseqIssue(Issue):
             self.ID: self.record["id"],
             self.UUID: self.record["uuid"],
             self.STATE: self.record["marker"],
-            self.TITLE: self.get_formated_title(),
+            self.TITLE: self.get_formatted_title(),
             self.URI: self.get_url(),
         }
 
     def get_default_description(self):
         return self.build_default_description(
-            title=self.get_formated_title(),
+            title=self.get_formatted_title(),
             url=self.get_url() if self.config.inline_links else '',
             number=self.record["id"],
             cls="issue",
