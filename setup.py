@@ -31,6 +31,7 @@ extras = {
         "importlib-metadata<5",
     ],
     "trac": ["offtrac"],
+    "todoist": ["todoist_api_python"]
 }
 
 setup(name='bugwarrior',
@@ -100,6 +101,7 @@ setup(name='bugwarrior',
       gitbug=bugwarrior.services.gitbug:GitBugService
       deck=bugwarrior.services.deck:NextcloudDeckService
       logseq=bugwarrior.services.logseq:LogseqService
+      todoist=bugwarrior.services.todoist:TodoistService
       [ini2toml.processing]
       bugwarrior = bugwarrior.config.ini2toml_plugin:activate
       """,

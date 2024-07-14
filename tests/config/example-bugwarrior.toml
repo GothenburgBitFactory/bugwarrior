@@ -175,3 +175,8 @@ exclude_stories = ["first_story_id", "second_story_id"]
 exclude_tags = ["wont fix", "should fix"]
 query = "mywork:1234 -has:label"
 
+[my_todoist]
+service = "todoist"
+token = "your-api-key"
+filter = "(today | tomorrow | overdue)"
+

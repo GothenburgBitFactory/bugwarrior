@@ -186,3 +186,8 @@ pivotaltracker.exclude_projects = first_project_id,second_project_id
 pivotaltracker.exclude_stories = first_story_id,second_story_id
 pivotaltracker.exclude_tags = wont fix, should fix
 pivotaltracker.query = mywork:1234 -has:label
+
+[my_todoist]
+service = todoist
+todoist.token = your-api-key
+todoist.filter = (today | tomorrow | overdue)

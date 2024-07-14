@@ -28,6 +28,7 @@ It currently supports the following remote resources:
 - `Redmine <https://www.redmine.org/>`_
 - `Taiga <https://taiga.io>`_
 - `Teamwork Projects <https://www.teamwork.com/>`_
+- `Todoist <https://todoist.com/>`_
 - `Trac <https://trac.edgewall.org/>`_
 - `Trello <https://trello.com/>`_
 - `YouTrack <https://www.jetbrains.com/youtrack/>`_
