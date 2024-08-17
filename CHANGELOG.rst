@@ -1,4 +1,4 @@
-release-next
+2.0.0
 ------------
 
 Bugwarrior has a new home! The [Bugwarrior repository](https://github.com/GothenburgBitFactory/bugwarrior) has been graciously transferred by [@ralphbean](https://github.com/ralphbean), the original author, to the [GothenburgBitFactory](https://gothenburgbitfactory.org/) organization which also maintains Taskwarrior.
@@ -17,6 +17,7 @@ New and Removed Services
 - Added Azure Devops service. (https://github.com/ralphbean/bugwarrior/pull/808)
 - Added Git-Bug service. (https://github.com/ralphbean/bugwarrior/pull/934)
 - Added Kanboard service. (https://github.com/ralphbean/bugwarrior/pull/794)
+- Added Logseq service. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1052)
 - Added Nextcloud Deck service. (https://github.com/ralphbean/bugwarrior/pull/954)
 - Removed Megaplan service. (https://github.com/ralphbean/bugwarrior/pull/844)
 
