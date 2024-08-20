@@ -171,15 +171,6 @@ class Issue(abc.ABC):
 
     @abc.abstractmethod
     def get_default_description(self):
-        """ Return the old-style verbose description from bugwarrior.
-
-        This is useful for two purposes:
-
-        * Finding and linking historically-created records.
-        * Allowing people to keep using the historical description
-          for taskwarrior.
-
-        """
         raise NotImplementedError()
 
     def get_tags_from_labels(self,
