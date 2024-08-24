@@ -2,7 +2,9 @@ import json
 
 import responses
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gerrit import GerritService
+
 from .base import ServiceTest, AbstractServiceTest
 
 
@@ -82,7 +84,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'project': 'nova',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
     @responses.activate
     def test_issues(self):
@@ -107,4 +109,4 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'project': 'nova',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

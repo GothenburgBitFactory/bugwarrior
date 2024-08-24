@@ -1,8 +1,9 @@
 from dateutil.parser import parse as parse_date
 import responses
 
-from bugwarrior.services.trello import TrelloConfig, TrelloService, TrelloIssue
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.config.schema import MainSectionConfig
+from bugwarrior.services.trello import TrelloConfig, TrelloService, TrelloIssue
 
 from .base import ConfigTest, ServiceTest
 
@@ -215,7 +216,7 @@ class TestTrelloService(ConfigTest):
                 "@luidgi - Preums",
                 "@mario - Deuz"],
             'tags': []}
-        actual = next(issues).get_taskwarrior_record()
+        actual = TaskConstructor(next(issues)).get_taskwarrior_record()
         self.assertEqual(expected, actual)
 
     maxDiff = None

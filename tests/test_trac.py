@@ -1,3 +1,4 @@
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.trac import TracService
 
 from .base import ServiceTest, AbstractServiceTest
@@ -93,4 +94,4 @@ class TestTracIssue(AbstractServiceTest, ServiceTest):
             'tracurl': 'https://ljlkajsdfl.com/ticket/1',
             'traccomponent': 'testcomponent'}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

@@ -2,6 +2,7 @@ from unittest import mock
 
 import responses
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.teamlab import TeamLabService
 
 from .base import ServiceTest, AbstractServiceTest
@@ -73,4 +74,4 @@ class TestTeamlabIssue(AbstractServiceTest, ServiceTest):
             'teamlaburl':
                 'http://something/products/projects/tasks.aspx?prjID=140&id=10'}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

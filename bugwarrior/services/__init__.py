@@ -1,13 +1,10 @@
 import abc
-import copy
 import re
 
 from dateutil.parser import parse as parse_date
 from dateutil.tz import tzlocal
 from jinja2 import Template
 import pytz
-
-from taskw.task import Task
 
 from bugwarrior.config import schema, secrets
 from bugwarrior.db import MARKUP, URLShortener
@@ -202,27 +199,6 @@ class Issue(abc.ABC):
 
         return tags
 
-    def get_added_tags(self):
-        added_tags = []
-        for tag in self.config.add_tags:
-            tag = Template(tag).render(self.get_template_context())
-            if tag:
-                added_tags.append(tag)
-
-        return added_tags
-
-    def get_taskwarrior_record(self, refined=True) -> dict:
-        if not getattr(self, '_taskwarrior_record', None):
-            self._taskwarrior_record = self.to_taskwarrior()
-        record = copy.deepcopy(self._taskwarrior_record)
-        if refined:
-            record = self.refine_record(record)
-        if 'tags' not in record:
-            record['tags'] = []
-        if refined:
-            record['tags'].extend(self.get_added_tags())
-        return record
-
     def get_priority(self):
         return self.PRIORITY_MAP.get(
             self.record.get('priority'),
@@ -272,25 +248,6 @@ class Issue(abc.ABC):
             url,
         )
 
-    def get_template_context(self):
-        context = (
-            self.get_taskwarrior_record(refined=False).copy()
-        )
-        context.update(self.extra)
-        context.update({
-            'description': self.get_default_description(),
-        })
-        return context
-
-    def refine_record(self, record):
-        for field in Task.FIELDS.keys():
-            if field in self.config.templates:
-                template = Template(self.config.templates[field])
-                record[field] = template.render(self.get_template_context())
-            elif hasattr(self, 'get_default_%s' % field):
-                record[field] = getattr(self, 'get_default_%s' % field)()
-        return record
-
     @property
     def record(self):
         return self._foreign_record
@@ -298,15 +255,6 @@ class Issue(abc.ABC):
     @property
     def extra(self):
         return self._extra
-
-    def __str__(self):
-        return '%s: %s' % (
-            self.config.target,
-            self.get_taskwarrior_record()['description']
-        )
-
-    def __repr__(self):
-        return '<%s>' % str(self)
 
 
 class ServiceClient:

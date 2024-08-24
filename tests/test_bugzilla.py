@@ -2,6 +2,7 @@ import datetime
 from unittest import mock
 from collections import namedtuple
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bz import BugzillaService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -155,7 +156,7 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             'project': 'Something',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
     def test_only_if_assigned(self):
         with mock.patch('bugzilla.Bugzilla'):
@@ -206,7 +207,7 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
             'project': 'Something',
             'tags': []}
 
-        self.assertEqual(next(issues).get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(next(issues)).get_taskwarrior_record(), expected)
 
         # Only one issue is assigned.
         self.assertRaises(StopIteration, lambda: next(issues))
@@ -246,9 +247,9 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
 
         issues = self.service.issues()
 
-        self.assertIn(next(issues).get_taskwarrior_record()['bugzillabugid'],
+        self.assertIn(TaskConstructor(next(issues)).get_taskwarrior_record()['bugzillabugid'],
                       [1234567, 1234568])
-        self.assertIn(next(issues).get_taskwarrior_record()['bugzillabugid'],
+        self.assertIn(TaskConstructor(next(issues)).get_taskwarrior_record()['bugzillabugid'],
                       [1234567, 1234568])
         # Only two issues are assigned to the user or unassigned.
         self.assertRaises(StopIteration, lambda: next(issues))

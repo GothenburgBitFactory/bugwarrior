@@ -5,6 +5,7 @@ from unittest import mock
 import pypandoc
 import pytz
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.activecollab import (
     ActiveCollabService
 )
@@ -141,4 +142,4 @@ class TestActiveCollabIssues(AbstractServiceTest, ServiceTest):
             'project': 'something',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

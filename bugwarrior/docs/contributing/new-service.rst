@@ -264,7 +264,7 @@ Create a test file and implement at least the minimal service tests by inheritin
 
           expected = { ... }
 
-          self.assertEqual(issue.get_taskwarrior_record(), expected)
+          self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
 9. Documentation
 ------------------

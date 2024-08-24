@@ -3,6 +3,7 @@ from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.azuredevops import (
     AzureDevopsService,
     striphtml,
@@ -230,7 +231,7 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "tags": []
         }
         issue = next(self.service.issues())
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
     def test_issues_wiql_filter(self):
         expected = {
@@ -255,4 +256,4 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
         }
         service = self.get_service(config_overrides={'wiql_filter': 'something'})
         issue = next(service.issues())
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

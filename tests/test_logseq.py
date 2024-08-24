@@ -1,7 +1,9 @@
 from unittest import mock
 
-from .base import AbstractServiceTest, ServiceTest
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.logseq import LogseqService, LogseqClient
+
+from .base import AbstractServiceTest, ServiceTest
 
 
 class TestLogseqIssue(AbstractServiceTest, ServiceTest):
@@ -97,4 +99,4 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             issue.URI: "logseq://graph/Test?block-id=66699a83-3ee0-4edc-81c6-a24c9b80bec6",
         }
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

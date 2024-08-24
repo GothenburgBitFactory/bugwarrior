@@ -1,6 +1,8 @@
 import sys
 from unittest import mock, SkipTest
 
+from bugwarrior.collect import TaskConstructor
+
 if sys.version_info >= (3, 11):
     raise SkipTest(
         "Python-3.11+ not supported. "
@@ -89,4 +91,4 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
             'btsstatus': 'pending',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

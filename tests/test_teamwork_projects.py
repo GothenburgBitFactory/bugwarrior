@@ -1,9 +1,11 @@
-from .base import ServiceTest, AbstractServiceTest
-from bugwarrior.services.teamwork_projects import TeamworkService
-
 import responses
 import datetime
 from dateutil.tz import tzutc
+
+from bugwarrior.collect import TaskConstructor
+from bugwarrior.services.teamwork_projects import TeamworkService
+
+from .base import ServiceTest, AbstractServiceTest
 
 
 class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
@@ -136,5 +138,5 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
         }
         issue.user_id = "5"
         issue.name = "Greg McCoy"
-        self.assertEqual(issue.get_taskwarrior_record(), expected_data)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected_data)
         self.assertEqual(issue.get_owner(), "Greg McCoy")

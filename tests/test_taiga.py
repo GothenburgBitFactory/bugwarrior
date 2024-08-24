@@ -1,5 +1,6 @@
 import responses
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.taiga import TaigaService
 
 from .base import ServiceTest, AbstractServiceTest
@@ -91,4 +92,4 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
             'taigasummary': 'this is a title',
             'taigaurl': 'https://one/project/something/us/40'}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
