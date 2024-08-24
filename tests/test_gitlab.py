@@ -3,6 +3,7 @@ import datetime
 import pytz
 import responses
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gitlab import GitlabService, GitlabClient
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -873,7 +874,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'priority': 'M',
             'project': 'arbitrary_username/project',
             'tags': []}
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
     @responses.activate
     def test_mrs_from_query(self):
@@ -933,7 +934,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'priority': 'M',
             'project': 'arbitrary_username/project',
             'tags': []}
-        self.assertEqual(mr.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(mr).get_taskwarrior_record(), expected)
 
     @responses.activate
     def test_todos_from_query(self):
@@ -997,7 +998,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'priority': 'M',
             'project': 'project',
             'tags': []}
-        self.assertEqual(todo.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(todo).get_taskwarrior_record(), expected)
 
         overrides = {
             'include_issues': 'false',
@@ -1008,7 +1009,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         todo = next(service.issues())
-        self.assertEqual(todo.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(todo).get_taskwarrior_record(), expected)
 
     @responses.activate
     def test_issues(self):
@@ -1065,4 +1066,4 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'project': 'arbitrary_username/project',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

@@ -4,6 +4,7 @@ import datetime
 import pytz
 import responses
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.activecollab2 import ActiveCollab2Service
 
 from .base import ServiceTest, AbstractServiceTest
@@ -97,4 +98,4 @@ class TestActiveCollab2Issue(AbstractServiceTest, ServiceTest):
             'project': 'something',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

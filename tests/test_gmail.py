@@ -8,6 +8,7 @@ from unittest.mock import patch
 from dateutil.tz import tzutc
 from google.oauth2.credentials import Credentials
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import gmail
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -167,7 +168,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
             'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
             'gmaillastsenderaddr': 'foobar@example.com'}
 
-        taskwarrior = issue.get_taskwarrior_record()
+        taskwarrior = TaskConstructor(issue).get_taskwarrior_record()
         taskwarrior['tags'] = set(taskwarrior['tags'])
 
         self.assertEqual(taskwarrior, expected)

@@ -3,6 +3,7 @@ from unittest import mock
 
 from dateutil.tz.tz import tzutc
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.kanboard import KanboardService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -231,4 +232,4 @@ class TestKanboardService(AbstractServiceTest, ServiceTest):
             "priority": "M",  # default priority
         }
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

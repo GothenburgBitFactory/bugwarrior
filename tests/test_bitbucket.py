@@ -1,5 +1,6 @@
 import responses
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bitbucket import BitbucketService
 
 from .base import ServiceTest, AbstractServiceTest
@@ -104,7 +105,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
             'project': 'somerepo',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected_issue)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected_issue)
 
         expected_pr = {
             'annotations': ['@nobody - Some comment.'],
@@ -116,7 +117,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
             'project': 'somerepo',
             'tags': []}
 
-        self.assertEqual(pr.get_taskwarrior_record(), expected_pr)
+        self.assertEqual(TaskConstructor(pr).get_taskwarrior_record(), expected_pr)
 
     def test_get_owner(self):
         issue = {

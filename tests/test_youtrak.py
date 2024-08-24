@@ -1,5 +1,6 @@
 import responses
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.youtrack import YoutrackService
 
 from .base import ConfigTest, ServiceTest, AbstractServiceTest
@@ -101,4 +102,4 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
             'youtracknumber': 1,
         }
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

@@ -3,6 +3,7 @@ import datetime
 from dateutil.tz import tzutc
 import responses
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.pivotaltracker import PivotalTrackerService
 
 from .base import ServiceTest, AbstractServiceTest, ConfigTest
@@ -354,4 +355,4 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
             'project': 'death_star',
             'tags': ['look_sir_metal']
         }
-        self.assertEqual(story.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(story).get_taskwarrior_record(), expected)

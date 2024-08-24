@@ -4,6 +4,7 @@ from unittest import TestCase
 import pytz
 import responses
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.github import (
     GithubConfig, GithubService, GithubClient)
 
@@ -85,7 +86,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'tags': []
         }
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
     def test_to_taskwarrior(self):
         service = self.get_mock_service(GithubService, config_overrides={
@@ -178,7 +179,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'project': 'arbitrary_repo',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
 
 class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
@@ -238,7 +239,7 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
             'project': 'arbitrary_repo',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
 
 class TestGithubService(ServiceTest):

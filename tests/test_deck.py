@@ -4,7 +4,9 @@ from unittest import mock
 import pydantic
 from dateutil.tz import tzutc
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.deck import NextcloudDeckClient, NextcloudDeckService
+
 from .base import AbstractServiceTest, ServiceTest
 
 
@@ -157,7 +159,7 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
             'tags': ['Later']
         }
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
     def test_filter_boards_include(self):
         self.config['deck']['include_board_ids'] = '5'

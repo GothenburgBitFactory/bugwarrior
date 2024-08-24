@@ -4,6 +4,7 @@ from unittest import mock
 import dateutil
 import responses
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.redmine import RedMineService
 
 from .base import ServiceTest, AbstractServiceTest
@@ -126,4 +127,4 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
             'redmineurl': 'https://something/issues/363901',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

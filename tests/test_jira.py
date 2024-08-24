@@ -4,6 +4,7 @@ from unittest import mock
 from dateutil.tz import datetime
 from dateutil.tz.tz import tzutc
 
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.config import schema
 from bugwarrior.services.jira import JiraExtraFields, JiraService
 
@@ -240,7 +241,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'project': 'DONUT',
             'tags': []}
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
     def test_get_due(self):
         issue = self.service.get_issue_for_record(
