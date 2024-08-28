@@ -1,10 +1,7 @@
 import json
-import os
 import re
 import subprocess
 
-import requests
-import dogpile.cache
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
@@ -13,35 +10,6 @@ from bugwarrior.notifications import send_notification
 
 import logging
 log = logging.getLogger(__name__)
-
-
-DOGPILE_CACHE_PATH = os.path.expanduser(''.join([
-    os.getenv('XDG_CACHE_HOME', '~/.cache'), '/dagd-py3.dbm']))
-
-if not os.path.isdir(os.path.dirname(DOGPILE_CACHE_PATH)):
-    os.makedirs(os.path.dirname(DOGPILE_CACHE_PATH))
-CACHE_REGION = dogpile.cache.make_region().configure(
-    "dogpile.cache.dbm",
-    arguments=dict(filename=DOGPILE_CACHE_PATH),
-)
-
-
-class URLShortener:
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super().__new__(
-                cls, *args, **kwargs
-            )
-        return cls._instance
-
-    @CACHE_REGION.cache_on_arguments()
-    def shorten(self, url):
-        if not url:
-            return ''
-        base = 'https://da.gd/s'
-        return requests.get(base, params=dict(url=url)).text.strip()
 
 
 class NotFound(Exception):
