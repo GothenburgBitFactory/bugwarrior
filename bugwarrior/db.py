@@ -15,8 +15,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-MARKUP = "(bw)"
-
 DOGPILE_CACHE_PATH = os.path.expanduser(''.join([
     os.getenv('XDG_CACHE_HOME', '~/.cache'), '/dagd-py3.dbm']))
 
