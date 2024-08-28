@@ -7,7 +7,7 @@ from jinja2 import Template
 import pytz
 
 from bugwarrior.config import schema, secrets
-from bugwarrior.db import MARKUP, URLShortener
+from bugwarrior.db import URLShortener
 
 import logging
 log = logging.getLogger(__name__)
@@ -230,8 +230,7 @@ class Issue(abc.ABC):
         url_separator = ' .. '
         url = get_processed_url(self.main_config, url) if self.main_config.inline_links else ''
         desc_len = self.main_config.description_length
-        return "%s%s#%s - %s%s%s" % (
-            MARKUP,
+        return "(bw)%s#%s - %s%s%s" % (
             cls_markup.get(cls, cls.title()),
             number,
             title[:desc_len] if desc_len else title,
