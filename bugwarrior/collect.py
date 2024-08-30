@@ -148,6 +148,6 @@ class TaskConstructor:
             if field in self.issue.config.templates:
                 template = Template(self.issue.config.templates[field])
                 record[field] = template.render(self.get_template_context())
-            elif hasattr(self.issue, 'get_default_%s' % field):
-                record[field] = getattr(self.issue, 'get_default_%s' % field)()
+            elif field == 'description':
+                record['description'] = self.issue.get_default_description()
         return record
