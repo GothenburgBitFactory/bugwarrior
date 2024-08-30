@@ -210,7 +210,7 @@ class BitbucketService(IssueService, ServiceClient):
                 'url': url,
                 'annotations': self.get_annotations(tag, issue, issue_obj, url)
             }
-            issue_obj.update_extra(extras)
+            issue_obj.extra.update(extras)
             yield issue_obj
 
         if self.config.include_merge_requests:
@@ -239,5 +239,5 @@ class BitbucketService(IssueService, ServiceClient):
                     'annotations': self.get_annotations(
                         tag, issue, issue_obj, url)
                 }
-                issue_obj.update_extra(extras)
+                issue_obj.extra.update(extras)
                 yield issue_obj

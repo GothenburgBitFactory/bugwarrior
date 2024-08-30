@@ -186,7 +186,7 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "annotations": [],
             "namespace": "test_organization\\test_project",
         }
-        issue.update_extra(extra)
+        issue.extra.update(extra)
 
         expected = {
             issue.TITLE: TEST_ISSUE["fields"]["System.Title"],

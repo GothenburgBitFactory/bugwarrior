@@ -247,5 +247,5 @@ class ActiveCollabService(IssueService):
             extra = {
                 'annotations': self.annotations(issue, issue_obj)
             }
-            issue_obj.update_extra(extra)
+            issue_obj.extra.update(extra)
             yield issue_obj

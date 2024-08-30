@@ -102,7 +102,7 @@ class TrelloService(IssueService, ServiceClient):
                 listextra = dict(boardname=board['name'], listname=lst['name'])
                 for card in self.get_cards(lst['id']):
                     issue = self.get_issue_for_record(card, extra=listextra)
-                    issue.update_extra({"annotations": self.annotations(card)})
+                    issue.extra.update({"annotations": self.annotations(card)})
                     yield issue
 
     def annotations(self, card_json):

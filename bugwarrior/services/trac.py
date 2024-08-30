@@ -170,5 +170,5 @@ class TracService(IssueService):
                 'annotations': self.annotations(issue),
                 'project': project,
             }
-            issue_obj.update_extra(extra)
+            issue_obj.extra.update(extra)
             yield issue_obj

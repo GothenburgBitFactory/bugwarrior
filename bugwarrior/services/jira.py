@@ -456,5 +456,5 @@ class JiraService(IssueService):
                 extra.update({
                     'annotations': self.annotations(case, issue)
                 })
-            issue.update_extra(extra)
+            issue.extra.update(extra)
             yield issue

@@ -183,13 +183,10 @@ class Issue(abc.ABC):
     PRIORITY_MAP = {}
 
     def __init__(self, foreign_record, config, main_config, extra=None):
-        self._foreign_record = foreign_record
+        self.record = foreign_record
         self.config = config
         self.main_config = main_config
-        self._extra = extra if extra else {}
-
-    def update_extra(self, extra):
-        self._extra.update(extra)
+        self.extra = extra if extra else {}
 
     @abc.abstractmethod
     def to_taskwarrior(self):
@@ -267,14 +264,6 @@ class Issue(abc.ABC):
             url_separator if url else '',
             url,
         )
-
-    @property
-    def record(self):
-        return self._foreign_record
-
-    @property
-    def extra(self):
-        return self._extra
 
 
 class ServiceClient:

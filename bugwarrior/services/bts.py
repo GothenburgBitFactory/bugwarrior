@@ -228,5 +228,5 @@ class BTSService(IssueService, ServiceClient):
             extra = {
                 'annotations': self.annotations(issue)
             }
-            issue_obj.update_extra(extra)
+            issue_obj.extra.update(extra)
             yield issue_obj

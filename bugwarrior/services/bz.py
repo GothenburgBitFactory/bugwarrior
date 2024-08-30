@@ -302,7 +302,7 @@ class BugzillaService(IssueService):
             else:
                 extra['assigned_on'] = None
 
-            issue_obj.update_extra(extra)
+            issue_obj.extra.update(extra)
             yield issue_obj
 
     def _get_assigned_date(self, issue):
