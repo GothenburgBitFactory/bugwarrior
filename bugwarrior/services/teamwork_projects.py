@@ -159,5 +159,5 @@ class TeamworkService(IssueService):
                     "host": self.config.host,
                     'annotations': self.get_comments(issue),
                 }
-                issue_obj.update_extra(extra)
+                issue_obj.extra.update(extra)
                 yield issue_obj

@@ -498,5 +498,5 @@ class GithubService(IssueService):
                 'body': self.body(issue),
                 'namespace': self.config.username,
             }
-            issue_obj.update_extra(extra)
+            issue_obj.extra.update(extra)
             yield issue_obj

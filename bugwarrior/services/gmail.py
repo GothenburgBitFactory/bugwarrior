@@ -215,7 +215,7 @@ class GmailService(IssueService):
             extra = {
                 'annotations': self.annotations(issue),
             }
-            issue.update_extra(extra)
+            issue.extra.update(extra)
             yield issue
 
 

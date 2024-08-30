@@ -200,5 +200,5 @@ class PagureService(IssueService):
                 'type': 'pull_request' if 'branch' in issue else 'issue',
                 'annotations': self.annotations(issue)
             }
-            issue_obj.update_extra(extra)
+            issue_obj.extra.update(extra)
             yield issue_obj

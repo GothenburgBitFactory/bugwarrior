@@ -246,7 +246,7 @@ class AzureDevopsService(IssueService):
                 "namespace": (
                     f"{self.config.organization}\\{self.config.project}"),
             }
-            issue_obj.update_extra(extra)
+            issue_obj.extra.update(extra)
             yield issue_obj
 
     def get_owner(self, issue):

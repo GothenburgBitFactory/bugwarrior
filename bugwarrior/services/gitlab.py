@@ -620,7 +620,7 @@ class GitlabService(IssueService):
                 'annotations': self.annotations(repo, issue_url, type_plural, issue),
                 'description': self.description(issue),
             }
-            issue_obj.update_extra(extra)
+            issue_obj.extra.update(extra)
             yield issue_obj
 
     def _get_todo_objs(self, todos):
@@ -645,7 +645,7 @@ class GitlabService(IssueService):
                 'type': 'todo',
                 'annotations': [],
             }
-            todo_obj.update_extra(extra)
+            todo_obj.extra.update(extra)
             yield todo_obj
 
     def include(self, issue):
