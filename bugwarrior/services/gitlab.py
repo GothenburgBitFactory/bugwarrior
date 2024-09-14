@@ -7,7 +7,7 @@ import sys
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 
 import logging
 log = logging.getLogger(__name__)
@@ -117,7 +117,7 @@ class GitlabConfig(config.ServiceConfig):
         return v
 
 
-class GitlabClient(ServiceClient):
+class GitlabClient(Client):
     """Abstraction of Gitlab API v4"""
 
     def __init__(self, host, token, only_if_assigned, also_unassigned, use_https, verify_ssl):

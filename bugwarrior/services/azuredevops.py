@@ -8,7 +8,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def format_item(item):
     return
 
 
-class AzureDevopsClient(ServiceClient):
+class AzureDevopsClient(Client):
     def __init__(self, pat, org, project, host):
         if pat[0] != ":":
             pat = f":{pat}"

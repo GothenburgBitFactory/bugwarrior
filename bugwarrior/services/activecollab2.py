@@ -4,7 +4,7 @@ import time
 import requests
 import typing_extensions
 
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 from bugwarrior import config
 
 import logging
@@ -38,7 +38,7 @@ class ActiveCollab2Config(config.ServiceConfig):
     projects: ActiveCollabProjects
 
 
-class ActiveCollab2Client(ServiceClient):
+class ActiveCollab2Client(Client):
     def __init__(self, url, key, user_id, projects, target):
         self.url = url
         self.key = key

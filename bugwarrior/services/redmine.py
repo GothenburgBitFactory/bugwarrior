@@ -5,7 +5,7 @@ from taskw import TaskWarriorShellout
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Issue, Service, ServiceClient
+from bugwarrior.services import Issue, Service, Client
 
 import logging
 log = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class RedMineConfig(config.ServiceConfig):
     verify_ssl: bool = True
 
 
-class RedMineClient(ServiceClient):
+class RedMineClient(Client):
     def __init__(self, url, key, auth, issue_limit, verify_ssl):
         self.url = url
         self.key = key

@@ -266,7 +266,7 @@ class Issue(abc.ABC):
         )
 
 
-class ServiceClient:
+class Client:
     """ Abstract class responsible for making requests to service API's. """
     @staticmethod
     def json_response(response):

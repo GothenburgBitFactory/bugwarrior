@@ -8,7 +8,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 
 log = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class Webui:
         return False
 
 
-class GitBugClient(ServiceClient):
+class GitBugClient(Client):
     def __init__(self, path, port, annotation_comments):
         self.path = path
         self.port = port

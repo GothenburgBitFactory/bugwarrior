@@ -2,7 +2,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, ServiceClient, CACHE_REGION as cache
+from bugwarrior.services import Service, Issue, Client, CACHE_REGION as cache
 
 import logging
 log = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class TaigaIssue(Issue):
         )
 
 
-class TaigaService(Service, ServiceClient):
+class TaigaService(Service, Client):
     ISSUE_CLASS = TaigaIssue
     CONFIG_SCHEMA = TaigaConfig
 

@@ -5,7 +5,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 
 import logging
 
@@ -125,7 +125,7 @@ class YoutrackIssue(Issue):
         )
 
 
-class YoutrackService(Service, ServiceClient):
+class YoutrackService(Service, Client):
     ISSUE_CLASS = YoutrackIssue
     CONFIG_SCHEMA = YoutrackConfig
 
