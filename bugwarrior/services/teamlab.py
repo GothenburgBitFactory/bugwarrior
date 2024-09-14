@@ -3,7 +3,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Issue, IssueService, ServiceClient
+from bugwarrior.services import Issue, Service, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
@@ -117,7 +117,7 @@ class TeamLabIssue(Issue):
         return self.config.default_priority
 
 
-class TeamLabService(IssueService):
+class TeamLabService(Service):
     ISSUE_CLASS = TeamLabIssue
     CONFIG_SCHEMA = TeamLabConfig
 

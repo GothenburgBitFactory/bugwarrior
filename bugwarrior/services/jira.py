@@ -11,7 +11,7 @@ from jira.client import JIRA as BaseJIRA
 from requests.cookies import RequestsCookieJar
 
 from bugwarrior import config
-from bugwarrior.services import Issue, IssueService
+from bugwarrior.services import Issue, Service
 
 log = logging.getLogger(__name__)
 
@@ -362,7 +362,7 @@ class JiraIssue(Issue):
         return self.record['fields']['issuetype']['name']
 
 
-class JiraService(IssueService):
+class JiraService(Service):
     ISSUE_CLASS = JiraIssue
     CONFIG_SCHEMA = JiraConfig
 

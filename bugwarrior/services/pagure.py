@@ -6,7 +6,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import Service, Issue
 
 import logging
 log = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ class PagureIssue(Issue):
         )
 
 
-class PagureService(IssueService):
+class PagureService(Service):
     ISSUE_CLASS = PagureIssue
     CONFIG_SCHEMA = PagureConfig
 

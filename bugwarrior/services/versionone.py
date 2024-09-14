@@ -5,7 +5,7 @@ from v1pysdk.none_deref import NoneDeref
 from urllib import parse
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import Service, Issue
 
 
 class VersionOneConfig(config.ServiceConfig):
@@ -163,7 +163,7 @@ class VersionOneIssue(Issue):
         )
 
 
-class VersionOneService(IssueService):
+class VersionOneService(Service):
     ISSUE_CLASS = VersionOneIssue
     CONFIG_SCHEMA = VersionOneConfig
 

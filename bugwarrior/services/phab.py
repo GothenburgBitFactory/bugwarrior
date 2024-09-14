@@ -6,7 +6,7 @@ import pydantic.v1
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import Service, Issue
 
 log = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class PhabricatorIssue(Issue):
             or self.config.default_priority
 
 
-class PhabricatorService(IssueService):
+class PhabricatorService(Service):
     ISSUE_CLASS = PhabricatorIssue
     CONFIG_SCHEMA = PhabricatorConfig
 

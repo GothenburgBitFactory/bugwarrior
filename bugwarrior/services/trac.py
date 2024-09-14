@@ -7,7 +7,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Issue, IssueService
+from bugwarrior.services import Issue, Service
 
 import logging
 log = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ class TracIssue(Issue):
         )
 
 
-class TracService(IssueService):
+class TracService(Service):
     ISSUE_CLASS = TracIssue
     CONFIG_SCHEMA = TracConfig
 

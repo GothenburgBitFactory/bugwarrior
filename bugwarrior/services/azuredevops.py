@@ -8,7 +8,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, ServiceClient
 
 log = logging.getLogger(__name__)
 
@@ -179,7 +179,7 @@ class AzureDevopsIssue(Issue):
         )
 
 
-class AzureDevopsService(IssueService):
+class AzureDevopsService(Service):
     ISSUE_CLASS = AzureDevopsIssue
     CONFIG_SCHEMA = AzureDevopsConfig
 

@@ -11,7 +11,7 @@ import pytz
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import Service, Issue
 
 log = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ class BugzillaIssue(Issue):
         )
 
 
-class BugzillaService(IssueService):
+class BugzillaService(Service):
     ISSUE_CLASS = BugzillaIssue
     CONFIG_SCHEMA = BugzillaConfig
 

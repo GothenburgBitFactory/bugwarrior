@@ -58,7 +58,7 @@ def get_processed_url(main_config: schema.MainSectionConfig, url: str):
     return url
 
 
-class IssueService(abc.ABC):
+class Service(abc.ABC):
     """ Abstract base class for each service """
     # Which class should this service instantiate for holding these issues?
     ISSUE_CLASS = None

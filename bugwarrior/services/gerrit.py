@@ -5,7 +5,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, ServiceClient
 
 
 class GerritConfig(config.ServiceConfig):
@@ -84,7 +84,7 @@ class GerritIssue(Issue):
         )
 
 
-class GerritService(IssueService, ServiceClient):
+class GerritService(Service, ServiceClient):
     ISSUE_CLASS = GerritIssue
     CONFIG_SCHEMA = GerritConfig
 

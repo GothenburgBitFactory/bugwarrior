@@ -5,7 +5,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Issue, IssueService, ServiceClient
+from bugwarrior.services import Issue, Service, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
@@ -138,7 +138,7 @@ class BTSIssue(Issue):
         )
 
 
-class BTSService(IssueService, ServiceClient):
+class BTSService(Service, ServiceClient):
     ISSUE_CLASS = BTSIssue
     CONFIG_SCHEMA = BTSConfig
 

@@ -7,7 +7,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
@@ -315,7 +315,7 @@ class GithubIssue(Issue):
         )
 
 
-class GithubService(IssueService):
+class GithubService(Service):
     ISSUE_CLASS = GithubIssue
     CONFIG_SCHEMA = GithubConfig
 

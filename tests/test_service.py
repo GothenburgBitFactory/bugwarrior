@@ -32,7 +32,7 @@ class DumbIssue(services.Issue):
         raise NotImplementedError
 
 
-class DumbIssueService(services.IssueService):
+class DumbService(services.Service):
     """
     Implement the required methods but they shouldn't be called.
     """
@@ -60,16 +60,16 @@ class ServiceBase(ConfigTest):
 
     def makeService(self):
         with unittest.mock.patch('bugwarrior.config.schema.get_service',
-                                 lambda x: DumbIssueService):
+                                 lambda x: DumbService):
             conf = schema.validate_config(self.config, 'general', 'configpath')
-        return DumbIssueService(conf['test'], conf['general'])
+        return DumbService(conf['test'], conf['general'])
 
     def makeIssue(self):
         service = self.makeService()
         return service.get_issue_for_record({})
 
 
-class TestIssueService(ServiceBase):
+class TestService(ServiceBase):
 
     def test_build_annotations_default(self):
         service = self.makeService()

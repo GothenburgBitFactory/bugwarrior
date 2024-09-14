@@ -5,7 +5,7 @@ from taskw import TaskWarriorShellout
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Issue, IssueService, ServiceClient
+from bugwarrior.services import Issue, Service, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
@@ -242,7 +242,7 @@ class RedMineIssue(Issue):
         )
 
 
-class RedMineService(IssueService):
+class RedMineService(Service):
     ISSUE_CLASS = RedMineIssue
     CONFIG_SCHEMA = RedMineConfig
 

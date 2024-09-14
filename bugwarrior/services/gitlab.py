@@ -7,7 +7,7 @@ import sys
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
@@ -525,7 +525,7 @@ class GitlabIssue(Issue):
         )
 
 
-class GitlabService(IssueService):
+class GitlabService(Service):
     ISSUE_CLASS = GitlabIssue
     CONFIG_SCHEMA = GitlabConfig
 

@@ -6,7 +6,7 @@ import typing_extensions
 from dateutil.tz import tzutc
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, ServiceClient
 
 log = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class NextcloudDeckIssue(Issue):
         return self.build_default_description(title=self.record['title'])
 
 
-class NextcloudDeckService(IssueService):
+class NextcloudDeckService(Service):
     ISSUE_CLASS = NextcloudDeckIssue
     CONFIG_SCHEMA = NextcloudDeckConfig
 
