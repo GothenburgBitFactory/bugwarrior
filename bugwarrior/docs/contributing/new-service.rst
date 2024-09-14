@@ -44,7 +44,7 @@ Fire up your favorite editor and import the base classes and whatever library yo
   import typing_extensions
 
   from bugwarrior import config
-  from bugwarrior.services import Service, Issue, ServiceClient
+  from bugwarrior.services import Service, Issue, Client
 
   log = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ Unless you're using a library that closely aligns with the needs of your service
 
 .. code:: python
 
-  class GitBugClient(ServiceClient):
+  class GitBugClient(Client):
       def __init__(self, path, port):
           self.path = path
           self.port = port

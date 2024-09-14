@@ -6,7 +6,7 @@ from jinja2 import Template
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 
 import logging
 log = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ class PivotalTrackerIssue(Issue):
         )
 
 
-class PivotalTrackerService(Service, ServiceClient):
+class PivotalTrackerService(Service, Client):
     ISSUE_CLASS = PivotalTrackerIssue
     CONFIG_SCHEMA = PivotalTrackerConfig
 

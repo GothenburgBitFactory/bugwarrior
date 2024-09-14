@@ -2,7 +2,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 
 import logging
 log = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ class TeamworkConfig(config.ServiceConfig):
     token: str
 
 
-class TeamworkClient(ServiceClient):
+class TeamworkClient(Client):
 
     def __init__(self, host, token):
         self.host = host

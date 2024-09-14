@@ -6,7 +6,7 @@ import typing_extensions
 from dateutil.tz import tzutc
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class NextcloudDeckConfig(config.ServiceConfig):
 # * Stacks will be mapped to an UDA
 # * Cards will be mapped to tasks
 # * Labels will be mapped to tags
-class NextcloudDeckClient(ServiceClient):
+class NextcloudDeckClient(Client):
     def __init__(self, base_uri, username, password):
         self.api_base_path = f'{base_uri}/index.php/apps/deck/api/v1.0'
         self.ocs_base_path = f'{base_uri}/ocs/v2.php/apps/deck/api/v1.0'

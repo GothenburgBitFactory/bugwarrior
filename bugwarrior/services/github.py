@@ -7,7 +7,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 
 import logging
 log = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class GithubConfig(config.ServiceConfig):
         return values
 
 
-class GithubClient(ServiceClient):
+class GithubClient(Client):
     def __init__(self, host, auth):
         self.host = host
         self.auth = auth

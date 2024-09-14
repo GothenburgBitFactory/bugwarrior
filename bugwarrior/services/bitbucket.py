@@ -6,7 +6,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 
 log = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class BitbucketIssue(Issue):
         )
 
 
-class BitbucketService(Service, ServiceClient):
+class BitbucketService(Service, Client):
     ISSUE_CLASS = BitbucketIssue
     CONFIG_SCHEMA = BitbucketConfig
 

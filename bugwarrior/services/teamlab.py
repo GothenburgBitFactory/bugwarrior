@@ -3,7 +3,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Issue, Service, ServiceClient
+from bugwarrior.services import Issue, Service, Client
 
 import logging
 log = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class TeamLabConfig(config.ServiceConfig):
         return values
 
 
-class TeamLabClient(ServiceClient):
+class TeamLabClient(Client):
     def __init__(self, hostname, verbose=False):
         self.hostname = hostname
         self.verbose = verbose

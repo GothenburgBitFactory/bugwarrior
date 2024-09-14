@@ -8,7 +8,7 @@ Trello API documentation available at https://developers.trello.com/
 import requests
 import typing_extensions
 
-from bugwarrior.services import Service, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 from bugwarrior import config
 
 
@@ -81,7 +81,7 @@ class TrelloIssue(Issue):
         }
 
 
-class TrelloService(Service, ServiceClient):
+class TrelloService(Service, Client):
     ISSUE_CLASS = TrelloIssue
     CONFIG_SCHEMA = TrelloConfig
 
