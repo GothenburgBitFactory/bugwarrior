@@ -2,7 +2,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, ServiceClient
 
 import logging
 log = logging.getLogger(__name__)
@@ -118,7 +118,7 @@ class TeamworkIssue(Issue):
         }
 
 
-class TeamworkService(IssueService):
+class TeamworkService(Service):
     ISSUE_CLASS = TeamworkIssue
     CONFIG_SCHEMA = TeamworkConfig
 

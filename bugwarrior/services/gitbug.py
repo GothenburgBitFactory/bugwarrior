@@ -8,7 +8,7 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, ServiceClient
 
 log = logging.getLogger(__name__)
 
@@ -145,7 +145,7 @@ class GitBugIssue(Issue):
             title=self.record['title'], cls='bug')
 
 
-class GitBugService(IssueService):
+class GitBugService(Service):
     ISSUE_CLASS = GitBugIssue
     CONFIG_SCHEMA = GitBugConfig
 

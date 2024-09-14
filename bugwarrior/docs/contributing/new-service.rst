@@ -44,7 +44,7 @@ Fire up your favorite editor and import the base classes and whatever library yo
   import typing_extensions
 
   from bugwarrior import config
-  from bugwarrior.services import IssueService, Issue, ServiceClient
+  from bugwarrior.services import Service, Issue, ServiceClient
 
   log = logging.getLogger(__name__)
 
@@ -178,7 +178,7 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
 
 .. code:: python
 
-  class GitBugService(IssueService):
+  class GitBugService(Service):
       ISSUE_CLASS = GitBugIssue
       CONFIG_SCHEMA = GitBugConfig
 

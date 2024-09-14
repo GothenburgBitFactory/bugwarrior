@@ -7,7 +7,7 @@ import re
 from datetime import datetime
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, ServiceClient
 
 log = logging.getLogger(__name__)
 
@@ -282,7 +282,7 @@ class LogseqIssue(Issue):
         )
 
 
-class LogseqService(IssueService):
+class LogseqService(Service):
     ISSUE_CLASS = LogseqIssue
     CONFIG_SCHEMA = LogseqConfig
 

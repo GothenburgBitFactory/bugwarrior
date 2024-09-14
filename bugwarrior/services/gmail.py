@@ -12,7 +12,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import Service, Issue
 
 log = logging.getLogger(__name__)
 
@@ -113,7 +113,7 @@ class GmailIssue(Issue):
         return self.parse_date(date_string)
 
 
-class GmailService(IssueService):
+class GmailService(Service):
     APPLICATION_NAME = 'Bugwarrior Gmail Service'
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 

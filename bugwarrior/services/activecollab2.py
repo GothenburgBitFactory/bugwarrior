@@ -4,7 +4,7 @@ import time
 import requests
 import typing_extensions
 
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, ServiceClient
 from bugwarrior import config
 
 import logging
@@ -191,7 +191,7 @@ class ActiveCollab2Issue(Issue):
         )
 
 
-class ActiveCollab2Service(IssueService):
+class ActiveCollab2Service(Service):
     ISSUE_CLASS = ActiveCollab2Issue
     CONFIG_SCHEMA = ActiveCollab2Config
 

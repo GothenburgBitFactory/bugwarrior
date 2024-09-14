@@ -3,7 +3,7 @@ import re
 import pypandoc
 from pyac.library import activeCollab
 import typing_extensions
-from bugwarrior.services import IssueService, Issue
+from bugwarrior.services import Service, Issue
 from bugwarrior import config
 
 import logging
@@ -166,7 +166,7 @@ class ActiveCollabIssue(Issue):
         )
 
 
-class ActiveCollabService(IssueService):
+class ActiveCollabService(Service):
     ISSUE_CLASS = ActiveCollabIssue
     CONFIG_SCHEMA = ActiveCollabConfig
 

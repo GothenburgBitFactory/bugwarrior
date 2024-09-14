@@ -8,7 +8,7 @@ from kanboard import Client
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Issue, IssueService
+from bugwarrior.services import Issue, Service
 
 log = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ class KanboardIssue(Issue):
             )
 
 
-class KanboardService(IssueService):
+class KanboardService(Service):
     ISSUE_CLASS = KanboardIssue
     CONFIG_SCHEMA = KanboardConfig
 
