@@ -1,7 +1,7 @@
 import datetime
 import pytz
 
-import pydantic
+import pydantic.v1
 import requests
 import typing_extensions
 
@@ -27,7 +27,7 @@ class PagureConfig(config.ServiceConfig):
     import_tags: bool = False
     tag_template: str = '{{label}}'
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def require_tag_or_repo(cls, values):
         if not values['tag'] and not values['repo']:
             raise ValueError(

@@ -1,6 +1,6 @@
 import typing
 
-import pydantic
+import pydantic.v1
 import requests
 import typing_extensions
 
@@ -31,7 +31,7 @@ class YoutrackConfig(config.ServiceConfig):
     # added during validation (computed field support will land in pydantic-2)
     base_url: str = ''
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def compute_base_url(cls, values):
         if values['use_https']:
             scheme = 'https'

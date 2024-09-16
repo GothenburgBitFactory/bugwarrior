@@ -1,4 +1,4 @@
-import pydantic
+import pydantic.v1
 import typing_extensions
 from v1pysdk import V1Meta
 from v1pysdk.none_deref import NoneDeref
@@ -13,7 +13,7 @@ class VersionOneConfig(config.ServiceConfig):
     project_name: str = ''
 
     service: typing_extensions.Literal['versionone']
-    base_uri: pydantic.AnyUrl
+    base_uri: pydantic.v1.AnyUrl
     username: str
 
     password: str = ''

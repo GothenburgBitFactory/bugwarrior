@@ -1,4 +1,4 @@
-import pydantic
+import pydantic.v1
 import requests
 import typing_extensions
 
@@ -18,7 +18,7 @@ class TeamLabConfig(config.ServiceConfig):
     login: str
     password: str
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def default_project_name(cls, values):
         if values['project_name'] == '':
             values['project_name'] = values['hostname']

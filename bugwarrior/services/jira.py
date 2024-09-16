@@ -4,7 +4,7 @@ import sys
 import typing
 from functools import reduce
 
-import pydantic
+import pydantic.v1
 import typing_extensions
 from dateutil.tz.tz import tzutc
 from jira.client import JIRA as BaseJIRA
@@ -78,7 +78,7 @@ class JiraExtraField:
 
 class JiraConfig(config.ServiceConfig):
     service: typing_extensions.Literal['jira']
-    base_uri: pydantic.AnyUrl
+    base_uri: pydantic.v1.AnyUrl
     username: str
 
     password: str = ''
@@ -94,7 +94,7 @@ class JiraConfig(config.ServiceConfig):
     verify_ssl: bool = True
     version: int = 5
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def require_password_xor_PAT(cls, values):
         if ((values['password'] and values['PAT'])
                 or not (values['password'] or values['PAT'])):
