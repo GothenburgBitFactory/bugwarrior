@@ -3,8 +3,8 @@ import re
 import typing
 
 from ini2toml.types import IntermediateRepr, Translator
-import pydantic
-from pydantic import BaseModel
+import pydantic.v1
+from pydantic.v1 import BaseModel
 
 from .schema import ConfigList
 from ..services.activecollab2 import ActiveCollabProjects
@@ -147,7 +147,7 @@ def process_values(doc: IntermediateRepr) -> IntermediateRepr:
                 if service == 'gitlab' and 'verify_ssl' in section.keys():
                     try:
                         to_bool(section, 'verify_ssl')
-                    except pydantic.error_wrappers.ValidationError:
+                    except pydantic.v1.ValidationError:
                         # verify_ssl is allowed to be a path
                         pass
 

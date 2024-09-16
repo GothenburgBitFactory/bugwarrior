@@ -1,7 +1,7 @@
 import logging
 import typing
 
-import pydantic
+import pydantic.v1
 import requests
 import typing_extensions
 
@@ -30,7 +30,7 @@ class BitbucketConfig(config.ServiceConfig):
     include_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
     project_owner_prefix: bool = False
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def deprecate_password_authentication(cls, values):
         if values['login'] != 'Undefined' or values['password'] != 'Undefined':
             log.warning(

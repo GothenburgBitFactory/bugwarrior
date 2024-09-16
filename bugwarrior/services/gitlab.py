@@ -2,7 +2,7 @@ from urllib.parse import quote, urlencode
 import requests
 import typing
 
-import pydantic
+import pydantic.v1
 import sys
 import typing_extensions
 
@@ -48,7 +48,7 @@ class GitlabConfig(config.ServiceConfig):
     merge_request_query: str = ''
     todo_query: str = ''
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def namespace_repo_lists(cls, values):
         """ Add a default namespace to a repository name.  If the name already
         contains a namespace, it will be returned unchanged:
@@ -64,7 +64,7 @@ class GitlabConfig(config.ServiceConfig):
                 for repo in values[repolist]]
         return values
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def default_priorities(cls, values):
         for task_type in ['issue', 'todo', 'mr']:
             priority_field = f'default_{task_type}_priority'
@@ -74,7 +74,7 @@ class GitlabConfig(config.ServiceConfig):
                 else values['default_priority'])
         return values
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def filter_gitlab_dot_com(cls, values):
         """
         There must be a repository filter if the host is gitlab.com.
@@ -99,7 +99,7 @@ class GitlabConfig(config.ServiceConfig):
                 "there are too many on gitlab.com to fetch them all.")
         return values
 
-    @pydantic.validator('owned', always=True)
+    @pydantic.v1.validator('owned', always=True)
     def require_owned(cls, v):
         """
         Migrate 'owned' field from default False to default True.

@@ -2,7 +2,7 @@ import logging
 import typing
 
 import phabricator
-import pydantic
+import pydantic.v1
 import typing_extensions
 
 from bugwarrior import config
@@ -16,7 +16,7 @@ class PhabricatorConfig(config.ServiceConfig):
 
     user_phids: config.ConfigList = config.ConfigList([])
     project_phids: config.ConfigList = config.ConfigList([])
-    host: typing.Optional[pydantic.AnyUrl]
+    host: typing.Optional[pydantic.v1.AnyUrl]
     ignore_cc: typing.Optional[bool] = None
     ignore_author: typing.Optional[bool] = None
     ignore_owner: bool = False

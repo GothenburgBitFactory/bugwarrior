@@ -1,6 +1,6 @@
 import sys
 
-import pydantic
+import pydantic.v1
 import requests
 import typing_extensions
 
@@ -24,7 +24,7 @@ UDD_BUGS_SEARCH = "https://udd.debian.org/bugs/"
 class BTSConfig(config.ServiceConfig):
     service: typing_extensions.Literal['bts']
 
-    email: pydantic.EmailStr = pydantic.EmailStr('')
+    email: pydantic.v1.EmailStr = pydantic.v1.EmailStr('')
     packages: config.ConfigList = config.ConfigList([])
 
     udd: bool = False
@@ -33,20 +33,20 @@ class BTSConfig(config.ServiceConfig):
     ignore_pkg: config.ConfigList = config.ConfigList([])
     ignore_src: config.ConfigList = config.ConfigList([])
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def require_email_or_packages(cls, values):
         if not values['email'] and not values['packages']:
             raise ValueError(
                 'section requires one of:\n    email\n    packages')
         return values
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def udd_needs_email(cls, values):
         if values['udd'] and not values['email']:
             raise ValueError("no 'email' but UDD search was requested")
         return values
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def python_version_limited(cls, values):
         log.warning(
             'The Debian BTS service has a dependency that has not yet been '

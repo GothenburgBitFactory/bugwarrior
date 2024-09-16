@@ -2,7 +2,7 @@ import re
 import sys
 import urllib.parse
 
-import pydantic
+import pydantic.v1
 import requests
 import typing_extensions
 
@@ -41,7 +41,7 @@ class GithubConfig(config.ServiceConfig):
     project_owner_prefix: bool = False
     issue_urls: config.ConfigList = config.ConfigList([])
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def deprecate_password(cls, values):
         if values['password'] != 'Deprecated':
             log.warning(
@@ -49,14 +49,14 @@ class GithubConfig(config.ServiceConfig):
                 '"password" in favor of "token".')
         return values
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def require_username_or_query(cls, values):
         if not values['username'] and not values['query']:
             raise ValueError(
                 'section requires one of:\n    username\n    query')
         return values
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def issue_urls_consistent_with_host(cls, values):
         issue_url_paths = []
         for url in values['issue_urls']:
@@ -71,7 +71,7 @@ class GithubConfig(config.ServiceConfig):
         values['issue_urls'] = issue_url_paths
         return values
 
-    @pydantic.root_validator
+    @pydantic.v1.root_validator
     def require_username_if_include_user_repos(cls, values):
         if values['include_user_repos'] and not values['username']:
             raise ValueError(

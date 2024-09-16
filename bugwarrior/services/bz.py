@@ -6,7 +6,7 @@ import typing
 import xmlrpc.client
 
 import bugzilla
-import pydantic
+import pydantic.v1
 import pytz
 import typing_extensions
 
@@ -16,7 +16,7 @@ from bugwarrior.services import IssueService, Issue
 log = logging.getLogger(__name__)
 
 
-class OptionalSchemeUrl(pydantic.AnyUrl):
+class OptionalSchemeUrl(pydantic.v1.AnyUrl):
     """
     A temporary type to use during the deprecation period of scheme-less urls.
     """
@@ -54,7 +54,7 @@ class BugzillaConfig(config.ServiceConfig):
         'PASSES_QA',
     ])
     include_needinfos: bool = False
-    query_url: typing.Optional[pydantic.AnyUrl]
+    query_url: typing.Optional[pydantic.v1.AnyUrl]
     force_rest: bool = False
     advanced: bool = False
 
