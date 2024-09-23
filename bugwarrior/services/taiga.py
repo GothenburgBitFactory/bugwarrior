@@ -2,7 +2,8 @@ import requests
 import typing_extensions
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, Client, CACHE_REGION as cache
+from bugwarrior.services import Service, Issue, Client
+from bugwarrior.services.base import CACHE_REGION as cache
 
 import logging
 log = logging.getLogger(__name__)
