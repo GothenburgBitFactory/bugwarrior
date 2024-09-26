@@ -1,3 +1,38 @@
+2.0.0
+------------
+
+Bugwarrior has a new home! The [Bugwarrior repository](https://github.com/GothenburgBitFactory/bugwarrior) has been graciously transferred by [@ralphbean](https://github.com/ralphbean), the original author, to the [GothenburgBitFactory](https://gothenburgbitfactory.org/) organization which also maintains Taskwarrior.
+
+*NOTE: In addition to these changes there are a number of new validation warnings and errors that should be minded when upgrading.*
+
+Major Changes
+
+- Top-level bugwarrior command. (https://github.com/ralphbean/bugwarrior/pull/882)
+- Enhanced configuration validation. (https://github.com/ralphbean/bugwarrior/pull/849)
+- Survive service failure. (https://github.com/ralphbean/bugwarrior/pull/825)
+- TOML configuration. (https://github.com/ralphbean/bugwarrior/issues/873)
+
+New and Removed Services
+
+- Added Azure Devops service. (https://github.com/ralphbean/bugwarrior/pull/808)
+- Added Git-Bug service. (https://github.com/ralphbean/bugwarrior/pull/934)
+- Added Kanboard service. (https://github.com/ralphbean/bugwarrior/pull/794)
+- Added Logseq service. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1052)
+- Added Nextcloud Deck service. (https://github.com/ralphbean/bugwarrior/pull/954)
+- Removed Megaplan service. (https://github.com/ralphbean/bugwarrior/pull/844)
+
+Notable Changes
+
+- bitbucket: Remove basic auth and update oauth2 workflow. (https://github.com/ralphbean/bugwarrior/pull/888)
+- gitlab: Merge requests and todo's will respect default_priority setting rather than being set to 'H'. (https://github.com/ralphbean/bugwarrior/pull/816)
+- gitlab: Added distinct default priorities for issues, merge requests, and todo's. (https://github.com/ralphbean/bugwarrior/pull/816)
+- gitlab: Query support. (https://github.com/ralphbean/bugwarrior/pull/876)
+- gitlab: Exclude archived projects by default. (https://github.com/ralphbean/bugwarrior/pull/938)
+- jira: Personal Access Token (PAT) authentication support. (https://github.com/ralphbean/bugwarrior/pull/853)
+- redmine: Query support. (https://github.com/ralphbean/bugwarrior/pull/886)
+- github: Pull issues by URL. (https://github.com/ralphbean/bugwarrior/pull/898)
+- notifications: Add applescript backend. (https://github.com/ralphbean/bugwarrior/pull/948)
+- youtrack: Replace password with token. (https://github.com/ralphbean/bugwarrior/pull/982)
 
 1.7.0
 -----
