@@ -145,9 +145,6 @@ class TeamworkService(Service):
                 return self.build_annotations(comment_list, None)
         return []
 
-    def get_owner(self, issue):
-        return issue.get_owner()
-
     def issues(self):
         response = self.client.call_api("GET", "/tasks.json")
         for issue in response["todo-items"]:

@@ -1,3 +1,4 @@
+import re
 import unittest.mock
 
 import typing_extensions
@@ -68,8 +69,30 @@ class ServiceBase(ConfigTest):
         service = self.makeService()
         return service.get_issue_for_record({})
 
+    def checkArchitecture(self, klass):
+        """
+        Bidirectional communication between the base classes and their children
+        has been a source of complication as changes to any part of the
+        circular data flow can create unpredictable side-effects. The concrete
+        methods of the base classes exist as utilities for children to call;
+        they should not call the abstract methods which children implement.
+
+        Here, we cheaply check that the names of the abstract methods only
+        appear once. This should ensure that these methods are declared here
+        but not called.
+        """
+        with open(services.base.__file__, 'r') as f:
+            base = f.read()
+
+        for method in klass.__abstractmethods__:
+            references = re.findall(rf'{method}\(', base)
+            self.assertEqual(len(references), 1, references)
+
 
 class TestService(ServiceBase):
+
+    def test_architecture(self):
+        self.checkArchitecture(services.base.Service)
 
     def test_build_annotations_default(self):
         service = self.makeService()
@@ -100,6 +123,9 @@ class TestService(ServiceBase):
 
 
 class TestIssue(ServiceBase):
+
+    def test_architecture(self):
+        self.checkArchitecture(services.base.Issue)
 
     def test_build_default_description_default(self):
         issue = self.makeIssue()

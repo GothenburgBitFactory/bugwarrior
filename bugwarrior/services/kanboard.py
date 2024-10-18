@@ -163,11 +163,6 @@ class KanboardService(Service):
 
             yield self.get_issue_for_record(task, extra)
 
-    def get_owner(self, issue):
-        # TODO
-        raise NotImplementedError(
-            "This service has not implemented support for 'only_if_assigned'.")
-
     @staticmethod
     def get_keyring_service(config):
         parsed = urlparse(config.url)

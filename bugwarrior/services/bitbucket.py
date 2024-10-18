@@ -179,6 +179,19 @@ class BitbucketService(Service, Client):
         if assignee is not None:
             return assignee.get('username', None)
 
+    def include(self, issue):
+        """ Return true if the issue in question should be included """
+        if self.config.only_if_assigned:
+            owner = self.get_owner(issue)
+            include_owners = [self.config.only_if_assigned]
+
+            if self.config.also_unassigned:
+                include_owners.append(None)
+
+            return owner in include_owners
+
+        return True
+
     def issues(self):
         user = self.config.username
         response = self.get_collection('/repositories/' + user + '/')

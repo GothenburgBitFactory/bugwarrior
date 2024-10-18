@@ -142,11 +142,6 @@ class BTSService(Service, Client):
     ISSUE_CLASS = BTSIssue
     CONFIG_SCHEMA = BTSConfig
 
-    def get_owner(self, issue):
-        # TODO
-        raise NotImplementedError(
-            "This service has not implemented support for 'only_if_assigned'.")
-
     def _record_for_bug(self, bug):
         return {'number': bug.bug_num,
                 'url': 'https://bugs.debian.org/' + str(bug.bug_num),

@@ -249,10 +249,6 @@ class AzureDevopsService(Service):
             issue_obj.extra.update(extra)
             yield issue_obj
 
-    def get_owner(self, issue):
-        # Issue filtering is implemented as part of issue aggregation.
-        pass
-
     @staticmethod
     def get_keyring_service(config):
         return f"azuredevops://{config.organization}@{config.host}"

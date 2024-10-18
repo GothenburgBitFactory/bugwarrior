@@ -189,6 +189,19 @@ class BugzillaService(Service):
     def get_owner(self, issue):
         return issue['assigned_to']
 
+    def include(self, issue):
+        """ Return true if the issue in question should be included """
+        if self.config.only_if_assigned:
+            owner = self.get_owner(issue)
+            include_owners = [self.config.only_if_assigned]
+
+            if self.config.also_unassigned:
+                include_owners.append(None)
+
+            return owner in include_owners
+
+        return True
+
     def annotations(self, tag, issue):
         base_url = "%s/show_bug.cgi?id=" % self.config.base_uri
         long_url = base_url + str(issue['id'])

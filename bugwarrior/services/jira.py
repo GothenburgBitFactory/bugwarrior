@@ -413,11 +413,6 @@ class JiraService(Service):
     def get_keyring_service(config):
         return f"jira://{config.username}@{config.base_uri}"
 
-    def get_owner(self, issue):
-        # TODO
-        raise NotImplementedError(
-            "This service has not implemented support for 'only_if_assigned'.")
-
     def body(self, issue):
         body = issue.record.get('fields', {}).get('description')
 
