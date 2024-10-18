@@ -131,6 +131,19 @@ class TracService(Service):
         tag, issue = issue
         return issue.get('owner', None) or None
 
+    def include(self, issue):
+        """ Return true if the issue in question should be included """
+        if self.config.only_if_assigned:
+            owner = self.get_owner(issue)
+            include_owners = [self.config.only_if_assigned]
+
+            if self.config.also_unassigned:
+                include_owners.append(None)
+
+            return owner in include_owners
+
+        return True
+
     def issues(self):
         base_url = "https://" + self.config.base_uri
         if self.trac:

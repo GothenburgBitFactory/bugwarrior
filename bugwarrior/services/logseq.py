@@ -296,12 +296,6 @@ class LogseqService(Service):
             filter=filter,
         )
 
-    def get_owner(self, issue):
-        # Issue assignment hasn't been implemented yet.
-        raise NotImplementedError(
-            "This service has not implemented support for 'only_if_assigned'."
-        )
-
     def issues(self):
         graph_name = self.client.get_graph_name()
         for issue in self.client.get_issues():

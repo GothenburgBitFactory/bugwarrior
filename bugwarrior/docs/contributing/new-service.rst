@@ -187,12 +187,6 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
 
           self.client = GitBugClient(path=self.config.path, port=self.config.port)
 
-      def get_owner(self, issue):
-          # Issue assignment hasn't been implemented in upstream git-bug yet.
-          # See https://github.com/MichaelMure/git-bug/issues/112.
-          raise NotImplementedError(
-              "This service has not implemented support for 'only_if_assigned'.")
-
       def issues(self):
           for issue in self.client.get_issues():
               comments = issue.pop('comments')
@@ -208,8 +202,6 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
               yield self.get_issue_for_record(issue)
 
 Here we see two required class attributes (pointing to the classes we previously defined) and two required methods.
-
-The ``get_owner`` method takes an individual issue and returns the "assigned" user, so that bugwarrior can filter issues on this basis. In this case git-bug has not yet implemented this feature, but it generally will just involve returning a value from the ``issue`` dictionary.
 
 The ``issues`` method is a generator which yields individual issue dictionaries.
 

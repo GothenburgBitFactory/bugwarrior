@@ -85,10 +85,6 @@ class TrelloService(Service, Client):
     ISSUE_CLASS = TrelloIssue
     CONFIG_SCHEMA = TrelloConfig
 
-    def get_owner(self, issue):
-        # Issue filtering is implemented as part of the api query.
-        pass
-
     @staticmethod
     def get_keyring_service(config):
         return f"trello://{config.api_key}@trello.com"

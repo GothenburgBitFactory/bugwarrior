@@ -116,11 +116,6 @@ class GerritService(Service, Client):
     def get_keyring_service(config):
         return f"gerrit://{config.base_uri}"
 
-    def get_owner(self, issue):
-        # TODO
-        raise NotImplementedError(
-            "This service has not implemented support for 'only_if_assigned'.")
-
     def issues(self):
         # Construct the whole url by hand here, because otherwise requests will
         # percent-encode the ':' characters, which gerrit doesn't like.

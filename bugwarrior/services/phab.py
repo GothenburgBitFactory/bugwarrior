@@ -243,10 +243,6 @@ class PhabricatorService(Service):
             }
             yield self.get_issue_for_record(diff, extra)
 
-    def get_owner(self, issue):
-        # Issue filtering is implemented as part of issue aggregation.
-        pass
-
     def issues(self):
         yield from self.tasks()
         yield from self.revisions()

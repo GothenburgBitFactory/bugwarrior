@@ -147,11 +147,6 @@ class YoutrackService(Service, Client):
     def get_keyring_service(config):
         return f"youtrack://{config.login}@{config.host}"
 
-    def get_owner(self, issue):
-        # TODO
-        raise NotImplementedError(
-            "This service has not implemented support for 'only_if_assigned'.")
-
     def issues(self):
         params = {
             'query': self.config.query,

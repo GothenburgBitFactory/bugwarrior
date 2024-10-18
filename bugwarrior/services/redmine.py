@@ -265,10 +265,6 @@ class RedMineService(Service):
     def get_keyring_service(config):
         return f"redmine://{config.login}@{config.url}/"
 
-    def get_owner(self, issue):
-        # Issue filtering is implemented as part of the api query.
-        pass
-
     def issues(self):
         issues = self.client.find_issues(
             self.config.issue_limit, self.config.query, self.config.only_if_assigned)

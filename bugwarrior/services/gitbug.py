@@ -157,12 +157,6 @@ class GitBugService(Service):
             port=self.config.port,
             annotation_comments=self.main_config.annotation_comments)
 
-    def get_owner(self, issue):
-        # Issue assignment hasn't been implemented in upstream git-bug yet.
-        # See https://github.com/MichaelMure/git-bug/issues/112.
-        raise NotImplementedError(
-            "This service has not implemented support for 'only_if_assigned'.")
-
     def issues(self):
         for issue in self.client.get_issues():
             comments = issue.pop('comments')

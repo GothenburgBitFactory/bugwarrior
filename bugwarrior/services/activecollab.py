@@ -193,10 +193,6 @@ class ActiveCollabService(Service):
                          body=comment['body']))
         return comments_formatted
 
-    def get_owner(self, issue):
-        if issue['assignee_id']:
-            return issue['assignee_id']
-
     def annotations(self, issue, issue_obj):
         if 'type' not in issue:
             # Subtask

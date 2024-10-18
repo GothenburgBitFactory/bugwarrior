@@ -71,10 +71,6 @@ class PivotalTrackerIssue(Issue):
 
     UNIQUE_KEY = (URL,)
 
-    def get_owner(self, issue):
-        _, issue = issue
-        return issue.get('pivotalowners')
-
     def to_taskwarrior(self):
         description = self.record.get('description')
         created = self.parse_date(self.record.get('created_at'))
@@ -147,10 +143,6 @@ class PivotalTrackerService(Service, Client):
                     labels=",".join(self.config.exclude_tags))
             if self.config.only_if_author:
                 self.query += f" requester:{self.config.user_id}"
-
-    def get_owner(self, issue):
-        # Issue filtering is implemented as part of the api query.
-        pass
 
     def annotations(self, annotations, story):
         final_annotations = []

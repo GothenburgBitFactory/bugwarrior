@@ -166,6 +166,19 @@ class NextcloudDeckService(Service):
     def get_owner(self, issue):
         return issue[issue.ASSIGNEE]
 
+    def include(self, issue):
+        """ Return true if the issue in question should be included """
+        if self.config.only_if_assigned:
+            owner = self.get_owner(issue)
+            include_owners = [self.config.only_if_assigned]
+
+            if self.config.also_unassigned:
+                include_owners.append(None)
+
+            return owner in include_owners
+
+        return True
+
     def filter_boards(self, board):
         # include_board_ids takes precedence over exclude_board_ids
         if self.config.include_board_ids:

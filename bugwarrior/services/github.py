@@ -439,12 +439,23 @@ class GithubService(Service):
         return True
 
     def include(self, issue):
+        """ Return true if the issue in question should be included """
         if 'pull_request' in issue[1]:
             if self.config.exclude_pull_requests:
                 return False
             if not self.config.filter_pull_requests:
                 return True
-        return super().include(issue)
+
+        if self.config.only_if_assigned:
+            owner = self.get_owner(issue)
+            include_owners = [self.config.only_if_assigned]
+
+            if self.config.also_unassigned:
+                include_owners.append(None)
+
+            return owner in include_owners
+
+        return True
 
     def issues(self):
         issues = {}

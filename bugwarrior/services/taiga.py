@@ -80,11 +80,6 @@ class TaigaService(Service, Client):
     def get_keyring_service(config):
         return f"taiga://{config.base_uri}"
 
-    def get_owner(self, issue):
-        # TODO
-        raise NotImplementedError(
-            "This service has not implemented support for 'only_if_assigned'.")
-
     def _issues(self, userid, task_type, task_type_plural, task_type_short):
         log.debug('Getting %s' % task_type_plural)
 
