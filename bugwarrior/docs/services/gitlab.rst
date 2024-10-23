@@ -175,6 +175,16 @@ Issues are included by default, if not configured otherwise. To disable querying
 
     gitlab.include_issues = False
 
+Filtering Issues by reaction
+++++++++++++++++++++++++++++
+
+If you want to keep track of issues you contributed to (which you did not create) 
+you can set the gitlab filter `my_reaction_emoji` with the following config::
+
+    gitlab.only_if_reaction = Any
+
+This way you can mark relevant issues by just reacting e.g. with a thumbsup and have them imported automatically.
+
 Include Merge Requests
 ++++++++++++++++++++++
 
