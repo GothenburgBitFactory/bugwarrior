@@ -64,7 +64,7 @@ jobs:
       - name: Set Jira version ${{ matrix.jira-version }}
         run: echo "JIRAVERSION=${{ matrix.jira-version }}" >> $GITHUB_ENV
       - name: Run tests on given architecture
-        uses: uraimo/run-on-arch-action@v2.5.0
+        uses: uraimo/run-on-arch-action@v2.8.1
         with:
           arch: ${{ matrix.architecture }}
           distro: ubuntu20.04
