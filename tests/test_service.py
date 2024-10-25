@@ -81,7 +81,7 @@ class ServiceBase(ConfigTest):
         appear once. This should ensure that these methods are declared here
         but not called.
         """
-        with open(services.base.__file__, 'r') as f:
+        with open(services.__file__, 'r') as f:
             base = f.read()
 
         for method in klass.__abstractmethods__:
@@ -92,7 +92,7 @@ class ServiceBase(ConfigTest):
 class TestService(ServiceBase):
 
     def test_architecture(self):
-        self.checkArchitecture(services.base.Service)
+        self.checkArchitecture(services.Service)
 
     def test_build_annotations_default(self):
         service = self.makeService()
@@ -125,7 +125,7 @@ class TestService(ServiceBase):
 class TestIssue(ServiceBase):
 
     def test_architecture(self):
-        self.checkArchitecture(services.base.Issue)
+        self.checkArchitecture(services.Issue)
 
     def test_build_default_description_default(self):
         issue = self.makeIssue()
