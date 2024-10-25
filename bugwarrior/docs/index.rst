@@ -31,6 +31,7 @@ Contents
    using
    common_configuration
    services
+   other_services
    contributing
    faq
 
