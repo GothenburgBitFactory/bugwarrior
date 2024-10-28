@@ -20,15 +20,25 @@ More likely you'll be writing your own client using an http API, so start off by
 
 This example of accessing a local service is quite simple, but you'll likely need to pass additional arguments and perhaps go through a handshake process to authenticate to a remote server.
 
-2. Service File
----------------
+2. Initialize Service
+---------------------
 
-Add a python file with the name of your service in ``bugwarrior/services``.
+There are two approaches here, depending on whether your service will be maintained in bugwarrior or will be maintained separately as a :doc:`third party service <third_party>`.
+
+If you're sure you're going to be upstreaming your service, clone the bugwarrior repo and create a python file with the name of your service in ``bugwarrior/services``.
 
 .. code:: bash
 
    touch bugwarrior/services/gitbug.py
 
+If you're going to maintain your service in it's own repository or if you're uncertain if it will be accepted upstream, create a new package for it.
+
+.. code:: bash
+
+   cd $MY_PROJECTS
+   mkdir bugwarrior-gitbug
+   cd bugwarrior-gitbug
+   touch bugwarrior_gitbug.py
 
 3. Imports
 ----------
@@ -47,6 +57,8 @@ Fire up your favorite editor and import the base classes and whatever library yo
   from bugwarrior.services import Service, Issue, Client
 
   log = logging.getLogger(__name__)
+
+We're going to step through the use of these bugwarrior classes in subsequent sections, but for reference you may find the :doc:`API docs <api>` helpful.
 
 
 4. Configuration Schema
@@ -208,14 +220,27 @@ The ``issues`` method is a generator which yields individual issue dictionaries.
 7. Service Registration
 -----------------------
 
-Add your service class as an ``entry_point`` under the ``[bugwarrior.service]`` section in ``setup.py``.
+If you're developing your service in a separate package, it's time to create a ``setup.py`` if you have not done so already, and register the name of your service with the path to your ``Service`` class.
 
 .. code:: python
 
-  gitbug=bugwarrior.services.gitbug:GitBugService
+  setup(...
+    entry_points="""
+    [bugwarrior.service]
+    gitbug=bugwarrior_gitbug:GitBugService
+    """
+  )
+
+If you're developing in the bugwarrior repo, you can simply add your entry to the existing ``[bugwarrior.service]`` group.
 
 8. Tests
 ----------
+
+.. note::
+
+   The remainder of this tutorial is not geared towards third-party services. While you are free to use bugwarrior's testing infrastructure, no attempt is being made to maintain the stability of these interfaces at this time.
+
+
 
 Create a test file and implement at least the minimal service tests by inheriting from ``AbstractServiceTest``.
 

@@ -168,6 +168,8 @@ regardless of what project was assigned by the service itself:
 
    github.project_template = Office
 
+.. _Password Management:
+
 Password Management
 -------------------
 

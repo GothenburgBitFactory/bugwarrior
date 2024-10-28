@@ -25,7 +25,7 @@ class TestTemplates(ServiceTest):
         )
         main_config = MainSectionConfig(interactive=False, targets=[])
 
-        issue = DumbIssue({}, config, main_config)
+        issue = DumbIssue({}, config, main_config, {})
         issue.to_taskwarrior = lambda: (
             self.arbitrary_issue if description is None else description
         )

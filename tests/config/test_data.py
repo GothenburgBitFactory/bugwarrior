@@ -12,13 +12,13 @@ class TestData(ConfigTest):
         self.data = data.BugwarriorData(self.lists_path)
 
     def assert0600(self):
-        permissions = oct(os.stat(self.data.datafile).st_mode & 0o777)
+        permissions = oct(os.stat(self.data._datafile).st_mode & 0o777)
         # python2 -> 0600, python3 -> 0o600
         self.assertIn(permissions, ['0600', '0o600'])
 
     def test_get_set(self):
         # "touch" data file.
-        with open(self.data.datafile, 'w+') as handle:
+        with open(self.data._datafile, 'w+') as handle:
             json.dump({'old': 'stuff'}, handle)
 
         self.data.set('key', 'value')

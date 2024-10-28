@@ -77,6 +77,7 @@ class YoutrackIssue(Issue):
         },
     }
     UNIQUE_KEY = (URL,)
+    PRIORITY_MAP = {}  # FIXME
 
     def to_taskwarrior(self):
         return {

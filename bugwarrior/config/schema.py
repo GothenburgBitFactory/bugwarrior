@@ -102,6 +102,7 @@ class PydanticConfig(pydantic.v1.BaseConfig):
 
 
 class MainSectionConfig(pydantic.v1.BaseModel):
+    """ The :ref:`common_configuration:Main Section` configuration, plus computed attributes: """
 
     class Config(PydanticConfig):
         arbitrary_types_allowed = True
@@ -110,9 +111,11 @@ class MainSectionConfig(pydantic.v1.BaseModel):
     targets: ConfigList
 
     # added during configuration loading
+    #: Interactive status.
     interactive: bool
 
     # added during validation (computed field support will land in pydantic-2)
+    #: Local data storage.
     data: typing.Optional[BugwarriorData] = None
 
     @pydantic.v1.root_validator
@@ -290,7 +293,10 @@ _ServiceConfig = pydantic.v1.create_model(
 
 
 class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
-    """ Base class for service configurations. """
+    """ Pydantic_ base class for service configurations.
+
+    .. _Pydantic: https://docs.pydantic.dev/latest/
+    """
     Config = PydanticConfig
 
     # Added during validation (computed field support will land in pydantic-2)
@@ -327,7 +333,7 @@ class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
 
             project_template = myprojectname
 
-        The above would cause all issues to recieve a project name
+        The above would cause all issues to receive a project name
         of 'myprojectname', regardless of what the project name of the
         generated issue was.
 

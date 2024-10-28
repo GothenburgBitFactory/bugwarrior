@@ -34,6 +34,7 @@ import bugwarrior
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
@@ -133,6 +134,17 @@ pygments_style = 'sphinx'
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
+# Show the class constructor arguments under __init__ rather than in the
+# header. This way we can omit __init__ when we don't want to document it.
+autodoc_class_signature = "separated"
+
+# Allow duplicate section names across the document collection (e.g., for each
+# service).
+autosectionlabel_prefix_document = True
+
+# For autodoc, split parameters onto separate lines when they exceed this
+# length.
+maximum_signature_line_length = 79
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -302,4 +314,7 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'requests': ('https://requests.readthedocs.io/en/latest/', None),
+}

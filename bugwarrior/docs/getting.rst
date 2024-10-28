@@ -1,8 +1,6 @@
 Getting bugwarrior
 ==================
 
-.. _requirements:
-
 Requirements
 ------------
 

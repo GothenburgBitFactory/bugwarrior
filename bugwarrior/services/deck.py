@@ -120,6 +120,8 @@ class NextcloudDeckIssue(Issue):
 
     UNIQUE_KEY = (BOARD_ID, STACK_ID, CARD_ID,)
 
+    PRIORITY_MAP = {}  # FIXME
+
     def to_taskwarrior(self):
         return {
             'project': self.extra['board']['title'].lower().replace(' ', '_'),
