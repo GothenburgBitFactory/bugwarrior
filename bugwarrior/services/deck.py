@@ -1,8 +1,8 @@
 import datetime
 import logging
+import typing
 
 import requests
-import typing_extensions
 from dateutil.tz import tzutc
 
 from bugwarrior import config
@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class NextcloudDeckConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['deck']
+    service: typing.Literal['deck']
     base_uri: config.StrippedTrailingSlashUrl
     username: str
 

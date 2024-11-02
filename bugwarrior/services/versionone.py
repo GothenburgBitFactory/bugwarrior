@@ -1,5 +1,6 @@
+import typing
+
 import pydantic.v1
-import typing_extensions
 from v1pysdk import V1Meta
 from v1pysdk.none_deref import NoneDeref
 from urllib import parse
@@ -12,7 +13,7 @@ class VersionOneConfig(config.ServiceConfig):
     _DEPRECATE_PROJECT_NAME = True
     project_name: str = ''
 
-    service: typing_extensions.Literal['versionone']
+    service: typing.Literal['versionone']
     base_uri: pydantic.v1.AnyUrl
     username: str
 

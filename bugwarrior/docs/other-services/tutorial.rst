@@ -49,9 +49,9 @@ Fire up your favorite editor and import the base classes and whatever library yo
 
   import logging
   import pathlib
+  import typing
 
   import requests
-  import typing_extensions
 
   from bugwarrior import config
   from bugwarrior.services import Service, Issue, Client
@@ -69,7 +69,7 @@ Now define an initial configuration schema as follows. Don't worry, we're about 
 .. code:: python
 
   class GitbugConfig(config.ServiceConfig):
-      service: typing_extensions.Literal['gitbug']
+      service: typing.Literal['gitbug']
 
       path: pathlib.Path
 

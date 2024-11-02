@@ -5,11 +5,11 @@ import os
 import pickle
 import re
 import time
+import typing
 
 import googleapiclient.discovery
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue
@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 class GmailConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['gmail']
+    service: typing.Literal['gmail']
 
     client_secret_path: config.ExpandedPath = config.ExpandedPath(
         '~/.gmail_client_secret.json')

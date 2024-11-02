@@ -1,8 +1,8 @@
 import sys
+import typing
 
 import pydantic.v1
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service, Client
@@ -22,7 +22,7 @@ UDD_BUGS_SEARCH = "https://udd.debian.org/bugs/"
 
 
 class BTSConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['bts']
+    service: typing.Literal['bts']
 
     email: pydantic.v1.EmailStr = pydantic.v1.EmailStr('')
     packages: config.ConfigList = config.ConfigList([])

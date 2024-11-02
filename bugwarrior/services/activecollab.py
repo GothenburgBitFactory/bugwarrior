@@ -1,8 +1,8 @@
 import re
+import typing
 
 import pypandoc
 from pyac.library import activeCollab
-import typing_extensions
 from bugwarrior.services import Service, Issue
 from bugwarrior import config
 
@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class ActiveCollabConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['activecollab']
+    service: typing.Literal['activecollab']
     url: config.StrippedTrailingSlashUrl
     key: str
     user_id: int

@@ -1,5 +1,6 @@
+import typing
+
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client, CACHE_REGION as cache
@@ -9,7 +10,7 @@ log = logging.getLogger(__name__)
 
 
 class TaigaConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['taiga']
+    service: typing.Literal['taiga']
     base_uri: config.StrippedTrailingSlashUrl
     auth_token: str
 

@@ -2,10 +2,10 @@ import base64
 import logging
 import re
 import sys
+import typing
 from urllib.parse import quote
 
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
@@ -25,7 +25,7 @@ class EscapedStr(str):
 
 
 class AzureDevopsConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['azuredevops']
+    service: typing.Literal['azuredevops']
     PAT: str
     project: EscapedStr
     organization: EscapedStr

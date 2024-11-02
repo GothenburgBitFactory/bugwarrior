@@ -5,15 +5,16 @@ Pulls trello cards as tasks.
 
 Trello API documentation available at https://developers.trello.com/
 """
+import typing
+
 import requests
-import typing_extensions
 
 from bugwarrior.services import Service, Issue, Client
 from bugwarrior import config
 
 
 class TrelloConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['trello']
+    service: typing.Literal['trello']
     api_key: str
     token: str
 

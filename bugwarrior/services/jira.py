@@ -5,7 +5,6 @@ import typing
 from functools import reduce
 
 import pydantic.v1
-import typing_extensions
 from dateutil.tz.tz import tzutc
 from jira.client import JIRA as BaseJIRA
 from requests.cookies import RequestsCookieJar
@@ -77,7 +76,7 @@ class JiraExtraField:
 
 
 class JiraConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['jira']
+    service: typing.Literal['jira']
     base_uri: pydantic.v1.AnyUrl
     username: str
 

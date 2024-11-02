@@ -1,11 +1,11 @@
 import datetime
 import logging
 import re
+import typing
 from urllib.parse import urlparse
 
 from dateutil.tz.tz import tzutc
 from kanboard import Client
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class KanboardConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['kanboard']
+    service: typing.Literal['kanboard']
     url: config.StrippedTrailingSlashUrl
     username: str
     password: str

@@ -1,10 +1,10 @@
 import csv
 import io as StringIO
+import typing
 import urllib.parse
 
 import offtrac
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class TracConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['trac']
+    service: typing.Literal['trac']
     base_uri: config.NoSchemeUrl
 
     scheme: str = 'https'

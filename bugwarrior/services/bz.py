@@ -8,7 +8,6 @@ import xmlrpc.client
 import bugzilla
 import pydantic.v1
 import pytz
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue
@@ -34,7 +33,7 @@ class OptionalSchemeUrl(pydantic.v1.AnyUrl):
 
 
 class BugzillaConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['bugzilla']
+    service: typing.Literal['bugzilla']
     username: str
     base_uri: OptionalSchemeUrl
 

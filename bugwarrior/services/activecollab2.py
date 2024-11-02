@@ -1,8 +1,8 @@
 import itertools
 import time
+import typing
 
 import requests
-import typing_extensions
 
 from bugwarrior.services import Service, Issue, Client
 from bugwarrior import config
@@ -31,7 +31,7 @@ class ActiveCollabProjects(dict):
 
 
 class ActiveCollab2Config(config.ServiceConfig):
-    service: typing_extensions.Literal['activecollab2']
+    service: typing.Literal['activecollab2']
     url: config.StrippedTrailingSlashUrl
     key: str
     user_id: int

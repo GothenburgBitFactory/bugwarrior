@@ -3,9 +3,9 @@ import os
 import signal
 import subprocess
 import sys
+import typing
 
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class GitBugConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['gitbug']
+    service: typing.Literal['gitbug']
 
     path: config.ExpandedPath
 

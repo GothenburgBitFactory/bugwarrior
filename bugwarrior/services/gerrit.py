@@ -2,14 +2,13 @@ import json
 import typing
 
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
 
 
 class GerritConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['gerrit']
+    service: typing.Literal['gerrit']
     base_uri: config.StrippedTrailingSlashUrl
     username: str
     password: str

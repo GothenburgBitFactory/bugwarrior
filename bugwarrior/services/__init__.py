@@ -13,7 +13,6 @@ import dogpile.cache
 from jinja2 import Template
 import pytz
 import requests
-import typing_extensions
 
 from bugwarrior.config import schema, secrets
 
@@ -154,7 +153,7 @@ class Issue(abc.ABC):
 
         return tags
 
-    def get_priority(self) -> typing_extensions.Literal['', 'L', 'M', 'H']:
+    def get_priority(self) -> typing.Literal['', 'L', 'M', 'H']:
         """ Return the priority of this issue, falling back to ``default_priority`` configuration.
         """
         return self.PRIORITY_MAP.get(

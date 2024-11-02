@@ -2,7 +2,6 @@ import typing
 
 import pydantic.v1
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class YoutrackConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['youtrack']
+    service: typing.Literal['youtrack']
     host: config.NoSchemeUrl
     login: str
     token: str

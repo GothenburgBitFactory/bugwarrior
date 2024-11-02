@@ -1,9 +1,9 @@
-import re
 import operator
+import re
+import typing
 
 import requests
 from jinja2 import Template
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
@@ -13,12 +13,12 @@ log = logging.getLogger(__name__)
 
 
 class PivotalTrackerConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['pivotaltracker']
+    service: typing.Literal['pivotaltracker']
     user_id: int
     account_ids: config.ConfigList
     token: str
 
-    version: typing_extensions.Literal['v5', 'edge'] = 'v5'
+    version: typing.Literal['v5', 'edge'] = 'v5'
     host: config.StrippedTrailingSlashUrl = config.StrippedTrailingSlashUrl(
         'https://www.pivotaltracker.com/services',
         scheme='https', host='pivotaltracker.com')

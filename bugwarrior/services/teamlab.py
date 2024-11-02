@@ -1,6 +1,7 @@
+import typing
+
 import pydantic.v1
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service, Client
@@ -13,7 +14,7 @@ class TeamLabConfig(config.ServiceConfig):
     _DEPRECATE_PROJECT_NAME = True
     project_name: str = ''
 
-    service: typing_extensions.Literal['teamlab']
+    service: typing.Literal['teamlab']
     hostname: str
     login: str
     password: str

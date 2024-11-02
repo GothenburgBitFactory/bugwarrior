@@ -3,7 +3,6 @@ import typing
 
 import pydantic.v1
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
@@ -13,9 +12,9 @@ log = logging.getLogger(__name__)
 
 class BitbucketConfig(config.ServiceConfig):
     _DEPRECATE_FILTER_MERGE_REQUESTS = True
-    filter_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
+    filter_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = 'Undefined'
 
-    service: typing_extensions.Literal['bitbucket']
+    service: typing.Literal['bitbucket']
 
     username: str
 
@@ -27,7 +26,7 @@ class BitbucketConfig(config.ServiceConfig):
 
     include_repos: config.ConfigList = config.ConfigList([])
     exclude_repos: config.ConfigList = config.ConfigList([])
-    include_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
+    include_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = 'Undefined'
     project_owner_prefix: bool = False
 
     @pydantic.v1.root_validator

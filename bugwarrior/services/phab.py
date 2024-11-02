@@ -3,7 +3,6 @@ import typing
 
 import phabricator
 import pydantic.v1
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue
@@ -12,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class PhabricatorConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['phabricator']
+    service: typing.Literal['phabricator']
 
     user_phids: config.ConfigList = config.ConfigList([])
     project_phids: config.ConfigList = config.ConfigList([])

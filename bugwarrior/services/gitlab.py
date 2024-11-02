@@ -4,7 +4,6 @@ import typing
 
 import pydantic.v1
 import sys
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
@@ -12,14 +11,14 @@ from bugwarrior.services import Service, Issue, Client
 import logging
 log = logging.getLogger(__name__)
 
-DefaultPriority = typing_extensions.Literal['', 'L', 'M', 'H', 'unassigned']
+DefaultPriority = typing.Literal['', 'L', 'M', 'H', 'unassigned']
 
 
 class GitlabConfig(config.ServiceConfig):
     _DEPRECATE_FILTER_MERGE_REQUESTS = True
-    filter_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
+    filter_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = 'Undefined'
 
-    service: typing_extensions.Literal['gitlab']
+    service: typing.Literal['gitlab']
     login: str
     token: str
     host: config.NoSchemeUrl
@@ -32,7 +31,7 @@ class GitlabConfig(config.ServiceConfig):
     owned: typing.Optional[bool] = None
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'
-    include_merge_requests: typing.Union[bool, typing_extensions.Literal['Undefined']] = 'Undefined'
+    include_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = 'Undefined'
     include_issues: bool = True
     include_todos: bool = False
     include_all_todos: bool = True

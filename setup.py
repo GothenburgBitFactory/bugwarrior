@@ -67,8 +67,6 @@ setup(name='bugwarrior',
           "taskw>=0.8",
           # Needed for backwards compatibility with python<=3.10.
           "tomli",
-          # Needed for backwards compatibility with python<=3.7.
-          "typing-extensions",
       ],
       extras_require={
           'all': list(

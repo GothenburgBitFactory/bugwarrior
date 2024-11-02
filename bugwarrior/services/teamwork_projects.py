@@ -1,5 +1,6 @@
+import typing
+
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
@@ -9,7 +10,7 @@ log = logging.getLogger(__name__)
 
 
 class TeamworkConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['teamwork_projects']
+    service: typing.Literal['teamwork_projects']
     host: config.StrippedTrailingSlashUrl
     token: str
 

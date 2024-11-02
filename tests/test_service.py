@@ -1,7 +1,7 @@
 import re
+import typing
 import unittest.mock
 
-import typing_extensions
 
 from bugwarrior import config, services
 from bugwarrior.config import schema
@@ -15,7 +15,7 @@ that long.""".replace('\n', ' ')
 
 
 class DumbConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['test']
+    service: typing.Literal['test']
 
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'

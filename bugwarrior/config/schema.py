@@ -8,7 +8,6 @@ import typing
 import pydantic.v1
 import pydantic.v1.error_wrappers
 import taskw
-import typing_extensions
 
 from bugwarrior.collect import get_service
 
@@ -139,7 +138,7 @@ class MainSectionConfig(pydantic.v1.BaseModel):
     static_tags: ConfigList = ConfigList([])
     static_fields: ConfigList = ConfigList(['priority'])
 
-    log_level: typing_extensions.Literal[
+    log_level: typing.Literal[
         ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', 'DISABLED')
     ] = 'INFO'
     log_file: typing.Optional[LoggingPath] = None
@@ -152,7 +151,7 @@ class Hooks(pydantic.v1.BaseModel):
 class Notifications(pydantic.v1.BaseModel):
     notifications: bool = False
     # Although upstream supports it, pydantic has problems with Literal[None].
-    backend: typing.Optional[typing_extensions.Literal[
+    backend: typing.Optional[typing.Literal[
         ('gobject', 'growlnotify', 'applescript')]] = None
     finished_querying_sticky: bool = True
     task_crud_sticky: bool = True
@@ -306,7 +305,7 @@ class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
     # Optional fields shared by all services.
     only_if_assigned: str = ''
     also_unassigned: bool = False
-    default_priority: typing_extensions.Literal['', 'L', 'M', 'H'] = 'M'
+    default_priority: typing.Literal['', 'L', 'M', 'H'] = 'M'
     add_tags: ConfigList = ConfigList([])
     description_template: typing.Optional[str] = None
 

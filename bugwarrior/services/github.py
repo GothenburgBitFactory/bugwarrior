@@ -1,10 +1,10 @@
 import re
 import sys
+import typing
 import urllib.parse
 
 import pydantic.v1
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
@@ -17,7 +17,7 @@ class GithubConfig(config.ServiceConfig):
     password: str = 'Deprecated'
 
     # strictly required
-    service: typing_extensions.Literal['github']
+    service: typing.Literal['github']
     login: str
     token: str
 

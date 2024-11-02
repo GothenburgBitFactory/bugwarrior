@@ -1,9 +1,9 @@
 import datetime
 import pytz
+import typing
 
 import pydantic.v1
 import requests
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 class PagureConfig(config.ServiceConfig):
     # strictly required
-    service: typing_extensions.Literal['pagure']
+    service: typing.Literal['pagure']
     base_url: config.StrippedTrailingSlashUrl
 
     # conditionally required

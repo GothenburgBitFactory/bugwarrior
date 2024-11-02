@@ -1,7 +1,7 @@
 import logging
+import typing
 
 import requests
-import typing_extensions
 
 import re
 from datetime import datetime
@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 class LogseqConfig(config.ServiceConfig):
-    service: typing_extensions.Literal["logseq"]
+    service: typing.Literal["logseq"]
     host: str = "localhost"
     port: int = 12315
     token: str

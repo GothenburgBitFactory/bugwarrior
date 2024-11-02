@@ -1,8 +1,8 @@
 import requests
 import re
+import typing
 
 from taskw import TaskWarriorShellout
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service, Client
@@ -15,7 +15,7 @@ class RedMineConfig(config.ServiceConfig):
     _DEPRECATE_PROJECT_NAME = True
     project_name: str = ''
 
-    service: typing_extensions.Literal['redmine']
+    service: typing.Literal['redmine']
     url: config.StrippedTrailingSlashUrl
     key: str
 
