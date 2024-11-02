@@ -2,12 +2,13 @@ import docutils.core
 import glob
 import os.path
 import pathlib
-import pkg_resources
 import re
 import socket
 import subprocess
 import tempfile
 import unittest
+
+from importlib_metadata import entry_points
 
 DOCS_PATH = pathlib.Path(__file__).parent / '../bugwarrior/docs'
 
@@ -69,7 +70,7 @@ class DocsTest(unittest.TestCase):
     def test_registered_services_are_documented(self):
         registered_services = set(
             e.name for e in
-            pkg_resources.iter_entry_points(group='bugwarrior.service'))
+            entry_points(group='bugwarrior.service'))
 
         documented_services = set()
         services_paths = os.listdir(DOCS_PATH / 'services')

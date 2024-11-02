@@ -3,8 +3,8 @@ import logging
 import multiprocessing
 import time
 
+from importlib_metadata import entry_points
 from jinja2 import Template
-from pkg_resources import iter_entry_points
 
 from taskw.task import Task
 
@@ -15,14 +15,13 @@ SERVICE_FINISHED_OK = 0
 SERVICE_FINISHED_ERROR = 1
 
 
-def get_service(service_name):
-    epoint = iter_entry_points(group='bugwarrior.service', name=service_name)
+def get_service(service_name: str):
     try:
-        epoint = next(epoint)
-    except StopIteration:
-        return None
-
-    return epoint.load()
+        (service,) = entry_points(group='bugwarrior.service', name=service_name)
+    except ValueError as e:
+        raise ValueError(f"Configured service '{service_name}' not found. "
+                         "Is it installed? Or misspelled?") from e
+    return service.load()
 
 
 def _aggregate_issues(conf, main_section, target, queue):
