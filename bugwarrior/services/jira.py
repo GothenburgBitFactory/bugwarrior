@@ -246,11 +246,11 @@ class JiraIssue(Issue):
         return {**fixed_fields, **extra_fields}
 
     def get_extra_fields(self):
-        if self.extra['extra_fields'] is None:
+        if self.config.extra_fields is None:
             return {}
 
         return {extra_field.label: extra_field.extract_value(
-            self.record['fields']) for extra_field in self.extra['extra_fields']}
+            self.record['fields']) for extra_field in self.config.extra_fields}
 
     def get_entry(self):
         created_at = self.record['fields']['created']
@@ -308,12 +308,12 @@ class JiraIssue(Issue):
         return self.config.base_uri + '/browse/' + self.record['key']
 
     def get_summary(self):
-        if self.extra.get('jira_version') == 4:
+        if self.config.version == 4:
             return self.record['fields']['summary']['value']
         return self.record['fields']['summary']
 
     def get_estimate(self):
-        if self.extra.get('jira_version') == 4:
+        if self.config.version == 4:
             return self.record['fields']['timeestimate']['value']
         try:
             return self.record['fields']['timeestimate'] / 60 / 60
@@ -431,21 +431,15 @@ class JiraService(Service):
             issue_obj.get_url()
         )
 
-    def get_issue_for_record(self, record, extra=None):
-        if extra is None:
-            extra = {}
-        extra.setdefault('sprint_field_names', self.sprint_field_names)
-        return super().get_issue_for_record(record, extra=extra)
-
     def issues(self):
         cases = self.jira.search_issues(self.query, maxResults=None)
 
         for case in cases:
-            issue = self.get_issue_for_record(case.raw)
+            issue = self.get_issue_for_record(
+                case.raw,
+                extra={'sprint_field_names': self.sprint_field_names})
             extra = {
-                'jira_version': self.config.version,
                 'body': self.body(issue),
-                'extra_fields': self.config.extra_fields,
             }
             if self.config.version > 4:
                 extra.update({
