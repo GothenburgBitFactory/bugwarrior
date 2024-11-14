@@ -194,7 +194,9 @@ Provided UDA Fields
 Support for Extra UDA Fields
 +++++++++++++++++++++++++++++
 
-To export additional UDA fields, set ``extra_fields`` to comma-separated entries of the form ``uda_tag:field_key[.subkey]``. You can also chain subkeys to extract deeply embedded keys, e.g.:
+Exporting additional UDA fields is a two-step process.
+
+First, set ``extra_fields`` to comma-separated entries of the form ``uda_tag:field_key[.subkey]``. You can also chain subkeys to extract deeply embedded keys, e.g.:
 
 .. config::
     :fragment: jira
@@ -202,3 +204,13 @@ To export additional UDA fields, set ``extra_fields`` to comma-separated entries
     jira.extra_fields = jiraextrafield1:customfield_10000, jiraextrafield2:customfield_10001.attributes.description
 
 The correct key (and subkeys) can be found by inspecting the `fields` attribute of a standard Jira issue response.
+
+Second, `add the new UDA(s) to taskwarrior`_. Assuming `jiraextrafield1` is a string, you would run:
+
+::
+
+   $ task config uda.jiraextrafield1.type string
+   $ task config uda.jiraextrafield1.label My Extra Field
+
+.. _add the new UDA(s) to taskwarrior: https://taskwarrior.org/docs/udas/#example-estimate
+
