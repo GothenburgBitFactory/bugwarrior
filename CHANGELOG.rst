@@ -1,5 +1,5 @@
 2.0.0
-------------
+-----
 
 Bugwarrior has a new home! The [Bugwarrior repository](https://github.com/GothenburgBitFactory/bugwarrior) has been graciously transferred by [@ralphbean](https://github.com/ralphbean), the original author, to the [GothenburgBitFactory](https://gothenburgbitfactory.org/) organization which also maintains Taskwarrior.
 
@@ -9,8 +9,9 @@ Major Changes
 
 - Top-level bugwarrior command. (https://github.com/ralphbean/bugwarrior/pull/882)
 - Enhanced configuration validation. (https://github.com/ralphbean/bugwarrior/pull/849)
-- Survive service failure. (https://github.com/ralphbean/bugwarrior/pull/825)
 - TOML configuration. (https://github.com/ralphbean/bugwarrior/issues/873)
+- Survive service failure. (https://github.com/ralphbean/bugwarrior/pull/825)
+- Stable service API. (Third party service support.) (many PR's over the course of years)
 
 New and Removed Services
 
