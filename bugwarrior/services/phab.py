@@ -24,6 +24,8 @@ class PhabricatorConfig(config.ServiceConfig):
     # XXX Override common service configuration
     only_if_assigned: bool = False
 
+    also_unassigned: config.UnsupportedOption[bool] = False
+
 
 class PhabricatorIssue(Issue):
     TITLE = 'phabricatortitle'

@@ -11,7 +11,8 @@ from .schema import (ConfigList,  # noqa: F401
                      NoSchemeUrl,  # noqa: F401
                      ServiceConfig,
                      StrippedTrailingSlashUrl,  # noqa: F401
-                     TaskrcPath)  # noqa: F401
+                     TaskrcPath,  # noqa: F401
+                     UnsupportedOption)  # noqa: F401
 from .secrets import get_keyring  # noqa: F401
 
 # NOTE: __all__ determines the stable, public API.

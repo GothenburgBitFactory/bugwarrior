@@ -25,6 +25,8 @@ class RedMineConfig(config.ServiceConfig):
     password: str = ''
     verify_ssl: bool = True
 
+    also_unassigned: config.UnsupportedOption[bool] = False
+
 
 class RedMineClient(Client):
     def __init__(self, url, key, auth, issue_limit, verify_ssl):

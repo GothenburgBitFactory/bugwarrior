@@ -21,6 +21,9 @@ class VersionOneConfig(config.ServiceConfig):
     timebox_name: str = ''
     timezone: str = ''
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
 
 class VersionOneIssue(Issue):
     TASK_NAME = 'versiononetaskname'

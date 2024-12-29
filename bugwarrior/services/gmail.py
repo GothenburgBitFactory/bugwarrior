@@ -26,6 +26,9 @@ class GmailConfig(config.ServiceConfig):
     login_name: str = 'me'
     thread_limit: int = 100
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
 
 class GmailIssue(Issue):
     THREAD_ID = 'gmailthreadid'

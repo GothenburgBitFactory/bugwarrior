@@ -1,5 +1,9 @@
+import importlib
 import os
+import re
 import unittest
+
+from importlib_metadata import entry_points
 
 from bugwarrior.config import schema
 
@@ -53,6 +57,15 @@ class TestConfigList(unittest.TestCase):
                 "work, jira, {{jirastatus|lower|replace(' ','_')}}"),
             ['work', 'jira', "{{jirastatus|lower|replace(' ','_')}}"]
         )
+
+
+class TestUnsupportedOption(unittest.TestCase):
+    def test_unsupportedoption_falsey(self):
+        self.assertEqual(schema.UnsupportedOption.validate(''), '')
+
+    def test_unsupportedoption_truthy(self):
+        with self.assertRaises(ValueError):
+            schema.UnsupportedOption.validate('foo')
 
 
 class TestValidation(ConfigTest):
@@ -189,3 +202,32 @@ class TestComputeTemplates(unittest.TestCase):
         raw_values = {'templates': {}, 'project_template': ''}
         computed_values = schema.ServiceConfig().compute_templates(raw_values)
         self.assertEqual(computed_values['templates'], {'project': ''})
+
+
+class TestServices(unittest.TestCase):
+    def test_common_configuration_options(self):
+        """
+        Cheaply check that each service at least references all of the common
+        configuration options, if for no other reason than to throw a
+        validation error if they are not supported.
+        """
+        for e in entry_points(group='bugwarrior.service'):
+            with self.subTest(service=e.name):
+                service_file = importlib.import_module(e.module).__file__
+                with open(service_file, 'r') as f:
+                    service_code = f.read()
+                for option in ['only_if_assigned', 'also_unassigned']:
+                    with self.subTest(option=option):
+                        self.assertIsNotNone(
+                            re.search(option, service_code),
+                            msg=f'\
+Service should support common configuration option self.config.{option}')
+
+                # get_priority() makes use of the default_priority option
+                with self.subTest(option='default_priority'):
+                    self.assertIsNotNone(
+                        re.search('default_priority', service_code) or
+                        re.search('get_priority', service_code),
+                        msg='\
+Service should support self.config.default_priority or use self.get_priority()'
+                    )

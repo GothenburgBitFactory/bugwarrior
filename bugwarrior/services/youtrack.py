@@ -27,6 +27,9 @@ class YoutrackConfig(config.ServiceConfig):
     import_tags: bool = True
     tag_template: str = '{{tag|lower}}'
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
     # added during validation (computed field support will land in pydantic-2)
     base_url: str = ''
 

@@ -16,6 +16,9 @@ class ActiveCollabConfig(config.ServiceConfig):
     key: str
     user_id: int
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
 
 class ActiveCollabClient:
     def __init__(self, url, key, user_id):

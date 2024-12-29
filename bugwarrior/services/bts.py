@@ -33,6 +33,9 @@ class BTSConfig(config.ServiceConfig):
     ignore_pkg: config.ConfigList = config.ConfigList([])
     ignore_src: config.ConfigList = config.ConfigList([])
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
     @pydantic.v1.root_validator
     def require_email_or_packages(cls, values):
         if not values['email'] and not values['packages']:

@@ -94,6 +94,21 @@ class TaskrcPath(ExpandedPath):
         return expanded_path
 
 
+T = typing.TypeVar('T')
+
+
+class UnsupportedOption(typing.Generic[T]):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v: T):
+        if v:
+            raise ValueError("Option is unsupported by service.")
+        return v
+
+
 class PydanticConfig(pydantic.v1.BaseConfig):
     allow_mutation = False  # config is faux-immutable
     extra = 'forbid'  # do not allow undeclared fields

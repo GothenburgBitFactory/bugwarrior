@@ -19,6 +19,8 @@ class TeamLabConfig(config.ServiceConfig):
     login: str
     password: str
 
+    also_unassigned: config.UnsupportedOption[bool] = False
+
     @pydantic.v1.root_validator
     def default_project_name(cls, values):
         if values['project_name'] == '':

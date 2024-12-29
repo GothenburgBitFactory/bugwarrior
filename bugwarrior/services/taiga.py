@@ -17,6 +17,9 @@ class TaigaConfig(config.ServiceConfig):
     include_tasks: bool = False
     label_template: str = '{{label}}'
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
 
 class TaigaIssue(Issue):
     SUMMARY = 'taigasummary'

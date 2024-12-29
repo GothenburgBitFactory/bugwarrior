@@ -21,6 +21,9 @@ class KanboardConfig(config.ServiceConfig):
 
     query: str = ''
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
 
 class KanboardIssue(Issue):
     TASK_ID = "kanboardtaskid"

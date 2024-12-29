@@ -93,6 +93,9 @@ class JiraConfig(config.ServiceConfig):
     verify_ssl: bool = True
     version: int = 5
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
     @pydantic.v1.root_validator
     def require_password_xor_PAT(cls, values):
         if ((values['password'] and values['PAT'])

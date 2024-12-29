@@ -22,6 +22,9 @@ class GitBugConfig(config.ServiceConfig):
     label_template: str = '{{label}}'
     port: int = 43915
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
 
 class Webui:
     def __init__(self, path, port):

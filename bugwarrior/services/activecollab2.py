@@ -37,6 +37,9 @@ class ActiveCollab2Config(config.ServiceConfig):
     user_id: int
     projects: ActiveCollabProjects
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
 
 class ActiveCollab2Client(Client):
     def __init__(self, url, key, user_id, projects, target):

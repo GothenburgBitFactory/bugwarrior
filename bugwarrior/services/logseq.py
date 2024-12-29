@@ -27,6 +27,9 @@ class LogseqConfig(config.ServiceConfig):
     char_close_bracket: str = "〉"
     inline_links: bool = True
 
+    only_if_assigned: config.UnsupportedOption[str] = ''
+    also_unassigned: config.UnsupportedOption[bool] = False
+
 
 class LogseqClient(Client):
     def __init__(self, host, port, token, filter):
@@ -255,11 +258,7 @@ class LogseqIssue(Issue):
         wait_date = min([d for d in [scheduled_date, deadline_date, self.SOMEDAY] if d is not None])
         return {
             "project": self.extra["graph"],
-            "priority": (
-                self.PRIORITY_MAP[self.record["priority"]]
-                if "priority" in self.record
-                else None
-            ),
+            "priority": self.get_priority(),
             "annotations": annotations,
             "tags": self.get_tags_from_content(),
             "due": deadline_date,
