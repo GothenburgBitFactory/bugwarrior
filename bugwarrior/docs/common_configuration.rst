@@ -107,7 +107,9 @@ The following options are supported:
   set, then also create tasks for issues that are not assigned to anybody.
   Defaults to ``false``.
 * ``default_priority``: Assign this priority ('L', 'M', 'H', or '') to
-  newly-imported issues. Defaults to ``M``.
+  newly-imported issues. Note that priority is static by default, so changes
+  will not be reflected in existing tasks unless it is (at least temporarily)
+  removed from ``static_fields``. Defaults to ``M``.
 * ``add_tags``: A list of tags to add to an issue.  In
   most cases, plain strings will suffice, but you can also specify
   templates.  See the section `Field Templates`_ for more information.
