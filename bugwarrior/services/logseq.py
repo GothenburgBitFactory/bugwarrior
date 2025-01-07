@@ -168,10 +168,11 @@ class LogseqIssue(Issue):
 
     # get an optimized and formatted title
     def get_formatted_title(self):
-        # use first line only and remove priority
+        # use first line only and remove state and priority
         first_line = (
             self.record["content"]
             .split("\n")[0]  # only use first line
+            .split(self.get_logseq_state() + " ")[1]  # remove state marker
             .replace("[#A] ", "")  # remove priority markers
             .replace("[#B] ", "")
             .replace("[#C] ", "")

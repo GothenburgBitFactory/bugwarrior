@@ -68,7 +68,7 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             issue.ID: int(self.test_record["id"]),
             issue.UUID: self.test_record["uuid"],
             issue.STATE: self.test_record["marker"],
-            issue.TITLE: "DOING Do something #【Test tag】 #【TestTag】 #TestTag",
+            issue.TITLE: "Do something #【Test tag】 #【TestTag】 #TestTag",
             issue.URI: self.test_extra["baseURI"] + self.test_record["uuid"],
         }
 
@@ -84,7 +84,7 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
         expected = {
             "annotations": [],
             "description": f"(bw)Is#{self.test_record['id']}"
-            + " - DOING Do something #【Test tag】 #【TestTag】 #TestTag"
+            + " - Do something #【Test tag】 #【TestTag】 #TestTag"
             + " .. " + self.test_extra["baseURI"] + self.test_record["uuid"],
             "due": None,
             "scheduled": None,
@@ -96,7 +96,7 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             issue.ID: int(self.test_record["id"]),
             issue.UUID: self.test_record["uuid"],
             issue.STATE: self.test_record["marker"],
-            issue.TITLE: "DOING Do something #【Test tag】 #【TestTag】 #TestTag",
+            issue.TITLE: "Do something #【Test tag】 #【TestTag】 #TestTag",
             issue.URI: self.test_extra["baseURI"] + self.test_record["uuid"],
         }
 
