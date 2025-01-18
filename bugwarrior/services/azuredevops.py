@@ -122,7 +122,7 @@ class AzureDevopsIssue(Issue):
         TYPE: {"type": "string", "label": "Azure Devops Work Item Type"},
         STATE: {"type": "string", "label": "Azure Devops Work Item State"},
         ACTIVITY: {"type": "string", "label": "Azure Devops Activity"},
-        PRIORITY: {"type": "numeric", "label": "Azure Devops Priority"},
+        PRIORITY: {"type": "string", "label": "Azure Devops Priority"},
         REMAINING_WORK: {
             "type": "numeric",
             "label": "Azure Devops Amount of Remaining Work",
