@@ -113,6 +113,7 @@ class AzureDevopsIssue(Issue):
     REMAINING_WORK = "adoremainingwork"
     PARENT = "adoparent"
     NAMESPACE = "adonamespace"
+    DUE = "adodue"
 
     UDAS = {
         TITLE: {"type": "string", "label": "Azure Devops Title"},
@@ -129,6 +130,7 @@ class AzureDevopsIssue(Issue):
         },
         PARENT: {"type": "string", "label": "Azure Devops Parent Work Item Name"},
         NAMESPACE: {"type": "string", "label": "Azure Devops Namespace"},
+        DUE: {"type": "string", "label": "Azure Devops due date"},
     }
     UNIQUE_KEY = (URL,)
 
@@ -146,10 +148,10 @@ class AzureDevopsIssue(Issue):
             "priority": self.get_priority(),
             "annotations": self.extra.get("annotations", []),
             "entry": self.parse_date(
-                self.record.get("fields", {}).get("System.CreatedDate")
+                self.record.get("fields", {}).get("System.CreatedDate"), timezone=""
             ),
             "end": self.parse_date(
-                self.record.get("fields", {}).get("Microsoft.VSTS.Common.ClosedDate")
+                self.record.get("fields", {}).get("Microsoft.VSTS.Common.ClosedDate"), timezone=""
             ),
             self.TITLE: self.record["fields"]["System.Title"],
             self.DESCRIPTION: format_item(
@@ -168,14 +170,19 @@ class AzureDevopsIssue(Issue):
             ),
             self.PARENT: self.record.get("ParentTitle"),
             self.NAMESPACE: self.extra.get("namespace"),
+            "due": self.parse_date(
+                self.record.get("fields", {}).get("Microsoft.VSTS.Scheduling.DueDate"), timezone=""
+            ),
+
         }
 
     def get_default_description(self):
         return self.build_default_description(
-            title=self.record["fields"]["System.Title"],
-            url=self.record["_links"]["html"]["href"],
-            number=self.record["id"],
-            cls=self.record["fields"]["System.WorkItemType"].lower(),
+            title=f" {self.record['fields']['System.Title']}",
+            # url=self.record["_links"]["html"]["href"],
+            url="",
+            number=f"{self.record['id']}",
+            cls=f" {self.record['fields']['System.WorkItemType'].lower()} ",
         )
 
 
