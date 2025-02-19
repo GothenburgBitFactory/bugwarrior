@@ -100,7 +100,7 @@ def aggregate_issues(conf, main_section, debug):
                     log.error(f"Aborted [{target}] due to critical error.")
                     yield ('SERVICE FAILED', target)
                 continue
-            yield issue
+            raise
 
     log.info("Done aggregating remote issues.")
 
