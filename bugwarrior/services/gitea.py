@@ -3,9 +3,9 @@
 """Bugwarrior service support class for Gitea
 
 Available classes:
-- GiteaClient(ServiceClient): Constructs Gitea API strings
+- GiteaClient(Service): Constructs Gitea API strings
 - GiteaIssue(Issue): TaskWarrior Interface
-- GiteaService(IssueService): Engine for firing off requests
+- GiteaService(Issue): Engine for firing off requests
 
 Todo:
     * Add token support
@@ -25,7 +25,7 @@ import typing_extensions
 from jinja2 import Template
 
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Issue, Service, Client
 
 log = logging.getLogger(__name__)  # pylint: disable-msg=C0103
 
@@ -62,7 +62,7 @@ class GiteaConfig(config.ServiceConfig):
             return default
 
 
-class GiteaClient(ServiceClient):
+class GiteaClient(Client):
     """Builds Gitea API strings
     Args:
         host (str): remote gitea server
@@ -263,8 +263,11 @@ class GiteaIssue(Issue):
     @staticmethod
     def _normalize_label_to_tag(label):
         return re.sub(r'[^a-zA-Z0-9]', '_', label)
+    def get_tags(self):
+        labels = [label['name'] for label in self.record.get('labels', [])] 
+        return self.get_tags_from_labels(labels)
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict:
         milestone = self.record['milestone']
         if milestone:
             milestone = milestone['title']
@@ -302,31 +305,18 @@ class GiteaIssue(Issue):
             self.NAMESPACE: self.extra['namespace'],
             self.STATE: self.record.get('state', '')
         }
-    def get_tags(self):
-        labels = [label['name'] for label in self.record.get('labels', [])] 
-        return self.get_tags_from_labels(labels)
 
     def get_default_description(self):
         log.info('In get_default_description')
         return self.build_default_description(
             title=self.record['title'],
-            url=self.get_processed_url(self.record['url']),
+            url=self.record['url'],
             number=self.record['number'],
             cls=self.extra['type'],
         )
 
 
-    def get_default_description(self):
-        log.info('In get_default_description')
-        return self.build_default_description(
-            title=self.record['title'],
-            url=self.get_processed_url(self.record['url']),
-            number=self.record['number'],
-            cls=self.extra['type'],
-        )
-
-
-class GiteaService(IssueService):
+class GiteaService(Service):
     ISSUE_CLASS = GiteaIssue
     CONFIG_SCHEMA = GiteaConfig
     CONFIG_PREFIX = 'gitea'
@@ -455,7 +445,7 @@ class GiteaService(IssueService):
             ) for c in comments)
         annotations_result = self.build_annotations(
             annotations,
-            issue_obj.get_processed_url(url))
+            url)
         log.info('annotations: {}'.format(annotations_result))
         return annotations_result
 
@@ -573,6 +563,9 @@ class GiteaService(IssueService):
                 'annotations': [issue['body']],
                 'namespace': self.username,
             }
-            issue_obj.update_extra(extra)
+            issue_obj.extra.update(extra)
             yield issue_obj
+
+
+
 
