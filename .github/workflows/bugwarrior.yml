@@ -53,6 +53,9 @@ jobs:
         python-version: [3.8, 3.9, "3.10", 3.11]
         jira-version: [1.0.10, 2.0.0]
         architecture: [aarch64, ppc64le]
+        # ppc64le action is currently broken: https://github.com/uraimo/run-on-arch-action/issues/160
+        exclude:
+          - architecture: ppc64le
 
     steps:
       - name: Checkout code
