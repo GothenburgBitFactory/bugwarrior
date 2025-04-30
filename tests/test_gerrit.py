@@ -14,6 +14,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
         'base_uri': 'https://one.com',
         'username': 'two',
         'password': 'three',
+        'ignore_user_comments': ['CI Bot'],
     }
 
     record = {
@@ -26,6 +27,9 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
         'subject': 'this is a title',
         'messages': [{'author': {'username': 'Iam Author'},
                       'message': 'this is a message',
+                      '_revision_number': 1},
+                     {'author': {'username': 'CI Bot'},
+                      'message': 'ignore me please',
                       '_revision_number': 1}],
     }
 
