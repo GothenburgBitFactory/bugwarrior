@@ -42,6 +42,10 @@ ARBITRARY_EXTRA = {
     'body': 'Something',
     'namespace': 'arbitrary_username',
 }
+IGNORABLE = {
+    'user': {'login': 'cibot'},
+    'body': 'Ignore this comment.'
+}
 
 
 class TestGithubIssue(AbstractServiceTest, ServiceTest):
@@ -51,6 +55,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
         'login': 'arbitrary_login',
         'token': 'arbitrary_token',
         'username': 'arbitrary_username',
+        'ignore_user_comments': [IGNORABLE['user']['login']],
     }
 
     def test_draft(self):
@@ -151,7 +156,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             json=[{
                 'user': {'login': 'arbitrary_login'},
                 'body': 'Arbitrary comment.'
-            }])
+            }, IGNORABLE])  # second comment should be ignored and still pass
 
         service = self.get_mock_service(GithubService)
         issue = next(service.issues())
@@ -248,7 +253,6 @@ class TestGithubService(ServiceTest):
         'login': 'tintin',
         'username': 'milou',
         'token': 't0ps3cr3t',
-
     }
 
     def test_token_authorization_header(self):
