@@ -45,6 +45,19 @@ For example:
 
     gerrit.query = is:open+((reviewer:self+-owner:self+-is:ignored)+OR+assignee:self)
 
+
+Synchronizing Issue Content
++++++++++++++++++++++++++++
+
+This service synchronizes fields to UDAs, as described below.
+Comments are synchronized as annotations.
+
+To limit the amount of content synchronized into TaskWarrior (which can help to avoid issues with synchronization), use
+
+ * ``annotation_comments=False`` (a global configuration) to disable synchronizing comments to annotations; and
+ * ``ignore_user_comments=<comma separated list>`` in the ``[gerrit]`` section to filter out (e.g. automated) comments turning into annotations if ``annotation_comments`` is on
+
+
 Provided UDA Fields
 -------------------
 
