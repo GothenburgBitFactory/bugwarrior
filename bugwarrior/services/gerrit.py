@@ -148,7 +148,6 @@ class GerritService(Service, Client):
                     break
             else:
                 username = item['author']['_account_id']
-            # Gerrit messages are really messy
             if username in self.config.ignore_user_comments:
                 log.debug(" ignoring comment from %s", username)
                 continue
