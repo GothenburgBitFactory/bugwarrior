@@ -12,12 +12,12 @@ from .base import ServiceTest, AbstractServiceTest
 
 
 ARBITRARY_CREATED = (
-    datetime.datetime.utcnow() - datetime.timedelta(hours=1)
+    datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
 ).replace(tzinfo=pytz.UTC, microsecond=0)
 ARBITRARY_CLOSED = (
-    datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
+    datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=30)
 ).replace(tzinfo=pytz.UTC, microsecond=0)
-ARBITRARY_UPDATED = datetime.datetime.utcnow().replace(
+ARBITRARY_UPDATED = datetime.datetime.now(datetime.timezone.utc).replace(
     tzinfo=pytz.UTC, microsecond=0)
 ARBITRARY_ISSUE = {
     'title': 'Hallo',

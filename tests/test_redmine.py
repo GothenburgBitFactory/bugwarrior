@@ -18,9 +18,9 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
         'key': 'something_else',
         'issue_limit': '100',
     }
-    arbitrary_created = datetime.datetime.utcnow().replace(
+    arbitrary_created = datetime.datetime.now(datetime.timezone.utc).replace(
         tzinfo=dateutil.tz.tz.tzutc(), microsecond=0) - datetime.timedelta(1)
-    arbitrary_updated = datetime.datetime.utcnow().replace(
+    arbitrary_updated = datetime.datetime.now(datetime.timezone.utc).replace(
         tzinfo=dateutil.tz.tz.tzutc(), microsecond=0)
     arbitrary_issue = {
         "assigned_to": {
