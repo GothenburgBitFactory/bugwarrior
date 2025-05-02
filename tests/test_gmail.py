@@ -52,7 +52,7 @@ class TestGmailService(ConfigTest):
 
     def test_get_credentials_with_refresh(self):
         expired_credential = Credentials(**copy(TEST_CREDENTIAL))
-        expired_credential.expiry = datetime.now(timezone.utc)
+        expired_credential.expiry = datetime.now(timezone.utc).replace(tzinfo=None)
         self.assertEqual(expired_credential.valid, False)
         with open(self.service.credentials_path, "wb") as token:
             pickle.dump(expired_credential, token)
@@ -60,7 +60,7 @@ class TestGmailService(ConfigTest):
         with patch("google.oauth2.reauth.refresh_grant") as mock_refresh_grant:
             access_token = "newaccesstoken"
             refresh_token = "newrefreshtoken"
-            expiry = datetime.now(timezone.utc) + timedelta(hours=24)
+            expiry = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)
             grant_response = {"id_token": "idtoken"}
             rapt_token = "reauthprooftoken"
             mock_refresh_grant.return_value = (
