@@ -185,9 +185,11 @@ class LogseqIssue(Issue):
     # get a list of tags from the task content
     def get_tags_from_content(self):
         # pattern match for #[[multi word]] tags and #single word tags
-        # but ignore any non-tag use of the # character in URLs like http://example.com/page#test or in `#code`
+        # but ignore any non-tag use of the # character in URLs
+        # like http://example.com/page#test or in `#code`
         # Regex Pattern: (?<=\s)#【.*】|(?<=\s)#\S+
-        # Note that this is processed after the content is unescaped, so we can use the char_open_link and char_close_link
+        # Note that this is processed after the content is unescaped,
+        # so we use the char_open_link and char_close_link
         tags = re.findall(
             r"(?<=\s)#" + self.config.char_open_link + r".*?" + self.config.char_close_link + r"|(?<=\s)#\S+",
             self.get_formatted_title()
