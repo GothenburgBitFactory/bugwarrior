@@ -224,6 +224,7 @@ class LogseqIssue(Issue):
             scheduled.replace("DEADLINE: <", "")
             .replace("SCHEDULED: <", "")
             .replace(">", "")
+            .strip()
             .split(" ")
         )
         if len(date_split) == 2:  # <date day>
