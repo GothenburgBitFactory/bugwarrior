@@ -200,7 +200,22 @@ class LogseqIssue(Issue):
         annotations = []
         scheduled_date = None
         deadline_date = None
+        in_logbook = False
         for line in self.record["content"].split("\n"):
+            # Ignore things which are only useful within Logseq
+            if in_logbook:
+                if line.startswith(":END:"):
+                    in_logbook = False
+
+                continue
+
+            if line.startswith(":LOGBOOK:"):
+                in_logbook = True
+                continue
+
+            if line.startswith("id::"):
+                continue
+
             # handle special annotations
             if line.startswith("SCHEDULED: "):
                 scheduled_date = self.get_scheduled_date(line)
