@@ -15,9 +15,12 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
     }
 
     test_record = {
-        "properties": {"duration": '{"TODO":[0,1699562197346]}'},
+        "properties": {
+            "id": "67dae9ea-8e4d-4ad1-91dc-72aacc72a802",
+            "duration": '{"TODO":[0,1699562197346]}',
+        },
         "priority": "C",
-        "properties-order": ["duration"],
+        "properties-order": ["duration", "id"],
         "parent": {"id": 7083},
         "id": 7146,
         "uuid": "66699a83-3ee0-4edc-81c6-a24c9b80bec6",
@@ -30,8 +33,15 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             {"id": 1777},
             {"id": 7070},
         ],
-        "content": "DOING [#A] Do something #[[Test tag]] #[[TestTag]] #TestTag",
-        "properties-text-values": {"duration": '{"TODO":[0,1699562197346]}'},
+        "content": ("DOING [#C] Do something #[[Test tag]] #[[TestTag]] #TestTag\n"
+                    "id:: 67dae9ea-8e4d-4ad1-91dc-72aacc72a802\n"
+                    ":LOGBOOK:\n"
+                    "CLOCK: [2025-06-03 Tue 13:56:47]--[2025-06-03 Tue 13:56:49] =>  00:00:02\n"
+                    ":END:"),
+        "properties-text-values": {
+            "duration": '{"TODO":[0,1699562197346]}',
+            "id": "67dae9ea-8e4d-4ad1-91dc-72aacc72a802",
+        },
         "marker": "DOING",
         "page": {"id": 7070},
         "left": {"id": 7109},
