@@ -3,8 +3,10 @@ import logging
 from todoist_api_python.api import TodoistAPI
 import typing_extensions
 
+from datetime import datetime, time
+
 from bugwarrior import config
-from bugwarrior.services import IssueService, Issue, ServiceClient
+from bugwarrior.services import Service, Issue, Client
 
 log = logging.getLogger(__name__)
 
@@ -15,35 +17,48 @@ class TodoistConfig(config.ServiceConfig):
     filter: str = None
 
 
-class TodoistClient(ServiceClient):
+class TodoistClient(Client):
     def __init__(self, token, filter):
         self._api = TodoistAPI(token)
         self.filter = filter
 
     def get_projects(self):
-        projects = self._api.get_projects()
-        return projects
+        all_projects = []
+        projects_iter = self._api.get_projects()
+        for projects in projects_iter:
+            for project in projects:
+                all_projects.append(project)
+        return all_projects
+
+    def get_sections(self):
+        all_sections = []
+        sections_iter = self._api.get_sections()
+        for sections in sections_iter:
+            for section in sections:
+                all_sections.append(section)
+        return all_sections
 
     def get_users(self, project_id):
-        users = self._api.get_collaborators(project_id)
-        return users
+        all_users = []
+        users_iter = self._api.get_collaborators(project_id)
+        for users in users_iter:
+            for user in users:
+                all_users.append(user)
+        return all_users
 
     def get_issues(self):
-        tasks = self._api.get_tasks(filter=self.filter)
-        return tasks
+        tasks_iter = self._api.filter_tasks(query=self.filter)
+        return tasks_iter
 
 
 class TodoistIssue(Issue):
     ASSIGNEE = "todoistassignee"
     CONTENT = "todoistcontent"
     DESCRIPTION = "todoistdescription"
+    DURATION = "todoistduration"
     ID = "todoistid"
-    LABELS = "todoistlabels"
-    PARENT_ID = "todoistparentid"
-    PROJECT_ID = "todoistprojectid"
-    SECTION_ID = "todoistsectionid"
+    SECTION = "todoistsection"
     URL = "todoisturl"
-    SYNC_ID = "todoistsyncid"
 
     PRIORITY_MAP = {
         1: "H",
@@ -53,9 +68,9 @@ class TodoistIssue(Issue):
     }
 
     UDAS = {
-        ASSIGNEE: {
+        ID: {
             "type": "string",
-            "label": "Todoist Assignee",
+            "label": "Todoist ID",
         },
         CONTENT: {
             "type": "string",
@@ -65,13 +80,17 @@ class TodoistIssue(Issue):
             "type": "string",
             "label": "Todoist Description",
         },
-        ID: {
+        DURATION: {
             "type": "string",
-            "label": "Todoist ID",
+            "label": "Todoist Duration",
         },
-        SYNC_ID: {
+        SECTION: {
             "type": "string",
-            "label": "Todoist Sync ID",
+            "label": "Todoist Section",
+        },
+        ASSIGNEE: {
+            "type": "string",
+            "label": "Todoist Assignee",
         },
         URL: {
             "type": "string",
@@ -79,22 +98,38 @@ class TodoistIssue(Issue):
         },
     }
 
-    UNIQUE_KEY = (ID, SYNC_ID)
+    UNIQUE_KEY = (ID, ID)
 
     def to_taskwarrior(self):
-        print(self.record)
+        default_time = time(0, 0, 0)
+        # use due date "scheduled".
+        # adjust timezone to use local time for "floating" dates
+        if self.record.due and type(self.record.due.date) is datetime:
+            if self.record.due.timezone:
+                scheduled = self.record.due.date
+            else:
+                scheduled = self.record.due.date.replace(tzinfo=None)
+        else:
+            scheduled = datetime.combine(self.record.due.date, default_time, tzinfo=None) if self.record.due else None
+
+        # use deadline as "due". 
+        # deadline if set is only a date with no time or timezone. adjust to locla time
+        due = datetime.combine(self.record.deadline.date, default_time, tzinfo=None) if self.record.deadline else None
+
         task = {
             "project": self.extra["project"],
             "priority": self.PRIORITY_MAP[self.record.priority],
             # "annotations": None,
             "tags": self.record.labels if self.record.labels else [],
-            "due": self.record.due.date if self.record.due else None,
+            "scheduled": scheduled,
+            "due": due,
             "status": "completed" if self.record.is_completed else "pending",
-            self.ASSIGNEE: self.extra["assignee"],
+            self.ID: self.record.id,
             self.CONTENT: self.record.content,
             self.DESCRIPTION: self.record.description,
-            self.ID: self.record.id,
-            self.SYNC_ID: self.record.sync_id,
+            self.DURATION: self.extra["duration"],
+            self.ASSIGNEE: self.extra["assignee"],
+            self.SECTION: self.extra["section"],
             self.URL: self.record.url,
         }
         return task
@@ -109,7 +144,7 @@ class TodoistIssue(Issue):
         return description
 
 
-class TodoistService(IssueService):
+class TodoistService(Service):
     ISSUE_CLASS = TodoistIssue
     CONFIG_SCHEMA = TodoistConfig
 
@@ -128,14 +163,18 @@ class TodoistService(IssueService):
 
     def issues(self):
         project_index = {project.id: project.name for project in self.client.get_projects()}
+        section_index = {section.id: section.name for section in self.client.get_sections()}
         user_index = {
             user.id: user.name
             for project in project_index.keys()
             for user in self.client.get_users(project)
         }
-        for issue in self.client.get_issues():
-            extra = {
-                "project": project_index[issue.project_id],
-                "assignee": user_index[issue.assignee_id] if issue.assignee_id else None,
-            }
-            yield self.get_issue_for_record(issue, extra)
+        for issue_iter in self.client.get_issues():
+            for issue in issue_iter:
+                extra = {
+                    "project": project_index[issue.project_id],
+                    "section": section_index[issue.section_id] if issue.section_id in section_index.keys() else None,
+                    "assignee": user_index[issue.assignee_id] if issue.assignee_id else None,
+                    "duration": f"{issue.duration.amount} {issue.duration.unit}" if issue.duration else None
+                }
+                yield self.get_issue_for_record(issue, extra)
