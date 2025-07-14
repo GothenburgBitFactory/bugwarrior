@@ -28,7 +28,12 @@ if sys.version_info >= (3, 9):
             parent_id=None,
             labels=[],
             priority=1,
-            due=Due(date=datetime(year=2025, month=7, day=1), string="", lang="en", is_recurring=False),
+            due=Due(
+                date=datetime(year=2025, month=7, day=1),
+                string="",
+                lang="en",
+                is_recurring=False,
+            ),
             deadline=None,
             duration=None,
             is_collapsed=False,
