@@ -11,7 +11,7 @@ Here is an example of a configuration for the ``todoist`` service:
 
 .. config::
 
-    [my_tasks]
+    [todoist]
     service = todoist
     todoist.token = <API_TOKEN>
 
@@ -26,7 +26,19 @@ visit https://app.todoist.com/app/settings/integrations/developer.
 Service Features
 ----------------
 
-Filter tasks
+Authorization Token
++++++++++++++++++++
+
+The authorization ``token`` is used to authenticate with Todoist. See the Todoist
+documentition on how to `find your API token <https://www.todoist.com/help/articles/find-your-api-token-Jpzx9IIlB>`
+
+.. config::
+    :fragment: todoist
+
+    todoist.token = <API_TOKEN>
+
+
+Task filters
 ++++++++++++
 
 The ``filter`` option allows you to filter the tasks that are imported from Todoist.
@@ -37,7 +49,47 @@ Multiple filters (using the comma , operator) are not supported.
 .. config::
     :fragment: todoist
 
-    todoist.filter = (today | tomorrow | overdue)
+    todoist.filter = (today | tomorrow | overdue | next 5 days)
+
+Priority mapping
+++++++++++++++++
+
+Todosit task priorities ``p1``, ``p2``, and ``p3`` are mapped to the taskwarrior priorities
+``H``, ``M``, and ``L`` respectively.
+
+Character replacement
++++++++++++++++++++++
+
+This capability is in part to workaround ``ralphbean/taskw#172 <https://github.com/ralphbean/taskw/issues/172>``_
+which causes the ``[`` and ``]`` characters to be over escaped as ``&open;`` and ``&close;``
+when they are synced using bugwarrior.
+
+To avoid display issues ``[`` and ``]`` are replaced by ``〈`` and ``〉`` in the Task title and description. 
+
+You can override this default behaviour to use alternative custom characters by setting the ``char_*`` options.
+
+.. config::
+    :fragment: todoist
+
+    todoist.char_open_bracket = (
+    todoist.char_close_bracket = )
+
+Todoist URL links
++++++++++++++++++
+
+By default bugwarrior incorporates the links into task description. To disable this behaviour either 
+modify the ``inline_links`` option in the main section to affect all services, or to modify for the todoist sevice only you can 
+set it in your todoist section.
+
+.. config::
+    :fragment: todoist
+    
+    todoist.inline_links = False
+
+Lables
+++++++
+
+Todoist `Labels <https://www.todoist.com/help/articles/introduction-to-labels-dSo2eE>` are added as Taskwarrior tags.
 
 
 Provided UDA Fields

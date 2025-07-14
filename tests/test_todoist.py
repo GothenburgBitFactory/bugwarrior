@@ -1,9 +1,12 @@
 from unittest import mock
-
 from .base import AbstractServiceTest, ServiceTest
+
+from datetime import datetime
+
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.todoist import TodoistService, TodoistClient
 
-from todoist_api_python.api import Task, Project
+from todoist_api_python.models import Task, Due, Project, ApiDate
 
 
 class TestTodoistIssue(AbstractServiceTest, ServiceTest):
@@ -13,43 +16,48 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
     }
 
     test_record = Task(
-        content="TEST",
+        id="1111111111111111",
+        content="TESTTASK",
+        description="TESTTASKDESCRIPTION",
+        project_id="2222222222222222",
+        section_id=None,
+        parent_id=None,
+        labels=[],
+        priority=1,
+        due=Due(date=datetime(year=2025, month=7, day=1), string="", lang="en", is_recurring=False),
+        deadline=None,
+        duration=None,
+        is_collapsed=False,
+        order=1,
         assignee_id=None,
         assigner_id=None,
-        comment_count=0,
-        is_completed=False,
-        created_at=None,
-        creator_id=None,
-        description="Testing",
-        due=None,
-        duration=0,
-        id="123456789",
-        labels=None,
-        order=0,
-        parent_id=None,
-        priority=1,
-        project_id="123456789",
-        section_id=None,
-        url="https://todoist.com/app/task/123456789",
+        completed_at=None,
+        creator_id="333333",
+        created_at=ApiDate(),
+        updated_at=ApiDate(),
     )
+
     test_extra = {
         "project": "TESTPROJECT",
+        "section": None,
         "assignee": None,
+        "duration": None,
     }
+
     test_project = Project(
-        color=None,
-        comment_count=0,
-        id="123456789",
-        is_favorite=False,
-        is_inbox_project=False,
-        is_shared=False,
-        is_team_inbox=False,
-        can_assign_tasks=False,
+        id="2222222222222222",
         name="TESTPROJECT",
-        order=0,
-        parent_id=None,
-        url="https://todoist.com/app/project/123456789",
-        view_style=None,
+        description="TESTPROJECTDESCRIPTION",
+        order=1,
+        color="",
+        is_collapsed=False,
+        is_shared=False,
+        is_favorite=False,
+        is_archived=False,
+        can_assign_tasks=False,
+        view_style="list",
+        created_at=ApiDate(),
+        updated_at=ApiDate(),
     )
 
     def setUp(self):
@@ -69,13 +77,16 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
             "status": "pending",
             "priority": "H",
             "project": "TESTPROJECT",
+            "scheduled": datetime(year=2025, month=7, day=1),
+            "status": "pending",
             "tags": [],
             issue.ASSIGNEE: None,
-            issue.CONTENT: "TEST",
-            issue.DESCRIPTION: "Testing",
-            issue.ID: "123456789",
-            issue.SYNC_ID: None,
-            issue.URL: "https://todoist.com/app/task/123456789",
+            issue.CONTENT: "TESTTASK",
+            issue.DESCRIPTION: "TESTTASKDESCRIPTION",
+            issue.DURATION: None,
+            issue.ID: "1111111111111111",
+            issue.SECTION: None,
+            issue.URL: "https://app.todoist.com/app/task/testtask-1111111111111111",
         }
 
         actual = issue.to_taskwarrior()
@@ -84,24 +95,26 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
 
     def test_issues(self):
         self.service.client.get_projects.return_value = [self.test_project]
-        self.service.client.get_issues.return_value = [self.test_record]
+        self.service.client.get_issues.return_value = [[self.test_record]]
         issue = next(self.service.issues())
 
         expected = {
-            "description": "(bw)Is#123456789"
-            + " - TEST"
-            + " .. https://todoist.com/app/task/123456789",
+            "description": "(bw)Is#1111111111111111"
+            + " - TESTTASK"
+            + " .. https://app.todoist.com/app/task/testtask-1111111111111111",
             "due": None,
             "status": "pending",
             "priority": "H",
             "project": "TESTPROJECT",
+            "scheduled": datetime(year=2025, month=7, day=1),
             "tags": [],
             issue.ASSIGNEE: None,
-            issue.CONTENT: "TEST",
-            issue.DESCRIPTION: "Testing",
-            issue.ID: "123456789",
-            issue.SYNC_ID: None,
-            issue.URL: "https://todoist.com/app/task/123456789",
+            issue.CONTENT: "TESTTASK",
+            issue.DESCRIPTION: "TESTTASKDESCRIPTION",
+            issue.DURATION: None,
+            issue.ID: "1111111111111111",
+            issue.SECTION: None,
+            issue.URL: "https://app.todoist.com/app/task/testtask-1111111111111111",
         }
 
-        self.assertEqual(issue.get_taskwarrior_record(), expected)
+        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

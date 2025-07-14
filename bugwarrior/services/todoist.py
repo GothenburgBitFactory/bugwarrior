@@ -15,6 +15,9 @@ class TodoistConfig(config.ServiceConfig):
     service: typing_extensions.Literal["todoist"]
     token: str
     filter: str = None
+    char_open_bracket: str = "〈"
+    char_close_bracket: str = "〉"
+    inline_links: bool = True
 
 
 class TodoistClient(Client):
@@ -100,6 +103,15 @@ class TodoistIssue(Issue):
 
     UNIQUE_KEY = (ID, ID)
 
+    # replace characters that cause escaping issues in teh description like [] and "
+    # this is a workaround for https://github.com/ralphbean/taskw/issues/172
+    def _unescape_content(self, content):
+        return (
+            content.replace('"', "'")  # prevent &dquote; in task details
+            .replace("[", self.config.char_open_bracket)  # prevent &open; and &close;
+            .replace("]", self.config.char_close_bracket)
+        )
+
     def to_taskwarrior(self):
         default_time = time(0, 0, 0)
         # use due date "scheduled".
@@ -110,11 +122,19 @@ class TodoistIssue(Issue):
             else:
                 scheduled = self.record.due.date.replace(tzinfo=None)
         else:
-            scheduled = datetime.combine(self.record.due.date, default_time, tzinfo=None) if self.record.due else None
+            scheduled = (
+                datetime.combine(self.record.due.date, default_time, tzinfo=None)
+                if self.record.due
+                else None
+            )
 
-        # use deadline as "due". 
+        # use deadline as "due".
         # deadline if set is only a date with no time or timezone. adjust to locla time
-        due = datetime.combine(self.record.deadline.date, default_time, tzinfo=None) if self.record.deadline else None
+        due = (
+            datetime.combine(self.record.deadline.date, default_time, tzinfo=None)
+            if self.record.deadline
+            else None
+        )
 
         task = {
             "project": self.extra["project"],
@@ -125,8 +145,8 @@ class TodoistIssue(Issue):
             "due": due,
             "status": "completed" if self.record.is_completed else "pending",
             self.ID: self.record.id,
-            self.CONTENT: self.record.content,
-            self.DESCRIPTION: self.record.description,
+            self.CONTENT: self._unescape_content(self.record.content),
+            self.DESCRIPTION: self._unescape_content(self.record.description),
             self.DURATION: self.extra["duration"],
             self.ASSIGNEE: self.extra["assignee"],
             self.SECTION: self.extra["section"],
@@ -136,8 +156,8 @@ class TodoistIssue(Issue):
 
     def get_default_description(self):
         description = self.build_default_description(
-            title=self.record.content,
-            url=self.record.url,
+            title=self._unescape_content(self.record.content),
+            url=self.record.url if self.config.inline_links else '',
             number=self.record.id,
             cls="issue",
         )
@@ -173,8 +193,18 @@ class TodoistService(Service):
             for issue in issue_iter:
                 extra = {
                     "project": project_index[issue.project_id],
-                    "section": section_index[issue.section_id] if issue.section_id in section_index.keys() else None,
-                    "assignee": user_index[issue.assignee_id] if issue.assignee_id else None,
-                    "duration": f"{issue.duration.amount} {issue.duration.unit}" if issue.duration else None
+                    "section": (
+                        section_index[issue.section_id]
+                        if issue.section_id in section_index.keys()
+                        else None
+                    ),
+                    "assignee": (
+                        user_index[issue.assignee_id] if issue.assignee_id else None
+                    ),
+                    "duration": (
+                        f"{issue.duration.amount} {issue.duration.unit}"
+                        if issue.duration
+                        else None
+                    ),
                 }
                 yield self.get_issue_for_record(issue, extra)
