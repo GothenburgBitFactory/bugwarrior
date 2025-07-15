@@ -11,7 +11,8 @@ from bugwarrior.services.todoist import TodoistService, TodoistClient
 import sys
 if sys.version_info >= (3, 9):
 
-    from todoist_api_python.models import Task, Due, Project, ApiDate
+    from todoist_api_python.models import Task, Project, Section, Collaborator
+    from todoist_api_python.models import Due, Deadline, Duration, ApiDate
 
     class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         SERVICE_CONFIG = {
@@ -24,9 +25,9 @@ if sys.version_info >= (3, 9):
             content="TESTTASK",
             description="TESTTASKDESCRIPTION",
             project_id="2222222222222222",
-            section_id=None,
+            section_id="4444444444444444",
             parent_id=None,
-            labels=[],
+            labels=["TESTLABEL"],
             priority=1,
             due=Due(
                 date=datetime(year=2025, month=7, day=1),
@@ -34,11 +35,17 @@ if sys.version_info >= (3, 9):
                 lang="en",
                 is_recurring=False,
             ),
-            deadline=None,
-            duration=None,
+            deadline=Deadline(
+                date=datetime(year=2025, month=7, day=31),
+                lang="en",
+            ),
+            duration=Duration(
+                amount=15,
+                unit="minute",
+            ),
             is_collapsed=False,
             order=1,
-            assignee_id=None,
+            assignee_id="5555555555555555",
             assigner_id=None,
             completed_at=None,
             creator_id="333333",
@@ -48,9 +55,9 @@ if sys.version_info >= (3, 9):
 
         test_extra = {
             "project": "TESTPROJECT",
-            "section": None,
-            "assignee": None,
-            "duration": None,
+            "section": "TESTSECTION",
+            "assignee": "TESTUSER",
+            "duration": "15 minute",
         }
 
         test_project = Project(
@@ -69,6 +76,20 @@ if sys.version_info >= (3, 9):
             updated_at=ApiDate(),
         )
 
+        test_section = Section(
+            id="4444444444444444",
+            name="TESTSECTION",
+            project_id="2222222222222222",
+            is_collapsed=False,
+            order=1,
+        )
+
+        test_user = Collaborator(
+            id="5555555555555555",
+            name="TESTUSER",
+            email="testuser@example.com"
+        )
+
         def setUp(self):
             super().setUp()
 
@@ -82,19 +103,19 @@ if sys.version_info >= (3, 9):
             issue = self.service.get_issue_for_record(self.test_record, self.test_extra)
 
             expected = {
-                "due": None,
+                "due": datetime(year=2025, month=7, day=31),
                 "status": "pending",
                 "priority": "H",
                 "project": "TESTPROJECT",
                 "scheduled": datetime(year=2025, month=7, day=1),
                 "status": "pending",
-                "tags": [],
-                issue.ASSIGNEE: None,
+                "tags": ["TESTLABEL"],
+                issue.ASSIGNEE: "TESTUSER",
                 issue.CONTENT: "TESTTASK",
                 issue.DESCRIPTION: "TESTTASKDESCRIPTION",
-                issue.DURATION: None,
+                issue.DURATION: "15 minute",
                 issue.ID: "1111111111111111",
-                issue.SECTION: None,
+                issue.SECTION: "TESTSECTION",
                 issue.URL: "https://app.todoist.com/app/task/testtask-1111111111111111",
             }
 
@@ -104,6 +125,8 @@ if sys.version_info >= (3, 9):
 
         def test_issues(self):
             self.service.client.get_projects.return_value = [self.test_project]
+            self.service.client.get_sections.return_value = [self.test_section]
+            self.service.client.get_users.return_value = [self.test_user]
             self.service.client.get_issues.return_value = [[self.test_record]]
             issue = next(self.service.issues())
 
@@ -111,18 +134,18 @@ if sys.version_info >= (3, 9):
                 "description": "(bw)Is#1111111111111111"
                 + " - TESTTASK"
                 + " .. https://app.todoist.com/app/task/testtask-1111111111111111",
-                "due": None,
+                "due": datetime(year=2025, month=7, day=31),
                 "status": "pending",
                 "priority": "H",
                 "project": "TESTPROJECT",
                 "scheduled": datetime(year=2025, month=7, day=1),
-                "tags": [],
-                issue.ASSIGNEE: None,
+                "tags": ["TESTLABEL"],
+                issue.ASSIGNEE: "TESTUSER",
                 issue.CONTENT: "TESTTASK",
                 issue.DESCRIPTION: "TESTTASKDESCRIPTION",
-                issue.DURATION: None,
+                issue.DURATION: "15 minute",
                 issue.ID: "1111111111111111",
-                issue.SECTION: None,
+                issue.SECTION: "TESTSECTION",
                 issue.URL: "https://app.todoist.com/app/task/testtask-1111111111111111",
             }
 
