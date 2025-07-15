@@ -12,7 +12,7 @@ import sys
 if sys.version_info >= (3, 9):
 
     from todoist_api_python.models import Task, Project, Section, Collaborator
-    from todoist_api_python.models import Due, Deadline, Duration, ApiDate
+    from todoist_api_python.models import Due, Deadline, Duration
 
     class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         SERVICE_CONFIG = {
