@@ -198,7 +198,6 @@ class TodoistService(Service):
         }
         for issue_iter in self.client.get_issues():
             for issue in issue_iter:
-                print(issue)
                 extra = {
                     "project": project_index[issue.project_id],
                     "section": (
