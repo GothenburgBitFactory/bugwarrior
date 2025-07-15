@@ -97,7 +97,6 @@ if sys.version_info >= (3, 9):
             email="testuser2@example.com"
         )
 
-
         def setUp(self):
             super().setUp()
 
