@@ -56,6 +56,7 @@ class TodoistClient(Client):
 
 class TodoistIssue(Issue):
     ASSIGNEE = "todoistassignee"
+    ASSIGNER = "todoistassigner"
     CONTENT = "todoistcontent"
     DESCRIPTION = "todoistdescription"
     DURATION = "todoistduration"
@@ -64,10 +65,10 @@ class TodoistIssue(Issue):
     URL = "todoisturl"
 
     PRIORITY_MAP = {
-        1: "H",
-        2: "M",
-        3: "L",
-        4: "",
+        4: "H",
+        3: "M",
+        2: "L",
+        1: None,
     }
 
     UDAS = {
@@ -94,6 +95,10 @@ class TodoistIssue(Issue):
         ASSIGNEE: {
             "type": "string",
             "label": "Todoist Assignee",
+        },
+        ASSIGNER: {
+            "type": "string",
+            "label": "Todoist Assigner",
         },
         URL: {
             "type": "string",
@@ -144,11 +149,13 @@ class TodoistIssue(Issue):
             "scheduled": scheduled,
             "due": due,
             "status": "completed" if self.record.is_completed else "pending",
+            "entry": self.record.created_at,
             self.ID: self.record.id,
             self.CONTENT: self._unescape_content(self.record.content),
             self.DESCRIPTION: self._unescape_content(self.record.description),
             self.DURATION: self.extra["duration"],
             self.ASSIGNEE: self.extra["assignee"],
+            self.ASSIGNER: self.extra["assigner"],
             self.SECTION: self.extra["section"],
             self.URL: self.record.url,
         }
@@ -185,12 +192,13 @@ class TodoistService(Service):
         project_index = {project.id: project.name for project in self.client.get_projects()}
         section_index = {section.id: section.name for section in self.client.get_sections()}
         user_index = {
-            user.id: user.name
+            user.id: f"{user.name} <{user.email}>"
             for project in project_index.keys()
             for user in self.client.get_users(project)
         }
         for issue_iter in self.client.get_issues():
             for issue in issue_iter:
+                print(issue)
                 extra = {
                     "project": project_index[issue.project_id],
                     "section": (
@@ -200,6 +208,9 @@ class TodoistService(Service):
                     ),
                     "assignee": (
                         user_index[issue.assignee_id] if issue.assignee_id else None
+                    ),
+                    "assigner": (
+                        user_index[issue.assigner_id] if issue.assigner_id else None
                     ),
                     "duration": (
                         f"{issue.duration.amount} {issue.duration.unit}"

@@ -28,7 +28,7 @@ if sys.version_info >= (3, 9):
             section_id="4444444444444444",
             parent_id=None,
             labels=["TESTLABEL"],
-            priority=1,
+            priority=4,
             due=Due(
                 date=datetime(year=2025, month=7, day=1),
                 string="",
@@ -46,17 +46,18 @@ if sys.version_info >= (3, 9):
             is_collapsed=False,
             order=1,
             assignee_id="5555555555555555",
-            assigner_id=None,
+            assigner_id="6666666666666666",
             completed_at=None,
             creator_id="333333",
-            created_at=ApiDate(),
-            updated_at=ApiDate(),
+            created_at=datetime(year=2025, month=7, day=1, hour=4, minute=30, second=0),
+            updated_at=datetime(year=2025, month=7, day=2, hour=8, minute=0, second=0),
         )
 
         test_extra = {
             "project": "TESTPROJECT",
             "section": "TESTSECTION",
-            "assignee": "TESTUSER",
+            "assignee": "TESTUSER1 <testuser1@example.com>",
+            "assigner": "TESTUSER2 <testuser2@example.com>",
             "duration": "15 minute",
         }
 
@@ -72,8 +73,8 @@ if sys.version_info >= (3, 9):
             is_archived=False,
             can_assign_tasks=False,
             view_style="list",
-            created_at=ApiDate(),
-            updated_at=ApiDate(),
+            created_at=datetime(year=2025, month=7, day=1, hour=4, minute=30, second=0),
+            updated_at=datetime(year=2025, month=7, day=2, hour=8, minute=0, second=0),
         )
 
         test_section = Section(
@@ -84,11 +85,18 @@ if sys.version_info >= (3, 9):
             order=1,
         )
 
-        test_user = Collaborator(
+        test_user1 = Collaborator(
             id="5555555555555555",
-            name="TESTUSER",
-            email="testuser@example.com"
+            name="TESTUSER1",
+            email="testuser1@example.com"
         )
+
+        test_user2 = Collaborator(
+            id="6666666666666666",
+            name="TESTUSER2",
+            email="testuser2@example.com"
+        )
+
 
         def setUp(self):
             super().setUp()
@@ -104,13 +112,15 @@ if sys.version_info >= (3, 9):
 
             expected = {
                 "due": datetime(year=2025, month=7, day=31),
+                "entry": datetime(year=2025, month=7, day=1, hour=4, minute=30, second=0),
                 "status": "pending",
                 "priority": "H",
                 "project": "TESTPROJECT",
                 "scheduled": datetime(year=2025, month=7, day=1),
                 "status": "pending",
                 "tags": ["TESTLABEL"],
-                issue.ASSIGNEE: "TESTUSER",
+                issue.ASSIGNEE: "TESTUSER1 <testuser1@example.com>",
+                issue.ASSIGNER: "TESTUSER2 <testuser2@example.com>",
                 issue.CONTENT: "TESTTASK",
                 issue.DESCRIPTION: "TESTTASKDESCRIPTION",
                 issue.DURATION: "15 minute",
@@ -126,7 +136,7 @@ if sys.version_info >= (3, 9):
         def test_issues(self):
             self.service.client.get_projects.return_value = [self.test_project]
             self.service.client.get_sections.return_value = [self.test_section]
-            self.service.client.get_users.return_value = [self.test_user]
+            self.service.client.get_users.return_value = [self.test_user1, self.test_user2]
             self.service.client.get_issues.return_value = [[self.test_record]]
             issue = next(self.service.issues())
 
@@ -135,12 +145,14 @@ if sys.version_info >= (3, 9):
                 + " - TESTTASK"
                 + " .. https://app.todoist.com/app/task/testtask-1111111111111111",
                 "due": datetime(year=2025, month=7, day=31),
+                "entry": datetime(year=2025, month=7, day=1, hour=4, minute=30, second=0),
                 "status": "pending",
                 "priority": "H",
                 "project": "TESTPROJECT",
                 "scheduled": datetime(year=2025, month=7, day=1),
                 "tags": ["TESTLABEL"],
-                issue.ASSIGNEE: "TESTUSER",
+                issue.ASSIGNEE: "TESTUSER1 <testuser1@example.com>",
+                issue.ASSIGNER: "TESTUSER2 <testuser2@example.com>",
                 issue.CONTENT: "TESTTASK",
                 issue.DESCRIPTION: "TESTTASKDESCRIPTION",
                 issue.DURATION: "15 minute",
