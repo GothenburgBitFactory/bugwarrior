@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 5
     strategy:
       matrix:
-        python-version: [3.8, 3.9, "3.10", 3.11]
+        python-version: [3.9, "3.10", 3.11]
         jira-version: [1.0.10, 2.0.0]
     steps:
       - name: Checkout code
