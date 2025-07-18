@@ -51,7 +51,9 @@ class TodoistClient(Client):
 
     def get_issues(self):
         tasks_iter = self._api.filter_tasks(query=self.filter)
-        return tasks_iter
+        for tasks in tasks_iter:
+            for task in tasks:
+                yield task
 
 
 class TodoistIssue(Issue):
@@ -182,12 +184,6 @@ class TodoistService(Service):
             filter=self.config.filter,
         )
 
-    def get_owner(self, issue):
-        # Issue assignment hasn't been implemented yet.
-        raise NotImplementedError(
-            "This service has not implemented support for 'only_if_assigned'."
-        )
-
     def issues(self):
         project_index = {project.id: project.name for project in self.client.get_projects()}
         section_index = {section.id: section.name for section in self.client.get_sections()}
@@ -196,25 +192,16 @@ class TodoistService(Service):
             for project in project_index.keys()
             for user in self.client.get_users(project)
         }
-        for issue_iter in self.client.get_issues():
-            for issue in issue_iter:
-                extra = {
-                    "project": project_index[issue.project_id],
-                    "section": (
-                        section_index[issue.section_id]
-                        if issue.section_id in section_index.keys()
-                        else None
-                    ),
-                    "assignee": (
-                        user_index[issue.assignee_id] if issue.assignee_id else None
-                    ),
-                    "assigner": (
-                        user_index[issue.assigner_id] if issue.assigner_id else None
-                    ),
-                    "duration": (
-                        f"{issue.duration.amount} {issue.duration.unit}"
-                        if issue.duration
-                        else None
-                    ),
-                }
-                yield self.get_issue_for_record(issue, extra)
+        for issue in self.client.get_issues():
+            extra = {
+                "project": project_index.get(issue.project_id),
+                "section": section_index.get(issue.section_id),
+                "assignee": user_index.get(issue.assignee_id),
+                "assigner": user_index.get(issue.assigner_id),
+                "duration": (
+                    f"{issue.duration.amount} {issue.duration.unit}"
+                    if issue.duration
+                    else None
+                ),
+            }
+            yield self.get_issue_for_record(issue, extra)

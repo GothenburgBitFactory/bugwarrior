@@ -98,9 +98,6 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
 
         self.service = self.get_mock_service(TodoistService)
         self.service.client = mock.MagicMock(spec=TodoistClient)
-        self.service.client.get_issues = mock.MagicMock(
-            return_value=[self.test_record, self.test_extra]
-        )
 
     def test_to_taskwarrior(self):
         issue = self.service.get_issue_for_record(self.test_record, self.test_extra)
@@ -132,7 +129,7 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         self.service.client.get_projects.return_value = [self.test_project]
         self.service.client.get_sections.return_value = [self.test_section]
         self.service.client.get_users.return_value = [self.test_user1, self.test_user2]
-        self.service.client.get_issues.return_value = [[self.test_record]]
+        self.service.client.get_issues.return_value = [self.test_record]
         issue = next(self.service.issues())
 
         expected = {

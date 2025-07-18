@@ -20,23 +20,12 @@ Todoist.  You can also use any of the
 configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
-``token`` is required to authenticate with your Todoist account. To get the token, 
-visit https://app.todoist.com/app/settings/integrations/developer.
+``token`` is required to authenticate with your Todoist account. To get the token 
+visit the Todosit `<developer console https://app.todoist.com/app/settings/integrations/developer>`,
+or see the Todoist documentition on how to `find your API token <https://www.todoist.com/help/articles/find-your-api-token-Jpzx9IIlB>`
 
 Service Features
 ----------------
-
-Authorization Token
-+++++++++++++++++++
-
-The authorization ``token`` is used to authenticate with Todoist. See the Todoist
-documentition on how to `find your API token <https://www.todoist.com/help/articles/find-your-api-token-Jpzx9IIlB>`
-
-.. config::
-    :fragment: todoist
-
-    todoist.token = <API_TOKEN>
-
 
 Task filters
 ++++++++++++
