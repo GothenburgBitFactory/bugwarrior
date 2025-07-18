@@ -108,7 +108,7 @@ class TodoistIssue(Issue):
 
     UNIQUE_KEY = (ID, ID)
 
-    # replace characters that cause escaping issues in teh description like [] and "
+    # replace characters that cause escaping issues like [] and "
     # this is a workaround for https://github.com/ralphbean/taskw/issues/172
     def _unescape_content(self, content):
         return (
@@ -119,7 +119,7 @@ class TodoistIssue(Issue):
 
     def to_taskwarrior(self):
         default_time = time(0, 0, 0)
-        # use due date "scheduled".
+        # use due date as "scheduled".
         # adjust timezone to use local time for "floating" dates
         if self.record.due and type(self.record.due.date) is datetime:
             if self.record.due.timezone:
@@ -134,7 +134,7 @@ class TodoistIssue(Issue):
             )
 
         # use deadline as "due".
-        # deadline if set is only a date with no time or timezone. adjust to locla time
+        # deadline if set is only a date with no time or timezone.
         due = (
             datetime.combine(self.record.deadline.date, default_time, tzinfo=None)
             if self.record.deadline

@@ -54,7 +54,7 @@ Multiple filters (using the comma , operator) are not supported.
 Priority mapping
 ++++++++++++++++
 
-Todosit task priorities ``p1``, ``p2``, and ``p3`` are mapped to the taskwarrior priorities
+Todoist task priorities ``p1``, ``p2``, and ``p3`` are mapped to the taskwarrior priorities
 ``H``, ``M``, and ``L`` respectively.
 
 Character replacement
