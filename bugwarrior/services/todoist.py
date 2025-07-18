@@ -108,7 +108,7 @@ class TodoistIssue(Issue):
         },
     }
 
-    UNIQUE_KEY = (ID, ID)
+    UNIQUE_KEY = (ID,)
 
     # replace characters that cause escaping issues like [] and "
     # this is a workaround for https://github.com/ralphbean/taskw/issues/172
@@ -119,21 +119,30 @@ class TodoistIssue(Issue):
             .replace("]", self.config.char_close_bracket)
         )
 
+    def get_priority(self):
+        return self.PRIORITY_MAP.get(
+            self.record.priority,
+            self.config.default_priority
+        )
+
     def to_taskwarrior(self):
         default_time = time(0, 0, 0)
         # use due date as "scheduled".
         # adjust timezone to use local time for "floating" dates
-        if self.record.due and type(self.record.due.date) is datetime:
-            if self.record.due.timezone:
-                scheduled = self.record.due.date
+        if self.record.due:
+            # The Todoist due date could be a `date` or `datetime`
+            if type(self.record.due.date) is datetime:
+                if self.record.due.timezone:
+                    scheduled = self.record.due.date
+                else:
+                    # if no timezone set is set remove tzinfo
+                    # otherwixe it will be treated as UTC by default
+                    scheduled = self.record.due.date.replace(tzinfo=None)
             else:
-                scheduled = self.record.due.date.replace(tzinfo=None)
+                # the due is just a `date` with no time or timezone.
+                scheduled = datetime.combine(self.record.due.date, default_time, tzinfo=None)
         else:
-            scheduled = (
-                datetime.combine(self.record.due.date, default_time, tzinfo=None)
-                if self.record.due
-                else None
-            )
+            scheduled = None
 
         # use deadline as "due".
         # deadline if set is only a date with no time or timezone.
@@ -145,7 +154,7 @@ class TodoistIssue(Issue):
 
         task = {
             "project": self.extra["project"],
-            "priority": self.PRIORITY_MAP[self.record.priority],
+            "priority": self.get_priority(),
             # "annotations": None,
             "tags": self.record.labels if self.record.labels else [],
             "scheduled": scheduled,
@@ -166,7 +175,7 @@ class TodoistIssue(Issue):
     def get_default_description(self):
         description = self.build_default_description(
             title=self._unescape_content(self.record.content),
-            url=self.record.url if self.config.inline_links else '',
+            url=self.record.url,
             number=self.record.id,
             cls="issue",
         )

@@ -63,18 +63,6 @@ You can override this default behaviour to use alternative custom characters by 
     todoist.char_open_bracket = (
     todoist.char_close_bracket = )
 
-Todoist URL links
-+++++++++++++++++
-
-By default bugwarrior incorporates the links into task description. To disable this behaviour either 
-modify the ``inline_links`` option in the main section to affect all services, or to modify for the todoist sevice only you can 
-set it in your todoist section.
-
-.. config::
-    :fragment: todoist
-    
-    todoist.inline_links = False
-
 Lables
 ++++++
 
