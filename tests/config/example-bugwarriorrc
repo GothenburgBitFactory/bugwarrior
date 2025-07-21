@@ -5,7 +5,7 @@
 # Here you define a comma separated list of targets.  Each of them must have a
 # section below determining their properties, how to query them, etc.  The name
 # is just a symbol, and doesn't have any functional importance.
-targets = activecollab, activecollab2, gitlab_config, jira_project, my_github, my_gmail, my_kanboard, my_phabricator, my_redmine, my_teamlab, moksha_trac, pivotaltracker
+targets = gitlab_config, jira_project, my_github, my_gmail, my_kanboard, my_phabricator, my_redmine, moksha_trac, pivotaltracker
 
 # If unspecified, the default taskwarrior config will be used.
 #taskrc = /path/to/.taskrc
@@ -156,34 +156,12 @@ kanboard.query = status:open assignee:me
 service = phabricator
 # No need to specify credentials.  They are gathered from ~/.arcrc
 
-# Here's an example of a teamlab target.
-[my_teamlab]
-service = teamlab
-
-teamlab.hostname = teamlab.example.com
-teamlab.login = alice
-teamlab.password = secret
-
 # Here's an example of a redmine target.
 [my_redmine]
 service = redmine
 redmine.url = http://redmine.example.org/
 redmine.key = c0c4c014cafebabe
 redmine.add_tags = chiliproject
-
-[activecollab]
-service = activecollab
-activecollab.url = https://ac.example.org/api.php
-activecollab.key = your-api-key
-activecollab.user_id = 15
-activecollab.add_tags = php
-
-[activecollab2]
-service = activecollab2
-activecollab2.url = http://ac.example.org/api.php
-activecollab2.key = your-api-key
-activecollab2.user_id = 15
-activecollab2.projects = 1:first_project, 5:another_project
 
 [my_gmail]
 service = gmail

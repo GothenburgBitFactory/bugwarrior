@@ -9,7 +9,6 @@ with open('bugwarrior/README.rst') as readme_file:
 long_description = readme.split('split here', 1)[1]
 
 extras = {
-    "activecollab": ["pypandoc", "pyac>=0.1.5"],
     "bts": ["python-debianbts>=2.6.1"],
     "bugzilla": ["python-bugzilla>=2.0.0"],
     "gmail": ["google-api-python-client", "google-auth-oauthlib"],
@@ -32,7 +31,6 @@ extras = {
         "importlib-metadata<5",
     ],
     "trac": ["offtrac"],
-    "versionone": ["v1pysdk"],
 }
 
 setup(name='bugwarrior',
@@ -87,13 +85,9 @@ setup(name='bugwarrior',
       bts=bugwarrior.services.bts:BTSService
       bugzilla=bugwarrior.services.bz:BugzillaService
       kanboard=bugwarrior.services.kanboard:KanboardService
-      teamlab=bugwarrior.services.teamlab:TeamLabService
       redmine=bugwarrior.services.redmine:RedMineService
-      activecollab2=bugwarrior.services.activecollab2:ActiveCollab2Service
-      activecollab=bugwarrior.services.activecollab:ActiveCollabService
       jira=bugwarrior.services.jira:JiraService
       phabricator=bugwarrior.services.phab:PhabricatorService
-      versionone=bugwarrior.services.versionone:VersionOneService
       pagure=bugwarrior.services.pagure:PagureService
       taiga=bugwarrior.services.taiga:TaigaService
       gerrit=bugwarrior.services.gerrit:GerritService

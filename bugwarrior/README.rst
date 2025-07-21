@@ -9,8 +9,6 @@ It currently supports the following remote resources:
 
 .. class:: services
 
-- `ActiveCollab 2 <https://www.activecollab.com>`_
-- `ActiveCollab 4 <https://www.activecollab.com>`_
 - `Azure DevOps <https://azure.microsoft.com/en-us/services/devops/>`_
 - `Bitbucket <https://bitbucket.org>`_
 - `Bugzilla <https://www.bugzilla.org/>`_
@@ -29,11 +27,9 @@ It currently supports the following remote resources:
 - `Pivotal Tracker <https://www.pivotaltracker.com/>`_
 - `Redmine <https://www.redmine.org/>`_
 - `Taiga <https://taiga.io>`_
-- `Teamlab <https://www.teamlab.com/>`_
 - `Teamwork Projects <https://www.teamwork.com/>`_
 - `Trac <https://trac.edgewall.org/>`_
 - `Trello <https://trello.com/>`_
-- `VersionOne <http://www.versionone.com/>`_
 - `YouTrack <https://www.jetbrains.com/youtrack/>`_
 
 Documentation

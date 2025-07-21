@@ -19,6 +19,9 @@ def get_service(service_name: str):
     try:
         (service,) = entry_points(group='bugwarrior.service', name=service_name)
     except ValueError as e:
+        if service_name in ['activecollab', 'activecollab2', 'megaplan',
+                            'teamlab', 'versionone']:
+            log.warning(f"The {service_name} service has been removed.")
         raise ValueError(f"Configured service '{service_name}' not found. "
                          "Is it installed? Or misspelled?") from e
     return service.load()

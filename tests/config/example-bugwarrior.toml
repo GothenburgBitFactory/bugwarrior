@@ -6,8 +6,6 @@
 # section below determining their properties, how to query them, etc.  The name
 # is just a symbol, and doesn't have any functional importance.
 targets = [
-    "activecollab",
-    "activecollab2",
     "gitlab_config",
     "jira_project",
     "my_github",
@@ -15,7 +13,6 @@ targets = [
     "my_kanboard",
     "my_phabricator",
     "my_redmine",
-    "my_teamlab",
     "moksha_trac",
     "pivotaltracker",
 ]
@@ -146,13 +143,6 @@ query = "status:open assignee:me"
 [my_phabricator]
 service = "phabricator"
 # No need to specify credentials.  They are gathered from ~/.arcrc
-# Here's an example of a teamlab target.
-
-[my_teamlab]
-service = "teamlab"
-hostname = "teamlab.example.com"
-login = "alice"
-password = "secret"
 # Here's an example of a redmine target.
 
 [my_redmine]
@@ -160,20 +150,6 @@ service = "redmine"
 url = "http://redmine.example.org/"
 key = "c0c4c014cafebabe"
 add_tags = ["chiliproject"]
-
-[activecollab]
-service = "activecollab"
-url = "https://ac.example.org/api.php"
-key = "your-api-key"
-user_id = 15
-add_tags = ["php"]
-
-[activecollab2]
-service = "activecollab2"
-url = "http://ac.example.org/api.php"
-key = "your-api-key"
-user_id = 15
-projects = {1 = "first_project", 5 = "another_project"}
 
 [my_gmail]
 service = "gmail"

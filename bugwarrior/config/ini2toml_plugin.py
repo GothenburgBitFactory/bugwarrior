@@ -7,7 +7,6 @@ import pydantic.v1
 from pydantic.v1 import BaseModel
 
 from .schema import ConfigList
-from ..services.activecollab2 import ActiveCollabProjects
 
 log = logging.getLogger(__name__)
 
@@ -46,8 +45,6 @@ BOOLS = {
 
 INTEGERS = {
     'general': ['annotation_length', 'description_length'],
-    'activecollab': ['user_id'],
-    'activecollab2': ['user_id'],
     'gitbug': ['port'],
     'github': ['body_length'],
     'jira': ['body_length', 'version'],
@@ -150,10 +147,6 @@ def process_values(doc: IntermediateRepr) -> IntermediateRepr:
                     except pydantic.v1.ValidationError:
                         # verify_ssl is allowed to be a path
                         pass
-
-            if name == 'activecollab2' and 'projects' in section:
-                section['projects'] = ActiveCollabProjects.validate(
-                    section['projects'])
 
     return doc
 
