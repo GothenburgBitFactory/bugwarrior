@@ -1,0 +1,101 @@
+[project]
+name = "bugwarrior"
+version = "2.0.0-alpha"
+description = "a command line utility for updating your local taskwarrior database from your forge issue trackers"
+readme = "bugwarrior/README.rst"
+requires-python = ">3.9,<4"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE.txt"]
+keywords=["task", "taskwarrior", "todo", "github"]
+classifiers=[
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Bug Tracking",
+  "Topic :: Utilities",
+]
+dependencies = [
+  "click",
+  "dogpile.cache>=0.5.3",
+  "jinja2>=2.7.2",
+  "lockfile>=0.9.1",
+  "pydantic[email]>=2",
+  "python-dateutil",
+  "pytz",
+  "requests",
+  "taskw>=0.8",
+  # Needed for backwards compatibility with python<=3.10.
+  "tomli",
+]
+
+[project.optional-dependencies]
+bts = ["python-debianbts>=2.6.1"]
+bugzilla = ["python-bugzilla>=2.0.0"]
+gmail = ["google-api-python-client", "google-auth-oauthlib"]
+ini2toml = ["ini2toml[full]"]
+jira = ["jira>=0.22"]
+kanboard = ["kanboard"]
+keyring = ["keyring"]
+phabricator = ["phabricator"]
+test = [
+   "docutils",
+   "flake8",
+   "pytest",
+   "pytest-subtests",
+   "responses",
+   "sphinx>=1.0",
+   "sphinx-click",
+   "sphinx-inline-tabs",
+
+   # Workaround https://github.com/python/importlib_metadata/issues/406
+   "importlib-metadata<5",
+]
+todoist = ["todoist_api_python>=3.0.0"]
+trac = ["offtrac"]
+
+all = ["bugwarrior[bts,bugzilla,gmail,ini2toml,jira,kanboard,keyring,phabricator,test,todoist,trac]"]
+
+[project.urls]
+documentation = "https://bugwarrior.readthedocs.io/en/stable/"
+repository = "https://github.com/GothenburgBitFactory/bugwarrior"
+
+[project.scripts]
+bugwarrior = "bugwarrior:cli"
+bugwarrior-pull = "bugwarrior:pull"
+bugwarrior-vault = "bugwarrior:vault"
+bugwarrior-uda = "bugwarrior:uda"
+
+[project.entry-points."bugwarrior.service"]
+azuredevops = "bugwarrior.services.azuredevops:AzureDevopsService"
+deck = "bugwarrior.services.deck:NextcloudDeckService"
+gitbug = "bugwarrior.services.gitbug:GitBugService"
+github = "bugwarrior.services.github:GithubService"
+gitlab = "bugwarrior.services.gitlab:GitlabService"
+bitbucket = "bugwarrior.services.bitbucket:BitbucketService"
+trac = "bugwarrior.services.trac:TracService"
+bts = "bugwarrior.services.bts:BTSService"
+bugzilla = "bugwarrior.services.bz:BugzillaService"
+kanboard = "bugwarrior.services.kanboard:KanboardService"
+redmine = "bugwarrior.services.redmine:RedMineService"
+jira = "bugwarrior.services.jira:JiraService"
+phabricator = "bugwarrior.services.phab:PhabricatorService"
+pagure = "bugwarrior.services.pagure:PagureService"
+taiga = "bugwarrior.services.taiga:TaigaService"
+gerrit = "bugwarrior.services.gerrit:GerritService"
+trello = "bugwarrior.services.trello:TrelloService"
+youtrack = "bugwarrior.services.youtrack:YoutrackService"
+gmail = "bugwarrior.services.gmail:GmailService"
+teamwork_projects = "bugwarrior.services.teamwork_projects:TeamworkService"
+pivotaltracker = "bugwarrior.services.pivotaltracker:PivotalTrackerService"
+logseq = "bugwarrior.services.logseq:LogseqService"
+todoist = "bugwarrior.services.todoist:TodoistService"
+
+[project.entry-points."ini2toml.processing"]
+bugwarrior = "bugwarrior.config.ini2toml_plugin:activate"
+
+[tool.setuptools]
+packages = ["bugwarrior"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

@@ -8,56 +8,67 @@ Setting up your development environment
 
 First, make sure you have the necessary :ref:`requirements`.
 
-You should also install the `virtualenv
-<https://pypi.python.org/pypi/virtualenv>`_ tool for python.  (I use a wrapper
-for it called `virtualenvwrapper
-<https://pypi.python.org/pypi/virtualenvwrapper>`_ which is awesome but not
-required.)  Virtualenv will help isolate your dependencies from the rest of
-your system.
-
-::
-
-    $ sudo yum install python-virtualenv git
-    $ mkdir -p ~/virtualenvs/
-    $ virtualenv ~/virtualenvs/bugwarrior
-
-You should now have a virtualenv in a ``~/virtualenvs/`` directory.
-To use it, you need to "activate" it like this::
-
-    $ source ~/virtualenvs/bugwarrior/bin/activate
-    (bugwarrior)$ which python
-
-At any time, you can deactivate it by typing ``deactivate`` at the command
-prompt.
-
 Next step -- get the code!
 
 ::
 
-    (bugwarrior)$ git clone git@github.com:GothenburgBitFactory/bugwarrior.git
-    (bugwarrior)$ cd bugwarrior
-    (bugwarrior)$ pip install -e .[all]
-    (bugwarrior)$ which bugwarrior
+    $ git clone git@github.com:GothenburgBitFactory/bugwarrior.git
+    $ cd bugwarrior
 
-This will actually run it.. be careful and back up your task directory!
+Now use your favorite tool to attain an editable installation.
 
-::
+.. tab:: pip
 
-    (bugwarrior)$ bugwarrior pull
+   .. code-block:: bash
+
+    $ mkdir .venv
+    $ python -m venv .venv
+    $ source .venv/bin/activate
+    $ pip install -e .[all]
+
+.. tab:: uv
+
+   .. code-block:: bash
+
+    $ uv sync --all-extras
+
+The following will actually run it...be careful and back up your task directory!
+
+.. tab:: pip
+
+   .. code-block:: bash
+
+    $ bugwarrior pull
+
+.. tab:: uv
+
+   .. code-block:: bash
+
+    $ uv run bugwarrior pull
+
 
 To run the tests, use ``pytest``, and also check your code quality with ``flake8``:
 
-::
+.. tab:: pip
 
-    (bugwarrior)$ pytest
-    (bugwarrior)$ flake8
+   .. code-block:: bash
+
+    $ pytest
+    $ flake8 .
+
+.. tab:: uv
+
+   .. code-block:: bash
+
+    $ uv run pytest
+    $ uv run flake8 .
 
 Making a pull request
 ---------------------
 
 Create a new branch for each pull request based off the ``develop`` branch::
 
-    (bugwarrior)$ git checkout -b my-shiny-new-feature develop
+    $ git checkout -b my-shiny-new-feature develop
 
 Make your changes, push your branch to your fork of the repository, and create
 a new PR using the normal GitHub flow.
