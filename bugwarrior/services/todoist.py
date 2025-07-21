@@ -76,6 +76,8 @@ class TodoistIssue(Issue):
     ASSIGNER = "todoistassigner"
     CONTENT = "todoistcontent"
     DESCRIPTION = "todoistdescription"
+    DUE = "todoistdue"
+    DEADLINE = "todoistdeadline"
     DURATION = "todoistduration"
     ID = "todoistid"
     SECTION = "todoistsection"
@@ -100,6 +102,14 @@ class TodoistIssue(Issue):
         DESCRIPTION: {
             "type": "string",
             "label": "Todoist Description",
+        },
+        DUE: {
+            "type": "date",
+            "label": "Todoist Due Date",
+        },
+        DEADLINE: {
+            "type": "date",
+            "label": "Todoist Deadline Date",
         },
         DURATION: {
             "type": "string",
@@ -132,11 +142,6 @@ class TodoistIssue(Issue):
             content.replace('"', "'")  # prevent &dquote; in task details
             .replace("[", self.config.char_open_bracket)  # prevent &open; and &close;
             .replace("]", self.config.char_close_bracket)
-        )
-
-    def get_priority(self):
-        return self.PRIORITY_MAP.get(
-            self.record["priority"], self.config.default_priority
         )
 
     def to_taskwarrior(self):
@@ -201,6 +206,8 @@ class TodoistIssue(Issue):
             self.ID: self.record["id"],
             self.CONTENT: self._unescape_content(self.record["content"]),
             self.DESCRIPTION: self._unescape_content(self.record["description"]),
+            self.DUE: todoist_due,
+            self.DEADLINE: todoist_deadline,
             self.DURATION: self.extra["duration"],
             self.ASSIGNEE: self.extra["assignee"],
             self.ASSIGNER: self.extra["assigner"],
