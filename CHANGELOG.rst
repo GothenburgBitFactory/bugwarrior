@@ -21,6 +21,7 @@ New and Removed Services
 - Added Logseq service. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1052)
 - Added Nextcloud Deck service. (https://github.com/ralphbean/bugwarrior/pull/954)
 - Removed Megaplan service. (https://github.com/ralphbean/bugwarrior/pull/844)
+- Removed ActiveCollab, ActiveCollab2, Teamlab, and VersionOne services. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1102)
 
 Notable Changes
 
