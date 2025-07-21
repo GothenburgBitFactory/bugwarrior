@@ -44,7 +44,30 @@ Priority mapping
 ++++++++++++++++
 
 Todoist task priorities ``p1``, ``p2``, and ``p3`` are mapped to the taskwarrior priorities
-``H``, ``M``, and ``L`` respectively.
+``H``, ``M``, and ``L`` respectively and ``p4`` leaves the priorty unset. 
+
+Due and Deadline Date Mappings
+++++++++++++++++++++++++++++++
+
+By default the Todoist task due date is mapped to the taskwarrior ``due`` date field unless the Todiost task 
+also has a deadline date set, in which case the tasks due date is mapped to ``scheduled`` and the deadline 
+date is mappped to the taskwarrior ``due`` field.
+
+Two alternative date mapping options are available by setting the ``due_date_mapping`` configuraiton option.
+
+.. config::
+    :fragment: todoist
+
+    todoist.due_date_mapping = always_scheduled
+
+``
+
+``always_due`` - always map the Todoist due date to the taskwarrior due date, and ignore the Deadline date.
+
+``always_scheduled`` - always map the Todoist due date to taskwarrior scheduled date, and map deadline to due 
+if deadline if set.
+
+``default`` - map Todoist due date to taskwarrior due date unless deadline is set, as descripbed above.
 
 Character replacement
 +++++++++++++++++++++

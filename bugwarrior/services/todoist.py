@@ -17,7 +17,7 @@ class TodoistConfig(config.ServiceConfig):
     filter: str = None
     char_open_bracket: str = "〈"
     char_close_bracket: str = "〉"
-    inline_links: bool = True
+    due_date_mapping: str = "default"  # default, always_due, always_scheduleds
 
 
 class TodoistClient(Client):
@@ -120,37 +120,53 @@ class TodoistIssue(Issue):
         )
 
     def get_priority(self):
-        return self.PRIORITY_MAP.get(
-            self.record.priority,
-            self.config.default_priority
-        )
+        return self.PRIORITY_MAP.get(self.record.priority, self.config.default_priority)
 
     def to_taskwarrior(self):
         default_time = time(0, 0, 0)
-        # use due date as "scheduled".
         # adjust timezone to use local time for "floating" dates
         if self.record.due:
             # The Todoist due date could be a `date` or `datetime`
             if type(self.record.due.date) is datetime:
                 if self.record.due.timezone:
-                    scheduled = self.record.due.date
+                    todoist_due = self.record.due.date
                 else:
                     # if no timezone set is set remove tzinfo
                     # otherwixe it will be treated as UTC by default
-                    scheduled = self.record.due.date.replace(tzinfo=None)
+                    todoist_due = self.record.due.date.replace(tzinfo=None)
             else:
                 # the due is just a `date` with no time or timezone.
-                scheduled = datetime.combine(self.record.due.date, default_time, tzinfo=None)
+                todoist_due = datetime.combine(
+                    self.record.due.date, default_time, tzinfo=None
+                )
         else:
-            scheduled = None
+            todoist_due = None
 
-        # use deadline as "due".
         # deadline if set is only a date with no time or timezone.
-        due = (
+        todoist_deadline = (
             datetime.combine(self.record.deadline.date, default_time, tzinfo=None)
             if self.record.deadline
             else None
         )
+
+        # map the Todoist due and deadline to the taret Issue scheduled and due based on the
+        # date mapping setting
+        if self.config.due_date_mapping == "default":
+            due = todoist_deadline if todoist_deadline else todoist_due
+            scheduled = todoist_due if todoist_deadline else None
+        elif self.config.due_date_mapping == "always_due":
+            due = todoist_due
+            scheduled = None
+        elif self.config.due_date_mapping == "always_scheduled":
+            due = todoist_deadline
+            scheduled = todoist_due
+        else:
+            logging.warning(
+                f'Invalid due_date_mapping setting "{self.config.due_date_mapping}"',
+                '. Using default mapping'
+            )
+            due = todoist_deadline if todoist_deadline else todoist_due
+            scheduled = todoist_due if todoist_deadline else None
 
         task = {
             "project": self.extra["project"],
@@ -194,8 +210,12 @@ class TodoistService(Service):
         )
 
     def issues(self):
-        project_index = {project.id: project.name for project in self.client.get_projects()}
-        section_index = {section.id: section.name for section in self.client.get_sections()}
+        project_index = {
+            project.id: project.name for project in self.client.get_projects()
+        }
+        section_index = {
+            section.id: section.name for section in self.client.get_sections()
+        }
         user_index = {
             user.id: f"{user.name} <{user.email}>"
             for project in project_index.keys()
