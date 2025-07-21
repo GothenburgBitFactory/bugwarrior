@@ -21,7 +21,7 @@ configuration options described in :ref:`common_configuration_options`
 or described in `Service Features`_ below.
 
 ``token`` is required to authenticate with your Todoist account. To get the token 
-visit the Todosit `<developer console https://app.todoist.com/app/settings/integrations/developer>`,
+visit the Todoist `<developer console https://app.todoist.com/app/settings/integrations/developer>`,
 or see the Todoist documentition on how to `find your API token <https://www.todoist.com/help/articles/find-your-api-token-Jpzx9IIlB>`
 
 Service Features
@@ -60,8 +60,6 @@ Two alternative date mapping options are available by setting the ``due_date_map
 
     todoist.due_date_mapping = always_scheduled
 
-``
-
 ``always_due`` - always map the Todoist due date to the taskwarrior due date, and ignore the Deadline date.
 
 ``always_scheduled`` - always map the Todoist due date to taskwarrior scheduled date, and map deadline to due 
@@ -86,11 +84,36 @@ You can override this default behaviour to use alternative custom characters by 
     todoist.char_open_bracket = (
     todoist.char_close_bracket = )
 
-Lables
-++++++
+Import Labels as Tags
++++++++++++++++++++++
 
-Todoist `Labels <https://www.todoist.com/help/articles/introduction-to-labels-dSo2eE>` are added as Taskwarrior tags.
+Todoist allows you to attach `labels <https://www.todoist.com/help/articles/introduction-to-labels-dSo2eE>` 
+to issues; to use those labels as tags, you can use the ``import_labels_as_tags`` option:
 
+.. config::
+    :fragment: todoist
+
+    todoist.import_labels_as_tags = True
+
+Also, if you would like to control how these labels are created, you can
+specify a template used for converting the Todoist label into a Taskwarrior
+tag.
+
+For example, to prefix all incoming labels with the string 'todoist_' (perhaps
+to differentiate them from any existing tags you might have), you could
+add the following configuration option:
+
+.. config::
+    :fragment: todoist
+    
+    todoist.label_template = todoist_{{label}}
+
+In addition to the context variable ``{{label}}``, you also have access
+to all fields on the Taskwarrior task if needed.
+
+.. note::
+   See :ref:`field_templates` for more details regarding how templates
+   are processed.
 
 Provided UDA Fields
 -------------------

@@ -2,6 +2,7 @@ from unittest import mock
 from .base import AbstractServiceTest, ServiceTest
 
 import copy
+from dataclasses import asdict
 from datetime import datetime
 
 from bugwarrior.collect import TaskConstructor
@@ -18,7 +19,7 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
     }
 
     # Base test record
-    test_record = Task(
+    test_record = TodoistClient.task_to_dict(Task(
         id="1111111111111111",
         content="TESTTASK",
         description="TESTTASKDESCRIPTION",
@@ -49,7 +50,7 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         creator_id="333333",
         created_at=datetime(year=2025, month=7, day=1, hour=4, minute=30, second=0),
         updated_at=datetime(year=2025, month=7, day=2, hour=8, minute=0, second=0),
-    )
+    ))
 
     test_extra = {
         "project": "TESTPROJECT",
@@ -112,7 +113,7 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
             "project": "TESTPROJECT",
             "scheduled": datetime(year=2025, month=7, day=1),
             "status": "pending",
-            "tags": ["TESTLABEL"],
+            "tags": [],  # by default labels are not mapped to tags
             issue.ASSIGNEE: "TESTUSER1 <testuser1@example.com>",
             issue.ASSIGNER: "TESTUSER2 <testuser2@example.com>",
             issue.CONTENT: "TESTTASK",
@@ -127,10 +128,20 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
 
         self.assertEqual(actual, expected)
 
+    def test_to_taskwarrior_with_labels(self):
+        # Test lables when `import_labels_as_tags` is enabled
+        overrides = {
+            "import_labels_as_tags": "True",
+        }
+        service = self.get_mock_service(TodoistService, config_overrides=overrides)
+        issue = service.get_issue_for_record(self.test_record, self.test_extra)
+        actual = issue.to_taskwarrior()
+        self.assertEqual(actual.get("tags"),  ["TESTLABEL"])
+
     def test_to_taskwarrior_task_with_low_priority(self):
         # Test with priority set to lowest (1 in the API, which is P4 on the Todoist UI)
         test_record = copy.copy(self.test_record)
-        test_record.priority = 1
+        test_record["priority"] = 1
         issue = self.service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
         self.assertIs(actual.get("priority"), None)
@@ -139,32 +150,32 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         # Test that when the "default" due date mapping is used and task has only a due date.
         # due->due, scheduled is None
         test_record = copy.copy(self.test_record)
-        test_record.due = Due(
+        test_record["due"] = asdict(Due(
             date=datetime(year=2025, month=7, day=1),
             string="",
             lang="en",
             is_recurring=False,
-        )
-        test_record.deadline = None
+        ))
+        test_record["deadline"] = None
         issue = self.service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
-        self.assertEqual(actual.get("scheduled"), None)
-        self.assertEqual(actual.get("due"), datetime(year=2025, month=7, day=1))
+        self.assertEqual(actual["scheduled"], None)
+        self.assertEqual(actual["due"], datetime(year=2025, month=7, day=1))
 
     def test_to_taskwarrior_task_with_due_and_deadline_default_setting(self):
         # Test that when the "default" due date mapping is used and task has both a due date
         # and a deadline. due->scheduled and deadline->due
         test_record = copy.copy(self.test_record)
-        test_record.due = Due(
+        test_record["due"] = asdict(Due(
             date=datetime(year=2025, month=7, day=1),
             string="",
             lang="en",
             is_recurring=False,
-        )
-        test_record.deadline = Deadline(
+        ))
+        test_record["deadline"] = asdict(Deadline(
             date=datetime(year=2025, month=7, day=31),
             lang="en",
-        )
+        ))
         issue = self.service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
         self.assertEqual(actual.get("scheduled"), datetime(year=2025, month=7, day=1))
@@ -178,13 +189,13 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         }
         service = self.get_mock_service(TodoistService, config_overrides=overrides)
         test_record = copy.copy(self.test_record)
-        test_record.due = Due(
+        test_record["due"] = asdict(Due(
             date=datetime(year=2025, month=7, day=1),
             string="",
             lang="en",
             is_recurring=False,
-        )
-        test_record.deadline = None
+        ))
+        test_record["deadline"] = None
         issue = service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
         self.assertEqual(actual.get("scheduled"), None)
@@ -198,16 +209,16 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         }
         service = self.get_mock_service(TodoistService, config_overrides=overrides)
         test_record = copy.copy(self.test_record)
-        test_record.due = Due(
+        test_record["due"] = asdict(Due(
             date=datetime(year=2025, month=7, day=1),
             string="",
             lang="en",
             is_recurring=False,
-        )
-        test_record.deadline = Deadline(
+        ))
+        test_record["deadline"] = asdict(Deadline(
             date=datetime(year=2025, month=7, day=31),
             lang="en",
-        )
+        ))
         issue = service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
         self.assertEqual(actual.get("scheduled"), None)
@@ -221,13 +232,13 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         }
         service = self.get_mock_service(TodoistService, config_overrides=overrides)
         test_record = copy.copy(self.test_record)
-        test_record.due = Due(
+        test_record["due"] = asdict(Due(
             date=datetime(year=2025, month=7, day=1),
             string="",
             lang="en",
             is_recurring=False,
-        )
-        test_record.deadline = None
+        ))
+        test_record["deadline"] = None
         issue = service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
         self.assertEqual(actual.get("scheduled"), datetime(year=2025, month=7, day=1))
@@ -241,16 +252,16 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         }
         service = self.get_mock_service(TodoistService, config_overrides=overrides)
         test_record = copy.copy(self.test_record)
-        test_record.due = Due(
+        test_record["due"] = asdict(Due(
             date=datetime(year=2025, month=7, day=1),
             string="",
             lang="en",
             is_recurring=False,
-        )
-        test_record.deadline = Deadline(
+        ))
+        test_record["deadline"] = asdict(Deadline(
             date=datetime(year=2025, month=7, day=31),
             lang="en",
-        )
+        ))
         issue = service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
         self.assertEqual(actual.get("scheduled"), datetime(year=2025, month=7, day=1))
@@ -273,7 +284,7 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
             "priority": "H",
             "project": "TESTPROJECT",
             "scheduled": datetime(year=2025, month=7, day=1),
-            "tags": ["TESTLABEL"],
+            "tags": [],  # by default labels are not maped to tags
             issue.ASSIGNEE: "TESTUSER1 <testuser1@example.com>",
             issue.ASSIGNER: "TESTUSER2 <testuser2@example.com>",
             issue.CONTENT: "TESTTASK",

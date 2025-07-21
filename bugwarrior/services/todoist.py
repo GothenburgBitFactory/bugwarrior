@@ -4,9 +4,12 @@ from todoist_api_python.api import TodoistAPI
 import typing_extensions
 
 from datetime import datetime, time
+from dataclasses import asdict
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
+
+from todoist_api_python.models import Task
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +18,8 @@ class TodoistConfig(config.ServiceConfig):
     service: typing_extensions.Literal["todoist"]
     token: str
     filter: str = None
+    import_labels_as_tags = False
+    label_template = "{{label}}"
     char_open_bracket: str = "〈"
     char_close_bracket: str = "〉"
     due_date_mapping: str = "default"  # default, always_due, always_scheduleds
@@ -24,6 +29,15 @@ class TodoistClient(Client):
     def __init__(self, token, filter):
         self._api = TodoistAPI(token)
         self.filter = filter
+
+    @classmethod
+    def task_to_dict(cls, task: Task):
+        record = asdict(task)
+        # add data items for additional properties
+        record["is_completed"] = task.is_completed
+        record["url"] = task.url
+        record["labels"] = task.labels
+        return record
 
     def get_projects(self):
         all_projects = []
@@ -53,7 +67,8 @@ class TodoistClient(Client):
         tasks_iter = self._api.filter_tasks(query=self.filter)
         for tasks in tasks_iter:
             for task in tasks:
-                yield task
+                record = self.task_to_dict(task)
+                yield record
 
 
 class TodoistIssue(Issue):
@@ -120,32 +135,34 @@ class TodoistIssue(Issue):
         )
 
     def get_priority(self):
-        return self.PRIORITY_MAP.get(self.record.priority, self.config.default_priority)
+        return self.PRIORITY_MAP.get(
+            self.record["priority"], self.config.default_priority
+        )
 
     def to_taskwarrior(self):
         default_time = time(0, 0, 0)
         # adjust timezone to use local time for "floating" dates
-        if self.record.due:
+        if self.record["due"]:
             # The Todoist due date could be a `date` or `datetime`
-            if type(self.record.due.date) is datetime:
-                if self.record.due.timezone:
-                    todoist_due = self.record.due.date
+            if isinstance(self.record["due"]["date"], datetime):
+                if self.record["due"]["timezone"]:
+                    todoist_due = self.record["due"]["date"]
                 else:
                     # if no timezone set is set remove tzinfo
                     # otherwixe it will be treated as UTC by default
-                    todoist_due = self.record.due.date.replace(tzinfo=None)
+                    todoist_due = self.record["due"]["date"].replace(tzinfo=None)
             else:
                 # the due is just a `date` with no time or timezone.
                 todoist_due = datetime.combine(
-                    self.record.due.date, default_time, tzinfo=None
+                    self.record["due"]["date"], default_time, tzinfo=None
                 )
         else:
             todoist_due = None
 
         # deadline if set is only a date with no time or timezone.
         todoist_deadline = (
-            datetime.combine(self.record.deadline.date, default_time, tzinfo=None)
-            if self.record.deadline
+            datetime.combine(self.record["deadline"]["date"], default_time, tzinfo=None)
+            if self.record["deadline"]
             else None
         )
 
@@ -163,7 +180,7 @@ class TodoistIssue(Issue):
         else:
             logging.warning(
                 f'Invalid due_date_mapping setting "{self.config.due_date_mapping}"',
-                '. Using default mapping'
+                ". Using default mapping",
             )
             due = todoist_deadline if todoist_deadline else todoist_due
             scheduled = todoist_due if todoist_deadline else None
@@ -171,28 +188,32 @@ class TodoistIssue(Issue):
         task = {
             "project": self.extra["project"],
             "priority": self.get_priority(),
-            # "annotations": None,
-            "tags": self.record.labels if self.record.labels else [],
+            # "annotations": None,  # TODO for future addition of comments
+            "tags": (
+                self.get_tags_from_labels(self.record["labels"])
+                if self.record["labels"]
+                else []
+            ),
             "scheduled": scheduled,
             "due": due,
-            "status": "completed" if self.record.is_completed else "pending",
-            "entry": self.record.created_at,
-            self.ID: self.record.id,
-            self.CONTENT: self._unescape_content(self.record.content),
-            self.DESCRIPTION: self._unescape_content(self.record.description),
+            "status": "completed" if self.record["is_completed"] else "pending",
+            "entry": self.record["created_at"],
+            self.ID: self.record["id"],
+            self.CONTENT: self._unescape_content(self.record["content"]),
+            self.DESCRIPTION: self._unescape_content(self.record["description"]),
             self.DURATION: self.extra["duration"],
             self.ASSIGNEE: self.extra["assignee"],
             self.ASSIGNER: self.extra["assigner"],
             self.SECTION: self.extra["section"],
-            self.URL: self.record.url,
+            self.URL: self.record["url"],
         }
         return task
 
     def get_default_description(self):
         description = self.build_default_description(
-            title=self._unescape_content(self.record.content),
-            url=self.record.url,
-            number=self.record.id,
+            title=self._unescape_content(self.record["content"]),
+            url=self.record["url"],
+            number=self.record["id"],
             cls="issue",
         )
         return description
@@ -223,13 +244,13 @@ class TodoistService(Service):
         }
         for issue in self.client.get_issues():
             extra = {
-                "project": project_index.get(issue.project_id),
-                "section": section_index.get(issue.section_id),
-                "assignee": user_index.get(issue.assignee_id),
-                "assigner": user_index.get(issue.assigner_id),
+                "project": project_index.get(issue["project_id"]),
+                "section": section_index.get(issue["section_id"]),
+                "assignee": user_index.get(issue["assignee_id"]),
+                "assigner": user_index.get(issue["assigner_id"]),
                 "duration": (
-                    f"{issue.duration.amount} {issue.duration.unit}"
-                    if issue.duration
+                    f'{issue["duration"]["amount"]} {issue["duration"]["unit"]}'
+                    if issue["duration"]
                     else None
                 ),
             }
