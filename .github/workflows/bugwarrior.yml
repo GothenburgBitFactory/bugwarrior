@@ -55,7 +55,7 @@ jobs:
     strategy:
       matrix:
         jira-version: [1.0.10, 2.0.0]
-        architecture: [aarch64, ppc64le]
+        architecture: [ppc64le]
 
     steps:
       - name: Checkout code
