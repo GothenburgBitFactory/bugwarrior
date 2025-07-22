@@ -106,6 +106,7 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         issue = self.service.get_issue_for_record(self.test_record, self.test_extra)
 
         expected = {
+            "annotations": [],
             "due": datetime(year=2025, month=7, day=31),
             "entry": datetime(year=2025, month=7, day=1, hour=4, minute=30, second=0),
             "status": "pending",
@@ -277,6 +278,7 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         issue = next(self.service.issues())
 
         expected = {
+            "annotations": [],
             "description": "(bw)Is#1111111111111111"
             + " - TESTTASK"
             + " .. https://app.todoist.com/app/task/testtask-1111111111111111",

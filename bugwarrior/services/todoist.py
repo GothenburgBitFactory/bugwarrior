@@ -70,6 +70,14 @@ class TodoistClient(Client):
                 record = self.task_to_dict(task)
                 yield record
 
+    def get_comments(self, task_id):
+        all_comments = []
+        comments_iter = self._api.get_comments(task_id=task_id)
+        for comments in comments_iter:
+            for comment in comments:
+                all_comments.append(comment)
+        return all_comments
+
 
 class TodoistIssue(Issue):
     ASSIGNEE = "todoistassignee"
@@ -193,7 +201,7 @@ class TodoistIssue(Issue):
         task = {
             "project": self.extra["project"],
             "priority": self.get_priority(),
-            # "annotations": None,  # TODO for future addition of comments
+            "annotations": self.extra.get("annotations", []),
             "tags": (
                 self.get_tags_from_labels(self.record["labels"])
                 if self.record["labels"]
@@ -280,4 +288,12 @@ class TodoistService(Service):
                     else None
                 ),
             }
+            # optionally add comments as annotations
+            if self.main_config.annotation_comments:
+                comments = self.client.get_comments(issue["id"])
+                annotations = self.build_annotations(
+                    [(user_index.get(comment.poster_id), comment.content) for comment in comments],
+                    issue["url"]
+                )
+                extra["annotations"] = annotations
             yield self.get_issue_for_record(issue, extra)
