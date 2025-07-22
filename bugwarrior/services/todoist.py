@@ -22,7 +22,7 @@ class TodoistConfig(config.ServiceConfig):
     label_template = "{{label}}"
     char_open_bracket: str = "〈"
     char_close_bracket: str = "〉"
-    due_date_mapping: str = "default"  # default, always_due, always_scheduleds
+    due_date_mapping: str = "default"  # default, always_due, always_scheduledss
 
 
 class TodoistClient(Client):
@@ -232,9 +232,27 @@ class TodoistService(Service):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # apply additional filters
+        if self.config.only_if_assigned:
+            if self.config.also_unassigned:
+                filter = (
+                    self.config.filter
+                    + f" & (!assigned | shared & assigned to: {self.config.only_if_assigned})"
+                )
+            else:
+                filter = (
+                    self.config.filter
+                    + f" & (!shared | shared & assigned to: {self.config.only_if_assigned})"
+                )
+        else:
+            filter = self.config.filter
+
+        log.info(f"Using Todoist filter: {filter}")
+
         self.client = TodoistClient(
             token=self.config.token,
-            filter=self.config.filter,
+            filter=filter,
         )
 
     def issues(self):
@@ -249,6 +267,7 @@ class TodoistService(Service):
             for project in project_index.keys()
             for user in self.client.get_users(project)
         }
+
         for issue in self.client.get_issues():
             extra = {
                 "project": project_index.get(issue["project_id"]),

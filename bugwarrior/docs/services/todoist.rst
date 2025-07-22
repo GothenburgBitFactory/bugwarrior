@@ -40,6 +40,24 @@ Multiple filters (using the comma , operator) are not supported.
 
     todoist.filter = (today | tomorrow | overdue | next 5 days)
 
+Additionally the standard options ``only_if_assigned`` and ``also_unassigned`` can be set
+to modify the filter. These effectively _and_ additional filters the default or user provider query filter
+
+.. config::
+    :fragment: todoist
+
+    todoist.only_if_assigned = me
+    todoist.also_unassigned = true
+
+``only_if_assigned``: If set, only import issues from shared projects assigned to the specified user. 
+User can be identified by their name, email address, or ``me``. Issues for personal (not shared) projects
+are always imported. Equivilent to filer ``shared & assigned to: <value>``
+
+``also_unassigned``: If set to ``true`` and ``only_if_assigned`` is set, then also create tasks
+ for issues that are not assigned to anybody. This only applies the tasks in shared projects, 
+ tasks in personal (not shared) projects will always be imported. Defaults to ``false``.
+ Equivilent to filer ``!assigned``
+
 Priority mapping
 ++++++++++++++++
 
