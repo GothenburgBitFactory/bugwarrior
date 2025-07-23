@@ -67,23 +67,19 @@ Todoist task priorities ``p1``, ``p2``, and ``p3`` are mapped to the taskwarrior
 Due and Deadline Date Mappings
 ++++++++++++++++++++++++++++++
 
-By default the Todoist task due date is mapped to the taskwarrior ``due`` date field unless the Todiost task 
-also has a deadline date set, in which case the tasks due date is mapped to ``scheduled`` and the deadline 
-date is mappped to the taskwarrior ``due`` field.
+By default the Todoist task due date is mapped to the taskwarrior ``due`` date field and Todoist deadline
+dates are available as a UDA.
 
-Two alternative date mapping options are available by setting the ``due_date_mapping`` configuraiton option.
+You can alter the date mapping using ``due_template`` and ``scheduled_template`` configuration options.
+For example if you prefer to use due date for when to start working on a task for tasks that have a deadline
+date set, as suggestion in the Todosit ``difference between a date and a deadline https://www.todoist.com/help/articles/introduction-to-deadlines-uMqbSLM6U#h_01JDS5KZG9AMRPBWBEK366TXGE``,
+you can use the following templates.
 
 .. config::
     :fragment: todoist
 
-    todoist.due_date_mapping = always_scheduled
-
-``always_due`` - always map the Todoist due date to the taskwarrior due date, and ignore the Deadline date.
-
-``always_scheduled`` - always map the Todoist due date to taskwarrior scheduled date, and map deadline to due 
-if deadline if set.
-
-``default`` - map Todoist due date to taskwarrior due date unless deadline is set, as descripbed above.
+    todoist.due_template = {{ todoistdeadline if todoistdeadline else todoistdue if todoistdue else "" }}
+    todoist.scheduled_template = {{ todoistdue if todoistdeadline else "" }}
 
 Character replacement
 +++++++++++++++++++++

@@ -22,7 +22,6 @@ class TodoistConfig(config.ServiceConfig):
     label_template = "{{label}}"
     char_open_bracket: str = "〈"
     char_close_bracket: str = "〉"
-    due_date_mapping: str = "default"  # default, always_due, always_scheduledss
 
 
 class TodoistClient(Client):
@@ -179,25 +178,6 @@ class TodoistIssue(Issue):
             else None
         )
 
-        # map the Todoist due and deadline to the taret Issue scheduled and due based on the
-        # date mapping setting
-        if self.config.due_date_mapping == "default":
-            due = todoist_deadline if todoist_deadline else todoist_due
-            scheduled = todoist_due if todoist_deadline else None
-        elif self.config.due_date_mapping == "always_due":
-            due = todoist_due
-            scheduled = None
-        elif self.config.due_date_mapping == "always_scheduled":
-            due = todoist_deadline
-            scheduled = todoist_due
-        else:
-            logging.warning(
-                f'Invalid due_date_mapping setting "{self.config.due_date_mapping}"',
-                ". Using default mapping",
-            )
-            due = todoist_deadline if todoist_deadline else todoist_due
-            scheduled = todoist_due if todoist_deadline else None
-
         task = {
             "project": self.extra["project"],
             "priority": self.get_priority(),
@@ -207,8 +187,8 @@ class TodoistIssue(Issue):
                 if self.record["labels"]
                 else []
             ),
-            "scheduled": scheduled,
-            "due": due,
+            "scheduled": None,
+            "due": todoist_due,
             "status": "completed" if self.record["is_completed"] else "pending",
             "entry": self.record["created_at"],
             self.ID: self.record["id"],
