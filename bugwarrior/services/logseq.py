@@ -18,7 +18,13 @@ class LogseqConfig(config.ServiceConfig):
     port: int = 12315
     token: str
     task_state: config.ConfigList = [
-        "DOING", "TODO", "NOW", "LATER", "IN-PROGRESS", "WAIT", "WAITING"
+        "DOING",
+        "TODO",
+        "NOW",
+        "LATER",
+        "IN-PROGRESS",
+        "WAIT",
+        "WAITING",
         # states DONE and CANCELED/CANCELLED are skipped by default
     ]
     char_open_link: str = "【"
@@ -27,7 +33,7 @@ class LogseqConfig(config.ServiceConfig):
     char_close_bracket: str = "〉"
     inline_links: bool = True
 
-    only_if_assigned: config.UnsupportedOption[str] = ''
+    only_if_assigned: config.UnsupportedOption[str] = ""
     also_unassigned: config.UnsupportedOption[bool] = False
 
 
@@ -80,7 +86,9 @@ class LogseqClient(Client):
         """
         result = self._datascript_query(query)
         if "error" in result:
-            log.fatal("Error querying Logseq: %s using query %s", result["error"], query)
+            log.fatal(
+                "Error querying Logseq: %s using query %s", result["error"], query
+            )
             exit(1)
         return result
 
@@ -154,7 +162,9 @@ class LogseqIssue(Issue):
     def _unescape_content(self, content):
         return (
             content.replace('"', "'")  # prevent &dquote; in task details
-            .replace("[[", self.config.char_open_link)  # alternate brackets for linked items
+            .replace(
+                "[[", self.config.char_open_link
+            )  # alternate brackets for linked items
             .replace("]]", self.config.char_close_link)
             .replace("[", self.config.char_open_bracket)  # prevent &open; and &close;
             .replace("]", self.config.char_close_bracket)
@@ -191,11 +201,15 @@ class LogseqIssue(Issue):
         # Note that this is processed after the content is unescaped,
         # so we use the char_open_link and char_close_link
         tags = re.findall(
-            r"(?<=\s)#" + self.config.char_open_link + r".*?" + self.config.char_close_link + r"|(?<=\s)#\S+",
-            self.get_formatted_title()
+            r"(?<=\s)#"
+            + self.config.char_open_link
+            + r".*?"
+            + self.config.char_close_link
+            + r"|(?<=\s)#\S+",
+            self.get_formatted_title(),
         )
         # compress format to single words and strip leading `#`
-        tags = [self._compress_tag_format(t).lstrip('#') for t in tags]
+        tags = [self._compress_tag_format(t).lstrip("#") for t in tags]
         return tags
 
     # get a list of annotations from the content
@@ -248,7 +262,9 @@ class LogseqIssue(Issue):
         if len(date_split) == 2:  # <date day>
             date = date_split[0]
             date_format = "%Y-%m-%d"
-        elif len(date_split) == 3 and (date_split[2][0] in ("+", ".")):  # <date day repeat>
+        elif len(date_split) == 3 and (
+            date_split[2][0] in ("+", ".")
+        ):  # <date day repeat>
             date = date_split[0]
             date_format = "%Y-%m-%d"
         elif len(date_split) == 3:  # <date day time>
@@ -272,7 +288,9 @@ class LogseqIssue(Issue):
 
     def to_taskwarrior(self):
         annotations, scheduled_date, deadline_date = self.get_annotations_from_content()
-        wait_date = min([d for d in [scheduled_date, deadline_date, self.SOMEDAY] if d is not None])
+        wait_date = min(
+            [d for d in [scheduled_date, deadline_date, self.SOMEDAY] if d is not None]
+        )
         return {
             "project": self.extra["graph"],
             "priority": self.get_priority(),
@@ -292,7 +310,7 @@ class LogseqIssue(Issue):
     def get_default_description(self):
         return self.build_default_description(
             title=self.get_formatted_title(),
-            url=self.get_url() if self.config.inline_links else '',
+            url=self.get_url() if self.config.inline_links else "",
             number=self.record["id"],
             cls="issue",
         )
