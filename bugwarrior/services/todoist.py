@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 class TodoistConfig(config.ServiceConfig):
     service: typing_extensions.Literal["todoist"]
     token: str
-    filter: str = None
+    filter: str = "(view all)"
     import_labels_as_tags = False
     label_template = "{{label}}"
     char_open_bracket: str = "〈"
@@ -227,8 +227,8 @@ class TodoistService(Service):
             personal = "!shared"
             # fetch assigned tasks in shared projects (shared & assigned)
             shared_assigned = f"| shared & assigned to: {self.config.only_if_assigned}"
-            # fetch unassigned tasks in shared projects (!assigned)
-            unassigned = "| !assigned" if self.config.also_unassigned else ""
+            # fetch unassigned tasks in shared projects (shared & !assigned)
+            unassigned = "| shared & !assigned" if self.config.also_unassigned else ""
             filter += f" & ({personal} {shared_assigned} {unassigned})"
 
         log.info(f"Using Todoist filter: {filter}")
