@@ -35,7 +35,6 @@ class TodoistClient(Client):
         # add data items for additional properties
         record["is_completed"] = task.is_completed
         record["url"] = task.url
-        record["labels"] = task.labels
         return record
 
     def get_projects(self):
@@ -222,25 +221,35 @@ class TodoistService(Service):
         super().__init__(*args, **kwargs)
 
         # apply additional filters
+        filter = self.config.filter
         if self.config.only_if_assigned:
-            if self.config.also_unassigned:
-                filter = (
-                    self.config.filter
-                    + f" & (!assigned | shared & assigned to: {self.config.only_if_assigned})"
-                )
-            else:
-                filter = (
-                    self.config.filter
-                    + f" & (!shared | shared & assigned to: {self.config.only_if_assigned})"
-                )
-        else:
-            filter = self.config.filter
+            # fetch personal tasks (!shared)
+            personal = "!shared"
+            # fetch assigned tasks in shared projects (shared & assigned)
+            shared_assigned = f"| shared & assigned to: {self.config.only_if_assigned}"
+            # fetch unassigned tasks in shared projects (!assigned)
+            unassigned = "| !assigned" if self.config.also_unassigned else ""
+            filter += f" & ({personal} {shared_assigned} {unassigned})"
 
         log.info(f"Using Todoist filter: {filter}")
 
         self.client = TodoistClient(
             token=self.config.token,
             filter=filter,
+        )
+
+    def annotations(self, user_index, issue):
+        comments = (
+            self.client.get_comments(issue["id"])
+            if self.main_config.annotation_comments
+            else []
+        )
+        return self.build_annotations(
+            [
+                (user_index.get(comment.poster_id), comment.content)
+                for comment in comments
+            ],
+            issue["url"],
         )
 
     def issues(self):
@@ -267,13 +276,6 @@ class TodoistService(Service):
                     if issue["duration"]
                     else None
                 ),
+                "annotations": self.annotations(user_index, issue),
             }
-            # optionally add comments as annotations
-            if self.main_config.annotation_comments:
-                comments = self.client.get_comments(issue["id"])
-                annotations = self.build_annotations(
-                    [(user_index.get(comment.poster_id), comment.content) for comment in comments],
-                    issue["url"]
-                )
-                extra["annotations"] = annotations
             yield self.get_issue_for_record(issue, extra)
