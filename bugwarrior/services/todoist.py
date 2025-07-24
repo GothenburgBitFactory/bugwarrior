@@ -219,6 +219,7 @@ class TodoistService(Service):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.token = self.get_password("token")
 
         # apply additional filters
         filter = self.config.filter
@@ -234,9 +235,13 @@ class TodoistService(Service):
         log.info(f"Using Todoist filter: {filter}")
 
         self.client = TodoistClient(
-            token=self.config.token,
+            token=self.token,
             filter=filter,
         )
+
+    @staticmethod
+    def get_keyring_service(config):
+        return "todoist://"
 
     def annotations(self, user_index, issue):
         comments = (
