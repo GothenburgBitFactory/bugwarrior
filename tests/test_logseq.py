@@ -1,9 +1,12 @@
 from unittest import mock
 
 from bugwarrior.collect import TaskConstructor
-from bugwarrior.services.logseq import LogseqService, LogseqClient
+from bugwarrior.services.logseq import LogseqService, LogseqClient, LogseqIssue
 
 from .base import AbstractServiceTest, ServiceTest
+
+import datetime
+import copy
 
 
 class TestLogseqIssue(AbstractServiceTest, ServiceTest):
@@ -35,6 +38,8 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
         ],
         "content": ("DOING [#C] Do something http://example.com/page#NotATag `#code`"
                     " #[[Test tag one]] #[[TestTagTwo]] #TestTagThree\n"
+                    "SCHEDULED: <2025-07-01 Tue>\n"
+                    "DEADLINE: <2025-07-31 Thu>\n"
                     "id:: 67dae9ea-8e4d-4ad1-91dc-72aacc72a802\n"
                     ":LOGBOOK:\n"
                     "CLOCK: [2025-06-03 Tue 13:56:47]--[2025-06-03 Tue 13:56:49] =>  00:00:02\n"
@@ -80,8 +85,8 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             "annotations": [],
-            "due": None,
-            "scheduled": None,
+            "due": datetime.datetime(year=2025, month=7, day=31),
+            "scheduled": datetime.datetime(year=2025, month=7, day=1),
             "wait": None,
             "status": "pending",
             "priority": "L",
@@ -93,8 +98,8 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             issue.TITLE: "Do something http://example.com/page#NotATag `#code`"
             + " #【Test tag one】 #【TestTagTwo】 #TestTagThree",
             issue.URI: self.test_extra["baseURI"] + self.test_record["uuid"],
-            issue.SCHEDULED: None,
-            issue.DEADLINE: None,
+            issue.SCHEDULED: datetime.datetime(year=2025, month=7, day=1),
+            issue.DEADLINE: datetime.datetime(year=2025, month=7, day=31),
             issue.PAGE: "TestPageTitle",
         }
 
@@ -112,6 +117,59 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
         actual = issue.to_taskwarrior()
         self.assertEqual(actual["tags"], ["Testtagone", "TestTagTwo", "TestTagThree"])
 
+    def test_to_taskwarrior_todo(self):
+        test_record = copy.copy(self.test_record)
+        test_record["content"] = ("TODO test task in todo state\n")
+        test_record["marker"] = "TODO"
+        issue = self.service.get_issue_for_record(test_record, self.test_extra)
+        actual = issue.to_taskwarrior()
+        self.assertEqual(actual["status"], "pending")
+
+    def test_to_taskwarrior_waiting(self):
+        test_record = copy.copy(self.test_record)
+        test_record["content"] = ("WAITING test task in waiting state\n")
+        test_record["marker"] = "WAITING"
+        issue = self.service.get_issue_for_record(test_record, self.test_extra)
+        actual = issue.to_taskwarrior()
+        self.assertEqual(actual["status"], "pending")
+        self.assertEqual(actual["wait"], LogseqIssue.SOMEDAY)
+
+    def test_to_taskwarrior_dates_with_time(self):
+        test_record = copy.copy(self.test_record)
+        test_record["content"] = ("DOING test schedule and deadline dates with times\n"
+                                  "SCHEDULED: <2025-07-01 Tue 12:30>\n"
+                                  "DEADLINE: <2025-07-31 Thu 12:30>"
+                                  )
+        print(test_record)
+
+        issue = self.service.get_issue_for_record(test_record, self.test_extra)
+        actual = issue.to_taskwarrior()
+
+        scheduled = datetime.datetime(year=2025, month=7, day=1, hour=12, minute=30)
+        deadline = datetime.datetime(year=2025, month=7, day=31, hour=12, minute=30)
+        self.assertEqual(actual["scheduled"], scheduled)
+        self.assertEqual(actual["due"], deadline)
+        self.assertEqual(actual[issue.SCHEDULED], scheduled)
+        self.assertEqual(actual[issue.DEADLINE], deadline)
+
+    def test_to_taskwarrior_dates_with_repeat(self):
+        test_record = copy.copy(self.test_record)
+        test_record["content"] = ("DOING test schedule and deadline dates with times\n"
+                                  "SCHEDULED: <2025-07-01 Tue 12:30 .+1d>\n"
+                                  "DEADLINE: <2025-07-31 Thu .+1d>"
+                                  )
+        print(test_record)
+
+        issue = self.service.get_issue_for_record(test_record, self.test_extra)
+        actual = issue.to_taskwarrior()
+
+        scheduled = datetime.datetime(year=2025, month=7, day=1, hour=12, minute=30)
+        deadline = datetime.datetime(year=2025, month=7, day=31)
+        self.assertEqual(actual["scheduled"], scheduled)
+        self.assertEqual(actual["due"], deadline)
+        self.assertEqual(actual[issue.SCHEDULED], scheduled)
+        self.assertEqual(actual[issue.DEADLINE], deadline)
+
     def test_issues(self):
         self.service.client.get_graph_name.return_value = self.test_extra["graph"]
         self.service.client.get_issues.return_value = [[self.test_record]]
@@ -126,8 +184,8 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             + " .. "
             + self.test_extra["baseURI"]
             + self.test_record["uuid"],
-            "due": None,
-            "scheduled": None,
+            "due": datetime.datetime(year=2025, month=7, day=31),
+            "scheduled": datetime.datetime(year=2025, month=7, day=1),
             "wait": None,
             "status": "pending",
             "priority": "L",
@@ -139,8 +197,8 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             issue.TITLE: "Do something http://example.com/page#NotATag `#code`"
             + " #【Test tag one】 #【TestTagTwo】 #TestTagThree",
             issue.URI: self.test_extra["baseURI"] + self.test_record["uuid"],
-            issue.SCHEDULED: None,
-            issue.DEADLINE: None,
+            issue.SCHEDULED: datetime.datetime(year=2025, month=7, day=1),
+            issue.DEADLINE: datetime.datetime(year=2025, month=7, day=31),
             issue.PAGE: "Jul 1st, 2025",
         }
 
