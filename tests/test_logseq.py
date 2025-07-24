@@ -53,6 +53,20 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
     test_extra = {
         "baseURI": "logseq://graph/Test?block-id=",
         "graph": "Test",
+        "page_title": "TestPageTitle",
+    }
+
+    test_page = {
+        "updatedAt": 1751385600000,
+        "journalDay": 20250701,
+        "createdAt": 1751371200000,
+        "id": 19,
+        "name": "jul 1st, 2025",
+        "uuid": "6692f0c1-f610-40e3-840f-ba763627de40",
+        "journal?": True,
+        "originalName": "Jul 1st, 2025",
+        "file": {"id": 25},
+        "format": "markdown",
     }
 
     def setUp(self):
@@ -60,9 +74,6 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
 
         self.service = self.get_mock_service(LogseqService)
         self.service.client = mock.MagicMock(spec=LogseqClient)
-        self.service.client.get_issues = mock.MagicMock(
-            return_value=[self.test_record, self.test_extra]
-        )
 
     def test_to_taskwarrior(self):
         issue = self.service.get_issue_for_record(self.test_record, self.test_extra)
@@ -75,22 +86,36 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             "status": "pending",
             "priority": "L",
             "project": self.test_extra["graph"],
-            "tags": ["Testtagone", "TestTagTwo", "TestTagThree"],
+            "tags": [],
             issue.ID: int(self.test_record["id"]),
             issue.UUID: self.test_record["uuid"],
             issue.STATE: self.test_record["marker"],
             issue.TITLE: "Do something http://example.com/page#NotATag `#code`"
             + " #【Test tag one】 #【TestTagTwo】 #TestTagThree",
             issue.URI: self.test_extra["baseURI"] + self.test_record["uuid"],
+            issue.SCHEDULED: None,
+            issue.DEADLINE: None,
+            issue.PAGE: "TestPageTitle",
         }
 
         actual = issue.to_taskwarrior()
 
         self.assertEqual(actual, expected)
 
+    def test_to_taskwarrior_with_tags(self):
+        overrides = {
+            "import_labels_as_tags": "True",
+        }
+        service = self.get_mock_service(LogseqService, config_overrides=overrides)
+        issue = service.get_issue_for_record(self.test_record, self.test_extra)
+
+        actual = issue.to_taskwarrior()
+        self.assertEqual(actual["tags"], ["Testtagone", "TestTagTwo", "TestTagThree"])
+
     def test_issues(self):
         self.service.client.get_graph_name.return_value = self.test_extra["graph"]
         self.service.client.get_issues.return_value = [[self.test_record]]
+        self.service.client.get_page.return_value = self.test_page
         issue = next(self.service.issues())
 
         expected = {
@@ -107,13 +132,16 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             "status": "pending",
             "priority": "L",
             "project": self.test_extra["graph"],
-            "tags": ["Testtagone", "TestTagTwo", "TestTagThree"],
+            "tags": [],
             issue.ID: int(self.test_record["id"]),
             issue.UUID: self.test_record["uuid"],
             issue.STATE: self.test_record["marker"],
             issue.TITLE: "Do something http://example.com/page#NotATag `#code`"
             + " #【Test tag one】 #【TestTagTwo】 #TestTagThree",
             issue.URI: self.test_extra["baseURI"] + self.test_record["uuid"],
+            issue.SCHEDULED: None,
+            issue.DEADLINE: None,
+            issue.PAGE: "Jul 1st, 2025",
         }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

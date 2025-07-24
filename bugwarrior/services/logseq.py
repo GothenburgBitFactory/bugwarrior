@@ -32,6 +32,8 @@ class LogseqConfig(config.ServiceConfig):
     char_open_bracket: str = "〈"
     char_close_bracket: str = "〉"
     inline_links: bool = True
+    import_labels_as_tags: bool = False
+    label_template: str = '{{label}}'
 
     only_if_assigned: config.UnsupportedOption[str] = ""
     also_unassigned: config.UnsupportedOption[bool] = False
@@ -77,6 +79,18 @@ class LogseqClient(Client):
         graph = self._get_current_graph()
         return graph["name"] if graph else None
 
+    def get_page(self, page_id):
+        try:
+            response = requests.post(
+                f"http://{self.host}:{self.port}/api",
+                headers=self.headers,
+                json={"method": "logseq.getPage", "args": [page_id]},
+            )
+            return self.json_response(response)
+        except requests.exceptions.ConnectionError as ce:
+            log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
+            exit(1)
+
     def get_issues(self):
         query = f"""
             [:find (pull ?b [*])
@@ -100,6 +114,9 @@ class LogseqIssue(Issue):
     TITLE = "logseqtitle"
     DONE = "logseqdone"
     URI = "logsequri"
+    SCHEDULED = "logseqscheduled"
+    DEADLINE = "logseqdeadline"
+    PAGE = "logseqpage"
 
     # Local 2038-01-18, with time 00:00:00.
     # A date far away, with semantically meaningful to GTD users.
@@ -131,6 +148,18 @@ class LogseqIssue(Issue):
             "type": "string",
             "label": "Logseq URI",
         },
+        SCHEDULED: {
+            "type": "date",
+            "label": "Logseq Scheduled"
+        },
+        DEADLINE: {
+            "type": "date",
+            "label": "Logseq Deadline"
+        },
+        PAGE: {
+            "type": "string",
+            "label": "Logseq Page"
+        }
     }
 
     UNIQUE_KEY = (ID, UUID)
@@ -297,7 +326,7 @@ class LogseqIssue(Issue):
             "project": self.extra["graph"],
             "priority": self.get_priority(),
             "annotations": annotations,
-            "tags": self.get_tags_from_content(),
+            "tags": self.get_tags_from_labels(self.get_tags_from_content()),
             "due": deadline_date,
             "scheduled": scheduled_date,
             "wait": wait_date if self._is_waiting() else None,
@@ -307,6 +336,9 @@ class LogseqIssue(Issue):
             self.STATE: self.record["marker"],
             self.TITLE: self.get_formatted_title(),
             self.URI: self.get_url(),
+            self.SCHEDULED: scheduled_date,
+            self.DEADLINE: deadline_date,
+            self.PAGE: self.extra["page_title"],
         }
 
     def get_default_description(self):
@@ -324,16 +356,27 @@ class LogseqService(Service):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.token = self.get_password('token')
         filter = '"' + '" "'.join(self.config.task_state) + '"'
         self.client = LogseqClient(
             host=self.config.host,
             port=self.config.port,
-            token=self.config.token,
+            token=self.token,
             filter=filter,
         )
+
+    @staticmethod
+    def get_keyring_service(config):
+        return f"http://{config.host}:{config.port}"
 
     def issues(self):
         graph_name = self.client.get_graph_name()
         for issue in self.client.get_issues():
-            extra = {"graph": graph_name}
+            print(issue[0])
+            print(issue[0]["parent"]["id"])
+            parent_page = self.client.get_page(issue[0]["parent"]["id"])
+            extra = {
+                "graph": graph_name,
+                "page_title": parent_page["originalName"],
+            }
             yield self.get_issue_for_record(issue[0], extra)
