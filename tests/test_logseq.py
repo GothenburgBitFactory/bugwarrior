@@ -33,7 +33,8 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             {"id": 1777},
             {"id": 7070},
         ],
-        "content": ("DOING [#C] Do something #[[Test tag one]] #[[TestTagTwo]] #TestTagThree\n"
+        "content": ("DOING [#C] Do something http://example.com/page#NotATag `#code`"
+                    " #[[Test tag one]] #[[TestTagTwo]] #TestTagThree\n"
                     "id:: 67dae9ea-8e4d-4ad1-91dc-72aacc72a802\n"
                     ":LOGBOOK:\n"
                     "CLOCK: [2025-06-03 Tue 13:56:47]--[2025-06-03 Tue 13:56:49] =>  00:00:02\n"
@@ -74,11 +75,12 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
             "status": "pending",
             "priority": "L",
             "project": self.test_extra["graph"],
-            "tags": ['Testtagone', 'TestTagTwo', 'TestTagThree'],
+            "tags": ["Testtagone", "TestTagTwo", "TestTagThree"],
             issue.ID: int(self.test_record["id"]),
             issue.UUID: self.test_record["uuid"],
             issue.STATE: self.test_record["marker"],
-            issue.TITLE: "Do something #【Test tag one】 #【TestTagTwo】 #TestTagThree",
+            issue.TITLE: "Do something http://example.com/page#NotATag `#code`"
+            + " #【Test tag one】 #【TestTagTwo】 #TestTagThree",
             issue.URI: self.test_extra["baseURI"] + self.test_record["uuid"],
         }
 
@@ -94,19 +96,23 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
         expected = {
             "annotations": [],
             "description": f"(bw)Is#{self.test_record['id']}"
-            + " - Do something #【Test tag one】 #【TestTagTwo】 #TestTagThree"
-            + " .. " + self.test_extra["baseURI"] + self.test_record["uuid"],
+            + " - Do something http://example.com/page#NotATag `#code`"
+            + " #【Test tag one】 #【TestTagTwo】 #TestTagThree"
+            + " .. "
+            + self.test_extra["baseURI"]
+            + self.test_record["uuid"],
             "due": None,
             "scheduled": None,
             "wait": None,
             "status": "pending",
             "priority": "L",
             "project": self.test_extra["graph"],
-            "tags": ['Testtagone', 'TestTagTwo', 'TestTagThree'],
+            "tags": ["Testtagone", "TestTagTwo", "TestTagThree"],
             issue.ID: int(self.test_record["id"]),
             issue.UUID: self.test_record["uuid"],
             issue.STATE: self.test_record["marker"],
-            issue.TITLE: "Do something #【Test tag one】 #【TestTagTwo】 #TestTagThree",
+            issue.TITLE: "Do something http://example.com/page#NotATag `#code`"
+            + " #【Test tag one】 #【TestTagTwo】 #TestTagThree",
             issue.URI: self.test_extra["baseURI"] + self.test_record["uuid"],
         }
 

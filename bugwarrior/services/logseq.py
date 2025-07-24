@@ -197,15 +197,17 @@ class LogseqIssue(Issue):
         # pattern match for #[[multi word]] tags and #single word tags
         # but ignore any non-tag use of the # character in URLs
         # like http://example.com/page#test or in `#code`
-        # Regex Pattern: (?<=\s)#【.*】|(?<=\s)#\S+
+        # Regex Pattern: (?<=\s)(#【.*?】|#\S+)
         # Note that this is processed after the content is unescaped,
         # so we use the char_open_link and char_close_link
         tags = re.findall(
-            r"(?<=\s)#"
+            r"(?<=\s)"
+            + "(#"
             + self.config.char_open_link
             + r".*?"
             + self.config.char_close_link
-            + r"|(?<=\s)#\S+",
+            + r"|#\S+"
+            + ")",
             self.get_formatted_title(),
         )
         # compress format to single words and strip leading `#`
