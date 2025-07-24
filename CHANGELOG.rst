@@ -20,6 +20,7 @@ New and Removed Services
 - Added Kanboard service. (https://github.com/ralphbean/bugwarrior/pull/794)
 - Added Logseq service. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1052)
 - Added Nextcloud Deck service. (https://github.com/ralphbean/bugwarrior/pull/954)
+- Added Todoist service. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1101)
 - Removed Megaplan service. (https://github.com/ralphbean/bugwarrior/pull/844)
 - Removed ActiveCollab, ActiveCollab2, Teamlab, and VersionOne services. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1102)
 
