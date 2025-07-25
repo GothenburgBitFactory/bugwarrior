@@ -372,11 +372,9 @@ class LogseqService(Service):
     def issues(self):
         graph_name = self.client.get_graph_name()
         for issue in self.client.get_issues():
-            print(issue[0])
-            print(issue[0]["parent"]["id"])
             parent_page = self.client.get_page(issue[0]["parent"]["id"])
             extra = {
                 "graph": graph_name,
-                "page_title": parent_page["originalName"],
+                "page_title": parent_page["originalName"] if parent_page else None,
             }
             yield self.get_issue_for_record(issue[0], extra)
