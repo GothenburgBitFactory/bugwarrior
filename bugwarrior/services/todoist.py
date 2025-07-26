@@ -208,7 +208,7 @@ class TodoistIssue(Issue):
             title=self._unescape_content(self.record["content"]),
             url=self.record["url"],
             number=self.record["id"],
-            cls="issue",
+            cls="task",
         )
         return description
 

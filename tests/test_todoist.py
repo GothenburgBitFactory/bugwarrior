@@ -157,7 +157,7 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             "annotations": [],
-            "description": "(bw)Is#1111111111111111"
+            "description": "(bw)#1111111111111111"
             + " - TESTTASK"
             + " .. https://app.todoist.com/app/task/testtask-1111111111111111",
             "due": datetime(year=2025, month=7, day=1),
