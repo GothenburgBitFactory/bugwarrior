@@ -117,6 +117,35 @@ You can override this default behaviour to use alternative custom characters by 
     logseq.char_open_bracket = (
     logseq.char_close_bracket = )
 
+Import Labels as Tags
++++++++++++++++++++++
+
+Logseq tasks with ``#tag`` style page references in the description can be added to Taskwarrior as tags
+using the use the ``import_labels_as_tags`` option.
+
+.. config::
+    :fragment: logseq
+
+    logseq.import_labels_as_tags = True
+
+Single- and multi-word tags using the Logseq ``#[[Tag]]`` or ``#[[Multi Word]]`` format are always
+condensed to ``Tag`` and ``MultiWord`` before adding as Taskwarrior tags. The format of
+the page reference in the task description is unchanged.
+
+To futher control how labels are formatted, you can specify a template used for converting the Logseq tagged page
+reference into a Taskwarrior tag. For example, to force all tags to be in lower case, and retain the `#` prefiex 
+you could add the following configuration option:
+
+.. config::
+    :fragment: logseq
+
+        logseq.label_template = #{{label|lower}}
+
+If you change the tag format you may also need to set the general option ``replace_tags = True`` to replace existing
+tags that used the previous format.
+
+See :ref:`field_templates` for more more details on building templates.
+
 Logseq URI links
 ++++++++++++++++
 
@@ -145,15 +174,6 @@ Logseq URI in MacOS add the following to your ``~/..zshrc``
     }
 
 From the command line you can open a specific task using taskwarior task id, e.g. ``taskopen 1234``.
-
-Tags
-++++
-
-Logseq tasks with ``#tag`` style tag entries in the description are added to the Taskwarrior tags.
-Single- and multi-word tags using the Logseq ``#[[Tag]]`` or ``#[[Multi Word]]`` format are
-condensed to a ``Tag`` and ``MultiWord`` style before adding the Taskwarrior tags. The format of
-the tag content in the task description is unchanged.
-
 
 Troubleshooting
 ---------------
