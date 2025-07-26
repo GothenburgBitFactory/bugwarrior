@@ -86,6 +86,7 @@ class TodoistIssue(Issue):
     DEADLINE = "todoistdeadline"
     DURATION = "todoistduration"
     ID = "todoistid"
+    PARENT_ID = "todoistparentid"
     SECTION = "todoistsection"
     URL = "todoisturl"
 
@@ -137,6 +138,10 @@ class TodoistIssue(Issue):
             "type": "string",
             "label": "Todoist URL",
         },
+        PARENT_ID: {
+            "type": "string",
+            "label": "Todoist Parent ID",
+        }
     }
 
     UNIQUE_KEY = (ID,)
@@ -200,15 +205,16 @@ class TodoistIssue(Issue):
             self.ASSIGNER: self.extra["assigner"],
             self.SECTION: self.extra["section"],
             self.URL: self.record["url"],
+            self.PARENT_ID: self.extra["parent_id"],
         }
         return task
-
+    
     def get_default_description(self):
         description = self.build_default_description(
             title=self._unescape_content(self.record["content"]),
             url=self.record["url"],
             number=self.record["id"],
-            cls="task",
+            cls="subtask" if self.extra["parent_id"] else "task",
         )
         return description
 
@@ -282,5 +288,6 @@ class TodoistService(Service):
                     else None
                 ),
                 "annotations": self.annotations(user_index, issue),
+                "parent_id": issue["parent_id"]
             }
             yield self.get_issue_for_record(issue, extra)
