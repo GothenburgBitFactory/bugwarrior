@@ -139,7 +139,7 @@ you could add the following configuration option:
 .. config::
     :fragment: logseq
 
-        logseq.label_template = #{{label|lower}}
+    logseq.label_template = #{{label|lower}}
 
 If you change the tag format you may also need to set the general option ``replace_tags = True`` to replace existing
 tags that used the previous format.
