@@ -160,7 +160,8 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         actual = issue.to_taskwarrior()
         self.assertIs(actual.get("todoistparentid"), "1212121212121212")
         self.assertEqual(issue.get_default_description(), "(bw)Subtask ##1111111111111111"
-                         " - TESTTASK .. https://app.todoist.com/app/task/testtask-1111111111111111")
+                         " - TESTTASK .."
+                         " https://app.todoist.com/app/task/testtask-1111111111111111")
 
     def test_issues(self):
         self.service.client.get_projects.return_value = [self.test_project]
