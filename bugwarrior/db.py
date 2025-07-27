@@ -346,7 +346,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
             if main_config.merge_tags:
                 if main_config.replace_tags:
-                    replace_left('tags', task, issue, main_config.static_tags)
+                    replace_left('tags', task, issue, list(main_config.static_tags))
                 else:
                     merge_left('tags', task, issue)
 
