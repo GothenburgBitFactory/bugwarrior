@@ -208,7 +208,7 @@ class TodoistIssue(Issue):
             self.PARENT_ID: self.extra["parent_id"],
         }
         return task
-    
+
     def get_default_description(self):
         description = self.build_default_description(
             title=self._unescape_content(self.record["content"]),
