@@ -454,6 +454,7 @@ class GitlabIssue(Issue):
         assignee = self.record.get('assignee')
         duedate = self.record.get('due_date')
         weight = self.record.get('weight')
+        iteration = self.record.get('iteration')
         number = (
             self.record['id'] if self.extra['type'] == 'todo'
             else self.record['iid'])
@@ -465,10 +466,12 @@ class GitlabIssue(Issue):
             self.record['body'] if self.extra['type'] == 'todo'
             else self.extra['description'])
 
-        if milestone and (
-                self.extra['type'] == 'issue' or
-                (self.extra['type'] == 'merge_request' and duedate is None)):
-            duedate = milestone['due_date']
+        if duedate is None:
+            if iteration and iteration['due_date']:
+                duedate = iteration['due_date']
+            elif milestone:
+                duedate = milestone['due_date']
+
         if milestone:
             milestone = milestone['title']
         if created:
