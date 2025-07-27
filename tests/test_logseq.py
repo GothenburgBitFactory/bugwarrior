@@ -178,7 +178,7 @@ class TestLogseqIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             "annotations": [],
-            "description": f"(bw)Is#{self.test_record['id']}"
+            "description": f"(bw)#{self.test_record['id']}"
             + " - Do something http://example.com/page#NotATag `#code`"
             + " #【Test tag one】 #【TestTagTwo】 #TestTagThree"
             + " .. "

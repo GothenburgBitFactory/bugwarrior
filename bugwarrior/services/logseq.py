@@ -346,7 +346,7 @@ class LogseqIssue(Issue):
             title=self.get_formatted_title(),
             url=self.get_url() if self.config.inline_links else "",
             number=self.record["id"],
-            cls="issue",
+            cls="task",
         )
 
 
