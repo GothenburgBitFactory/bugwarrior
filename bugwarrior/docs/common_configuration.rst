@@ -137,7 +137,7 @@ for each service) defined for the relevant service.
 
    Jinja templates can be very complex.  For more details about
    Jinja templates, please consult
-   `Jinja's Template Documentation <http://jinja.pocoo.org/docs/templates/>`_.
+   `Jinja's Template Documentation <https://jinja.palletsprojects.com/en/stable/templates/>`_.
 
 For example, to pull-in Github issues assigned to
 `@ralphbean <https://github.com/ralphbean>`_, setting the issue description
