@@ -205,7 +205,7 @@ class TodoistIssue(Issue):
             self.ASSIGNER: self.extra["assigner"],
             self.SECTION: self.extra["section"],
             self.URL: self.record["url"],
-            self.PARENT_ID: self.extra["parent_id"],
+            self.PARENT_ID: self.record["parent_id"],
         }
         return task
 
@@ -214,7 +214,7 @@ class TodoistIssue(Issue):
             title=self._unescape_content(self.record["content"]),
             url=self.record["url"],
             number=self.record["id"],
-            cls="subtask" if self.extra["parent_id"] else "task",
+            cls="subtask" if self.record["parent_id"] else "task",
         )
         return description
 
@@ -288,6 +288,5 @@ class TodoistService(Service):
                     else None
                 ),
                 "annotations": self.annotations(user_index, issue),
-                "parent_id": issue["parent_id"]
             }
             yield self.get_issue_for_record(issue, extra)

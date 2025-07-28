@@ -57,7 +57,6 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         "assignee": "TESTUSER1 <testuser1@example.com>",
         "assigner": "TESTUSER2 <testuser2@example.com>",
         "duration": "15 minute",
-        "parent_id": None,
     }
 
     test_project = Project(
@@ -155,7 +154,6 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         test_record = copy.copy(self.test_record)
         test_extras = copy.copy(self.test_extra)
         test_record["parent_id"] = "1212121212121212"
-        test_extras["parent_id"] = "1212121212121212"
         issue = self.service.get_issue_for_record(test_record, test_extras)
         actual = issue.to_taskwarrior()
         self.assertIs(actual.get("todoistparentid"), "1212121212121212")
