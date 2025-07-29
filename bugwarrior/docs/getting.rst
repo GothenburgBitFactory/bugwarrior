@@ -47,18 +47,6 @@ The following extra dependency sets are available:
 - bugzilla
 - gmail
 
-Installing from Source
-----------------------
-
-You can find the source on github at http://github.com/ralphbean/bugwarrior.
-Either fork/clone if you plan to do development on bugwarrior, or you can simply
-download the latest tarball::
-
-    $ wget https://github.com/ralphbean/bugwarrior/tarball/master -O bugwarrior-latest.tar.gz
-    $ tar -xzvf bugwarrior-latest.tar.gz
-    $ cd ralphbean-bugwarrior-*
-    $ python setup.py install
-
 Installing from Distribution Packages
 -------------------------------------
 
