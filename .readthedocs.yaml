@@ -4,6 +4,8 @@
 
 # Required
 version: 2
+sphinx:
+  configuration: bugwarrior/docs/conf.py
 build:
   os: ubuntu-22.04
   tools:
