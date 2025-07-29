@@ -18,6 +18,7 @@ New and Removed Services
 - Added Azure Devops service. (https://github.com/ralphbean/bugwarrior/pull/808)
 - Added Git-Bug service. (https://github.com/ralphbean/bugwarrior/pull/934)
 - Added Kanboard service. (https://github.com/ralphbean/bugwarrior/pull/794)
+- Added Linear service. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1106)
 - Added Logseq service. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1052)
 - Added Nextcloud Deck service. (https://github.com/ralphbean/bugwarrior/pull/954)
 - Added Todoist service. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1101)
