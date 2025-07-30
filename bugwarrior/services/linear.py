@@ -3,6 +3,7 @@ import typing
 import json
 
 import requests
+import pydantic
 
 from bugwarrior import config
 from bugwarrior.services import Service, Issue, Client
@@ -19,16 +20,26 @@ class LinearConfig(config.ServiceConfig):
     host: config.StrippedTrailingSlashUrl = config.StrippedTrailingSlashUrl(
         "https://api.linear.app/graphql", scheme="https", host="api.linear.app"
     )
+    statuses: config.ConfigList = config.ConfigList([])
+    status_types: typing.Optional[config.ConfigList] = None
     import_labels_as_tags: bool = False
     label_template: str = "{{label|replace(' ', '_')}}"
     also_unassigned: config.UnsupportedOption[bool] = False
+
+    @pydantic.v1.root_validator
+    def statuses_or_status_types(cls, values):
+        if values["statuses"] and values["status_types"]:
+            raise ValueError("statuses and status_types are incompatible")
+        if not values["statuses"] and not values["status_types"]:  # set default value
+            values["status_types"] = ["backlog", "unstarted", "started"]
+        return values
 
 
 class LinearIssue(Issue):
     URL = "linearurl"
     TITLE = "lineartitle"
     DESCRIPTION = "lineardescription"
-    STATE = "linearstate"
+    STATUS = "linearstatus"
     IDENTIFIER = "linearidentifier"
     TEAM = "linearteam"
     CREATOR = "linearcreator"
@@ -41,7 +52,7 @@ class LinearIssue(Issue):
         URL: {"type": "string", "label": "Issue URL"},
         TITLE: {"type": "string", "label": "Issue Title"},
         DESCRIPTION: {"type": "string", "label": "Issue Description"},
-        STATE: {"type": "string", "label": "Issue State"},
+        STATUS: {"type": "string", "label": "Issue State"},
         IDENTIFIER: {"type": "string", "label": "Linear Identifier"},
         TEAM: {"type": "string", "label": "Project ID"},
         CREATOR: {"type": "string", "label": "Issue Creator"},
@@ -86,7 +97,7 @@ class LinearIssue(Issue):
             self.URL: self.record["url"],
             self.TITLE: get(self.record, "title"),
             self.DESCRIPTION: description,
-            self.STATE: get(get(self.record, "state", {}), "name"),
+            self.STATUS: get(get(self.record, "state", {}), "name"),
             self.IDENTIFIER: get(self.record, "identifier"),
             self.TEAM: get(get(self.record, "team", {}), "name"),
             self.CREATOR: get(get(self.record, "creator", {}), "name"),
@@ -123,14 +134,21 @@ class LinearService(Service, Client):
             {"Authorization": self.get_password("api_token"), "Content-Type": "application/json"}
         )
 
-        filter = "{}"
+        self.filter = []
         if self.config.only_if_assigned:
-            filter = '{assignee: {email: {eq: "%s"}}}' % self.config.only_if_assigned
+            self.filter.append(
+                {"assignee": {"email": {"eq": self.config.only_if_assigned}}}
+            )
+        if self.config.statuses:
+            self.filter.append({"state": {"name": {"in": list(self.config.statuses)}}})
+        elif self.config.status_types:
+            self.filter.append(
+                {"state": {"type": {"in": list(self.config.status_types)}}}
+            )
 
-        self.query = (
-            """
-            query Issues {
-              issues(filter: %s) {
+        self.query = """
+            query Issues($filter: IssueFilter!) {
+              issues(filter: $filter) {
                 nodes {
                   url
                   title
@@ -162,8 +180,6 @@ class LinearService(Service, Client):
               }
             }
             """
-            % filter
-        )
 
     @staticmethod
     def get_keyring_service(config):
@@ -177,9 +193,13 @@ class LinearService(Service, Client):
         """
         Make a Linear API request, using the query defined in the constructor.
         """
-        response = self.session.post(
-            self.config.host, data=json.dumps({"query": self.query})
-        )
+        data = {
+            "query": self.query,
+            "variables": {
+                "filter": {"and": self.filter} if self.filter else {},
+            },
+        }
+        response = self.session.post(self.config.host, data=json.dumps(data))
         res = self.json_response(response)
 
         if "errors" in res:

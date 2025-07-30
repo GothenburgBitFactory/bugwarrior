@@ -40,6 +40,34 @@ Options
    are processed.
    The default value is ``{{label|replace(' ', '_')}}``.
 
+.. describe:: status_types
+
+   Comma-separated list of Linear status types that should be included. The
+   default statuses for a team and any custom statuses fall into one of a few
+   pre-defined types: `backlog`, `unstarted`, `started`, `completed`, and
+   `canceled`, and are case-sensitive. See
+   https://linear.app/docs/configuring-workflows#overview. The default value is:
+      
+   .. config::
+       :fragment: linear
+
+       linear.status_types = backlog,unstarted,started
+
+.. describe:: statuses
+
+   If filtering by status types is not sufficient, this option allows filtering
+   by a comma-separated list of status names. For example, if your team has a
+   "Not A Priority" status with type "Canceled", which you would like to
+   include, use:
+
+   .. config::
+       :fragment: linear
+
+       linear.statuses = Backlog,Todo,In Progress,Not A Priority
+
+   These values are case-sensitive. This setting overrides the default value of
+   ``status_types``.
+
 Provided UDA Fields
 -------------------
 
