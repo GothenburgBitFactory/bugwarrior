@@ -220,7 +220,7 @@ class RedMineIssue(Issue):
         return self.config.url + "/issues/" + str(self.record["id"])
 
     def get_converted_hours(self, estimated_hours):
-        tw = TaskWarriorShellout()
+        tw = TaskWarriorShellout(config_filename=self.main_config.taskrc)
         calc = tw._execute('calc', estimated_hours)
         return (
             calc[0].rstrip()
