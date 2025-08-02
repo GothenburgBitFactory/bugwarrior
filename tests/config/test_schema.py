@@ -59,6 +59,60 @@ class TestConfigList(unittest.TestCase):
         )
 
 
+class TestTaskrcPath(ConfigTest):
+    def setUp(self):
+        super().setUp()
+        self.config = {
+            'general': {'targets': []},
+        }
+
+    def test_default_factory_default(self):
+        config = self.validate()
+        self.assertEqual(config['general'].taskrc,
+                         os.path.join(self.tempdir, '.taskrc'))
+
+    def test_default_factory_env_override(self):
+        override = os.path.join(self.tempdir, 'override_taskrc')
+        with open(override, 'w+') as fout:
+            fout.write('data.location=%s\n' % self.lists_path)
+        os.environ['TASKRC'] = override
+
+        config = self.validate()
+        self.assertEqual(config['general'].taskrc, override)
+
+    def test_default_factory_xdg_config_home(self):
+        os.remove(self.taskrc)
+
+        dot_config_task = os.path.join(self.tempdir, '.config', 'task')
+        os.makedirs(dot_config_task)
+        taskrc = os.path.join(dot_config_task, 'taskrc')
+        with open(taskrc, 'w+') as fout:
+            fout.write('data.location=%s\n' % self.lists_path)
+
+        config = self.validate()
+        self.assertEqual(config['general'].taskrc, taskrc)
+
+    def test_default_factory_dot_config_taskrc(self):
+        """ Taskrc is still found if XDG_CONFIG_HOME is unset. """
+        os.remove(self.taskrc)
+
+        dot_config_task = os.path.join(self.tempdir, '.config', 'task')
+        os.makedirs(dot_config_task)
+        taskrc = os.path.join(dot_config_task, 'taskrc')
+        with open(taskrc, 'w+') as fout:
+            fout.write('data.location=%s\n' % self.lists_path)
+        del os.environ['XDG_CONFIG_HOME']
+
+        config = self.validate()
+        self.assertEqual(config['general'].taskrc, taskrc)
+
+    def test_no_taskrc_file_found(self):
+        os.remove(self.taskrc)
+
+        with self.assertRaisesRegex(OSError, r"Unable to find taskrc file\."):
+            self.validate()
+
+
 class TestUnsupportedOption(unittest.TestCase):
     def test_unsupportedoption_falsey(self):
         self.assertEqual(schema.UnsupportedOption.validate(''), '')

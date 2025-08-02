@@ -93,6 +93,34 @@ class TaskrcPath(ExpandedPath):
             raise OSError(f"Unable to find taskrc file at {expanded_path}.")
         return expanded_path
 
+    @classmethod
+    def default_factory(cls):
+        """ Mimic taskwarrior's logic (comments copied from taskwarrior). """
+
+        # Allow $TASKRC override.
+        env_taskrc = os.getenv('TASKRC')
+        if env_taskrc:
+            return cls(env_taskrc)
+
+        # Default to ~/.taskrc (ctor).
+        taskrc = os.path.expanduser('~/.taskrc')
+        if os.path.isfile(taskrc):
+            return cls(taskrc)
+
+        # If no ~/.taskrc, use $XDG_CONFIG_HOME/task/taskrc if exists, or
+        # ~/.config/task/taskrc if $XDG_CONFIG_HOME is unset
+        xdg_config_home = os.getenv('XDG_CONFIG_HOME')
+        if xdg_config_home:
+            xdg_config_taskrc = os.path.join(xdg_config_home, 'task/taskrc')
+            if os.path.isfile(xdg_config_taskrc):
+                return cls(xdg_config_taskrc)
+        else:
+            dotconfig_taskrc = os.path.expanduser('~/.config/task/taskrc')
+            if os.path.isfile(dotconfig_taskrc):
+                return cls(dotconfig_taskrc)
+
+        raise OSError("Unable to find taskrc file. (Try running `task`.)")
+
 
 T = typing.TypeVar('T')
 
@@ -139,7 +167,7 @@ class MainSectionConfig(pydantic.v1.BaseModel):
 
     # optional
     taskrc: TaskrcPath = pydantic.v1.Field(
-        default_factory=lambda: TaskrcPath(os.getenv('TASKRC', '~/.taskrc')))
+        default_factory=TaskrcPath.default_factory)
     shorten: bool = False
     inline_links: bool = True
     annotation_links: bool = False
