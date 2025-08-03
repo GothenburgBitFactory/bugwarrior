@@ -94,8 +94,8 @@ todoist = "bugwarrior.services.todoist:TodoistService"
 [project.entry-points."ini2toml.processing"]
 bugwarrior = "bugwarrior.config.ini2toml_plugin:activate"
 
-[tool.setuptools]
-packages = ["bugwarrior"]
+[tool.setuptools.packages.find]
+where = ["bugwarrior"]
 
 [build-system]
 requires = ["setuptools"]
