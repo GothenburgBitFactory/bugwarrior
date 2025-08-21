@@ -158,7 +158,7 @@ class TrelloService(Service, Client):
             f"/1/lists/{list_id}/cards/open",
             **params)
         for card in cards:
-            cardmembers = [m['username'] for m in card['members']]
+            cardmembers = [m['username'] for m in card.get('members', [])]
             if (not self.config.only_if_assigned
                     or self.config.only_if_assigned in cardmembers
                     or (self.config.also_unassigned and not cardmembers)):
