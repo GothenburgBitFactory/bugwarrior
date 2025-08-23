@@ -37,6 +37,7 @@ jobs:
           pip install pytest-cov
           pip install -e .[all]
 
+          bugwarrior --version
           pytest --cov=bugwarrior --cov-branch tests
           flake8
       - name: Coverage
@@ -86,6 +87,7 @@ jobs:
 
             pip install -e .[all]
 
+            bugwarrior --version
             pytest
   bugwarrior-development-uv-test:
     runs-on: ubuntu-latest
@@ -107,4 +109,6 @@ jobs:
       - name: Install Editable Installation
         run: uv sync --all-extras
       - name: Run tests
-        run: uv run pytest
+        run: |
+          uv run bugwarrior --version
+          uv run pytest
