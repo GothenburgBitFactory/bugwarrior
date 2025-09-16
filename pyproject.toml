@@ -3,7 +3,7 @@ name = "bugwarrior"
 version = "2.0.0-alpha"
 description = "a command line utility for updating your local taskwarrior database from your forge issue trackers"
 readme = "bugwarrior/README.rst"
-requires-python = ">3.9,<4"
+requires-python = ">=3.10,<4"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE.txt"]
 keywords=["task", "taskwarrior", "todo", "github"]
@@ -33,7 +33,7 @@ bts = ["python-debianbts>=2.6.1"]
 bugzilla = ["python-bugzilla>=2.0.0"]
 gmail = ["google-api-python-client", "google-auth-oauthlib"]
 ini2toml = ["ini2toml[full]"]
-jira = ["jira>=0.22"]
+jira = ["jira>=3.10.0"]
 kanboard = ["kanboard"]
 keyring = ["keyring"]
 phabricator = ["phabricator"]

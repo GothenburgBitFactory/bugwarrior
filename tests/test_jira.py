@@ -15,7 +15,7 @@ class FakeJiraClient:
     def __init__(self, arbitrary_record):
         self.arbitrary_record = arbitrary_record
 
-    def search_issues(self, *args, **kwargs):
+    def extended_search_issues(self, *args, **kwargs):
         Case = namedtuple('Case', ['raw', 'key'])
         return [Case(self.arbitrary_record, self.arbitrary_record['key'])]
 
