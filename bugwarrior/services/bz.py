@@ -167,7 +167,7 @@ class BugzillaService(Service):
             force_rest_kwargs = {"force_rest": True}
 
         if self.config.api_key:
-            api_key = self.get_password('api_key')
+            api_key = self.get_secret('api_key')
             try:
                 self.bz = bugzilla.Bugzilla(url=self.config.base_uri,
                                             api_key=api_key,
@@ -178,7 +178,7 @@ class BugzillaService(Service):
             self.bz = bugzilla.Bugzilla(url=self.config.base_uri,
                                         **force_rest_kwargs)
             if self.config.password:
-                password = self.get_password('password', self.config.username)
+                password = self.get_secret('password', self.config.username)
                 self.bz.login(self.config.username, password)
 
     @staticmethod

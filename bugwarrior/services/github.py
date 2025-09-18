@@ -323,7 +323,7 @@ class GithubService(Service):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        auth = {'token': self.get_password('token', self.config.login)}
+        auth = {'token': self.get_secret('token', self.config.login)}
         self.client = GithubClient(self.config.host, auth)
 
     @staticmethod

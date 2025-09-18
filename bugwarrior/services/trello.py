@@ -181,6 +181,6 @@ class TrelloService(Service, Client):
         key and token from the configuration
         """
         params['key'] = self.config.api_key,
-        params['token'] = self.get_password('token'),
+        params['token'] = self.get_secret('token'),
         url = "https://api.trello.com" + url
         return self.json_response(requests.get(url, params=params))

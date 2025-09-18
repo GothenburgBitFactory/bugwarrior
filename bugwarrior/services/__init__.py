@@ -234,8 +234,8 @@ class Service(abc.ABC):
 
         log.info("Working on [%s]", self.config.target)
 
-    def get_password(self, key, login='nousername') -> str:
-        """ Get a secret value, potentially from an :ref:`oracle <Password Management>`.
+    def get_secret(self, key, login='nousername') -> str:
+        """ Get a secret value, potentially from an :ref:`oracle <Secret Management>`.
 
         The secret key need not be a *password*, per se.
 

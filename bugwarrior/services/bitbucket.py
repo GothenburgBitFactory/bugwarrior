@@ -98,7 +98,7 @@ class BitbucketService(Service, Client):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        oauth = (self.config.key, self.get_password('secret', self.config.key))
+        oauth = (self.config.key, self.get_secret('secret', self.config.key))
         refresh_token = self.main_config.data.get('bitbucket_refresh_token')
 
         if refresh_token:

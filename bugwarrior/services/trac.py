@@ -97,7 +97,7 @@ class TracService(Service):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         if self.config.username:
-            password = self.get_password('password', self.config.username)
+            password = self.get_secret('password', self.config.username)
 
             auth = urllib.parse.quote_plus(
                 f'{self.config.username}:{password}@')

@@ -96,7 +96,7 @@ class GerritService(Service, Client):
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
-        self.password = self.get_password('password', self.config.username)
+        self.password = self.get_secret('password', self.config.username)
         self.session = requests.session()
         self.session.headers.update({
             'Accept': 'application/json',

@@ -217,6 +217,10 @@ Here we see two required class attributes (pointing to the classes we previously
 
 The ``issues`` method is a generator which yields individual issue dictionaries.
 
+.. note::
+
+  Sensitive configuration values should be fetched with ``self.get_secret()`` so that they can be optionally retrieved with :ref:`oracles <Secret Management>`.
+
 7. Service Registration
 -----------------------
 

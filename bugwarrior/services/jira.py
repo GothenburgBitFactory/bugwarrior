@@ -378,10 +378,10 @@ class JiraService(Service):
         self.query = self.config.query or default_query
 
         if self.config.PAT:
-            pat = self.get_password('PAT', self.config.username)
+            pat = self.get_secret('PAT', self.config.username)
             auth = dict(token_auth=pat)
         else:
-            password = self.get_password('password', self.config.username)
+            password = self.get_secret('password', self.config.username)
             if password == '@kerberos':
                 auth = dict(kerberos=True)
             else:

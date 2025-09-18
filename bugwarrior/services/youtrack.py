@@ -143,7 +143,7 @@ class YoutrackService(Service, Client):
             requests.packages.urllib3.disable_warnings()
             self.session.verify = False
 
-        token = self.get_password('token', self.config.login)
+        token = self.get_secret('token', self.config.login)
         self.session.headers['Authorization'] = f'Bearer {token}'
 
     @staticmethod

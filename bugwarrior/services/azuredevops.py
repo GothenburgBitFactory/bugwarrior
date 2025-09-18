@@ -186,7 +186,7 @@ class AzureDevopsService(Service):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self.client = AzureDevopsClient(
-            pat=self.get_password('PAT'),
+            pat=self.get_secret('PAT'),
             project=self.config.project,
             org=self.config.organization,
             host=self.config.host

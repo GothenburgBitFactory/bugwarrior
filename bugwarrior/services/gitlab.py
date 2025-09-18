@@ -534,7 +534,7 @@ class GitlabService(Service):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        token = self.get_password('token', self.config.login)
+        token = self.get_secret('token', self.config.login)
         self.gitlab_client = GitlabClient(
             host=self.config.host,
             token=token,

@@ -251,9 +251,9 @@ class RedMineService(Service):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        self.key = self.get_password('key')
+        self.key = self.get_secret('key')
 
-        password = (self.get_password('password', self.config.login)
+        password = (self.get_secret('password', self.config.login)
                     if self.config.login else None)
         auth = ((self.config.login, password)
                 if (self.config.login and password) else None)

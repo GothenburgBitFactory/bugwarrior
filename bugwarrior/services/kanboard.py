@@ -119,7 +119,7 @@ class KanboardService(Service):
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
-        password = self.get_password("password", self.config.username)
+        password = self.get_secret("password", self.config.username)
         self.client = Client(
             f"{self.config.url}/jsonrpc.php", self.config.username, password)
         default_query = f"status:open assignee:{self.config.username}"

@@ -170,18 +170,18 @@ regardless of what project was assigned by the service itself:
 
    github.project_template = Office
 
-.. _Password Management:
+.. _Secret Management:
 
-Password Management
--------------------
+Secret Management
+-----------------
 
-You need not store your password in plain text in your `bugwarriorrc` file;
-you can enter the following values to control where to gather your password
+You need not store your secrets in plain text in your `bugwarriorrc` file;
+you can enter the following values to control where to gather your secrets
 from:
 
 ``password = @oracle:use_keyring``
-  Retrieve a password from the system keyring.  The ``bugwarrior vault``
-  command line tool can be used to manage your passwords as stored in your
+  Retrieve a secret from the system keyring.  The ``bugwarrior vault``
+  command line tool can be used to manage your secrets as stored in your
   keyring (say to reset them or clear them).  Extra dependencies must be
   installed with `pip install bugwarrior[keyring]` to enable this feature.
 ``password = @oracle:ask_password``

@@ -356,7 +356,7 @@ class LogseqService(Service):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.token = self.get_password('token')
+        self.token = self.get_secret('token')
         filter = '"' + '" "'.join(self.config.task_state) + '"'
         self.client = LogseqClient(
             host=self.config.host,

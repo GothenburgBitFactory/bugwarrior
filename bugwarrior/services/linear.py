@@ -131,7 +131,7 @@ class LinearService(Service, Client):
 
         self.session = requests.Session()
         self.session.headers.update(
-            {"Authorization": self.get_password("api_token"), "Content-Type": "application/json"}
+            {"Authorization": self.get_secret("api_token"), "Content-Type": "application/json"}
         )
 
         self.filter = []

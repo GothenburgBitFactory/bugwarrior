@@ -72,7 +72,7 @@ class TaigaService(Service, Client):
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
-        self.auth_token = self.get_password('auth_token')
+        self.auth_token = self.get_secret('auth_token')
         self.session = requests.session()
         self.session.headers.update({
             'Accept': 'application/json',
