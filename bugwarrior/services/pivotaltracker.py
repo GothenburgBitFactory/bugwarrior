@@ -144,6 +144,10 @@ class PivotalTrackerService(Service, Client):
             if self.config.only_if_author:
                 self.query += f" requester:{self.config.user_id}"
 
+    @staticmethod
+    def get_keyring_service(config):
+        return f'pivotaltracker://{config.user_id}@{config.host}'
+
     def annotations(self, annotations, story):
         final_annotations = []
         if self.main_config.annotation_comments:

@@ -197,7 +197,14 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
       def __init__(self, *args, **kwargs):
           super().__init__(*args, **kwargs)
 
-          self.client = GitBugClient(path=self.config.path, port=self.config.port)
+          self.client = GitBugClient(
+              path=self.config.path,
+              port=self.config.port,
+              annotation_comments=self.main_config.annotation_comments)
+
+      @staticmethod
+      def get_keyring_service(config):
+          return f'gitbug://{config.path}'
 
       def issues(self):
           for issue in self.client.get_issues():
@@ -214,6 +221,8 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
               yield self.get_issue_for_record(issue)
 
 Here we see two required class attributes (pointing to the classes we previously defined) and two required methods.
+
+The ``get_keyring_service`` method returns a string identifier for secrets in the keyring. Ideally, this string uniquely identifies a given instance of the service when it is possible to have multiple instances of the service configured.
 
 The ``issues`` method is a generator which yields individual issue dictionaries.
 

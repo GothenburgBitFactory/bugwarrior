@@ -165,6 +165,10 @@ class NextcloudDeckService(Service):
             password=self.config.password
         )
 
+    @staticmethod
+    def get_keyring_service(config):
+        return f'deck://{config.username}@{config.base_uri}'
+
     def get_owner(self, issue):
         return issue[issue.ASSIGNEE]
 

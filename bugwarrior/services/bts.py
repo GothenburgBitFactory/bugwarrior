@@ -145,6 +145,10 @@ class BTSService(Service, Client):
     ISSUE_CLASS = BTSIssue
     CONFIG_SCHEMA = BTSConfig
 
+    @staticmethod
+    def get_keyring_service(config):
+        return 'bts://'
+
     def _record_for_bug(self, bug):
         return {'number': bug.bug_num,
                 'url': 'https://bugs.debian.org/' + str(bug.bug_num),

@@ -318,9 +318,9 @@ class Service(abc.ABC):
         raise NotImplementedError()
 
     @staticmethod
-    # @abc.abstractmethod
-    def get_keyring_service(service_config):
-        """ Given the keyring service name for this service. """
+    @abc.abstractmethod
+    def get_keyring_service(service_config) -> str:
+        """ Return the keyring name for this service. """
         raise NotImplementedError
 
 

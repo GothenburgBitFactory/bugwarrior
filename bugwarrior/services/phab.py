@@ -108,6 +108,10 @@ class PhabricatorService(Service):
             self.config.ignore_author if self.config.ignore_author is not None
             else self.config.only_if_assigned)
 
+    @staticmethod
+    def get_keyring_service(config):
+        return f'phabricator://{config.host if config.host else ""}'
+
     def tasks(self):
         # If self.config.user_phids or self.config.project_phids is set,
         # retrict API calls to user_phids or project_phids to avoid time out

@@ -160,6 +160,10 @@ class GitBugService(Service):
             port=self.config.port,
             annotation_comments=self.main_config.annotation_comments)
 
+    @staticmethod
+    def get_keyring_service(config):
+        return f'gitbug://{config.path}'
+
     def issues(self):
         for issue in self.client.get_issues():
             comments = issue.pop('comments')

@@ -40,7 +40,11 @@ class DumbService(services.Service):
     ISSUE_CLASS = DumbIssue
     CONFIG_SCHEMA = DumbConfig
 
-    def get_owner(self, issue):
+    @staticmethod
+    def get_keyring_service(_):
+        raise NotImplementedError
+
+    def get_owner(self, _):
         raise NotImplementedError
 
     def issues(self):
@@ -85,7 +89,7 @@ class ServiceBase(ConfigTest):
             base = f.read()
 
         for method in klass.__abstractmethods__:
-            references = re.findall(rf'{method}\(', base)
+            references = re.findall(rf'def {method}\(', base)
             self.assertEqual(len(references), 1, references)
 
 

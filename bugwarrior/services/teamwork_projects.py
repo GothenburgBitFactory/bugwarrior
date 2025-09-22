@@ -133,6 +133,10 @@ class TeamworkService(Service):
         self.user_id = user["account"]["userId"]
         self.name = user["account"]["firstname"] + " " + user["account"]["lastname"]
 
+    @staticmethod
+    def get_keyring_service(config):
+        return f'teamwork_projects://{config.host}'
+
     def get_comments(self, issue):
         if self.main_config.annotation_comments:
             if issue.get("comments-count", 0) > 0:

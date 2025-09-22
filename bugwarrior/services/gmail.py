@@ -135,6 +135,10 @@ class GmailService(Service):
             'gmail_credentials_%s.pickle' % (credentials_name,))
         self.gmail_api = self.build_api()
 
+    @staticmethod
+    def get_keyring_service(config):
+        return f'gmail://{config.login_name}'
+
     def build_api(self):
         credentials = self.get_credentials()
         return googleapiclient.discovery.build(
