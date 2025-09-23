@@ -23,7 +23,12 @@ This example of accessing a local service is quite simple, but you'll likely nee
 2. Initialize Service
 ---------------------
 
-There are two approaches here, depending on whether your service will be maintained in bugwarrior or will be maintained separately as a :doc:`third party service <third_party>`.
+There are two approaches here, depending on whether your service will be maintained in bugwarrior or will be maintained separately as a :doc:`third party service <third_party>`. We don't have a strict criteria, but the best candidates for services maintained within bugwarrior tend to satisfy most of the following considerations:
+
+- open source (or useful free tier)
+- popularity
+- maturity (not a new startup)
+- public API documentation
 
 If you're sure you're going to be upstreaming your service, clone the bugwarrior repo and create a python file with the name of your service in ``bugwarrior/services``.
 
@@ -89,6 +94,9 @@ The ``service`` attribute is how bugwarrior will know to assign a given section 
 The ``path`` is the only particular detail required to access our local git-bug instance. You'll likely need additional details such as a username and token to authenticate to the service. Look at how you accessed the API in step 1 and ask yourself which components need to be configurable.
 
 The ``import_labels_as_tags`` and ``port`` attributes create optional configuration fields to allow customization of bugwarrior behavior.
+
+.. note::
+   A common pitfall when writing a new service is to add configuration options for functionality that is already provided by :ref:`field_templates`. This is a powerful feature which makes many configurable features unnecessary.
 
 4. Client
 ---------
@@ -229,6 +237,14 @@ The ``issues`` method is a generator which yields individual issue dictionaries.
 .. note::
 
   Sensitive configuration values should be fetched with ``self.get_secret()`` so that they can be optionally retrieved with :ref:`oracles <Secret Management>`.
+
+.. note::
+
+   When relevant and reasonably feasible, all services should implement the :ref:`common_configuration_options`:
+
+   - ``only_if_assigned`` and ``also_unassigned``: These options are usually implemented either in the service by filtering retrieved tasks or (ideally) in the client by increasing the specificity of the api query.
+   - ``default_priority``: This is generally implemented by adding an ``ISSUE_MAP`` class attribute to the ``Issue`` class and using the ``get_priority`` method in ``to_taskwarrior``. When the service does not provide a relevant "priority" value, this configuration value can be assigned directly.
+   - ``add_tags``: You need not worry about this one, it is implemented automatically.
 
 7. Service Registration
 -----------------------
