@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 5
     strategy:
       matrix:
-        python-version: ["3.10", 3.11]
+        python-version: ["3.10", 3.11, 3.12, 3.13]
         jira-version: [1.0.10, 2.0.0]
     steps:
       - name: Checkout code
@@ -47,7 +47,7 @@ jobs:
         # Fragile way to only run codecov once.
         # See https://github.com/codecov/codecov-action/issues/40.
         if: |
-          matrix.python-version == 3.10 &&
+          matrix.python-version == 3.13 &&
           matrix.jira-version == '2.0.0'
   bugwarrior-multiarch-test:
     runs-on: ubuntu-latest
