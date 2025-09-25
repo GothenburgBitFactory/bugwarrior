@@ -434,7 +434,7 @@ class JiraService(Service):
         )
 
     def issues(self):
-        cases = self.jira.extended_search_issues(self.query, maxResults=False)
+        cases = self.jira.enhanced_search_issues(self.query, maxResults=False)
 
         for case in cases:
             issue = self.get_issue_for_record(
