@@ -560,7 +560,7 @@ class GiteaService(Service):
             extra = {
                 'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',
-                'annotations': [issue['body']],
+                'annotations': ["#" + str(issue['number']) + " - " + issue['title']],
                 'namespace': self.username,
             }
             issue_obj.extra.update(extra)
