@@ -42,6 +42,13 @@ class BugwarriorData:
         #: services can manage their own files here.
         self.path = data_path
 
+    @classmethod
+    def __modify_schema__(cls, field_schema: typing.Dict[str, typing.Any]) -> None:
+        """ Fix schema generation in pydantic. """
+        field_schema.update(
+            {"type": "object", "description": "Local data storage"}
+        )
+
     def get_data(self) -> dict:
         """ Return all data from the ``bugwarrior.data`` file. """
         with open(self._datafile) as jsondata:
