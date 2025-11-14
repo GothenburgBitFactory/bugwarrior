@@ -215,6 +215,45 @@ class LogseqIssue(Issue):
         )
 
     # get an optimized and formatted title
+    def _resolve_page_links(self, content):
+        """Replace [[uuid]] patterns with [[page-name]] by looking up the pages."""
+        import re
+
+        # Find all [[uuid]] patterns
+        uuid_pattern = (
+            r"\[\[([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\]\]"
+        )
+        matches = re.findall(uuid_pattern, content, re.IGNORECASE)
+
+        for uuid in matches:
+            try:
+                # Look up the page by UUID - need to query by block/uuid
+                page_query = f"""
+                    [:find (pull ?b [:block/original-name :block/name :block/title])
+                    :where
+                    [?b :block/uuid #{uuid}]]
+                """
+                result = self.origin["client"]._datascript_query(page_query)
+
+                if result and len(result) > 0:
+                    page_data = result[0][0]
+                    page_name = (
+                        page_data.get("block/original-name")
+                        or page_data.get(":block/original-name")
+                        or page_data.get("block/name")
+                        or page_data.get(":block/name")
+                        or page_data.get("block/title")
+                        or page_data.get(":block/title")
+                    )
+
+                    if page_name:
+                        content = content.replace(f"[[{uuid}]]", f"[[{page_name}]]")
+                        log.debug(f"Resolved UUID {uuid} to page name: {page_name}")
+            except Exception as e:
+                log.warning(f"Failed to resolve page UUID {uuid}: {e}")
+
+        return content
+
     def get_formatted_title(self):
         # DB mode uses :block/title, classic mode uses content
         content = (
@@ -226,8 +265,11 @@ class LogseqIssue(Issue):
         if not content:
             return ""
 
+        # Resolve page link UUIDs to names
+        content = self._resolve_page_links(content)
+
         # use first line only and remove state and priority
-        first_line = content.split("\n")[0]  # only use first line
+        first_line = content.split("\n")[0]
 
         # Remove state marker if present
         state = self.get_logseq_state()
