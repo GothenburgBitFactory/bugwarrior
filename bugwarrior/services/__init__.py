@@ -178,7 +178,7 @@ class Issue(abc.ABC):
                 else:
                     tzinfo = pytz.timezone(timezone)
                 date = date.replace(tzinfo=tzinfo)
-            return date
+            return date.replace(microsecond=0)
         return None
 
     def build_default_description(

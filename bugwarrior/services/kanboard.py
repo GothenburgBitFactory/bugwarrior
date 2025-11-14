@@ -109,7 +109,6 @@ class KanboardIssue(Issue):
             return (
                 datetime.datetime.fromtimestamp(timestamp)
                 .astimezone(tzutc())
-                .replace(microsecond=0)
             )
 
 

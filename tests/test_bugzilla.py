@@ -85,7 +85,7 @@ class TestBugzillaService(AbstractServiceTest, ServiceTest):
         'assigned_to': None,
     }
 
-    arbitrary_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
+    arbitrary_datetime = datetime.datetime.now(tz=datetime.timezone.utc).replace(microsecond=0)
 
     def setUp(self):
         super().setUp()

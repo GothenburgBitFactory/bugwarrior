@@ -475,9 +475,9 @@ class GitlabIssue(Issue):
         if milestone:
             milestone = milestone['title']
         if created:
-            created = self.parse_date(created).replace(microsecond=0)
+            created = self.parse_date(created)
         if updated:
-            updated = self.parse_date(updated).replace(microsecond=0)
+            updated = self.parse_date(updated)
         if duedate:
             duedate = self.parse_date(duedate)
         if author:

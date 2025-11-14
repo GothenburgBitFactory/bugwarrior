@@ -170,13 +170,13 @@ class RedMineIssue(Issue):
         assigned_to = self.record.get('assigned_to')
 
         if due_date:
-            due_date = self.parse_date(due_date).replace(microsecond=0)
+            due_date = self.parse_date(due_date)
         if start_date:
-            start_date = self.parse_date(start_date).replace(microsecond=0)
+            start_date = self.parse_date(start_date)
         if updated_on:
-            updated_on = self.parse_date(updated_on).replace(microsecond=0)
+            updated_on = self.parse_date(updated_on)
         if created_on:
-            created_on = self.parse_date(created_on).replace(microsecond=0)
+            created_on = self.parse_date(created_on)
         if spent_hours or spent_hours == 0.0:
             spent_hours = str(spent_hours) + ' hours'
             spent_hours = self.get_converted_hours(spent_hours)

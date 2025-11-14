@@ -257,8 +257,7 @@ class JiraIssue(Issue):
     def get_entry(self):
         created_at = self.record['fields']['created']
         # Convert timestamp to an offset-aware datetime
-        date = self.parse_date(created_at).astimezone(
-            tzutc()).replace(microsecond=0)
+        date = self.parse_date(created_at).astimezone(tzutc())
         return date
 
     def get_tags(self):
