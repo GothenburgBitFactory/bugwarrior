@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-bts = ["python-debianbts>=2.6.1"]
+bts = ["python-debianbts>=4.1.1"]
 bugzilla = ["python-bugzilla>=2.0.0"]
 gmail = ["google-api-python-client", "google-auth-oauthlib"]
 ini2toml = ["ini2toml[full]"]

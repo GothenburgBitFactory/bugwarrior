@@ -1,6 +1,6 @@
-import sys
 import typing
 
+import debianbts
 import pydantic.v1
 import requests
 
@@ -9,14 +9,6 @@ from bugwarrior.services import Issue, Service, Client
 
 import logging
 log = logging.getLogger(__name__)
-
-try:
-    import debianbts
-except AttributeError as e:
-    # Suppress exception if we're just building docs in python-3.11+.
-    if 'sphinx' not in ''.join(sys.argv):
-        log.warning('debianbts does not support python-3.11+')
-        raise e
 
 UDD_BUGS_SEARCH = "https://udd.debian.org/bugs/"
 
@@ -47,16 +39,6 @@ class BTSConfig(config.ServiceConfig):
     def udd_needs_email(cls, values):
         if values['udd'] and not values['email']:
             raise ValueError("no 'email' but UDD search was requested")
-        return values
-
-    @pydantic.v1.root_validator
-    def python_version_limited(cls, values):
-        log.warning(
-            'The Debian BTS service has a dependency that has not yet been '
-            'ported to python-3.11+. If this has not been resolved by October '
-            '2026, when python-3.10 hits EOL, this service is liable to be '
-            'removed. See '
-            '<https://github.com/venthur/python-debianbts/issues/59>.')
         return values
 
 
