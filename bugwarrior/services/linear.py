@@ -123,6 +123,7 @@ class LinearIssue(Issue):
 
 
 class LinearService(Service, Client):
+    API_VERSION = 1.0
     ISSUE_CLASS = LinearIssue
     CONFIG_SCHEMA = LinearConfig
 

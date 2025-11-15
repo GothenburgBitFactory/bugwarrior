@@ -180,6 +180,7 @@ class AzureDevopsIssue(Issue):
 
 
 class AzureDevopsService(Service):
+    API_VERSION = 1.0
     ISSUE_CLASS = AzureDevopsIssue
     CONFIG_SCHEMA = AzureDevopsConfig
 

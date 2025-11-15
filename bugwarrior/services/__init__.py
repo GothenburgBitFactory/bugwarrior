@@ -3,6 +3,7 @@ Service API
 -----------
 """
 import abc
+import math
 import os
 import re
 import typing
@@ -28,6 +29,13 @@ CACHE_REGION = dogpile.cache.make_region().configure(
     "dogpile.cache.dbm",
     arguments=dict(filename=DOGPILE_CACHE_PATH),
 )
+
+# MAJOR versions signal a breakage in backwards compatibility between services
+# and previous releases of bugwarrior. That is, services implementing the new
+# spec will cause breakages with older bugwarrior releases.
+# MINOR versions signal extensions of the spec which enhance future releases of
+# bugwarrior without breaking past releases.
+LATEST_API_VERSION = 1.0
 
 
 class URLShortener:
@@ -220,12 +228,21 @@ class Service(abc.ABC):
     service implementations, while the lower case attributes and concrete
     methods are provided by the base class.
     """
+    #: Which version of the API does this service implement?
+    API_VERSION: float
     #: Which class should this service instantiate for holding these issues?
     ISSUE_CLASS: Issue
     #: Which class defines this service's configuration options?
     CONFIG_SCHEMA: schema.ServiceConfig
 
     def __init__(self, config: schema.ServiceConfig, main_config: schema.MainSectionConfig):
+        over_version = math.floor(LATEST_API_VERSION) + 1
+        if self.API_VERSION >= over_version:
+            raise ValueError(
+                f"Incompatible Service: {config.service} implements api "
+                f"version {self.API_VERSION} but this version of bugwarrior "
+                f"only supports versions less than {over_version}.")
+
         #: An object whose attributes are this service's configuration values.
         self.config = config
         #: An object whose attributes are the

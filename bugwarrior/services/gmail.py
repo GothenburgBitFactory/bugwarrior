@@ -120,6 +120,7 @@ class GmailService(Service):
     APPLICATION_NAME = 'Bugwarrior Gmail Service'
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
+    API_VERSION = 1.0
     ISSUE_CLASS = GmailIssue
     CONFIG_SCHEMA = GmailConfig
     AUTHENTICATION_LOCK = multiprocessing.Lock()

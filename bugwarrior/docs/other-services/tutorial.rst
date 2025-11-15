@@ -199,6 +199,7 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
 .. code:: python
 
   class GitBugService(Service):
+      API_VERSION = 1.0
       ISSUE_CLASS = GitBugIssue
       CONFIG_SCHEMA = GitBugConfig
 
@@ -228,7 +229,9 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
 
               yield self.get_issue_for_record(issue)
 
-Here we see two required class attributes (pointing to the classes we previously defined) and two required methods.
+Here we see three required class attributes and two required methods.
+
+The ``API_VERSION`` is set to the latest, while the other two attributes point to our previously defined classes.
 
 The ``get_keyring_service`` method returns a string identifier for secrets in the keyring. Ideally, this string uniquely identifies a given instance of the service when it is possible to have multiple instances of the service configured.
 

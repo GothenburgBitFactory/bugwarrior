@@ -528,6 +528,7 @@ class GitlabIssue(Issue):
 
 
 class GitlabService(Service):
+    API_VERSION = 1.0
     ISSUE_CLASS = GitlabIssue
     CONFIG_SCHEMA = GitlabConfig
 

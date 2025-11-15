@@ -317,6 +317,7 @@ class GithubIssue(Issue):
 
 
 class GithubService(Service):
+    API_VERSION = 1.0
     ISSUE_CLASS = GithubIssue
     CONFIG_SCHEMA = GithubConfig
 
