@@ -1,7 +1,7 @@
 How to Configure
 ================
 
-Bugwarrior's configuration file can be written either in `ini <https://en.wikipedia.org/wiki/INI_file#Format>`_ or `toml <https://toml.io>`_ format.
+Bugwarrior's configuration file can be written either in `ini <https://en.wikipedia.org/wiki/INI_file#Format>`_ or `toml <https://toml.io>`_ format. See :ref:`the man page <configuration-files>` to determine the name and location of this file.
 
 A basic configuration might look like this:
 
@@ -19,7 +19,7 @@ A basic configuration might look like this:
 Main Section
 ------------
 
-Your :ref:`configuration file <configuration-files>` must include at least a ``[general]`` section including the
+Your configuration file must include at least a ``[general]`` section including the
 following option:
 
 * ``targets``: A list of *other* section names to use
@@ -175,7 +175,7 @@ regardless of what project was assigned by the service itself:
 Secret Management
 -----------------
 
-You need not store your secrets in plain text in your `bugwarriorrc` file;
+You need not store your secrets in plain text in your configuration file;
 you can enter the following values to control where to gather your secrets
 from:
 

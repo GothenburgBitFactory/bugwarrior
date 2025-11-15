@@ -90,7 +90,7 @@ def cli():
 def pull(dry_run, flavor, interactive, debug, quiet):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.
 
-    Relies on configuration in bugwarriorrc
+    Relies on configuration file.
     """
 
     try:

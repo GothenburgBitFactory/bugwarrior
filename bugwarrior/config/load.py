@@ -31,18 +31,7 @@ def configure_logging(logfile, loglevel):
 
 
 def get_config_path():
-    """
-    Determine the path to the config file. This will return, in this order of
-    precedence:
-    - the value of $BUGWARRIORRC if set
-    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorrc if exists
-    - $XDG_CONFIG_HOME/bugwarrior/bugwarrior.toml if exists
-    - ~/.bugwarriorrc if exists
-    - ~/.bugwarrior.toml if exists
-    - <dir>/bugwarrior/bugwarriorrc if exists, for dir in $XDG_CONFIG_DIRS
-    - <dir>/bugwarrior/bugwarrior.toml if exists, for dir in $XDG_CONFIG_DIRS
-    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorrc otherwise
-    """
+    """ Determine path to config file. See docs/manpage.rst for precedence. """
     if os.environ.get(BUGWARRIORRC):
         return os.environ[BUGWARRIORRC]
     xdg_config_home = (

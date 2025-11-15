@@ -84,7 +84,7 @@ Now define an initial configuration schema as follows. Don't worry, we're about 
 
 This class is a `pydantic <https://pydantic-docs.helpmanual.io/>`_ model which we use to define which configuration options are available for the service, validate user configurations, and pass these values on to the service.
 
-The ``service`` attribute is how bugwarrior will know to assign a given section of the ``bugwarriorrc`` file to your service, for example:
+The ``service`` attribute is how bugwarrior will know to assign a given section of the configuration file to your service, for example:
 
 .. config::
 
