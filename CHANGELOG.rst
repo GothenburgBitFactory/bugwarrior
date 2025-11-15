@@ -28,6 +28,7 @@ New and Removed Services
 Notable Changes
 
 - bitbucket: Remove basic auth and update oauth2 workflow. (https://github.com/ralphbean/bugwarrior/pull/888)
+- configuration: Disable interpolation. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1140)
 - gitlab: Merge requests and todo's will respect default_priority setting rather than being set to 'H'. (https://github.com/ralphbean/bugwarrior/pull/816)
 - gitlab: Added distinct default priorities for issues, merge requests, and todo's. (https://github.com/ralphbean/bugwarrior/pull/816)
 - gitlab: Query support. (https://github.com/ralphbean/bugwarrior/pull/876)
