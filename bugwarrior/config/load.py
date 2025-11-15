@@ -115,7 +115,8 @@ def load_config(main_section, interactive, quiet) -> dict:
 # ConfigParser is not a new-style class, so inherit from object to fix super().
 class BugwarriorConfigParser(configparser.ConfigParser):
     def __init__(self, *args, allow_no_value=True, **kwargs):
-        super().__init__(*args, allow_no_value=allow_no_value, **kwargs)
+        super().__init__(*args, allow_no_value=allow_no_value,
+                         interpolation=None, **kwargs)
 
     def getint(self, section, option):
         """ Accepts both integers and empty values. """
