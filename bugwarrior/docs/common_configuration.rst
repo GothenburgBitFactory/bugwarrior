@@ -76,9 +76,8 @@ Optional options and their defaults include:
     # that you want to keep when replace_tags is set to true.
     static_tags =
 
-    # A list of attributes that shouldn't be *updated* by bugwarrior.  Use for
-    # values that you want to tune manually. Note that service-specific UDAs
-    # can be included here.
+    # A list of attributes that shouldn't be *updated* by bugwarrior for any services.
+    # Use for values that you want to tune manually.
     static_fields = priority
 
 In addition to the ``[general]`` section, sections may be named
@@ -113,6 +112,8 @@ The following options are supported:
 * ``add_tags``: A list of tags to add to an issue.  In
   most cases, plain strings will suffice, but you can also specify
   templates.  See the section `Field Templates`_ for more information.
+* ``static_fields``: A comma separated list of attributes that shouldn't be
+  *updated* by bugwarrior. Use for values that you want to tune manually.
 
 .. _field_templates:
 

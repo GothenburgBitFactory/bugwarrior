@@ -94,7 +94,9 @@ def aggregate_issues(conf, main_section, debug):
     while currently_running > 0:
         issue = queue.get(True)
         try:
-            yield TaskConstructor(issue).get_taskwarrior_record()
+            record = TaskConstructor(issue).get_taskwarrior_record()
+            record['target'] = issue.config.target
+            yield record
         except AttributeError:
             if isinstance(issue, tuple):
                 currently_running -= 1
