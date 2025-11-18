@@ -44,11 +44,13 @@ class LogseqClient(Client):
 
     def _datascript_query(self, query):
         try:
+            log.debug(f"Query: {query}")
             response = requests.post(
                 f"http://{self.host}:{self.port}/api",
                 headers=self.headers,
                 json={"method": "logseq.DB.datascriptQuery", "args": [query]},
             )
+            log.debug(f"Response status: {response.status_code}, body: {response.text}")
             return self.json_response(response)
         except requests.exceptions.ConnectionError as ce:
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
@@ -83,25 +85,27 @@ class LogseqClient(Client):
             exit(1)
 
     def get_issues(self):
+        print("DEBUG: Using modified logseq.py")
+
         # In DB mode, blocks have :db/id, status is at :logseq.property/status with {:db/id N}
         # We need to query for blocks and join with status entities
         query = f"""
-            [:find (pull ?b [* {{:logseq.property/status [:block/title]}}])
-             :where
-               [?b :block/uuid _]
-               (or-join [?b]
-                 ;; Classic mode: marker as direct attribute
-                 (and
-                   [?b :block/marker ?marker]
-                   [(contains? #{{{self.filter}}} ?marker)]
-                 )
-                 ;; DB mode: status reference with :db/id
-                 (and
-                   [?b :logseq.property/status ?status-ref]
-                   [?status-ref :block/title ?status-name]
-                   [(contains? #{{{self.filter}}} ?status-name)]
-                 )
-               )
+            [:find (pull ?b [* :block/full-title {{:logseq.property/status [:block/title]}}])
+            :where
+            [?b :block/uuid _]
+            (or-join [?b]
+                ;; Classic mode: marker as direct attribute
+                (and
+                [?b :block/marker ?marker]
+                [(contains? #{{{self.filter}}} ?marker)]
+                )
+                ;; DB mode: status reference with :db/id
+                (and
+                [?b :logseq.property/status ?status-ref]
+                [?status-ref :block/title ?status-name]
+                [(contains? #{{{self.filter}}} ?status-name)]
+                )
+            )
             ]
         """
 
@@ -192,7 +196,7 @@ class LogseqIssue(Issue):
         "Canceled": "deleted",
     }
 
-    # replace characters that cause escaping issues like [] and "
+    # replace characters that cause escaping  like [] and "
     # this is a workaround for https://github.com/ralphbean/taskw/issues/172
     def _unescape_content(self, content):
         return (
@@ -214,59 +218,16 @@ class LogseqIssue(Issue):
             .replace(self.config.char_close_link, "")
         )
 
-    # get an optimized and formatted title
-    def _resolve_page_links(self, content):
-        """Replace [[uuid]] patterns with [[page-name]] by looking up the pages."""
-        import re
-
-        # Find all [[uuid]] patterns
-        uuid_pattern = (
-            r"\[\[([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\]\]"
-        )
-        matches = re.findall(uuid_pattern, content, re.IGNORECASE)
-
-        for uuid in matches:
-            try:
-                # Look up the page by UUID - need to query by block/uuid
-                page_query = f"""
-                    [:find (pull ?b [:block/original-name :block/name :block/title])
-                    :where
-                    [?b :block/uuid #{uuid}]]
-                """
-                result = self.origin["client"]._datascript_query(page_query)
-
-                if result and len(result) > 0:
-                    page_data = result[0][0]
-                    page_name = (
-                        page_data.get("block/original-name")
-                        or page_data.get(":block/original-name")
-                        or page_data.get("block/name")
-                        or page_data.get(":block/name")
-                        or page_data.get("block/title")
-                        or page_data.get(":block/title")
-                    )
-
-                    if page_name:
-                        content = content.replace(f"[[{uuid}]]", f"[[{page_name}]]")
-                        log.debug(f"Resolved UUID {uuid} to page name: {page_name}")
-            except Exception as e:
-                log.warning(f"Failed to resolve page UUID {uuid}: {e}")
-
-        return content
-
     def get_formatted_title(self):
-        # DB mode uses :block/title, classic mode uses content
+        # DB mode provides full-title with resolved page names!
         content = (
-            self.record.get("block/title")
-            or self.record.get(":block/title")
+            self.record.get("full-title")
+            or self.record.get("title")
             or self.record.get("content", "")
         )
 
         if not content:
             return ""
-
-        # Resolve page link UUIDs to names
-        content = self._resolve_page_links(content)
 
         # use first line only and remove state and priority
         first_line = content.split("\n")[0]
@@ -508,5 +469,8 @@ class LogseqService(Service):
         graph_name = self.client.get_graph_name()
         for issue in self.client.get_issues():
             parent_page = self.client.get_page(issue[0]["parent"]["id"])
-            extra = {"graph": graph_name, "page_title": parent_page.get("name")}
+            extra = {
+                "graph": graph_name,
+                "page_title": parent_page.get("name") if parent_page else None,
+            }
             yield self.get_issue_for_record(issue[0], extra)
