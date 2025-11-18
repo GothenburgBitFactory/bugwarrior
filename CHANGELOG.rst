@@ -27,6 +27,7 @@ Major Changes
 
 Minor Changes
 - configuration: Disable interpolation. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1140)
+- configuration: Add per-service static_fields option. (https://github.com/GothenburgBitFactory/bugwarrior/pull/908)
 - notifications: Add applescript backend. (https://github.com/ralphbean/bugwarrior/pull/948)
 
 Service-Specific Changes
