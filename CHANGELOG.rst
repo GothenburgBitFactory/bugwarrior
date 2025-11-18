@@ -5,14 +5,6 @@ Bugwarrior has a new home! The [Bugwarrior repository](https://github.com/Gothen
 
 *NOTE: In addition to these changes there are a number of new validation warnings and errors that should be minded when upgrading.*
 
-Major Changes
-
-- Top-level bugwarrior command. (https://github.com/ralphbean/bugwarrior/pull/882)
-- Enhanced configuration validation. (https://github.com/ralphbean/bugwarrior/pull/849)
-- TOML configuration. (https://github.com/ralphbean/bugwarrior/issues/873)
-- Survive service failure. (https://github.com/ralphbean/bugwarrior/pull/825)
-- Stable service API. (Third party service support.) (many PR's over the course of years)
-
 New and Removed Services
 
 - Added Azure Devops service. (https://github.com/ralphbean/bugwarrior/pull/808)
@@ -25,18 +17,27 @@ New and Removed Services
 - Removed Megaplan service. (https://github.com/ralphbean/bugwarrior/pull/844)
 - Removed ActiveCollab, ActiveCollab2, Teamlab, and VersionOne services. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1102)
 
-Notable Changes
+Major Changes
 
-- bitbucket: Remove basic auth and update oauth2 workflow. (https://github.com/ralphbean/bugwarrior/pull/888)
+- Top-level bugwarrior command. (https://github.com/ralphbean/bugwarrior/pull/882)
+- Enhanced configuration validation. (https://github.com/ralphbean/bugwarrior/pull/849)
+- TOML configuration. (https://github.com/ralphbean/bugwarrior/issues/873)
+- Survive service failure. (https://github.com/ralphbean/bugwarrior/pull/825)
+- Stable service API. (Third party service support.) (many PR's over the course of years)
+
+Minor Changes
 - configuration: Disable interpolation. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1140)
+- notifications: Add applescript backend. (https://github.com/ralphbean/bugwarrior/pull/948)
+
+Service-Specific Changes
+- bitbucket: Remove basic auth and update oauth2 workflow. (https://github.com/ralphbean/bugwarrior/pull/888)
+- github: Pull issues by URL. (https://github.com/ralphbean/bugwarrior/pull/898)
 - gitlab: Merge requests and todo's will respect default_priority setting rather than being set to 'H'. (https://github.com/ralphbean/bugwarrior/pull/816)
 - gitlab: Added distinct default priorities for issues, merge requests, and todo's. (https://github.com/ralphbean/bugwarrior/pull/816)
 - gitlab: Query support. (https://github.com/ralphbean/bugwarrior/pull/876)
 - gitlab: Exclude archived projects by default. (https://github.com/ralphbean/bugwarrior/pull/938)
 - jira: Personal Access Token (PAT) authentication support. (https://github.com/ralphbean/bugwarrior/pull/853)
 - redmine: Query support. (https://github.com/ralphbean/bugwarrior/pull/886)
-- github: Pull issues by URL. (https://github.com/ralphbean/bugwarrior/pull/898)
-- notifications: Add applescript backend. (https://github.com/ralphbean/bugwarrior/pull/948)
 - youtrack: Replace password with token. (https://github.com/ralphbean/bugwarrior/pull/982)
 
 1.7.0
