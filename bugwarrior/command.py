@@ -90,7 +90,7 @@ def cli():
 def pull(dry_run, flavor, interactive, debug, quiet):
     """ Pull down tasks from forges and add them to your taskwarrior tasks.
 
-    Relies on configuration in bugwarriorrc
+    Relies on configuration file.
     """
 
     try:
@@ -129,7 +129,8 @@ def vault():
     """ Password/keyring management for bugwarrior.
 
     If you use the keyring password oracle in your bugwarrior config, this tool
-    can be used to manage your keyring.
+    can be used to manage your keyring. This feature requires the optional
+    keyring library. (pip install "bugwarrior[keyring]")
     """
     pass
 

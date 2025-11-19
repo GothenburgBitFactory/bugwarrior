@@ -109,11 +109,11 @@ class KanboardIssue(Issue):
             return (
                 datetime.datetime.fromtimestamp(timestamp)
                 .astimezone(tzutc())
-                .replace(microsecond=0)
             )
 
 
 class KanboardService(Service):
+    API_VERSION = 1.0
     ISSUE_CLASS = KanboardIssue
     CONFIG_SCHEMA = KanboardConfig
 

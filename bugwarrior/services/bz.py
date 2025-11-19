@@ -143,6 +143,7 @@ class BugzillaIssue(Issue):
 
 
 class BugzillaService(Service):
+    API_VERSION = 1.0
     ISSUE_CLASS = BugzillaIssue
     CONFIG_SCHEMA = BugzillaConfig
 

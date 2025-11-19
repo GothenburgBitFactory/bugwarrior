@@ -107,6 +107,7 @@ class PagureIssue(Issue):
 
 
 class PagureService(Service):
+    API_VERSION = 1.0
     ISSUE_CLASS = PagureIssue
     CONFIG_SCHEMA = PagureConfig
 

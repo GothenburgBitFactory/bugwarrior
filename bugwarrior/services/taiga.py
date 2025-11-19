@@ -67,6 +67,7 @@ class TaigaIssue(Issue):
 
 
 class TaigaService(Service, Client):
+    API_VERSION = 1.0
     ISSUE_CLASS = TaigaIssue
     CONFIG_SCHEMA = TaigaConfig
 

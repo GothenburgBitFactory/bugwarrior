@@ -149,6 +149,7 @@ class GitBugIssue(Issue):
 
 
 class GitBugService(Service):
+    API_VERSION = 1.0
     ISSUE_CLASS = GitBugIssue
     CONFIG_SCHEMA = GitBugConfig
 

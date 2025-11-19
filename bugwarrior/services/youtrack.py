@@ -129,6 +129,7 @@ class YoutrackIssue(Issue):
 
 
 class YoutrackService(Service, Client):
+    API_VERSION = 1.0
     ISSUE_CLASS = YoutrackIssue
     CONFIG_SCHEMA = YoutrackConfig
 

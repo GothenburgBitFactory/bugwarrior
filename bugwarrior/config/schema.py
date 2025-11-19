@@ -350,6 +350,7 @@ class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
     also_unassigned: bool = False
     default_priority: typing.Literal['', 'L', 'M', 'H'] = 'M'
     add_tags: ConfigList = ConfigList([])
+    static_fields = ConfigList([])
 
     @pydantic.v1.root_validator
     def compute_templates(cls, values):

@@ -1,5 +1,5 @@
-Python API
-==========
+Python API v1.0
+===============
 
 The interfaces documented here are considered stable. All other interfaces
 should be considered private to bugwarrior and are subject to change without

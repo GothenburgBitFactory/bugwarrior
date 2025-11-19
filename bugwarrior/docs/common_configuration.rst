@@ -1,7 +1,7 @@
 How to Configure
 ================
 
-Bugwarrior's configuration file can be written either in `ini <https://en.wikipedia.org/wiki/INI_file#Format>`_ or `toml <https://toml.io>`_ format.
+Bugwarrior's configuration file can be written either in `ini <https://en.wikipedia.org/wiki/INI_file#Format>`_ or `toml <https://toml.io>`_ format. See :ref:`the man page <configuration-files>` to determine the name and location of this file.
 
 A basic configuration might look like this:
 
@@ -19,7 +19,7 @@ A basic configuration might look like this:
 Main Section
 ------------
 
-Your :ref:`configuration file <configuration-files>` must include at least a ``[general]`` section including the
+Your configuration file must include at least a ``[general]`` section including the
 following option:
 
 * ``targets``: A list of *other* section names to use
@@ -76,9 +76,8 @@ Optional options and their defaults include:
     # that you want to keep when replace_tags is set to true.
     static_tags =
 
-    # A list of attributes that shouldn't be *updated* by bugwarrior.  Use for
-    # values that you want to tune manually. Note that service-specific UDAs
-    # can be included here.
+    # A list of attributes that shouldn't be *updated* by bugwarrior for any services.
+    # Use for values that you want to tune manually.
     static_fields = priority
 
 In addition to the ``[general]`` section, sections may be named
@@ -113,6 +112,8 @@ The following options are supported:
 * ``add_tags``: A list of tags to add to an issue.  In
   most cases, plain strings will suffice, but you can also specify
   templates.  See the section `Field Templates`_ for more information.
+* ``static_fields``: A comma separated list of attributes that shouldn't be
+  *updated* by bugwarrior. Use for values that you want to tune manually.
 
 .. _field_templates:
 
@@ -175,7 +176,7 @@ regardless of what project was assigned by the service itself:
 Secret Management
 -----------------
 
-You need not store your secrets in plain text in your `bugwarriorrc` file;
+You need not store your secrets in plain text in your configuration file;
 you can enter the following values to control where to gather your secrets
 from:
 

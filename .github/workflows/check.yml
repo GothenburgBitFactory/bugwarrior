@@ -1,0 +1,37 @@
+---
+name: check
+
+on: [pull_request]
+
+jobs:
+  api-change-check:
+    runs-on: ubuntu-latest
+    # We're currently seeing these complete in 1 minute.
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+      - name: Python API Change Detection
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y \
+            libffi-dev libssl-dev python3-venv taskwarrior
+          task --version
+
+          mkdir .venv
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip setuptools
+
+          pip install -e .[all]
+          bugwarrior --version
+
+          sphinx-build -b text ./bugwarrior/docs new-docs-build ./bugwarrior/docs/other-services/api.rst
+          git checkout origin/develop
+          sphinx-build -b text ./bugwarrior/docs prev-docs-build ./bugwarrior/docs/other-services/api.rst
+          diff ./prev-docs-build/other-services/api.txt ./new-docs-build/other-services/api.txt || (
+            echo "It's ok if this job fails as long as we understand why."; exit 1)

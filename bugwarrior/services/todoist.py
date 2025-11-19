@@ -220,6 +220,7 @@ class TodoistIssue(Issue):
 
 
 class TodoistService(Service):
+    API_VERSION = 1.0
     ISSUE_CLASS = TodoistIssue
     CONFIG_SCHEMA = TodoistConfig
 

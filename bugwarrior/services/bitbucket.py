@@ -89,6 +89,7 @@ class BitbucketIssue(Issue):
 
 
 class BitbucketService(Service, Client):
+    API_VERSION = 1.0
     ISSUE_CLASS = BitbucketIssue
     CONFIG_SCHEMA = BitbucketConfig
 

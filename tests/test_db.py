@@ -111,6 +111,7 @@ class TestSynchronize(ConfigTest):
             'githuburl': 'https://example.com',
             'priority': 'M',
             'tags': ['foo'],
+            'target': 'my_service',
         }
         duplicate_issue = copy.deepcopy(issue)
         duplicate_issue['tags'] = ['bar']

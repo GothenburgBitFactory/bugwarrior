@@ -31,18 +31,7 @@ def configure_logging(logfile, loglevel):
 
 
 def get_config_path():
-    """
-    Determine the path to the config file. This will return, in this order of
-    precedence:
-    - the value of $BUGWARRIORRC if set
-    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorrc if exists
-    - $XDG_CONFIG_HOME/bugwarrior/bugwarrior.toml if exists
-    - ~/.bugwarriorrc if exists
-    - ~/.bugwarrior.toml if exists
-    - <dir>/bugwarrior/bugwarriorrc if exists, for dir in $XDG_CONFIG_DIRS
-    - <dir>/bugwarrior/bugwarrior.toml if exists, for dir in $XDG_CONFIG_DIRS
-    - $XDG_CONFIG_HOME/bugwarrior/bugwarriorrc otherwise
-    """
+    """ Determine path to config file. See docs/manpage.rst for precedence. """
     if os.environ.get(BUGWARRIORRC):
         return os.environ[BUGWARRIORRC]
     xdg_config_home = (
@@ -115,7 +104,8 @@ def load_config(main_section, interactive, quiet) -> dict:
 # ConfigParser is not a new-style class, so inherit from object to fix super().
 class BugwarriorConfigParser(configparser.ConfigParser):
     def __init__(self, *args, allow_no_value=True, **kwargs):
-        super().__init__(*args, allow_no_value=allow_no_value, **kwargs)
+        super().__init__(*args, allow_no_value=allow_no_value,
+                         interpolation=None, **kwargs)
 
     def getint(self, section, option):
         """ Accepts both integers and empty values. """

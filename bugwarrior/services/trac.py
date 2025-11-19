@@ -91,6 +91,7 @@ class TracIssue(Issue):
 
 
 class TracService(Service):
+    API_VERSION = 1.0
     ISSUE_CLASS = TracIssue
     CONFIG_SCHEMA = TracConfig
 

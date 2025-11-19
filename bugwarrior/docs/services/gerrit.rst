@@ -36,7 +36,7 @@ API query::
 
     is:open+is:reviewer
 
-You may override this query string through your `bugwarriorrc` file.
+You may override this query string through your configuration file.
 
 For example:
 

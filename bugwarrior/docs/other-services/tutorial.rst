@@ -23,7 +23,12 @@ This example of accessing a local service is quite simple, but you'll likely nee
 2. Initialize Service
 ---------------------
 
-There are two approaches here, depending on whether your service will be maintained in bugwarrior or will be maintained separately as a :doc:`third party service <third_party>`.
+There are two approaches here, depending on whether your service will be maintained in bugwarrior or will be maintained separately as a :doc:`third party service <third_party>`. We don't have a strict criteria, but the best candidates for services maintained within bugwarrior tend to satisfy most of the following considerations:
+
+- open source (or useful free tier)
+- popularity
+- maturity (not a new startup)
+- public API documentation
 
 If you're sure you're going to be upstreaming your service, clone the bugwarrior repo and create a python file with the name of your service in ``bugwarrior/services``.
 
@@ -79,7 +84,7 @@ Now define an initial configuration schema as follows. Don't worry, we're about 
 
 This class is a `pydantic <https://pydantic-docs.helpmanual.io/>`_ model which we use to define which configuration options are available for the service, validate user configurations, and pass these values on to the service.
 
-The ``service`` attribute is how bugwarrior will know to assign a given section of the ``bugwarriorrc`` file to your service, for example:
+The ``service`` attribute is how bugwarrior will know to assign a given section of the configuration file to your service, for example:
 
 .. config::
 
@@ -89,6 +94,9 @@ The ``service`` attribute is how bugwarrior will know to assign a given section 
 The ``path`` is the only particular detail required to access our local git-bug instance. You'll likely need additional details such as a username and token to authenticate to the service. Look at how you accessed the API in step 1 and ask yourself which components need to be configurable.
 
 The ``import_labels_as_tags`` and ``port`` attributes create optional configuration fields to allow customization of bugwarrior behavior.
+
+.. note::
+   A common pitfall when writing a new service is to add configuration options for functionality that is already provided by :ref:`field_templates`. This is a powerful feature which makes many configurable features unnecessary.
 
 4. Client
 ---------
@@ -191,6 +199,7 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
 .. code:: python
 
   class GitBugService(Service):
+      API_VERSION = 1.0
       ISSUE_CLASS = GitBugIssue
       CONFIG_SCHEMA = GitBugConfig
 
@@ -220,7 +229,9 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
 
               yield self.get_issue_for_record(issue)
 
-Here we see two required class attributes (pointing to the classes we previously defined) and two required methods.
+Here we see three required class attributes and two required methods.
+
+The ``API_VERSION`` is set to the latest, while the other two attributes point to our previously defined classes.
 
 The ``get_keyring_service`` method returns a string identifier for secrets in the keyring. Ideally, this string uniquely identifies a given instance of the service when it is possible to have multiple instances of the service configured.
 
@@ -229,6 +240,14 @@ The ``issues`` method is a generator which yields individual issue dictionaries.
 .. note::
 
   Sensitive configuration values should be fetched with ``self.get_secret()`` so that they can be optionally retrieved with :ref:`oracles <Secret Management>`.
+
+.. note::
+
+   When relevant and reasonably feasible, all services should implement the :ref:`common_configuration_options`:
+
+   - ``only_if_assigned`` and ``also_unassigned``: These options are usually implemented either in the service by filtering retrieved tasks or (ideally) in the client by increasing the specificity of the api query.
+   - ``default_priority``: This is generally implemented by adding an ``ISSUE_MAP`` class attribute to the ``Issue`` class and using the ``get_priority`` method in ``to_taskwarrior``. When the service does not provide a relevant "priority" value, this configuration value can be assigned directly.
+   - ``add_tags``: You need not worry about this one, it is implemented automatically.
 
 7. Service Registration
 -----------------------

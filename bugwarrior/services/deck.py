@@ -153,6 +153,7 @@ class NextcloudDeckIssue(Issue):
 
 
 class NextcloudDeckService(Service):
+    API_VERSION = 1.0
     ISSUE_CLASS = NextcloudDeckIssue
     CONFIG_SCHEMA = NextcloudDeckConfig
 

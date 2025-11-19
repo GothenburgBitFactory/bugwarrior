@@ -11,7 +11,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10", 3.11, 3.12, 3.13]
-        jira-version: [1.0.10, 2.0.0]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,8 +18,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Set Jira version ${{ matrix.jira-version }}
-        run: echo "JIRAVERSION=${{ matrix.jira-version }}" >> "$GITHUB_ENV"
       - name: Run tests
         run: |
           sudo apt-get update -qq
@@ -35,7 +32,7 @@ jobs:
 
           pip install codecov
           pip install pytest-cov
-          pip install -e .[all]
+          pip install -e ".[all]"
 
           bugwarrior --version
           pytest --cov=bugwarrior --cov-branch tests
@@ -46,23 +43,17 @@ jobs:
           files: ./.coverage
         # Fragile way to only run codecov once.
         # See https://github.com/codecov/codecov-action/issues/40.
-        if: |
-          matrix.python-version == 3.13 &&
-          matrix.jira-version == '2.0.0'
+        if: matrix.python-version == 3.13
   bugwarrior-multiarch-test:
     runs-on: ubuntu-latest
     # We're currently seeing these complete in 10-30 minutes.
     timeout-minutes: 60
     strategy:
       matrix:
-        jira-version: [1.0.10, 2.0.0]
         architecture: [ppc64le]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Set Jira version ${{ matrix.jira-version }}
-        run: echo "JIRAVERSION=${{ matrix.jira-version }}" >> "$GITHUB_ENV"
       - name: Run tests on given architecture
         uses: uraimo/run-on-arch-action@v3
         with:

@@ -1,3 +1,4 @@
+import itertools
 import json
 import re
 import subprocess
@@ -319,6 +320,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         if issue['priority'] == '':
             issue['priority'] = None
 
+        # Target was only tacked on to pass configuration to this function.
+        service_config = conf[issue.pop('target')]
+
         try:
             existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
         except MultipleMatches as e:
@@ -336,7 +340,8 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
             # Drop static fields from the upstream issue.  We don't want to
             # overwrite local changes to fields we declare static.
-            for field in main_config.static_fields:
+            for field in itertools.chain(main_config.static_fields,
+                                         service_config.static_fields):
                 if field in issue:
                     del issue[field]
 
