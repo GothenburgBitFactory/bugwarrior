@@ -33,60 +33,44 @@ class LogseqClient(Client):
         self.port = port
         self.token = token
         self.filter = filter
-
+        self.base_url = f"http://{host}:{port}/api"
         self.headers = {
-            "Authorization": "Bearer " + self.token,
+            "Authorization": f"Bearer {token}",
             "content-type": "application/json; charset=utf-8",
         }
 
-    def _datascript_query(self, query):
+    def _api_call(self, method, args):
+        """Generic API call handler with error handling."""
         try:
-            log.debug(f"Query: {query}")
             response = requests.post(
-                f"http://{self.host}:{self.port}/api",
+                self.base_url,
                 headers=self.headers,
-                json={"method": "logseq.DB.datascriptQuery", "args": [query]},
+                json={"method": method, "args": args},
             )
-            log.debug(f"Response status: {response.status_code}, body: {response.text}")
+            log.debug(f"API call to {method}: status {response.status_code}")
             return self.json_response(response)
         except requests.exceptions.ConnectionError as ce:
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
             exit(1)
 
+    def _datascript_query(self, query):
+        log.debug(f"DataScript query: {query}")
+        return self._api_call("logseq.DB.datascriptQuery", [query])
+
     def _get_current_graph(self):
-        try:
-            response = requests.post(
-                f"http://{self.host}:{self.port}/api",
-                headers=self.headers,
-                json={"method": "logseq.App.getCurrentGraph", "args": []},
-            )
-            return self.json_response(response)
-        except requests.exceptions.ConnectionError as ce:
-            log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
-            exit(1)
+        return self._api_call("logseq.App.getCurrentGraph", [])
 
     def get_graph_name(self):
         graph = self._get_current_graph()
-        return graph["name"] if graph else None
+        return graph.get("name") if graph else None
 
     def get_page(self, page_id):
-        try:
-            response = requests.post(
-                f"http://{self.host}:{self.port}/api",
-                headers=self.headers,
-                json={"method": "logseq.Editor.getPage", "args": [page_id]},
-            )
-            return self.json_response(response)
-        except requests.exceptions.ConnectionError as ce:
-            log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
-            exit(1)
+        return self._api_call("logseq.Editor.getPage", [page_id])
 
     def get_issues(self):
-        print("DEBUG: Using modified logseq.py for DB 0.11.0 (Refactored)")
-
+        log.info("Querying Logseq DB 0.11.0+ (DB mode)")
         filter_set = f"#{{{self.filter}}}"
 
-        # DB Mode Query
         query = f"""
             [:find (pull ?b [* :block/full-title {{:logseq.property/status [:block/title]}}])
             :where
@@ -117,6 +101,7 @@ class LogseqClient(Client):
 
 
 class LogseqIssue(Issue):
+    # Field constants
     ID = "logseqid"
     UUID = "logsequuid"
     STATE = "logseqstate"
@@ -126,6 +111,7 @@ class LogseqIssue(Issue):
     SCHEDULED = "logseqscheduled"
     DEADLINE = "logseqdeadline"
     PAGE = "logseqpage"
+
     SOMEDAY = datetime(2038, 1, 18)
 
     UDAS = {
@@ -163,7 +149,16 @@ class LogseqIssue(Issue):
         "Canceled": "deleted",
     }
 
+    def _get_content_field(self, *field_names):
+        """Helper to get the first available content field from various possible keys."""
+        for field in field_names:
+            value = self.record.get(field)
+            if value:
+                return value
+        return ""
+
     def _unescape_content(self, content):
+        """Escape special characters for taskwarrior compatibility."""
         return (
             content.replace('"', "'")
             .replace("[[", self.config.char_open_link)
@@ -173,90 +168,21 @@ class LogseqIssue(Issue):
         )
 
     def _compress_tag_format(self, tag):
+        """Remove special characters from tags."""
         return (
             tag.replace(self.config.char_open_link, "")
             .replace(" ", "")
             .replace(self.config.char_close_link, "")
         )
 
-    def get_formatted_title(self):
-        content = (
-            self.record.get("full-title")
-            or self.record.get("title")
-            or self.record.get("content", "")
-        )
-
-        if not content:
-            return ""
-
-        first_line = content.split("\n")[0]
-        state = self.get_logseq_state()
-        if state and first_line.startswith(state + " "):
-            first_line = first_line.split(state + " ", 1)[1]
-
-        first_line = (
-            first_line.replace("[#A] ", "").replace("[#B] ", "").replace("[#C] ", "")
-        )
-
-        return self._unescape_content(first_line)
-
-    def get_tags_from_content(self):
-        tags = re.findall(
-            r"(?<=\s)"
-            + "(#"
-            + self.config.char_open_link
-            + r".*?"
-            + self.config.char_close_link
-            + r"|#\S+"
-            + ")",
-            self.get_formatted_title(),
-        )
-        tags = [self._compress_tag_format(t).lstrip("#") for t in tags]
-        return tags
-
-    def get_annotations_from_content(self):
-        annotations = []
-        scheduled_date = None
-        deadline_date = None
-        in_logbook = False
-
-        content = (
-            self.record.get("block/title")
-            or self.record.get(":block/title")
-            or self.record.get("content", "")
-        )
-
-        if not content:
-            return annotations, scheduled_date, deadline_date
-
-        for line in content.split("\n"):
-            if in_logbook:
-                if line.startswith(":END:"):
-                    in_logbook = False
-                continue
-            if line.startswith(":LOGBOOK:"):
-                in_logbook = True
-                continue
-            if line.startswith("id::"):
-                continue
-            if line.startswith("SCHEDULED: "):
-                scheduled_date = self.get_scheduled_date(line)
-            elif line.startswith("DEADLINE: "):
-                deadline_date = self.get_scheduled_date(line)
-            else:
-                annotations.append(self._unescape_content(line))
-
-        if annotations:
-            annotations.pop(0)
-        return annotations, scheduled_date, deadline_date
-
-    def get_url(self):
-        return f'logseq://graph/{self.extra["graph"]}?block-id={self.record["uuid"]}'
-
     def get_logseq_state(self):
+        """Extract the task state from either classic or DB mode."""
+        # Classic mode
         if "marker" in self.record and self.record["marker"]:
             return self.record["marker"]
-        elif ":logseq.property/status" in self.record:
+
+        # DB mode
+        if ":logseq.property/status" in self.record:
             status_ref = self.record[":logseq.property/status"]
             if isinstance(status_ref, dict):
                 return status_ref.get(
@@ -264,62 +190,136 @@ class LogseqIssue(Issue):
                 )
             elif isinstance(status_ref, str):
                 return status_ref
+
         return "TODO"
 
-    def get_scheduled_date(self, scheduled):
-        date_split = (
-            scheduled.replace("DEADLINE: <", "")
+    def get_formatted_title(self):
+        """Get the task title with state markers and priority removed."""
+        content = self._get_content_field("full-title", "title", "content")
+        if not content:
+            return ""
+
+        first_line = content.split("\n")[0]
+
+        # Remove state marker
+        state = self.get_logseq_state()
+        if state and first_line.startswith(f"{state} "):
+            first_line = first_line.split(f"{state} ", 1)[1]
+
+        # Remove priority markers
+        for priority in ["[#A]", "[#B]", "[#C]"]:
+            first_line = first_line.replace(f"{priority} ", "")
+
+        return self._unescape_content(first_line)
+
+    def get_tags_from_content(self):
+        """Extract hashtags from content."""
+        pattern = (
+            r"(?<=\s)(#"
+            + self.config.char_open_link
+            + r".*?"
+            + self.config.char_close_link
+            + r"|#\S+)"
+        )
+        tags = re.findall(pattern, self.get_formatted_title())
+        return [self._compress_tag_format(t).lstrip("#") for t in tags]
+
+    def get_annotations_from_content(self):
+        """Parse annotations and dates from block content."""
+        annotations = []
+        scheduled_date = None
+        deadline_date = None
+        in_logbook = False
+
+        content = self._get_content_field("block/title", ":block/title", "content")
+        if not content:
+            return annotations, scheduled_date, deadline_date
+
+        for line in content.split("\n"):
+            if line.startswith(":LOGBOOK:"):
+                in_logbook = True
+                continue
+            if line.startswith(":END:"):
+                in_logbook = False
+                continue
+            if in_logbook or line.startswith("id::"):
+                continue
+
+            if line.startswith("SCHEDULED: "):
+                scheduled_date = self._parse_date_line(line)
+            elif line.startswith("DEADLINE: "):
+                deadline_date = self._parse_date_line(line)
+            else:
+                annotations.append(self._unescape_content(line))
+
+        # Remove first line (the title itself)
+        if annotations:
+            annotations.pop(0)
+
+        return annotations, scheduled_date, deadline_date
+
+    def _parse_date_line(self, line):
+        """Parse SCHEDULED or DEADLINE date lines."""
+        date_str = (
+            line.replace("DEADLINE: <", "")
             .replace("SCHEDULED: <", "")
             .replace(">", "")
             .strip()
-            .split(" ")
         )
-        date = None
-        date_format = None
+        date_parts = date_str.split(" ")
 
-        if len(date_split) == 2:
-            date = date_split[0]
-            date_format = "%Y-%m-%d"
-        elif len(date_split) == 3 and (date_split[2][0] in ("+", ".")):
-            date = date_split[0]
-            date_format = "%Y-%m-%d"
-        elif len(date_split) == 3:
-            date = date_split[0] + " " + date_split[2]
-            date_format = "%Y-%m-%d %H:%M"
-        elif len(date_split) == 4:
-            date = date_split[0] + " " + date_split[2]
-            date_format = "%Y-%m-%d %H:%M"
+        date_formats = [
+            (2, "%Y-%m-%d", lambda p: p[0]),
+            (
+                3,
+                "%Y-%m-%d",
+                lambda p: p[0] if p[2][0] in ("+", ".") else f"{p[0]} {p[2]}",
+            ),
+            (3, "%Y-%m-%d %H:%M", lambda p: f"{p[0]} {p[2]}"),
+            (4, "%Y-%m-%d %H:%M", lambda p: f"{p[0]} {p[2]}"),
+        ]
 
-        if date:
-            try:
-                return datetime.strptime(date, date_format)
-            except ValueError:
-                log.warning(f"Could not parse date {date}")
+        for expected_len, date_format, extractor in date_formats:
+            if len(date_parts) == expected_len:
+                try:
+                    date_str = extractor(date_parts)
+                    if date_format == "%Y-%m-%d" and " " in date_str:
+                        date_format = "%Y-%m-%d %H:%M"
+                    return datetime.strptime(date_str, date_format)
+                except (ValueError, IndexError):
+                    continue
+
+        log.warning(f"Could not parse date from line: {line}")
         return None
 
+    def get_priority(self):
+        """Extract priority from content."""
+        content = self._get_content_field("block/title", ":block/title", "content")
+
+        for marker, priority in [("[#A]", "H"), ("[#B]", "M"), ("[#C]", "L")]:
+            if marker in content:
+                return priority
+        return None
+
+    def get_url(self):
+        """Generate logseq:// URL for the block."""
+        return f'logseq://graph/{self.extra["graph"]}?block-id={self.record["uuid"]}'
+
     def _is_waiting(self):
+        """Check if task is in a waiting state."""
         return self.get_logseq_state() in ["WAIT", "WAITING"]
 
-    def get_priority(self):
-        content = (
-            self.record.get("block/title")
-            or self.record.get(":block/title")
-            or self.record.get("content", "")
-        )
-        if "[#A]" in content:
-            return "H"
-        elif "[#B]" in content:
-            return "M"
-        elif "[#C]" in content:
-            return "L"
-        else:
-            return None
-
-    # --- Helper Methods to Reduce Complexity ---
+    def _is_journal_date(self, text):
+        """Check if text is a journal date (YYYY-MM-DD)."""
+        try:
+            datetime.strptime(str(text), "%Y-%m-%d")
+            return True
+        except (ValueError, TypeError):
+            return False
 
     def _find_project_property_ref(self):
-        """Locates the project property within nested or top-level keys."""
-        # 1. Check Nested properties (Legacy/Mixed)
+        """Locate the project property within nested or top-level keys."""
+        # Check nested properties (legacy/mixed mode)
         props = (
             self.record.get("block/properties")
             or self.record.get(":block/properties")
@@ -327,34 +327,32 @@ class LogseqIssue(Issue):
         )
 
         if props and isinstance(props, dict):
-            for k, v in props.items():
-                if "project" in str(k).lower():
-                    print(f"DEBUG: Found project in nested props: {k} -> {v}")
-                    return v
+            for key, value in props.items():
+                if "project" in str(key).lower():
+                    log.debug(f"Found project in nested props: {key} -> {value}")
+                    return value
 
-        # 2. Check Top Level (DB 0.11.0+)
+        # Check top-level keys (DB 0.11.0+)
         for key, value in self.record.items():
             key_str = str(key).lower()
-            if "project" in key_str:
-                if (
-                    key_str == "project"
-                    or key_str == ":project"
-                    or "/project" in key_str
-                ):
-                    print(f"DEBUG: Found project key at top level: {key} -> {value}")
-                    return value
+            if "project" in key_str and (
+                key_str in ("project", ":project") or "/project" in key_str
+            ):
+                log.debug(f"Found project at top level: {key} -> {value}")
+                return value
+
         return None
 
     def _resolve_project_name(self, project_ref):
-        """Resolves a project reference (ID or String) to a human-readable name."""
+        """Resolve a project reference (ID, dict, or string) to a readable name."""
         if not project_ref:
             return None
 
-        # Handle Direct String
+        # Direct string value
         if isinstance(project_ref, str):
             return project_ref
 
-        # Handle Reference (Dict or Int)
+        # Extract reference ID
         ref_id = None
         if isinstance(project_ref, dict):
             ref_id = (
@@ -369,75 +367,77 @@ class LogseqIssue(Issue):
             return None
 
         try:
-            # 1. Try DataScript with wildcard [*]
-            project_query = f"[:find (pull ?e [*]) :where [?e :db/id {ref_id}]]"
-            result = self.extra["client"]._datascript_query(project_query)
+            # Try DataScript query first
+            query = f"[:find (pull ?e [*]) :where [?e :db/id {ref_id}]]"
+            result = self.extra["client"]._datascript_query(query)
 
-            entity = None
-            if result and len(result) > 0 and result[0]:
-                entity = result[0][0]
+            entity = result[0][0] if result and result[0] else None
 
-            # 2. Fallback to getPage API
+            # Fallback to getPage API
             if not entity:
                 entity = self.extra["client"].get_page(ref_id)
 
             if entity:
-                resolved_project = (
-                    entity.get("block/original-name")
-                    or entity.get("block/name")
-                    or entity.get("block/title")
-                    or entity.get("original-name")
-                    or entity.get("name")
-                    or entity.get("title")
-                    or entity.get("block/content")
-                    or entity.get("content")
-                )
+                # Try various name fields
+                name_fields = [
+                    "block/original-name",
+                    "block/name",
+                    "block/title",
+                    "original-name",
+                    "name",
+                    "title",
+                    "block/content",
+                    "content",
+                ]
 
-                # Exclude Journal Dates
-                try:
-                    if resolved_project and datetime.strptime(
-                        str(resolved_project), "%Y-%m-%d"
-                    ):
-                        log.info(
-                            f"Resolved name '{resolved_project}' is a Journal Date. Ignoring."
-                        )
-                        return None
-                except ValueError:
-                    pass  # Not a date, this is good
-
-                return resolved_project
+                for field in name_fields:
+                    resolved = entity.get(field)
+                    if resolved:
+                        # Skip journal dates
+                        if self._is_journal_date(resolved):
+                            log.debug(f"Ignoring journal date as project: {resolved}")
+                            return None
+                        return resolved
 
         except Exception as e:
-            log.warning(f"Failed to resolve project reference: {e}")
+            log.warning(f"Failed to resolve project reference {ref_id}: {e}")
 
         return None
 
-    def to_taskwarrior(self):
-        # DEBUG PRINT
-        print(f"DEBUG: Task {self.record.get('uuid')} Keys: {list(self.record.keys())}")
-
-        annotations, scheduled_date, deadline_date = self.get_annotations_from_content()
-        wait_date = min(
-            [d for d in [scheduled_date, deadline_date, self.SOMEDAY] if d is not None]
-        )
-
-        # 1. Find and Resolve Project
+    def _determine_project(self):
+        """Determine the project for this task with fallbacks."""
+        # 1. Try explicit project property
         project_ref = self._find_project_property_ref()
         project = self._resolve_project_name(project_ref)
 
-        # 2. Fallbacks
-        if not project and self.extra.get("page_title"):
-            parent_page_title = self.extra["page_title"]
-            try:
-                # Skip Journal Dates
-                datetime.strptime(parent_page_title, "%Y-%m-%d")
-            except ValueError:
-                project = parent_page_title
+        if project:
+            log.debug(f"Using project from property: {project}")
+            return project
 
-        if not project:
-            project = self.extra["graph"]
+        # 2. Fall back to parent page title (if not a journal date)
+        page_title = self.extra.get("page_title")
+        if page_title and not self._is_journal_date(page_title):
+            log.debug(f"Using parent page as project: {page_title}")
+            return page_title
 
-        # Final clean up
+        # 3. Fall back to graph name
+        graph = self.extra.get("graph")
+        log.debug(f"Using graph name as project: {graph}")
+        return graph
+
+    def to_taskwarrior(self):
+        """Convert Logseq task to taskwarrior format."""
+        log.debug(f"Converting task {self.record.get('uuid')}")
+
+        annotations, scheduled_date, deadline_date = self.get_annotations_from_content()
+
+        # Calculate wait date (earliest of scheduled/deadline, or SOMEDAY)
+        wait_date = min(
+            d for d in [scheduled_date, deadline_date, self.SOMEDAY] if d is not None
+        )
+
+        # Determine project with clean fallback logic
+        project = self._determine_project()
         if project and isinstance(project, str):
             project = project.replace("[[", "").replace("]]", "")
 
@@ -461,6 +461,7 @@ class LogseqIssue(Issue):
         }
 
     def get_default_description(self):
+        """Build the default description for taskwarrior."""
         return self.build_default_description(
             title=self.get_formatted_title(),
             url=self.get_url() if self.config.inline_links else "",
@@ -476,12 +477,12 @@ class LogseqService(Service):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.token = self.get_secret("token")
-        filter = '"' + '" "'.join(self.config.task_state) + '"'
+        filter_string = '"' + '" "'.join(self.config.task_state) + '"'
         self.client = LogseqClient(
             host=self.config.host,
             port=self.config.port,
             token=self.token,
-            filter=filter,
+            filter=filter_string,
         )
 
     @staticmethod
@@ -489,7 +490,9 @@ class LogseqService(Service):
         return f"http://{config.host}:{config.port}"
 
     def issues(self):
+        """Generate issues from Logseq."""
         graph_name = self.client.get_graph_name()
+
         for issue in self.client.get_issues():
             parent_page = self.client.get_page(issue[0]["parent"]["id"])
             extra = {
