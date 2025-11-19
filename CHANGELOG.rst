@@ -1,11 +1,12 @@
 2.0.0
 -----
 
-Bugwarrior has a new home! The [Bugwarrior repository](https://github.com/GothenburgBitFactory/bugwarrior) has been graciously transferred by [@ralphbean](https://github.com/ralphbean), the original author, to the [GothenburgBitFactory](https://gothenburgbitfactory.org/) organization which also maintains Taskwarrior.
+Bugwarrior has a new home! The bugwarrior repository has been graciously transferred by @ralphbean, the original author, to the @GothenburgBitFactory organization which also maintains Taskwarrior.
 
 *NOTE: In addition to these changes there are a number of new validation warnings and errors that should be minded when upgrading.*
 
 New and Removed Services
+========================
 
 - Added Azure Devops service. (https://github.com/ralphbean/bugwarrior/pull/808)
 - Added Git-Bug service. (https://github.com/ralphbean/bugwarrior/pull/934)
@@ -18,6 +19,7 @@ New and Removed Services
 - Removed ActiveCollab, ActiveCollab2, Teamlab, and VersionOne services. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1102)
 
 Major Changes
+=============
 
 - Top-level bugwarrior command. (https://github.com/ralphbean/bugwarrior/pull/882)
 - Enhanced configuration validation. (https://github.com/ralphbean/bugwarrior/pull/849)
@@ -26,11 +28,15 @@ Major Changes
 - Stable service API. (Third party service support.) (many PR's over the course of years)
 
 Minor Changes
+=============
+
 - configuration: Disable interpolation. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1140)
 - configuration: Add per-service static_fields option. (https://github.com/GothenburgBitFactory/bugwarrior/pull/908)
 - notifications: Add applescript backend. (https://github.com/ralphbean/bugwarrior/pull/948)
 
 Service-Specific Changes
+========================
+
 - bitbucket: Remove basic auth and update oauth2 workflow. (https://github.com/ralphbean/bugwarrior/pull/888)
 - github: Pull issues by URL. (https://github.com/ralphbean/bugwarrior/pull/898)
 - gitlab: Merge requests and todo's will respect default_priority setting rather than being set to 'H'. (https://github.com/ralphbean/bugwarrior/pull/816)
