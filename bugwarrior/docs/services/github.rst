@@ -216,6 +216,10 @@ By default the taskwarrior ``project`` name will not include the owner. To do so
 Get Specific Issues
 +++++++++++++++++++
 
+.. warning::
+
+  This feature is experimental and may be removed in a minor release. See `946 <https://github.com/GothenburgBitFactory/bugwarrior/issues/946>`_.
+
 Specific issues can be pulled in using ``issue_urls``:
 
 .. config::

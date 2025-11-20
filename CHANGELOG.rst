@@ -38,7 +38,7 @@ Service-Specific Changes
 ========================
 
 - bitbucket: Remove basic auth and update oauth2 workflow. (https://github.com/ralphbean/bugwarrior/pull/888)
-- github: Pull issues by URL. (https://github.com/ralphbean/bugwarrior/pull/898)
+- github: Pull issues by URL. *experimental* (https://github.com/ralphbean/bugwarrior/pull/898)
 - gitlab: Merge requests and todo's will respect default_priority setting rather than being set to 'H'. (https://github.com/ralphbean/bugwarrior/pull/816)
 - gitlab: Added distinct default priorities for issues, merge requests, and todo's. (https://github.com/ralphbean/bugwarrior/pull/816)
 - gitlab: Query support. (https://github.com/ralphbean/bugwarrior/pull/876)
