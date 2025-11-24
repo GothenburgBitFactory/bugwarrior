@@ -50,6 +50,8 @@ test = [
 
    # Workaround https://github.com/python/importlib_metadata/issues/406
    "importlib-metadata<5",
+   # To make this installable with uvx/pipx and no additional options needed.
+   "setuptools",
 ]
 todoist = ["todoist_api_python>=3.0.0"]
 trac = ["offtrac"]
