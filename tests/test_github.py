@@ -5,11 +5,9 @@ import pytz
 import responses
 
 from bugwarrior.collect import TaskConstructor
-from bugwarrior.services.github import (
-    GithubConfig, GithubService, GithubClient)
+from bugwarrior.services.github import GithubClient, GithubConfig, GithubService
 
-from .base import ServiceTest, AbstractServiceTest
-
+from .base import AbstractServiceTest, ServiceTest
 
 ARBITRARY_CREATED = (
     datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)

@@ -5,7 +5,7 @@ import phabricator
 import pydantic.v1
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue
+from bugwarrior.services import Issue, Service
 
 log = logging.getLogger(__name__)
 

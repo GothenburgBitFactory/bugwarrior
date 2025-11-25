@@ -1,8 +1,8 @@
+from bugwarrior.collect import TaskConstructor
+from bugwarrior.config.schema import MainSectionConfig, ServiceConfig
+
 from .base import ServiceTest
 from .test_service import DumbIssue
-
-from bugwarrior.collect import TaskConstructor
-from bugwarrior.config.schema import ServiceConfig, MainSectionConfig
 
 
 class TestTemplates(ServiceTest):

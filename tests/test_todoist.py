@@ -1,14 +1,21 @@
-from unittest import mock
-from .base import AbstractServiceTest, ServiceTest
-
 import copy
 from datetime import datetime
+from unittest import mock
+
+from todoist_api_python.models import (
+    Collaborator,
+    Deadline,
+    Due,
+    Duration,
+    Project,
+    Section,
+    Task,
+)
 
 from bugwarrior.collect import TaskConstructor
-from bugwarrior.services.todoist import TodoistService, TodoistClient
+from bugwarrior.services.todoist import TodoistClient, TodoistService
 
-from todoist_api_python.models import Task, Project, Section, Collaborator
-from todoist_api_python.models import Due, Deadline, Duration
+from .base import AbstractServiceTest, ServiceTest
 
 
 class TestTodoistIssue(AbstractServiceTest, ServiceTest):
@@ -108,7 +115,6 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
             "annotations": [],
             "due": datetime(year=2025, month=7, day=1),
             "entry": datetime(year=2025, month=7, day=1, hour=4, minute=30, second=0),
-            "status": "pending",
             "priority": "H",
             "project": "TESTPROJECT",
             "scheduled": None,

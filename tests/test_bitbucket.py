@@ -3,7 +3,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bitbucket import BitbucketService
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import AbstractServiceTest, ServiceTest
 
 
 class TestBitbucketIssue(AbstractServiceTest, ServiceTest):

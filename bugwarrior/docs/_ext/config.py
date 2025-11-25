@@ -1,6 +1,6 @@
 from ini2toml.api import Translator
-from sphinx.util.docutils import SphinxDirective
 from sphinx.directives.code import CodeBlock
+from sphinx.util.docutils import SphinxDirective
 from sphinx_inline_tabs._impl import TabDirective
 
 

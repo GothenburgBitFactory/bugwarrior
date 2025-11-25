@@ -1,5 +1,6 @@
 import itertools
 import json
+import logging
 import re
 import subprocess
 
@@ -9,7 +10,6 @@ from taskw.exceptions import TaskwarriorError
 from bugwarrior.collect import get_service
 from bugwarrior.notifications import send_notification
 
-import logging
 log = logging.getLogger(__name__)
 
 

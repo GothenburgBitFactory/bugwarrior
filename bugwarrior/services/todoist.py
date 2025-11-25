@@ -1,15 +1,13 @@
+from dataclasses import asdict
+from datetime import datetime, time
 import logging
 
 from todoist_api_python.api import TodoistAPI
+from todoist_api_python.models import Task
 import typing_extensions
 
-from datetime import datetime, time
-from dataclasses import asdict
-
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, Client
-
-from todoist_api_python.models import Task
+from bugwarrior.services import Client, Issue, Service
 
 log = logging.getLogger(__name__)
 

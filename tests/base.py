@@ -1,6 +1,6 @@
 import abc
-import shutil
 import os.path
+import shutil
 import tempfile
 import unittest
 

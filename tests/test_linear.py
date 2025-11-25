@@ -7,7 +7,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.linear import LinearService
 
-from .base import ServiceTest, AbstractServiceTest, ConfigTest
+from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
 RESPONSE = json.loads(
     """

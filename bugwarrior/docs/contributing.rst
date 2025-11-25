@@ -47,21 +47,24 @@ The following will actually run it...be careful and back up your task directory!
     $ uv run bugwarrior pull
 
 
-To run the tests, use ``pytest``, and also check your code quality with ``flake8``:
+To run the tests, use ``pytest``:
 
 .. tab:: pip
 
    .. code-block:: bash
 
     $ pytest
-    $ flake8 .
 
 .. tab:: uv
 
    .. code-block:: bash
 
     $ uv run pytest
-    $ uv run flake8 .
+
+We use ruff for linting and formatting. This is checked in the test suite, so
+you don't necessarily need to worry about it separately, but you may find it
+convenient to run ``ruff check`` and ``ruff format`` or `integrate ruff with
+your editor <https://docs.astral.sh/ruff/editors/setup/>`_.
 
 Making a pull request
 ---------------------

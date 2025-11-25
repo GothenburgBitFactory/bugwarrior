@@ -5,7 +5,7 @@ import pytz
 
 from bugwarrior.services.phab import PhabricatorService
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import AbstractServiceTest, ServiceTest
 
 
 class TestPhabricatorIssue(AbstractServiceTest, ServiceTest):

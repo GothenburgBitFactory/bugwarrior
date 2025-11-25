@@ -1,13 +1,12 @@
+from datetime import datetime
 import logging
+import re
 import typing
 
 import requests
 
-import re
-from datetime import datetime
-
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, Client
+from bugwarrior.services import Client, Issue, Service
 
 log = logging.getLogger(__name__)
 

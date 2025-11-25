@@ -3,6 +3,7 @@ Service API
 -----------
 """
 import abc
+import logging
 import math
 import os
 import re
@@ -17,7 +18,6 @@ import requests
 
 from bugwarrior.config import schema, secrets
 
-import logging
 log = logging.getLogger(__name__)
 
 DOGPILE_CACHE_PATH = os.path.expanduser(''.join([

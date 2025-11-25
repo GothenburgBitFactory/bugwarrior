@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 from bugwarrior.config import data, schema
 

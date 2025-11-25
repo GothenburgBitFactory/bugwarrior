@@ -1,7 +1,7 @@
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.trac import TracService
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import AbstractServiceTest, ServiceTest
 
 
 class FakeTracTicket:

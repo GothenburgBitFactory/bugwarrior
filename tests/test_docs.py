@@ -1,4 +1,3 @@
-import docutils.core
 import glob
 import os.path
 import pathlib
@@ -8,6 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
+import docutils.core
 from importlib_metadata import entry_points
 
 DOCS_PATH = pathlib.Path(__file__).parent / '../bugwarrior/docs'

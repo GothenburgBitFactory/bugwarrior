@@ -23,7 +23,6 @@ sys.path.insert(0, os.path.abspath('../..'))
 # Custom Sphinx Extensions
 sys.path.insert(0, os.path.abspath('_ext'))
 
-import bugwarrior
 
 # -- General configuration ------------------------------------------------
 

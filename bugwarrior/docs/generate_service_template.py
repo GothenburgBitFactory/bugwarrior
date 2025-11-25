@@ -1,3 +1,4 @@
+from functools import reduce
 import inspect
 import os
 import sys
@@ -5,7 +6,6 @@ import sys
 from jinja2 import Template
 
 from bugwarrior.services import Issue
-from functools import reduce
 
 
 def make_table(grid):

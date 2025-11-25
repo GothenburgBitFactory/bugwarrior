@@ -1,11 +1,12 @@
-import responses
 import datetime
+
 from dateutil.tz import tzutc
+import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.teamwork_projects import TeamworkService
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import AbstractServiceTest, ServiceTest
 
 
 class TestTeamworkIssue(AbstractServiceTest, ServiceTest):

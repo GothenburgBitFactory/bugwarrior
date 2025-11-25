@@ -3,7 +3,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.taiga import TaigaService
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import AbstractServiceTest, ServiceTest
 
 
 class TestTaigaIssue(AbstractServiceTest, ServiceTest):

@@ -1,13 +1,13 @@
-import requests
+import logging
 import re
 import typing
 
+import requests
 from taskw import TaskWarriorShellout
 
 from bugwarrior import config
-from bugwarrior.services import Issue, Service, Client
+from bugwarrior.services import Client, Issue, Service
 
-import logging
 log = logging.getLogger(__name__)
 
 

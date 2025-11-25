@@ -7,12 +7,12 @@ import re
 import time
 import typing
 
-import googleapiclient.discovery
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
+import googleapiclient.discovery
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue
+from bugwarrior.services import Issue, Service
 
 log = logging.getLogger(__name__)
 

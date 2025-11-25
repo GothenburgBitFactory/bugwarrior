@@ -1,3 +1,4 @@
+import logging
 import typing
 
 import debianbts
@@ -5,9 +6,8 @@ import pydantic.v1
 import requests
 
 from bugwarrior import config
-from bugwarrior.services import Issue, Service, Client
+from bugwarrior.services import Client, Issue, Service
 
-import logging
 log = logging.getLogger(__name__)
 
 UDD_BUGS_SEARCH = "https://udd.debian.org/bugs/"

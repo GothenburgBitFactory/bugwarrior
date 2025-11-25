@@ -1,8 +1,8 @@
 import datetime
 import logging
-import urllib.parse
 import time
 import typing
+import urllib.parse
 import xmlrpc.client
 
 import bugzilla
@@ -10,7 +10,7 @@ import pydantic.v1
 import pytz
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue
+from bugwarrior.services import Issue, Service
 
 log = logging.getLogger(__name__)
 

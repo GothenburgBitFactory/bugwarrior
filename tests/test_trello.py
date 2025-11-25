@@ -3,7 +3,7 @@ import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.config.schema import MainSectionConfig
-from bugwarrior.services.trello import TrelloConfig, TrelloService, TrelloIssue
+from bugwarrior.services.trello import TrelloConfig, TrelloIssue, TrelloService
 
 from .base import ConfigTest, ServiceTest
 

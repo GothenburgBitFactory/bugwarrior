@@ -1,14 +1,14 @@
 import datetime
-import pytz
+import logging
 import typing
 
 import pydantic.v1
+import pytz
 import requests
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue
+from bugwarrior.services import Issue, Service
 
-import logging
 log = logging.getLogger(__name__)
 
 

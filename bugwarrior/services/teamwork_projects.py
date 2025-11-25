@@ -1,11 +1,11 @@
+import logging
 import typing
 
 import requests
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, Client
+from bugwarrior.services import Client, Issue, Service
 
-import logging
 log = logging.getLogger(__name__)
 
 

@@ -5,7 +5,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gerrit import GerritService
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import AbstractServiceTest, ServiceTest
 
 
 class TestGerritIssue(AbstractServiceTest, ServiceTest):

@@ -1,14 +1,14 @@
-from urllib.parse import quote, urlencode
-import requests
+import logging
+import sys
 import typing
+from urllib.parse import quote, urlencode
 
 import pydantic.v1
-import sys
+import requests
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, Client
+from bugwarrior.services import Client, Issue, Service
 
-import logging
 log = logging.getLogger(__name__)
 
 DefaultPriority = typing.Literal['', 'L', 'M', 'H', 'unassigned']

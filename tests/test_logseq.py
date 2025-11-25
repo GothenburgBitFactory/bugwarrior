@@ -1,12 +1,11 @@
+import copy
+import datetime
 from unittest import mock
 
 from bugwarrior.collect import TaskConstructor
-from bugwarrior.services.logseq import LogseqService, LogseqClient, LogseqIssue
+from bugwarrior.services.logseq import LogseqClient, LogseqIssue, LogseqService
 
 from .base import AbstractServiceTest, ServiceTest
-
-import datetime
-import copy
 
 
 class TestLogseqIssue(AbstractServiceTest, ServiceTest):

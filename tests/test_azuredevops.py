@@ -4,13 +4,9 @@ from unittest import mock
 from dateutil.tz.tz import tzutc
 
 from bugwarrior.collect import TaskConstructor
-from bugwarrior.services.azuredevops import (
-    AzureDevopsService,
-    striphtml,
-)
+from bugwarrior.services.azuredevops import AzureDevopsService, striphtml
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
-
 
 TEST_ISSUE = {
     "_links": {

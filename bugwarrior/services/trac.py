@@ -1,5 +1,6 @@
 import csv
 import io as StringIO
+import logging
 import typing
 import urllib.parse
 
@@ -9,7 +10,6 @@ import requests
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
 
-import logging
 log = logging.getLogger(__name__)
 
 

@@ -1,12 +1,12 @@
 import dataclasses
+from functools import reduce
 import logging
 import sys
 import typing
-from functools import reduce
 
-import pydantic.v1
 from dateutil.tz.tz import tzutc
 from jira.client import JIRA as BaseJIRA
+import pydantic.v1
 from requests.cookies import RequestsCookieJar
 
 from bugwarrior import config

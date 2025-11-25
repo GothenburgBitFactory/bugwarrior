@@ -1,7 +1,7 @@
-import os.path
-import pickle
 from copy import copy
 from datetime import datetime, timedelta, timezone
+import os.path
+import pickle
 from unittest import mock
 from unittest.mock import patch
 

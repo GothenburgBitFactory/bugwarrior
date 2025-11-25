@@ -9,8 +9,8 @@ import typing
 
 import requests
 
-from bugwarrior.services import Service, Issue, Client
 from bugwarrior import config
+from bugwarrior.services import Client, Issue, Service
 
 
 class TrelloConfig(config.ServiceConfig):

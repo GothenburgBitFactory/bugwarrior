@@ -40,10 +40,10 @@ keyring = ["keyring"]
 phabricator = ["phabricator"]
 test = [
    "docutils",
-   "flake8",
    "pytest",
    "pytest-subtests",
    "responses",
+   "ruff",
    "sphinx>=1.0",
    "sphinx-click",
    "sphinx-inline-tabs",
@@ -96,6 +96,18 @@ todoist = "bugwarrior.services.todoist:TodoistService"
 
 [project.entry-points."ini2toml.processing"]
 bugwarrior = "bugwarrior.config.ini2toml_plugin:activate"
+
+[tool.ruff.format]
+quote-style = "preserve"
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "W", "I"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-sort-within-sections = true
+split-on-trailing-comma = false
 
 [tool.setuptools.packages.find]
 include = ["bugwarrior*"]

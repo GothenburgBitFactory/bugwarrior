@@ -3,7 +3,7 @@ from unittest import mock
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import bts
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import AbstractServiceTest, ServiceTest
 
 
 class FakeBTSBug:

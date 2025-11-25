@@ -7,7 +7,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.redmine import RedMineService
 
-from .base import ServiceTest, AbstractServiceTest
+from .base import AbstractServiceTest, ServiceTest
 
 
 class TestRedmineIssue(AbstractServiceTest, ServiceTest):
