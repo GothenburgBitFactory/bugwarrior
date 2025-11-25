@@ -38,7 +38,7 @@ class RedMineClient(Client):
 
     def find_issues(self, issue_limit, query, only_if_assigned=False):
         args = {}
-        url = "/issues.json" + "?" + query
+        url = "/issues.json?" + query
 
         # TODO: if issue_limit is greater than 100, implement pagination
         # to return all issues. Leave the implementation of this to

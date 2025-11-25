@@ -6,7 +6,7 @@ import requests
 
 cache_dir = os.path.expanduser(os.getenv('XDG_CACHE_HOME', "~/.cache") + "/bugwarrior")
 logo_path = cache_dir + "/logo.png"
-logo_url = "https://upload.wikimedia.org/wikipedia/" + "en/5/59/Taskwarrior_logo.png"
+logo_url = "https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png"
 
 
 def _cache_logo():
@@ -83,8 +83,7 @@ def send_notification(issue, op, conf):
                 description="Finished querying for new issues.\n%s"
                 % issue['description'],
                 sticky=conf.finished_querying_sticky,
-                icon="https://upload.wikimedia.org/wikipedia/"
-                "en/5/59/Taskwarrior_logo.png",
+                icon=logo_url,
                 priority=1,
             )
             return
@@ -93,7 +92,7 @@ def send_notification(issue, op, conf):
             title="Bugwarrior",
             description=message,
             sticky=conf.task_crud_sticky,
-            icon="https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png",
+            icon=logo_url,
             priority=1,
         )
         return

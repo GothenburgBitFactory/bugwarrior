@@ -257,7 +257,7 @@ class AzureDevopsService(Service):
             extra = {
                 "project": issue["ParentTitle"],
                 "annotations": self.annotations(issue),
-                "namespace": (f"{self.config.organization}\\{self.config.project}"),
+                "namespace": f"{self.config.organization}\\{self.config.project}",
             }
             issue_obj.extra.update(extra)
             yield issue_obj

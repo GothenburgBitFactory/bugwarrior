@@ -108,9 +108,11 @@ class NextcloudDeckIssue(Issue):
             self.TITLE: self.record['title'],
             self.DESCRIPTION: self.record['description'],
             self.ORDER: self.record['order'],
-            self.ASSIGNEE: self.record['assignedUsers'][0]['participant']['uid']
-            if self.record['assignedUsers']
-            else None,
+            self.ASSIGNEE: (
+                self.record['assignedUsers'][0]['participant']['uid']
+                if self.record['assignedUsers']
+                else None
+            ),
         }
 
     def get_tags(self):

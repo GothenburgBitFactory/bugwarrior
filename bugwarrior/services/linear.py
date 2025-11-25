@@ -80,10 +80,14 @@ class LinearIssue(Issue):
             return r
 
         return {
-            "project": re.sub(
-                r"[^a-zA-Z0-9]", "_", get(get(self.record, "project", {}), "name", "")
-            ).lower()
-            or None,
+            "project": (
+                re.sub(
+                    r"[^a-zA-Z0-9]",
+                    "_",
+                    get(get(self.record, "project", {}), "name", ""),
+                ).lower()
+                or None
+            ),
             "priority": self.config.default_priority,
             "annotations": get(self.extra, "annotations", []),
             "tags": self.get_tags(),

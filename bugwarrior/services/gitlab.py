@@ -237,7 +237,7 @@ class GitlabClient(Client):
             for repo in include_repos:
                 if repo.startswith("id:"):
                     repo = repo[3:]
-                indiv_tmpl = 'projects' + '/' + quote(repo, '') + '?simple=true'
+                indiv_tmpl = 'projects/' + quote(repo, '') + '?simple=true'
                 item = self._fetch(indiv_tmpl)
                 if not item:
                     break
@@ -250,7 +250,7 @@ class GitlabClient(Client):
                 querystring['membership'] = True
             if only_owned:
                 querystring['owned'] = True
-            all_repos = self._fetch_paged('projects' + '?' + urlencode(querystring))
+            all_repos = self._fetch_paged('projects?' + urlencode(querystring))
         for item in all_repos:
             self.repo_cache[item['id']] = item
         return all_repos
