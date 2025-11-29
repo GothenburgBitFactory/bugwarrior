@@ -17,7 +17,6 @@ log = logging.getLogger(__name__)
 
 
 class StrippedTrailingSlashUrl(pydantic.v1.AnyUrl):
-
     @classmethod
     def validate(cls, value, field, config):
         return super().validate(value.rstrip('/'), field, config)
@@ -28,10 +27,8 @@ class UrlSchemeError(pydantic.v1.UrlSchemeError):
 
 
 class NoSchemeUrl(StrippedTrailingSlashUrl):
-
     @classmethod
-    def validate_parts(
-            cls, parts: typing.Dict[str, str]) -> typing.Dict[str, str]:
+    def validate_parts(cls, parts: typing.Dict[str, str]) -> typing.Dict[str, str]:
         scheme = parts['scheme']
         if scheme is not None:
             raise UrlSchemeError(scheme=scheme)
@@ -49,25 +46,25 @@ class NoSchemeUrl(StrippedTrailingSlashUrl):
 
 # Pydantic complicates the use of sets or lists as default values.
 class ConfigList(frozenset):
-
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
 
     @classmethod
     def validate(cls, value):
-        """ Cast ini string to a list of strings """
+        """Cast ini string to a list of strings"""
         try:
             return [
-                item.strip() for item in re.split(",(?![^{]*})", value.strip())
-                if item != '']
+                item.strip()
+                for item in re.split(",(?![^{]*})", value.strip())
+                if item != ''
+            ]
         except AttributeError:  # not a string, presumably an iterable
             return value
 
 
 # HACK https://stackoverflow.com/a/34116756
 class ExpandedPath(type(pathlib.Path())):  # type: ignore
-
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
@@ -78,14 +75,12 @@ class ExpandedPath(type(pathlib.Path())):  # type: ignore
 
 
 class LoggingPath(ExpandedPath):
-
     @classmethod
     def validate(cls, path):
         return os.path.relpath(super().validate(path))
 
 
 class TaskrcPath(ExpandedPath):
-
     @classmethod
     def validate(cls, path):
         expanded_path = super().validate(os.path.normpath(path))
@@ -95,7 +90,7 @@ class TaskrcPath(ExpandedPath):
 
     @classmethod
     def default_factory(cls):
-        """ Mimic taskwarrior's logic (comments copied from taskwarrior). """
+        """Mimic taskwarrior's logic (comments copied from taskwarrior)."""
 
         # Allow $TASKRC override.
         env_taskrc = os.getenv('TASKRC')
@@ -144,7 +139,7 @@ class PydanticConfig(pydantic.v1.BaseConfig):
 
 
 class MainSectionConfig(pydantic.v1.BaseModel):
-    """ The :ref:`common_configuration:Main Section` configuration, plus computed attributes: """
+    """The :ref:`common_configuration:Main Section` configuration, plus computed attributes:"""
 
     class Config(PydanticConfig):
         arbitrary_types_allowed = True
@@ -166,8 +161,7 @@ class MainSectionConfig(pydantic.v1.BaseModel):
         return values
 
     # optional
-    taskrc: TaskrcPath = pydantic.v1.Field(
-        default_factory=TaskrcPath.default_factory)
+    taskrc: TaskrcPath = pydantic.v1.Field(default_factory=TaskrcPath.default_factory)
     shorten: bool = False
     inline_links: bool = True
     annotation_links: bool = False
@@ -194,8 +188,9 @@ class Hooks(pydantic.v1.BaseModel):
 class Notifications(pydantic.v1.BaseModel):
     notifications: bool = False
     # Although upstream supports it, pydantic has problems with Literal[None].
-    backend: typing.Optional[typing.Literal[
-        ('gobject', 'growlnotify', 'applescript')]] = None
+    backend: typing.Optional[
+        typing.Literal[('gobject', 'growlnotify', 'applescript')]
+    ] = None
     finished_querying_sticky: bool = True
     task_crud_sticky: bool = True
     only_on_new_tasks: bool = False
@@ -211,7 +206,7 @@ class SchemaBase(pydantic.v1.BaseSettings):
 
 
 class ValidationErrorEnhancedMessages(list):
-    """ Methods loosely adapted from pydantic.error_wrappers. """
+    """Methods loosely adapted from pydantic.error_wrappers."""
 
     def __init__(self, error: pydantic.v1.ValidationError):
         super().__init__(self.flatten(error))
@@ -229,7 +224,8 @@ class ValidationErrorEnhancedMessages(list):
             # https://github.com/samuelcolvin/pydantic/issues/784
             return f"[{e['loc'][0]}]\n{e['loc'][1]}"
         raise ValueError(
-            'Configuration should not be nested more than two layers deep.')
+            'Configuration should not be nested more than two layers deep.'
+        )
 
     def display_error(self, e, error, model):
         if e['type'] == 'value_error.extra':
@@ -239,7 +235,6 @@ class ValidationErrorEnhancedMessages(list):
     def flatten(self, err, loc=None):
         for error in err.raw_errors:
             if isinstance(error, pydantic.v1.error_wrappers.ErrorWrapper):
-
                 if loc:
                     error_loc = loc + error.loc_tuple()
                 else:
@@ -249,7 +244,8 @@ class ValidationErrorEnhancedMessages(list):
                     yield from self.flatten(error.exc, error_loc)
                 else:
                     e = pydantic.v1.error_wrappers.error_dict(
-                        error.exc, PydanticConfig, error_loc)
+                        error.exc, PydanticConfig, error_loc
+                    )
                     yield self.display_error(e, error, err.model)
             elif isinstance(error, list):
                 yield from self.flatten(error, loc=loc)
@@ -259,16 +255,14 @@ class ValidationErrorEnhancedMessages(list):
 
 def raise_validation_error(msg, config_path, no_errors=1):
     log.error(
-        ('Validation error' if no_errors == 1
-         else f'{no_errors} validation errors') +
-        f' found in {config_path}\n'
+        ('Validation error' if no_errors == 1 else f'{no_errors} validation errors')
+        + f' found in {config_path}\n'
         f'See https://bugwarrior.readthedocs.io\n\n{msg}'
     )
     sys.exit(1)
 
 
 def get_target_validator(targets):
-
     @pydantic.v1.root_validator(pre=True, allow_reuse=True)
     def compute_target(cls, values):
         for target in targets:
@@ -288,7 +282,8 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
         targets = ConfigList.validate(main['targets'])
     except KeyError:
         raise_validation_error(
-            f"No option 'targets' in section: '{main_section}'", config_path)
+            f"No option 'targets' in section: '{main_section}'", config_path
+        )
     try:
         configmap = {target: config[target] for target in targets}
     except KeyError as e:
@@ -299,11 +294,14 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
             servicemap[target] = serviceconfig['service']
         except KeyError:
             raise_validation_error(
-                f"No option 'service' in section: '{target}'", config_path)
+                f"No option 'service' in section: '{target}'", config_path
+            )
 
     # Construct Service Models
-    target_schemas = {target: (get_service(service).CONFIG_SCHEMA, ...)
-                      for target, service in servicemap.items()}
+    target_schemas = {
+        target: (get_service(service).CONFIG_SCHEMA, ...)
+        for target, service in servicemap.items()
+    }
 
     # Construct Validation Model
     bugwarrior_config_model = pydantic.v1.create_model(
@@ -311,9 +309,12 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
         __base__=SchemaBase,
         __validators__={'compute_target': get_target_validator(targets)},
         general=(MainSectionConfig, ...),
-        flavor={flavor: (MainSectionConfig, ...)
-                for flavor in config.get('flavor', {}).values()},
-        **target_schemas)
+        flavor={
+            flavor: (MainSectionConfig, ...)
+            for flavor in config.get('flavor', {}).values()
+        },
+        **target_schemas,
+    )
 
     # Validate
     try:
@@ -322,23 +323,25 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
         return dict(bugwarrior_config_model(**config))
     except pydantic.v1.ValidationError as e:
         errors = ValidationErrorEnhancedMessages(e)
-        raise_validation_error(
-            str(errors), config_path, no_errors=len(errors))
+        raise_validation_error(str(errors), config_path, no_errors=len(errors))
 
 
 # Dynamically add template fields to model.
 _ServiceConfig = pydantic.v1.create_model(
     '_ServiceConfig',
-    **{f'{key}_template': (typing.Optional[str], None)
-       for key in taskw.task.Task.FIELDS}
+    **{
+        f'{key}_template': (typing.Optional[str], None)
+        for key in taskw.task.Task.FIELDS
+    },
 )
 
 
 class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
-    """ Pydantic_ base class for service configurations.
+    """Pydantic_ base class for service configurations.
 
     .. _Pydantic: https://docs.pydantic.dev/latest/
     """
+
     Config = PydanticConfig
 
     # Added during validation (computed field support will land in pydantic-2)
@@ -354,7 +357,7 @@ class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
 
     @pydantic.v1.root_validator
     def compute_templates(cls, values):
-        """ Get any defined templates for configuration values.
+        """Get any defined templates for configuration values.
 
         Users can override the value of any Taskwarrior field using
         this feature on a per-key basis.  The key should be the name of
@@ -392,10 +395,12 @@ class ServiceConfig(_ServiceConfig):  # type: ignore  # (dynamic base class)
             if values['filter_merge_requests'] != 'Undefined':
                 if values['include_merge_requests'] != 'Undefined':
                     raise ValueError(
-                        'filter_merge_requests and include_merge_requests are incompatible.')
+                        'filter_merge_requests and include_merge_requests are incompatible.'
+                    )
                 values['include_merge_requests'] = not values['filter_merge_requests']
                 log.warning(
-                    'filter_merge_requests is deprecated in favor of include_merge_requests')
+                    'filter_merge_requests is deprecated in favor of include_merge_requests'
+                )
             elif values['include_merge_requests'] == 'Undefined':
                 values['include_merge_requests'] = True
         return values

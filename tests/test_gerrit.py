@@ -25,12 +25,18 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
         'status': 'new',
         'work_in_progress': False,
         'subject': 'this is a title',
-        'messages': [{'author': {'username': 'Iam Author'},
-                      'message': 'this is a message',
-                      '_revision_number': 1},
-                     {'author': {'username': 'CI Bot'},
-                      'message': 'ignore me please',
-                      '_revision_number': 1}],
+        'messages': [
+            {
+                'author': {'username': 'Iam Author'},
+                'message': 'this is a message',
+                '_revision_number': 1,
+            },
+            {
+                'author': {'username': 'CI Bot'},
+                'message': 'ignore me please',
+                '_revision_number': 1,
+            },
+        ],
     }
 
     extra = {
@@ -46,7 +52,8 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
         responses.add(
             responses.HEAD,
             self.SERVICE_CONFIG['base_uri'] + '/a/',
-            headers={'www-authenticate': 'digest'})
+            headers={'www-authenticate': 'digest'},
+        )
         with responses.mock:
             self.service = self.get_mock_service(GerritService)
 
@@ -86,7 +93,8 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'gerritwip': 1,
             'priority': 'M',
             'project': 'nova',
-            'tags': []}
+            'tags': [],
+        }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
@@ -95,7 +103,8 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
         self.add_response(
             'https://one.com/a/changes/?q=is:open+is:reviewer&o=MESSAGES&o=DETAILED_ACCOUNTS',
             # The response has some ")]}'" garbage prefixed.
-            body=")]}'" + json.dumps([self.record]))
+            body=")]}'" + json.dumps([self.record]),
+        )
 
         issue = next(self.service.issues())
 
@@ -111,6 +120,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
             'gerritwip': 0,
             'priority': 'M',
             'project': 'nova',
-            'tags': []}
+            'tags': [],
+        }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

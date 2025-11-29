@@ -28,7 +28,7 @@ class TestData:
                 "cardId": 11,
                 "lastModified": 1660767234,
                 "id": 8,
-                "ETag": "e388bcf5a1d076dd6b7d097ff259cd16"
+                "ETag": "e388bcf5a1d076dd6b7d097ff259cd16",
             }
         ],
         "assignedUsers": [
@@ -38,10 +38,10 @@ class TestData:
                     "primaryKey": "rainbow",
                     "uid": "rainbow",
                     "displayname": "Rainbow",
-                    "type": 0
+                    "type": 0,
                 },
                 "cardId": 35,
-                "type": 0
+                "type": 0,
             }
         ],
         "attachments": None,
@@ -50,7 +50,7 @@ class TestData:
             "primaryKey": "unicorn",
             "uid": "unicorn",
             "displayname": "Unicorn",
-            "type": 0
+            "type": 0,
         },
         "order": 10,
         "archived": False,
@@ -60,7 +60,7 @@ class TestData:
         "commentsCount": 0,
         "id": 11,
         "ETag": "9641ba85250eedb2f2027ac49cf58796",
-        "overdue": 0
+        "overdue": 0,
     }
 
 
@@ -79,7 +79,7 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
             'general': {
                 'targets': ['deck'],
                 # would otherwise cut the title short
-                'description_length': '45'
+                'description_length': '45',
             },
             'deck': {
                 'service': 'deck',
@@ -98,20 +98,31 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
         service = NextcloudDeckService(conf['deck'], conf['general'])
         service.client = mock.MagicMock(spec=NextcloudDeckClient)
         service.client.get_boards = mock.MagicMock(
-            return_value=[{'id': 5, 'title': 'testboard'}])
+            return_value=[{'id': 5, 'title': 'testboard'}]
+        )
         service.client.get_stacks = mock.MagicMock(
-            return_value=[{'id': 13, 'title': 'teststack', 'cards': [self.data.arbitrary_card]}])
-        service.client.get_comments = mock.MagicMock(return_value={
-            'ocs': {'data': [{'actorDisplayName': 'Lena', 'message': 'testcomment'}]}})
+            return_value=[
+                {'id': 13, 'title': 'teststack', 'cards': [self.data.arbitrary_card]}
+            ]
+        )
+        service.client.get_comments = mock.MagicMock(
+            return_value={
+                'ocs': {
+                    'data': [{'actorDisplayName': 'Lena', 'message': 'testcomment'}]
+                }
+            }
+        )
         return service
 
     def test_to_taskwarrior(self):
         issue = self.service.get_issue_for_record(
-            self.data.arbitrary_card, {
+            self.data.arbitrary_card,
+            {
                 'board': {'title': 'testboard', 'id': 5},
                 'stack': {'title': 'teststack', 'id': 13},
                 'annotations': ['@Lena - testcomment'],
-            })
+            },
+        )
 
         expected = {
             'annotations': ['@Lena - testcomment'],
@@ -129,7 +140,7 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
             'nextclouddeckorder': 10,
             'priority': 'M',
             'project': 'testboard',
-            'tags': ['Later']
+            'tags': ['Later'],
         }
         actual = issue.to_taskwarrior()
 
@@ -155,7 +166,7 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
             'nextclouddeckorder': 10,
             'priority': 'M',
             'project': 'testboard',
-            'tags': ['Later']
+            'tags': ['Later'],
         }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

@@ -18,16 +18,23 @@ def get_service(service_name: str):
     try:
         (service,) = entry_points(group='bugwarrior.service', name=service_name)
     except ValueError as e:
-        if service_name in ['activecollab', 'activecollab2', 'megaplan',
-                            'teamlab', 'versionone']:
+        if service_name in [
+            'activecollab',
+            'activecollab2',
+            'megaplan',
+            'teamlab',
+            'versionone',
+        ]:
             log.warning(f"The {service_name} service has been removed.")
-        raise ValueError(f"Configured service '{service_name}' not found. "
-                         "Is it installed? Or misspelled?") from e
+        raise ValueError(
+            f"Configured service '{service_name}' not found. "
+            "Is it installed? Or misspelled?"
+        ) from e
     return service.load()
 
 
 def _aggregate_issues(conf, main_section, target, queue):
-    """ This worker function is separated out from the main
+    """This worker function is separated out from the main
     :func:`aggregate_issues` func only so that we can use multiprocessing
     on it for speed reasons.
     """
@@ -35,8 +42,7 @@ def _aggregate_issues(conf, main_section, target, queue):
     start = time.time()
 
     try:
-        service = get_service(conf[target].service)(
-            conf[target], conf[main_section])
+        service = get_service(conf[target].service)(conf[target], conf[main_section])
         issue_count = 0
         for issue in service.issues():
             queue.put(issue)
@@ -62,7 +68,7 @@ def _aggregate_issues(conf, main_section, target, queue):
 
 
 def aggregate_issues(conf, main_section, debug):
-    """ Return all issues from every target. """
+    """Return all issues from every target."""
     log.info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
@@ -78,8 +84,7 @@ def aggregate_issues(conf, main_section, debug):
     else:
         for target in targets:
             proc = multiprocessing.Process(
-                target=_aggregate_issues,
-                args=(conf, main_section, target, queue)
+                target=_aggregate_issues, args=(conf, main_section, target, queue)
             )
             proc.start()
 
@@ -110,7 +115,7 @@ def aggregate_issues(conf, main_section, debug):
 
 
 class TaskConstructor:
-    """ Construct a taskwarrior task from a foreign record. """
+    """Construct a taskwarrior task from a foreign record."""
 
     def __init__(self, issue):
         self.issue = issue
@@ -137,13 +142,9 @@ class TaskConstructor:
         return record
 
     def get_template_context(self):
-        context = (
-            self.get_taskwarrior_record(refined=False).copy()
-        )
+        context = self.get_taskwarrior_record(refined=False).copy()
         context.update(self.issue.extra)
-        context.update({
-            'description': self.issue.get_default_description(),
-        })
+        context.update({'description': self.issue.get_default_description()})
         return context
 
     def refine_record(self, record):

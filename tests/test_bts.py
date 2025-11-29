@@ -9,9 +9,11 @@ from .base import AbstractServiceTest, ServiceTest
 class FakeBTSBug:
     bug_num = 810629
     package = "wnpp"
-    subject = ("ITP: bugwarrior -- Pull tickets from github, "
-               "bitbucket, bugzilla, jira, trac, and others into "
-               "taskwarrior")
+    subject = (
+        "ITP: bugwarrior -- Pull tickets from github, "
+        "bitbucket, bugzilla, jira, trac, and others into "
+        "taskwarrior"
+    )
     severity = "wishlist"
     source = ""
     forwarded = ""
@@ -28,7 +30,6 @@ class FakeBTSLib:
 
 
 class TestBTSService(AbstractServiceTest, ServiceTest):
-
     maxDiff = None
 
     SERVICE_CONFIG = {
@@ -49,7 +50,6 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
         expected_output = {
             'priority': issue.PRIORITY_MAP[FakeBTSBug.severity],
             'annotations': [],
-
             issue.URL: "https://bugs.debian.org/" + str(FakeBTSBug.bug_num),
             issue.SUBJECT: FakeBTSBug.subject,
             issue.NUMBER: FakeBTSBug.bug_num,
@@ -71,17 +71,21 @@ class TestBTSService(AbstractServiceTest, ServiceTest):
             'btsnumber': 810629,
             'btsforwarded': '',
             'btspackage': 'wnpp',
-            'btssubject': ('ITP: bugwarrior -- Pull tickets from github, '
-                           'bitbucket, bugzilla, jira, trac, and others into '
-                           'taskwarrior'),
+            'btssubject': (
+                'ITP: bugwarrior -- Pull tickets from github, '
+                'bitbucket, bugzilla, jira, trac, and others into '
+                'taskwarrior'
+            ),
             'btsurl': 'https://bugs.debian.org/810629',
             'btssource': '',
             'description': (
                 '(bw)Is#810629 - ITP: bugwarrior -- Pull tickets from github, '
                 'bitbucket, bugzilla, jira, trac, and others into taskwa .. '
-                'https://bugs.debian.org/810629'),
+                'https://bugs.debian.org/810629'
+            ),
             'priority': 'L',
             'btsstatus': 'pending',
-            'tags': []}
+            'tags': [],
+        }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

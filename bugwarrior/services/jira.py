@@ -28,7 +28,6 @@ class ExtraFieldNotFoundError(Exception):
 
 
 class JiraExtraFields(frozenset):
-
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
@@ -65,12 +64,10 @@ class JiraExtraField:
 
         try:
             value = reduce(
-                lambda val, key: val.get(key) if val else None,
-                self.keys,
-                fields)
+                lambda val, key: val.get(key) if val else None, self.keys, fields
+            )
         except KeyError:
-            raise ExtraFieldNotFoundError(
-                label=self.label, query='.'.join(self.keys))
+            raise ExtraFieldNotFoundError(label=self.label, query='.'.join(self.keys))
 
         return value
 
@@ -98,10 +95,12 @@ class JiraConfig(config.ServiceConfig):
 
     @pydantic.v1.root_validator
     def require_password_xor_PAT(cls, values):
-        if ((values['password'] and values['PAT'])
-                or not (values['password'] or values['PAT'])):
+        if (values['password'] and values['PAT']) or not (
+            values['password'] or values['PAT']
+        ):
             raise ValueError(
-                'section requires one of (not both):\n    password\n    PAT')
+                'section requires one of (not both):\n    password\n    PAT'
+            )
         return values
 
 
@@ -136,14 +135,14 @@ class JIRA(BaseJIRA):
 
 
 def _parse_sprint_string(sprint):
-    """ Parse the big ugly sprint string stored by JIRA.
+    """Parse the big ugly sprint string stored by JIRA.
 
     They look like:
         com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapid
         ViewId=1173,state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4
         55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]
     """
-    entries = sprint[sprint.index('[') + 1:sprint.index(']')].split('=')
+    entries = sprint[sprint.index('[') + 1 : sprint.index(']')].split('=')
     fields = sum((entry.rsplit(',', 1) for entry in entries), [])
     return dict(zip(fields[::2], fields[1::2]))
 
@@ -162,52 +161,19 @@ class JiraIssue(Issue):
     PARENT = 'jiraparent'
 
     UDAS = {
-        ISSUE_TYPE: {
-            'type': 'string',
-            'label': 'Issue Type'
-        },
-        SUMMARY: {
-            'type': 'string',
-            'label': 'Jira Summary'
-        },
-        URL: {
-            'type': 'string',
-            'label': 'Jira URL',
-        },
-        DESCRIPTION: {
-            'type': 'string',
-            'label': 'Jira Description',
-        },
-        FOREIGN_ID: {
-            'type': 'string',
-            'label': 'Jira Issue ID'
-        },
-        ESTIMATE: {
-            'type': 'numeric',
-            'label': 'Estimate'
-        },
-        FIX_VERSION: {
-            'type': 'string',
-            'label': 'Fix Version'
-        },
-        CREATED_AT: {
-            'type': 'date',
-            'label': 'Created At'
-        },
-        STATUS: {
-            'type': 'string',
-            'label': "Jira Status"
-        },
-        SUBTASKS: {
-            'type': 'string',
-            'label': "Jira Subtasks"
-        },
-        PARENT: {
-            'type': 'string',
-            'label': 'Jira Parent'
-        }
+        ISSUE_TYPE: {'type': 'string', 'label': 'Issue Type'},
+        SUMMARY: {'type': 'string', 'label': 'Jira Summary'},
+        URL: {'type': 'string', 'label': 'Jira URL'},
+        DESCRIPTION: {'type': 'string', 'label': 'Jira Description'},
+        FOREIGN_ID: {'type': 'string', 'label': 'Jira Issue ID'},
+        ESTIMATE: {'type': 'numeric', 'label': 'Estimate'},
+        FIX_VERSION: {'type': 'string', 'label': 'Fix Version'},
+        CREATED_AT: {'type': 'date', 'label': 'Created At'},
+        STATUS: {'type': 'string', 'label': "Jira Status"},
+        SUBTASKS: {'type': 'string', 'label': "Jira Subtasks"},
+        PARENT: {'type': 'string', 'label': 'Jira Parent'},
     }
-    UNIQUE_KEY = (URL, )
+    UNIQUE_KEY = (URL,)
 
     PRIORITY_MAP = {
         'Highest': 'H',
@@ -230,7 +196,6 @@ class JiraIssue(Issue):
             'tags': self.get_tags(),
             'due': self.get_due(),
             'entry': self.get_entry(),
-
             self.ISSUE_TYPE: self.get_issue_type(),
             self.URL: self.get_url(),
             self.FOREIGN_ID: self.record['key'],
@@ -251,8 +216,10 @@ class JiraIssue(Issue):
         if self.config.extra_fields is None:
             return {}
 
-        return {extra_field.label: extra_field.extract_value(
-            self.record['fields']) for extra_field in self.config.extra_fields}
+        return {
+            extra_field.label: extra_field.extract_value(self.record['fields'])
+            for extra_field in self.config.extra_fields
+        }
 
     def get_entry(self):
         created_at = self.record['fields']['created']
@@ -266,7 +233,8 @@ class JiraIssue(Issue):
 
         sprints = [sprint['name'] for sprint in self.__get_sprints()]
         sprint_tags = self.get_tags_from_labels(
-            sprints, toggle_option='import_sprints_as_tags')
+            sprints, toggle_option='import_sprints_as_tags'
+        )
 
         return label_tags + sprint_tags
 
@@ -283,10 +251,9 @@ class JiraIssue(Issue):
 
     def __get_sprints(self):
         fields = self.record.get('fields', {})
-        sprints = sum((
-            fields.get(key) or []
-            for key in self.extra['sprint_field_names']
-        ), [])
+        sprints = sum(
+            (fields.get(key) or [] for key in self.extra['sprint_field_names']), []
+        )
         for sprint in sprints:
             if isinstance(sprint, dict):
                 yield sprint
@@ -325,7 +292,7 @@ class JiraIssue(Issue):
         value = self.record['fields'].get('priority')
         try:
             value = value['name']
-        except (TypeError, ):
+        except (TypeError,):
             value = str(value)
         # priority.name format: "1 - Critical"
         map_key = value.strip().split()[-1]
@@ -349,12 +316,14 @@ class JiraIssue(Issue):
         return self.record['fields']['status']['name']
 
     def get_subtasks(self):
-        return ','.join(task['key'] for task in self.record['fields'].get('subtasks', []))
+        return ','.join(
+            task['key'] for task in self.record['fields'].get('subtasks', [])
+        )
 
     def get_parent(self):
         try:
             parent = self.record['fields']['parent']['key']
-        except (KeyError, ):
+        except (KeyError,):
             return None
 
         return parent
@@ -372,9 +341,11 @@ class JiraService(Service):
         _skip_server = kw.pop('_skip_server', False)
         super().__init__(*args, **kw)
 
-        default_query = 'assignee="' + \
-            self.config.username.replace("@", "\\u0040") + \
-            '" AND resolution is null'
+        default_query = (
+            'assignee="'
+            + self.config.username.replace("@", "\\u0040")
+            + '" AND resolution is null'
+        )
         self.query = self.config.query or default_query
 
         if self.config.PAT:
@@ -396,20 +367,20 @@ class JiraService(Service):
                     'rest_api_version': 'latest',
                     'verify': self.config.verify_ssl,
                 },
-                **auth
+                **auth,
             )
 
         self.sprint_field_names = []
         if self.config.import_sprints_as_tags:
-            field_names = [field for field in self.jira.fields()
-                           if field['name'] == 'Sprint']
+            field_names = [
+                field for field in self.jira.fields() if field['name'] == 'Sprint'
+            ]
             if len(field_names) < 1:
                 log.warn("No sprint custom field found.  Ignoring sprints.")
                 self.config.import_sprints_as_tags = False
             else:
                 log.info("Found %i distinct sprint fields." % len(field_names))
-                self.sprint_field_names = [field['id']
-                                           for field in field_names]
+                self.sprint_field_names = [field['id'] for field in field_names]
 
     @staticmethod
     def get_keyring_service(config):
@@ -419,18 +390,15 @@ class JiraService(Service):
         body = issue.record.get('fields', {}).get('description')
 
         if body:
-            body = body[:self.config.body_length]
+            body = body[: self.config.body_length]
 
         return body
 
     def annotations(self, issue, issue_obj):
         comments = self.jira.comments(issue.key) or []
         return self.build_annotations(
-            ((
-                comment.author.displayName,
-                comment.body
-            ) for comment in comments),
-            issue_obj.get_url()
+            ((comment.author.displayName, comment.body) for comment in comments),
+            issue_obj.get_url(),
         )
 
     def issues(self):
@@ -438,14 +406,10 @@ class JiraService(Service):
 
         for case in cases:
             issue = self.get_issue_for_record(
-                case.raw,
-                extra={'sprint_field_names': self.sprint_field_names})
-            extra = {
-                'body': self.body(issue),
-            }
+                case.raw, extra={'sprint_field_names': self.sprint_field_names}
+            )
+            extra = {'body': self.body(issue)}
             if self.config.version > 4:
-                extra.update({
-                    'annotations': self.annotations(case, issue)
-                })
+                extra.update({'annotations': self.annotations(case, issue)})
             issue.extra.update(extra)
             yield issue

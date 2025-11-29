@@ -53,9 +53,7 @@ class RedMineClient(Client):
 
     def call_api(self, uri, params):
         url = self.url.rstrip("/") + uri
-        kwargs = {
-            'headers': {'X-Redmine-API-Key': self.key},
-            'params': params}
+        kwargs = {'headers': {'X-Redmine-API-Key': self.key}, 'params': params}
 
         if self.auth:
             kwargs['auth'] = self.auth
@@ -84,72 +82,24 @@ class RedMineIssue(Issue):
     PROJECT_NAME = 'redmineprojectname'
 
     UDAS = {
-        URL: {
-            'type': 'string',
-            'label': 'Redmine URL',
-        },
-        SUBJECT: {
-            'type': 'string',
-            'label': 'Redmine Subject',
-        },
-        ID: {
-            'type': 'numeric',
-            'label': 'Redmine ID',
-        },
-        DESCRIPTION: {
-            'type': 'string',
-            'label': 'Redmine Description',
-        },
-        TRACKER: {
-            'type': 'string',
-            'label': 'Redmine Tracker',
-        },
-        STATUS: {
-            'type': 'string',
-            'label': 'Redmine Status',
-        },
-        AUTHOR: {
-            'type': 'string',
-            'label': 'Redmine Author',
-        },
-        CATEGORY: {
-            'type': 'string',
-            'label': 'Redmine Category',
-        },
-        START_DATE: {
-            'type': 'date',
-            'label': 'Redmine Start Date',
-        },
-        SPENT_HOURS: {
-            'type': 'duration',
-            'label': 'Redmine Spent Hours',
-        },
-        ESTIMATED_HOURS: {
-            'type': 'duration',
-            'label': 'Redmine Estimated Hours',
-        },
-        CREATED_ON: {
-            'type': 'date',
-            'label': 'Redmine Created On',
-        },
-        UPDATED_ON: {
-            'type': 'date',
-            'label': 'Redmine Updated On',
-        },
-        DUEDATE: {
-            'type': 'date',
-            'label': 'Redmine Due Date'
-        },
-        ASSIGNED_TO: {
-            'type': 'string',
-            'label': 'Redmine Assigned To',
-        },
-        PROJECT_NAME: {
-            'type': 'string',
-            'label': 'Redmine Project',
-        },
+        URL: {'type': 'string', 'label': 'Redmine URL'},
+        SUBJECT: {'type': 'string', 'label': 'Redmine Subject'},
+        ID: {'type': 'numeric', 'label': 'Redmine ID'},
+        DESCRIPTION: {'type': 'string', 'label': 'Redmine Description'},
+        TRACKER: {'type': 'string', 'label': 'Redmine Tracker'},
+        STATUS: {'type': 'string', 'label': 'Redmine Status'},
+        AUTHOR: {'type': 'string', 'label': 'Redmine Author'},
+        CATEGORY: {'type': 'string', 'label': 'Redmine Category'},
+        START_DATE: {'type': 'date', 'label': 'Redmine Start Date'},
+        SPENT_HOURS: {'type': 'duration', 'label': 'Redmine Spent Hours'},
+        ESTIMATED_HOURS: {'type': 'duration', 'label': 'Redmine Estimated Hours'},
+        CREATED_ON: {'type': 'date', 'label': 'Redmine Created On'},
+        UPDATED_ON: {'type': 'date', 'label': 'Redmine Updated On'},
+        DUEDATE: {'type': 'date', 'label': 'Redmine Due Date'},
+        ASSIGNED_TO: {'type': 'string', 'label': 'Redmine Assigned To'},
+        PROJECT_NAME: {'type': 'string', 'label': 'Redmine Project'},
     }
-    UNIQUE_KEY = (ID, )
+    UNIQUE_KEY = (ID,)
 
     PRIORITY_MAP = {
         'Low': 'L',
@@ -212,8 +162,7 @@ class RedMineIssue(Issue):
 
     def get_priority(self):
         return self.PRIORITY_MAP.get(
-            self.record.get('priority', {}).get('name'),
-            self.config.default_priority
+            self.record.get('priority', {}).get('name'), self.config.default_priority
         )
 
     def get_issue_url(self):
@@ -222,9 +171,7 @@ class RedMineIssue(Issue):
     def get_converted_hours(self, estimated_hours):
         tw = TaskWarriorShellout(config_filename=self.main_config.taskrc)
         calc = tw._execute('calc', estimated_hours)
-        return (
-            calc[0].rstrip()
-        )
+        return calc[0].rstrip()
 
     def get_project_name(self):
         if self.config.project_name:
@@ -254,15 +201,21 @@ class RedMineService(Service):
 
         self.key = self.get_secret('key')
 
-        password = (self.get_secret('password', self.config.login)
-                    if self.config.login else None)
-        auth = ((self.config.login, password)
-                if (self.config.login and password) else None)
-        self.client = RedMineClient(self.config.url,
-                                    self.key,
-                                    auth,
-                                    self.config.issue_limit,
-                                    self.config.verify_ssl)
+        password = (
+            self.get_secret('password', self.config.login)
+            if self.config.login
+            else None
+        )
+        auth = (
+            (self.config.login, password) if (self.config.login and password) else None
+        )
+        self.client = RedMineClient(
+            self.config.url,
+            self.key,
+            auth,
+            self.config.issue_limit,
+            self.config.verify_ssl,
+        )
 
     @staticmethod
     def get_keyring_service(config):
@@ -270,7 +223,8 @@ class RedMineService(Service):
 
     def issues(self):
         issues = self.client.find_issues(
-            self.config.issue_limit, self.config.query, self.config.only_if_assigned)
+            self.config.issue_limit, self.config.query, self.config.only_if_assigned
+        )
         log.debug(" Found %i total.", len(issues))
         for issue in issues:
             yield self.get_issue_for_record(issue)

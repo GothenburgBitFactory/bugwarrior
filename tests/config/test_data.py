@@ -24,8 +24,7 @@ class TestData(ConfigTest):
         self.data.set('key', 'value')
 
         self.assertEqual(self.data.get('key'), 'value')
-        self.assertEqual(
-            self.data.get_data(), {'old': 'stuff', 'key': 'value'})
+        self.assertEqual(self.data.get_data(), {'old': 'stuff', 'key': 'value'})
         self.assert0600()
 
     def test_set_first_time(self):
@@ -39,7 +38,6 @@ class TestData(ConfigTest):
 
 
 class TestGetDataPath(ConfigTest):
-
     def setUp(self):
         super().setUp()
         rawconfig = {
@@ -51,12 +49,12 @@ class TestGetDataPath(ConfigTest):
                 'username': 'ralphbean',
             },
         }
-        self.config = schema.validate_config(
-            rawconfig, 'general', 'configpath')
+        self.config = schema.validate_config(rawconfig, 'general', 'configpath')
 
     def assertDataPath(self, expected_datapath):
-        self.assertEqual(expected_datapath,
-                         data.get_data_path(self.config['general'].taskrc))
+        self.assertEqual(
+            expected_datapath, data.get_data_path(self.config['general'].taskrc)
+        )
 
     def test_TASKDATA(self):
         """

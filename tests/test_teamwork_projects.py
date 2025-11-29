@@ -21,48 +21,44 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
         super().setUp()
         self.add_response(
             'https://test.teamwork_projects.com/authenticate.json',
-            json={
-                'account': {
-                    'userId': 5,
-                    'firstname': 'Greg',
-                    'lastname': 'McCoy'
-                }
-            }
+            json={'account': {'userId': 5, 'firstname': 'Greg', 'lastname': 'McCoy'}},
         )
         self.service = self.get_mock_service(TeamworkService)
         self.arbitrary_issue = {
-            "todo-items": [{
-                "id": 5,
-                "comments-count": 2,
-                "description": "This issue is meant for testing",
-                "content": "This is a test issue",
-                "project-id": 1,
-                "project-name": "Test Project",
-                "status": "new",
-                "company-name": "Test Company",
-                "company-id": 1,
-                "creator-id": 1,
-                "creator-firstname": "Greg",
-                "creator-lastname": "McCoy",
-                "updater-id": 0,
-                "updater-firstname": "",
-                "updater-lastname": "",
-                "completed": False,
-                "start-date": "",
-                "due-date": "2019-12-12T10:06:31Z",
-                "created-on": "2018-12-12T10:06:31Z",
-                "last-changed-on": "2019-01-16T11:00:44Z",
-                "priority": "high",
-                "parentTaskId": "",
-                "userFollowingComments": True,
-                "userFollowingChanges": True,
-                "DLM": 0,
-                "responsible-party-ids": ["5"]
-            }]
+            "todo-items": [
+                {
+                    "id": 5,
+                    "comments-count": 2,
+                    "description": "This issue is meant for testing",
+                    "content": "This is a test issue",
+                    "project-id": 1,
+                    "project-name": "Test Project",
+                    "status": "new",
+                    "company-name": "Test Company",
+                    "company-id": 1,
+                    "creator-id": 1,
+                    "creator-firstname": "Greg",
+                    "creator-lastname": "McCoy",
+                    "updater-id": 0,
+                    "updater-firstname": "",
+                    "updater-lastname": "",
+                    "completed": False,
+                    "start-date": "",
+                    "due-date": "2019-12-12T10:06:31Z",
+                    "created-on": "2018-12-12T10:06:31Z",
+                    "last-changed-on": "2019-01-16T11:00:44Z",
+                    "priority": "high",
+                    "parentTaskId": "",
+                    "userFollowingComments": True,
+                    "userFollowingChanges": True,
+                    "DLM": 0,
+                    "responsible-party-ids": ["5"],
+                }
+            ]
         }
         self.arbitrary_extra = {
             "host": "https://test.teamwork_projects.com",
-            "annotations": [("Greg McCoy", "Test comment"), ("Bob Test", "testing")]
+            "annotations": [("Greg McCoy", "Test comment"), ("Bob Test", "testing")],
         }
         self.arbitrary_comments = {
             "comments": [
@@ -80,7 +76,7 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
                     "commentNo": "1",
                     "author-firstname": "Demo",
                     "comment-link": "tasks/436523?c=93",
-                    "author-id": "999"
+                    "author-id": "999",
                 }
             ]
         }
@@ -88,7 +84,8 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_to_taskwarrior(self):
         issue = self.service.get_issue_for_record(
-            self.arbitrary_issue["todo-items"][0], self.arbitrary_extra)
+            self.arbitrary_issue["todo-items"][0], self.arbitrary_extra
+        )
         data = self.arbitrary_issue["todo-items"][0]
         expected_data = {
             'project': data["project-name"],
@@ -112,11 +109,10 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         self.add_response(
             'https://test.teamwork_projects.com/tasks/5/comments.json',
-            json=self.arbitrary_comments
+            json=self.arbitrary_comments,
         )
         self.add_response(
-            'https://test.teamwork_projects.com/tasks.json',
-            json=self.arbitrary_issue
+            'https://test.teamwork_projects.com/tasks.json', json=self.arbitrary_issue
         )
         issue = next(self.service.issues())
         data = self.arbitrary_issue["todo-items"][0]

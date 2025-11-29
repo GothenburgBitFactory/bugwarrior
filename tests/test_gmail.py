@@ -24,7 +24,6 @@ TEST_CREDENTIAL = {
 
 
 class TestGmailService(ConfigTest):
-
     def setUp(self):
         super().setUp()
         self.config = {
@@ -47,8 +46,7 @@ class TestGmailService(ConfigTest):
         with open(self.service.credentials_path, "wb") as token:
             pickle.dump(expected, token)
 
-        self.assertEqual(self.service.get_credentials().to_json(),
-                         expected.to_json())
+        self.assertEqual(self.service.get_credentials().to_json(), expected.to_json())
 
     def test_get_credentials_with_refresh(self):
         expired_credential = Credentials(**copy(TEST_CREDENTIAL))
@@ -60,11 +58,17 @@ class TestGmailService(ConfigTest):
         with patch("google.oauth2.reauth.refresh_grant") as mock_refresh_grant:
             access_token = "newaccesstoken"
             refresh_token = "newrefreshtoken"
-            expiry = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)
+            expiry = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(
+                hours=24
+            )
             grant_response = {"id_token": "idtoken"}
             rapt_token = "reauthprooftoken"
             mock_refresh_grant.return_value = (
-                access_token, refresh_token, expiry, grant_response, rapt_token
+                access_token,
+                refresh_token,
+                expiry,
+                grant_response,
+                rapt_token,
             )
             refreshed_credential = self.service.get_credentials()
         self.assertEqual(refreshed_credential.valid, True)
@@ -114,9 +118,12 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
         super().setUp()
 
         mock_api = mock.Mock()
-        mock_api().users().labels().list().execute.return_value = {'labels': TEST_LABELS}
+        mock_api().users().labels().list().execute.return_value = {
+            'labels': TEST_LABELS
+        }
         mock_api().users().threads().list().execute.return_value = {
-            'threads': [{'id': TEST_THREAD['id']}]}
+            'threads': [{'id': TEST_THREAD['id']}]
+        }
         mock_api().users().threads().get().execute.return_value = TEST_THREAD
         gmail.GmailService.build_api = mock_api
         self.service = self.get_mock_service(gmail.GmailService, section='test_section')
@@ -124,14 +131,15 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
     def test_config_paths(self):
         credentials_path = os.path.join(
             self.service.main_config.data.path,
-            'gmail_credentials_test_example_com.pickle')
+            'gmail_credentials_test_example_com.pickle',
+        )
         self.assertEqual(self.service.credentials_path, credentials_path)
 
     def test_to_taskwarrior(self):
         thread = TEST_THREAD
         issue = self.service.get_issue_for_record(
-            thread,
-            gmail.thread_extras(thread, self.service.get_labels()))
+            thread, gmail.thread_extras(thread, self.service.get_labels())
+        )
         expected = {
             'annotations': [],
             'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=tzutc()),
@@ -144,7 +152,8 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
             'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
             'priority': 'M',
-            'gmaillastsenderaddr': 'foobar@example.com'}
+            'gmaillastsenderaddr': 'foobar@example.com',
+        }
 
         taskwarrior = issue.to_taskwarrior()
         taskwarrior['tags'] = set(taskwarrior['tags'])
@@ -166,7 +175,8 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
             'gmailsubject': 'Regarding Bugwarrior',
             'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
             'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
-            'gmaillastsenderaddr': 'foobar@example.com'}
+            'gmaillastsenderaddr': 'foobar@example.com',
+        }
 
         taskwarrior = TaskConstructor(issue).get_taskwarrior_record()
         taskwarrior['tags'] = set(taskwarrior['tags'])
@@ -177,21 +187,19 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
         test_thread = {
             'messages': [
                 {
-                    'payload':
-                        {
-                            'headers': [
-                                {'name': 'From', 'value': 'Xyz <xyz@example.com'}
-                            ]
-                        }
+                    'payload': {
+                        'headers': [{'name': 'From', 'value': 'Xyz <xyz@example.com'}]
+                    }
                 },
                 {
-                    'payload':
-                        {
-                            'headers': [
-                                {'name': 'From', 'value': 'Foo Bar <foobar@example.com'}
-                            ]
-                        }
+                    'payload': {
+                        'headers': [
+                            {'name': 'From', 'value': 'Foo Bar <foobar@example.com'}
+                        ]
+                    }
                 },
             ]
         }
-        self.assertEqual(gmail.thread_last_sender(test_thread), ('Foo Bar', 'foobar@example.com'))
+        self.assertEqual(
+            gmail.thread_last_sender(test_thread), ('Foo Bar', 'foobar@example.com')
+        )

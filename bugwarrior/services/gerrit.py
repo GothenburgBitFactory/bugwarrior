@@ -34,43 +34,21 @@ class GerritIssue(Issue):
     WORK_IN_PROGRESS = 'gerritwip'
 
     UDAS = {
-        SUMMARY: {
-            'type': 'string',
-            'label': 'Gerrit Summary'
-        },
-        URL: {
-            'type': 'string',
-            'label': 'Gerrit URL',
-        },
-        FOREIGN_ID: {
-            'type': 'numeric',
-            'label': 'Gerrit Change ID'
-        },
-        BRANCH: {
-            'type': 'string',
-            'label': 'Gerrit Branch',
-        },
-        TOPIC: {
-            'type': 'string',
-            'label': 'Gerrit Topic',
-        },
-        STATUS: {
-            'type': 'string',
-            'label': 'Gerrit Status',
-        },
-        WORK_IN_PROGRESS: {
-            'type': 'numeric',
-            'label': 'Gerrit Work in Progress',
-        },
+        SUMMARY: {'type': 'string', 'label': 'Gerrit Summary'},
+        URL: {'type': 'string', 'label': 'Gerrit URL'},
+        FOREIGN_ID: {'type': 'numeric', 'label': 'Gerrit Change ID'},
+        BRANCH: {'type': 'string', 'label': 'Gerrit Branch'},
+        TOPIC: {'type': 'string', 'label': 'Gerrit Topic'},
+        STATUS: {'type': 'string', 'label': 'Gerrit Status'},
+        WORK_IN_PROGRESS: {'type': 'numeric', 'label': 'Gerrit Work in Progress'},
     }
-    UNIQUE_KEY = (URL, )
+    UNIQUE_KEY = (URL,)
 
     def to_taskwarrior(self):
         return {
             'project': self.record['project'],
             'annotations': self.extra['annotations'],
             self.URL: self.extra['url'],
-
             'priority': self.config.default_priority,
             'tags': [],
             self.FOREIGN_ID: self.record['_number'],
@@ -99,12 +77,10 @@ class GerritService(Service, Client):
         super().__init__(*args, **kw)
         self.password = self.get_secret('password', self.config.username)
         self.session = requests.session()
-        self.session.headers.update({
-            'Accept': 'application/json',
-            'Accept-Encoding': 'gzip',
-        })
-        self.query_string = (
-            self.config.query + '&o=MESSAGES&o=DETAILED_ACCOUNTS')
+        self.session.headers.update(
+            {'Accept': 'application/json', 'Accept-Encoding': 'gzip'}
+        )
+        self.query_string = self.config.query + '&o=MESSAGES&o=DETAILED_ACCOUNTS'
 
         if self.config.ssl_ca_path:
             self.session.verify = self.config.ssl_ca_path
@@ -114,10 +90,12 @@ class GerritService(Service, Client):
         response = self.session.head(self.config.base_uri + '/a/')
         if 'digest' in response.headers.get('www-authenticate', '').lower():
             self.session.auth = requests.auth.HTTPDigestAuth(
-                self.config.username, self.password)
+                self.config.username, self.password
+            )
         else:
             self.session.auth = requests.auth.HTTPBasicAuth(
-                self.config.username, self.password)
+                self.config.username, self.password
+            )
 
     @staticmethod
     def get_keyring_service(config):
@@ -155,11 +133,13 @@ class GerritService(Service, Client):
             if username in self.config.ignore_user_comments:
                 log.debug(" ignoring comment from %s", username)
                 continue
-            message = item['message']\
-                .lstrip('Patch Set ')\
-                .lstrip("%s:" % item['_revision_number'])\
-                .strip()\
+            message = (
+                item['message']
+                .lstrip('Patch Set ')
+                .lstrip("%s:" % item['_revision_number'])
+                .strip()
                 .replace('\n', ' ')
-            entries.append((username, message,))
+            )
+            entries.append((username, message))
 
         return self.build_annotations(entries, self.build_url(change))

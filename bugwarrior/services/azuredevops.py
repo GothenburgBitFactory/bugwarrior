@@ -14,7 +14,6 @@ log = logging.getLogger(__name__)
 
 
 class EscapedStr(str):
-
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
@@ -31,7 +30,8 @@ class AzureDevopsConfig(config.ServiceConfig):
     organization: EscapedStr
 
     host: config.NoSchemeUrl = config.NoSchemeUrl(
-        'dev.azure.com', scheme='https', host='azure.com')
+        'dev.azure.com', scheme='https', host='azure.com'
+    )
     wiql_filter: str = ''
 
 
@@ -44,9 +44,7 @@ def format_item(item):
     """Removes HTML Elements, splits by line"""
     if item:
         item_lines = re.split(r"<br>|</.*?>|&nbsp;", item)
-        text = "\n".join(
-            [striphtml(line) for line in item_lines if striphtml(line)]
-        )
+        text = "\n".join([striphtml(line) for line in item_lines if striphtml(line)])
         return text
     return
 
@@ -71,19 +69,28 @@ class AzureDevopsClient(Client):
     def get_work_item(self, workitemid):
         queryset = self.params.copy()
         queryset.update({"$expand": "all"})
-        resp = self.session.get(f"{self.base_url}/workitems/{workitemid}", params=queryset)
+        resp = self.session.get(
+            f"{self.base_url}/workitems/{workitemid}", params=queryset
+        )
         return resp.json()
 
     def get_work_items_from_query(self, query):
         data = str({"query": query})
         resp = self.session.post(f"{self.base_url}/wiql", data=data, params=self.params)
         if resp.status_code == 401:
-            log.critical("HTTP 401 - Error authenticating! Please check 'PAT' in the configuration")
+            log.critical(
+                "HTTP 401 - Error authenticating! Please check 'PAT' in the configuration"
+            )
             sys.exit(1)
-        if resp.status_code == 400 and resp.json(
-        )['typeKey'] == "WorkItemTrackingQueryResultSizeLimitExceededException":
-            log.critical("Too many azure devops results in query, please "
-                         "narrow the search by updating the ado.wiql_filter")
+        if (
+            resp.status_code == 400
+            and resp.json()['typeKey']
+            == "WorkItemTrackingQueryResultSizeLimitExceededException"
+        ):
+            log.critical(
+                "Too many azure devops results in query, please "
+                "narrow the search by updating the ado.wiql_filter"
+            )
             sys.exit(1)
         return [workitem['id'] for workitem in resp.json()["workItems"]]
 
@@ -190,16 +197,20 @@ class AzureDevopsService(Service):
             pat=self.get_secret('PAT'),
             project=self.config.project,
             org=self.config.organization,
-            host=self.config.host
+            host=self.config.host,
         )
 
     def get_query(self):
         default_query = "SELECT [System.Id] FROM workitems"
 
         # Test for Clauses, add WHERE if any exist
-        if any([self.config.wiql_filter,
+        if any(
+            [
+                self.config.wiql_filter,
                 self.config.only_if_assigned,
-                self.config.also_unassigned]):
+                self.config.also_unassigned,
+            ]
+        ):
             default_query += " WHERE "
 
         # Adding The User Added Query
@@ -211,7 +222,9 @@ class AzureDevopsService(Service):
             if self.config.wiql_filter:
                 default_query += " AND "
             if self.config.also_unassigned:
-                default_query += "([System.AssignedTo] = @me OR [System.AssignedTo] == '')"
+                default_query += (
+                    "([System.AssignedTo] = @me OR [System.AssignedTo] == '')"
+                )
             else:
                 default_query += "[System.AssignedTo] = @me "
 
@@ -244,8 +257,7 @@ class AzureDevopsService(Service):
             extra = {
                 "project": issue["ParentTitle"],
                 "annotations": self.annotations(issue),
-                "namespace": (
-                    f"{self.config.organization}\\{self.config.project}"),
+                "namespace": (f"{self.config.organization}\\{self.config.project}"),
             }
             issue_obj.extra.update(extra)
             yield issue_obj

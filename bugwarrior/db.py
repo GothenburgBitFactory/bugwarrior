@@ -22,20 +22,16 @@ class MultipleMatches(Exception):
 
 
 def get_normalized_annotation(annotation):
-    return re.sub(
-        r'[\W_]',
-        '',
-        str(annotation)
-    )
+    return re.sub(r'[\W_]', '', str(annotation))
 
 
 def get_annotation_hamming_distance(left, right):
     left = get_normalized_annotation(left)
     right = get_normalized_annotation(right)
     if len(left) > len(right):
-        left = left[0:len(right)]
+        left = left[0 : len(right)]
     elif len(right) > len(left):
-        right = right[0:len(left)]
+        right = right[0 : len(left)]
     return hamdist(left, right)
 
 
@@ -51,22 +47,19 @@ def hamdist(str1, str2):
 def get_managed_task_uuids(tw, key_list):
     expected_task_ids = set()
     for keys in key_list.values():
-        tasks = tw.filter_tasks({
-            'and': [('%s.any' % key, None) for key in keys],
-            'or': [
-                ('status', 'pending'),
-                ('status', 'waiting'),
-            ],
-        })
-        expected_task_ids = expected_task_ids | set([
-            task['uuid'] for task in tasks
-        ])
+        tasks = tw.filter_tasks(
+            {
+                'and': [('%s.any' % key, None) for key in keys],
+                'or': [('status', 'pending'), ('status', 'waiting')],
+            }
+        )
+        expected_task_ids = expected_task_ids | set([task['uuid'] for task in tasks])
 
     return expected_task_ids
 
 
 def make_unique_identifier(keys: dict, issue: dict) -> str:
-    """ For a given issue, make an identifier from its unique keys.
+    """For a given issue, make an identifier from its unique keys.
 
     This is not the same as the taskwarrior uuid, which is assigned
     only once the task is created.
@@ -79,7 +72,7 @@ def make_unique_identifier(keys: dict, issue: dict) -> str:
 
 
 def find_taskwarrior_uuid(tw, keys, issue):
-    """ For a given issue issue, find its local taskwarrior UUID.
+    """For a given issue issue, find its local taskwarrior UUID.
 
     Assembles a list of task IDs existing in taskwarrior
     matching the supplied issue (`issue`) on the combination of any
@@ -116,20 +109,23 @@ def find_taskwarrior_uuid(tw, keys, issue):
 
     for service, key_list in keys.items():
         if any([key in issue for key in key_list]):
-            results = tw.filter_tasks({
-                'and': [("%s.is" % key, issue[key]) for key in key_list],
-                'or': [
-                    ('status', 'pending'),
-                    ('status', 'waiting'),
-                    ('status', 'completed')
-                ],
-            })
+            results = tw.filter_tasks(
+                {
+                    'and': [("%s.is" % key, issue[key]) for key in key_list],
+                    'or': [
+                        ('status', 'pending'),
+                        ('status', 'waiting'),
+                        ('status', 'completed'),
+                    ],
+                }
+            )
             new_possibilities = set([task['uuid'] for task in results])
             # Previous versions of bugwarrior did not allow for reopening
             # completed tasks, so there could be multiple completed tasks
             # for the same issue if it was closed and reopened before that.
             if len(new_possibilities) > 1 and all(
-                    r['status'] == 'completed' for r in results):
+                r['status'] == 'completed' for r in results
+            ):
                 for r in results[1:]:
                     for k in key_list:
                         if r[k] != results[0][k]:
@@ -144,19 +140,14 @@ def find_taskwarrior_uuid(tw, keys, issue):
 
     if len(possibilities) > 1:
         raise MultipleMatches(
-            "Issue %s matched multiple IDs: %s" % (
-                issue['description'],
-                possibilities
-            )
+            "Issue %s matched multiple IDs: %s" % (issue['description'], possibilities)
         )
 
-    raise NotFound(
-        "No issue was found matching %s" % issue
-    )
+    raise NotFound("No issue was found matching %s" % issue)
 
 
 def replace_left(field, local_task, remote_issue, keep_items=[]):
-    """ Replace array field from the remote_issue to the local_task
+    """Replace array field from the remote_issue to the local_task
 
     * Local 'left' entries are suppressed, unless those listed in keep_items.
     * Remote 'left' are appended to task, if not present in local.
@@ -193,7 +184,7 @@ def replace_left(field, local_task, remote_issue, keep_items=[]):
 
 
 def merge_left(field, local_task, remote_issue, hamming=False):
-    """ Merge array field from the remote_issue into local_task
+    """Merge array field from the remote_issue into local_task
 
     * Local 'left' entries are preserved without modification
     * Remote 'left' are appended to task if not present in local.
@@ -224,14 +215,9 @@ def merge_left(field, local_task, remote_issue, hamming=False):
         for local in local_field:
             if (
                 # For annotations, they don't have to match *exactly*.
-                (
-                    hamming
-                    and get_annotation_hamming_distance(remote, local) == 0
-                )
+                (hamming and get_annotation_hamming_distance(remote, local) == 0)
                 # But for everything else, they should.
-                or (
-                    remote == local
-                )
+                or (remote == local)
             ):
                 break
         else:
@@ -239,8 +225,10 @@ def merge_left(field, local_task, remote_issue, hamming=False):
             local_task[field].append(remote)
             new_count += 1
     if new_count > 0:
-        log.debug('Added %s new values to %s (total: %s)' % (
-            new_count, field, len(local_task[field]),))
+        log.debug(
+            'Added %s new values to %s (total: %s)'
+            % (new_count, field, len(local_task[field]))
+        )
 
 
 def run_hooks(pre_import):
@@ -273,17 +261,10 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
     notify = conf['notifications'].notifications and not dry_run
 
     tw = TaskWarriorShellout(
-        config_filename=main_config.taskrc,
-        config_overrides=uda_list,
-        marshal=True,
+        config_filename=main_config.taskrc, config_overrides=uda_list, marshal=True
     )
 
-    issue_updates = {
-        'new': [],
-        'existing': [],
-        'changed': [],
-        'closed': [],
-    }
+    issue_updates = {'new': [], 'existing': [], 'changed': [], 'closed': []}
 
     issue_map = {}  # unique identifier -> issue
     for issue in issue_generator:
@@ -294,11 +275,12 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         # De-duplicate issues coming in
         unique_identifier = make_unique_identifier(key_list, issue)
         if unique_identifier in issue_map:
-            log.debug(
-                f"Merging tags and skipping. Seen {unique_identifier} of {issue}")
+            log.debug(f"Merging tags and skipping. Seen {unique_identifier} of {issue}")
             # Merge and deduplicate tags.
             issue_map[unique_identifier]['tags'] += issue['tags']
-            issue_map[unique_identifier]['tags'] = list(set(issue_map[unique_identifier]['tags']))
+            issue_map[unique_identifier]['tags'] = list(
+                set(issue_map[unique_identifier]['tags'])
+            )
         else:
             issue_map[unique_identifier] = issue
 
@@ -340,8 +322,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
             # Drop static fields from the upstream issue.  We don't want to
             # overwrite local changes to fields we declare static.
-            for field in itertools.chain(main_config.static_fields,
-                                         service_config.static_fields):
+            for field in itertools.chain(
+                main_config.static_fields, service_config.static_fields
+            ):
                 if field in issue:
                     del issue[field]
 
@@ -387,20 +370,18 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
     log.info("Updating %i tasks", len(issue_updates['changed']))
     for issue in issue_updates['changed']:
-        changes = '; '.join([
-            '{field}: {f} -> {t}'.format(
-                field=field,
-                f=repr(ch[0]),
-                t=repr(ch[1])
-            )
-            for field, ch in issue.get_changes(keep=True).items()
-        ])
+        changes = '; '.join(
+            [
+                '{field}: {f} -> {t}'.format(field=field, f=repr(ch[0]), t=repr(ch[1]))
+                for field, ch in issue.get_changes(keep=True).items()
+            ]
+        )
         log.info(
             "Updating task %s, %s; %s%s",
             str(issue['uuid']),
             issue['description'],
             changes,
-            notreally
+            notreally,
         )
         if dry_run:
             continue
@@ -414,9 +395,8 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
     log.debug(f'Closing tasks for succeeding services: {targets}.')
     succeeded_service_task_uuids = get_managed_task_uuids(
-        tw,
-        build_key_list(
-            set([conf[target].service for target in targets])))
+        tw, build_key_list(set([conf[target].service for target in targets]))
+    )
     issue_updates['closed'] = succeeded_service_task_uuids - seen_uuids
     log.info("Closing %i tasks", len(issue_updates['closed']))
     for issue in issue_updates['closed']:
@@ -425,7 +405,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             "Completing task %s %s%s",
             issue,
             task_info.get('description', ''),
-            notreally
+            notreally,
         )
         if dry_run:
             continue
@@ -440,16 +420,19 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
 
     # Send notifications
     if notify:
-        updates = (len(issue_updates['new']) +
-                   len(issue_updates['changed']) +
-                   len(issue_updates['closed']))
+        updates = (
+            len(issue_updates['new'])
+            + len(issue_updates['changed'])
+            + len(issue_updates['closed'])
+        )
         if not conf['notifications'].only_on_new_tasks or updates > 0:
             send_notification(
                 dict(
-                    description="New: %d, Changed: %d, Completed: %d" % (
+                    description="New: %d, Changed: %d, Completed: %d"
+                    % (
                         len(issue_updates['new']),
                         len(issue_updates['changed']),
-                        len(issue_updates['closed'])
+                        len(issue_updates['closed']),
                     )
                 ),
                 'bw_finished',
@@ -473,7 +456,7 @@ def get_defined_udas_as_strings(conf, main_section):
 
 
 def build_uda_config_overrides(targets):
-    """ Returns a list of UDAs defined by given targets
+    """Returns a list of UDAs defined by given targets
 
     For all targets in `targets`, build a dictionary of configuration overrides
     representing the UDAs defined by the passed-in services (`targets`).
@@ -505,9 +488,7 @@ def build_uda_config_overrides(targets):
     targets_udas = {}
     for target in targets:
         targets_udas.update(get_service(target).ISSUE_CLASS.UDAS)
-    return {
-        'uda': targets_udas
-    }
+    return {'uda': targets_udas}
 
 
 def convert_override_args_to_taskrc_settings(config, prefix=''):
@@ -516,11 +497,7 @@ def convert_override_args_to_taskrc_settings(config, prefix=''):
         if isinstance(v, dict):
             args.extend(
                 convert_override_args_to_taskrc_settings(
-                    v,
-                    prefix='.'.join([
-                        prefix,
-                        k,
-                    ]) if prefix else k
+                    v, prefix='.'.join([prefix, k]) if prefix else k
                 )
             )
         else:

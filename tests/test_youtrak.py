@@ -11,11 +11,7 @@ class TestYoutrackService(ConfigTest):
         super().setUp()
         self.config = {
             'general': {'targets': ['myservice']},
-            'myservice': {
-                'service': 'youtrack',
-                'login': 'foobar',
-                'token': 'XXXXXX',
-            },
+            'myservice': {'service': 'youtrack', 'login': 'foobar', 'token': 'XXXXXX'},
         }
 
     def test_get_keyring_service(self):
@@ -23,7 +19,8 @@ class TestYoutrackService(ConfigTest):
         service_config = self.validate()['myservice']
         self.assertEqual(
             YoutrackService.get_keyring_service(service_config),
-            'youtrack://foobar@youtrack.example.com')
+            'youtrack://foobar@youtrack.example.com',
+        )
 
 
 class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
@@ -41,23 +38,13 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
         "$type": "Issue",
         "numberInProject": 1,
         "summary": "Hello World",
-        "project": {
-            "shortName": "TEST",
-            "$type": "Project"
-        },
+        "project": {"shortName": "TEST", "$type": "Project"},
         "tags": [
-            {
-                "$type": "IssueTag",
-                "name": "bug"
-            },
-            {
-                "$type": "IssueTag",
-                "name": "New Feature"
-            }
-        ]
+            {"$type": "IssueTag", "name": "bug"},
+            {"$type": "IssueTag", "name": "New Feature"},
+        ],
     }
-    arbitrary_extra = {
-    }
+    arbitrary_extra = {}
 
     def setUp(self):
         super().setUp()
@@ -65,7 +52,9 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
 
     def test_to_taskwarrior(self):
         self.service.import_tags = True
-        issue = self.service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
+        issue = self.service.get_issue_for_record(
+            self.arbitrary_issue, self.arbitrary_extra
+        )
 
         expected_output = {
             'project': 'TEST',
@@ -85,13 +74,13 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         self.add_response(
             'https://youtrack.example.com:443/api/issues?query=for%3Ame+%23Unresolved&max=100&fields=id,summary,project(shortName),numberInProject,tags(name)',  # noqa: E501
-            json=[self.arbitrary_issue])
+            json=[self.arbitrary_issue],
+        )
 
         issue = next(self.service.issues())
 
         expected = {
-            'description':
-                '(bw)Is#TEST-1 - Hello World .. https://youtrack.example.com:443/issue/TEST-1',
+            'description': '(bw)Is#TEST-1 - Hello World .. https://youtrack.example.com:443/issue/TEST-1',
             'project': 'TEST',
             'priority': self.service.config.default_priority,
             'tags': ['bug', 'new_feature'],

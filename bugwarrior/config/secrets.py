@@ -6,13 +6,14 @@ log = logging.getLogger(__name__)
 
 
 def get_keyring():
-    """ Try to import and return optional keyring dependency. """
+    """Try to import and return optional keyring dependency."""
     try:
         import keyring
     except ImportError:
         raise ImportError(
             "Extra dependencies must be installed to use the keyring feature. "
-            "Install them with `pip install bugwarrior[keyring]`.")
+            "Install them with `pip install bugwarrior[keyring]`."
+        )
     return keyring
 
 
@@ -45,8 +46,7 @@ def get_service_password(service, username, oracle=None, interactive=False):
         if interactive and password is None:
             # -- LEARNING MODE: Password is not stored in keyring yet.
             oracle = "@oracle:ask_password"
-            password = get_service_password(service, username,
-                                            oracle, interactive=True)
+            password = get_service_password(service, username, oracle, interactive=True)
             if password:
                 keyring.set_password(service, username, password)
         elif not interactive and password is None:
@@ -63,21 +63,25 @@ def get_service_password(service, username, oracle=None, interactive=False):
 
     if password is None:
         log.critical(
-            "MISSING PASSWORD: oracle='%s', interactive=%s for service=%s" %
-            (oracle, interactive, service))
+            "MISSING PASSWORD: oracle='%s', interactive=%s for service=%s"
+            % (oracle, interactive, service)
+        )
         sys.exit(1)
     return password
 
 
 def oracle_eval(command):
-    """ Retrieve password from the given command """
+    """Retrieve password from the given command"""
     p = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     p.wait()
     if p.returncode == 0:
         return p.stdout.readline().strip().decode('utf-8')
     else:
         log.critical(
             "Error retrieving password: `{command}` returned '{error}'".format(
-                command=command, error=p.stderr.read().strip()))
+                command=command, error=p.stderr.read().strip()
+            )
+        )
         sys.exit(1)

@@ -16,22 +16,22 @@ class TestData:
         'author': {'name': 'ryneeverett'},
         'comments': {
             'nodes': [
-                {'author': {'name': 'ryneeverett'},
-                 'message': 'This is the description, albeit a brief one.'}
-            ]},
+                {
+                    'author': {'name': 'ryneeverett'},
+                    'message': 'This is the description, albeit a brief one.',
+                }
+            ]
+        },
         'createdAt': '2022-05-05T23:06:52-04:00',
         'id': '032d911695cc68d9881aabc24a6c62853f90f834',
         'labels': [],
         'status': 'OPEN',
-        'title': 'Some Issue'
+        'title': 'Some Issue',
     }
 
 
 class TestGitBugIssue(AbstractServiceTest, ServiceTest):
-    SERVICE_CONFIG = {
-        'service': 'gitbug',
-        'path': '/dev/null',
-    }
+    SERVICE_CONFIG = {'service': 'gitbug', 'path': '/dev/null'}
 
     def setUp(self):
         super().setUp()
@@ -41,24 +41,24 @@ class TestGitBugIssue(AbstractServiceTest, ServiceTest):
         self.service = self.get_mock_service(GitBugService)
         self.service.client = mock.MagicMock(spec=GitBugClient)
         self.service.client.get_issues = mock.MagicMock(
-            return_value=[self.data.arbitrary_bug])
+            return_value=[self.data.arbitrary_bug]
+        )
 
     def test_to_taskwarrior(self):
-        issue = self.service.get_issue_for_record(
-            self.data.arbitrary_bug, {})
+        issue = self.service.get_issue_for_record(self.data.arbitrary_bug, {})
 
         expected = {
             'annotations': [],
             'entry': datetime.datetime(
-                2022, 5, 5, 23, 6, 52,
-                tzinfo=dateutil.tz.tzoffset(None, -14400)),
+                2022, 5, 5, 23, 6, 52, tzinfo=dateutil.tz.tzoffset(None, -14400)
+            ),
             'gitbugauthor': 'ryneeverett',
             'gitbugid': '032d911695cc68d9881aabc24a6c62853f90f834',
             'gitbugstate': 'OPEN',
             'gitbugtitle': 'Some Issue',
             'priority': 'M',
             'project': 'unspecified',
-            'tags': []
+            'tags': [],
         }
         actual = issue.to_taskwarrior()
 
@@ -71,15 +71,15 @@ class TestGitBugIssue(AbstractServiceTest, ServiceTest):
             'annotations': [],
             'description': '(bw)Bug# - Some Issue',
             'entry': datetime.datetime(
-                2022, 5, 5, 23, 6, 52,
-                tzinfo=dateutil.tz.tzoffset(None, -14400)),
+                2022, 5, 5, 23, 6, 52, tzinfo=dateutil.tz.tzoffset(None, -14400)
+            ),
             'gitbugauthor': 'ryneeverett',
             'gitbugid': '032d911695cc68d9881aabc24a6c62853f90f834',
             'gitbugstate': 'OPEN',
             'gitbugtitle': 'Some Issue',
             'priority': 'M',
             'project': 'unspecified',
-            'tags': []
+            'tags': [],
         }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

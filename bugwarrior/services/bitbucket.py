@@ -26,7 +26,9 @@ class BitbucketConfig(config.ServiceConfig):
 
     include_repos: config.ConfigList = config.ConfigList([])
     exclude_repos: config.ConfigList = config.ConfigList([])
-    include_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = 'Undefined'
+    include_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = (
+        'Undefined'
+    )
     project_owner_prefix: bool = False
 
     @pydantic.v1.root_validator
@@ -35,7 +37,8 @@ class BitbucketConfig(config.ServiceConfig):
             log.warning(
                 'Bitbucket has disabled password authentication and, as such, '
                 'the "login" and "password" options are deprecated and should '
-                'be removed from your configuration file.')
+                'be removed from your configuration file.'
+            )
         return values
 
 
@@ -45,20 +48,11 @@ class BitbucketIssue(Issue):
     FOREIGN_ID = 'bitbucketid'
 
     UDAS = {
-        TITLE: {
-            'type': 'string',
-            'label': 'Bitbucket Title',
-        },
-        URL: {
-            'type': 'string',
-            'label': 'Bitbucket URL',
-        },
-        FOREIGN_ID: {
-            'type': 'numeric',
-            'label': 'Bitbucket Issue ID',
-        }
+        TITLE: {'type': 'string', 'label': 'Bitbucket Title'},
+        URL: {'type': 'string', 'label': 'Bitbucket URL'},
+        FOREIGN_ID: {'type': 'numeric', 'label': 'Bitbucket Issue ID'},
     }
-    UNIQUE_KEY = (URL, )
+    UNIQUE_KEY = (URL,)
 
     PRIORITY_MAP = {
         'trivial': 'L',
@@ -73,7 +67,6 @@ class BitbucketIssue(Issue):
             'project': self.extra['project'],
             'priority': self.get_priority(),
             'annotations': self.extra['annotations'],
-
             self.URL: self.extra['url'],
             self.FOREIGN_ID: self.record['id'],
             self.TITLE: self.record['title'],
@@ -84,7 +77,7 @@ class BitbucketIssue(Issue):
             title=self.record['title'],
             url=self.extra['url'],
             number=self.record['id'],
-            cls='issue'
+            cls='issue',
         )
 
 
@@ -105,20 +98,23 @@ class BitbucketService(Service, Client):
         if refresh_token:
             response = requests.post(
                 self.BASE_URL + 'site/oauth2/access_token',
-                data={'grant_type': 'refresh_token',
-                      'refresh_token': refresh_token},
-                auth=oauth).json()
+                data={'grant_type': 'refresh_token', 'refresh_token': refresh_token},
+                auth=oauth,
+            ).json()
         else:
             response = requests.post(
                 self.BASE_URL + 'site/oauth2/access_token',
                 data={'grant_type': 'client_credentials'},
-                auth=oauth).json()
+                auth=oauth,
+            ).json()
 
-            self.main_config.data.set('bitbucket_refresh_token',
-                                      response['refresh_token'])
+            self.main_config.data.set(
+                'bitbucket_refresh_token', response['refresh_token']
+            )
 
         self.requests_kwargs = {
-            'headers': {'Authorization': f"Bearer {response['access_token']}"}}
+            'headers': {'Authorization': f"Bearer {response['access_token']}"}
+        }
 
     @staticmethod
     def get_keyring_service(config):
@@ -140,13 +136,13 @@ class BitbucketService(Service, Client):
         return True
 
     def get_data(self, url):
-        """ Perform a request to the fully qualified url and return json. """
+        """Perform a request to the fully qualified url and return json."""
         return self.json_response(requests.get(url, **self.requests_kwargs))
 
     def get_collection(self, url):
-        """ Pages through an object collection from the bitbucket API.
+        """Pages through an object collection from the bitbucket API.
         Returns an iterator that lazily goes through all the 'values'
-        of all the pages in the collection. """
+        of all the pages in the collection."""
         url = self.BASE_API2 + url
         while url is not None:
             response = self.get_data(url)
@@ -166,11 +162,11 @@ class BitbucketService(Service, Client):
             '/repositories/%s/pullrequests/%i/comments' % (tag, issue['id'])
         )
         return self.build_annotations(
-            ((
-                comment['user']['username'],
-                comment['content']['raw'],
-            ) for comment in response),
-            url
+            (
+                (comment['user']['username'], comment['content']['raw'])
+                for comment in response
+            ),
+            url,
         )
 
     def get_owner(self, issue):
@@ -180,7 +176,7 @@ class BitbucketService(Service, Client):
             return assignee.get('username', None)
 
     def include(self, issue):
-        """ Return true if the issue in question should be included """
+        """Return true if the issue in question should be included"""
         if self.config.only_if_assigned:
             owner = self.get_owner(issue)
             include_owners = [self.config.only_if_assigned]
@@ -195,10 +191,12 @@ class BitbucketService(Service, Client):
     def issues(self):
         user = self.config.username
         response = self.get_collection('/repositories/' + user + '/')
-        repo_tags = list(filter(self.filter_repos, [
-            repo['full_name'] for repo in response
-            if repo.get('has_issues')
-        ]))
+        repo_tags = list(
+            filter(
+                self.filter_repos,
+                [repo['full_name'] for repo in response if repo.get('has_issues')],
+            )
+        )
 
         issues = sum((self.fetch_issues(repo) for repo in repo_tags), [])
         log.debug(" Found %i total.", len(issues))
@@ -221,18 +219,22 @@ class BitbucketService(Service, Client):
             extras = {
                 'project': projectName,
                 'url': url,
-                'annotations': self.get_annotations(tag, issue, issue_obj, url)
+                'annotations': self.get_annotations(tag, issue, issue_obj, url),
             }
             issue_obj.extra.update(extras)
             yield issue_obj
 
         if self.config.include_merge_requests:
             pull_requests = sum(
-                (self.fetch_pull_requests(repo) for repo in repo_tags), [])
+                (self.fetch_pull_requests(repo) for repo in repo_tags), []
+            )
             log.debug(" Found %i total.", len(pull_requests))
 
             closed = ['rejected', 'fulfilled']
-            def not_resolved(tup): return tup[1]['state'] not in closed
+
+            def not_resolved(tup):
+                return tup[1]['state'] not in closed
+
             pull_requests = list(filter(not_resolved, pull_requests))
             pull_requests = list(filter(self.include, pull_requests))
             log.debug(" Pruned down to %i", len(pull_requests))
@@ -249,8 +251,7 @@ class BitbucketService(Service, Client):
                 extras = {
                     'project': projectName,
                     'url': url,
-                    'annotations': self.get_annotations(
-                        tag, issue, issue_obj, url)
+                    'annotations': self.get_annotations(tag, issue, issue_obj, url),
                 }
                 issue_obj.extra.update(extras)
                 yield issue_obj

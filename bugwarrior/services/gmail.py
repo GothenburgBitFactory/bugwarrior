@@ -21,7 +21,8 @@ class GmailConfig(config.ServiceConfig):
     service: typing.Literal['gmail']
 
     client_secret_path: config.ExpandedPath = config.ExpandedPath(
-        '~/.gmail_client_secret.json')
+        '~/.gmail_client_secret.json'
+    )
     query: str = 'label:Starred'
     login_name: str = 'me'
     thread_limit: int = 100
@@ -42,38 +43,14 @@ class GmailIssue(Issue):
 
     UNIQUE_KEY = (THREAD_ID,)
     UDAS = {
-        THREAD_ID: {
-            'type': 'string',
-            'label': 'GMail Thread Id',
-        },
-        SUBJECT: {
-            'type': 'string',
-            'label': 'GMail Subject',
-        },
-        URL: {
-            'type': 'string',
-            'label': 'GMail URL',
-        },
-        LAST_SENDER: {
-            'type': 'string',
-            'label': 'GMail last sender name',
-        },
-        LAST_SENDER_ADDR: {
-            'type': 'string',
-            'label': 'GMail last sender address',
-        },
-        LAST_MESSAGE_ID: {
-            'type': 'string',
-            'label': 'Last RFC2822 Message-ID',
-        },
-        SNIPPET: {
-            'type': 'string',
-            'label': 'GMail snippet',
-        },
-        LABELS: {
-            'type': 'string',
-            'label': 'GMail labels',
-        },
+        THREAD_ID: {'type': 'string', 'label': 'GMail Thread Id'},
+        SUBJECT: {'type': 'string', 'label': 'GMail Subject'},
+        URL: {'type': 'string', 'label': 'GMail URL'},
+        LAST_SENDER: {'type': 'string', 'label': 'GMail last sender name'},
+        LAST_SENDER_ADDR: {'type': 'string', 'label': 'GMail last sender address'},
+        LAST_MESSAGE_ID: {'type': 'string', 'label': 'Last RFC2822 Message-ID'},
+        SNIPPET: {'type': 'string', 'label': 'GMail snippet'},
+        LABELS: {'type': 'string', 'label': 'GMail labels'},
     }
     EXCLUDE_LABELS = [
         'IMPORTANT',
@@ -81,13 +58,18 @@ class GmailIssue(Issue):
         'CATEGORY_PROMOTIONS',
         'CATEGORY_UPDATES',
         'CATEGORY_FORUMS',
-        'SENT']
+        'SENT',
+    ]
 
     def to_taskwarrior(self):
         return {
             'annotations': self.get_annotations(),
             'entry': self.get_entry(),
-            'tags': [label for label in self.extra['labels'] if label not in self.EXCLUDE_LABELS],
+            'tags': [
+                label
+                for label in self.extra['labels']
+                if label not in self.EXCLUDE_LABELS
+            ],
             'priority': self.config.default_priority,
             self.THREAD_ID: self.record['id'],
             self.SUBJECT: self.extra['subject'],
@@ -112,7 +94,8 @@ class GmailIssue(Issue):
 
     def get_entry(self):
         date_string = time.strftime(
-            '%Y-%m-%d %H:%M:%S', time.gmtime(int(self.extra['internal_date']) / 1000))
+            '%Y-%m-%d %H:%M:%S', time.gmtime(int(self.extra['internal_date']) / 1000)
+        )
         return self.parse_date(date_string)
 
 
@@ -129,11 +112,14 @@ class GmailService(Service):
         super().__init__(*args, **kw)
 
         credentials_name = clean_filename(
-            self.config.login_name if self.config.login_name != 'me'
-            else self.config.target)
+            self.config.login_name
+            if self.config.login_name != 'me'
+            else self.config.target
+        )
         self.credentials_path = os.path.join(
             self.main_config.data.path,
-            'gmail_credentials_%s.pickle' % (credentials_name,))
+            'gmail_credentials_%s.pickle' % (credentials_name,),
+        )
         self.gmail_api = self.build_api()
 
     @staticmethod
@@ -143,7 +129,8 @@ class GmailService(Service):
     def build_api(self):
         credentials = self.get_credentials()
         return googleapiclient.discovery.build(
-            'gmail', 'v1', credentials=credentials, cache_discovery=False)
+            'gmail', 'v1', credentials=credentials, cache_discovery=False
+        )
 
     def get_credentials(self):
         """Gets valid user credentials from storage.
@@ -172,7 +159,8 @@ class GmailService(Service):
                     credentials.refresh(Request())
                 else:
                     flow = InstalledAppFlow.from_client_secrets_file(
-                        self.config.client_secret_path, self.SCOPES)
+                        self.config.client_secret_path, self.SCOPES
+                    )
                     credentials = flow.run_local_server(port=0)
                 # Save the credentials for the next run
                 with open(self.credentials_path, 'wb') as token:
@@ -181,8 +169,12 @@ class GmailService(Service):
             return credentials
 
     def get_labels(self):
-        result = self.gmail_api.users().labels().list(
-            userId=self.config.login_name).execute()
+        result = (
+            self.gmail_api.users()
+            .labels()
+            .list(userId=self.config.login_name)
+            .execute()
+        )
         return {label['id']: label['name'] for label in result['labels']}
 
     def get_threads(self):
@@ -194,11 +186,17 @@ class GmailService(Service):
         while len(threads) < self.config.thread_limit:
             maxResults = min(100, self.config.thread_limit - len(threads))
 
-            result = thread_service.list(userId=self.config.login_name, q=self.config.query,
-                                         maxResults=maxResults, pageToken=pageToken).execute()
+            result = thread_service.list(
+                userId=self.config.login_name,
+                q=self.config.query,
+                maxResults=maxResults,
+                pageToken=pageToken,
+            ).execute()
 
             for thread in result.get('threads', []):
-                threads.append(thread_service.get(userId='me', id=thread['id']).execute())
+                threads.append(
+                    thread_service.get(userId='me', id=thread['id']).execute()
+                )
 
             pageToken = result.get('nextPageToken', None)
             if not pageToken:
@@ -216,9 +214,7 @@ class GmailService(Service):
         labels = self.get_labels()
         for thread in self.get_threads():
             issue = self.get_issue_for_record(thread, thread_extras(thread, labels))
-            extra = {
-                'annotations': self.annotations(issue),
-            }
+            extra = {'annotations': self.annotations(issue)}
             issue.extra.update(extra)
             yield issue
 

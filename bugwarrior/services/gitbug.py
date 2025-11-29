@@ -77,25 +77,28 @@ class GitBugClient(Client):
     def _query_graphql(self, query):
         with Webui(self.path, self.port):
             response = requests.post(
-                f'http://127.0.0.1:{self.port}/graphql',
-                json={'query': query})
+                f'http://127.0.0.1:{self.port}/graphql', json={'query': query}
+            )
         return self.json_response(response)['data']
 
     def get_issues(self):
         return self._query_graphql(
-            '{ repository { allBugs { nodes { %s } } } }' % ' '.join([
-                'author { name }',
-                (
-                    'comments' +
-                    ('(first: 1) ' if not self.annotation_comments else '')
-                    + ' { nodes { author { name } message } }'
-                ),
-                'createdAt',
-                'id',
-                'labels { name }'
-                'status',
-                'title',
-            ]))['repository']['allBugs']['nodes']
+            '{ repository { allBugs { nodes { %s } } } }'
+            % ' '.join(
+                [
+                    'author { name }',
+                    (
+                        'comments'
+                        + ('(first: 1) ' if not self.annotation_comments else '')
+                        + ' { nodes { author { name } message } }'
+                    ),
+                    'createdAt',
+                    'id',
+                    'labels { name }status',
+                    'title',
+                ]
+            )
+        )['repository']['allBugs']['nodes']
 
 
 class GitBugIssue(Issue):
@@ -105,22 +108,10 @@ class GitBugIssue(Issue):
     TITLE = 'gitbugtitle'
 
     UDAS = {
-        AUTHOR: {
-            'type': 'string',
-            'label': 'Gitbug Issue Author',
-        },
-        ID: {
-            'type': 'string',
-            'label': 'Gitbug UUID',
-        },
-        STATE: {
-            'type': 'string',
-            'label': 'Gitbug state',
-        },
-        TITLE: {
-            'type': 'string',
-            'label': 'Gitbug Title',
-        },
+        AUTHOR: {'type': 'string', 'label': 'Gitbug Issue Author'},
+        ID: {'type': 'string', 'label': 'Gitbug UUID'},
+        STATE: {'type': 'string', 'label': 'Gitbug state'},
+        TITLE: {'type': 'string', 'label': 'Gitbug Title'},
     }
 
     UNIQUE_KEY = (ID,)
@@ -132,7 +123,6 @@ class GitBugIssue(Issue):
             'annotations': self.record.get('annotations', []),
             'tags': self.get_tags(),
             'entry': self.parse_date(self.record.get('createdAt')),
-
             self.AUTHOR: self.record['author']['name'],
             self.ID: self.record['id'],
             self.STATE: self.record['status'],
@@ -141,11 +131,11 @@ class GitBugIssue(Issue):
 
     def get_tags(self):
         return self.get_tags_from_labels(
-            [label['name'] for label in self.record['labels']])
+            [label['name'] for label in self.record['labels']]
+        )
 
     def get_default_description(self):
-        return self.build_default_description(
-            title=self.record['title'], cls='bug')
+        return self.build_default_description(title=self.record['title'], cls='bug')
 
 
 class GitBugService(Service):
@@ -159,7 +149,8 @@ class GitBugService(Service):
         self.client = GitBugClient(
             path=self.config.path,
             port=self.config.port,
-            annotation_comments=self.main_config.annotation_comments)
+            annotation_comments=self.main_config.annotation_comments,
+        )
 
     @staticmethod
     def get_keyring_service(config):
@@ -171,10 +162,10 @@ class GitBugService(Service):
             issue['description'] = comments['nodes'].pop(0)['message']
 
             if self.main_config.annotation_comments:
-                annotations = ((
-                    comment['author']['name'],
-                    comment['message']
-                ) for comment in comments['nodes'])
+                annotations = (
+                    (comment['author']['name'], comment['message'])
+                    for comment in comments['nodes']
+                )
                 issue['annotations'] = self.build_annotations(annotations)
 
             yield self.get_issue_for_record(issue)

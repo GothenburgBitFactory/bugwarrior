@@ -19,40 +19,24 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
         'issue_limit': '100',
     }
     arbitrary_created = datetime.datetime.now(datetime.timezone.utc).replace(
-        tzinfo=dateutil.tz.tz.tzutc(), microsecond=0) - datetime.timedelta(1)
+        tzinfo=dateutil.tz.tz.tzutc(), microsecond=0
+    ) - datetime.timedelta(1)
     arbitrary_updated = datetime.datetime.now(datetime.timezone.utc).replace(
-        tzinfo=dateutil.tz.tz.tzutc(), microsecond=0)
+        tzinfo=dateutil.tz.tz.tzutc(), microsecond=0
+    )
     arbitrary_issue = {
-        "assigned_to": {
-            "id": 35546,
-            "name": "Adam Coddington"
-        },
-        "author": {
-            "id": 35546,
-            "name": "Adam Coddington"
-        },
+        "assigned_to": {"id": 35546, "name": "Adam Coddington"},
+        "author": {"id": 35546, "name": "Adam Coddington"},
         "created_on": arbitrary_created.isoformat(),
         "due_on": "2016-12-30T16:40:29Z",
         "description": "This is a test issue.",
         "done_ratio": 0,
         "id": 363901,
-        "priority": {
-            "id": 4,
-            "name": "High"
-        },
-        "project": {
-            "id": 27375,
-            "name": "Boiled Cabbage - Yum"
-        },
-        "status": {
-            "id": 1,
-            "name": "New"
-        },
+        "priority": {"id": 4, "name": "High"},
+        "project": {"id": 27375, "name": "Boiled Cabbage - Yum"},
+        "status": {"id": 1, "name": "New"},
         "subject": "Biscuits",
-        "tracker": {
-            "id": 4,
-            "name": "Task"
-        },
+        "tracker": {"id": 4, "name": "Task"},
         "updated_on": arbitrary_updated.isoformat(),
     }
 
@@ -99,15 +83,15 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         self.add_response(
             'https://something/issues.json?limit=100',
-            json={'issues': [self.arbitrary_issue]})
+            json={'issues': [self.arbitrary_issue]},
+        )
 
         issue = next(self.service.issues())
 
         expected = {
             'annotations': [],
             issue.DUEDATE: None,
-            'description':
-                '(bw)Is#363901 - Biscuits .. https://something/issues/363901',
+            'description': '(bw)Is#363901 - Biscuits .. https://something/issues/363901',
             'priority': 'H',
             'project': 'boiledcabbageyum',
             'redmineid': 363901,
@@ -125,6 +109,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
             issue.CREATED_ON: self.arbitrary_created,
             issue.UPDATED_ON: self.arbitrary_updated,
             'redmineurl': 'https://something/issues/363901',
-            'tags': []}
+            'tags': [],
+        }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

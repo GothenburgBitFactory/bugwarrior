@@ -9,16 +9,18 @@ from bugwarrior.services.gitlab import GitlabClient, GitlabService
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
 
 
-class TestData():
+class TestData:
     def __init__(self):
         self.arbitrary_created = (
             datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
         ).replace(tzinfo=pytz.UTC, microsecond=0)
         self.arbitrary_updated = datetime.datetime.now(datetime.timezone.utc).replace(
-            tzinfo=pytz.UTC, microsecond=0)
+            tzinfo=pytz.UTC, microsecond=0
+        )
         self.arbitrary_duedate = (
-            datetime.datetime.combine(datetime.date.today(),
-                                      datetime.datetime.min.time())
+            datetime.datetime.combine(
+                datetime.date.today(), datetime.datetime.min.time()
+            )
         ).replace(tzinfo=pytz.UTC)
         self.arbitrary_issue = {
             "id": 42,
@@ -26,9 +28,7 @@ class TestData():
             "project_id": 8,
             "title": "Add user settings",
             "description": "",
-            "labels": [
-                "feature"
-            ],
+            "labels": ["feature"],
             "milestone": {
                 "id": 1,
                 "title": "v1.0",
@@ -36,7 +36,7 @@ class TestData():
                 "due_date": self.arbitrary_duedate.date().isoformat(),
                 "state": "closed",
                 "updated_at": "2012-07-04T13:42:48Z",
-                "created_at": "2012-07-04T13:42:48Z"
+                "created_at": "2012-07-04T13:42:48Z",
             },
             "assignee": {
                 "id": 2,
@@ -44,7 +44,7 @@ class TestData():
                 "email": "jack@example.com",
                 "name": "Jack Smith",
                 "state": "active",
-                "created_at": "2012-05-23T08:01:01Z"
+                "created_at": "2012-05-23T08:01:01Z",
             },
             'assignees': [
                 {
@@ -53,8 +53,8 @@ class TestData():
                     "email": "jack@example.com",
                     "name": "Jack Smith",
                     "state": "active",
-                    "created_at": "2012-05-23T08:01:01Z"
-                },
+                    "created_at": "2012-05-23T08:01:01Z",
+                }
             ],
             "author": {
                 "id": 1,
@@ -62,13 +62,13 @@ class TestData():
                 "email": "john@example.com",
                 "name": "John Smith",
                 "state": "active",
-                "created_at": "2012-05-23T08:00:58Z"
+                "created_at": "2012-05-23T08:00:58Z",
             },
             "state": "opened",
             "updated_at": self.arbitrary_updated.isoformat(),
             "created_at": self.arbitrary_created.isoformat(),
             "weight": 3,
-            "work_in_progress": True
+            "work_in_progress": True,
         }
         self.arbitrary_extra = {
             'issue_url': 'https://my-git.org/arbitrary_username/project/issues/3',
@@ -85,7 +85,7 @@ class TestData():
                 "name": "project",
                 "name_with_namespace": "arbitrary_namespace / project",
                 "path": "project",
-                "path_with_namespace": "arbitrary_namespace/project"
+                "path_with_namespace": "arbitrary_namespace/project",
             },
             "author": {
                 "id": 1,
@@ -93,7 +93,7 @@ class TestData():
                 "email": "john@example.com",
                 "name": "John Smith",
                 "state": "active",
-                "created_at": "2012-05-23T08:00:58Z"
+                "created_at": "2012-05-23T08:00:58Z",
             },
             "action_name": "marked",
             "target_type": "Issue",
@@ -103,9 +103,7 @@ class TestData():
                 "project_id": 8,
                 "title": "Add user settings",
                 "description": "",
-                "labels": [
-                    "feature"
-                ],
+                "labels": ["feature"],
                 "milestone": {
                     "id": 1,
                     "title": "v1.0",
@@ -113,7 +111,7 @@ class TestData():
                     "due_date": self.arbitrary_duedate.date().isoformat(),
                     "state": "closed",
                     "updated_at": "2012-07-04T13:42:48Z",
-                    "created_at": "2012-07-04T13:42:48Z"
+                    "created_at": "2012-07-04T13:42:48Z",
                 },
                 "assignee": {
                     "id": 2,
@@ -121,7 +119,7 @@ class TestData():
                     "email": "jack@example.com",
                     "name": "Jack Smith",
                     "state": "active",
-                    "created_at": "2012-05-23T08:01:01Z"
+                    "created_at": "2012-05-23T08:01:01Z",
                 },
                 "author": {
                     "id": 1,
@@ -129,14 +127,13 @@ class TestData():
                     "email": "john@example.com",
                     "name": "John Smith",
                     "state": "active",
-                    "created_at": "2012-05-23T08:00:58Z"
+                    "created_at": "2012-05-23T08:00:58Z",
                 },
                 "state": "opened",
                 "updated_at": self.arbitrary_updated.isoformat(),
                 "created_at": self.arbitrary_created.isoformat(),
                 "weight": 3,
-                "work_in_progress": True
-
+                "work_in_progress": True,
             },
             "target_url": "https://my-git.org/arbitrary_username/project/issues/3",
             "body": "Add user settings",
@@ -157,9 +154,7 @@ class TestData():
             "project_id": 8,
             "title": "Add user settings",
             "description": "",
-            "labels": [
-                "feature"
-            ],
+            "labels": ["feature"],
             "milestone": {
                 "id": 1,
                 "title": "v1.0",
@@ -167,7 +162,7 @@ class TestData():
                 "due_date": self.arbitrary_duedate.date().isoformat(),
                 "state": "closed",
                 "updated_at": "2012-07-04T13:42:48Z",
-                "created_at": "2012-07-04T13:42:48Z"
+                "created_at": "2012-07-04T13:42:48Z",
             },
             "assignee": {
                 "id": 2,
@@ -175,7 +170,7 @@ class TestData():
                 "email": "jack@example.com",
                 "name": "Jack Smith",
                 "state": "active",
-                "created_at": "2012-05-23T08:01:01Z"
+                "created_at": "2012-05-23T08:01:01Z",
             },
             "author": {
                 "id": 1,
@@ -183,13 +178,13 @@ class TestData():
                 "email": "john@example.com",
                 "name": "John Smith",
                 "state": "active",
-                "created_at": "2012-05-23T08:00:58Z"
+                "created_at": "2012-05-23T08:00:58Z",
             },
             "state": "opened",
             "updated_at": self.arbitrary_updated.isoformat(),
             "created_at": self.arbitrary_created.isoformat(),
             "weight": 3,
-            "work_in_progress": True
+            "work_in_progress": True,
         }
         self.arbitrary_mr_extra = {
             'issue_url': 'https://my-git.org/arbitrary_username/project/merge_requests/3',
@@ -213,8 +208,7 @@ class TestData():
             "ssh_url_to_repo": "git@my-git.org:arbitrary_namespace/arbitrary_project.git",
             "http_url_to_repo": "https://my-git.org/arbitrary_namespace/arbitrary_project.git",
             "web_url": "https://my-git.org/arbitrary_namespace/arbitrary_project",
-            "readme_url":
-                "https://my-git.org/arbitrary_namespace/arbitrary_project/-/blob/main/README.md",
+            "readme_url": "https://my-git.org/arbitrary_namespace/arbitrary_project/-/blob/main/README.md",
             "avatar_url": None,
             "forks_count": 7,
             "star_count": 11,
@@ -227,10 +221,9 @@ class TestData():
                 "full_path": "arbitrary_namespace",
                 "parent_id": None,
                 "avatar_url": None,
-                "web_url": "https://my-git.org/groups/arbitrary_namespace"
+                "web_url": "https://my-git.org/groups/arbitrary_namespace",
             },
-            "container_registry_image_prefix":
-                "my-git.org:5555/arbitrary_namespace/arbitrary_project",
+            "container_registry_image_prefix": "my-git.org:5555/arbitrary_namespace/arbitrary_project",
             "_links": {
                 "self": "https://my-git.org/api/v4/projects/8",
                 "issues": "https://my-git.org/api/v4/projects/8/issues",
@@ -238,7 +231,7 @@ class TestData():
                 "repo_branches": "https://my-git.org/api/v4/projects/8/repository/branches",
                 "labels": "https://my-git.org/api/v4/projects/8/labels",
                 "events": "https://my-git.org/api/v4/projects/8/events",
-                "members": "https://my-git.org/api/v4/projects/8/members"
+                "members": "https://my-git.org/api/v4/projects/8/members",
             },
             "packages_enabled": None,
             "empty_repo": False,
@@ -300,64 +293,70 @@ class TestData():
             "autoclose_referenced_issues": True,
             "repository_storage": "default",
             "keep_latest_artifact": False,
-            "permissions": {
-                "project_access": None,
-                "group_access": None
-            }
-
+            "permissions": {"project_access": None, "group_access": None},
         }
 
 
 class TestGitlabClient(ServiceTest):
     def setUp(self):
         super().setUp()
-        self.client = GitlabClient('my-git.org',
-                                   'XXXXXX',
-                                   only_if_assigned='',
-                                   also_unassigned=False,
-                                   use_https=True,
-                                   verify_ssl=True)
+        self.client = GitlabClient(
+            'my-git.org',
+            'XXXXXX',
+            only_if_assigned='',
+            also_unassigned=False,
+            use_https=True,
+            verify_ssl=True,
+        )
         self.data = TestData()
 
     def test_init(self):
-        http_client = GitlabClient('my-git.org',
-                                   '12345',
-                                   only_if_assigned='',
-                                   also_unassigned=False,
-                                   use_https=False,
-                                   verify_ssl=False)
+        http_client = GitlabClient(
+            'my-git.org',
+            '12345',
+            only_if_assigned='',
+            also_unassigned=False,
+            use_https=False,
+            verify_ssl=False,
+        )
         expected_base_url = 'http://my-git.org/api/v4/'
         self.assertEqual(expected_base_url, http_client._base_url())
-        http_client = GitlabClient('my-git.org',
-                                   '12345',
-                                   only_if_assigned='',
-                                   also_unassigned=False,
-                                   use_https=False,
-                                   verify_ssl=True)
+        http_client = GitlabClient(
+            'my-git.org',
+            '12345',
+            only_if_assigned='',
+            also_unassigned=False,
+            use_https=False,
+            verify_ssl=True,
+        )
         expected_base_url = 'http://my-git.org/api/v4/'
         self.assertEqual(expected_base_url, http_client._base_url())
-        http_client = GitlabClient('my-git.org',
-                                   '12345',
-                                   only_if_assigned='',
-                                   also_unassigned=False,
-                                   use_https=True,
-                                   verify_ssl=False)
+        http_client = GitlabClient(
+            'my-git.org',
+            '12345',
+            only_if_assigned='',
+            also_unassigned=False,
+            use_https=True,
+            verify_ssl=False,
+        )
         expected_base_url = 'https://my-git.org/api/v4/'
         self.assertEqual(expected_base_url, http_client._base_url())
-        http_client = GitlabClient('my-git.org',
-                                   '12345',
-                                   only_if_assigned='',
-                                   also_unassigned=False,
-                                   use_https=True,
-                                   verify_ssl=True)
+        http_client = GitlabClient(
+            'my-git.org',
+            '12345',
+            only_if_assigned='',
+            also_unassigned=False,
+            use_https=True,
+            verify_ssl=True,
+        )
         expected_base_url = 'https://my-git.org/api/v4/'
         self.assertEqual(expected_base_url, http_client._base_url())
 
     @responses.activate
     def test_get_repo(self):
         self.add_response(
-            'https://my-git.org/api/v4/projects/8',
-            json=self.data.arbitrary_project)
+            'https://my-git.org/api/v4/projects/8', json=self.data.arbitrary_project
+        )
         result = self.client.get_repo_cached(repo_id=8)
         self.assertEqual(result, self.data.arbitrary_project)
 
@@ -365,118 +364,153 @@ class TestGitlabClient(ServiceTest):
     def test_get_repos(self):
         self.add_response(
             'https://my-git.org/api/v4/projects?simple=True&archived=False&page=1&per_page=100',
-            json=[self.data.arbitrary_project])
+            json=[self.data.arbitrary_project],
+        )
         self.add_response(
-            'https://my-git.org/api/v4/projects' +
-            '?simple=True&archived=False&membership=True&page=1&per_page=100',
-            json=[self.data.arbitrary_project])
+            'https://my-git.org/api/v4/projects'
+            + '?simple=True&archived=False&membership=True&page=1&per_page=100',
+            json=[self.data.arbitrary_project],
+        )
         self.add_response(
-            'https://my-git.org/api/v4/projects' +
-            '?simple=True&archived=False&owned=True&page=1&per_page=100',
-            json=[])
+            'https://my-git.org/api/v4/projects'
+            + '?simple=True&archived=False&owned=True&page=1&per_page=100',
+            json=[],
+        )
         self.add_response(
-            'https://my-git.org/api/v4/projects/' +
-            'arbitrary_namespace%2Farbitrary_project?simple=true',
-            json=self.data.arbitrary_project)
+            'https://my-git.org/api/v4/projects/'
+            + 'arbitrary_namespace%2Farbitrary_project?simple=true',
+            json=self.data.arbitrary_project,
+        )
         self.add_response(
             'https://my-git.org/api/v4/projects/8?simple=true',
-            json=self.data.arbitrary_project)
+            json=self.data.arbitrary_project,
+        )
         self.add_response(
-            'https://my-git.org/api/v4/projects/non_existing?simple=true',
-            json=[])
+            'https://my-git.org/api/v4/projects/non_existing?simple=true', json=[]
+        )
         self.add_response(
-            'https://my-git.org/api/v4/projects' +
-            '?simple=True&membership=True&owned=False&page=1&per_page=100',
-            json=[self.data.arbitrary_project])
+            'https://my-git.org/api/v4/projects'
+            + '?simple=True&membership=True&owned=False&page=1&per_page=100',
+            json=[self.data.arbitrary_project],
+        )
         self.add_response(
-            'https://my-git.org/api/v4/projects' +
-            '?simple=True&archived=False&membership=True&owned=True&page=1&per_page=100',
-            json=[])
+            'https://my-git.org/api/v4/projects'
+            + '?simple=True&archived=False&membership=True&owned=True&page=1&per_page=100',
+            json=[],
+        )
 
-        result = self.client.get_repos(include_repos=[], only_membership=False, only_owned=False)
+        result = self.client.get_repos(
+            include_repos=[], only_membership=False, only_owned=False
+        )
         self.assertEqual(result, [self.data.arbitrary_project])
 
-        result = self.client.get_repos(include_repos=[], only_membership=True, only_owned=False)
+        result = self.client.get_repos(
+            include_repos=[], only_membership=True, only_owned=False
+        )
         self.assertEqual(result, [self.data.arbitrary_project])
 
-        result = self.client.get_repos(include_repos=[], only_membership=True, only_owned=True)
+        result = self.client.get_repos(
+            include_repos=[], only_membership=True, only_owned=True
+        )
         self.assertEqual(result, [])
 
-        result = self.client.get_repos(include_repos=['arbitrary_namespace/arbitrary_project'],
-                                       only_membership=False, only_owned=False)
+        result = self.client.get_repos(
+            include_repos=['arbitrary_namespace/arbitrary_project'],
+            only_membership=False,
+            only_owned=False,
+        )
         self.assertEqual(result, [self.data.arbitrary_project])
 
-        result = self.client.get_repos(include_repos=['id:8'],
-                                       only_membership=False, only_owned=False)
+        result = self.client.get_repos(
+            include_repos=['id:8'], only_membership=False, only_owned=False
+        )
         self.assertEqual(result, [self.data.arbitrary_project])
 
-        result = self.client.get_repos(include_repos=['non_existing'],
-                                       only_membership=False, only_owned=False)
+        result = self.client.get_repos(
+            include_repos=['non_existing'], only_membership=False, only_owned=False
+        )
         self.assertRaises(OSError)
 
     @responses.activate
     def test_get_notes(self):
         self.add_response(
             'https://my-git.org/api/v4/projects/8/issues/3/notes?page=1&per_page=100',
-            json=[{
-                'author': {'username': 'john_smith'},
-                'body': 'Some comment.'
-            }])
-        expected = [{
-            'author': {'username': 'john_smith'},
-            'body': 'Some comment.'
-        }]
+            json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
+        )
+        expected = [{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}]
         result = self.client.get_notes(
-            self.data.arbitrary_issue['project_id'], 'issues', self.data.arbitrary_issue['iid'])
+            self.data.arbitrary_issue['project_id'],
+            'issues',
+            self.data.arbitrary_issue['iid'],
+        )
         self.assertEqual(result, expected)
 
     @responses.activate
     def test_get_repo_issues(self):
         self.add_response(
             'https://my-git.org/api/v4/projects/8/issues?state=opened&page=1&per_page=100',
-            json=[self.data.arbitrary_issue])
+            json=[self.data.arbitrary_issue],
+        )
         self.assertEqual(
             self.client.get_repo_issues(self.data.arbitrary_issue['project_id']),
-            {self.data.arbitrary_issue['id']: (
-                self.data.arbitrary_issue['project_id'], self.data.arbitrary_issue)}
+            {
+                self.data.arbitrary_issue['id']: (
+                    self.data.arbitrary_issue['project_id'],
+                    self.data.arbitrary_issue,
+                )
+            },
         )
 
     @responses.activate
     def test_get_repo_merge_requests(self):
         self.add_response(
             'https://my-git.org/api/v4/projects/8/merge_requests?state=opened&page=1&per_page=100',
-            json=[self.data.arbitrary_mr])
+            json=[self.data.arbitrary_mr],
+        )
         self.assertEqual(
-            self.client.get_repo_merge_requests(self.data.arbitrary_issue['project_id']),
-            {self.data.arbitrary_mr['id']: (
-                self.data.arbitrary_issue['project_id'], self.data.arbitrary_mr)}
+            self.client.get_repo_merge_requests(
+                self.data.arbitrary_issue['project_id']
+            ),
+            {
+                self.data.arbitrary_mr['id']: (
+                    self.data.arbitrary_issue['project_id'],
+                    self.data.arbitrary_mr,
+                )
+            },
         )
 
     @responses.activate
     def test_get_issues_from_query(self):
         self.add_response(
-            'https://my-git.org/api/v4/' +
-            'issues?assignee_id=2&state=opened&scope=all&page=1&per_page=100',
-            json=[self.data.arbitrary_issue])
+            'https://my-git.org/api/v4/'
+            + 'issues?assignee_id=2&state=opened&scope=all&page=1&per_page=100',
+            json=[self.data.arbitrary_issue],
+        )
         self.assertEqual(
-            self.client.get_issues_from_query('issues?assignee_id=2&state=opened&scope=all'),
-            {self.data.arbitrary_issue['id']: (
-                self.data.arbitrary_issue['project_id'], self.data.arbitrary_issue)}
+            self.client.get_issues_from_query(
+                'issues?assignee_id=2&state=opened&scope=all'
+            ),
+            {
+                self.data.arbitrary_issue['id']: (
+                    self.data.arbitrary_issue['project_id'],
+                    self.data.arbitrary_issue,
+                )
+            },
         )
 
     @responses.activate
     def test_get_todos(self):
         self.add_response(
             'https://my-git.org/api/v4/todos?state=pending&page=1&per_page=100',
-            json=[self.data.arbitrary_todo])
+            json=[self.data.arbitrary_todo],
+        )
         self.assertEqual(
             self.client.get_todos('todos?state=pending'),
-            [(self.data.arbitrary_todo['project'], self.data.arbitrary_todo)]
+            [(self.data.arbitrary_todo['project'], self.data.arbitrary_todo)],
         )
 
 
 class TestGitlabService(ConfigTest):
-
     def setUp(self):
         super().setUp()
         self.config = {
@@ -495,55 +529,59 @@ class TestGitlabService(ConfigTest):
     def service(self):
         conf = self.validate()
         service = GitlabService(conf['myservice'], conf['general'])
-        service.gitlab_client.repo_cache = {1: {
-            'id': 1,
-            'path_with_namespace': 'arbitrary_namespace/arbitrary_project',
-        }}
+        service.gitlab_client.repo_cache = {
+            1: {'id': 1, 'path_with_namespace': 'arbitrary_namespace/arbitrary_project'}
+        }
         return service
 
     def test_get_keyring_service_default_host(self):
         conf = self.validate()['myservice']
         self.assertEqual(
-            GitlabService.get_keyring_service(conf),
-            'gitlab://foobar@gitlab.com')
+            GitlabService.get_keyring_service(conf), 'gitlab://foobar@gitlab.com'
+        )
 
     def test_get_keyring_service_custom_host(self):
         self.config['myservice']['host'] = 'my-git.org'
         conf = self.validate()['myservice']
         self.assertEqual(
-            GitlabService.get_keyring_service(conf),
-            'gitlab://foobar@my-git.org')
+            GitlabService.get_keyring_service(conf), 'gitlab://foobar@my-git.org'
+        )
 
     def test_filter_gitlab_dot_com(self):
-        self.config['myservice'].update({
-            'host': 'gitlab.com',
-            'owned': 'false',
-        })
-        self.assertValidationError('You must set at least one of the '
-                                   'configuration options to filter '
-                                   'repositories')
+        self.config['myservice'].update({'host': 'gitlab.com', 'owned': 'false'})
+        self.assertValidationError(
+            'You must set at least one of the '
+            'configuration options to filter '
+            'repositories'
+        )
 
-        self.config['myservice'].update({
-            'issue_query': 'arbitrary_query',
-            'merge_request_query': 'arbitrary_query',
-            'todo_query': 'arbitrary_query',
-        })
+        self.config['myservice'].update(
+            {
+                'issue_query': 'arbitrary_query',
+                'merge_request_query': 'arbitrary_query',
+                'todo_query': 'arbitrary_query',
+            }
+        )
         self.validate()
 
         self.config['myservice']['issue_query'] = ''
-        self.assertValidationError('You must set at least one of the '
-                                   'configuration options to filter '
-                                   'repositories')
+        self.assertValidationError(
+            'You must set at least one of the '
+            'configuration options to filter '
+            'repositories'
+        )
 
     def test_add_default_namespace_to_included_repos(self):
         self.config['myservice']['include_repos'] = 'baz, banana/tree'
-        self.assertEqual(self.service.config.include_repos,
-                         ['foobar/baz', 'banana/tree'])
+        self.assertEqual(
+            self.service.config.include_repos, ['foobar/baz', 'banana/tree']
+        )
 
     def test_add_default_namespace_to_excluded_repos(self):
         self.config['myservice']['exclude_repos'] = 'baz, banana/tree'
-        self.assertEqual(self.service.config.exclude_repos,
-                         ['foobar/baz', 'banana/tree'])
+        self.assertEqual(
+            self.service.config.exclude_repos, ['foobar/baz', 'banana/tree']
+        )
 
     def test_filter_repos_default(self):
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
@@ -577,11 +615,13 @@ class TestGitlabService(ConfigTest):
         self.assertFalse(self.service.include((1, data.arbitrary_issue)))
 
     def test_default_priorities(self):
-        self.config['myservice'].update({
-            'default_issue_priority': 'L',
-            'default_mr_priority': 'M',
-            'default_todo_priority': 'H',
-        })
+        self.config['myservice'].update(
+            {
+                'default_issue_priority': 'L',
+                'default_mr_priority': 'M',
+                'default_todo_priority': 'H',
+            }
+        )
         self.assertEqual('L', self.service.config.default_issue_priority)
         self.assertEqual('M', self.service.config.default_mr_priority)
         self.assertEqual('H', self.service.config.default_todo_priority)
@@ -595,7 +635,9 @@ class TestGitlabService(ConfigTest):
         size_limit = 5
         self.config['myservice']['body_length'] = size_limit
         issue = dict(description="A very short issue body.  Fixes #42.")
-        self.assertEqual(issue["description"][:size_limit], self.service.description(issue))
+        self.assertEqual(
+            issue["description"][:size_limit], self.service.description(issue)
+        )
 
     def test_body_no_limit(self):
         issue = dict(description="A very short issue body.  Fixes #42.")
@@ -609,7 +651,8 @@ class TestGitlabService(ConfigTest):
         self.assertIn(
             "WARNING: Gitlab's 'owned' configuration field should be set "
             "explicitly. In a future release, this will be an error.",
-            self.caplog.records[0].message)
+            self.caplog.records[0].message,
+        )
 
 
 class TestGitlabIssue(AbstractServiceTest, ServiceTest):
@@ -629,8 +672,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     def test_to_taskwarrior(self):
         issue = self.service.get_issue_for_record(
-            self.data.arbitrary_issue,
-            self.data.arbitrary_extra
+            self.data.arbitrary_issue, self.data.arbitrary_extra
         )
 
         expected_output = {
@@ -664,13 +706,10 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         self.assertEqual(actual_output, expected_output)
 
     def test_custom_issue_priority(self):
-        overrides = {
-            'default_issue_priority': 'L',
-        }
+        overrides = {'default_issue_priority': 'L'}
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         issue = service.get_issue_for_record(
-            self.data.arbitrary_issue,
-            self.data.arbitrary_extra
+            self.data.arbitrary_issue, self.data.arbitrary_extra
         )
         expected_output = {
             'project': self.data.arbitrary_extra['project'],
@@ -703,14 +742,11 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         self.assertEqual(actual_output, expected_output)
 
     def test_custom_todo_priority(self):
-        overrides = {
-            'default_todo_priority': 'H',
-        }
+        overrides = {'default_todo_priority': 'H'}
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         service.import_labels_as_tags = True
         issue = service.get_issue_for_record(
-            self.data.arbitrary_todo,
-            self.data.arbitrary_todo_extra
+            self.data.arbitrary_todo, self.data.arbitrary_todo_extra
         )
         expected_output = {
             'project': self.data.arbitrary_todo_extra['project'],
@@ -723,8 +759,11 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             issue.REPO: 'project',
             issue.STATE: self.data.arbitrary_todo['state'],
             issue.TYPE: self.data.arbitrary_todo_extra['type'],
-            issue.TITLE: 'Todo from %s for %s' % (self.data.arbitrary_todo['author']['name'],
-                                                  self.data.arbitrary_todo['project']['path']),
+            issue.TITLE: 'Todo from %s for %s'
+            % (
+                self.data.arbitrary_todo['author']['name'],
+                self.data.arbitrary_todo['project']['path'],
+            ),
             issue.NUMBER: str(self.data.arbitrary_todo['id']),
             issue.UPDATED_AT: self.data.arbitrary_updated.replace(microsecond=0),
             issue.CREATED_AT: self.data.arbitrary_created.replace(microsecond=0),
@@ -744,14 +783,10 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         self.assertEqual(actual_output, expected_output)
 
     def test_custom_mr_priority(self):
-        overrides = {
-            'default_mr_priority': '',
-            'import_labels_as_tags': True,
-        }
+        overrides = {'default_mr_priority': '', 'import_labels_as_tags': True}
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         issue = service.get_issue_for_record(
-            self.data.arbitrary_mr,
-            self.data.arbitrary_mr_extra
+            self.data.arbitrary_mr, self.data.arbitrary_mr_extra
         )
         expected_output = {
             'project': self.data.arbitrary_mr_extra['project'],
@@ -786,8 +821,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     def test_work_in_progress(self):
         self.data.arbitrary_issue['work_in_progress'] = False
         issue = self.service.get_issue_for_record(
-            self.data.arbitrary_issue,
-            self.data.arbitrary_extra
+            self.data.arbitrary_issue, self.data.arbitrary_extra
         )
 
         expected_output = {
@@ -822,35 +856,30 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues_from_query(self):
-        overrides = {
-            'issue_query': 'issues?state=opened',
-        }
+        overrides = {'issue_query': 'issues?state=opened'}
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         self.add_response(
             'https://my-git.org/api/v4/issues?state=opened&per_page=100&page=1',
-            json=[self.data.arbitrary_issue])
+            json=[self.data.arbitrary_issue],
+        )
         self.add_response(
             'https://my-git.org/api/v4/projects/8',
             json={
                 'id': 8,
                 'path': 'arbitrary_username/project',
                 'web_url': 'example.com',
-                "namespace": {
-                    "full_path": "arbitrary_username"
-                },
-                'path_with_namespace': 'arbitrary_username/project'
-            })
+                "namespace": {"full_path": "arbitrary_username"},
+                'path_with_namespace': 'arbitrary_username/project',
+            },
+        )
         self.add_response(
             'https://my-git.org/api/v4/projects/8/issues/3/notes?page=1&per_page=100',
-            json=[{
-                'author': {'username': 'john_smith'},
-                'body': 'Some comment.'
-            }])
+            json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
+        )
         issue = next(service.issues())
         expected = {
             'annotations': ['@john_smith - Some comment.'],
-            'description':
-                '(bw)Is#3 - Add user settings .. example.com/issues/3',
+            'description': '(bw)Is#3 - Add user settings .. example.com/issues/3',
             'due': self.data.arbitrary_duedate,
             'entry': self.data.arbitrary_created,
             'gitlabassignee': 'jack_smith',
@@ -873,7 +902,8 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'gitlabweight': 3,
             'priority': 'M',
             'project': 'arbitrary_username/project',
-            'tags': []}
+            'tags': [],
+        }
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
     @responses.activate
@@ -882,35 +912,32 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'include_issues': 'false',
             'include_todos': 'false',
             'include_merge_requests': 'true',
-            'merge_request_query': 'merge_requests?state=opened'
+            'merge_request_query': 'merge_requests?state=opened',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         self.add_response(
             'https://my-git.org/api/v4/merge_requests?state=opened&per_page=100&page=1',
-            json=[self.data.arbitrary_mr])
+            json=[self.data.arbitrary_mr],
+        )
         self.add_response(
             'https://my-git.org/api/v4/projects/8',
             json={
                 'id': 8,
                 'path': 'arbitrary_username/project',
                 'web_url': 'example.com',
-                "namespace": {
-                    "full_path": "arbitrary_username"
-                },
-                'path_with_namespace': 'arbitrary_username/project'
-            })
+                "namespace": {"full_path": "arbitrary_username"},
+                'path_with_namespace': 'arbitrary_username/project',
+            },
+        )
         self.add_response(
-            'https://my-git.org/api/v4/projects/8/' +
-            'merge_requests/3/notes?page=1&per_page=100',
-            json=[{
-                'author': {'username': 'john_smith'},
-                'body': 'Some comment.'
-            }])
+            'https://my-git.org/api/v4/projects/8/'
+            + 'merge_requests/3/notes?page=1&per_page=100',
+            json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
+        )
         mr = next(service.issues())
         expected = {
             'annotations': ['@john_smith - Some comment.'],
-            'description':
-                '(bw)MR#3 - Add user settings .. example.com/merge_requests/3',
+            'description': '(bw)MR#3 - Add user settings .. example.com/merge_requests/3',
             'due': self.data.arbitrary_duedate,
             'entry': self.data.arbitrary_created,
             'gitlabassignee': 'jack_smith',
@@ -933,7 +960,8 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'gitlabweight': 3,
             'priority': 'M',
             'project': 'arbitrary_username/project',
-            'tags': []}
+            'tags': [],
+        }
         self.assertEqual(TaskConstructor(mr).get_taskwarrior_record(), expected)
 
     @responses.activate
@@ -942,39 +970,38 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'include_issues': 'false',
             'include_merge_requests': 'false',
             'include_todos': 'true',
-            'todo_query': 'todos?state=pending'
+            'todo_query': 'todos?state=pending',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         self.add_response(
             'https://my-git.org/api/v4/todos?state=pending&per_page=100&page=1',
-            json=[self.data.arbitrary_todo])
+            json=[self.data.arbitrary_todo],
+        )
         self.add_response(
             'https://my-git.org/api/v4/projects/2',
             json={
                 "id": 2,
                 'path': 'arbitrary_namespace/project',
                 'web_url': 'example.com',
-                "namespace": {
-                    "full_path": "arbitrary_namespace"
-                },
-                'path_with_namespace': 'arbitrary_namespace/project'
-            })
+                "namespace": {"full_path": "arbitrary_namespace"},
+                'path_with_namespace': 'arbitrary_namespace/project',
+            },
+        )
         self.add_response(
             'https://my-git.org/api/v4/projects/arbitrary_namespace%2Fproject?simple=true',
             json={
                 'id': 2,
                 'path': 'arbitrary_namespace/project',
                 'web_url': 'example.com',
-                "namespace": {
-                    "full_path": "arbitrary_namespace"
-                },
-                'path_with_namespace': 'arbitrary_namespace/project'
-            })
+                "namespace": {"full_path": "arbitrary_namespace"},
+                'path_with_namespace': 'arbitrary_namespace/project',
+            },
+        )
         todo = next(service.issues())
         expected = {
             'annotations': [],
             'description': '(bw)# - Todo from John Smith for project .. '
-                           'https://my-git.org/arbitrary_username/project/issues/3',
+            'https://my-git.org/arbitrary_username/project/issues/3',
             'due': None,
             'entry': self.data.arbitrary_created,
             'gitlabassignee': None,
@@ -997,7 +1024,8 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'gitlabweight': None,
             'priority': 'M',
             'project': 'project',
-            'tags': []}
+            'tags': [],
+        }
         self.assertEqual(TaskConstructor(todo).get_taskwarrior_record(), expected)
 
         overrides = {
@@ -1005,7 +1033,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'include_merge_requests': 'false',
             'include_todos': 'true',
             'include_repos': 'arbitrary_namespace/project',
-            'include_all_todos': 'false'
+            'include_all_todos': 'false',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         todo = next(service.issues())
@@ -1015,33 +1043,32 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         self.add_response(
             'https://my-git.org/api/v4/projects?simple=True&archived=False&per_page=100&page=1',
-            json=[{
-                'id': 8,
-                'path': 'arbitrary_username/project',
-                'web_url': 'example.com',
-                "namespace": {
-                    "full_path": "arbitrary_username"
-                },
-                'path_with_namespace': 'arbitrary_username/project'
-            }])
+            json=[
+                {
+                    'id': 8,
+                    'path': 'arbitrary_username/project',
+                    'web_url': 'example.com',
+                    "namespace": {"full_path": "arbitrary_username"},
+                    'path_with_namespace': 'arbitrary_username/project',
+                }
+            ],
+        )
 
         self.add_response(
             'https://my-git.org/api/v4/projects/8/issues?state=opened&per_page=100&page=1',
-            json=[self.data.arbitrary_issue])
+            json=[self.data.arbitrary_issue],
+        )
 
         self.add_response(
             'https://my-git.org/api/v4/projects/8/issues/3/notes?per_page=100&page=1',
-            json=[{
-                'author': {'username': 'john_smith'},
-                'body': 'Some comment.'
-            }])
+            json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
+        )
 
         issue = next(self.service.issues())
 
         expected = {
             'annotations': ['@john_smith - Some comment.'],
-            'description':
-                '(bw)Is#3 - Add user settings .. example.com/issues/3',
+            'description': '(bw)Is#3 - Add user settings .. example.com/issues/3',
             'due': self.data.arbitrary_duedate,
             'entry': self.data.arbitrary_created,
             'gitlabassignee': 'jack_smith',
@@ -1064,6 +1091,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'gitlabweight': 3,
             'priority': 'M',
             'project': 'arbitrary_username/project',
-            'tags': []}
+            'tags': [],
+        }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

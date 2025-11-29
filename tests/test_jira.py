@@ -24,21 +24,19 @@ class FakeJiraClient:
 
 
 class testJiraService(ConfigTest):
-
     def setUp(self):
         super().setUp()
         self.config = {
-            'general': {
-                'targets': ['myjira'],
-                'interactive': 'false',
-            },
+            'general': {'targets': ['myjira'], 'interactive': 'false'},
             'myjira': {
                 'service': 'jira',
                 'base_uri': 'https://example.com',
                 'username': 'milou',
                 'password': 't0ps3cr3t',
                 'extra_fields': [
-                    'jiraextra1:customfield_10000', 'jiraextra2:namedfield.valueinside'],
+                    'jiraextra1:customfield_10000',
+                    'jiraextra2:namedfield.valueinside',
+                ],
             },
         }
 
@@ -46,8 +44,7 @@ class testJiraService(ConfigTest):
         description = "A very short issue body.  Fixes #828."
         self.config['myjira']['body_length'] = '5'
         conf = schema.validate_config(self.config, 'general', 'configpath')
-        service = JiraService(
-            conf['myjira'], conf['general'], _skip_server=True)
+        service = JiraService(conf['myjira'], conf['general'], _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
         self.assertEqual(description[:5], service.body(issue))
@@ -55,8 +52,7 @@ class testJiraService(ConfigTest):
     def test_body_length_limit(self):
         description = "A very short issue body.  Fixes #828."
         conf = schema.validate_config(self.config, 'general', 'configpath')
-        service = JiraService(
-            conf['myjira'], conf['general'], _skip_server=True)
+        service = JiraService(conf['myjira'], conf['general'], _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
         self.assertEqual(description, service.body(issue))
@@ -68,7 +64,10 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         'username': 'one',
         'base_uri': 'https://two.org',
         'password': 'three',
-        'extra_fields': ['jiraextra1:customfield_10000', 'jiraextra2:namedfield.valueinside'],
+        'extra_fields': [
+            'jiraextra1:customfield_10000',
+            'jiraextra2:namedfield.valueinside',
+        ],
     }
 
     arbitrary_estimation = 3600
@@ -88,21 +87,23 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'fixVersions': [{'name': '1.2.3'}],
             'issuetype': {'name': 'Epic'},
             'status': {'name': 'Open'},
-            'subtasks': [{'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids],
+            'subtasks': [
+                {'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids
+            ],
             'parent': {'key': f'DONUT-{arbitrary_parent_id}'},
             'customfield_10000': 'foo',
             'namedfield': {'valueinside': arbitrary_namedfield_valueinside},
         },
-        'key': '%s-%s' % (arbitrary_project, arbitrary_id, ),
+        'key': '%s-%s' % (arbitrary_project, arbitrary_id),
     }
 
     arbitrary_record_with_due = arbitrary_record.copy()
-    arbitrary_record_with_due['fields'] = arbitrary_record_with_due['fields'].copy(
-    )
+    arbitrary_record_with_due['fields'] = arbitrary_record_with_due['fields'].copy()
     arbitrary_record_with_due['fields']['Sprint'] = [
         'com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
                     state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4\
-                    55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]']
+                    55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]'
+    ]
 
     def setUp(self):
         super().setUp()
@@ -117,7 +118,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
 
     def get_extra_fields(self):
         return JiraExtraFields.validate(
-            ['jiraextra1:customfield_10000', 'jiraextra2:namedfield.valueinside'])
+            ['jiraextra1:customfield_10000', 'jiraextra2:namedfield.valueinside']
+        )
 
     def test_to_taskwarrior(self):
         arbitrary_url = 'http://one'
@@ -147,12 +149,11 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraparent': 'DONUT-13',
             'jiraextra1': 'foo',
             'jiraextra2': 77,
-
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: self.arbitrary_record['key'],
             issue.SUMMARY: self.arbitrary_summary,
             issue.DESCRIPTION: 'issue body',
-            issue.ESTIMATE: self.arbitrary_estimation / 60 / 60
+            issue.ESTIMATE: self.arbitrary_estimation / 60 / 60,
         }
 
         def get_url(*args):
@@ -177,15 +178,11 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'sprint_field_names': self.service.sprint_field_names,
         }
 
-        issue = self.service.get_issue_for_record(
-            record_with_goal, arbitrary_extra
-        )
+        issue = self.service.get_issue_for_record(record_with_goal, arbitrary_extra)
 
         expected_output = {
             'project': self.arbitrary_project,
-            'priority': (
-                issue.PRIORITY_MAP[record_with_goal['fields']['priority']]
-            ),
+            'priority': (issue.PRIORITY_MAP[record_with_goal['fields']['priority']]),
             'annotations': arbitrary_extra['annotations'],
             'due': datetime.datetime(2016, 9, 23, 16, 8, tzinfo=tzutc()),
             'tags': [],
@@ -197,12 +194,11 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraparent': 'DONUT-13',
             'jiraextra1': 'foo',
             'jiraextra2': 77,
-
             issue.URL: arbitrary_url,
             issue.FOREIGN_ID: record_with_goal['key'],
             issue.SUMMARY: self.arbitrary_summary,
             issue.DESCRIPTION: None,
-            issue.ESTIMATE: self.arbitrary_estimation / 60 / 60
+            issue.ESTIMATE: self.arbitrary_estimation / 60 / 60,
         }
 
         def get_url(*args):
@@ -219,8 +215,9 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
         expected = {
             'annotations': [],
             'due': None,
-            'description': ('(bw)Is#10 - lkjaldsfjaldf .. '
-                            'https://two.org/browse/DONUT-10'),
+            'description': (
+                '(bw)Is#10 - lkjaldsfjaldf .. https://two.org/browse/DONUT-10'
+            ),
             'entry': datetime.datetime(2016, 6, 6, 13, 7, 8, tzinfo=tzutc()),
             'jiradescription': None,
             'jiraestimate': 1,
@@ -236,7 +233,8 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'jiraextra2': 77,
             'priority': 'H',
             'project': 'DONUT',
-            'tags': []}
+            'tags': [],
+        }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
@@ -245,5 +243,6 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             self.arbitrary_record_with_due,
             extra={'sprint_field_names': self.service.sprint_field_names},
         )
-        self.assertEqual(issue.get_due(), datetime.datetime(
-            2016, 9, 23, 16, 8, tzinfo=tzutc()))
+        self.assertEqual(
+            issue.get_due(), datetime.datetime(2016, 9, 23, 16, 8, tzinfo=tzutc())
+        )

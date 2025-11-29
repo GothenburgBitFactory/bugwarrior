@@ -36,7 +36,8 @@ class GithubConfig(config.ServiceConfig):
     include_user_issues: bool = True
     involved_issues: bool = False
     host: config.NoSchemeUrl = config.NoSchemeUrl(
-        'github.com', scheme='https', host='github.com')
+        'github.com', scheme='https', host='github.com'
+    )
     body_length: int = sys.maxsize
     project_owner_prefix: bool = False
     issue_urls: config.ConfigList = config.ConfigList([])
@@ -47,14 +48,14 @@ class GithubConfig(config.ServiceConfig):
         if values['password'] != 'Deprecated':
             log.warning(
                 'Basic auth is no longer supported. Please remove '
-                '"password" in favor of "token".')
+                '"password" in favor of "token".'
+            )
         return values
 
     @pydantic.v1.root_validator
     def require_username_or_query(cls, values):
         if not values['username'] and not values['query']:
-            raise ValueError(
-                'section requires one of:\n    username\n    query')
+            raise ValueError('section requires one of:\n    username\n    query')
         return values
 
     @pydantic.v1.root_validator
@@ -64,10 +65,12 @@ class GithubConfig(config.ServiceConfig):
             parsed_url = urllib.parse.urlparse(url)
             if parsed_url.netloc != values['host']:
                 raise ValueError(
-                    f'issue_urls: {url} inconsistent with host {values["host"]}')
+                    f'issue_urls: {url} inconsistent with host {values["host"]}'
+                )
             if not re.match(r'^/.*/.*/(issues|pull)/[0-9]*$', parsed_url.path):
                 raise ValueError(
-                    f'issue_urls: {parsed_url.path} is not a valid issue path')
+                    f'issue_urls: {parsed_url.path} is not a valid issue path'
+                )
             issue_url_paths.append(parsed_url.path)
         values['issue_urls'] = issue_url_paths
         return values
@@ -76,7 +79,8 @@ class GithubConfig(config.ServiceConfig):
     def require_username_if_include_user_repos(cls, values):
         if values['include_user_repos'] and not values['username']:
             raise ValueError(
-                'username required when include_user_repos is True (default)')
+                'username required when include_user_repos is True (default)'
+            )
         return values
 
 
@@ -94,7 +98,7 @@ class GithubClient(Client):
             self.kwargs['auth'] = self.auth['basic']
 
     def _api_url(self, path, **context):
-        """ Build the full url to the API endpoint """
+        """Build the full url to the API endpoint"""
         if self.host == 'github.com':
             baseurl = "https://api.github.com"
         else:
@@ -103,24 +107,24 @@ class GithubClient(Client):
 
     def get_repos(self, username):
         user_repos = self._getter(self._api_url("/user/repos?per_page=100"))
-        public_repos = self._getter(self._api_url(
-            "/users/{username}/repos?per_page=100", username=username))
+        public_repos = self._getter(
+            self._api_url("/users/{username}/repos?per_page=100", username=username)
+        )
         return user_repos + public_repos
 
     def get_query(self, query):
         """Run a generic issue/PR query"""
-        url = self._api_url(
-            "/search/issues?q={query}&per_page=100", query=query)
+        url = self._api_url("/search/issues?q={query}&per_page=100", query=query)
         return self._getter(url, subkey='items')
 
     def get_issues(self, username, repo):
         url = self._api_url(
-            "/repos/{username}/{repo}/issues?per_page=100",
-            username=username, repo=repo)
+            "/repos/{username}/{repo}/issues?per_page=100", username=username, repo=repo
+        )
         return self._getter(url)
 
     def get_directly_assigned_issues(self):
-        """ Returns all issues assigned to authenticated user.
+        """Returns all issues assigned to authenticated user.
 
         List issues assigned to the authenticated user across all visible
         repositories including owned repositories, member repositories, and
@@ -138,17 +142,20 @@ class GithubClient(Client):
     def get_comments(self, username, repo, number):
         url = self._api_url(
             "/repos/{username}/{repo}/issues/{number}/comments?per_page=100",
-            username=username, repo=repo, number=number)
+            username=username,
+            repo=repo,
+            number=number,
+        )
         return self._getter(url)
 
     def get_pulls(self, username, repo):
         url = self._api_url(
-            "/repos/{username}/{repo}/pulls?per_page=100",
-            username=username, repo=repo)
+            "/repos/{username}/{repo}/pulls?per_page=100", username=username, repo=repo
+        )
         return self._getter(url)
 
     def _getter(self, url, subkey=None):
-        """ Pagination utility.  Obnoxious. """
+        """Pagination utility.  Obnoxious."""
         results = []
         link = dict(next=url)
 
@@ -171,16 +178,18 @@ class GithubClient(Client):
         # Warn about the mis-leading 404 error code.  See:
         # https://github.com/ralphbean/bugwarrior/issues/374
         if response.status_code == 404 and 'token' in self.auth:
-            log.warn("A '404' from github may indicate an auth "
-                     "failure. Make sure both that your token is correct "
-                     "and that it has 'public_repo' and not 'public "
-                     "access' rights.")
+            log.warn(
+                "A '404' from github may indicate an auth "
+                "failure. Make sure both that your token is correct "
+                "and that it has 'public_repo' and not 'public "
+                "access' rights."
+            )
 
         return response
 
     @staticmethod
     def _link_field_to_dict(field):
-        """ Utility for ripping apart github's Link header field.
+        """Utility for ripping apart github's Link header field.
         It's kind of ugly.
         """
 
@@ -188,8 +197,7 @@ class GithubClient(Client):
             return dict()
 
         return {
-            part.split('; ')[1][5:-1]:
-            part.split('; ')[0][1:-1]
+            part.split('; ')[1][5:-1]: part.split('; ')[0][1:-1]
             for part in field.split(', ')
         }
 
@@ -211,64 +219,22 @@ class GithubIssue(Issue):
     DRAFT = 'githubdraft'
 
     UDAS = {
-        TITLE: {
-            'type': 'string',
-            'label': 'Github Title',
-        },
-        BODY: {
-            'type': 'string',
-            'label': 'Github Body',
-        },
-        CREATED_AT: {
-            'type': 'date',
-            'label': 'Github Created',
-        },
-        UPDATED_AT: {
-            'type': 'date',
-            'label': 'Github Updated',
-        },
-        CLOSED_AT: {
-            'type': 'date',
-            'label': 'GitHub Closed',
-        },
-        MILESTONE: {
-            'type': 'string',
-            'label': 'Github Milestone',
-        },
-        REPO: {
-            'type': 'string',
-            'label': 'Github Repo Slug',
-        },
-        URL: {
-            'type': 'string',
-            'label': 'Github URL',
-        },
-        TYPE: {
-            'type': 'string',
-            'label': 'Github Type',
-        },
-        NUMBER: {
-            'type': 'numeric',
-            'label': 'Github Issue/PR #',
-        },
-        USER: {
-            'type': 'string',
-            'label': 'Github User',
-        },
-        NAMESPACE: {
-            'type': 'string',
-            'label': 'Github Namespace',
-        },
-        STATE: {
-            'type': 'string',
-            'label': 'GitHub State',
-        },
-        DRAFT: {
-            'type': 'numeric',
-            'label': 'GitHub Draft',
-        },
+        TITLE: {'type': 'string', 'label': 'Github Title'},
+        BODY: {'type': 'string', 'label': 'Github Body'},
+        CREATED_AT: {'type': 'date', 'label': 'Github Created'},
+        UPDATED_AT: {'type': 'date', 'label': 'Github Updated'},
+        CLOSED_AT: {'type': 'date', 'label': 'GitHub Closed'},
+        MILESTONE: {'type': 'string', 'label': 'Github Milestone'},
+        REPO: {'type': 'string', 'label': 'Github Repo Slug'},
+        URL: {'type': 'string', 'label': 'Github URL'},
+        TYPE: {'type': 'string', 'label': 'Github Type'},
+        NUMBER: {'type': 'numeric', 'label': 'Github Issue/PR #'},
+        USER: {'type': 'string', 'label': 'Github User'},
+        NAMESPACE: {'type': 'string', 'label': 'Github Namespace'},
+        STATE: {'type': 'string', 'label': 'GitHub State'},
+        DRAFT: {'type': 'numeric', 'label': 'GitHub Draft'},
     }
-    UNIQUE_KEY = (URL, TYPE,)
+    UNIQUE_KEY = (URL, TYPE)
 
     def to_taskwarrior(self):
         milestone = self.record['milestone']
@@ -286,7 +252,6 @@ class GithubIssue(Issue):
             'tags': self.get_tags(),
             'entry': created,
             'end': closed,
-
             self.URL: self.record['html_url'],
             self.REPO: self.record['repo'],
             self.TYPE: self.extra['type'],
@@ -332,14 +297,14 @@ class GithubService(Service):
         return f"github://{config.login}@{config.host}/{config.username}"
 
     def get_owned_repo_issues(self, tag):
-        """ Grab all the issues """
+        """Grab all the issues"""
         issues = {}
         for issue in self.client.get_issues(*tag.split('/')):
             issues[issue['url']] = (tag, issue)
         return issues
 
     def get_query(self, query):
-        """ Grab all issues matching a github query """
+        """Grab all issues matching a github query"""
         issues = {}
         for issue in self.client.get_query(query):
             url = issue['html_url']
@@ -397,14 +362,8 @@ class GithubService(Service):
                 if login in self.config.ignore_user_comments:
                     log.debug(" ignoring comment from %s", login)
                     continue
-                annotations.append((
-                    login,
-                    c['body'],
-                ))
-        return self.build_annotations(
-            annotations,
-            url
-        )
+                annotations.append((login, c['body']))
+        return self.build_annotations(annotations, url)
 
     def body(self, issue):
         body = issue['body']
@@ -417,11 +376,8 @@ class GithubService(Service):
         return body
 
     def _reqs(self, tag):
-        """ Grab all the pull requests """
-        return [
-            (tag, i) for i in
-            self.client.get_pulls(*tag.split('/'))
-        ]
+        """Grab all the pull requests"""
+        return [(tag, i) for i in self.client.get_pulls(*tag.split('/'))]
 
     def get_owner(self, issue):
         if issue[1]['assignee']:
@@ -450,7 +406,7 @@ class GithubService(Service):
         return True
 
     def include(self, issue):
-        """ Return true if the issue in question should be included """
+        """Return true if the issue in question should be included"""
         if 'pull_request' in issue[1]:
             if self.config.exclude_pull_requests:
                 return False
@@ -473,8 +429,11 @@ class GithubService(Service):
         if self.config.query:
             issues.update(self.get_query(self.config.query))
         elif self.config.involved_issues:
-            issues.update(self.get_query('involves:{user} state:open'.format(
-                user=self.config.username)))
+            issues.update(
+                self.get_query(
+                    'involves:{user} state:open'.format(user=self.config.username)
+                )
+            )
 
         if self.config.include_user_repos:
             # Only query for all repos if an explicit
@@ -488,13 +447,11 @@ class GithubService(Service):
 
             for repo in repos:
                 issues.update(
-                    self.get_owned_repo_issues(
-                        self.config.username + "/" + repo)
+                    self.get_owned_repo_issues(self.config.username + "/" + repo)
                 )
         if self.config.include_user_issues:
             issues.update(
-                filter(self.filter_issues,
-                       self.get_directly_assigned_issues().items())
+                filter(self.filter_issues, self.get_directly_assigned_issues().items())
             )
         if self.config.issue_urls:
             issues.update(filter(self.filter_issues, self.get_issues_by_url().items()))

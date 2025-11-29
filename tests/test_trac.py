@@ -53,18 +53,9 @@ class TestTracIssue(AbstractServiceTest, ServiceTest):
         return service
 
     def test_to_taskwarrior(self):
-        arbitrary_extra = {
-            'annotations': [
-                'alpha',
-                'beta',
-            ],
-            'project': 'some project',
-        }
+        arbitrary_extra = {'annotations': ['alpha', 'beta'], 'project': 'some project'}
 
-        issue = self.service.get_issue_for_record(
-            self.arbitrary_issue,
-            arbitrary_extra,
-        )
+        issue = self.service.get_issue_for_record(self.arbitrary_issue, arbitrary_extra)
 
         expected_output = {
             'project': arbitrary_extra['project'],
@@ -84,14 +75,14 @@ class TestTracIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'annotations': [],
-            'description':
-                '(bw)Is#1 - Some Summary .. https://ljlkajsdfl.com/ticket/1',
+            'description': '(bw)Is#1 - Some Summary .. https://ljlkajsdfl.com/ticket/1',
             'priority': 'H',
             'project': 'unspecified',
             'tags': [],
             'tracnumber': 1,
             'tracsummary': 'Some Summary',
             'tracurl': 'https://ljlkajsdfl.com/ticket/1',
-            'traccomponent': 'testcomponent'}
+            'traccomponent': 'testcomponent',
+        }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

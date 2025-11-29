@@ -115,39 +115,33 @@ class TestAzureDevopsServiceConfig(ConfigTest):
         }
 
     def test_validate_config_required_fields(self):
-        self.config["test_ado"].update({
-            "organization": "test_organization",
-            "project": "test_project",
-            "PAT": "myPAT",
-        })
+        self.config["test_ado"].update(
+            {
+                "organization": "test_organization",
+                "project": "test_project",
+                "PAT": "myPAT",
+            }
+        )
         self.validate()
 
     def test_validate_config_no_organization(self):
-        self.config["test_ado"].update({
-            "project": "test_project",
-            "PAT": "myPAT",
-        })
+        self.config["test_ado"].update({"project": "test_project", "PAT": "myPAT"})
 
-        self.assertValidationError(
-            '[test_ado]\norganization  <- field required')
+        self.assertValidationError('[test_ado]\norganization  <- field required')
 
     def test_validate_config_no_project(self):
-        self.config["test_ado"].update({
-            "organization": "http://one.com/",
-            "PAT": "myPAT",
-        })
+        self.config["test_ado"].update(
+            {"organization": "http://one.com/", "PAT": "myPAT"}
+        )
 
-        self.assertValidationError(
-            '[test_ado]\nproject  <- field required')
+        self.assertValidationError('[test_ado]\nproject  <- field required')
 
     def test_validate_config_no_PAT(self):
-        self.config["test_ado"].update({
-            "organization": "http://one.com/",
-            "project": "test_project",
-        })
+        self.config["test_ado"].update(
+            {"organization": "http://one.com/", "project": "test_project"}
+        )
 
-        self.assertValidationError(
-            '[test_ado]\nPAT  <- field required')
+        self.assertValidationError('[test_ado]\nPAT  <- field required')
 
 
 class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
@@ -224,7 +218,7 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "adoparent": None,
             "adonamespace": "test_organization\\test_project",
             "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',  # noqa: E501
-            "tags": []
+            "tags": [],
         }
         issue = next(self.service.issues())
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
@@ -248,7 +242,7 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "adoparent": None,
             "adonamespace": "test_organization\\test_project",
             "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',  # noqa: E501
-            "tags": []
+            "tags": [],
         }
         service = self.get_service(config_overrides={'wiql_filter': 'something'})
         issue = next(service.issues())

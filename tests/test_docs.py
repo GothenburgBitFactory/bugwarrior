@@ -21,7 +21,6 @@ except OSError:
 
 class ReadmeTest(unittest.TestCase):
     def test_service_list(self):
-
         # GET README LISTED SERVICES
         def is_services(node):
             try:
@@ -37,7 +36,8 @@ class ReadmeTest(unittest.TestCase):
         self.assertEqual(len(service_list_search), 1)
         service_list_element = service_list_search.pop()
         readme_listed_services = set(
-            list_item.astext() for list_item in service_list_element.children)
+            list_item.astext() for list_item in service_list_element.children
+        )
 
         # GET TITLES FROM SERVICE DOCUMENTATION FILES
         documented_services = set()
@@ -49,7 +49,7 @@ class ReadmeTest(unittest.TestCase):
                     firstline = f.readline().strip()
                 documented_services.add(firstline)
 
-        self.assertEqual(documented_services,  readme_listed_services)
+        self.assertEqual(documented_services, readme_listed_services)
 
 
 class DocsTest(unittest.TestCase):
@@ -57,20 +57,30 @@ class DocsTest(unittest.TestCase):
     def test_docs_build_without_warning(self):
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
-                ['sphinx-build', '-n', '-W', '-v', str(DOCS_PATH), buildDir],
-                check=True)
+                ['sphinx-build', '-n', '-W', '-v', str(DOCS_PATH), buildDir], check=True
+            )
 
     @unittest.skipIf(not INTERNET, 'no internet')
     def test_manpage_build_without_warning(self):
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
-                ['sphinx-build', '-b', 'man', '-n', '-W', '-v', str(DOCS_PATH), buildDir],
-                check=True)
+                [
+                    'sphinx-build',
+                    '-b',
+                    'man',
+                    '-n',
+                    '-W',
+                    '-v',
+                    str(DOCS_PATH),
+                    buildDir,
+                ],
+                check=True,
+            )
 
     def test_registered_services_are_documented(self):
         registered_services = set(
-            e.name for e in
-            entry_points(group='bugwarrior.service'))
+            e.name for e in entry_points(group='bugwarrior.service')
+        )
 
         documented_services = set()
         services_paths = os.listdir(DOCS_PATH / 'services')

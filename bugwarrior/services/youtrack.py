@@ -56,26 +56,11 @@ class YoutrackIssue(Issue):
     NUMBER = 'youtracknumber'
 
     UDAS = {
-        ISSUE: {
-            'type': 'string',
-            'label': 'YouTrack Issue'
-        },
-        SUMMARY: {
-            'type': 'string',
-            'label': 'YouTrack Summary',
-        },
-        URL: {
-            'type': 'string',
-            'label': 'YouTrack URL',
-        },
-        PROJECT: {
-            'type': 'string',
-            'label': 'YouTrack Project'
-        },
-        NUMBER: {
-            'type': 'string',
-            'label': 'YouTrack Project Issue Number'
-        },
+        ISSUE: {'type': 'string', 'label': 'YouTrack Issue'},
+        SUMMARY: {'type': 'string', 'label': 'YouTrack Summary'},
+        URL: {'type': 'string', 'label': 'YouTrack URL'},
+        PROJECT: {'type': 'string', 'label': 'YouTrack Project'},
+        NUMBER: {'type': 'string', 'label': 'YouTrack Project Issue Number'},
     }
     UNIQUE_KEY = (URL,)
     PRIORITY_MAP = {}  # FIXME
@@ -85,7 +70,6 @@ class YoutrackIssue(Issue):
             'project': self.get_project(),
             'priority': self.get_priority(),
             'tags': self.get_tags(),
-
             self.ISSUE: self.get_issue(),
             self.SUMMARY: self.get_issue_summary(),
             self.URL: self.get_issue_url(),
@@ -100,9 +84,7 @@ class YoutrackIssue(Issue):
         return self.record.get('summary')
 
     def get_issue_url(self):
-        return "%s/issue/%s" % (
-            self.config.base_url, self.get_issue()
-        )
+        return "%s/issue/%s" % (self.config.base_url, self.get_issue())
 
     def get_project(self):
         return self.record.get('project').get('shortName')
@@ -154,7 +136,7 @@ class YoutrackService(Service, Client):
         params = {
             'query': self.config.query,
             'max': self.config.query_limit,
-            'fields': 'id,summary,project(shortName),numberInProject,tags(name)'
+            'fields': 'id,summary,project(shortName),numberInProject,tags(name)',
         }
         resp = self.session.get(self.rest_url + '/issues', params=params)
         issues = self.json_response(resp)

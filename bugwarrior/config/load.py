@@ -58,7 +58,7 @@ def parse_file(configpath: str) -> dict:
             config = tomllib.load(f)
     else:
         rawconfig = BugwarriorConfigParser()
-        with codecs.open(configpath, "r", "utf-8",) as buff:
+        with codecs.open(configpath, "r", "utf-8") as buff:
             rawconfig.read_file(buff)
         config = {}
         for section in rawconfig.sections():

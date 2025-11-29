@@ -19,7 +19,6 @@ class TeamworkConfig(config.ServiceConfig):
 
 
 class TeamworkClient(Client):
-
     def __init__(self, host, token):
         self.host = host
         self.token = token
@@ -29,7 +28,9 @@ class TeamworkClient(Client):
         return self.json_response(response)
 
     def call_api(self, method, endpoint, data=None):
-        response = requests.get(self.host + endpoint, auth=(self.token, ""), params=data)
+        response = requests.get(
+            self.host + endpoint, auth=(self.token, ""), params=data
+        )
         return self.json_response(response)
 
 
@@ -42,42 +43,21 @@ class TeamworkIssue(Issue):
     ID = 'teamwork_id'
 
     UDAS = {
-        URL: {
-            'type': 'string',
-            'label': 'Teamwork Url',
-        },
-        TITLE: {
-            'type': 'string',
-            'label': 'Teamwork Title',
-        },
-        DESCRIPTION_LONG: {
-            'type': 'string',
-            'label': 'Teamwork Description Long',
-        },
-        PROJECT_ID: {
-            'type': 'numeric',
-            'label': 'Teamwork Project ID',
-        },
-        STATUS: {
-            'type': 'string',
-            'label': 'Teamwork Status',
-        },
-        ID: {
-            'type': 'numeric',
-            'label': 'Teamwork Task ID',
-        },
+        URL: {'type': 'string', 'label': 'Teamwork Url'},
+        TITLE: {'type': 'string', 'label': 'Teamwork Title'},
+        DESCRIPTION_LONG: {'type': 'string', 'label': 'Teamwork Description Long'},
+        PROJECT_ID: {'type': 'numeric', 'label': 'Teamwork Project ID'},
+        STATUS: {'type': 'string', 'label': 'Teamwork Status'},
+        ID: {'type': 'numeric', 'label': 'Teamwork Task ID'},
     }
 
-    UNIQUE_KEY = (URL, )
-    PRIORITY_MAP = {
-        "low": "L",
-        "medium": "M",
-        "high": "H"
-    }
+    UNIQUE_KEY = (URL,)
+    PRIORITY_MAP = {"low": "L", "medium": "M", "high": "H"}
 
     def get_owner(self):
-        if (self.record.get("responsible-party-ids", "") and
-                self.user_id in self.record.get("responsible-party-ids", "")):
+        if self.record.get(
+            "responsible-party-ids", ""
+        ) and self.user_id in self.record.get("responsible-party-ids", ""):
             return self.name
 
     def get_task_url(self):
@@ -158,8 +138,11 @@ class TeamworkService(Service):
         response = self.client.call_api("GET", "/tasks.json")
         for issue in response["todo-items"]:
             # Determine if issue is need by if following comments, changes or assigned
-            if issue["userFollowingComments"] or issue["userFollowingChanges"]\
-                    or (self.user_id in issue.get("responsible-party-ids", "")):
+            if (
+                issue["userFollowingComments"]
+                or issue["userFollowingChanges"]
+                or (self.user_id in issue.get("responsible-party-ids", ""))
+            ):
                 issue_obj = self.get_issue_for_record(issue)
                 extra = {
                     "host": self.config.host,

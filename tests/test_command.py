@@ -17,24 +17,25 @@ def fake_github_issues(self):
 
 
 def fake_bz_issues(self):
-    yield from [self.get_issue_for_record(
-        {
-            'id': 1234567,
-            'status': 'NEW',
-            'summary': 'This is the issue summary',
-            'product': 'Product',
-            'component': 'Something',
-            'description': '(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',  # noqa: E501
-            'priority': 'H',
-            'project': 'Something',
-            'tags': []
-        }, {
-            'url': 'https://http://one.com//show_bug.cgi?id=1234567',
-        })]
+    yield from [
+        self.get_issue_for_record(
+            {
+                'id': 1234567,
+                'status': 'NEW',
+                'summary': 'This is the issue summary',
+                'product': 'Product',
+                'component': 'Something',
+                'description': '(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',  # noqa: E501
+                'priority': 'H',
+                'project': 'Something',
+                'tags': [],
+            },
+            {'url': 'https://http://one.com//show_bug.cgi?id=1234567'},
+        )
+    ]
 
 
 class TestPull(ConfigTest):
-
     def setUp(self):
         super().setUp()
 
@@ -66,8 +67,7 @@ class TestPull(ConfigTest):
             conf.write(configfile)
         return rcfile
 
-    @mock.patch(
-        'bugwarrior.services.github.GithubService.issues', fake_github_issues)
+    @mock.patch('bugwarrior.services.github.GithubService.issues', fake_github_issues)
     def test_success(self):
         """
         A normal `bugwarrior pull` invocation.
@@ -83,7 +83,7 @@ class TestPull(ConfigTest):
 
     @mock.patch(
         'bugwarrior.services.github.GithubService.issues',
-        lambda self: (_ for _ in ()).throw(Exception('message'))
+        lambda self: (_ for _ in ()).throw(Exception('message')),
     )
     def test_failure(self):
         """
@@ -94,16 +94,15 @@ class TestPull(ConfigTest):
 
         self.assertNotEqual(self.caplog.records, [])
         self.assertEqual(len(self.caplog.records), 1)
-        self.assertEqual(self.caplog.records[0].message,
-                         "Aborted [my_service] due to critical error.")
+        self.assertEqual(
+            self.caplog.records[0].message,
+            "Aborted [my_service] due to critical error.",
+        )
 
-    @mock.patch(
-        'bugwarrior.services.github.GithubService.issues',
-        lambda self: []
-    )
+    @mock.patch('bugwarrior.services.github.GithubService.issues', lambda self: [])
     @mock.patch(
         'bugwarrior.services.bz.BugzillaService.issues',
-        lambda self: (_ for _ in ()).throw(Exception('message'))
+        lambda self: (_ for _ in ()).throw(Exception('message')),
     )
     def test_partial_failure_survival(self):
         """
@@ -125,12 +124,10 @@ class TestPull(ConfigTest):
             self.runner.invoke(command.cli, args=('pull'))
 
         logs = [rec.message for rec in self.caplog.records]
-        self.assertIn(
-            'Aborted [my_broken_service] due to critical error.', logs)
+        self.assertIn('Aborted [my_broken_service] due to critical error.', logs)
         self.assertIn('Adding 0 tasks', logs)
 
-    @mock.patch(
-        'bugwarrior.services.github.GithubService.issues', fake_github_issues)
+    @mock.patch('bugwarrior.services.github.GithubService.issues', fake_github_issues)
     @mock.patch('bugzilla.Bugzilla')
     def test_partial_failure_database_integrity(self, bugzillalib):
         """
@@ -149,8 +146,9 @@ class TestPull(ConfigTest):
 
         # Add a task to each service.
         with self.caplog.at_level(logging.DEBUG):
-            with mock.patch('bugwarrior.services.bz.BugzillaService.issues',
-                            fake_bz_issues):
+            with mock.patch(
+                'bugwarrior.services.bz.BugzillaService.issues', fake_bz_issues
+            ):
                 self.runner.invoke(command.cli, args=('pull'))
         logs = [rec.message for rec in self.caplog.records]
         self.assertIn('Adding 2 tasks', logs)
@@ -159,7 +157,7 @@ class TestPull(ConfigTest):
         with self.caplog.at_level(logging.INFO):
             with mock.patch(
                 'bugwarrior.services.bz.BugzillaService.issues',
-                lambda self: (_ for _ in ()).throw(Exception('message'))
+                lambda self: (_ for _ in ()).throw(Exception('message')),
             ):
                 self.runner.invoke(command.cli, args=('pull'))
         logs = [rec.message for rec in self.caplog.records]
@@ -172,8 +170,7 @@ class TestPull(ConfigTest):
         self.assertNotIn('Closing 1 tasks', logs)
         self.assertNotIn('Completing task', logs)
 
-    @mock.patch(
-        'bugwarrior.services.github.GithubService.issues', fake_github_issues)
+    @mock.patch('bugwarrior.services.github.GithubService.issues', fake_github_issues)
     def test_legacy_cli(self):
         """
         Test that invoking the subcommand function directly still works.
@@ -198,8 +195,8 @@ class TestIni2Toml(TestCase):
     def test_bugwarriorrc(self):
         basedir = pathlib.Path(__file__).parent
         result = self.runner.invoke(
-            command.cli,
-            args=('ini2toml', str(basedir / 'config/example-bugwarriorrc')))
+            command.cli, args=('ini2toml', str(basedir / 'config/example-bugwarriorrc'))
+        )
 
         self.assertEqual(result.exit_code, 0)
 

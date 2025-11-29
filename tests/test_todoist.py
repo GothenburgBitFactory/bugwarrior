@@ -19,44 +19,37 @@ from .base import AbstractServiceTest, ServiceTest
 
 
 class TestTodoistIssue(AbstractServiceTest, ServiceTest):
-    SERVICE_CONFIG = {
-        "service": "todoist",
-        "token": "TESTTOKEN",
-    }
+    SERVICE_CONFIG = {"service": "todoist", "token": "TESTTOKEN"}
 
     # Base test record
-    test_record = TodoistClient.task_to_dict(Task(
-        id="1111111111111111",
-        content="TESTTASK",
-        description="TESTTASKDESCRIPTION",
-        project_id="2222222222222222",
-        section_id="4444444444444444",
-        parent_id=None,
-        labels=["TESTLABEL"],
-        priority=4,
-        due=Due(
-            date=datetime(year=2025, month=7, day=1),
-            string="",
-            lang="en",
-            is_recurring=False,
-        ),
-        deadline=Deadline(
-            date=datetime(year=2025, month=7, day=31),
-            lang="en",
-        ),
-        duration=Duration(
-            amount=15,
-            unit="minute",
-        ),
-        is_collapsed=False,
-        order=1,
-        assignee_id="5555555555555555",
-        assigner_id="6666666666666666",
-        completed_at=None,
-        creator_id="333333",
-        created_at=datetime(year=2025, month=7, day=1, hour=4, minute=30, second=0),
-        updated_at=datetime(year=2025, month=7, day=2, hour=8, minute=0, second=0),
-    ))
+    test_record = TodoistClient.task_to_dict(
+        Task(
+            id="1111111111111111",
+            content="TESTTASK",
+            description="TESTTASKDESCRIPTION",
+            project_id="2222222222222222",
+            section_id="4444444444444444",
+            parent_id=None,
+            labels=["TESTLABEL"],
+            priority=4,
+            due=Due(
+                date=datetime(year=2025, month=7, day=1),
+                string="",
+                lang="en",
+                is_recurring=False,
+            ),
+            deadline=Deadline(date=datetime(year=2025, month=7, day=31), lang="en"),
+            duration=Duration(amount=15, unit="minute"),
+            is_collapsed=False,
+            order=1,
+            assignee_id="5555555555555555",
+            assigner_id="6666666666666666",
+            completed_at=None,
+            creator_id="333333",
+            created_at=datetime(year=2025, month=7, day=1, hour=4, minute=30, second=0),
+            updated_at=datetime(year=2025, month=7, day=2, hour=8, minute=0, second=0),
+        )
+    )
 
     test_extra = {
         "project": "TESTPROJECT",
@@ -91,15 +84,11 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
     )
 
     test_user1 = Collaborator(
-        id="5555555555555555",
-        name="TESTUSER1",
-        email="testuser1@example.com"
+        id="5555555555555555", name="TESTUSER1", email="testuser1@example.com"
     )
 
     test_user2 = Collaborator(
-        id="6666666666666666",
-        name="TESTUSER2",
-        email="testuser2@example.com"
+        id="6666666666666666", name="TESTUSER2", email="testuser2@example.com"
     )
 
     def setUp(self):
@@ -139,13 +128,11 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
 
     def test_to_taskwarrior_with_labels(self):
         # Test lables when `import_labels_as_tags` is enabled
-        overrides = {
-            "import_labels_as_tags": "True",
-        }
+        overrides = {"import_labels_as_tags": "True"}
         service = self.get_mock_service(TodoistService, config_overrides=overrides)
         issue = service.get_issue_for_record(self.test_record, self.test_extra)
         actual = issue.to_taskwarrior()
-        self.assertEqual(actual.get("tags"),  ["TESTLABEL"])
+        self.assertEqual(actual.get("tags"), ["TESTLABEL"])
 
     def test_to_taskwarrior_task_with_low_priority(self):
         # Test with priority set to lowest (1 in the API, which is P4 on the Todoist UI)
@@ -163,9 +150,12 @@ class TestTodoistIssue(AbstractServiceTest, ServiceTest):
         issue = self.service.get_issue_for_record(test_record, test_extras)
         actual = issue.to_taskwarrior()
         self.assertIs(actual.get("todoistparentid"), "1212121212121212")
-        self.assertEqual(issue.get_default_description(), "(bw)Subtask ##1111111111111111"
-                         " - TESTTASK .."
-                         " https://app.todoist.com/app/task/testtask-1111111111111111")
+        self.assertEqual(
+            issue.get_default_description(),
+            "(bw)Subtask ##1111111111111111"
+            " - TESTTASK .."
+            " https://app.todoist.com/app/task/testtask-1111111111111111",
+        )
 
     def test_issues(self):
         self.service.client.get_projects.return_value = [self.test_project]

@@ -2,6 +2,7 @@
 Service API
 -----------
 """
+
 import abc
 import logging
 import math
@@ -20,14 +21,14 @@ from bugwarrior.config import schema, secrets
 
 log = logging.getLogger(__name__)
 
-DOGPILE_CACHE_PATH = os.path.expanduser(''.join([
-    os.getenv('XDG_CACHE_HOME', '~/.cache'), '/dagd-py3.dbm']))
+DOGPILE_CACHE_PATH = os.path.expanduser(
+    ''.join([os.getenv('XDG_CACHE_HOME', '~/.cache'), '/dagd-py3.dbm'])
+)
 
 if not os.path.isdir(os.path.dirname(DOGPILE_CACHE_PATH)):
     os.makedirs(os.path.dirname(DOGPILE_CACHE_PATH))
 CACHE_REGION = dogpile.cache.make_region().configure(
-    "dogpile.cache.dbm",
-    arguments=dict(filename=DOGPILE_CACHE_PATH),
+    "dogpile.cache.dbm", arguments=dict(filename=DOGPILE_CACHE_PATH)
 )
 
 # MAJOR versions signal a breakage in backwards compatibility between services
@@ -43,9 +44,7 @@ class URLShortener:
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super().__new__(
-                cls, *args, **kwargs
-            )
+            cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
     @CACHE_REGION.cache_on_arguments()
@@ -57,7 +56,7 @@ class URLShortener:
 
 
 def get_processed_url(main_config: schema.MainSectionConfig, url: str):
-    """ Returns a URL with conditional processing.
+    """Returns a URL with conditional processing.
 
     If the following config key are set:
 
@@ -72,12 +71,13 @@ def get_processed_url(main_config: schema.MainSectionConfig, url: str):
 
 
 class Issue(abc.ABC):
-    """ Base class for translating from foreign records to taskwarrior tasks.
+    """Base class for translating from foreign records to taskwarrior tasks.
 
     The upper case attributes and abstract methods need to be defined by
     service implementations, while the lower case attributes and concrete
     methods are provided by the base class.
     """
+
     #: Set to a dictionary mapping UDA short names with type and long name.
     #:
     #: Example::
@@ -102,11 +102,13 @@ class Issue(abc.ABC):
     #: system and the string values 'H', 'M' or 'L'.
     PRIORITY_MAP: dict
 
-    def __init__(self,
-                 foreign_record: dict,
-                 config: schema.ServiceConfig,
-                 main_config: schema.MainSectionConfig,
-                 extra: dict):
+    def __init__(
+        self,
+        foreign_record: dict,
+        config: schema.ServiceConfig,
+        main_config: schema.MainSectionConfig,
+        extra: dict,
+    ):
         #: Data retrieved from the external service.
         self.record: dict = foreign_record
         #: An object whose attributes are this service's configuration values.
@@ -119,24 +121,26 @@ class Issue(abc.ABC):
 
     @abc.abstractmethod
     def to_taskwarrior(self) -> dict:
-        """ Transform a foreign record into a taskwarrior dictionary."""
+        """Transform a foreign record into a taskwarrior dictionary."""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def get_default_description(self) -> str:
-        """ Return a default description for this task.
+        """Return a default description for this task.
 
         You should probably use :meth:`build_default_description` to achieve
         this.
         """
         raise NotImplementedError()
 
-    def get_tags_from_labels(self,
-                             labels: list,
-                             toggle_option='import_labels_as_tags',
-                             template_option='label_template',
-                             template_variable='label') -> list:
-        """ Transform labels into suitable taskwarrior tags, respecting configuration options.
+    def get_tags_from_labels(
+        self,
+        labels: list,
+        toggle_option='import_labels_as_tags',
+        template_option='label_template',
+        template_variable='label',
+    ) -> list:
+        """Transform labels into suitable taskwarrior tags, respecting configuration options.
 
         :param `labels`: Returned from the service.
         :param `toggle_option`: Option which, if false, would not import labels as tags.
@@ -162,15 +166,13 @@ class Issue(abc.ABC):
         return tags
 
     def get_priority(self) -> typing.Literal['', 'L', 'M', 'H']:
-        """ Return the priority of this issue, falling back to ``default_priority`` configuration.
-        """
+        """Return the priority of this issue, falling back to ``default_priority`` configuration."""
         return self.PRIORITY_MAP.get(
-            self.record.get('priority'),
-            self.config.default_priority
+            self.record.get('priority'), self.config.default_priority
         )
 
     def parse_date(self, date, timezone='UTC'):
-        """ Parse a date string into a datetime object.
+        """Parse a date string into a datetime object.
 
         :param `date`: A time string parseable by `dateutil.parser.parse`
         :param `timezone`: The string timezone name (from `pytz.all_timezones`)
@@ -192,7 +194,7 @@ class Issue(abc.ABC):
     def build_default_description(
         self, title='', url='', number='', cls="issue"
     ) -> str:
-        """ Return a default description, respecting configuration options.
+        """Return a default description, respecting configuration options.
 
         :param `title`: Short description of the task.
         :param `url`: URL to the task on the service.
@@ -210,7 +212,11 @@ class Issue(abc.ABC):
             'subtask': 'Subtask #',
         }
         url_separator = ' .. '
-        url = get_processed_url(self.main_config, url) if self.main_config.inline_links else ''
+        url = (
+            get_processed_url(self.main_config, url)
+            if self.main_config.inline_links
+            else ''
+        )
         desc_len = self.main_config.description_length
         return "(bw)%s#%s - %s%s%s" % (
             cls_markup.get(cls, cls.title()),
@@ -222,12 +228,13 @@ class Issue(abc.ABC):
 
 
 class Service(abc.ABC):
-    """ Base class for fetching issues from the service.
+    """Base class for fetching issues from the service.
 
     The upper case attributes and abstract methods need to be defined by
     service implementations, while the lower case attributes and concrete
     methods are provided by the base class.
     """
+
     #: Which version of the API does this service implement?
     API_VERSION: float
     #: Which class should this service instantiate for holding these issues?
@@ -235,13 +242,16 @@ class Service(abc.ABC):
     #: Which class defines this service's configuration options?
     CONFIG_SCHEMA: schema.ServiceConfig
 
-    def __init__(self, config: schema.ServiceConfig, main_config: schema.MainSectionConfig):
+    def __init__(
+        self, config: schema.ServiceConfig, main_config: schema.MainSectionConfig
+    ):
         over_version = math.floor(LATEST_API_VERSION) + 1
         if self.API_VERSION >= over_version:
             raise ValueError(
                 f"Incompatible Service: {config.service} implements api "
                 f"version {self.API_VERSION} but this version of bugwarrior "
-                f"only supports versions less than {over_version}.")
+                f"only supports versions less than {over_version}."
+            )
 
         #: An object whose attributes are this service's configuration values.
         self.config = config
@@ -252,7 +262,7 @@ class Service(abc.ABC):
         log.info("Working on [%s]", self.config.target)
 
     def get_secret(self, key, login='nousername') -> str:
-        """ Get a secret value, potentially from an :ref:`oracle <Secret Management>`.
+        """Get a secret value, potentially from an :ref:`oracle <Secret Management>`.
 
         The secret key need not be a *password*, per se.
 
@@ -264,22 +274,26 @@ class Service(abc.ABC):
         keyring_service = self.get_keyring_service(self.config)
         if not password or password.startswith("@oracle:"):
             password = secrets.get_service_password(
-                keyring_service, login, oracle=password,
-                interactive=self.main_config.interactive)
+                keyring_service,
+                login,
+                oracle=password,
+                interactive=self.main_config.interactive,
+            )
         return password
 
     def get_issue_for_record(self, record, extra=None) -> Issue:
-        """ Instantiate and return an issue for the given record.
+        """Instantiate and return an issue for the given record.
 
         :param `record`: Foreign record.
         :param `extra`: Computed data which is not directly from the service.
         """
         extra = extra if extra is not None else {}
-        return self.ISSUE_CLASS(
-            record, self.config, self.main_config, extra=extra)
+        return self.ISSUE_CLASS(record, self.config, self.main_config, extra=extra)
 
-    def build_annotations(self, annotations: list, url: typing.Optional[str] = None) -> list:
-        """ Format annotations, respecting configuration values.
+    def build_annotations(
+        self, annotations: list, url: typing.Optional[str] = None
+    ) -> list:
+        """Format annotations, respecting configuration values.
 
         :param `annotations`: Comments from service.
         :param `url`: Url to prepend to the annotations.
@@ -300,14 +314,14 @@ class Service(abc.ABC):
                 if annotation_length:
                     message = '%s%s' % (
                         message[:annotation_length],
-                        '...' if len(message) > annotation_length else ''
+                        '...' if len(message) > annotation_length else '',
                     )
                 final.append('@%s - %s' % (author, message))
         return final
 
     @abc.abstractmethod
     def issues(self):
-        """ A generator yielding Issue instances representing issues from a remote service.
+        """A generator yielding Issue instances representing issues from a remote service.
 
         Each item in the list should be a dict that looks something like this:
 
@@ -337,26 +351,27 @@ class Service(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def get_keyring_service(service_config) -> str:
-        """ Return the keyring name for this service. """
+        """Return the keyring name for this service."""
         raise NotImplementedError
 
 
 class Client:
-    """ Base class for making requests to service API's.
+    """Base class for making requests to service API's.
 
     This class is not strictly necessary but encourages a well-structured
     service in which the details of making and parsing http requests is
     compartmentalized.
     """
+
     @staticmethod
     def json_response(response: requests.Response):
-        """ Return json if response is OK. """
+        """Return json if response is OK."""
         # If we didn't get good results, just bail.
         if response.status_code != 200:
             raise OSError(
-                "Non-200 status code %r; %r; %r" % (
-                    response.status_code, response.url, response.text,
-                ))
+                "Non-200 status code %r; %r; %r"
+                % (response.status_code, response.url, response.text)
+            )
         if callable(response.json):
             # Newer python-requests
             return response.json()
@@ -366,8 +381,4 @@ class Client:
 
 
 # NOTE: __all__ determines the stable, public API.
-__all__ = [
-    Client.__name__,
-    Issue.__name__,
-    Service.__name__,
-]
+__all__ = [Client.__name__, Issue.__name__, Service.__name__]

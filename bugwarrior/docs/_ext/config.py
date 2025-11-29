@@ -26,7 +26,8 @@ class Config(SphinxDirective):
 
         if 'fragment' in self.options:  # add stub
             stub_section = (
-                '[some_section]\nservice = ' + self.options['fragment'] + '\n')
+                '[some_section]\nservice = ' + self.options['fragment'] + '\n'
+            )
             initext = stub_section + initext
         tomltext = Translator().translate(initext, 'bugwarriorrc')
         if 'fragment' in self.options:  # remove stub

@@ -12,10 +12,11 @@ from bugwarrior.config import schema
 
 
 class AbstractServiceTest(abc.ABC):
-    """ Ensures that certain test methods are implemented for each service. """
+    """Ensures that certain test methods are implemented for each service."""
+
     @abc.abstractmethod
     def test_to_taskwarrior(self):
-        """ Test Service.to_taskwarrior(). """
+        """Test Service.to_taskwarrior()."""
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -68,7 +69,6 @@ class ConfigTest(unittest.TestCase):
         return schema.validate_config(self.config, 'general', 'configpath')
 
     def assertValidationError(self, expected):
-
         with self.assertRaises(SystemExit):
             self.validate()
 
@@ -87,16 +87,18 @@ class ServiceTest(ConfigTest):
         'annotation_length': 100,
         'description_length': 100,
     }
-    SERVICE_CONFIG = {
-    }
+    SERVICE_CONFIG = {}
 
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
 
     def get_mock_service(
-        self, service_class, section='unspecified',
-        config_overrides=None, general_overrides=None
+        self,
+        service_class,
+        section='unspecified',
+        config_overrides=None,
+        general_overrides=None,
     ):
         options = {
             'general': {**self.GENERAL_CONFIG, 'targets': [section]},
@@ -114,9 +116,6 @@ class ServiceTest(ConfigTest):
 
     @staticmethod
     def add_response(url, method='GET', **kwargs):
-        responses.add(responses.Response(
-            url=url,
-            method=method,
-            match_querystring=True,
-            **kwargs
-        ))
+        responses.add(
+            responses.Response(url=url, method=method, match_querystring=True, **kwargs)
+        )

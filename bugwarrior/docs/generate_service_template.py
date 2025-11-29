@@ -9,23 +9,24 @@ from bugwarrior.services import Issue
 
 
 def make_table(grid):
-    """ Make a RST-compatible table
+    """Make a RST-compatible table
 
     From http://stackoverflow.com/a/12539081
 
     """
     cell_width = 2 + max(
-        reduce(
-            lambda x, y: x + y, [[len(item) for item in row] for row in grid], []
-        )
+        reduce(lambda x, y: x + y, [[len(item) for item in row] for row in grid], [])
     )
     num_cols = len(grid[0])
     rst = table_div(num_cols, cell_width, 0)
     header_flag = 1
     for row in grid:
-        rst = rst + '| ' + '| '.join(
-            [normalize_cell(x, cell_width - 1) for x in row]
-        ) + '|\n'
+        rst = (
+            rst
+            + '| '
+            + '| '.join([normalize_cell(x, cell_width - 1) for x in row])
+            + '|\n'
+        )
         rst = rst + table_div(num_cols, cell_width, header_flag)
         header_flag = 0
     return rst
@@ -63,15 +64,13 @@ TYPE_NAME_MAP = {
     'date': 'Date & Time',
     'numeric': 'Numeric',
     'string': 'Text (string)',
-    'duration': 'Duration'
+    'duration': 'Duration',
 }
 
 
 if __name__ == '__main__':
     service = sys.argv[1]
-    module = import_by_path(
-        f'bugwarrior.services.{service}'
-    )
+    module = import_by_path(f'bugwarrior.services.{service}')
     rows = []
     for name, obj in inspect.getmembers(module):
         if inspect.isclass(obj) and issubclass(obj, Issue):
@@ -80,10 +79,7 @@ if __name__ == '__main__':
                     [
                         '``%s``' % field_name,
                         ' '.join(details['label'].split(' ')[1:]),
-                        TYPE_NAME_MAP.get(
-                            details['type'],
-                            '``%s``' % details['type'],
-                        ),
+                        TYPE_NAME_MAP.get(details['type'], '``%s``' % details['type']),
                     ]
                 )
 
@@ -92,10 +88,12 @@ if __name__ == '__main__':
 
     filename = os.path.join(os.path.dirname(__file__), 'service_template.html')
     with open(filename) as template:
-        rendered = Template(template.read()).render({
-            'service_name_humane': service.title(),
-            'service_name': service,
-            'uda_table': make_table(rows)
-        })
+        rendered = Template(template.read()).render(
+            {
+                'service_name_humane': service.title(),
+                'service_name': service,
+                'uda_table': make_table(rows),
+            }
+        )
 
     print(rendered)

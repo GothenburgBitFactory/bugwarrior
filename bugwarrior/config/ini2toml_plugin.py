@@ -29,6 +29,7 @@ class BooleanModel(BaseModel):
     "True", "False", "yes", "no", etc.
     Adapted from https://docs.pydantic.dev/usage/types/#booleans
     """
+
     bool_value: bool
 
 
@@ -84,21 +85,27 @@ def process_values(doc: IntermediateRepr) -> IntermediateRepr:
                             log.warning(
                                 f"[{name}]\n{key} <-expected prefix "
                                 f"'{prefix}': did you mean "
-                                f"'{prefix}.{option}'?")
+                                f"'{prefix}.{option}'?"
+                            )
                         section.rename(key, newkey)
 
                 # Get Config
-                module_name = {'bugzilla': 'bz', 'phabricator': 'phab'}.get(service, service)
+                module_name = {'bugzilla': 'bz', 'phabricator': 'phab'}.get(
+                    service, service
+                )
                 service_module = importlib.import_module(
-                    f'bugwarrior.services.{module_name}')
+                    f'bugwarrior.services.{module_name}'
+                )
                 for name, obj in inspect.getmembers(
-                        service_module, predicate=inspect.isclass):
+                    service_module, predicate=inspect.isclass
+                ):
                     if issubclass(obj, ServiceConfig):
                         schema = obj
                         break
                 else:
                     raise ValueError(
-                        f"ServiceConfig class not found in {service} module.")
+                        f"ServiceConfig class not found in {service} module."
+                    )
 
                 # Convert Types
                 convert_section(section, schema)

@@ -30,8 +30,7 @@ class PagureConfig(config.ServiceConfig):
     @pydantic.v1.root_validator
     def require_tag_or_repo(cls, values):
         if not values['tag'] and not values['repo']:
-            raise ValueError(
-                'section requires one of:\n    tag\n    repo')
+            raise ValueError('section requires one of:\n    tag\n    repo')
         return values
 
 
@@ -44,32 +43,14 @@ class PagureIssue(Issue):
     ID = 'pagureid'
 
     UDAS = {
-        TITLE: {
-            'type': 'string',
-            'label': 'Pagure Title',
-        },
-        DATE_CREATED: {
-            'type': 'date',
-            'label': 'Pagure Created',
-        },
-        REPO: {
-            'type': 'string',
-            'label': 'Pagure Repo Slug',
-        },
-        URL: {
-            'type': 'string',
-            'label': 'Pagure URL',
-        },
-        TYPE: {
-            'type': 'string',
-            'label': 'Pagure Type',
-        },
-        ID: {
-            'type': 'numeric',
-            'label': 'Pagure Issue/PR #',
-        },
+        TITLE: {'type': 'string', 'label': 'Pagure Title'},
+        DATE_CREATED: {'type': 'date', 'label': 'Pagure Created'},
+        REPO: {'type': 'string', 'label': 'Pagure Repo Slug'},
+        URL: {'type': 'string', 'label': 'Pagure URL'},
+        TYPE: {'type': 'string', 'label': 'Pagure Type'},
+        ID: {'type': 'numeric', 'label': 'Pagure Issue/PR #'},
     }
-    UNIQUE_KEY = (URL, TYPE,)
+    UNIQUE_KEY = (URL, TYPE)
 
     def to_taskwarrior(self):
         if self.extra['type'] == 'pull_request':
@@ -82,20 +63,22 @@ class PagureIssue(Issue):
             'priority': priority,
             'annotations': self.extra.get('annotations', []),
             'tags': self.get_tags(),
-
             self.URL: self.record['html_url'],
             self.REPO: self.record['repo'],
             self.TYPE: self.extra['type'],
             self.TITLE: self.record['title'],
             self.ID: self.record['id'],
             self.DATE_CREATED: datetime.datetime.fromtimestamp(
-                int(self.record['date_created']), pytz.UTC),
+                int(self.record['date_created']), pytz.UTC
+            ),
         }
 
     def get_tags(self):
-        return self.get_tags_from_labels(self.record.get('tags', []),
-                                         toggle_option='import_tags',
-                                         template_option='tag_template')
+        return self.get_tags_from_labels(
+            self.record.get('tags', []),
+            toggle_option='import_tags',
+            template_option='tag_template',
+        )
 
     def get_default_description(self):
         return self.build_default_description(
@@ -117,7 +100,7 @@ class PagureService(Service):
         self.session = requests.Session()
 
     def get_issues(self, repo, keys):
-        """ Grab all the issues """
+        """Grab all the issues"""
         key1, key2 = keys
         key3 = key1[:-1]  # Just the singular form of key1
 
@@ -135,8 +118,7 @@ class PagureService(Service):
         issues = []
         for result in response.json()[key2]:
             idx = str(result['id'])
-            result['html_url'] = "/".join([
-                self.config.base_url, repo, key3, idx])
+            result['html_url'] = "/".join([self.config.base_url, repo, key3, idx])
             issues.append((repo, result))
 
         return issues
@@ -144,11 +126,7 @@ class PagureService(Service):
     def annotations(self, issue):
         url = issue['html_url']
         return self.build_annotations(
-            ((
-                c['user']['name'],
-                c['comment'],
-            ) for c in issue['comments']),
-            url
+            ((c['user']['name'], c['comment']) for c in issue['comments']), url
         )
 
     def get_owner(self, issue):
@@ -156,7 +134,7 @@ class PagureService(Service):
             return issue[1]['assignee']['name']
 
     def include(self, issue):
-        """ Return true if the issue in question should be included """
+        """Return true if the issue in question should be included"""
         if self.config.only_if_assigned:
             owner = self.get_owner(issue)
             include_owners = [self.config.only_if_assigned]
@@ -182,8 +160,7 @@ class PagureService(Service):
 
     def issues(self):
         if self.config.tag:
-            url = (self.config.base_url +
-                   "/api/0/projects?tags=" + self.config.tag)
+            url = self.config.base_url + "/api/0/projects?tags=" + self.config.tag
             response = self.session.get(url)
             if not bool(response):
                 raise OSError('Failed to talk to %r %r' % (url, response))
@@ -212,7 +189,7 @@ class PagureService(Service):
             extra = {
                 'project': repo,
                 'type': 'pull_request' if 'branch' in issue else 'issue',
-                'annotations': self.annotations(issue)
+                'annotations': self.annotations(issue),
             }
             issue_obj.extra.update(extra)
             yield issue_obj

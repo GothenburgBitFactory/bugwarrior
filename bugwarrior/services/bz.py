@@ -40,18 +40,20 @@ class BugzillaConfig(config.ServiceConfig):
     password: str = ''
     api_key: str = ''
     ignore_cc: bool = False
-    open_statuses: config.ConfigList = config.ConfigList([
-        'NEW',
-        'ASSIGNED',
-        'NEEDINFO',
-        'ON_DEV',
-        'MODIFIED',
-        'POST',
-        'REOPENED',
-        'ON_QA',
-        'FAILS_QA',
-        'PASSES_QA',
-    ])
+    open_statuses: config.ConfigList = config.ConfigList(
+        [
+            'NEW',
+            'ASSIGNED',
+            'NEEDINFO',
+            'ON_DEV',
+            'MODIFIED',
+            'POST',
+            'REOPENED',
+            'ON_QA',
+            'FAILS_QA',
+            'PASSES_QA',
+        ]
+    )
     include_needinfos: bool = False
     query_url: typing.Optional[pydantic.v1.AnyUrl]
     force_rest: bool = False
@@ -69,40 +71,16 @@ class BugzillaIssue(Issue):
     ASSIGNED_ON = 'bugzillaassignedon'
 
     UDAS = {
-        URL: {
-            'type': 'string',
-            'label': 'Bugzilla URL',
-        },
-        SUMMARY: {
-            'type': 'string',
-            'label': 'Bugzilla Summary',
-        },
-        STATUS: {
-            'type': 'string',
-            'label': 'Bugzilla Status',
-        },
-        BUG_ID: {
-            'type': 'numeric',
-            'label': 'Bugzilla Bug ID',
-        },
-        NEEDINFO: {
-            'type': 'date',
-            'label': 'Bugzilla Needinfo',
-        },
-        PRODUCT: {
-            'type': 'string',
-            'label': 'Bugzilla Product',
-        },
-        COMPONENT: {
-            'type': 'string',
-            'label': 'Bugzilla Component',
-        },
-        ASSIGNED_ON: {
-            'type': 'date',
-            'label': 'Bugzilla Assigned On',
-        },
+        URL: {'type': 'string', 'label': 'Bugzilla URL'},
+        SUMMARY: {'type': 'string', 'label': 'Bugzilla Summary'},
+        STATUS: {'type': 'string', 'label': 'Bugzilla Status'},
+        BUG_ID: {'type': 'numeric', 'label': 'Bugzilla Bug ID'},
+        NEEDINFO: {'type': 'date', 'label': 'Bugzilla Needinfo'},
+        PRODUCT: {'type': 'string', 'label': 'Bugzilla Product'},
+        COMPONENT: {'type': 'string', 'label': 'Bugzilla Component'},
+        ASSIGNED_ON: {'type': 'date', 'label': 'Bugzilla Assigned On'},
     }
-    UNIQUE_KEY = (URL, )
+    UNIQUE_KEY = (URL,)
 
     PRIORITY_MAP = {
         'unspecified': 'M',
@@ -117,7 +95,6 @@ class BugzillaIssue(Issue):
             'project': self.record['component'],
             'priority': self.get_priority(),
             'annotations': self.extra.get('annotations', []),
-
             self.URL: self.extra['url'],
             self.SUMMARY: self.record['summary'],
             self.BUG_ID: self.record['id'],
@@ -170,14 +147,13 @@ class BugzillaService(Service):
         if self.config.api_key:
             api_key = self.get_secret('api_key')
             try:
-                self.bz = bugzilla.Bugzilla(url=self.config.base_uri,
-                                            api_key=api_key,
-                                            **force_rest_kwargs)
+                self.bz = bugzilla.Bugzilla(
+                    url=self.config.base_uri, api_key=api_key, **force_rest_kwargs
+                )
             except TypeError:
                 raise Exception("Bugzilla API keys require python-bugzilla>=2.1.0")
         else:
-            self.bz = bugzilla.Bugzilla(url=self.config.base_uri,
-                                        **force_rest_kwargs)
+            self.bz = bugzilla.Bugzilla(url=self.config.base_uri, **force_rest_kwargs)
             if self.config.password:
                 password = self.get_secret('password', self.config.username)
                 self.bz.login(self.config.username, password)
@@ -190,7 +166,7 @@ class BugzillaService(Service):
         return issue['assigned_to']
 
     def include(self, issue):
-        """ Return true if the issue in question should be included """
+        """Return true if the issue in question should be included"""
         if self.config.only_if_assigned:
             owner = self.get_owner(issue)
             include_owners = [self.config.only_if_assigned]
@@ -210,11 +186,7 @@ class BugzillaService(Service):
         if 'comments' in issue:
             comments = issue.get('comments', [])
             return self.build_annotations(
-                ((
-                    c['author'].split('@')[0],
-                    c['text'],
-                ) for c in comments),
-                url
+                ((c['author'].split('@')[0], c['text']) for c in comments), url
             )
         else:
             # Backwards compatibility (old python-bugzilla/bugzilla instances)
@@ -233,11 +205,7 @@ class BugzillaService(Service):
                 return obj.get('text', obj.get('body'))
 
             return self.build_annotations(
-                ((
-                    _parse_author(c['author']),
-                    _parse_body(c)
-                ) for c in comments),
-                url
+                ((_parse_author(c['author']), _parse_body(c)) for c in comments), url
             )
 
     def issues(self):
@@ -269,10 +237,11 @@ class BugzillaService(Service):
         bugs = self.bz.query(query)
 
         if self.config.include_needinfos:
-            needinfos = self.bz.query(dict(
-                column_list=self.COLUMN_LIST,
-                quicksearch='flag:needinfo?%s' % email,
-            ))
+            needinfos = self.bz.query(
+                dict(
+                    column_list=self.COLUMN_LIST, quicksearch='flag:needinfo?%s' % email
+                )
+            )
             exists = [b.id for b in bugs]
             for bug in needinfos:
                 # don't double-add bugs that have already been found
@@ -282,9 +251,7 @@ class BugzillaService(Service):
 
         # Convert to dicts
         bugs = [
-            {
-                col: _get_bug_attr(bug, col) for col in self.COLUMN_LIST
-            } for bug in bugs
+            {col: _get_bug_attr(bug, col) for col in self.COLUMN_LIST} for bug in bugs
         ]
 
         bugs = filter(self.include, bugs)
@@ -301,11 +268,15 @@ class BugzillaService(Service):
             }
 
             username = self.config.username
-            needinfos = [f for f in issue['flags'] if (
-                f['name'] == 'needinfo' and
-                f['status'] == '?' and
-                f.get('requestee', username) == username
-            )]
+            needinfos = [
+                f
+                for f in issue['flags']
+                if (
+                    f['name'] == 'needinfo'
+                    and f['status'] == '?'
+                    and f.get('requestee', username) == username
+                )
+            ]
             if needinfos:
                 last_mod = needinfos[0]['modification_date']
                 extra['needinfo_since'] = _ensure_datetime(last_mod).isoformat()
@@ -337,11 +308,7 @@ def _get_bug_attr(bug, attr):
 
 
 def _ensure_datetime(
-    timestamp: typing.Union[
-        datetime.datetime,
-        str,
-        xmlrpc.client.DateTime,
-    ],
+    timestamp: typing.Union[datetime.datetime, str, xmlrpc.client.DateTime],
 ) -> datetime.datetime:
     """Convert "timestamp" into native `datetime.datetime` object.
 
@@ -364,4 +331,6 @@ def _ensure_datetime(
         naive = datetime.datetime.fromtimestamp(structured)
         return pytz.UTC.localize(naive)
     else:
-        raise TypeError("Timestamp conversion from `{0!r}` is not supported.".format(timestamp))
+        raise TypeError(
+            "Timestamp conversion from `{0!r}` is not supported.".format(timestamp)
+        )

@@ -12,53 +12,34 @@ from .base import AbstractServiceTest, ConfigTest, ServiceTest
 class TestKanboardServiceConfig(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = {
-            "general": {"targets": ["kb"]},
-            "kb": {"service": "kanboard"},
-        }
+        self.config = {"general": {"targets": ["kb"]}, "kb": {"service": "kanboard"}}
 
     def test_validate_config_required_fields(self):
-        self.config["kb"].update({
-            "url": "http://example.com/",
-            "username": "myuser",
-            "password": "mypass",
-        })
+        self.config["kb"].update(
+            {"url": "http://example.com/", "username": "myuser", "password": "mypass"}
+        )
 
         self.validate()
 
     def test_validate_config_no_url(self):
-        self.config["kb"].update({
-            "username": "myuser",
-            "password": "mypass",
-        })
+        self.config["kb"].update({"username": "myuser", "password": "mypass"})
 
-        self.assertValidationError(
-            '[kb]\nurl  <- field required')
+        self.assertValidationError('[kb]\nurl  <- field required')
 
     def test_validate_config_no_username(self):
-        self.config["kb"].update({
-            "url": "http://one.com/",
-            "password": "mypass",
-        })
+        self.config["kb"].update({"url": "http://one.com/", "password": "mypass"})
 
-        self.assertValidationError(
-            '[kb]\nusername  <- field required')
+        self.assertValidationError('[kb]\nusername  <- field required')
 
     def test_validate_config_no_password(self):
-        self.config["kb"].update({
-            "url": "http://one.com/",
-            "username": "myuser",
-        })
+        self.config["kb"].update({"url": "http://one.com/", "username": "myuser"})
 
-        self.assertValidationError(
-            '[kb]\npassword  <- field required')
+        self.assertValidationError('[kb]\npassword  <- field required')
 
     def test_get_keyring_service(self):
-        self.config["kb"].update({
-            "url": "http://example.com/",
-            "username": "myuser",
-            "password": "mypass",
-        })
+        self.config["kb"].update(
+            {"url": "http://example.com/", "username": "myuser", "password": "mypass"}
+        )
         service_config = self.validate()['kb']
         self.assertEqual(
             KanboardService.get_keyring_service(service_config),
@@ -120,13 +101,8 @@ class TestKanboardService(AbstractServiceTest, ServiceTest):
 
         extra = {
             "url": "http://path/to/issue",
-            "annotations": [
-                "One",
-                "Two",
-            ],
-            "tags": [
-                "tag",
-            ],
+            "annotations": ["One", "Two"],
+            "tags": ["tag"],
         }
 
         issue = self.service.get_issue_for_record(record, extra)

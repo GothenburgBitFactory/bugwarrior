@@ -34,9 +34,11 @@ def _try_load_config(main_section, interactive=False, quiet=False):
         logging.basicConfig()
 
         exc_info = sys.exc_info()
-        log.critical("Could not load configuration. "
-                     "Maybe you have not created a configuration file.",
-                     exc_info=(exc_info[0], exc_info[1], None))
+        log.critical(
+            "Could not load configuration. "
+            "Maybe you have not created a configuration file.",
+            exc_info=(exc_info[0], exc_info[1], None),
+        )
         sys.exit(1)
 
 
@@ -50,8 +52,10 @@ def _legacy_cli_deprecation_warning(subcommand_callback):
             log.warning(
                 f'Deprecation Warning: `{old_command}` is deprecated and will '
                 'be removed in a future version of bugwarrior. Please use '
-                f'`{new_command}` instead.')
+                f'`{new_command}` instead.'
+            )
         return ctx.invoke(subcommand_callback, *args, **kwargs)
+
     return wrapped_subcommand_callback
 
 
@@ -62,6 +66,7 @@ class AliasedCli(click.Group):
     By implementing this as an alias, we can maintain backwards compatibility
     with the old cli api.
     """
+
     def list_commands(self, ctx):
         return ctx.command.commands.keys()
 
@@ -79,12 +84,13 @@ def cli():
 @click.option('--dry-run', is_flag=True)
 @click.option('--flavor', default=None, help='The flavor to use')
 @click.option('--interactive', is_flag=True)
-@click.option('--debug', is_flag=True,
-              help='Do not use multiprocessing (which breaks pdb).')
+@click.option(
+    '--debug', is_flag=True, help='Do not use multiprocessing (which breaks pdb).'
+)
 @click.option('--quiet', is_flag=True, help='Set logging level to WARNING.')
 @_legacy_cli_deprecation_warning
 def pull(dry_run, flavor, interactive, debug, quiet):
-    """ Pull down tasks from forges and add them to your taskwarrior tasks.
+    """Pull down tasks from forges and add them to your taskwarrior tasks.
 
     Relies on configuration file.
     """
@@ -94,7 +100,8 @@ def pull(dry_run, flavor, interactive, debug, quiet):
         config = _try_load_config(main_section, interactive, quiet)
 
         lockfile_path = os.path.join(
-            config[main_section].data.path, 'bugwarrior.lockfile')
+            config[main_section].data.path, 'bugwarrior.lockfile'
+        )
         lockfile = PIDLockFile(lockfile_path)
         lockfile.acquire(timeout=10)
         try:
@@ -109,9 +116,7 @@ def pull(dry_run, flavor, interactive, debug, quiet):
         log.critical(
             'Your taskrc repository is currently locked. '
             'Remove the file at %s if you are sure no other '
-            'bugwarrior processes are currently running.' % (
-                lockfile_path
-            )
+            'bugwarrior processes are currently running.' % (lockfile_path)
         )
         sys.exit(1)
     except RuntimeError as e:
@@ -122,7 +127,7 @@ def pull(dry_run, flavor, interactive, debug, quiet):
 @cli.group()
 @_legacy_cli_deprecation_warning
 def vault():
-    """ Password/keyring management for bugwarrior.
+    """Password/keyring management for bugwarrior.
 
     If you use the keyring password oracle in your bugwarrior config, this tool
     can be used to manage your keyring. This feature requires the optional
@@ -135,8 +140,7 @@ def targets():
     config = _try_load_config('general')
     for target in config['general'].targets:
         service_class = get_service(config[target].service)
-        for value in [v for v in dict(config[target]).values()
-                      if isinstance(v, str)]:
+        for value in [v for v in dict(config[target]).values() if isinstance(v, str)]:
             if '@oracle:use_keyring' in value:
                 yield service_class.get_keyring_service(config[target])
 
@@ -171,8 +175,10 @@ def clear(target, username):
 def set(target, username):
     target_list = lst(targets())
     if target not in target_list:
-        log.warning("You must configure the password to '@oracle:use_keyring' "
-                    "prior to setting the value.")
+        log.warning(
+            "You must configure the password to '@oracle:use_keyring' "
+            "prior to setting the value."
+        )
         raise ValueError("%s must be one of %r" % (target, target_list))
 
     keyring = get_keyring()
@@ -214,16 +220,18 @@ def uda(flavor):
 
 
 @cli.command()
-@click.argument('rcfile', required=False, default=get_config_path(),
-                type=click.Path(exists=True))
+@click.argument(
+    'rcfile', required=False, default=get_config_path(), type=click.Path(exists=True)
+)
 def ini2toml(rcfile):
-    """ Convert ini bugwarriorrc to toml and print result to stdout. """
+    """Convert ini bugwarriorrc to toml and print result to stdout."""
     try:
         from ini2toml.api import Translator
     except ImportError:
         raise SystemExit(
             'Install extra dependencies to use this command:\n'
-            '    pip install bugwarrior[ini2toml]')
+            '    pip install bugwarrior[ini2toml]'
+        )
     if os.path.splitext(rcfile)[-1] == '.toml':
         raise SystemExit(f'{rcfile} is already toml!')
     with open(rcfile, 'r') as f:

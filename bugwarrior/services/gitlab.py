@@ -31,7 +31,9 @@ class GitlabConfig(config.ServiceConfig):
     owned: typing.Optional[bool] = None
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'
-    include_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = 'Undefined'
+    include_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = (
+        'Undefined'
+    )
     include_issues: bool = True
     include_todos: bool = False
     include_all_todos: bool = True
@@ -49,7 +51,7 @@ class GitlabConfig(config.ServiceConfig):
 
     @pydantic.v1.root_validator
     def namespace_repo_lists(cls, values):
-        """ Add a default namespace to a repository name.  If the name already
+        """Add a default namespace to a repository name.  If the name already
         contains a namespace, it will be returned unchanged:
             e.g. "foo/bar" → "foo/bar"
         otherwise, the login will be prepended as namespace:
@@ -60,7 +62,8 @@ class GitlabConfig(config.ServiceConfig):
                 f"{values['login']}/{repo}"
                 if not repo.startswith('id:') and repo.find('/') < 0
                 else repo
-                for repo in values[repolist]]
+                for repo in values[repolist]
+            ]
         return values
 
     @pydantic.v1.root_validator
@@ -70,7 +73,8 @@ class GitlabConfig(config.ServiceConfig):
             values[priority_field] = (
                 values[priority_field]
                 if values[priority_field] != 'unassigned'
-                else values['default_priority'])
+                else values['default_priority']
+            )
         return values
 
     @pydantic.v1.root_validator
@@ -81,21 +85,25 @@ class GitlabConfig(config.ServiceConfig):
         Otherwise we'll get a 405 error for exceeding gitlab's rate limit by
         trying to paginate through all public repositories.
         """
-        if (values['host'] == 'gitlab.com'
-                # Options which automatically apply a filter.
-                and not (values['owned'] or
-                         values['membership'] or
-                         values['include_repos'])
-                # Query options *may* apply a filter.
-                and (
-                    (values['include_issues'] and not values['issue_query'])
-                    or (values['include_merge_requests'] and not values['merge_request_query'])
-                    or (values['include_todos'] and not values['todo_query'])
-                )):
+        if (
+            values['host'] == 'gitlab.com'
+            # Options which automatically apply a filter.
+            and not (values['owned'] or values['membership'] or values['include_repos'])
+            # Query options *may* apply a filter.
+            and (
+                (values['include_issues'] and not values['issue_query'])
+                or (
+                    values['include_merge_requests']
+                    and not values['merge_request_query']
+                )
+                or (values['include_todos'] and not values['todo_query'])
+            )
+        ):
             raise ValueError(
                 "You must set at least one of the configuration options "
                 "to filter repositories (e.g., 'owned') because there "
-                "there are too many on gitlab.com to fetch them all.")
+                "there are too many on gitlab.com to fetch them all."
+            )
         return values
 
     @pydantic.v1.validator('owned', always=True)
@@ -111,7 +119,8 @@ class GitlabConfig(config.ServiceConfig):
         if v is None:
             log.warning(
                 "WARNING: Gitlab's 'owned' configuration field should be set "
-                "explicitly. In a future release, this will be an error.")
+                "explicitly. In a future release, this will be an error."
+            )
             v = False
         return v
 
@@ -119,7 +128,9 @@ class GitlabConfig(config.ServiceConfig):
 class GitlabClient(Client):
     """Abstraction of Gitlab API v4"""
 
-    def __init__(self, host, token, only_if_assigned, also_unassigned, use_https, verify_ssl):
+    def __init__(
+        self, host, token, only_if_assigned, also_unassigned, use_https, verify_ssl
+    ):
         if use_https:
             self.scheme = 'https'
         else:
@@ -135,9 +146,10 @@ class GitlabClient(Client):
         # filtering in the query.
         assignee_id = (
             self._fetch(f'users?username={only_if_assigned}')[-1]['id']
-            if only_if_assigned and not also_unassigned else None)
-        self.assignee_query = (
-            f'assignee_id={assignee_id}' if assignee_id else '')
+            if only_if_assigned and not also_unassigned
+            else None
+        )
+        self.assignee_query = f'assignee_id={assignee_id}' if assignee_id else ''
 
     def _base_url(self):
         return f"{self.scheme}://{self.host}/api/v4/"
@@ -158,8 +170,7 @@ class GitlabClient(Client):
 
         if not self.verify_ssl:
             requests.packages.urllib3.disable_warnings()
-        response = requests.get(
-            url, headers=headers, verify=self.verify_ssl, **kwargs)
+        response = requests.get(url, headers=headers, verify=self.verify_ssl, **kwargs)
 
         if skip_403 and response.status_code == 403:
             log.debug(f'Skipping {relative_url}. (Is feature disabled?)')
@@ -167,11 +178,8 @@ class GitlabClient(Client):
         return self.json_response(response)
 
     def _fetch_paged(
-            self,
-            relative_url: str,
-            page_size: int = 100,
-            skip_403: bool = False
-            ) -> list:
+        self, relative_url: str, page_size: int = 100, skip_403: bool = False
+    ) -> list:
         """Make a gitlab REST API call with pagination. Calls will be buffered on pages with size
         ``page_size``.
 
@@ -181,10 +189,7 @@ class GitlabClient(Client):
         :type page_size: int
         :rtype: list
         """
-        params = {
-            'page': 1,
-            'per_page': page_size,
-        }
+        params = {'page': 1, 'per_page': page_size}
 
         full = []
         detect_broken_gitlab_pagination = []
@@ -210,7 +215,9 @@ class GitlabClient(Client):
 
         return full
 
-    def get_repos(self, include_repos: list, only_membership: bool, only_owned: bool) -> list:
+    def get_repos(
+        self, include_repos: list, only_membership: bool, only_owned: bool
+    ) -> list:
         """Returns a list of repo objects for all repositories accessible. Respects
         config.include_repos.
 
@@ -291,7 +298,8 @@ class GitlabClient(Client):
         :rtype: list
         """
         return self.get_issues_from_query(
-            f'projects/{rid}/issues?state=opened&{self.assignee_query}')
+            f'projects/{rid}/issues?state=opened&{self.assignee_query}'
+        )
 
     def get_repo_merge_requests(self, rid: int) -> dict:
         """Get all merge_requests from a repository as JSON dictionary
@@ -302,10 +310,10 @@ class GitlabClient(Client):
         """
         return self.get_issues_from_query(
             f'projects/{rid}/merge_requests?state=opened&{self.assignee_query}',
-            skip_403=True)
+            skip_403=True,
+        )
 
-    def get_issues_from_query(
-            self, query: str, skip_403: bool = False) -> dict:
+    def get_issues_from_query(self, query: str, skip_403: bool = False) -> dict:
         """Get objects matching a query. Results will be returned in a dictionary where the key
         matches their project ID.
 
@@ -354,87 +362,37 @@ class GitlabIssue(Issue):
     WEIGHT = 'gitlabweight'
 
     UDAS = {
-        TITLE: {
-            'type': 'string',
-            'label': 'Gitlab Title',
-        },
-        DESCRIPTION: {
-            'type': 'string',
-            'label': 'Gitlab Description',
-        },
-        CREATED_AT: {
-            'type': 'date',
-            'label': 'Gitlab Created',
-        },
-        UPDATED_AT: {
-            'type': 'date',
-            'label': 'Gitlab Updated',
-        },
-        DUEDATE: {
-            'type': 'date',
-            'label': 'Gitlab Due Date',
-        },
-        MILESTONE: {
-            'type': 'string',
-            'label': 'Gitlab Milestone',
-        },
-        URL: {
-            'type': 'string',
-            'label': 'Gitlab URL',
-        },
-        REPO: {
-            'type': 'string',
-            'label': 'Gitlab Repo Slug',
-        },
-        TYPE: {
-            'type': 'string',
-            'label': 'Gitlab Type',
-        },
-        NUMBER: {
-            'type': 'string',
-            'label': 'Gitlab Issue/MR #',
-        },
-        STATE: {
-            'type': 'string',
-            'label': 'Gitlab Issue/MR State',
-        },
-        UPVOTES: {
-            'type': 'numeric',
-            'label': 'Gitlab Upvotes',
-        },
-        DOWNVOTES: {
-            'type': 'numeric',
-            'label': 'Gitlab Downvotes',
-        },
+        TITLE: {'type': 'string', 'label': 'Gitlab Title'},
+        DESCRIPTION: {'type': 'string', 'label': 'Gitlab Description'},
+        CREATED_AT: {'type': 'date', 'label': 'Gitlab Created'},
+        UPDATED_AT: {'type': 'date', 'label': 'Gitlab Updated'},
+        DUEDATE: {'type': 'date', 'label': 'Gitlab Due Date'},
+        MILESTONE: {'type': 'string', 'label': 'Gitlab Milestone'},
+        URL: {'type': 'string', 'label': 'Gitlab URL'},
+        REPO: {'type': 'string', 'label': 'Gitlab Repo Slug'},
+        TYPE: {'type': 'string', 'label': 'Gitlab Type'},
+        NUMBER: {'type': 'string', 'label': 'Gitlab Issue/MR #'},
+        STATE: {'type': 'string', 'label': 'Gitlab Issue/MR State'},
+        UPVOTES: {'type': 'numeric', 'label': 'Gitlab Upvotes'},
+        DOWNVOTES: {'type': 'numeric', 'label': 'Gitlab Downvotes'},
         WORK_IN_PROGRESS: {
             'type': 'numeric',
             'label': 'Gitlab MR Work-In-Progress Flag',
         },
-        AUTHOR: {
-            'type': 'string',
-            'label': 'Gitlab Author',
-        },
-        ASSIGNEE: {
-            'type': 'string',
-            'label': 'Gitlab Assignee',
-        },
-        NAMESPACE: {
-            'type': 'string',
-            'label': 'Gitlab Namespace',
-        },
-        WEIGHT: {
-            'type': 'numeric',
-            'label': 'Gitlab Weight',
-        },
+        AUTHOR: {'type': 'string', 'label': 'Gitlab Author'},
+        ASSIGNEE: {'type': 'string', 'label': 'Gitlab Assignee'},
+        NAMESPACE: {'type': 'string', 'label': 'Gitlab Namespace'},
+        WEIGHT: {'type': 'numeric', 'label': 'Gitlab Weight'},
     }
-    UNIQUE_KEY = (REPO, TYPE, NUMBER,)
+    UNIQUE_KEY = (REPO, TYPE, NUMBER)
 
     # Override the method from parent class
     def get_priority(self):
         default_priority_map = {
             'todo': self.config.default_todo_priority,
             'merge_request': self.config.default_mr_priority,
-            'issue': self.config.default_issue_priority}
+            'issue': self.config.default_issue_priority,
+        }
 
         type_str = self.extra['type']
         default_priority = self.config.default_priority
@@ -456,15 +414,19 @@ class GitlabIssue(Issue):
         weight = self.record.get('weight')
         iteration = self.record.get('iteration')
         number = (
-            self.record['id'] if self.extra['type'] == 'todo'
-            else self.record['iid'])
+            self.record['id'] if self.extra['type'] == 'todo' else self.record['iid']
+        )
         priority = self.get_priority()
         title = (
             'Todo from %s for %s' % (author['name'], self.extra['project'])
-            if self.extra['type'] == 'todo' else self.record['title'])
+            if self.extra['type'] == 'todo'
+            else self.record['title']
+        )
         description = (
-            self.record['body'] if self.extra['type'] == 'todo'
-            else self.extra['description'])
+            self.record['body']
+            if self.extra['type'] == 'todo'
+            else self.extra['description']
+        )
 
         if duedate is None:
             if iteration and iteration['due_date']:
@@ -494,7 +456,6 @@ class GitlabIssue(Issue):
             'tags': self.get_tags(),
             'due': duedate,
             'entry': created,
-
             self.URL: self.extra['issue_url'],
             self.REPO: self.extra['project'],
             self.TYPE: self.extra['type'],
@@ -542,7 +503,7 @@ class GitlabService(Service):
             only_if_assigned=self.config.only_if_assigned,
             also_unassigned=self.config.also_unassigned,
             use_https=self.config.use_https,
-            verify_ssl=self.config.verify_ssl
+            verify_ssl=self.config.verify_ssl,
         )
         self.repo_map = dict()
 
@@ -558,8 +519,10 @@ class GitlabService(Service):
             return issue[1]['author']['username']
 
     def filter_repos(self, repo):
-        if (repo['path_with_namespace'] in self.config.exclude_repos
-                or "id:%d" % repo['id'] in self.config.exclude_repos):
+        if (
+            repo['path_with_namespace'] in self.config.exclude_repos
+            or "id:%d" % repo['id'] in self.config.exclude_repos
+        ):
             return False
 
         if self.config.exclude_regex:
@@ -570,8 +533,10 @@ class GitlabService(Service):
         is_included = True
 
         if self.config.include_repos:
-            if (repo['path_with_namespace'] in self.config.include_repos
-                    or "id:%d" % repo['id'] in self.config.include_repos):
+            if (
+                repo['path_with_namespace'] in self.config.include_repos
+                or "id:%d" % repo['id'] in self.config.include_repos
+            ):
                 return True
             else:
                 is_included = False
@@ -589,10 +554,7 @@ class GitlabService(Service):
 
         if self.main_config.annotation_comments:
             notes = self.gitlab_client.get_notes(repo['id'], issue_type, issue['iid'])
-            annotations = ((
-                n['author']['username'],
-                n['body']
-            ) for n in notes)
+            annotations = ((n['author']['username'], n['body']) for n in notes)
 
         return self.build_annotations(annotations, url)
 
@@ -602,6 +564,7 @@ class GitlabService(Service):
         def include_todo(todo):
             project, todo = todo
             return project is None or project['id'] in ids
+
         return include_todo
 
     def _get_issue_objs(self, issues, issue_type):
@@ -631,9 +594,7 @@ class GitlabService(Service):
             if project is not None:
                 repo = project
             else:
-                repo = {
-                    'path': 'the instance',
-                }
+                repo = {'path': 'the instance'}
             todo['repo'] = repo['path']
 
             todo_obj = self.get_issue_for_record(todo)
@@ -652,7 +613,7 @@ class GitlabService(Service):
             yield todo_obj
 
     def include(self, issue):
-        """ Return true if the issue in question should be included """
+        """Return true if the issue in question should be included"""
         if not self.filter_repos(self.gitlab_client.get_repo_cached(issue[0])):
             return False
 
@@ -674,9 +635,7 @@ class GitlabService(Service):
         for repo in repos:
             rid = repo['id']
             self.repo_map[rid] = repo
-            issues.update(
-                self.gitlab_client.get_repo_issues(rid)
-            )
+            issues.update(self.gitlab_client.get_repo_issues(rid))
         return issues
 
     def get_all_repos(self):
@@ -686,7 +645,7 @@ class GitlabService(Service):
         all_repos = self.gitlab_client.get_repos(
             include_repos=include_repos,
             only_membership=self.config.membership,
-            only_owned=self.config.owned
+            only_owned=self.config.owned,
         )
         repos = list(filter(self.filter_repos, all_repos))
         return repos
@@ -701,14 +660,15 @@ class GitlabService(Service):
         return description
 
     def issues(self):
-
         # List of repos will only be queried if needed
         repos = []
 
         # Issues
         if self.config.include_issues:
             if self.config.issue_query:
-                issues = self.gitlab_client.get_issues_from_query(self.config.issue_query)
+                issues = self.gitlab_client.get_issues_from_query(
+                    self.config.issue_query
+                )
             else:
                 if not repos:
                     repos = self.get_all_repos()
@@ -723,7 +683,8 @@ class GitlabService(Service):
         if self.config.include_merge_requests:
             if self.config.merge_request_query:
                 merge_requests = self.gitlab_client.get_issues_from_query(
-                    self.config.merge_request_query, skip_403=True)
+                    self.config.merge_request_query, skip_403=True
+                )
             else:
                 if not repos:
                     repos = self.get_all_repos()
@@ -734,7 +695,9 @@ class GitlabService(Service):
                         self.gitlab_client.get_repo_merge_requests(rid)
                     )
             log.debug("Found %i merge requests.", len(merge_requests))
-            merge_requests_filtered = list(filter(self.include, merge_requests.values()))
+            merge_requests_filtered = list(
+                filter(self.include, merge_requests.values())
+            )
             log.debug("Pruned down to %i merge requests.", len(merge_requests_filtered))
 
             yield from self._get_issue_objs(merge_requests_filtered, 'merge_request')

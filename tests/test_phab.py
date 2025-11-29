@@ -22,10 +22,12 @@ class TestPhabricatorIssue(AbstractServiceTest, ServiceTest):
             datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
         ).replace(tzinfo=pytz.UTC, microsecond=0)
         self.arbitrary_updated = datetime.datetime.now(datetime.timezone.utc).replace(
-            tzinfo=pytz.UTC, microsecond=0)
+            tzinfo=pytz.UTC, microsecond=0
+        )
         self.arbitrary_duedate = (
-            datetime.datetime.combine(datetime.date.today(),
-                                      datetime.datetime.min.time())
+            datetime.datetime.combine(
+                datetime.date.today(), datetime.datetime.min.time()
+            )
         ).replace(tzinfo=pytz.UTC)
         self.arbitrary_issue = {
             "id": 42,
@@ -41,8 +43,7 @@ class TestPhabricatorIssue(AbstractServiceTest, ServiceTest):
     def test_to_taskwarrior(self):
         self.service.import_labels_as_tags = True
         issue = self.service.get_issue_for_record(
-            self.arbitrary_issue,
-            self.arbitrary_extra
+            self.arbitrary_issue, self.arbitrary_extra
         )
 
         expected_output = {

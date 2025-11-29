@@ -17,17 +17,7 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
         'project': 4,
         'ref': 40,
         'subject': 'this is a title',
-        'tags': [
-            'single',
-            [
-                'bugwarrior',
-                None
-            ],
-            [
-                'task',
-                '#c0ffee'
-            ]
-        ],
+        'tags': ['single', ['bugwarrior', None], ['task', '#c0ffee']],
     }
 
     def setUp(self):
@@ -61,35 +51,36 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         userid = 1
 
-        self.add_response(
-            'https://one/api/v1/users/me',
-            json={'id': userid})
+        self.add_response('https://one/api/v1/users/me', json={'id': userid})
 
         self.add_response(
             'https://one/api/v1/userstories?status__is_closed=false&assigned_to={}'.format(
-                userid),
-            json=[self.record])
+                userid
+            ),
+            json=[self.record],
+        )
 
         self.add_response(
             'https://one/api/v1/projects/{}'.format(self.record['project']),
-            json={'slug': 'something'})
+            json={'slug': 'something'},
+        )
 
         self.add_response(
-            'https://one/api/v1/history/userstory/{}'.format(
-                self.record['id']),
-            json=[{'user': {'username': 'you'}, 'comment': 'Blah blah blah!'}])
+            'https://one/api/v1/history/userstory/{}'.format(self.record['id']),
+            json=[{'user': {'username': 'you'}, 'comment': 'Blah blah blah!'}],
+        )
 
         issue = next(self.service.issues())
 
         expected = {
             'annotations': ['@you - Blah blah blah!'],
-            'description':
-                '(bw)Is#40 - this is a title .. https://one/project/something/us/40',
+            'description': '(bw)Is#40 - this is a title .. https://one/project/something/us/40',
             'priority': 'M',
             'project': 'something',
             'tags': ['single', 'bugwarrior', 'task'],
             'taigaid': 40,
             'taigasummary': 'this is a title',
-            'taigaurl': 'https://one/project/something/us/40'}
+            'taigaurl': 'https://one/project/something/us/40',
+        }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)

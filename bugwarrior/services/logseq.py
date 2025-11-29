@@ -123,52 +123,21 @@ class LogseqIssue(Issue):
     SOMEDAY = datetime(2038, 1, 18)
 
     UDAS = {
-        ID: {
-            "type": "string",
-            "label": "Logseq ID",
-        },
-        UUID: {
-            "type": "string",
-            "label": "Logseq UUID",
-        },
-        STATE: {
-            "type": "string",
-            "label": "Logseq State",
-        },
-        TITLE: {
-            "type": "string",
-            "label": "Logseq Title",
-        },
-        DONE: {
-            "type": "date",
-            "label": "Logseq Done",
-        },
-        URI: {
-            "type": "string",
-            "label": "Logseq URI",
-        },
-        SCHEDULED: {
-            "type": "date",
-            "label": "Logseq Scheduled"
-        },
-        DEADLINE: {
-            "type": "date",
-            "label": "Logseq Deadline"
-        },
-        PAGE: {
-            "type": "string",
-            "label": "Logseq Page"
-        }
+        ID: {"type": "string", "label": "Logseq ID"},
+        UUID: {"type": "string", "label": "Logseq UUID"},
+        STATE: {"type": "string", "label": "Logseq State"},
+        TITLE: {"type": "string", "label": "Logseq Title"},
+        DONE: {"type": "date", "label": "Logseq Done"},
+        URI: {"type": "string", "label": "Logseq URI"},
+        SCHEDULED: {"type": "date", "label": "Logseq Scheduled"},
+        DEADLINE: {"type": "date", "label": "Logseq Deadline"},
+        PAGE: {"type": "string", "label": "Logseq Page"},
     }
 
     UNIQUE_KEY = (ID, UUID)
 
     # map A B C priority to H M L
-    PRIORITY_MAP = {
-        "A": "H",
-        "B": "M",
-        "C": "L",
-    }
+    PRIORITY_MAP = {"A": "H", "B": "M", "C": "L"}
 
     # `pending` is the defuault state. Taskwarrior will dynamcily change task to `waiting`
     # state if wait date is set to a future date.

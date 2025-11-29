@@ -34,24 +34,12 @@ class PhabricatorIssue(Issue):
     OBJECT_NAME = 'phabricatorid'
 
     UDAS = {
-        TITLE: {
-            'type': 'string',
-            'label': 'Phabricator Title',
-        },
-        URL: {
-            'type': 'string',
-            'label': 'Phabricator URL',
-        },
-        TYPE: {
-            'type': 'string',
-            'label': 'Phabricator Type',
-        },
-        OBJECT_NAME: {
-            'type': 'string',
-            'label': 'Phabricator Object',
-        },
+        TITLE: {'type': 'string', 'label': 'Phabricator Title'},
+        URL: {'type': 'string', 'label': 'Phabricator URL'},
+        TYPE: {'type': 'string', 'label': 'Phabricator Type'},
+        OBJECT_NAME: {'type': 'string', 'label': 'Phabricator Object'},
     }
-    UNIQUE_KEY = (URL, )
+    UNIQUE_KEY = (URL,)
 
     PRIORITY_MAP = {
         'Needs Triage': None,
@@ -67,7 +55,6 @@ class PhabricatorIssue(Issue):
             'project': self.extra['project'],
             'priority': self.priority,
             'annotations': self.extra.get('annotations', []),
-
             self.URL: self.record['uri'],
             self.TYPE: self.extra['type'],
             self.TITLE: self.record['title'],
@@ -84,8 +71,10 @@ class PhabricatorIssue(Issue):
 
     @property
     def priority(self):
-        return self.PRIORITY_MAP.get(self.record.get('priority')) \
+        return (
+            self.PRIORITY_MAP.get(self.record.get('priority'))
             or self.config.default_priority
+        )
 
 
 class PhabricatorService(Service):
@@ -103,11 +92,15 @@ class PhabricatorService(Service):
             self.api = phabricator.Phabricator()
 
         self.ignore_cc = (
-            self.config.ignore_cc if self.config.ignore_cc is not None
-            else self.config.only_if_assigned)
+            self.config.ignore_cc
+            if self.config.ignore_cc is not None
+            else self.config.only_if_assigned
+        )
         self.ignore_author = (
-            self.config.ignore_author if self.config.ignore_author is not None
-            else self.config.only_if_assigned)
+            self.config.ignore_author
+            if self.config.ignore_author is not None
+            else self.config.only_if_assigned
+        )
 
     @staticmethod
     def get_keyring_service(config):
@@ -121,24 +114,30 @@ class PhabricatorService(Service):
             if self.config.user_phids or self.config.project_phids:
                 if self.config.user_phids:
                     tasks_owner = self.api.maniphest.query(
-                        status='status-open',
-                        ownerPHIDs=self.config.user_phids)
+                        status='status-open', ownerPHIDs=self.config.user_phids
+                    )
                     tasks_cc = self.api.maniphest.query(
-                        status='status-open',
-                        ccPHIDs=self.config.user_phids)
+                        status='status-open', ccPHIDs=self.config.user_phids
+                    )
                     tasks_author = self.api.maniphest.query(
-                        status='status-open',
-                        authorPHIDs=self.config.user_phids)
-                    tasks = list(tasks_owner.items()) + list(tasks_cc.items()) + \
-                        list(tasks_author.items())
+                        status='status-open', authorPHIDs=self.config.user_phids
+                    )
+                    tasks = (
+                        list(tasks_owner.items())
+                        + list(tasks_cc.items())
+                        + list(tasks_author.items())
+                    )
                     # Delete duplicates
                     seen = set()
-                    tasks = [item for item in tasks if str(
-                        item[1]) not in seen and not seen.add(str(item[1]))]
+                    tasks = [
+                        item
+                        for item in tasks
+                        if str(item[1]) not in seen and not seen.add(str(item[1]))
+                    ]
                 if self.config.project_phids:
                     tasks = self.api.maniphest.query(
-                        status='status-open',
-                        projectPHIDs=self.config.project_phids)
+                        status='status-open', projectPHIDs=self.config.project_phids
+                    )
                     tasks = tasks.items()
             else:
                 tasks = self.api.maniphest.query(status='status-open')
@@ -150,7 +149,6 @@ class PhabricatorService(Service):
         log.info("Found %i tasks" % len(tasks))
 
         for phid, task in tasks:
-
             project = self.config.target  # a sensible default
 
             this_task_matches = False
@@ -168,16 +166,14 @@ class PhabricatorService(Service):
                     task_relevant_to.add(task['ownerPHID'])
                 if not self.ignore_author:
                     task_relevant_to.add(task['authorPHID'])
-                if len(task_relevant_to.intersection(
-                        self.config.user_phids)) > 0:
+                if len(task_relevant_to.intersection(self.config.user_phids)) > 0:
                     this_task_matches = True
 
             if self.config.project_phids:
                 # Checking whether projectPHIDs
                 # is intersecting with self.config.project_phids
                 task_relevant_to = set(task['projectPHIDs'])
-                if len(task_relevant_to.intersection(
-                        self.config.project_phids)) > 0:
+                if len(task_relevant_to.intersection(self.config.project_phids)) > 0:
                     this_task_matches = True
 
             if not this_task_matches:
@@ -203,7 +199,6 @@ class PhabricatorService(Service):
         log.info("Found %i differentials" % len(diffs))
 
         for diff in diffs:
-
             project = self.config.target  # a sensible default
 
             this_diff_matches = False
@@ -221,8 +216,7 @@ class PhabricatorService(Service):
                     diff_relevant_to.update(diff['ccs'])
                 if not self.ignore_author:
                     diff_relevant_to.add(diff['authorPHID'])
-                if len(diff_relevant_to.intersection(
-                        self.config.user_phids)) > 0:
+                if len(diff_relevant_to.intersection(self.config.user_phids)) > 0:
                     this_diff_matches = True
 
             if self.config.project_phids:
@@ -235,8 +229,7 @@ class PhabricatorService(Service):
                     pass
 
                 diff_relevant_to = set(phabricator_projects + [diff['repositoryPHID']])
-                if len(diff_relevant_to.intersection(
-                        self.config.project_phids)) > 0:
+                if len(diff_relevant_to.intersection(self.config.project_phids)) > 0:
                     this_diff_matches = True
 
             if not this_diff_matches:

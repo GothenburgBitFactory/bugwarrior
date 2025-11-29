@@ -78,7 +78,6 @@ RESPONSE = json.loads(
 
 
 class TestLinearServiceConfig(ConfigTest):
-
     def setUp(self):
         super().setUp()
         self.config = {
@@ -88,20 +87,13 @@ class TestLinearServiceConfig(ConfigTest):
 
     def test_validate_config(self):
         self.config["linear"].update(
-            {
-                "only_if_assigned": "foo@bar.com",
-                "api_token": "abc123",
-            }
+            {"only_if_assigned": "foo@bar.com", "api_token": "abc123"}
         )
 
         self.validate()
 
     def test_validate_config_no_api_token(self):
-        self.config["linear"].update(
-            {
-                "only_if_assigned": "foo@bar.com",
-            }
-        )
+        self.config["linear"].update({"only_if_assigned": "foo@bar.com"})
 
         self.assertValidationError("[linear]\napi_token  <- field required")
 
@@ -122,15 +114,9 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
         issue = RESPONSE["data"]["issues"]["nodes"][0]
         issue = self.service.get_issue_for_record(issue, {})
 
-        created_timestamp = datetime.datetime(
-            2025, 7, 24, 17, 3, 4, 0, tzinfo=tzutc()
-        )
-        updated_timestamp = datetime.datetime(
-            2025, 7, 25, 17, 3, 4, 0, tzinfo=tzutc()
-        )
-        closed_timestamp = datetime.datetime(
-            2025, 7, 26, 17, 3, 4, 0, tzinfo=tzutc()
-        )
+        created_timestamp = datetime.datetime(2025, 7, 24, 17, 3, 4, 0, tzinfo=tzutc())
+        updated_timestamp = datetime.datetime(2025, 7, 25, 17, 3, 4, 0, tzinfo=tzutc())
+        closed_timestamp = datetime.datetime(2025, 7, 26, 17, 3, 4, 0, tzinfo=tzutc())
         expected_output = {
             "project": "prj",
             "priority": "M",
@@ -155,12 +141,8 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
         issue = RESPONSE["data"]["issues"]["nodes"][1]
         issue = self.service.get_issue_for_record(issue, {})
 
-        created_timestamp = datetime.datetime(
-            2025, 7, 24, 15, 34, 7, 0, tzinfo=tzutc()
-        )
-        updated_timestamp = datetime.datetime(
-            2025, 7, 24, 17, 8, 33, 0, tzinfo=tzutc()
-        )
+        created_timestamp = datetime.datetime(2025, 7, 24, 15, 34, 7, 0, tzinfo=tzutc())
+        updated_timestamp = datetime.datetime(2025, 7, 24, 17, 8, 33, 0, tzinfo=tzutc())
         expected_output = {
             "project": None,
             "priority": "M",
@@ -185,15 +167,9 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         issue = next(self.service.issues())
-        created_timestamp = datetime.datetime(
-            2025, 7, 24, 17, 3, 4, 0, tzinfo=tzutc()
-        )
-        updated_timestamp = datetime.datetime(
-            2025, 7, 25, 17, 3, 4, 0, tzinfo=tzutc()
-        )
-        closed_timestamp = datetime.datetime(
-            2025, 7, 26, 17, 3, 4, 0, tzinfo=tzutc()
-        )
+        created_timestamp = datetime.datetime(2025, 7, 24, 17, 3, 4, 0, tzinfo=tzutc())
+        updated_timestamp = datetime.datetime(2025, 7, 25, 17, 3, 4, 0, tzinfo=tzutc())
+        closed_timestamp = datetime.datetime(2025, 7, 26, 17, 3, 4, 0, tzinfo=tzutc())
         expected = {
             "annotations": [],
             "description": "(bw)#DUS-5 - DO STUFF .. "

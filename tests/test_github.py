@@ -16,7 +16,8 @@ ARBITRARY_CLOSED = (
     datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=30)
 ).replace(tzinfo=pytz.UTC, microsecond=0)
 ARBITRARY_UPDATED = datetime.datetime.now(datetime.timezone.utc).replace(
-    tzinfo=pytz.UTC, microsecond=0)
+    tzinfo=pytz.UTC, microsecond=0
+)
 ARBITRARY_ISSUE = {
     'title': 'Hallo',
     'html_url': 'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
@@ -40,10 +41,7 @@ ARBITRARY_EXTRA = {
     'body': 'Something',
     'namespace': 'arbitrary_username',
 }
-IGNORABLE = {
-    'user': {'login': 'cibot'},
-    'body': 'Ignore this comment.'
-}
+IGNORABLE = {'user': {'login': 'cibot'}, 'body': 'Ignore this comment.'}
 
 
 class TestGithubIssue(AbstractServiceTest, ServiceTest):
@@ -60,10 +58,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
         service = self.get_mock_service(GithubService)
         draft = dict(ARBITRARY_ISSUE)
         draft['draft'] = True
-        issue = service.get_issue_for_record(
-            draft,
-            ARBITRARY_EXTRA
-        )
+        issue = service.get_issue_for_record(draft, ARBITRARY_EXTRA)
 
         expected = {
             'annotations': [],
@@ -86,18 +81,16 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'githubstate': draft['state'],
             'priority': 'M',
             'project': ARBITRARY_EXTRA['project'],
-            'tags': []
+            'tags': [],
         }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
     def test_to_taskwarrior(self):
-        service = self.get_mock_service(GithubService, config_overrides={
-            'import_labels_as_tags': True})
-        issue = service.get_issue_for_record(
-            ARBITRARY_ISSUE,
-            ARBITRARY_EXTRA
+        service = self.get_mock_service(
+            GithubService, config_overrides={'import_labels_as_tags': True}
         )
+        issue = service.get_issue_for_record(ARBITRARY_ISSUE, ARBITRARY_EXTRA)
 
         expected_output = {
             'project': ARBITRARY_EXTRA['project'],
@@ -129,32 +122,30 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         self.add_response(
             'https://api.github.com/user/repos?per_page=100',
-            json=[{
-                'name': 'some_repo',
-                'owner': {'login': 'some_username'}
-            }])
+            json=[{'name': 'some_repo', 'owner': {'login': 'some_username'}}],
+        )
 
         self.add_response(
             'https://api.github.com/users/arbitrary_username/repos?per_page=100',
-            json=[{
-                'name': 'arbitrary_repo',
-                'owner': {'login': 'arbitrary_username'}
-            }])
+            json=[{'name': 'arbitrary_repo', 'owner': {'login': 'arbitrary_username'}}],
+        )
 
         self.add_response(
             'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues?per_page=100',
-            json=[ARBITRARY_ISSUE])
+            json=[ARBITRARY_ISSUE],
+        )
 
         self.add_response(
-            'https://api.github.com/issues?per_page=100',
-            json=[ARBITRARY_ISSUE])
+            'https://api.github.com/issues?per_page=100', json=[ARBITRARY_ISSUE]
+        )
 
         self.add_response(
             'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',  # noqa: E501
-            json=[{
-                'user': {'login': 'arbitrary_login'},
-                'body': 'Arbitrary comment.'
-            }, IGNORABLE])  # second comment should be ignored and still pass
+            json=[
+                {'user': {'login': 'arbitrary_login'}, 'body': 'Arbitrary comment.'},
+                IGNORABLE,
+            ],
+        )  # second comment should be ignored and still pass
 
         service = self.get_mock_service(GithubService)
         issue = next(service.issues())
@@ -180,7 +171,8 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
             'githubstate': 'closed',
             'priority': 'M',
             'project': 'arbitrary_repo',
-            'tags': []}
+            'tags': [],
+        }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
@@ -208,14 +200,13 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         self.add_response(
             'https://api.github.com/search/issues?q=is%3Aopen+reviewer%3Aoctocat&per_page=100',
-            json={'items': [ARBITRARY_ISSUE]})
+            json={'items': [ARBITRARY_ISSUE]},
+        )
 
         self.add_response(
             'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',  # noqa: E501
-            json=[{
-                'user': {'login': 'arbitrary_login'},
-                'body': 'Arbitrary comment.'
-            }])
+            json=[{'user': {'login': 'arbitrary_login'}, 'body': 'Arbitrary comment.'}],
+        )
 
         issue = list(self.service.issues())[0]
 
@@ -240,7 +231,8 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
             'githubstate': 'closed',
             'priority': 'M',
             'project': 'arbitrary_repo',
-            'tags': []}
+            'tags': [],
+        }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
@@ -255,32 +247,37 @@ class TestGithubService(ServiceTest):
 
     def test_token_authorization_header(self):
         service = self.get_mock_service(GithubService)
-        service = self.get_mock_service(GithubService, config_overrides={
-            'token': '@oracle:eval:echo 1234567890ABCDEF'})
-        self.assertEqual(service.client.session.headers['Authorization'],
-                         "token 1234567890ABCDEF")
+        service = self.get_mock_service(
+            GithubService,
+            config_overrides={'token': '@oracle:eval:echo 1234567890ABCDEF'},
+        )
+        self.assertEqual(
+            service.client.session.headers['Authorization'], "token 1234567890ABCDEF"
+        )
 
     def test_default_host(self):
-        """ Check that if host is not set, we default to github.com """
+        """Check that if host is not set, we default to github.com"""
         service = self.get_mock_service(GithubService)
         self.assertEqual("github.com", service.config.host)
 
     def test_overwrite_host(self):
-        """ Check that if host is set, we use its value as host """
-        service = self.get_mock_service(GithubService, config_overrides={
-            'host': 'github.example.com'})
+        """Check that if host is set, we use its value as host"""
+        service = self.get_mock_service(
+            GithubService, config_overrides={'host': 'github.example.com'}
+        )
         self.assertEqual("github.example.com", service.config.host)
 
     def test_keyring_service(self):
-        """ Checks that the keyring service name """
+        """Checks that the keyring service name"""
         service_config = GithubConfig(**self.SERVICE_CONFIG)
         keyring_service = GithubService.get_keyring_service(service_config)
         self.assertEqual("github://tintin@github.com/milou", keyring_service)
 
     def test_keyring_service_host(self):
-        """ Checks that the keyring key depends on the github host. """
-        service_config = GithubConfig(**{'host': 'github.example.com'},
-                                      **self.SERVICE_CONFIG)
+        """Checks that the keyring key depends on the github host."""
+        service_config = GithubConfig(
+            **{'host': 'github.example.com'}, **self.SERVICE_CONFIG
+        )
         keyring_service = GithubService.get_keyring_service(service_config)
         self.assertEqual("github://tintin@github.example.com/milou", keyring_service)
 
@@ -310,32 +307,33 @@ class TestGithubService(ServiceTest):
         self.assertEqual("An\nIssue\nWith\nNewlines", service.body(issue))
 
     def test_body_length_limit(self):
-        service = self.get_mock_service(GithubService, config_overrides={
-            'body_length': 5
-        })
+        service = self.get_mock_service(
+            GithubService, config_overrides={'body_length': 5}
+        )
         issue = dict(body="A very short issue body.  Fixes #42.")
         self.assertEqual(issue["body"][:5], service.body(issue))
 
 
 class TestGithubClient(TestCase):
-
     def test_api_url(self):
         auth = {'token': 'xxxx'}
         client = GithubClient('github.com', auth)
         self.assertEqual(
-            client._api_url('/some/path'), 'https://api.github.com/some/path')
+            client._api_url('/some/path'), 'https://api.github.com/some/path'
+        )
 
     def test_api_url_with_context(self):
         auth = {'token': 'xxxx'}
         client = GithubClient('github.com', auth)
         self.assertEqual(
             client._api_url('/some/path/{foo}', foo='bar'),
-            'https://api.github.com/some/path/bar')
+            'https://api.github.com/some/path/bar',
+        )
 
     def test_api_url_with_custom_host(self):
-        """ Test generating an API URL with a custom host """
+        """Test generating an API URL with a custom host"""
         auth = {'token': 'xxxx'}
         client = GithubClient('github.example.com', auth)
         self.assertEqual(
-            client._api_url('/some/path'),
-            'https://github.example.com/api/v3/some/path')
+            client._api_url('/some/path'), 'https://github.example.com/api/v3/some/path'
+        )

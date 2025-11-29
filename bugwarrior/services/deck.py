@@ -38,10 +38,9 @@ class NextcloudDeckClient(Client):
 
         self.session = requests.session()
         self.session.auth = (username, password)
-        self.session.headers.update({
-            'Accept': 'application/json',
-            'OCS-APIRequest': 'true',
-        })
+        self.session.headers.update(
+            {'Accept': 'application/json', 'OCS-APIRequest': 'true'}
+        )
 
     # see https://deck.readthedocs.io/en/latest/API/#boards for API docs
     def get_boards(self):
@@ -50,9 +49,7 @@ class NextcloudDeckClient(Client):
 
     # see https://deck.readthedocs.io/en/latest/API/#stacks for API docs
     def get_stacks(self, board_id):
-        response = self.session.get(
-            f'{self.api_base_path}/boards/{board_id}/stacks'
-        )
+        response = self.session.get(f'{self.api_base_path}/boards/{board_id}/stacks')
         return response.json()
 
     # see https://deck.readthedocs.io/en/latest/API/#comments for API docs
@@ -76,49 +73,19 @@ class NextcloudDeckIssue(Issue):
     ASSIGNEE = 'nextclouddeckassignee'
 
     UDAS = {
-        AUTHOR: {
-            'type': 'string',
-            'label': 'Nextcloud Deck Issue Author',
-        },
-        BOARD_ID: {
-            'type': 'numeric',
-            'label': 'Nextcloud Deck Board ID',
-        },
-        BOARD_TITLE: {
-            'type': 'string',
-            'label': 'Nextcloud Deck Board Title',
-        },
-        STACK_ID: {
-            'type': 'numeric',
-            'label': 'Nextcloud Deck Stack ID',
-        },
-        STACK_TITLE: {
-            'type': 'string',
-            'label': 'Nextcloud Deck Stack Title',
-        },
-        CARD_ID: {
-            'type': 'numeric',
-            'label': 'Nextcloud Deck Card ID',
-        },
-        TITLE: {
-            'type': 'string',
-            'label': 'Nextcloud Deck Card Title',
-        },
-        DESCRIPTION: {
-            'type': 'string',
-            'label': 'Nextcloud Deck Card Description',
-        },
-        ORDER: {
-            'type': 'numeric',
-            'label': 'Nextcloud Deck Order',
-        },
-        ASSIGNEE: {
-            'type': 'string',
-            'label': 'Nextcloud Deck Assignee(s)',
-        }
+        AUTHOR: {'type': 'string', 'label': 'Nextcloud Deck Issue Author'},
+        BOARD_ID: {'type': 'numeric', 'label': 'Nextcloud Deck Board ID'},
+        BOARD_TITLE: {'type': 'string', 'label': 'Nextcloud Deck Board Title'},
+        STACK_ID: {'type': 'numeric', 'label': 'Nextcloud Deck Stack ID'},
+        STACK_TITLE: {'type': 'string', 'label': 'Nextcloud Deck Stack Title'},
+        CARD_ID: {'type': 'numeric', 'label': 'Nextcloud Deck Card ID'},
+        TITLE: {'type': 'string', 'label': 'Nextcloud Deck Card Title'},
+        DESCRIPTION: {'type': 'string', 'label': 'Nextcloud Deck Card Description'},
+        ORDER: {'type': 'numeric', 'label': 'Nextcloud Deck Order'},
+        ASSIGNEE: {'type': 'string', 'label': 'Nextcloud Deck Assignee(s)'},
     }
 
-    UNIQUE_KEY = (BOARD_ID, STACK_ID, CARD_ID,)
+    UNIQUE_KEY = (BOARD_ID, STACK_ID, CARD_ID)
 
     PRIORITY_MAP = {}  # FIXME
 
@@ -128,9 +95,10 @@ class NextcloudDeckIssue(Issue):
             'priority': self.get_priority(),
             'annotations': self.extra['annotations'],
             'tags': self.get_tags(),
-            'entry': datetime.datetime.fromtimestamp(self.record.get('createdAt'), tz=tzutc()),
+            'entry': datetime.datetime.fromtimestamp(
+                self.record.get('createdAt'), tz=tzutc()
+            ),
             'due': self.parse_date(self.record.get('duedate')),
-
             self.AUTHOR: self.record['owner']['uid'],
             self.BOARD_ID: self.extra['board']['id'],
             self.BOARD_TITLE: self.extra['board']['title'],
@@ -140,13 +108,15 @@ class NextcloudDeckIssue(Issue):
             self.TITLE: self.record['title'],
             self.DESCRIPTION: self.record['description'],
             self.ORDER: self.record['order'],
-            self.ASSIGNEE:
-                self.record['assignedUsers'][0]['participant']['uid']
-                if self.record['assignedUsers'] else None,
+            self.ASSIGNEE: self.record['assignedUsers'][0]['participant']['uid']
+            if self.record['assignedUsers']
+            else None,
         }
 
     def get_tags(self):
-        return self.get_tags_from_labels([label['title'] for label in self.record['labels']])
+        return self.get_tags_from_labels(
+            [label['title'] for label in self.record['labels']]
+        )
 
     def get_default_description(self):
         return self.build_default_description(title=self.record['title'])
@@ -163,7 +133,7 @@ class NextcloudDeckService(Service):
         self.client = NextcloudDeckClient(
             base_uri=self.config.base_uri,
             username=self.config.username,
-            password=self.config.password
+            password=self.config.password,
         )
 
     @staticmethod
@@ -174,7 +144,7 @@ class NextcloudDeckService(Service):
         return issue[issue.ASSIGNEE]
 
     def include(self, issue):
-        """ Return true if the issue in question should be included """
+        """Return true if the issue in question should be included"""
         if self.config.only_if_assigned:
             owner = self.get_owner(issue)
             include_owners = [self.config.only_if_assigned]
@@ -196,13 +166,14 @@ class NextcloudDeckService(Service):
         return True
 
     def annotations(self, card):
-        comments = (self.client.get_comments(card['id'])['ocs']['data']
-                    if self.main_config.annotation_comments else [])
+        comments = (
+            self.client.get_comments(card['id'])['ocs']['data']
+            if self.main_config.annotation_comments
+            else []
+        )
         return self.build_annotations(
-            ((
-                comment['actorDisplayName'],
-                comment['message'],
-            ) for comment in comments))
+            ((comment['actorDisplayName'], comment['message']) for comment in comments)
+        )
 
     def issues(self):
         for board in self.client.get_boards():
@@ -212,7 +183,7 @@ class NextcloudDeckService(Service):
                         extra = {
                             'board': board,
                             'stack': stack,
-                            'annotations': self.annotations(card)
+                            'annotations': self.annotations(card),
                         }
                         issue = self.get_issue_for_record(card, extra)
                         if self.include(issue):
