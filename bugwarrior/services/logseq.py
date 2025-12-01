@@ -224,16 +224,58 @@ class LogseqIssue(Issue):
         tags = re.findall(pattern, self.get_formatted_title())
         return [self._compress_tag_format(t).lstrip("#") for t in tags]
 
+    def get_deadline_date(self):
+        """Extract deadline from DB mode property or classic mode content."""
+        # DB mode: check for :logseq.property/deadline timestamp
+        deadline_ts = self.record.get(":logseq.property/deadline")
+        if deadline_ts:
+            try:
+                # Convert from milliseconds to seconds
+                return datetime.fromtimestamp(deadline_ts / 1000)
+            except (ValueError, TypeError) as e:
+                log.warning(f"Could not parse deadline timestamp {deadline_ts}: {e}")
+
+        # Fallback to classic mode parsing from content
+        content = self._get_content_field("block/title", ":block/title", "content")
+        if not content:
+            return None
+
+        for line in content.split("\n"):
+            if line.startswith("DEADLINE: "):
+                return self._parse_date_line(line)
+
+        return None
+
+    def get_scheduled_date(self):
+        """Extract scheduled date from DB mode property or classic mode content."""
+        # DB mode: check for :logseq.property/scheduled timestamp
+        scheduled_ts = self.record.get(":logseq.property/scheduled")
+        if scheduled_ts:
+            try:
+                # Convert from milliseconds to seconds
+                return datetime.fromtimestamp(scheduled_ts / 1000)
+            except (ValueError, TypeError) as e:
+                log.warning(f"Could not parse scheduled timestamp {scheduled_ts}: {e}")
+
+        # Fallback to classic mode parsing from content
+        content = self._get_content_field("block/title", ":block/title", "content")
+        if not content:
+            return None
+
+        for line in content.split("\n"):
+            if line.startswith("SCHEDULED: "):
+                return self._parse_date_line(line)
+
+        return None
+
     def get_annotations_from_content(self):
-        """Parse annotations and dates from block content."""
+        """Parse annotations from block content (excluding dates handled separately)."""
         annotations = []
-        scheduled_date = None
-        deadline_date = None
         in_logbook = False
 
         content = self._get_content_field("block/title", ":block/title", "content")
         if not content:
-            return annotations, scheduled_date, deadline_date
+            return annotations
 
         for line in content.split("\n"):
             if line.startswith(":LOGBOOK:"):
@@ -245,18 +287,17 @@ class LogseqIssue(Issue):
             if in_logbook or line.startswith("id::"):
                 continue
 
-            if line.startswith("SCHEDULED: "):
-                scheduled_date = self._parse_date_line(line)
-            elif line.startswith("DEADLINE: "):
-                deadline_date = self._parse_date_line(line)
-            else:
-                annotations.append(self._unescape_content(line))
+            # Skip SCHEDULED/DEADLINE lines (handled by separate methods)
+            if line.startswith("SCHEDULED: ") or line.startswith("DEADLINE: "):
+                continue
+
+            annotations.append(self._unescape_content(line))
 
         # Remove first line (the title itself)
         if annotations:
             annotations.pop(0)
 
-        return annotations, scheduled_date, deadline_date
+        return annotations
 
     def _parse_date_line(self, line):
         """Parse SCHEDULED or DEADLINE date lines."""
@@ -429,7 +470,10 @@ class LogseqIssue(Issue):
         """Convert Logseq task to taskwarrior format."""
         log.debug(f"Converting task {self.record.get('uuid')}")
 
-        annotations, scheduled_date, deadline_date = self.get_annotations_from_content()
+        # Get dates from DB mode properties or classic mode content
+        scheduled_date = self.get_scheduled_date()
+        deadline_date = self.get_deadline_date()
+        annotations = self.get_annotations_from_content()
 
         # Calculate wait date (earliest of scheduled/deadline, or SOMEDAY)
         wait_date = min(
