@@ -6,7 +6,7 @@ import typing
 
 from dateutil.tz.tz import tzutc
 from jira.client import JIRA as BaseJIRA
-import pydantic.v1
+from pydantic import BeforeValidator, model_validator
 from requests.cookies import RequestsCookieJar
 
 from bugwarrior import config
@@ -27,37 +27,33 @@ class ExtraFieldNotFoundError(Exception):
         super().__init__(self.message)
 
 
-class JiraExtraFields(frozenset):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+def parse_jira_extra_fields(extra_fields_raw) -> "list[JiraExtraField] | None":
+    if extra_fields_raw is None:
+        return None
+    try:  # ini
+        extra_fields_list = extra_fields_raw.split(',')
+    except AttributeError:  # toml
+        extra_fields_list = extra_fields_raw
+    extra_fields = []
+    for extra_field_raw in extra_fields_list:
+        split_extra_field = extra_field_raw.strip().split(":", maxsplit=2)
 
-    @classmethod
-    def validate(cls, extra_fields_raw):
-        try:  # ini
-            extra_fields_list = extra_fields_raw.split(',')
-        except AttributeError:  # toml
-            extra_fields_list = extra_fields_raw
-        extra_fields = []
-        for extra_field_raw in extra_fields_list:
-            split_extra_field = extra_field_raw.strip().split(":", maxsplit=2)
+        try:
+            label, keys = split_extra_field
+        except (IndexError, ValueError):
+            raise ExtraFieldConfigError(extra_field_raw)
 
-            try:
-                label, keys = split_extra_field
-            except IndexError:
-                raise ExtraFieldConfigError(extra_field_raw)
+        keys = keys.split('.')
 
-            keys = keys.split('.')
-
-            extra_field = JiraExtraField(label, keys)
-            extra_fields.append(extra_field)
-        return extra_fields
+        extra_field = JiraExtraField(label, keys)
+        extra_fields.append(extra_field)
+    return extra_fields
 
 
 @dataclasses.dataclass
 class JiraExtraField:
     label: str
-    keys: typing.List[str]
+    keys: list[str]
 
     def extract_value(self, fields):
         """Extract a field value from a dictionary of Jira issue fields."""
@@ -72,9 +68,14 @@ class JiraExtraField:
         return value
 
 
+JiraExtraFields = typing.Annotated[
+    list[JiraExtraField], BeforeValidator(parse_jira_extra_fields)
+]
+
+
 class JiraConfig(config.ServiceConfig):
     service: typing.Literal['jira']
-    base_uri: pydantic.v1.AnyUrl
+    base_uri: config.StrippedTrailingSlashUrl
     username: str
 
     password: str = ''
@@ -93,15 +94,13 @@ class JiraConfig(config.ServiceConfig):
     only_if_assigned: config.UnsupportedOption[str] = ''
     also_unassigned: config.UnsupportedOption[bool] = False
 
-    @pydantic.v1.root_validator
-    def require_password_xor_PAT(cls, values):
-        if (values['password'] and values['PAT']) or not (
-            values['password'] or values['PAT']
-        ):
+    @model_validator(mode='after')
+    def require_password_xor_PAT(self):
+        if (self.password and self.PAT) or not (self.password or self.PAT):
             raise ValueError(
                 'section requires one of (not both):\n    password\n    PAT'
             )
-        return values
+        return self
 
 
 # The below `ObliviousCookieJar` and `JIRA` classes are MIT Licensed.

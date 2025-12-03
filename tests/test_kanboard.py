@@ -24,17 +24,17 @@ class TestKanboardServiceConfig(ConfigTest):
     def test_validate_config_no_url(self):
         self.config["kb"].update({"username": "myuser", "password": "mypass"})
 
-        self.assertValidationError('[kb]\nurl  <- field required')
+        self.assertValidationError('[kb]\nurl  <- Field required')
 
     def test_validate_config_no_username(self):
         self.config["kb"].update({"url": "http://one.com/", "password": "mypass"})
 
-        self.assertValidationError('[kb]\nusername  <- field required')
+        self.assertValidationError('[kb]\nusername  <- Field required')
 
     def test_validate_config_no_password(self):
         self.config["kb"].update({"url": "http://one.com/", "username": "myuser"})
 
-        self.assertValidationError('[kb]\npassword  <- field required')
+        self.assertValidationError('[kb]\npassword  <- Field required')
 
     def test_get_keyring_service(self):
         self.config["kb"].update(

@@ -2,7 +2,7 @@ import datetime
 import logging
 import typing
 
-import pydantic.v1
+from pydantic import model_validator
 import pytz
 import requests
 
@@ -22,16 +22,16 @@ class PagureConfig(config.ServiceConfig):
     repo: str = ''
 
     # optional
-    include_repos: config.ConfigList = config.ConfigList([])
-    exclude_repos: config.ConfigList = config.ConfigList([])
+    include_repos: config.ConfigList = []
+    exclude_repos: config.ConfigList = []
     import_tags: bool = False
     tag_template: str = '{{label}}'
 
-    @pydantic.v1.root_validator
-    def require_tag_or_repo(cls, values):
-        if not values['tag'] and not values['repo']:
+    @model_validator(mode='after')
+    def require_tag_or_repo(self):
+        if not self.tag and not self.repo:
             raise ValueError('section requires one of:\n    tag\n    repo')
-        return values
+        return self
 
 
 class PagureIssue(Issue):

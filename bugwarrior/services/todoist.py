@@ -1,10 +1,10 @@
 from dataclasses import asdict
 from datetime import datetime, time
 import logging
+import typing
 
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Task
-import typing_extensions
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
@@ -13,11 +13,11 @@ log = logging.getLogger(__name__)
 
 
 class TodoistConfig(config.ServiceConfig):
-    service: typing_extensions.Literal["todoist"]
+    service: typing.Literal["todoist"]
     token: str
     filter: str = "(view all)"
-    import_labels_as_tags = False
-    label_template = "{{label}}"
+    import_labels_as_tags: bool = False
+    label_template: str = "{{label}}"
     char_open_bracket: str = "〈"
     char_close_bracket: str = "〉"
 

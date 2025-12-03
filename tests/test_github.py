@@ -314,6 +314,55 @@ class TestGithubService(ServiceTest):
         self.assertEqual(issue["body"][:5], service.body(issue))
 
 
+class TestGithubValidation(ServiceTest):
+    SERVICE_CONFIG = {'service': 'github', 'login': 'tintin', 'token': 't0ps3cr3t'}
+
+    def setUp(self):
+        super().setUp()
+        self.config = {
+            'general': {'targets': ['myservice']},
+            'myservice': {**self.SERVICE_CONFIG, 'username': 'milou'},
+        }
+
+    def test_require_username_or_query(self):
+        self.config['myservice']['include_user_repos'] = 'false'
+        self.config['myservice'].pop('username')
+        self.assertValidationError('section requires one of')
+
+    def test_require_username_or_query_with_query(self):
+        self.config['myservice']['include_user_repos'] = 'false'
+        self.config['myservice'].pop('username')
+        self.config['myservice']['query'] = 'is:open reviewer:octocat'
+        self.validate()
+
+    def test_require_username_if_include_user_repos(self):
+        self.config['myservice'].pop('username')
+        self.config['myservice']['query'] = 'is:open'
+        self.assertValidationError('username required when include_user_repos is True')
+
+    def test_require_username_if_include_user_repos_disabled(self):
+        self.config['myservice'].pop('username')
+        self.config['myservice']['query'] = 'is:open'
+        self.config['myservice']['include_user_repos'] = 'false'
+        self.validate()
+
+    def test_issue_urls_consistent_with_host(self):
+        self.config['myservice']['issue_urls'] = (
+            'https://github.example.com/foo/bar/issues/1'
+        )
+        self.assertValidationError('inconsistent with host')
+
+    def test_issue_urls_invalid_path(self):
+        self.config['myservice']['issue_urls'] = 'https://github.com/foo/bar/invalid/1'
+        self.assertValidationError('is not a valid issue path')
+
+    def test_issue_urls_valid(self):
+        self.config['myservice']['issue_urls'] = (
+            'https://github.com/foo/bar/issues/1, https://github.com/foo/bar/pull/2'
+        )
+        self.validate()
+
+
 class TestGithubClient(TestCase):
     def test_api_url(self):
         auth = {'token': 'xxxx'}

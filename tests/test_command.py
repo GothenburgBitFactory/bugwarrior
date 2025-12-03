@@ -114,7 +114,7 @@ class TestPull(ConfigTest):
         self.config['general']['targets'] = 'my_service,my_broken_service'
         self.config['my_broken_service'] = {
             'service': 'bugzilla',
-            'bugzilla.base_uri': 'bugzilla.redhat.com',
+            'bugzilla.base_uri': 'https://bugzilla.redhat.com',
             'bugzilla.username': 'rbean@redhat.com',
         }
 
@@ -139,7 +139,7 @@ class TestPull(ConfigTest):
         self.config['general']['targets'] = 'my_service,my_broken_service'
         self.config['my_broken_service'] = {
             'service': 'bugzilla',
-            'bugzilla.base_uri': 'bugzilla.redhat.com',
+            'bugzilla.base_uri': 'https://bugzilla.redhat.com',
             'bugzilla.username': 'rbean@redhat.com',
         }
         self.write_rc(self.config)

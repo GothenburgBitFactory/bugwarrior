@@ -97,7 +97,7 @@ class Issue(abc.ABC):
     UDAS: dict
     #: Should be a tuple of field names (can be UDA names) that are usable for
     #: uniquely identifying an issue in the foreign system.
-    UNIQUE_KEY: list
+    UNIQUE_KEY: tuple[str, ...]
     #: Should be a dictionary of value-to-level mappings between the foreign
     #: system and the string values 'H', 'M' or 'L'.
     PRIORITY_MAP: dict
@@ -139,7 +139,7 @@ class Issue(abc.ABC):
         toggle_option='import_labels_as_tags',
         template_option='label_template',
         template_variable='label',
-    ) -> list:
+    ) -> list[str]:
         """Transform labels into suitable taskwarrior tags, respecting configuration options.
 
         :param `labels`: Returned from the service.
@@ -150,7 +150,7 @@ class Issue(abc.ABC):
             :ref:`field template<common_configuration:Field Templates>` context to refer to the
             label.
         """
-        tags = []
+        tags: list[str] = []
 
         if not getattr(self.config, toggle_option):
             return tags
@@ -238,9 +238,9 @@ class Service(abc.ABC):
     #: Which version of the API does this service implement?
     API_VERSION: float
     #: Which class should this service instantiate for holding these issues?
-    ISSUE_CLASS: Issue
+    ISSUE_CLASS: type[Issue]
     #: Which class defines this service's configuration options?
-    CONFIG_SCHEMA: schema.ServiceConfig
+    CONFIG_SCHEMA: type[schema.ServiceConfig]
 
     def __init__(
         self, config: schema.ServiceConfig, main_config: schema.MainSectionConfig

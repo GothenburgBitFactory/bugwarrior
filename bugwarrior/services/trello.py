@@ -19,9 +19,9 @@ class TrelloConfig(config.ServiceConfig):
     api_key: str
     token: str
 
-    include_boards: config.ConfigList = config.ConfigList([])
-    include_lists: config.ConfigList = config.ConfigList([])
-    exclude_lists: config.ConfigList = config.ConfigList([])
+    include_boards: config.ConfigList = []
+    include_lists: config.ConfigList = []
+    exclude_lists: config.ConfigList = []
     import_labels_as_tags: bool = False
     label_template: str = "{{label|replace(' ', '_')}}"
 

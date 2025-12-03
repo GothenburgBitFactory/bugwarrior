@@ -19,8 +19,8 @@ class NextcloudDeckConfig(config.ServiceConfig):
     # can be a password or an app-password
     password: str
 
-    include_board_ids: config.ConfigList = config.ConfigList([])
-    exclude_board_ids: config.ConfigList = config.ConfigList([])
+    include_board_ids: config.ConfigList = []
+    exclude_board_ids: config.ConfigList = []
 
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'

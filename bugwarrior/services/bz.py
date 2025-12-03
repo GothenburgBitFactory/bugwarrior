@@ -2,11 +2,10 @@ import datetime
 import logging
 import time
 import typing
-import urllib.parse
 import xmlrpc.client
 
 import bugzilla
-import pydantic.v1
+import pydantic
 import pytz
 
 from bugwarrior import config
@@ -15,27 +14,11 @@ from bugwarrior.services import Issue, Service
 log = logging.getLogger(__name__)
 
 
-class OptionalSchemeUrl(pydantic.v1.AnyUrl):
-    """
-    A temporary type to use during the deprecation period of scheme-less urls.
-    """
-
-    @classmethod
-    def validate(cls, value, field, config):
-        if not urllib.parse.urlparse(value).scheme:
-            value = f'https://{value}'
-            log.warning(
-                'Deprecation Warning: bugzilla.base_uri should include the '
-                f'scheme ("{value}"). In a future version this will be an '
-                'error.'
-            )
-        return super().validate(value.rstrip('/'), field, config)
-
-
 class BugzillaConfig(config.ServiceConfig):
     service: typing.Literal['bugzilla']
     username: str
-    base_uri: OptionalSchemeUrl
+    # NOTE: removed OptionalSchemeURl based on deprecation period
+    base_uri: config.StrippedTrailingSlashUrl
 
     password: str = ''
     api_key: str = ''
@@ -55,7 +38,7 @@ class BugzillaConfig(config.ServiceConfig):
         ]
     )
     include_needinfos: bool = False
-    query_url: typing.Optional[pydantic.v1.AnyUrl]
+    query_url: typing.Optional[pydantic.AnyUrl] = None
     force_rest: bool = False
     advanced: bool = False
 

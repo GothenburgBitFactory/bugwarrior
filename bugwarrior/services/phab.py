@@ -2,7 +2,7 @@ import logging
 import typing
 
 import phabricator
-import pydantic.v1
+import pydantic
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
@@ -13,9 +13,9 @@ log = logging.getLogger(__name__)
 class PhabricatorConfig(config.ServiceConfig):
     service: typing.Literal['phabricator']
 
-    user_phids: config.ConfigList = config.ConfigList([])
-    project_phids: config.ConfigList = config.ConfigList([])
-    host: typing.Optional[pydantic.v1.AnyUrl]
+    user_phids: config.ConfigList = []
+    project_phids: config.ConfigList = []
+    host: typing.Optional[pydantic.AnyUrl] = None
     ignore_cc: typing.Optional[bool] = None
     ignore_author: typing.Optional[bool] = None
     ignore_owner: bool = False

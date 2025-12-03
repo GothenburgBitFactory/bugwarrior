@@ -63,7 +63,7 @@ def parse_file(configpath: str) -> dict:
         config = {}
         for section in rawconfig.sections():
             if section in ['hooks', 'notifications']:
-                config[section] = rawconfig[section].items()
+                config[section] = dict(rawconfig[section].items())
             elif section == 'general':
                 config[section] = {
                     k.replace('log.', 'log_'): v for k, v in rawconfig[section].items()

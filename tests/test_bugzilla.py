@@ -46,15 +46,14 @@ class TestBugzillaServiceConfig(ConfigTest):
     def test_validate_config_api_key_no_username(self):
         self.config['mybz'].update({'base_uri': 'https://one.com/', 'api_key': '123'})
 
-        self.assertValidationError('[mybz]\nusername  <- field required')
+        self.assertValidationError('[mybz]\nusername  <- Field required')
 
-    def test_validate_legacy_schemeless_uri(self):
+    def test_validate_requires_scheme_in_uri(self):
         self.config['mybz'].update(
             {'base_uri': 'one.com/', 'username': 'me', 'password': 'mypas'}
         )
 
-        # no error expected
-        self.validate()
+        self.assertValidationError('base_uri  <- Input should be a valid URL')
 
 
 class TestBugzillaService(AbstractServiceTest, ServiceTest):

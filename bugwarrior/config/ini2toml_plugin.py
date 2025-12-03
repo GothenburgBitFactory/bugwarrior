@@ -5,10 +5,15 @@ import re
 import typing
 
 from ini2toml.types import IntermediateRepr, Translator
-import pydantic.v1
-from pydantic.v1 import BaseModel
+import pydantic
 
-from .schema import ConfigList, Hooks, MainSectionConfig, Notifications, ServiceConfig
+from .schema import (
+    Hooks,
+    MainSectionConfig,
+    Notifications,
+    ServiceConfig,
+    parse_config_list,
+)
 
 log = logging.getLogger(__name__)
 
@@ -22,19 +27,12 @@ def to_type(section: IntermediateRepr, key: str, converter: typing.Callable):
         section[key] = converter(val)
 
 
-class BooleanModel(BaseModel):
-    """
-    Use Pydantic to convert various strings to booleans.
-
-    "True", "False", "yes", "no", etc.
-    Adapted from https://docs.pydantic.dev/usage/types/#booleans
-    """
-
-    bool_value: bool
+# Use Pydantic to convert various strings to booleans.
+_bool_adapter = pydantic.TypeAdapter(bool)
 
 
 def to_bool(section: IntermediateRepr, key: str):
-    to_type(section, key, lambda val: BooleanModel(bool_value=val).bool_value)
+    to_type(section, key, _bool_adapter.validate_python)
 
 
 def to_int(section: IntermediateRepr, key: str):
@@ -42,22 +40,33 @@ def to_int(section: IntermediateRepr, key: str):
 
 
 def to_list(section: IntermediateRepr, key: str):
-    to_type(section, key, ConfigList.validate)
+    to_type(section, key, parse_config_list)
 
 
-def convert_section(section: IntermediateRepr, schema: BaseModel):
-    for prop, attrs in schema.schema()['properties'].items():
-        try:
-            t = attrs['type']
-        except KeyError:
-            pass  # optional
-        else:
-            if t == 'boolean':
-                to_bool(section, prop)
-            elif t == 'integer':
-                to_int(section, prop)
-            elif t == 'array':
-                to_list(section, prop)
+def get_field_type(attrs: dict) -> typing.Optional[str]:
+    if 'type' in attrs:
+        return attrs['type']
+    if 'anyOf' in attrs:
+        non_null_types = [
+            option.get('type')
+            for option in attrs['anyOf']
+            if option.get('type') != 'null'
+        ]
+        if len(non_null_types) == 1:
+            return non_null_types[0]
+    return None
+
+
+# NOTE: not sure about this one, but model_json_schema is definitely different than previous function
+def convert_section(section: IntermediateRepr, schema: type[pydantic.BaseModel]):
+    for prop, attrs in schema.model_json_schema()['properties'].items():
+        field_type = get_field_type(attrs)
+        if field_type == 'boolean':
+            to_bool(section, prop)
+        elif field_type == 'integer':
+            to_int(section, prop)
+        elif field_type == 'array':
+            to_list(section, prop)
 
 
 def process_values(doc: IntermediateRepr) -> IntermediateRepr:
@@ -112,7 +121,7 @@ def process_values(doc: IntermediateRepr) -> IntermediateRepr:
                 if service == 'gitlab' and 'verify_ssl' in section.keys():
                     try:
                         to_bool(section, 'verify_ssl')
-                    except pydantic.v1.ValidationError:
+                    except pydantic.ValidationError:
                         # verify_ssl is allowed to be a path
                         pass
 

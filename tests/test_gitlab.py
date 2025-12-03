@@ -626,6 +626,12 @@ class TestGitlabService(ConfigTest):
         self.assertEqual('M', self.service.config.default_mr_priority)
         self.assertEqual('H', self.service.config.default_todo_priority)
 
+    def test_default_priorities_fallback(self):
+        self.config['myservice']['default_priority'] = 'H'
+        self.assertEqual('H', self.service.config.default_issue_priority)
+        self.assertEqual('H', self.service.config.default_mr_priority)
+        self.assertEqual('H', self.service.config.default_todo_priority)
+
     def test_body_zero_limit(self):
         self.config['myservice']['body_length'] = 0
         issue = dict(description="A very short issue body.  Fixes #42.")

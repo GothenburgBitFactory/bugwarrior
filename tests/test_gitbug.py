@@ -92,4 +92,4 @@ class TestGitBugConfig(ConfigTest):
 
     def test_home_path_expansion(self):
         expected = self.tempdir + "/custom-gitbug-repo"
-        self.assertEqual(self.config.path, expected)
+        self.assertEqual(str(self.config.path), expected)

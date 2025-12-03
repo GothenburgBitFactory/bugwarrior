@@ -5,6 +5,7 @@ import sys
 import typing
 from urllib.parse import quote
 
+from pydantic import BeforeValidator
 import requests
 
 from bugwarrior import config
@@ -12,15 +13,7 @@ from bugwarrior.services import Client, Issue, Service
 
 log = logging.getLogger(__name__)
 
-
-class EscapedStr(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value):
-        return quote(value)
+EscapedStr = typing.Annotated[str, BeforeValidator(quote)]
 
 
 class AzureDevopsConfig(config.ServiceConfig):
@@ -29,9 +22,8 @@ class AzureDevopsConfig(config.ServiceConfig):
     project: EscapedStr
     organization: EscapedStr
 
-    host: config.NoSchemeUrl = config.NoSchemeUrl(
-        'dev.azure.com', scheme='https', host='azure.com'
-    )
+    # NOTE: I don't understand why we had a scheme passed in NoSchemUrl here
+    host: config.NoSchemeUrl = 'dev.azure.com'
     wiql_filter: str = ''
 
 

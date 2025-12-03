@@ -1,7 +1,7 @@
 import logging
 import typing
 
-import pydantic.v1
+from pydantic import computed_field
 import requests
 
 from bugwarrior import config
@@ -29,23 +29,20 @@ class YoutrackConfig(config.ServiceConfig):
     only_if_assigned: config.UnsupportedOption[str] = ''
     also_unassigned: config.UnsupportedOption[bool] = False
 
-    # added during validation (computed field support will land in pydantic-2)
-    base_url: str = ''
-
-    @pydantic.v1.root_validator
-    def compute_base_url(cls, values):
-        if values['use_https']:
+    @computed_field
+    @property
+    def base_url(self) -> str:
+        if self.use_https:
             scheme = 'https'
             port = 443
         else:
             scheme = 'http'
             port = 80
-        port = values['port'] or port
-        values['base_url'] = f'{scheme}://{values["host"]}:{port}'
-        if values['incloud_instance']:
-            values['base_url'] += '/youtrack'
-
-        return values
+        port = self.port or port
+        base_url = f'{scheme}://{self.host}:{port}'
+        if self.incloud_instance:
+            base_url += '/youtrack'
+        return base_url
 
 
 class YoutrackIssue(Issue):

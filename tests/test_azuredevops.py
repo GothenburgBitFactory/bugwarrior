@@ -127,21 +127,21 @@ class TestAzureDevopsServiceConfig(ConfigTest):
     def test_validate_config_no_organization(self):
         self.config["test_ado"].update({"project": "test_project", "PAT": "myPAT"})
 
-        self.assertValidationError('[test_ado]\norganization  <- field required')
+        self.assertValidationError('[test_ado]\norganization  <- Field required')
 
     def test_validate_config_no_project(self):
         self.config["test_ado"].update(
             {"organization": "http://one.com/", "PAT": "myPAT"}
         )
 
-        self.assertValidationError('[test_ado]\nproject  <- field required')
+        self.assertValidationError('[test_ado]\nproject  <- Field required')
 
     def test_validate_config_no_PAT(self):
         self.config["test_ado"].update(
             {"organization": "http://one.com/", "project": "test_project"}
         )
 
-        self.assertValidationError('[test_ado]\nPAT  <- field required')
+        self.assertValidationError('[test_ado]\nPAT  <- Field required')
 
 
 class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
