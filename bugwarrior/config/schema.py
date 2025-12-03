@@ -1,5 +1,4 @@
 import logging
-from operator import methodcaller
 import os
 from pathlib import Path
 import re
@@ -85,7 +84,9 @@ def _expand_env_vars(value: str | Path) -> str:
 
 
 ExpandedPath = Annotated[
-    Path, BeforeValidator(_expand_env_vars), AfterValidator(methodcaller("expanduser"))
+    Path,
+    BeforeValidator(_expand_env_vars),
+    AfterValidator(lambda path: path.expanduser()),
 ]
 
 
