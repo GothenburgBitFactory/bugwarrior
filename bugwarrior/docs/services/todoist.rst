@@ -113,7 +113,7 @@ Also, if you would like to control how these labels are created, you can
 specify a template used for converting the Todoist label into a Taskwarrior
 tag.
 
-For example, to prefix all incoming labels with the string 'todoist_' (perhaps
+For example, to prefix all incoming labels with the string 'todoist\_' (perhaps
 to differentiate them from any existing tags you might have), you could
 add the following configuration option:
 

@@ -39,13 +39,14 @@ kanboard = ["kanboard"]
 keyring = ["keyring"]
 phabricator = ["phabricator"]
 test = [
-   "docutils",
+   # sphinx-inline-tabs is incompatible with docutils-0.22 https://github.com/pradyunsg/sphinx-inline-tabs/pull/51
+   "docutils<0.22",
    "pytest",
    "pytest-subtests",
    "responses",
    "ruff",
-   # sphinx-click doesn't yet support sphinx-9.0. https://github.com/click-contrib/sphinx-click/issues/157
-   "sphinx>=1.0,<9.0",
+   "sphinx>=1.0,<9.0 ; python_version <= '3.10'",
+   "sphinx>=9.0.3 ; python_version >= '3.11'",
    "sphinx-click",
    "sphinx-inline-tabs",
 
