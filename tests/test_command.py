@@ -90,12 +90,15 @@ class TestPull(ConfigTest):
         A broken `bugwarrior pull` invocation.
         """
         with self.caplog.at_level(logging.ERROR):
-            self.runner.invoke(command.cli, args=('pull'))
+            self.runner.invoke(command.cli, args=('pull', '--debug'))
 
         self.assertNotEqual(self.caplog.records, [])
-        self.assertEqual(len(self.caplog.records), 1)
+        self.assertEqual(len(self.caplog.records), 2)
         self.assertEqual(
-            self.caplog.records[0].message,
+            self.caplog.records[0].message, "Worker for [my_service] failed: message"
+        )
+        self.assertEqual(
+            self.caplog.records[1].message,
             "Aborted [my_service] due to critical error.",
         )
 
@@ -121,7 +124,7 @@ class TestPull(ConfigTest):
         self.write_rc(self.config)
 
         with self.caplog.at_level(logging.INFO):
-            self.runner.invoke(command.cli, args=('pull'))
+            self.runner.invoke(command.cli, args=('pull', '--debug'))
 
         logs = [rec.message for rec in self.caplog.records]
         self.assertIn('Aborted [my_broken_service] due to critical error.', logs)
@@ -149,7 +152,7 @@ class TestPull(ConfigTest):
             with mock.patch(
                 'bugwarrior.services.bz.BugzillaService.issues', fake_bz_issues
             ):
-                self.runner.invoke(command.cli, args=('pull'))
+                self.runner.invoke(command.cli, args=('pull', '--debug'))
         logs = [rec.message for rec in self.caplog.records]
         self.assertIn('Adding 2 tasks', logs)
 
@@ -159,7 +162,7 @@ class TestPull(ConfigTest):
                 'bugwarrior.services.bz.BugzillaService.issues',
                 lambda self: (_ for _ in ()).throw(Exception('message')),
             ):
-                self.runner.invoke(command.cli, args=('pull'))
+                self.runner.invoke(command.cli, args=('pull', '--debug'))
         logs = [rec.message for rec in self.caplog.records]
 
         # Make sure my_broken_service failed while my_service succeeded.
