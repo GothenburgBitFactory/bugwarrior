@@ -13,8 +13,9 @@ class TestTemplates(ServiceTest):
 
     def get_issue(self, templates=None, issue=None, description=None, add_tags=None):
         templates = {} if templates is None else templates
+        template_kwargs = {f'{key}_template': value for key, value in templates.items()}
         config = ServiceConfig(
-            target='dummy', templates=templates, add_tags=add_tags if add_tags else []
+            target='dummy', add_tags=add_tags if add_tags else [], **template_kwargs
         )
         main_config = MainSectionConfig(interactive=False, targets=[])
 

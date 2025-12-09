@@ -27,8 +27,6 @@ def to_type(section: IntermediateRepr, key: str, converter: typing.Callable):
         section[key] = converter(val)
 
 
-
-
 def to_bool(section: IntermediateRepr, key: str):
     to_type(section, key, pydantic.TypeAdapter(bool).validate_python)
 

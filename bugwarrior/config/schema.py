@@ -48,7 +48,6 @@ def validate_no_scheme_url(value: str) -> str:
     # then validate as a proper URL
     url_with_scheme = f"https://{value}"
 
-
     return value.rstrip("/")
 
 
