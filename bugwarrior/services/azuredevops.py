@@ -22,7 +22,6 @@ class AzureDevopsConfig(config.ServiceConfig):
     project: EscapedStr
     organization: EscapedStr
 
-    # NOTE: I don't understand why we had a scheme passed in NoSchemUrl here
     host: config.NoSchemeUrl = 'dev.azure.com'
     wiql_filter: str = ''
 

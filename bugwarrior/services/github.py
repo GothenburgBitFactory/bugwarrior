@@ -35,7 +35,6 @@ class GithubConfig(config.ServiceConfig):
     exclude_pull_requests: bool = False
     include_user_issues: bool = True
     involved_issues: bool = False
-    # NOTE: why did we use a scheme with NoSchemeUrl ?
     host: config.NoSchemeUrl = 'github.com'
     body_length: int = sys.maxsize
     project_owner_prefix: bool = False
@@ -59,7 +58,7 @@ class GithubConfig(config.ServiceConfig):
             parsed_url = urllib.parse.urlparse(url)
             if parsed_url.netloc != values.get('host', 'github.com'):
                 raise ValueError(
-                    f'issue_urls: {url} inconsistent with host {values.get("host")}'
+                    f'issue_urls: {url} inconsistent with host {values.get("host", "github.com")}'
                 )
             if not re.match(r'^/.*/.*/(issues|pull)/[0-9]*$', parsed_url.path):
                 raise ValueError(

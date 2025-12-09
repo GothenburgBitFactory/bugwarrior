@@ -32,7 +32,6 @@ def validate_url(url: str):
     return str(AnyUrl(url)).rstrip("/")
 
 
-# NOTE: breaking change in pydantic v2: AnyUrl is not longer a subclass of str
 StrippedTrailingSlashUrl = Annotated[str, BeforeValidator(validate_url)]
 
 
@@ -49,15 +48,7 @@ def validate_no_scheme_url(value: str) -> str:
     # then validate as a proper URL
     url_with_scheme = f"https://{value}"
 
-    # NOTE: is this needed ?
-    try:
-        AnyUrl(url_with_scheme)
-    except Exception as exc:
-        raise PydanticCustomError(
-            "url_parsing", "Invalid URL format: {error}", {"error": str(exc)}
-        ) from exc
 
-    # NOTE: I did not migrate the user_required part, because it does not appear anywhere in the code
     return value.rstrip("/")
 
 
@@ -72,7 +63,7 @@ def parse_config_list(value: str | list[str]) -> list[str]:
             for item in re.split(r",(?![^{]*})", value.strip())
             if item != ""
         ]
-    return list(value)
+    return value
 
 
 ConfigList = Annotated[list[str], BeforeValidator(parse_config_list)]
@@ -185,6 +176,7 @@ class MainSectionConfig(BaseConfig):
     @computed_field
     @property
     def data(self) -> BugwarriorData:
+        """Local data storage."""
         return BugwarriorData(get_data_path(self.taskrc))
 
     shorten: bool = False
@@ -219,6 +211,7 @@ class Notifications(BaseConfig):
 
 
 class SchemaBase(BaseConfig):
+    # Allow extra top-level sections so all targets don't have to be selected.
     model_config = ConfigDict(extra="ignore")
 
     hooks: Hooks = Field(default_factory=Hooks)
@@ -356,7 +349,7 @@ class ServiceConfig(_ServiceConfig):
     templates: dict = {}
     target: typing.Optional[str] = None
 
-    # typing.Optional fields shared by all services.
+    # Optional fields shared by all services.
     only_if_assigned: str = ""
     also_unassigned: bool = False
     default_priority: Literal["", "L", "M", "H"] = "M"
@@ -397,9 +390,9 @@ class ServiceConfig(_ServiceConfig):
         # NOTE: 2. Since taskwarrior fields aren't updated often, shouldn't we define this list statically
         # NOTE: 3. this field is broken for ArrayFields such as annotations, right?
         if isinstance(values, dict):
-            templates = values.get("templates", {})
+            templates = {}
             for key in taskw.task.Task.FIELDS.keys():
-                template = values.pop(f"{key}_template", None)
+                template = values.get(f'{key}_template')
                 if template is not None:
                     templates[key] = template
             values["templates"] = templates

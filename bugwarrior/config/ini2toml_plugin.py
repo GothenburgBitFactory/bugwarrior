@@ -27,12 +27,10 @@ def to_type(section: IntermediateRepr, key: str, converter: typing.Callable):
         section[key] = converter(val)
 
 
-# Use Pydantic to convert various strings to booleans.
-_bool_adapter = pydantic.TypeAdapter(bool)
 
 
 def to_bool(section: IntermediateRepr, key: str):
-    to_type(section, key, _bool_adapter.validate_python)
+    to_type(section, key, pydantic.TypeAdapter(bool).validate_python)
 
 
 def to_int(section: IntermediateRepr, key: str):
