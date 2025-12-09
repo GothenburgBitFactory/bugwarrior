@@ -251,15 +251,15 @@ def raise_validation_error(msg, config_path, no_errors=1) -> typing.NoReturn:
     sys.exit(1)
 
 
-def inject_target(target_name: str):
-    """Create a BeforeValidator that injects the target name into the config dict."""
+def get_target_validator(targets):
+    @model_validator(mode='before')
+    @classmethod
+    def compute_target(cls, values):
+        for target in targets:
+            values[target]['target'] = target
+        return values
 
-    def _inject(v):
-        if isinstance(v, dict):
-            v["target"] = target_name
-        return v
-
-    return _inject
+    return compute_target
 
 
 def validate_config(config: dict, main_section: str, config_path: str) -> dict:
@@ -269,7 +269,7 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
     except KeyError:
         raise_validation_error(f"No section: '{main_section}'", config_path)
     try:
-        targets = TypeAdapter(ConfigList).validate_python(main["targets"])
+        targets = TypeAdapter(ConfigList).validate_python(main['targets'])
     except KeyError:
         raise_validation_error(
             f"No option 'targets' in section: '{main_section}'", config_path
@@ -281,36 +281,31 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
     servicemap = {}
     for target, serviceconfig in configmap.items():
         try:
-            servicemap[target] = serviceconfig["service"]
+            servicemap[target] = serviceconfig['service']
         except KeyError:
             raise_validation_error(
                 f"No option 'service' in section: '{target}'", config_path
             )
 
-    # NOTE: I think this could be less dynamic, maybe by using discriminated unions
-    # https://docs.pydantic.dev/2.0/usage/types/unions/#discriminated-unions-aka-tagged-unions
     # Construct Service Models
     target_schemas = {
-        target: (
-            Annotated[
-                get_service(service).CONFIG_SCHEMA,
-                BeforeValidator(inject_target(target)),
-            ],
-            ...,
-        )
+        target: (get_service(service).CONFIG_SCHEMA, ...)
         for target, service in servicemap.items()
     }
 
     # Construct Validation Model
     bugwarrior_config_model = pydantic.create_model(
-        "bugwarriorrc",
+        'bugwarriorrc',
         __base__=SchemaBase,
+        __validators__={'compute_target': get_target_validator(targets)},
         general=(MainSectionConfig, ...),
-        # NOTE: I add to change this, but not sure about my change though
-        **{
-            f"flavor.{name}": (MainSectionConfig, ...)
-            for name in config.get("flavor", {}).keys()
-        },
+        flavor=(
+            dict[str, MainSectionConfig],
+            {
+                flavor: (MainSectionConfig, ...)
+                for flavor in config.get('flavor', {}).values()
+            },
+        ),
         **target_schemas,
     )
 
@@ -338,8 +333,6 @@ _ServiceConfig = pydantic.create_model(
 # NOTE: I removed the deprecated fields
 class ServiceConfig(_ServiceConfig):
     """Pydantic base class for service configurations."""
-
-    model_config = ConfigDict(extra="forbid")
 
     # Added during validation (computed field)
     templates: dict = {}
@@ -381,10 +374,6 @@ class ServiceConfig(_ServiceConfig):
         generated issue was.
 
         """
-        # NOTE: 1. Not sure I understand why we try both "templates", and f"key_template".
-        # Couldn't we simply use "templates" as dict ? It would make the pydantic easiser to define
-        # NOTE: 2. Since taskwarrior fields aren't updated often, shouldn't we define this list statically
-        # NOTE: 3. this field is broken for ArrayFields such as annotations, right?
         if isinstance(values, dict):
             templates = {}
             for key in taskw.task.Task.FIELDS.keys():
