@@ -211,6 +211,39 @@ class TestValidation(ConfigTest):
         conf = self.validate()
         self.assertEqual(conf['my_kan'].url, 'https://kanboard.example.org')
 
+    def test_deprecated_filter_merge_requests(self):
+        conf = self.validate()
+        self.assertEqual(conf['my_gitlab'].include_merge_requests, True)
+
+        self.config['my_gitlab']['filter_merge_requests'] = 'true'
+        conf = self.validate()
+        self.assertEqual(conf['my_gitlab'].include_merge_requests, False)
+
+    def test_deprecated_filter_merge_requests_and_include_merge_requests(self):
+        self.config['my_gitlab']['filter_merge_requests'] = 'true'
+        self.config['my_gitlab']['include_merge_requests'] = 'true'
+        self.assertValidationError(
+            'filter_merge_requests and include_merge_requests are incompatible.'
+        )
+
+    def test_deprecated_project_name(self):
+        """We're just testing that deprecation doesn't break validation."""
+        self.config['general']['targets'] = [
+            'my_service',
+            'my_kan',
+            'my_gitlab',
+            'my_redmine',
+        ]
+        self.config['my_redmine'] = {
+            'service': 'redmine',
+            'url': 'https://example.com',
+            'key': 'mykey',
+        }
+        self.validate()
+
+        self.config['my_redmine']['project_name'] = 'myproject'
+        self.validate()
+
 
 class TestComputeTemplates(unittest.TestCase):
     def test_template(self):

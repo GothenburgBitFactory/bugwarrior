@@ -15,7 +15,9 @@ from pydantic import (
     ConfigDict,
     Field,
     TypeAdapter,
+    ValidationInfo,
     computed_field,
+    field_validator,
     model_validator,
 )
 from pydantic_core import ErrorDetails, PydanticCustomError
@@ -43,10 +45,6 @@ def validate_no_scheme_url(value: str) -> str:
             "URL should not include scheme ('{scheme}')",
             {"scheme": scheme},
         )
-
-    # Add a dummy scheme to leverage AnyUrl's validation (host, port, etc.)
-    # then validate as a proper URL
-    url_with_scheme = f"https://{value}"
 
     return value.rstrip("/")
 
@@ -169,15 +167,14 @@ class MainSectionConfig(BaseConfig):
     #: Interactive status.
     interactive: bool
 
-    # optional
-    taskrc: TaskrcPath = Field(default_factory=get_default_taskrc)
-
     @computed_field
     @property
     def data(self) -> BugwarriorData:
         """Local data storage."""
         return BugwarriorData(get_data_path(self.taskrc))
 
+    # optional
+    taskrc: TaskrcPath = Field(default_factory=get_default_taskrc)
     shorten: bool = False
     inline_links: bool = True
     annotation_links: bool = False
@@ -396,3 +393,31 @@ class ServiceConfig(_ServiceConfig):
                     templates[key] = template
             values["templates"] = templates
         return values
+
+    @field_validator('include_merge_requests', mode='after', check_fields=False)
+    @classmethod
+    def deprecate_filter_merge_requests(cls, value, info: ValidationInfo):
+        if not hasattr(cls, '_DEPRECATE_FILTER_MERGE_REQUESTS'):
+            return value
+
+        filter_mr = info.data.get('filter_merge_requests', 'Undefined')
+        if filter_mr != 'Undefined':
+            if value != 'Undefined':
+                raise ValueError(
+                    'filter_merge_requests and include_merge_requests are incompatible.'
+                )
+            log.warning(
+                'filter_merge_requests is deprecated in favor of include_merge_requests'
+            )
+            return not filter_mr
+        elif value == 'Undefined':
+            return True
+        return value
+
+    @field_validator('project_name', mode='after', check_fields=False)
+    @classmethod
+    def deprecate_project_name(cls, value):
+        if hasattr(cls, '_DEPRECATE_PROJECT_NAME'):
+            if value != '':
+                log.warning('project_name is deprecated in favor of project_template')
+        return value

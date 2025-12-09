@@ -1,6 +1,7 @@
 import logging
 import typing
 
+from pydantic import model_validator
 import requests
 
 from bugwarrior import config
@@ -10,6 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class BitbucketConfig(config.ServiceConfig):
+    _DEPRECATE_FILTER_MERGE_REQUESTS = True
     filter_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = 'Undefined'
 
     service: typing.Literal['bitbucket']
@@ -29,7 +31,15 @@ class BitbucketConfig(config.ServiceConfig):
     )
     project_owner_prefix: bool = False
 
-    # NOTE: I removed the deprecation validation, as it's quite old
+    @model_validator(mode='after')
+    def deprecate_password_authentication(self):
+        if self.login != 'Undefined' or self.password != 'Undefined':
+            log.warning(
+                'Bitbucket has disabled password authentication and, as such, '
+                'the "login" and "password" options are deprecated and should '
+                'be removed from your configuration file.'
+            )
+        return self
 
 
 class BitbucketIssue(Issue):

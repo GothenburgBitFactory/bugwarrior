@@ -2,22 +2,39 @@ import datetime
 import logging
 import time
 import typing
+from typing import Annotated
+import urllib
 import xmlrpc.client
 
 import bugzilla
 import pydantic
+from pydantic import BeforeValidator
 import pytz
 
 from bugwarrior import config
+from bugwarrior.config.schema import StrippedTrailingSlashUrl
 from bugwarrior.services import Issue, Service
 
 log = logging.getLogger(__name__)
 
 
+def validate_url(value: str):
+    if not urllib.parse.urlparse(value).scheme:
+        value = f'https://{value}'
+        log.warning(
+            'Deprecation Warning: bugzilla.base_uri should include the '
+            f'scheme ("{value}"). In a future version this will be an '
+            'error.'
+        )
+    return value
+
+
+OptionalSchemeUrl = Annotated[StrippedTrailingSlashUrl, BeforeValidator(validate_url)]
+
+
 class BugzillaConfig(config.ServiceConfig):
     service: typing.Literal['bugzilla']
     username: str
-    # NOTE: removed OptionalSchemeURl based on deprecation period
     base_uri: config.StrippedTrailingSlashUrl
 
     password: str = ''

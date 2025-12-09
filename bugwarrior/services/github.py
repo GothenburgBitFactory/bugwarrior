@@ -4,7 +4,7 @@ import sys
 import typing
 import urllib.parse
 
-from pydantic import model_validator
+from pydantic import ValidationInfo, field_validator, model_validator
 import requests
 
 from bugwarrior import config
@@ -42,31 +42,40 @@ class GithubConfig(config.ServiceConfig):
     ignore_user_comments: config.ConfigList = []
 
     @model_validator(mode='after')
+    def deprecate_password(self):
+        if self.password != 'Deprecated':
+            log.warning(
+                'Basic auth is no longer supported. Please remove '
+                '"password" in favor of "token".'
+            )
+        return self
+
+    @model_validator(mode='after')
     def require_username_or_query(self):
         if not self.username and not self.query:
             raise ValueError('section requires one of:\n    username\n    query')
         return self
 
-    @model_validator(mode='before')
+    @field_validator('issue_urls', mode='after')
     @classmethod
-    def issue_urls_consistent_with_host(cls, values):
+    def issue_urls_consistent_with_host(cls, value, info: ValidationInfo):
         issue_url_paths = []
-        issue_urls = values.get('issue_urls', [])
-        if isinstance(issue_urls, str):
-            issue_urls = [url.strip() for url in issue_urls.split(',') if url.strip()]
-        for url in issue_urls:
+
+        # host can be None if it raised a ValidationError (e.g. if it has a scheme)
+        host = info.data.get('host')
+
+        if host is None:
+            return value
+        for url in value:
             parsed_url = urllib.parse.urlparse(url)
-            if parsed_url.netloc != values.get('host', 'github.com'):
-                raise ValueError(
-                    f'issue_urls: {url} inconsistent with host {values.get("host", "github.com")}'
-                )
+            if parsed_url.netloc != host:
+                raise ValueError(f'issue_urls: {url} inconsistent with host {host}')
             if not re.match(r'^/.*/.*/(issues|pull)/[0-9]*$', parsed_url.path):
                 raise ValueError(
                     f'issue_urls: {parsed_url.path} is not a valid issue path'
                 )
             issue_url_paths.append(parsed_url.path)
-        values['issue_urls'] = issue_url_paths
-        return values
+        return issue_url_paths
 
     @model_validator(mode='after')
     def require_username_if_include_user_repos(self):
