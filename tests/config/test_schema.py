@@ -204,7 +204,9 @@ class TestValidation(ConfigTest):
 
     def test_no_scheme_url_validator_scheme(self):
         self.config['my_service']['host'] = 'https://github.com'
-        self.assertValidationError("host  <- URL should not include scheme ('https')")
+        self.assertValidationError(
+            "host = 'https://github.com'  <- URL should not include scheme ('https')"
+        )
 
     def test_stripped_trailing_slash_url(self):
         self.config['my_kan']['url'] = 'https://kanboard.example.org/'

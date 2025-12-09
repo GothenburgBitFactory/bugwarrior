@@ -53,7 +53,9 @@ class TestBugzillaServiceConfig(ConfigTest):
             {'base_uri': 'one.com/', 'username': 'me', 'password': 'mypas'}
         )
 
-        self.assertValidationError('base_uri  <- Input should be a valid URL')
+        self.assertValidationError(
+            "base_uri = 'one.com/'  <- Input should be a valid URL"
+        )
 
 
 class TestBugzillaService(AbstractServiceTest, ServiceTest):

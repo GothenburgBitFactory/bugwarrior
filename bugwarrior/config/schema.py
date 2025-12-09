@@ -20,7 +20,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from pydantic_core import ErrorDetails, PydanticCustomError
+from pydantic_core import PydanticCustomError
 import taskw
 
 from bugwarrior.collect import get_service
@@ -214,32 +214,29 @@ class SchemaBase(BaseConfig):
     notifications: Notifications = Field(default_factory=Notifications)
 
 
-class ValidationErrorEnhancedMessages(list):
-    """Pydantic v2 implementation using error.errors()."""
-
-    def __init__(self, error: pydantic.ValidationError):
-        super().__init__(self._format_error(e) for e in error.errors())
-
-    @staticmethod
-    def _format_error(error: ErrorDetails) -> str:
-        msg = error["msg"]
-        if error["type"] == "extra_forbidden":
+def get_validation_error_enhanced_messages(
+    error: pydantic.ValidationError,
+) -> list[str]:
+    errors = []
+    for _error in error.errors():
+        msg = _error["msg"]
+        if _error["type"] == "extra_forbidden":
             msg = "unrecognized option"
-        return f"{ValidationErrorEnhancedMessages.display_error_loc(error['loc'])}  <- {msg}\n"
-
-    def __str__(self):
-        return "\n".join(self)
-
-    @staticmethod
-    def display_error_loc(loc: tuple) -> str:
+        loc = _error["loc"]
         loc_len = len(loc)
+
         if loc_len == 1 or (loc_len > 1 and loc[1] == "__root__"):
-            return f"[{loc[0]}]"
+            formatted_error_loc = f"[{loc[0]}]"
         elif loc_len == 2:
-            return f"[{loc[0]}]\n{loc[1]}"
-        raise ValueError(
-            "Configuration should not be nested more than two layers deep."
-        )
+            formatted_error_loc = f"[{loc[0]}]\n{loc[1]}"
+            if _error["type"] not in {"missing", "extra_forbidden"}:
+                formatted_error_loc = f"{formatted_error_loc} = '{_error['input']}'"
+        else:
+            raise ValueError(
+                "Configuration should not be nested more than two layers deep."
+            )
+        errors.append(f"{formatted_error_loc}  <- {msg}\n")
+    return errors
 
 
 def raise_validation_error(msg, config_path, no_errors=1) -> typing.NoReturn:
@@ -315,8 +312,8 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
         # a bunch of calls to getattr(config, target) inhibits readability.
         return dict(bugwarrior_config_model(**config))
     except pydantic.ValidationError as e:
-        errors = ValidationErrorEnhancedMessages(e)
-        raise_validation_error(str(errors), config_path, no_errors=len(errors))
+        errors = get_validation_error_enhanced_messages(e)
+        raise_validation_error("\n".join(errors), config_path, no_errors=len(errors))
 
 
 # Dynamically add template fields to model.
@@ -330,7 +327,6 @@ _ServiceConfig = pydantic.create_model(
 )
 
 
-# NOTE: I removed the deprecated fields
 class ServiceConfig(_ServiceConfig):
     """Pydantic base class for service configurations."""
 
