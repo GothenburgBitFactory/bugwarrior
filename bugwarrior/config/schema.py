@@ -2,7 +2,6 @@ import logging
 import os
 from pathlib import Path
 import re
-from string import Template
 import sys
 import typing
 from typing import Annotated, Any, Generic, Literal
@@ -66,14 +65,9 @@ def parse_config_list(value: str | list[str]) -> list[str]:
 ConfigList = Annotated[list[str], BeforeValidator(parse_config_list)]
 
 
-def _expand_env_vars(value: str | Path) -> str:
-    """Expand $VAR and ${VAR} style environment variables."""
-    return Template(str(value)).safe_substitute(os.environ)
-
-
 ExpandedPath = Annotated[
     Path,
-    BeforeValidator(_expand_env_vars),
+    BeforeValidator(os.path.expandvars),
     AfterValidator(lambda path: path.expanduser()),
 ]
 
@@ -114,7 +108,7 @@ def get_default_taskrc() -> Path:
     # Allow $TASKRC override.
     env_taskrc = os.getenv("TASKRC")
     if env_taskrc:
-        path = Path(_expand_env_vars(env_taskrc)).expanduser()
+        path = Path(os.path.expandvars(env_taskrc)).expanduser()
         return _validate_file_exists(path)
 
     # Default to ~/.taskrc
