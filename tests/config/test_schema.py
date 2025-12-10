@@ -12,35 +12,6 @@ from bugwarrior.config import schema
 from ..base import ConfigTest
 
 
-class TestLoggingPath(unittest.TestCase):
-    def setUp(self):
-        self.dir = os.getcwd()
-        os.chdir(os.path.expanduser('~'))
-        self.adapter = TypeAdapter(schema.LoggingPath)
-
-    def test_log_relative_path(self):
-        self.assertEqual(
-            str(self.adapter.validate_python('bugwarrior.log')), 'bugwarrior.log'
-        )
-
-    def test_log_absolute_path(self):
-        filename = os.path.join(os.path.expandvars('$HOME'), 'bugwarrior.log')
-        self.assertEqual(str(self.adapter.validate_python(filename)), 'bugwarrior.log')
-
-    def test_log_userhome(self):
-        self.assertEqual(
-            str(self.adapter.validate_python('~/bugwarrior.log')), 'bugwarrior.log'
-        )
-
-    def test_log_envvar(self):
-        self.assertEqual(
-            str(self.adapter.validate_python('$HOME/bugwarrior.log')), 'bugwarrior.log'
-        )
-
-    def tearDown(self):
-        os.chdir(self.dir)
-
-
 class TestConfigList(unittest.TestCase):
     def setUp(self):
         self.adapter = TypeAdapter(schema.ConfigList)

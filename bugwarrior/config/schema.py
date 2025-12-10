@@ -72,22 +72,6 @@ ExpandedPath = Annotated[
 ]
 
 
-def _relativize_path(path: Path) -> Path:
-    """Convert path to relative path from cwd, or return absolute path if not possible."""
-    # NOTE: Path.relative_to() raises ValueError if path is not a subpath, unlike
-    # os.path.relpath() which can always compute a relative path using "../".
-    try:
-        return path.relative_to(Path.cwd())
-    except ValueError:
-        try:
-            return path.resolve().relative_to(Path.cwd().resolve())
-        except ValueError:
-            return path.resolve()
-
-
-LoggingPath = Annotated[ExpandedPath, AfterValidator(_relativize_path)]
-
-
 def _validate_file_exists(path: Path) -> Path:
     """Validate that path points to an existing file."""
     resolved = path.resolve()
@@ -185,7 +169,7 @@ class MainSectionConfig(BaseConfig):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "DISABLED"] = (
         "INFO"
     )
-    log_file: typing.Optional[LoggingPath] = None
+    log_file: typing.Optional[ExpandedPath] = None
 
 
 class Hooks(BaseConfig):

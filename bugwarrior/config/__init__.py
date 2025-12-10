@@ -8,7 +8,6 @@ from .load import BUGWARRIORRC, get_config_path, load_config  # noqa: F401
 from .schema import (
     ConfigList,  # noqa: F401
     ExpandedPath,  # noqa: F401
-    LoggingPath,  # noqa: F401
     MainSectionConfig,
     NoSchemeUrl,  # noqa: F401
     ServiceConfig,
