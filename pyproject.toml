@@ -18,6 +18,7 @@ classifiers=[
 dependencies = [
   "click",
   "dogpile.cache>=0.5.3",
+  "importlib-metadata",
   "jinja2>=2.7.2",
   "lockfile>=0.9.1",
   "pydantic[email]>=2",
@@ -47,9 +48,6 @@ test = [
    "sphinx>=1.0,<9.0",
    "sphinx-click",
    "sphinx-inline-tabs",
-
-   # Workaround https://github.com/python/importlib_metadata/issues/406
-   "importlib-metadata<5",
    # To make this installable with uvx/pipx and no additional options needed.
    "setuptools",
 ]
