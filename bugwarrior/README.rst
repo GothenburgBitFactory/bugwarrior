@@ -12,6 +12,7 @@ It currently supports the following remote resources:
 - `Azure DevOps <https://azure.microsoft.com/en-us/services/devops/>`_
 - `Bitbucket <https://bitbucket.org>`_
 - `Bugzilla <https://www.bugzilla.org/>`_
+- `Clickup <https://clickup.com/>`_
 - `Debian Bug Tracking System (BTS) <https://bugs.debian.org/>`_
 - `Gerrit <https://www.gerritcodereview.com/>`_
 - `Git-Bug <https://github.com/MichaelMure/git-bug>`_
