@@ -1,5 +1,5 @@
 Clickup
-======
+=======
 
 You can import tasks from a Clickup space using
 the ``clickup`` service name.

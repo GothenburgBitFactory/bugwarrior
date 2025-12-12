@@ -1,11 +1,8 @@
-import logging
 import datetime
-import sys
+import logging
 import typing
-from typing import Generator, List, Optional
-from urllib.parse import quote, urlencode
+from typing import Generator, Optional
 
-import pydantic.v1
 import requests
 
 from bugwarrior import config
@@ -79,13 +76,7 @@ class ClickupIssue(Issue):
     }
     UNIQUE_KEY = [ID]
 
-    PRIORITY_MAP = {
-        "urgent": "H",
-        "high": "M",
-        "normal": "L",
-        "low": "",
-        None: "",
-    }
+    PRIORITY_MAP = {"urgent": "H", "high": "M", "normal": "L", "low": "", None: ""}
 
     def to_taskwarrior(self):
         self.title = self.record["name"]
@@ -114,10 +105,7 @@ class ClickupIssue(Issue):
         }
 
     def get_default_description(self):
-        return self.build_default_description(
-            title=self.title,
-            url=self.record["url"],
-        )
+        return self.build_default_description(title=self.title, url=self.record["url"])
 
     @staticmethod
     def parse_timestamp(
