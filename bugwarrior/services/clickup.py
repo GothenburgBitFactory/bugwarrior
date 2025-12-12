@@ -19,6 +19,8 @@ class ClickupConfig(config.ServiceConfig):
     token: str
     team: int
 
+    default_priority: str = ""
+
 
 class ClickupClient(Client):
     """Abstraction of Clickup API v2"""
