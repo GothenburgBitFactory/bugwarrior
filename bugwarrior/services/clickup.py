@@ -32,7 +32,7 @@ class ClickupClient(Client):
         query = f"include_closed=false&page={page}"
         return f"{base_url}/team/{team_id}/task?{query}"
 
-    def get_tasks_for_team(self, team_id: int) -> Generator[dict]:
+    def get_tasks_for_team(self, team_id: int) -> Generator[dict, None, None]:
         headers = {"Authorization": self.token}
 
         page = 0
@@ -86,7 +86,7 @@ class ClickupIssue(Issue):
     }
 
     def to_taskwarrior(self):
-        self.title = self.record["name"],
+        self.title = self.record["name"]
 
         if not self.record["project"]["hidden"]:
             project = self.record["project"]["name"]
@@ -139,8 +139,22 @@ class ClickupService(Service):
 
     @staticmethod
     def get_keyring_service(config):
-        return f"clickup://"
+        return "clickup://"
+
+    def is_assigned(self, issue: dict) -> bool:
+        if self.config.only_if_assigned is None:
+            return True
+
+        if self.config.also_unassigned and len(issue["assignees"]) == 0:
+            return True
+
+        for assignee in issue["assignees"]:
+            if assignee["username"] == self.config.only_if_assigned:
+                return True
+
+        return False
 
     def issues(self):
         for task in self.client.get_tasks_for_team(self.config.team):
-            yield self.get_issue_for_record(task)
+            if self.is_assigned(task):
+                yield self.get_issue_for_record(task)
