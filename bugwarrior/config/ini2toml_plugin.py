@@ -53,7 +53,6 @@ def get_field_type(attrs: dict) -> typing.Optional[str]:
     return None
 
 
-# NOTE: not sure about this one, but model_json_schema is definitely different than previous function
 def convert_section(section: IntermediateRepr, schema: type[pydantic.BaseModel]):
     for prop, attrs in schema.model_json_schema()['properties'].items():
         field_type = get_field_type(attrs)
