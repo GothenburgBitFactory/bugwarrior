@@ -197,7 +197,7 @@ class TestPivotalTrackerServiceConfig(ConfigTest):
         )
 
         self.assertValidationError(
-            "[pivotal]\nversion = 'v1'  <- Input should be 'v5' or 'edge'"
+            "[pivotal]\nversion = v1  <- Input should be 'v5' or 'edge'"
         )
 
 

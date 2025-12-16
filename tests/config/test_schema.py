@@ -1,5 +1,6 @@
 import importlib
 import os
+from pathlib import Path
 import re
 import unittest
 
@@ -10,6 +11,27 @@ from pydantic import TypeAdapter
 from bugwarrior.config import schema
 
 from ..base import ConfigTest
+
+
+class TestExpandedPath(unittest.TestCase):
+    def setUp(self):
+        self.adapter = TypeAdapter(schema.ExpandedPath)
+        self.dir = os.getcwd()
+        os.chdir(os.path.expanduser('~'))
+        self.log = Path('./bugwarrior.log').absolute()
+
+    def test_log(self):
+        filename = os.path.join(os.path.expandvars('$HOME'), self.log)
+        self.assertEqual(self.adapter.validate_python(filename), self.log)
+
+    def test_log_userhome(self):
+        self.assertEqual(self.adapter.validate_python('~/bugwarrior.log'), self.log)
+
+    def test_log_envvar(self):
+        self.assertEqual(self.adapter.validate_python('$HOME/bugwarrior.log'), self.log)
+
+    def tearDown(self):
+        os.chdir(self.dir)
 
 
 class TestConfigList(unittest.TestCase):
@@ -154,7 +176,7 @@ class TestValidation(ConfigTest):
         self.config['my_service']['undeclared_field'] = 'extra'
 
         self.assertValidationError(
-            '[my_service]\nundeclared_field  <- unrecognized option'
+            '[my_service]\nundeclared_field = extra  <- unrecognized option'
         )
 
     def test_root_validator(self):
@@ -176,7 +198,7 @@ class TestValidation(ConfigTest):
     def test_no_scheme_url_validator_scheme(self):
         self.config['my_service']['host'] = 'https://github.com'
         self.assertValidationError(
-            "host = 'https://github.com'  <- URL should not include scheme ('https')"
+            "host = https://github.com  <- URL should not include scheme ('https')"
         )
 
     def test_stripped_trailing_slash_url(self):

@@ -188,8 +188,8 @@ class SchemaBase(BaseConfig):
     # Allow extra top-level sections so all targets don't have to be selected.
     model_config = ConfigDict(extra="ignore")
 
-    hooks: Hooks = Field(default_factory=Hooks)
-    notifications: Notifications = Field(default_factory=Notifications)
+    hooks: Hooks = Hooks()
+    notifications: Notifications = Notifications()
 
 
 def get_validation_error_enhanced_messages(
@@ -207,8 +207,8 @@ def get_validation_error_enhanced_messages(
             formatted_error_loc = f"[{loc[0]}]"
         elif loc_len == 2:
             formatted_error_loc = f"[{loc[0]}]\n{loc[1]}"
-            if _error["type"] not in {"missing", "extra_forbidden"}:
-                formatted_error_loc = f"{formatted_error_loc} = '{_error['input']}'"
+            if _error["type"] != "missing":
+                formatted_error_loc = f"{formatted_error_loc} = {_error['input']}"
         else:
             raise ValueError(
                 "Configuration should not be nested more than two layers deep."
@@ -288,7 +288,7 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
     try:
         # Convert top-level model to dict since target names are dynamic and
         # a bunch of calls to getattr(config, target) inhibits readability.
-        return dict(bugwarrior_config_model(**config))
+        return dict(bugwarrior_config_model.model_validate(config))
     except pydantic.ValidationError as e:
         errors = get_validation_error_enhanced_messages(e)
         raise_validation_error("\n".join(errors), config_path, no_errors=len(errors))
@@ -306,7 +306,10 @@ _ServiceConfig = pydantic.create_model(
 
 
 class ServiceConfig(_ServiceConfig):
-    """Pydantic base class for service configurations."""
+    """Pydantic_ base class for service configurations.
+
+    .. _Pydantic: https://docs.pydantic.dev/latest/
+    """
 
     # Added during validation (computed field)
     templates: dict = {}
@@ -348,13 +351,12 @@ class ServiceConfig(_ServiceConfig):
         generated issue was.
 
         """
-        if isinstance(values, dict):
-            templates = {}
-            for key in taskw.task.Task.FIELDS.keys():
-                template = values.get(f'{key}_template')
-                if template is not None:
-                    templates[key] = template
-            values["templates"] = templates
+        templates = {}
+        for key in taskw.task.Task.FIELDS.keys():
+            template = values.get(f'{key}_template')
+            if template is not None:
+                templates[key] = template
+        values["templates"] = templates
         return values
 
     @field_validator('include_merge_requests', mode='after', check_fields=False)
