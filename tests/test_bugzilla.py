@@ -48,13 +48,17 @@ class TestBugzillaServiceConfig(ConfigTest):
 
         self.assertValidationError('[mybz]\nusername  <- Field required')
 
-    def test_validate_requires_scheme_in_uri(self):
+    def test_validate_warns_when_scheme_missing_in_uri(self):
         self.config['mybz'].update(
             {'base_uri': 'one.com/', 'username': 'me', 'password': 'mypas'}
         )
 
-        self.assertValidationError(
-            "base_uri = 'one.com/'  <- Input should be a valid URL"
+        self.validate()
+
+        self.assertEqual(len(self.caplog.records), 1)
+        self.assertIn(
+            'bugzilla.base_uri should include the scheme',
+            self.caplog.records[0].message,
         )
 
 

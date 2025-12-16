@@ -35,7 +35,7 @@ OptionalSchemeUrl = Annotated[StrippedTrailingSlashUrl, BeforeValidator(validate
 class BugzillaConfig(config.ServiceConfig):
     service: typing.Literal['bugzilla']
     username: str
-    base_uri: config.StrippedTrailingSlashUrl
+    base_uri: OptionalSchemeUrl
 
     password: str = ''
     api_key: str = ''
