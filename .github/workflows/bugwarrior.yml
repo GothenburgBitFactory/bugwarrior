@@ -36,7 +36,6 @@ jobs:
 
           bugwarrior --version
           pytest --cov=bugwarrior --cov-branch tests
-          flake8
       - name: Coverage
         uses: codecov/codecov-action@v5
         with:

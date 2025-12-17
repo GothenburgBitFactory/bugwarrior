@@ -63,9 +63,7 @@ class KanboardIssue(Issue):
 
     def get_default_description(self):
         return self.build_default_description(
-            title=self.get_task_title(),
-            url=self.get_url(),
-            number=self.get_task_id(),
+            title=self.get_task_title(), url=self.get_url(), number=self.get_task_id()
         )
 
     def get_task_id(self):
@@ -106,10 +104,7 @@ class KanboardIssue(Issue):
     def _convert_timestamp_from_field(self, field):
         timestamp = int(self.record.get(field, 0))
         if timestamp:
-            return (
-                datetime.datetime.fromtimestamp(timestamp)
-                .astimezone(tzutc())
-            )
+            return datetime.datetime.fromtimestamp(timestamp).astimezone(tzutc())
 
 
 class KanboardService(Service):
@@ -121,7 +116,8 @@ class KanboardService(Service):
         super().__init__(*args, **kw)
         password = self.get_secret("password", self.config.username)
         self.client = Client(
-            f"{self.config.url}/jsonrpc.php", self.config.username, password)
+            f"{self.config.url}/jsonrpc.php", self.config.username, password
+        )
         default_query = f"status:open assignee:{self.config.username}"
         self.query = self.config.query or default_query
 

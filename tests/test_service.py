@@ -37,6 +37,7 @@ class DumbService(services.Service):
     """
     Implement the required methods but they shouldn't be called.
     """
+
     API_VERSION = 1.0
     ISSUE_CLASS = DumbIssue
     CONFIG_SCHEMA = DumbConfig
@@ -53,20 +54,17 @@ class DumbService(services.Service):
 
 
 class ServiceBase(ConfigTest):
-
     def setUp(self):
         super().setUp()
         self.config = {
-            'general': {
-                'targets': ['test'],
-                'interactive': 'false',
-            },
+            'general': {'targets': ['test'], 'interactive': 'false'},
             'test': {'service': 'test'},
         }
 
     def makeService(self):
-        with unittest.mock.patch('bugwarrior.config.schema.get_service',
-                                 lambda x: DumbService):
+        with unittest.mock.patch(
+            'bugwarrior.config.schema.get_service', lambda x: DumbService
+        ):
             conf = schema.validate_config(self.config, 'general', 'configpath')
         return DumbService(conf['test'], conf['general'])
 
@@ -95,7 +93,6 @@ class ServiceBase(ConfigTest):
 
 
 class TestService(ServiceBase):
-
     def test_architecture(self):
         self.checkArchitecture(services.Service)
 
@@ -103,49 +100,49 @@ class TestService(ServiceBase):
         service = self.makeService()
 
         annotations = service.build_annotations(
-            (('some_author', LONG_MESSAGE),), 'example.com')
-        self.assertEqual(annotations, [
-            '@some_author - Some message that is over 100 characters. Thi...'
-        ])
+            (('some_author', LONG_MESSAGE),), 'example.com'
+        )
+        self.assertEqual(
+            annotations,
+            ['@some_author - Some message that is over 100 characters. Thi...'],
+        )
 
     def test_build_annotations_limited(self):
         self.config['general']['annotation_length'] = '20'
         service = self.makeService()
 
         annotations = service.build_annotations(
-            (('some_author', LONG_MESSAGE),), 'example.com')
-        self.assertEqual(
-            annotations, ['@some_author - Some message that is...'])
+            (('some_author', LONG_MESSAGE),), 'example.com'
+        )
+        self.assertEqual(annotations, ['@some_author - Some message that is...'])
 
     def test_build_annotations_limitless(self):
         self.config['general']['annotation_length'] = None
         service = self.makeService()
 
         annotations = service.build_annotations(
-            (('some_author', LONG_MESSAGE),), 'example.com')
-        self.assertEqual(annotations, [
-            f'@some_author - {LONG_MESSAGE}'])
+            (('some_author', LONG_MESSAGE),), 'example.com'
+        )
+        self.assertEqual(annotations, [f'@some_author - {LONG_MESSAGE}'])
 
     def test_api_incompatibility_error(self):
         with unittest.mock.patch.object(
-                DumbService, 'API_VERSION', new=services.LATEST_API_VERSION+1):
+            DumbService, 'API_VERSION', new=services.LATEST_API_VERSION + 1
+        ):
             with self.assertRaisesRegex(ValueError, "Incompatible Service"):
                 self.makeService()
 
     def test_api_latest_version(self):
         basedir = pathlib.Path(__file__).parent.parent
-        with open(
-                basedir / 'bugwarrior/docs/other-services/api.rst', 'r') as f:
+        with open(basedir / 'bugwarrior/docs/other-services/api.rst', 'r') as f:
             header = f.readline().strip('\n')
-            match = re.fullmatch(
-                r'Python API v(?P<version>[0-9]+\.[0-9]+)', header)
+            match = re.fullmatch(r'Python API v(?P<version>[0-9]+\.[0-9]+)', header)
             latest_documented = float(match.groupdict()['version'])
 
         self.assertEqual(latest_documented, services.LATEST_API_VERSION)
 
 
 class TestIssue(ServiceBase):
-
     def test_architecture(self):
         self.checkArchitecture(services.Issue)
 
@@ -153,28 +150,24 @@ class TestIssue(ServiceBase):
         issue = self.makeIssue()
 
         description = issue.build_default_description(LONG_MESSAGE)
-        self.assertEqual(
-            description, '(bw)Is# - Some message that is over 100 chara')
+        self.assertEqual(description, '(bw)Is# - Some message that is over 100 chara')
 
     def test_build_default_description_limited(self):
         self.config['general']['description_length'] = '20'
         issue = self.makeIssue()
 
         description = issue.build_default_description(LONG_MESSAGE)
-        self.assertEqual(
-            description, '(bw)Is# - Some message that is')
+        self.assertEqual(description, '(bw)Is# - Some message that is')
 
     def test_build_default_description_limitless(self):
         self.config['general']['description_length'] = None
         issue = self.makeIssue()
 
         description = issue.build_default_description(LONG_MESSAGE)
-        self.assertEqual(
-            description, f'(bw)Is# - {LONG_MESSAGE}')
+        self.assertEqual(description, f'(bw)Is# - {LONG_MESSAGE}')
 
     def test_get_tags_from_labels_normalization(self):
         self.config['test']['import_labels_as_tags'] = True
         issue = self.makeIssue()
 
-        self.assertEqual(issue.get_tags_from_labels(['needs work']),
-                         ['needs_work'])
+        self.assertEqual(issue.get_tags_from_labels(['needs work']), ['needs_work'])

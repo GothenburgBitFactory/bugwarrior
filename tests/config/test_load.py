@@ -21,13 +21,11 @@ class ExampleTest(ConfigTest):
         super().setUp()
 
     def test_example_bugwarriorrc(self):
-        os.environ['BUGWARRIORRC'] = str(
-            self.basedir / 'example-bugwarriorrc')
+        os.environ['BUGWARRIORRC'] = str(self.basedir / 'example-bugwarriorrc')
         load.load_config('general', False, False)
 
     def test_example_bugwarrior_toml(self):
-        os.environ['BUGWARRIORRC'] = str(
-            self.basedir / 'example-bugwarrior.toml')
+        os.environ['BUGWARRIORRC'] = str(self.basedir / 'example-bugwarrior.toml')
         load.load_config('general', False, False)
 
 
@@ -86,7 +84,8 @@ class TestGetConfigPath(LoadTest):
         """
         self.assertEqual(
             load.get_config_path(),
-            os.path.join(self.tempdir, '.config/bugwarrior/bugwarriorrc'))
+            os.path.join(self.tempdir, '.config/bugwarrior/bugwarriorrc'),
+        )
 
     def test_BUGWARRIORRC(self):
         """
@@ -133,20 +132,24 @@ class TestParseFile(LoadTest):
     def test_toml(self):
         config_path = self.create('.bugwarrior.toml')
         with open(config_path, 'w') as fout:
-            fout.write(textwrap.dedent("""
+            fout.write(
+                textwrap.dedent("""
                 [general]
                 foo = "bar"
-            """))
+            """)
+            )
 
         load.parse_file(config_path)
 
     def test_toml_invalid(self):
         config_path = self.create('.bugwarrior.toml')
         with open(config_path, 'w') as fout:
-            fout.write(textwrap.dedent("""
+            fout.write(
+                textwrap.dedent("""
                 [general
                 foo = "bar"
-            """))
+            """)
+            )
 
         with self.assertRaises(tomllib.TOMLDecodeError):
             load.parse_file(config_path)
@@ -154,10 +157,12 @@ class TestParseFile(LoadTest):
     def test_ini(self):
         config_path = self.create('.bugwarriorrc')
         with open(config_path, 'w') as fout:
-            fout.write(textwrap.dedent("""
+            fout.write(
+                textwrap.dedent("""
                 [general]
                 foo = bar
-            """))
+            """)
+            )
         config = load.parse_file(config_path)
 
         self.assertEqual(config, {'general': {'foo': 'bar'}})
@@ -165,10 +170,12 @@ class TestParseFile(LoadTest):
     def test_ini_invalid(self):
         config_path = self.create('.bugwarriorrc')
         with open(config_path, 'w') as fout:
-            fout.write(textwrap.dedent("""
+            fout.write(
+                textwrap.dedent("""
                 [general
                 foo = bar
-            """))
+            """)
+            )
 
         with self.assertRaises(configparser.MissingSectionHeaderError):
             load.parse_file(config_path)
@@ -180,14 +187,16 @@ class TestParseFile(LoadTest):
 
         config_path = self.create('.bugwarriorrc')
         with open(config_path, 'w') as fout:
-            fout.write(textwrap.dedent("""
+            fout.write(
+                textwrap.dedent("""
                 [general]
                 foo = bar
                 log.level = DEBUG
                 [baz]
                 service = qux
                 qux.optionname
-            """))
+            """)
+            )
         config = load.parse_file(config_path)
 
         self.assertIn('optionname', config['baz'])
@@ -199,13 +208,15 @@ class TestParseFile(LoadTest):
     def test_ini_missing_prefix(self):
         config_path = self.create('.bugwarriorrc')
         with open(config_path, 'w') as fout:
-            fout.write(textwrap.dedent("""
+            fout.write(
+                textwrap.dedent("""
                 [general]
                 foo = bar
                 [baz]
                 service = qux
                 optionname
-            """))
+            """)
+            )
 
         with self.assertRaises(SystemExit):
             load.parse_file(config_path)
@@ -213,13 +224,15 @@ class TestParseFile(LoadTest):
     def test_ini_wrong_prefix(self):
         config_path = self.create('.bugwarriorrc')
         with open(config_path, 'w') as fout:
-            fout.write(textwrap.dedent("""
+            fout.write(
+                textwrap.dedent("""
                 [general]
                 foo = bar
                 [baz]
                 service = qux
                 wrong.optionname
-            """))
+            """)
+            )
 
         with self.assertRaises(SystemExit):
             load.parse_file(config_path)

@@ -1,15 +1,13 @@
+from dataclasses import asdict
+from datetime import datetime, time
 import logging
 
 from todoist_api_python.api import TodoistAPI
+from todoist_api_python.models import Task
 import typing_extensions
 
-from datetime import datetime, time
-from dataclasses import asdict
-
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, Client
-
-from todoist_api_python.models import Task
+from bugwarrior.services import Client, Issue, Service
 
 log = logging.getLogger(__name__)
 
@@ -90,58 +88,20 @@ class TodoistIssue(Issue):
     SECTION = "todoistsection"
     URL = "todoisturl"
 
-    PRIORITY_MAP = {
-        4: "H",
-        3: "M",
-        2: "L",
-        1: None,
-    }
+    PRIORITY_MAP = {4: "H", 3: "M", 2: "L", 1: None}
 
     UDAS = {
-        ID: {
-            "type": "string",
-            "label": "Todoist ID",
-        },
-        CONTENT: {
-            "type": "string",
-            "label": "Todoist Content",
-        },
-        DESCRIPTION: {
-            "type": "string",
-            "label": "Todoist Description",
-        },
-        DUE: {
-            "type": "date",
-            "label": "Todoist Due Date",
-        },
-        DEADLINE: {
-            "type": "date",
-            "label": "Todoist Deadline Date",
-        },
-        DURATION: {
-            "type": "string",
-            "label": "Todoist Duration",
-        },
-        SECTION: {
-            "type": "string",
-            "label": "Todoist Section",
-        },
-        ASSIGNEE: {
-            "type": "string",
-            "label": "Todoist Assignee",
-        },
-        ASSIGNER: {
-            "type": "string",
-            "label": "Todoist Assigner",
-        },
-        URL: {
-            "type": "string",
-            "label": "Todoist URL",
-        },
-        PARENT_ID: {
-            "type": "string",
-            "label": "Todoist Parent ID",
-        }
+        ID: {"type": "string", "label": "Todoist ID"},
+        CONTENT: {"type": "string", "label": "Todoist Content"},
+        DESCRIPTION: {"type": "string", "label": "Todoist Description"},
+        DUE: {"type": "date", "label": "Todoist Due Date"},
+        DEADLINE: {"type": "date", "label": "Todoist Deadline Date"},
+        DURATION: {"type": "string", "label": "Todoist Duration"},
+        SECTION: {"type": "string", "label": "Todoist Section"},
+        ASSIGNEE: {"type": "string", "label": "Todoist Assignee"},
+        ASSIGNER: {"type": "string", "label": "Todoist Assigner"},
+        URL: {"type": "string", "label": "Todoist URL"},
+        PARENT_ID: {"type": "string", "label": "Todoist Parent ID"},
     }
 
     UNIQUE_KEY = (ID,)
@@ -241,10 +201,7 @@ class TodoistService(Service):
 
         log.info(f"Using Todoist filter: {filter}")
 
-        self.client = TodoistClient(
-            token=self.token,
-            filter=filter,
-        )
+        self.client = TodoistClient(token=self.token, filter=filter)
 
     @staticmethod
     def get_keyring_service(config):

@@ -1,9 +1,10 @@
 [project]
 name = "bugwarrior"
-version = "2.0.0-alpha"
+version = "2.0.0.post"
 description = "a command line utility for updating your local taskwarrior database from your forge issue trackers"
 readme = "bugwarrior/README.rst"
-requires-python = ">=3.10,<4"
+# pydantic.v1 does not support python-3.14 See <https://github.com/GothenburgBitFactory/bugwarrior/issues/998>.
+requires-python = ">=3.10,<3.14"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE.txt"]
 keywords=["task", "taskwarrior", "todo", "github"]
@@ -17,6 +18,7 @@ classifiers=[
 dependencies = [
   "click",
   "dogpile.cache>=0.5.3",
+  "importlib-metadata",
   "jinja2>=2.7.2",
   "lockfile>=0.9.1",
   "pydantic[email]>=2",
@@ -24,8 +26,7 @@ dependencies = [
   "pytz",
   "requests",
   "taskw>=0.8",
-  # Needed for backwards compatibility with python<=3.10.
-  "tomli",
+  "tomli ; python_version <= '3.10'",
 ]
 
 [project.optional-dependencies]
@@ -39,16 +40,16 @@ keyring = ["keyring"]
 phabricator = ["phabricator"]
 test = [
    "docutils",
-   "flake8",
    "pytest",
    "pytest-subtests",
    "responses",
-   "sphinx>=1.0",
+   "ruff",
+   # sphinx-click doesn't yet support sphinx-9.0. https://github.com/click-contrib/sphinx-click/issues/157
+   "sphinx>=1.0,<9.0",
    "sphinx-click",
    "sphinx-inline-tabs",
-
-   # Workaround https://github.com/python/importlib_metadata/issues/406
-   "importlib-metadata<5",
+   # To make this installable with uvx/pipx and no additional options needed.
+   "setuptools",
 ]
 todoist = ["todoist_api_python>=3.0.0"]
 trac = ["offtrac"]
@@ -93,6 +94,18 @@ todoist = "bugwarrior.services.todoist:TodoistService"
 
 [project.entry-points."ini2toml.processing"]
 bugwarrior = "bugwarrior.config.ini2toml_plugin:activate"
+
+[tool.ruff.format]
+quote-style = "preserve"
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "W", "I"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-sort-within-sections = true
+split-on-trailing-comma = false
 
 [tool.setuptools.packages.find]
 include = ["bugwarrior*"]

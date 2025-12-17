@@ -1,14 +1,13 @@
+import json
+import logging
 import re
 import typing
-import json
 
-import requests
 import pydantic
+import requests
 
 from bugwarrior import config
-from bugwarrior.services import Service, Issue, Client
-
-import logging
+from bugwarrior.services import Client, Issue, Service
 
 log = logging.getLogger(__name__)
 
@@ -81,9 +80,14 @@ class LinearIssue(Issue):
             return r
 
         return {
-            "project": re.sub(
-                r"[^a-zA-Z0-9]", "_", get(get(self.record, "project", {}), "name", "")
-            ).lower() or None,
+            "project": (
+                re.sub(
+                    r"[^a-zA-Z0-9]",
+                    "_",
+                    get(get(self.record, "project", {}), "name", ""),
+                ).lower()
+                or None
+            ),
             "priority": self.config.default_priority,
             "annotations": get(self.extra, "annotations", []),
             "tags": self.get_tags(),
@@ -125,7 +129,10 @@ class LinearService(Service, Client):
 
         self.session = requests.Session()
         self.session.headers.update(
-            {"Authorization": self.get_secret("api_token"), "Content-Type": "application/json"}
+            {
+                "Authorization": self.get_secret("api_token"),
+                "Content-Type": "application/json",
+            }
         )
 
         self.filter = []
@@ -191,15 +198,15 @@ class LinearService(Service, Client):
         """
         data = {
             "query": self.query,
-            "variables": {
-                "filter": {"and": self.filter} if self.filter else {},
-            },
+            "variables": {"filter": {"and": self.filter} if self.filter else {}},
         }
         response = self.session.post(self.config.host, data=json.dumps(data))
         res = self.json_response(response)
 
         if "errors" in res:
-            messages = [error.get("message", "Unknown error") for error in res['errors']]
+            messages = [
+                error.get("message", "Unknown error") for error in res['errors']
+            ]
             raise ValueError(messages.join("; "))
 
         return res.get("data", {}).get("issues", {}).get("nodes", [])

@@ -15,7 +15,6 @@ class UDAs(Directive):
     has_content = True
 
     def run(self):
-
         package = '.'.join(self.arguments[0].split('.')[:-1])
         klass = self.arguments[0].split('.')[-1]
 

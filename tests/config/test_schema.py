@@ -17,27 +17,21 @@ class TestLoggingPath(unittest.TestCase):
 
     def test_log_relative_path(self):
         self.assertEqual(
-            schema.LoggingPath.validate('bugwarrior.log'),
-            'bugwarrior.log',
+            schema.LoggingPath.validate('bugwarrior.log'), 'bugwarrior.log'
         )
 
     def test_log_absolute_path(self):
         filename = os.path.join(os.path.expandvars('$HOME'), 'bugwarrior.log')
-        self.assertEqual(
-            schema.LoggingPath.validate(filename),
-            'bugwarrior.log',
-        )
+        self.assertEqual(schema.LoggingPath.validate(filename), 'bugwarrior.log')
 
     def test_log_userhome(self):
         self.assertEqual(
-            schema.LoggingPath.validate('~/bugwarrior.log'),
-            'bugwarrior.log',
+            schema.LoggingPath.validate('~/bugwarrior.log'), 'bugwarrior.log'
         )
 
     def test_log_envvar(self):
         self.assertEqual(
-            schema.LoggingPath.validate('$HOME/bugwarrior.log'),
-            'bugwarrior.log',
+            schema.LoggingPath.validate('$HOME/bugwarrior.log'), 'bugwarrior.log'
         )
 
     def tearDown(self):
@@ -48,28 +42,28 @@ class TestConfigList(unittest.TestCase):
     def test_configlist(self):
         self.assertEqual(
             schema.ConfigList.validate('project_bar,project_baz'),
-            ['project_bar', 'project_baz']
+            ['project_bar', 'project_baz'],
         )
 
     def test_configlist_jinja(self):
         self.assertEqual(
             schema.ConfigList.validate(
-                "work, jira, {{jirastatus|lower|replace(' ','_')}}"),
-            ['work', 'jira', "{{jirastatus|lower|replace(' ','_')}}"]
+                "work, jira, {{jirastatus|lower|replace(' ','_')}}"
+            ),
+            ['work', 'jira', "{{jirastatus|lower|replace(' ','_')}}"],
         )
 
 
 class TestTaskrcPath(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = {
-            'general': {'targets': []},
-        }
+        self.config = {'general': {'targets': []}}
 
     def test_default_factory_default(self):
         config = self.validate()
-        self.assertEqual(config['general'].taskrc,
-                         os.path.join(self.tempdir, '.taskrc'))
+        self.assertEqual(
+            config['general'].taskrc, os.path.join(self.tempdir, '.taskrc')
+        )
 
     def test_default_factory_env_override(self):
         override = os.path.join(self.tempdir, 'override_taskrc')
@@ -93,7 +87,7 @@ class TestTaskrcPath(ConfigTest):
         self.assertEqual(config['general'].taskrc, taskrc)
 
     def test_default_factory_dot_config_taskrc(self):
-        """ Taskrc is still found if XDG_CONFIG_HOME is unset. """
+        """Taskrc is still found if XDG_CONFIG_HOME is unset."""
         os.remove(self.taskrc)
 
         dot_config_task = os.path.join(self.tempdir, '.config', 'task')
@@ -173,23 +167,22 @@ class TestValidation(ConfigTest):
     def test_service_missing(self):
         del self.config['my_service']['service']
 
-        self.assertValidationError(
-            "No option 'service' in section: 'my_service'")
+        self.assertValidationError("No option 'service' in section: 'my_service'")
 
     def test_extra_field(self):
-        """ Undeclared fields are forbidden. """
+        """Undeclared fields are forbidden."""
         self.config['my_service']['undeclared_field'] = 'extra'
 
         self.assertValidationError(
-            '[my_service]\n'
-            'undeclared_field  <- unrecognized option')
+            '[my_service]\nundeclared_field  <- unrecognized option'
+        )
 
     def test_root_validator(self):
         del self.config['my_service']['username']
 
         self.assertValidationError(
-            '[my_service]  <- '
-            'section requires one of:\n    username\n    query')
+            '[my_service]  <- section requires one of:\n    username\n    query'
+        )
 
     def test_no_scheme_url_validator_default(self):
         conf = self.validate()
@@ -202,8 +195,7 @@ class TestValidation(ConfigTest):
 
     def test_no_scheme_url_validator_scheme(self):
         self.config['my_service']['host'] = 'https://github.com'
-        self.assertValidationError(
-            "host  <- URL should not include scheme ('https')")
+        self.assertValidationError("host  <- URL should not include scheme ('https')")
 
     def test_stripped_trailing_slash_url(self):
         self.config['my_kan']['url'] = 'https://kanboard.example.org/'
@@ -222,11 +214,17 @@ class TestValidation(ConfigTest):
         self.config['my_gitlab']['filter_merge_requests'] = 'true'
         self.config['my_gitlab']['include_merge_requests'] = 'true'
         self.assertValidationError(
-            '[my_gitlab]  <- filter_merge_requests and include_merge_requests are incompatible.')
+            '[my_gitlab]  <- filter_merge_requests and include_merge_requests are incompatible.'
+        )
 
     def test_deprecated_project_name(self):
-        """ We're just testing that deprecation doesn't break validation. """
-        self.config['general']['targets'] = ['my_service', 'my_kan', 'my_gitlab', 'my_redmine']
+        """We're just testing that deprecation doesn't break validation."""
+        self.config['general']['targets'] = [
+            'my_service',
+            'my_kan',
+            'my_gitlab',
+            'my_redmine',
+        ]
         self.config['my_redmine'] = {
             'service': 'redmine',
             'url': 'https://example.com',
@@ -275,13 +273,14 @@ class TestServices(unittest.TestCase):
                         self.assertIsNotNone(
                             re.search(option, service_code),
                             msg=f'\
-Service should support common configuration option self.config.{option}')
+Service should support common configuration option self.config.{option}',
+                        )
 
                 # get_priority() makes use of the default_priority option
                 with self.subTest(option='default_priority'):
                     self.assertIsNotNone(
-                        re.search('default_priority', service_code) or
-                        re.search('get_priority', service_code),
+                        re.search('default_priority', service_code)
+                        or re.search('get_priority', service_code),
                         msg='\
-Service should support self.config.default_priority or use self.get_priority()'
+Service should support self.config.default_priority or use self.get_priority()',
                     )
