@@ -62,7 +62,18 @@ class LogseqClient(Client):
 
     def get_graph_name(self):
         graph = self._get_current_graph()
-        return graph.get("name") if graph else None
+        if not graph:
+            return None
+
+        # Try to get the path/display name first, fall back to name
+        #        name = graph.get("path") or graph.get("name")
+        name = graph.get("name")
+
+        # Strip "logseq_db_" prefix if present
+        if name and name.startswith("logseq_db_"):
+            name = name.replace("logseq_db_", "")
+
+        return name
 
     def get_page(self, page_id):
         return self._api_call("logseq.Editor.getPage", [page_id])
@@ -175,6 +186,51 @@ class LogseqIssue(Issue):
             .replace(self.config.char_close_link, "")
         )
 
+    def _resolve_references_in_title(self, title):
+        """Resolve UUID references in title to actual page names."""
+        log.debug(f"Resolving references in title: {title}")
+
+        # Pattern to match [[uuid]] references
+        uuid_pattern = (
+            r"\[\[([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\]\]"
+        )
+
+        def replace_uuid(match):
+            uuid = match.group(1)
+            log.debug(f"Found UUID reference: {uuid}")
+            try:
+                # Query for the block/page with this UUID
+                query = f'[:find (pull ?e [:block/title :block/name :block/original-name]) :where [?e :block/uuid #uuid "{uuid}"]]'
+                log.debug(f"Running query: {query}")
+                result = self.extra["client"]._datascript_query(query)
+                log.debug(f"Query result: {result}")
+
+                if result and result[0]:
+                    entity = result[0][0]
+                    log.debug(f"Entity found: {entity}")
+                    # Try to get the readable name (try both with and without "block/" prefix)
+                    name = (
+                        entity.get("block/original-name")
+                        or entity.get("original-name")
+                        or entity.get("block/name")
+                        or entity.get("name")
+                        or entity.get("block/title")
+                        or entity.get("title")
+                        or uuid
+                    )
+                    log.debug(f"Resolved UUID {uuid} to name: {name}")
+                    return f"[[{name}]]"
+                else:
+                    log.warning(f"No entity found for UUID {uuid}")
+            except Exception as e:
+                log.warning(f"Failed to resolve UUID reference {uuid}: {e}")
+
+            return match.group(0)  # Return original if resolution fails
+
+        result = re.sub(uuid_pattern, replace_uuid, title, flags=re.IGNORECASE)
+        log.debug(f"Title after resolution: {result}")
+        return result
+
     def get_logseq_state(self):
         """Extract the task state from either classic or DB mode."""
         # Classic mode
@@ -209,6 +265,9 @@ class LogseqIssue(Issue):
         # Remove priority markers
         for priority in ["[#A]", "[#B]", "[#C]"]:
             first_line = first_line.replace(f"{priority} ", "")
+
+        # Resolve UUID references to actual page names
+        first_line = self._resolve_references_in_title(first_line)
 
         return self._unescape_content(first_line)
 
