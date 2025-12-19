@@ -1,7 +1,6 @@
-import datetime
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
-import dateutil
 import responses
 
 from bugwarrior.collect import TaskConstructor
@@ -18,12 +17,8 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
         'key': 'something_else',
         'issue_limit': '100',
     }
-    arbitrary_created = datetime.datetime.now(datetime.timezone.utc).replace(
-        tzinfo=dateutil.tz.tz.tzutc(), microsecond=0
-    ) - datetime.timedelta(1)
-    arbitrary_updated = datetime.datetime.now(datetime.timezone.utc).replace(
-        tzinfo=dateutil.tz.tz.tzutc(), microsecond=0
-    )
+    arbitrary_created = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(1)
+    arbitrary_updated = datetime.now(timezone.utc).replace(microsecond=0)
     arbitrary_issue = {
         "assigned_to": {"id": 35546, "name": "Adam Coddington"},
         "author": {"id": 35546, "name": "Adam Coddington"},

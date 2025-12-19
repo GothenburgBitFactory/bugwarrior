@@ -1,8 +1,6 @@
 import dataclasses
-import datetime
+from datetime import datetime, timedelta, timezone
 from unittest import mock
-
-import dateutil
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gitbug import GitBugClient, GitBugConfig, GitBugService
@@ -49,8 +47,8 @@ class TestGitBugIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'annotations': [],
-            'entry': datetime.datetime(
-                2022, 5, 5, 23, 6, 52, tzinfo=dateutil.tz.tzoffset(None, -14400)
+            'entry': datetime(
+                2022, 5, 5, 23, 6, 52, tzinfo=timezone(timedelta(seconds=-14400))
             ),
             'gitbugauthor': 'ryneeverett',
             'gitbugid': '032d911695cc68d9881aabc24a6c62853f90f834',
@@ -70,8 +68,8 @@ class TestGitBugIssue(AbstractServiceTest, ServiceTest):
         expected = {
             'annotations': [],
             'description': '(bw)Bug# - Some Issue',
-            'entry': datetime.datetime(
-                2022, 5, 5, 23, 6, 52, tzinfo=dateutil.tz.tzoffset(None, -14400)
+            'entry': datetime(
+                2022, 5, 5, 23, 6, 52, tzinfo=timezone(timedelta(seconds=-14400))
             ),
             'gitbugauthor': 'ryneeverett',
             'gitbugid': '032d911695cc68d9881aabc24a6c62853f90f834',

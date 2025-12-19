@@ -22,7 +22,6 @@ dependencies = [
   "lockfile>=0.9.1",
   "pydantic[email]>=2",
   "python-dateutil",
-  "pytz",
   "requests",
   "taskw>=0.8",
   "tomli ; python_version <= '3.10'",

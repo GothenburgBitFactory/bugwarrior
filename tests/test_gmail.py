@@ -5,7 +5,6 @@ import pickle
 from unittest import mock
 from unittest.mock import patch
 
-from dateutil.tz import tzutc
 from google.oauth2.credentials import Credentials
 
 from bugwarrior.collect import TaskConstructor
@@ -142,7 +141,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
         )
         expected = {
             'annotations': [],
-            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=tzutc()),
+            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=timezone.utc),
             'gmailthreadid': '1234',
             'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',  # noqa: E501
             'gmailsnippet': 'Bugwarrior is great',
@@ -164,7 +163,7 @@ class TestGmailIssue(AbstractServiceTest, ServiceTest):
         issue = next(self.service.issues())
         expected = {
             'annotations': ['@Foo Bar - Regarding Bugwarrior'],
-            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=tzutc()),
+            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=timezone.utc),
             'gmailthreadid': '1234',
             'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',  # noqa: E501
             'gmailsnippet': 'Bugwarrior is great',

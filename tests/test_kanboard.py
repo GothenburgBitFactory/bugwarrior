@@ -1,7 +1,5 @@
-import datetime
+from datetime import datetime, timezone
 from unittest import mock
-
-from dateutil.tz.tz import tzutc
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.kanboard import KanboardService
@@ -113,7 +111,7 @@ class TestKanboardService(AbstractServiceTest, ServiceTest):
             "annotations": extra["annotations"],
             "tags": extra["tags"],
             "due": None,
-            "entry": datetime.datetime(2015, 6, 13, 20, 30, 46, tzinfo=tzutc()),
+            "entry": datetime(2015, 6, 13, 20, 30, 46, tzinfo=timezone.utc),
             issue.TASK_ID: int(record["id"]),
             issue.TASK_TITLE: record["title"],
             issue.TASK_DESCRIPTION: record["description"],
@@ -195,7 +193,7 @@ class TestKanboardService(AbstractServiceTest, ServiceTest):
         expected = {
             "description": "(bw)Is#3 - T3 .. http://example.com?task_id=3&project_id=1",
             "due": None,
-            "entry": datetime.datetime(2016, 4, 22, 22, 46, 4, tzinfo=tzutc()),
+            "entry": datetime(2016, 4, 22, 22, 46, 4, tzinfo=timezone.utc),
             "annotations": [],
             "project": "project",
             "tags": ["tag1", "tag2"],

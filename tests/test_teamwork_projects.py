@@ -1,6 +1,5 @@
-import datetime
+from datetime import datetime, timezone
 
-from dateutil.tz import tzutc
 import responses
 
 from bugwarrior.collect import TaskConstructor
@@ -90,10 +89,10 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
         expected_data = {
             'project': data["project-name"],
             'priority': "H",
-            'due': datetime.datetime(2019, 12, 12, 10, 6, 31, tzinfo=tzutc()),
-            'entry': datetime.datetime(2018, 12, 12, 10, 6, 31, tzinfo=tzutc()),
+            'due': datetime(2019, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
+            'entry': datetime(2018, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
             'end': "",
-            'modified': datetime.datetime(2019, 1, 16, 11, 0, 44, tzinfo=tzutc()),
+            'modified': datetime(2019, 1, 16, 11, 0, 44, tzinfo=timezone.utc),
             issue.URL: "https://test.teamwork_projects.com/#/tasks/5",
             issue.TITLE: data["content"],
             issue.DESCRIPTION_LONG: data["description"],
@@ -119,10 +118,10 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
         expected_data = {
             'project': data["project-name"],
             'priority': "H",
-            'due': datetime.datetime(2019, 12, 12, 10, 6, 31, tzinfo=tzutc()),
-            'entry': datetime.datetime(2018, 12, 12, 10, 6, 31, tzinfo=tzutc()),
+            'due': datetime(2019, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
+            'entry': datetime(2018, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
             'end': "",
-            'modified': datetime.datetime(2019, 1, 16, 11, 0, 44, tzinfo=tzutc()),
+            'modified': datetime(2019, 1, 16, 11, 0, 44, tzinfo=timezone.utc),
             'description': '(bw)Is#5 - This is a test issue .. https://test.teamwork_projects.com/#/tasks/5',  # noqa: E501
             issue.URL: "https://test.teamwork_projects.com/#/tasks/5",
             issue.TITLE: data["content"],

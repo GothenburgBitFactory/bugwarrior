@@ -1,7 +1,6 @@
-import datetime
+from datetime import datetime, timedelta, timezone
 from unittest import TestCase
 
-import pytz
 import responses
 
 from bugwarrior.collect import TaskConstructor
@@ -9,14 +8,14 @@ from bugwarrior.services.github import GithubClient, GithubConfig, GithubService
 
 from .base import AbstractServiceTest, ServiceTest
 
-ARBITRARY_CREATED = (
-    datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
-).replace(tzinfo=pytz.UTC, microsecond=0)
-ARBITRARY_CLOSED = (
-    datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=30)
-).replace(tzinfo=pytz.UTC, microsecond=0)
-ARBITRARY_UPDATED = datetime.datetime.now(datetime.timezone.utc).replace(
-    tzinfo=pytz.UTC, microsecond=0
+ARBITRARY_CREATED = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(
+    tzinfo=timezone.utc, microsecond=0
+)
+ARBITRARY_CLOSED = (datetime.now(timezone.utc) - timedelta(minutes=30)).replace(
+    tzinfo=timezone.utc, microsecond=0
+)
+ARBITRARY_UPDATED = datetime.now(timezone.utc).replace(
+    tzinfo=timezone.utc, microsecond=0
 )
 ARBITRARY_ISSUE = {
     'title': 'Hallo',

@@ -1,7 +1,5 @@
-import datetime
+from datetime import date, datetime, timedelta, timezone
 import unittest
-
-import pytz
 
 from bugwarrior.services.phab import PhabricatorService
 
@@ -19,16 +17,12 @@ class TestPhabricatorIssue(AbstractServiceTest, ServiceTest):
         super().setUp()
         self.service = self.get_mock_service(PhabricatorService)
         self.arbitrary_created = (
-            datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
-        ).replace(tzinfo=pytz.UTC, microsecond=0)
-        self.arbitrary_updated = datetime.datetime.now(datetime.timezone.utc).replace(
-            tzinfo=pytz.UTC, microsecond=0
+            datetime.now(timezone.utc) - timedelta(hours=1)
+        ).replace(microsecond=0)
+        self.arbitrary_updated = datetime.now(timezone.utc).replace(microsecond=0)
+        self.arbitrary_duedate = datetime.combine(
+            date.today(), datetime.min.time(), tzinfo=timezone.utc
         )
-        self.arbitrary_duedate = (
-            datetime.datetime.combine(
-                datetime.date.today(), datetime.datetime.min.time()
-            )
-        ).replace(tzinfo=pytz.UTC)
         self.arbitrary_issue = {
             "id": 42,
             "uri": "https://phabricator.example.com/arbitrary_username/project/issues/3",
