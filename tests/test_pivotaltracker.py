@@ -174,17 +174,17 @@ class TestPivotalTrackerServiceConfig(ConfigTest):
     def test_validate_config_no_account_ids(self):
         self.config['pivotal'].update({'token': '123', 'user_id': '12345'})
 
-        self.assertValidationError('[pivotal]\naccount_ids  <- field required')
+        self.assertValidationError('[pivotal]\naccount_ids  <- Field required')
 
     def test_validate_config_no_user_id(self):
         self.config['pivotal'].update({'account_ids': '12345', 'token': '123'})
 
-        self.assertValidationError('[pivotal]\nuser_id  <- field required')
+        self.assertValidationError('[pivotal]\nuser_id  <- Field required')
 
     def test_validate_config_token(self):
         self.config['pivotal'].update({'account_ids': '12345', 'user_id': '12345'})
 
-        self.assertValidationError('[pivotal]\ntoken  <- field required')
+        self.assertValidationError('[pivotal]\ntoken  <- Field required')
 
     def test_validate_config_invalid_endpoint(self):
         self.config['pivotal'].update(
@@ -196,7 +196,9 @@ class TestPivotalTrackerServiceConfig(ConfigTest):
             }
         )
 
-        self.assertValidationError('[pivotal]\nversion  <- unexpected value')
+        self.assertValidationError(
+            "[pivotal]\nversion = v1  <- Input should be 'v5' or 'edge'"
+        )
 
 
 class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):

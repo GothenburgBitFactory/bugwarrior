@@ -3,7 +3,7 @@ import sys
 import typing
 from urllib.parse import quote, urlencode
 
-import pydantic.v1
+from pydantic import ValidationInfo, field_validator, model_validator
 import requests
 
 from bugwarrior import config
@@ -23,8 +23,8 @@ class GitlabConfig(config.ServiceConfig):
     token: str
     host: config.NoSchemeUrl
 
-    include_repos: config.ConfigList = config.ConfigList([])
-    exclude_repos: config.ConfigList = config.ConfigList([])
+    include_repos: config.ConfigList = []
+    exclude_repos: config.ConfigList = []
     include_regex: typing.Optional[typing.Pattern] = None
     exclude_regex: typing.Optional[typing.Pattern] = None
     membership: bool = False
@@ -49,36 +49,37 @@ class GitlabConfig(config.ServiceConfig):
     merge_request_query: str = ''
     todo_query: str = ''
 
-    @pydantic.v1.root_validator
-    def namespace_repo_lists(cls, values):
+    @field_validator('include_repos', 'exclude_repos', mode='after')
+    @classmethod
+    def namespace_repo_lists(cls, repos: list[str], info: ValidationInfo) -> list[str]:
         """Add a default namespace to a repository name.  If the name already
         contains a namespace, it will be returned unchanged:
             e.g. "foo/bar" → "foo/bar"
         otherwise, the login will be prepended as namespace:
             e.g. "bar" → "<login>/bar"
         """
-        for repolist in ['include_repos', 'exclude_repos']:
-            values[repolist] = [
-                f"{values['login']}/{repo}"
-                if not repo.startswith('id:') and repo.find('/') < 0
-                else repo
-                for repo in values[repolist]
-            ]
-        return values
+        login = info.data.get('login', '')
+        return [
+            f"{login}/{repo}"
+            if not repo.startswith('id:') and '/' not in repo
+            else repo
+            for repo in repos
+        ]
 
-    @pydantic.v1.root_validator
-    def default_priorities(cls, values):
-        for task_type in ['issue', 'todo', 'mr']:
-            priority_field = f'default_{task_type}_priority'
-            values[priority_field] = (
-                values[priority_field]
-                if values[priority_field] != 'unassigned'
-                else values['default_priority']
-            )
-        return values
+    @field_validator(
+        'default_issue_priority',
+        'default_todo_priority',
+        'default_mr_priority',
+        mode='after',
+    )
+    @classmethod
+    def default_priorities(cls, value: str, info: ValidationInfo) -> str:
+        if value == 'unassigned':
+            return info.data.get('default_priority', 'M')
+        return value
 
-    @pydantic.v1.root_validator
-    def filter_gitlab_dot_com(cls, values):
+    @model_validator(mode='after')
+    def filter_gitlab_dot_com(self):
         """
         There must be a repository filter if the host is gitlab.com.
 
@@ -86,17 +87,14 @@ class GitlabConfig(config.ServiceConfig):
         trying to paginate through all public repositories.
         """
         if (
-            values['host'] == 'gitlab.com'
+            self.host == 'gitlab.com'
             # Options which automatically apply a filter.
-            and not (values['owned'] or values['membership'] or values['include_repos'])
+            and not (self.owned or self.membership or self.include_repos)
             # Query options *may* apply a filter.
             and (
-                (values['include_issues'] and not values['issue_query'])
-                or (
-                    values['include_merge_requests']
-                    and not values['merge_request_query']
-                )
-                or (values['include_todos'] and not values['todo_query'])
+                (self.include_issues and not self.issue_query)
+                or (self.include_merge_requests and not self.merge_request_query)
+                or (self.include_todos and not self.todo_query)
             )
         ):
             raise ValueError(
@@ -104,9 +102,10 @@ class GitlabConfig(config.ServiceConfig):
                 "to filter repositories (e.g., 'owned') because there "
                 "there are too many on gitlab.com to fetch them all."
             )
-        return values
+        return self
 
-    @pydantic.v1.validator('owned', always=True)
+    @field_validator('owned', mode='before')
+    @classmethod
     def require_owned(cls, v):
         """
         Migrate 'owned' field from default False to default True.

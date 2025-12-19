@@ -3,7 +3,7 @@ import logging
 import re
 import typing
 
-import pydantic
+from pydantic import model_validator
 import requests
 
 from bugwarrior import config
@@ -16,20 +16,21 @@ class LinearConfig(config.ServiceConfig):
     service: typing.Literal["linear"]
     api_token: str
 
-    host: config.StrippedTrailingSlashUrl = config.StrippedTrailingSlashUrl(
-        "https://api.linear.app/graphql", scheme="https", host="api.linear.app"
-    )
-    statuses: config.ConfigList = config.ConfigList([])
+    host: config.StrippedTrailingSlashUrl = "https://api.linear.app/graphql"
+    statuses: config.ConfigList = []
     status_types: typing.Optional[config.ConfigList] = None
     import_labels_as_tags: bool = False
     label_template: str = "{{label|replace(' ', '_')}}"
     also_unassigned: config.UnsupportedOption[bool] = False
 
-    @pydantic.v1.root_validator
+    @model_validator(mode='before')
+    @classmethod
     def statuses_or_status_types(cls, values):
-        if values["statuses"] and values["status_types"]:
+        statuses = values.get("statuses")
+        status_types = values.get("status_types")
+        if statuses and status_types:
             raise ValueError("statuses and status_types are incompatible")
-        if not values["statuses"] and not values["status_types"]:  # set default value
+        if not statuses and not status_types:
             values["status_types"] = ["backlog", "unstarted", "started"]
         return values
 

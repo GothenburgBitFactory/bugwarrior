@@ -7,11 +7,11 @@ warning, release notes, or semantic version bumping.
 
 .. automodule:: bugwarrior.services
    :members:
-   :exclude-members: __init__
+   :exclude-members: __init__,model_config
    :member-order: bysource
 
 .. automodule:: bugwarrior.config
    :members:
-   :exclude-members: __init__,compute_templates
+   :exclude-members: __init__,compute_templates,model_config
    :imported-members:
    :member-order: bysource

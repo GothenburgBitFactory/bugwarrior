@@ -3,8 +3,7 @@ name = "bugwarrior"
 version = "2.0.0.post"
 description = "a command line utility for updating your local taskwarrior database from your forge issue trackers"
 readme = "bugwarrior/README.rst"
-# pydantic.v1 does not support python-3.14 See <https://github.com/GothenburgBitFactory/bugwarrior/issues/998>.
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.10"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE.txt"]
 keywords=["task", "taskwarrior", "todo", "github"]

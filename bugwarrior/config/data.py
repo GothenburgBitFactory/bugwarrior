@@ -44,9 +44,9 @@ class BugwarriorData:
         self.path = data_path
 
     @classmethod
-    def __modify_schema__(cls, field_schema: typing.Dict[str, typing.Any]) -> None:
-        """Fix schema generation in pydantic."""
-        field_schema.update({"type": "object", "description": "Local data storage"})
+    def __get_pydantic_json_schema__(cls, core_schema, handler):
+        """Fix schema generation in pydantic v2."""
+        return {"type": "object", "description": "Local data storage"}
 
     def get_data(self) -> dict:
         """Return all data from the ``bugwarrior.data`` file."""

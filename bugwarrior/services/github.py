@@ -4,7 +4,7 @@ import sys
 import typing
 import urllib.parse
 
-import pydantic.v1
+from pydantic import ValidationInfo, field_validator, model_validator
 import requests
 
 from bugwarrior import config
@@ -27,61 +27,63 @@ class GithubConfig(config.ServiceConfig):
 
     # optional
     include_user_repos: bool = True
-    include_repos: config.ConfigList = config.ConfigList([])
-    exclude_repos: config.ConfigList = config.ConfigList([])
+    include_repos: config.ConfigList = []
+    exclude_repos: config.ConfigList = []
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'
     filter_pull_requests: bool = False
     exclude_pull_requests: bool = False
     include_user_issues: bool = True
     involved_issues: bool = False
-    host: config.NoSchemeUrl = config.NoSchemeUrl(
-        'github.com', scheme='https', host='github.com'
-    )
+    host: config.NoSchemeUrl = 'github.com'
     body_length: int = sys.maxsize
     project_owner_prefix: bool = False
-    issue_urls: config.ConfigList = config.ConfigList([])
-    ignore_user_comments: config.ConfigList = config.ConfigList([])
+    issue_urls: config.ConfigList = []
+    ignore_user_comments: config.ConfigList = []
 
-    @pydantic.v1.root_validator
-    def deprecate_password(cls, values):
-        if values['password'] != 'Deprecated':
+    @model_validator(mode='after')
+    def deprecate_password(self):
+        if self.password != 'Deprecated':
             log.warning(
                 'Basic auth is no longer supported. Please remove '
                 '"password" in favor of "token".'
             )
-        return values
+        return self
 
-    @pydantic.v1.root_validator
-    def require_username_or_query(cls, values):
-        if not values['username'] and not values['query']:
+    @model_validator(mode='after')
+    def require_username_or_query(self):
+        if not self.username and not self.query:
             raise ValueError('section requires one of:\n    username\n    query')
-        return values
+        return self
 
-    @pydantic.v1.root_validator
-    def issue_urls_consistent_with_host(cls, values):
+    @field_validator('issue_urls', mode='after')
+    @classmethod
+    def issue_urls_consistent_with_host(cls, value, info: ValidationInfo):
         issue_url_paths = []
-        for url in values['issue_urls']:
+
+        # host can be None if it raised a ValidationError (e.g. if it has a scheme)
+        host = info.data.get('host')
+
+        if host is None:
+            return value
+        for url in value:
             parsed_url = urllib.parse.urlparse(url)
-            if parsed_url.netloc != values['host']:
-                raise ValueError(
-                    f'issue_urls: {url} inconsistent with host {values["host"]}'
-                )
+            if parsed_url.netloc != host:
+                raise ValueError(f'issue_urls: {url} inconsistent with host {host}')
             if not re.match(r'^/.*/.*/(issues|pull)/[0-9]*$', parsed_url.path):
                 raise ValueError(
                     f'issue_urls: {parsed_url.path} is not a valid issue path'
                 )
             issue_url_paths.append(parsed_url.path)
-        values['issue_urls'] = issue_url_paths
-        return values
+        return issue_url_paths
 
-    @pydantic.v1.root_validator
-    def require_username_if_include_user_repos(cls, values):
-        if values['include_user_repos'] and not values['username']:
+    @model_validator(mode='after')
+    def require_username_if_include_user_repos(self):
+        if self.include_user_repos and not self.username:
             raise ValueError(
                 'username required when include_user_repos is True (default)'
             )
-        return values
+        return self
 
 
 class GithubClient(Client):

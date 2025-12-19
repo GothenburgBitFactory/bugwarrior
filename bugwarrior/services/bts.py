@@ -2,7 +2,8 @@ import logging
 import typing
 
 import debianbts
-import pydantic.v1
+import pydantic
+from pydantic import model_validator
 import requests
 
 from bugwarrior import config
@@ -16,29 +17,29 @@ UDD_BUGS_SEARCH = "https://udd.debian.org/bugs/"
 class BTSConfig(config.ServiceConfig):
     service: typing.Literal['bts']
 
-    email: pydantic.v1.EmailStr = pydantic.v1.EmailStr('')
-    packages: config.ConfigList = config.ConfigList([])
+    email: pydantic.EmailStr = ''
+    packages: config.ConfigList = []
 
     udd: bool = False
     ignore_pending: bool = True
     udd_ignore_sponsor: bool = True
-    ignore_pkg: config.ConfigList = config.ConfigList([])
-    ignore_src: config.ConfigList = config.ConfigList([])
+    ignore_pkg: config.ConfigList = []
+    ignore_src: config.ConfigList = []
 
     only_if_assigned: config.UnsupportedOption[str] = ''
     also_unassigned: config.UnsupportedOption[bool] = False
 
-    @pydantic.v1.root_validator
-    def require_email_or_packages(cls, values):
-        if not values['email'] and not values['packages']:
+    @model_validator(mode='after')
+    def require_email_or_packages(self):
+        if not self.email and not self.packages:
             raise ValueError('section requires one of:\n    email\n    packages')
-        return values
+        return self
 
-    @pydantic.v1.root_validator
-    def udd_needs_email(cls, values):
-        if values['udd'] and not values['email']:
+    @model_validator(mode='after')
+    def udd_needs_email(self):
+        if self.udd and not self.email:
             raise ValueError("no 'email' but UDD search was requested")
-        return values
+        return self
 
 
 class BTSIssue(Issue):

@@ -2,34 +2,34 @@ import datetime
 import logging
 import time
 import typing
-import urllib.parse
+from typing import Annotated
+import urllib
 import xmlrpc.client
 
 import bugzilla
-import pydantic.v1
+import pydantic
+from pydantic import BeforeValidator
 import pytz
 
 from bugwarrior import config
+from bugwarrior.config.schema import StrippedTrailingSlashUrl
 from bugwarrior.services import Issue, Service
 
 log = logging.getLogger(__name__)
 
 
-class OptionalSchemeUrl(pydantic.v1.AnyUrl):
-    """
-    A temporary type to use during the deprecation period of scheme-less urls.
-    """
+def validate_url(value: str):
+    if not urllib.parse.urlparse(value).scheme:
+        value = f'https://{value}'
+        log.warning(
+            'Deprecation Warning: bugzilla.base_uri should include the '
+            f'scheme ("{value}"). In a future version this will be an '
+            'error.'
+        )
+    return value
 
-    @classmethod
-    def validate(cls, value, field, config):
-        if not urllib.parse.urlparse(value).scheme:
-            value = f'https://{value}'
-            log.warning(
-                'Deprecation Warning: bugzilla.base_uri should include the '
-                f'scheme ("{value}"). In a future version this will be an '
-                'error.'
-            )
-        return super().validate(value.rstrip('/'), field, config)
+
+OptionalSchemeUrl = Annotated[StrippedTrailingSlashUrl, BeforeValidator(validate_url)]
 
 
 class BugzillaConfig(config.ServiceConfig):
@@ -55,7 +55,7 @@ class BugzillaConfig(config.ServiceConfig):
         ]
     )
     include_needinfos: bool = False
-    query_url: typing.Optional[pydantic.v1.AnyUrl]
+    query_url: typing.Optional[pydantic.AnyUrl] = None
     force_rest: bool = False
     advanced: bool = False
 

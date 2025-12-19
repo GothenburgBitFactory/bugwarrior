@@ -18,7 +18,7 @@ class GerritConfig(config.ServiceConfig):
 
     ssl_ca_path: typing.Optional[config.ExpandedPath] = None
     query: str = 'is:open+is:reviewer'
-    ignore_user_comments: config.ConfigList = config.ConfigList([])
+    ignore_user_comments: config.ConfigList = []
 
     only_if_assigned: config.UnsupportedOption[str] = ''
     also_unassigned: config.UnsupportedOption[bool] = False

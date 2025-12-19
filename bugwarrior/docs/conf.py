@@ -317,4 +317,8 @@ texinfo_documents = [
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'requests': ('https://requests.readthedocs.io/en/latest/', None),
+    'pydantic': ('https://docs.pydantic.dev/latest/', None),
 }
+
+# Suppress warnings for types that can't be resolved via intersphinx
+nitpick_ignore = [('py:class', 'ConfigDict')]

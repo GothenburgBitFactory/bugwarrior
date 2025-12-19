@@ -95,7 +95,32 @@ class TestLinearServiceConfig(ConfigTest):
     def test_validate_config_no_api_token(self):
         self.config["linear"].update({"only_if_assigned": "foo@bar.com"})
 
-        self.assertValidationError("[linear]\napi_token  <- field required")
+        self.assertValidationError("[linear]\napi_token  <- Field required")
+
+    def test_statuses_and_status_types_incompatible(self):
+        self.config["linear"].update(
+            {"api_token": "abc123", "statuses": "Done, Todo", "status_types": "started"}
+        )
+        self.assertValidationError("statuses and status_types are incompatible")
+
+    def test_status_types_defaults_when_neither_set(self):
+        self.config["linear"].update({"api_token": "abc123"})
+        conf = self.validate()
+        self.assertEqual(
+            conf["linear"].status_types, ["backlog", "unstarted", "started"]
+        )
+
+    def test_statuses_only(self):
+        self.config["linear"].update({"api_token": "abc123", "statuses": "Done, Todo"})
+        conf = self.validate()
+        self.assertEqual(conf["linear"].statuses, ["Done", "Todo"])
+        self.assertIsNone(conf["linear"].status_types)
+
+    def test_status_types_only(self):
+        self.config["linear"].update({"api_token": "abc123", "status_types": "started"})
+        conf = self.validate()
+        self.assertEqual(conf["linear"].status_types, ["started"])
+        self.assertEqual(conf["linear"].statuses, [])
 
 
 class TestLinearIssue(AbstractServiceTest, ServiceTest):

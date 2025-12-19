@@ -245,12 +245,12 @@ class TestTrelloService(ConfigTest):
     def test_valid_config_no_access_token(self):
         del self.config['mytrello']['token']
 
-        self.assertValidationError('[mytrello]\ntoken  <- field required')
+        self.assertValidationError('[mytrello]\ntoken  <- Field required')
 
     def test_valid_config_no_api_key(self):
         del self.config['mytrello']['api_key']
 
-        self.assertValidationError('[mytrello]\napi_key  <- field required')
+        self.assertValidationError('[mytrello]\napi_key  <- Field required')
 
     def test_keyring_service(self):
         """Checks that the keyring service name"""

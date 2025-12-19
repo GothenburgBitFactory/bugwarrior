@@ -1,53 +1,52 @@
 import importlib
 import os
+from pathlib import Path
 import re
 import unittest
 
 from importlib_metadata import entry_points
+import pydantic
+from pydantic import TypeAdapter
 
 from bugwarrior.config import schema
 
 from ..base import ConfigTest
 
 
-class TestLoggingPath(unittest.TestCase):
+class TestExpandedPath(unittest.TestCase):
     def setUp(self):
+        self.adapter = TypeAdapter(schema.ExpandedPath)
         self.dir = os.getcwd()
         os.chdir(os.path.expanduser('~'))
+        self.log = Path('./bugwarrior.log').absolute()
 
-    def test_log_relative_path(self):
-        self.assertEqual(
-            schema.LoggingPath.validate('bugwarrior.log'), 'bugwarrior.log'
-        )
-
-    def test_log_absolute_path(self):
-        filename = os.path.join(os.path.expandvars('$HOME'), 'bugwarrior.log')
-        self.assertEqual(schema.LoggingPath.validate(filename), 'bugwarrior.log')
+    def test_log(self):
+        filename = os.path.join(os.path.expandvars('$HOME'), self.log)
+        self.assertEqual(self.adapter.validate_python(filename), self.log)
 
     def test_log_userhome(self):
-        self.assertEqual(
-            schema.LoggingPath.validate('~/bugwarrior.log'), 'bugwarrior.log'
-        )
+        self.assertEqual(self.adapter.validate_python('~/bugwarrior.log'), self.log)
 
     def test_log_envvar(self):
-        self.assertEqual(
-            schema.LoggingPath.validate('$HOME/bugwarrior.log'), 'bugwarrior.log'
-        )
+        self.assertEqual(self.adapter.validate_python('$HOME/bugwarrior.log'), self.log)
 
     def tearDown(self):
         os.chdir(self.dir)
 
 
 class TestConfigList(unittest.TestCase):
+    def setUp(self):
+        self.adapter = TypeAdapter(schema.ConfigList)
+
     def test_configlist(self):
         self.assertEqual(
-            schema.ConfigList.validate('project_bar,project_baz'),
+            self.adapter.validate_python('project_bar,project_baz'),
             ['project_bar', 'project_baz'],
         )
 
     def test_configlist_jinja(self):
         self.assertEqual(
-            schema.ConfigList.validate(
+            self.adapter.validate_python(
                 "work, jira, {{jirastatus|lower|replace(' ','_')}}"
             ),
             ['work', 'jira', "{{jirastatus|lower|replace(' ','_')}}"],
@@ -62,7 +61,7 @@ class TestTaskrcPath(ConfigTest):
     def test_default_factory_default(self):
         config = self.validate()
         self.assertEqual(
-            config['general'].taskrc, os.path.join(self.tempdir, '.taskrc')
+            str(config['general'].taskrc), os.path.join(self.tempdir, '.taskrc')
         )
 
     def test_default_factory_env_override(self):
@@ -72,7 +71,7 @@ class TestTaskrcPath(ConfigTest):
         os.environ['TASKRC'] = override
 
         config = self.validate()
-        self.assertEqual(config['general'].taskrc, override)
+        self.assertEqual(str(config['general'].taskrc), override)
 
     def test_default_factory_xdg_config_home(self):
         os.remove(self.taskrc)
@@ -84,7 +83,7 @@ class TestTaskrcPath(ConfigTest):
             fout.write('data.location=%s\n' % self.lists_path)
 
         config = self.validate()
-        self.assertEqual(config['general'].taskrc, taskrc)
+        self.assertEqual(str(config['general'].taskrc), taskrc)
 
     def test_default_factory_dot_config_taskrc(self):
         """Taskrc is still found if XDG_CONFIG_HOME is unset."""
@@ -98,7 +97,7 @@ class TestTaskrcPath(ConfigTest):
         del os.environ['XDG_CONFIG_HOME']
 
         config = self.validate()
-        self.assertEqual(config['general'].taskrc, taskrc)
+        self.assertEqual(str(config['general'].taskrc), taskrc)
 
     def test_no_taskrc_file_found(self):
         os.remove(self.taskrc)
@@ -108,12 +107,15 @@ class TestTaskrcPath(ConfigTest):
 
 
 class TestUnsupportedOption(unittest.TestCase):
+    def setUp(self):
+        self.adapter = TypeAdapter(schema.UnsupportedOption[str])
+
     def test_unsupportedoption_falsey(self):
-        self.assertEqual(schema.UnsupportedOption.validate(''), '')
+        self.assertEqual(self.adapter.validate_python(''), '')
 
     def test_unsupportedoption_truthy(self):
-        with self.assertRaises(ValueError):
-            schema.UnsupportedOption.validate('foo')
+        with self.assertRaises(pydantic.ValidationError):
+            self.adapter.validate_python('foo')
 
 
 class TestValidation(ConfigTest):
@@ -174,14 +176,14 @@ class TestValidation(ConfigTest):
         self.config['my_service']['undeclared_field'] = 'extra'
 
         self.assertValidationError(
-            '[my_service]\nundeclared_field  <- unrecognized option'
+            '[my_service]\nundeclared_field = extra  <- unrecognized option'
         )
 
     def test_root_validator(self):
         del self.config['my_service']['username']
 
         self.assertValidationError(
-            '[my_service]  <- section requires one of:\n    username\n    query'
+            '[my_service]  <- Value error, section requires one of:\n    username\n    query'
         )
 
     def test_no_scheme_url_validator_default(self):
@@ -195,7 +197,9 @@ class TestValidation(ConfigTest):
 
     def test_no_scheme_url_validator_scheme(self):
         self.config['my_service']['host'] = 'https://github.com'
-        self.assertValidationError("host  <- URL should not include scheme ('https')")
+        self.assertValidationError(
+            "host = https://github.com  <- URL should not include scheme ('https')"
+        )
 
     def test_stripped_trailing_slash_url(self):
         self.config['my_kan']['url'] = 'https://kanboard.example.org/'
@@ -214,7 +218,7 @@ class TestValidation(ConfigTest):
         self.config['my_gitlab']['filter_merge_requests'] = 'true'
         self.config['my_gitlab']['include_merge_requests'] = 'true'
         self.assertValidationError(
-            '[my_gitlab]  <- filter_merge_requests and include_merge_requests are incompatible.'
+            'filter_merge_requests and include_merge_requests are incompatible.'
         )
 
     def test_deprecated_project_name(self):
