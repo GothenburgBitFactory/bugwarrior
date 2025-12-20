@@ -100,12 +100,15 @@ quote-style = "preserve"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "W", "I"]
+select = ["E4", "E7", "E9", "F", "W", "I", "E501"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
 force-sort-within-sections = true
 split-on-trailing-comma = false
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 100
 
 [tool.setuptools.packages.find]
 include = ["bugwarrior*"]

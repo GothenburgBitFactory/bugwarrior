@@ -223,7 +223,9 @@ class TestData:
                 "avatar_url": None,
                 "web_url": "https://my-git.org/groups/arbitrary_namespace",
             },
-            "container_registry_image_prefix": "my-git.org:5555/arbitrary_namespace/arbitrary_project",
+            "container_registry_image_prefix": (
+                "my-git.org:5555/arbitrary_namespace/arbitrary_project"
+            ),
             "_links": {
                 "self": "https://my-git.org/api/v4/projects/8",
                 "issues": "https://my-git.org/api/v4/projects/8/issues",
