@@ -121,7 +121,7 @@ class TestSynchronize(ConfigTest):
             # writing out to taskwarrior.
             # https://github.com/ralphbean/bugwarrior/issues/601
             issue_generator = iter((copy.deepcopy(issue), duplicate_issue))
-            db.synchronize(issue_generator, bwconfig, 'general')
+            db.synchronize(issue_generator, bwconfig)
 
             self.assertEqual(
                 get_tasks(tw),
@@ -149,7 +149,7 @@ class TestSynchronize(ConfigTest):
         # Change static field
         issue['project'] = 'other_project'
 
-        db.synchronize(iter((copy.deepcopy(issue),)), bwconfig, 'general')
+        db.synchronize(iter((copy.deepcopy(issue),)), bwconfig)
 
         self.assertEqual(
             get_tasks(tw),
@@ -172,7 +172,7 @@ class TestSynchronize(ConfigTest):
         )
 
         # TEST CLOSED ISSUE.
-        db.synchronize(iter(()), bwconfig, 'general')
+        db.synchronize(iter(()), bwconfig)
 
         completed_tasks = tw.load_tasks()
 
@@ -199,7 +199,7 @@ class TestSynchronize(ConfigTest):
         )
 
         # TEST REOPENED ISSUE
-        db.synchronize(iter((copy.deepcopy(issue),)), bwconfig, 'general')
+        db.synchronize(iter((copy.deepcopy(issue),)), bwconfig)
 
         tasks = tw.load_tasks()
         self.assertEqual(
@@ -241,7 +241,7 @@ class TestUDAs(ConfigTest):
         }
 
         conf = self.validate()
-        udas = sorted(list(db.get_defined_udas_as_strings(conf, 'general')))
+        udas = sorted(list(db.get_defined_udas_as_strings(conf)))
         self.assertEqual(
             udas,
             [

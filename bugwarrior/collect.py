@@ -33,7 +33,7 @@ def get_service(service_name: str):
     return service.load()
 
 
-def _aggregate_issues(conf, main_section, target, queue):
+def _aggregate_issues(conf, target, queue):
     """This worker function is separated out from the main
     :func:`aggregate_issues` func only so that we can use multiprocessing
     on it for speed reasons.
@@ -42,7 +42,7 @@ def _aggregate_issues(conf, main_section, target, queue):
     start = time.time()
 
     try:
-        service = get_service(conf[target].service)(conf[target], conf[main_section])
+        service = get_service(conf[target].service)(conf[target], conf["general"])
         issue_count = 0
         for issue in service.issues():
             queue.put(issue)
@@ -67,12 +67,12 @@ def _aggregate_issues(conf, main_section, target, queue):
         log.info(f"Done with [{target}] in {duration}.")
 
 
-def aggregate_issues(conf, main_section, debug):
+def aggregate_issues(conf, debug):
     """Return all issues from every target."""
     log.info("Starting to aggregate remote issues.")
 
     # Create and call service objects for every target in the config
-    targets = conf[main_section].targets
+    targets = conf["general"].targets
 
     queue = multiprocessing.Queue()
 
@@ -80,11 +80,11 @@ def aggregate_issues(conf, main_section, debug):
 
     if debug:
         for target in targets:
-            _aggregate_issues(conf, main_section, target, queue)
+            _aggregate_issues(conf, target, queue)
     else:
         for target in targets:
             proc = multiprocessing.Process(
-                target=_aggregate_issues, args=(conf, main_section, target, queue)
+                target=_aggregate_issues, args=(conf, target, queue)
             )
             proc.start()
 

@@ -236,3 +236,39 @@ class TestParseFile(LoadTest):
 
         with self.assertRaises(SystemExit):
             load.parse_file(config_path)
+
+    def test_toml_flavors(self):
+        config_path = self.create('.bugwarrior.toml')
+        with open(config_path, 'w') as fout:
+            fout.write(
+                textwrap.dedent("""
+                [general]
+                targets = ["my_github"]
+
+                [flavor.work]
+                targets = ["my_jira"]
+
+                [flavor.personal]
+                targets = ["my_github"]
+                shorten = true
+
+                [my_github]
+                service = "github"
+                login = "test"
+                username = "test"
+                token = "abc"
+
+                [my_jira]
+                service = "jira"
+                base_uri = "https://jira.example.org"
+                username = "test"
+                password = "abc"
+            """)
+            )
+        config = load.parse_file(config_path)
+        self.assertIn('flavor', config)
+        self.assertIn('work', config['flavor'])
+        self.assertIn('personal', config['flavor'])
+        self.assertEqual(config['flavor']['work']['targets'], ['my_jira'])
+        self.assertEqual(config['flavor']['personal']['targets'], ['my_github'])
+        self.assertTrue(config['flavor']['personal']['shorten'])

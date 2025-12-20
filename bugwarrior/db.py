@@ -240,8 +240,8 @@ def run_hooks(pre_import):
             raise RuntimeError(msg)
 
 
-def synchronize(issue_generator, conf, main_section, dry_run=False):
-    main_config = conf[main_section]
+def synchronize(issue_generator, conf, dry_run=False):
+    main_config = conf["general"]
 
     targets = main_config.targets.copy()
     services = set([conf[target].service for target in targets])
@@ -447,8 +447,8 @@ def build_key_list(targets):
     return keys
 
 
-def get_defined_udas_as_strings(conf, main_section):
-    targets = conf[main_section].targets
+def get_defined_udas_as_strings(conf):
+    targets = conf["general"].targets
     services = set([conf[target].service for target in targets])
     uda_list = build_uda_config_overrides(services)
 

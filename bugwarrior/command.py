@@ -19,15 +19,9 @@ log = logging.getLogger(__name__)
 lst = list
 
 
-def _get_section_name(flavor):
-    if flavor:
-        return 'flavor.' + flavor
-    return 'general'
-
-
-def _try_load_config(main_section, interactive=False, quiet=False):
+def _try_load_config(flavor, interactive=False, quiet=False):
     try:
-        return load_config(main_section, interactive, quiet)
+        return load_config(flavor, interactive, quiet)
     except OSError:
         # Our standard logging configuration depends on the bugwarrior
         # configuration file which just failed to load.
@@ -82,7 +76,7 @@ def cli():
 
 @cli.command()
 @click.option('--dry-run', is_flag=True)
-@click.option('--flavor', default=None, help='The flavor to use')
+@click.option('--flavor', default="general", help='The flavor to use')
 @click.option('--interactive', is_flag=True)
 @click.option(
     '--debug', is_flag=True, help='Do not use multiprocessing (which breaks pdb).'
@@ -96,20 +90,17 @@ def pull(dry_run, flavor, interactive, debug, quiet):
     """
 
     try:
-        main_section = _get_section_name(flavor)
-        config = _try_load_config(main_section, interactive, quiet)
+        config = _try_load_config(flavor, interactive, quiet)
 
-        lockfile_path = os.path.join(
-            config[main_section].data.path, 'bugwarrior.lockfile'
-        )
+        lockfile_path = os.path.join(config["general"].data.path, 'bugwarrior.lockfile')
         lockfile = PIDLockFile(lockfile_path)
         lockfile.acquire(timeout=10)
         try:
             # Get all the issues.  This can take a while.
-            issue_generator = aggregate_issues(config, main_section, debug)
+            issue_generator = aggregate_issues(config, debug)
 
             # Stuff them in the taskwarrior db as necessary
-            synchronize(issue_generator, config, main_section, dry_run)
+            synchronize(issue_generator, config)
         finally:
             lockfile.release()
     except LockTimeout:
@@ -187,7 +178,7 @@ def set(target, username):
 
 
 @cli.command()
-@click.option('--flavor', default=None, help='The flavor to use')
+@click.option('--flavor', default="general", help='The flavor to use')
 @_legacy_cli_deprecation_warning
 def uda(flavor):
     """
@@ -211,10 +202,9 @@ def uda(flavor):
        may prevent you from changing the values of those fields or using them
        in filter expressions.
     """
-    main_section = _get_section_name(flavor)
-    conf = _try_load_config(main_section)
+    conf = _try_load_config(flavor)
     print("# Bugwarrior UDAs")
-    for uda in get_defined_udas_as_strings(conf, main_section):
+    for uda in get_defined_udas_as_strings(conf):
         print(uda)
     print("# END Bugwarrior UDAs")
 

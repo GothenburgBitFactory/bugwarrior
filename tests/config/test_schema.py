@@ -151,7 +151,7 @@ class TestValidation(ConfigTest):
         del self.config['general']
 
         with self.assertRaises(SystemExit):
-            schema.validate_config(self.config, 'general', 'configpath')
+            schema.validate_config(self.config, 'configpath')
 
         self.assertEqual(len(self.caplog.records), 1)
         self.assertIn("No section: 'general'", self.caplog.records[0].message)

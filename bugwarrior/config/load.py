@@ -92,14 +92,24 @@ def parse_file(configpath: str) -> dict:
     return config
 
 
-def load_config(main_section, interactive, quiet) -> dict:
+def load_config(flavor, interactive, quiet) -> dict:
     configpath = get_config_path()
     rawconfig = parse_file(configpath)
-    rawconfig[main_section]['interactive'] = interactive
-    config = schema.validate_config(rawconfig, main_section, configpath)
+
+    # NOTE: we could even do that directly in parse_file
+    if flavor != "general":
+        rawconfig["general"] = rawconfig["flavor"][flavor]
+        flavor_name = f"flavor.{flavor}"
+
+    else:
+        flavor_name = "general"
+
+    rawconfig["general"]["flavor_name"] = flavor_name
+    rawconfig["general"]['interactive'] = interactive
+
+    config = schema.validate_config(rawconfig, configpath)
     configure_logging(
-        config[main_section].log_file,
-        'WARNING' if quiet else config[main_section].log_level,
+        config["general"].log_file, 'WARNING' if quiet else config["general"].log_level
     )
     return config
 

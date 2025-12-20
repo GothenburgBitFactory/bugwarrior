@@ -145,6 +145,8 @@ class MainSectionConfig(BaseConfig):
     #: Interactive status.
     interactive: bool
 
+    flavor_name: str = "general"
+
     @computed_field
     @property
     def data(self) -> BugwarriorData:
@@ -237,17 +239,27 @@ def get_target_validator(targets):
     return compute_target
 
 
-def validate_config(config: dict, main_section: str, config_path: str) -> dict:
+def validate_config(config: dict, config_path: str) -> dict:
     # Pre-validate the minimum requirements to build our pydantic models.
     try:
-        main = config[main_section]
+        main = config["general"]
     except KeyError:
-        raise_validation_error(f"No section: '{main_section}'", config_path)
+        # NOTE: validate_config is called only from load_config,
+        # which already assumes config["general"] exists.
+        # we could either keep the check here as before,
+        # and add the two lines in this function, after the check:
+        # rawconfig["general"]["flavor_name"] = flavor_name
+        # rawconfig["general"]['interactive'] = interactive
+        # or we can simply get rid of the check.'
+        # For now, the section here is wrong, if the flavor is not 'general'.
+        raise_validation_error("No section: 'general'", config_path)
+
     try:
         targets = TypeAdapter(ConfigList).validate_python(main['targets'])
     except KeyError:
         raise_validation_error(
-            f"No option 'targets' in section: '{main_section}'", config_path
+            f"No option 'targets' in section: '{config['general']['flavor_name']}'",
+            config_path,
         )
     try:
         configmap = {target: config[target] for target in targets}
@@ -267,20 +279,12 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
         target: (get_service(service).CONFIG_SCHEMA, ...)
         for target, service in servicemap.items()
     }
-
     # Construct Validation Model
     bugwarrior_config_model = pydantic.create_model(
         'bugwarriorrc',
         __base__=SchemaBase,
         __validators__={'compute_target': get_target_validator(targets)},
         general=(MainSectionConfig, ...),
-        flavor=(
-            dict[str, MainSectionConfig],
-            {
-                flavor: (MainSectionConfig, ...)
-                for flavor in config.get('flavor', {}).values()
-            },
-        ),
         **target_schemas,
     )
 

@@ -49,7 +49,7 @@ class TestGetDataPath(ConfigTest):
                 'username': 'ralphbean',
             },
         }
-        self.config = schema.validate_config(rawconfig, 'general', 'configpath')
+        self.config = schema.validate_config(rawconfig, 'configpath')
 
     def assertDataPath(self, expected_datapath):
         self.assertEqual(

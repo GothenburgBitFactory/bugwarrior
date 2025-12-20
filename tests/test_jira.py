@@ -43,7 +43,7 @@ class testJiraService(ConfigTest):
     def test_body_length_no_limit(self):
         description = "A very short issue body.  Fixes #828."
         self.config['myjira']['body_length'] = '5'
-        conf = schema.validate_config(self.config, 'general', 'configpath')
+        conf = schema.validate_config(self.config, 'configpath')
         service = JiraService(conf['myjira'], conf['general'], _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
@@ -51,7 +51,7 @@ class testJiraService(ConfigTest):
 
     def test_body_length_limit(self):
         description = "A very short issue body.  Fixes #828."
-        conf = schema.validate_config(self.config, 'general', 'configpath')
+        conf = schema.validate_config(self.config, 'configpath')
         service = JiraService(conf['myjira'], conf['general'], _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))

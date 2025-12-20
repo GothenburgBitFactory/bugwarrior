@@ -2,6 +2,7 @@ import abc
 import os.path
 import shutil
 import tempfile
+from typing import Any
 import unittest
 
 import pytest
@@ -37,6 +38,8 @@ class ConfigTest(unittest.TestCase):
     Creates config files, configures the environment, and cleans up afterwards.
     """
 
+    config: dict[str, Any]
+
     def setUp(self):
         self.old_environ = os.environ.copy()
         self.tempdir = tempfile.mkdtemp(prefix='bugwarrior')
@@ -63,10 +66,11 @@ class ConfigTest(unittest.TestCase):
     def inject_fixtures(self, caplog):
         self.caplog = caplog
 
-    def validate(self):
+    def validate(self, flavor: str = "general"):
         self.config['general'] = self.config.get('general', {})
         self.config['general']['interactive'] = False
-        return schema.validate_config(self.config, 'general', 'configpath')
+        self.config['general']['flavor_name'] = flavor
+        return schema.validate_config(self.config, 'configpath')
 
     def assertValidationError(self, expected):
         with self.assertRaises(SystemExit):
