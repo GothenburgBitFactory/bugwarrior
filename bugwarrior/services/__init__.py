@@ -4,12 +4,13 @@ Service API
 """
 
 import abc
-from datetime import datetime, timezone
+import datetime
 import logging
 import math
 import os
 import re
 import typing
+import zoneinfo
 
 from dateutil.parser import parse as parse_date
 import dogpile.cache
@@ -170,18 +171,31 @@ class Issue(abc.ABC):
             self.record.get('priority'), self.config.default_priority
         )
 
-    def parse_date(self, date: str | None) -> datetime | None:
+    def parse_date(
+        self, date: str | None, timezone='deprecated'
+    ) -> datetime.datetime | None:
         """Parse a date string into a datetime object.
 
-        If the parsed date does not have a timezone, the UTC timezone is added
+        If the parsed date does not have a timezone, the UTC timezone is added.
+
         :param `date`: A time string parseable by `dateutil.parser.parse`
         """
+        if timezone != 'deprecated':
+            log.warning(
+                "Deprecation Warning: Issue.parse_date's timezone parameter is deprecated and will "
+                "be removed in a future API version."
+            )
+
         if not date:
             return None
 
         _date = parse_date(date)
         if not _date.tzinfo:
-            _date = _date.replace(tzinfo=timezone.utc)
+            _date = _date.replace(
+                tzinfo=datetime.timezone.utc
+                if timezone == 'deprecated'
+                else zoneinfo.ZoneInfo(timezone)
+            )
 
         return _date.replace(microsecond=0)
 
