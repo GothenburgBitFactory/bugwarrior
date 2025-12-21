@@ -1,7 +1,5 @@
-import datetime
+from datetime import datetime, timezone
 from unittest import mock
-
-from dateutil.tz.tz import tzutc
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.azuredevops import AzureDevopsService, striphtml
@@ -190,8 +188,8 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "project": None,
             "annotations": [],
             "adonamespace": "test_organization\\test_project",
-            "entry": datetime.datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=tzutc()),
-            "end": datetime.datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=tzutc()),
+            "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=timezone.utc),
+            "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=timezone.utc),
             "adoactivity": "",
             "adoremainingwork": None,
             "adoparent": None,
@@ -204,8 +202,8 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "project": None,
             "priority": "M",
             "annotations": [],
-            "entry": datetime.datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=tzutc()),
-            "end": datetime.datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=tzutc()),
+            "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=timezone.utc),
+            "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=timezone.utc),
             "adotitle": "Example Title",
             "adodescription": " This Description has some html in it ",
             "adoid": 1,
@@ -228,8 +226,8 @@ class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
             "project": None,
             "priority": "M",
             "annotations": [],
-            "entry": datetime.datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=tzutc()),
-            "end": datetime.datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=tzutc()),
+            "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=timezone.utc),
+            "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=timezone.utc),
             "adotitle": "Example Title",
             "adodescription": " This Description has some html in it ",
             "adoid": 1,

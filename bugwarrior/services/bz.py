@@ -9,7 +9,6 @@ import xmlrpc.client
 import bugzilla
 import pydantic
 from pydantic import BeforeValidator
-import pytz
 
 from bugwarrior import config
 from bugwarrior.config.schema import StrippedTrailingSlashUrl
@@ -328,8 +327,7 @@ def _ensure_datetime(
         return datetime.datetime.fromisoformat(timestamp)
     elif isinstance(timestamp, xmlrpc.client.DateTime):
         structured = time.mktime(timestamp.timetuple())
-        naive = datetime.datetime.fromtimestamp(structured)
-        return pytz.UTC.localize(naive)
+        return datetime.datetime.fromtimestamp(structured, tz=datetime.timezone.utc)
     else:
         raise TypeError(
             "Timestamp conversion from `{0!r}` is not supported.".format(timestamp)

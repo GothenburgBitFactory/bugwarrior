@@ -4,17 +4,17 @@ Service API
 """
 
 import abc
+import datetime
 import logging
 import math
 import os
 import re
 import typing
+import zoneinfo
 
 from dateutil.parser import parse as parse_date
-from dateutil.tz import tzlocal
 import dogpile.cache
 from jinja2 import Template
-import pytz
 import requests
 
 from bugwarrior.config import schema, secrets
@@ -171,25 +171,33 @@ class Issue(abc.ABC):
             self.record.get('priority'), self.config.default_priority
         )
 
-    def parse_date(self, date, timezone='UTC'):
+    def parse_date(
+        self, date: str | None, timezone='deprecated'
+    ) -> datetime.datetime | None:
         """Parse a date string into a datetime object.
 
-        :param `date`: A time string parseable by `dateutil.parser.parse`
-        :param `timezone`: The string timezone name (from `pytz.all_timezones`)
-            to use as a default should the parsed time string not include
-            timezone information.
+        If the parsed date does not have a timezone, the UTC timezone is added.
 
+        :param `date`: A time string parseable by `dateutil.parser.parse`
         """
-        if date:
-            date = parse_date(date)
-            if not date.tzinfo:
-                if timezone == '':
-                    tzinfo = tzlocal()
-                else:
-                    tzinfo = pytz.timezone(timezone)
-                date = date.replace(tzinfo=tzinfo)
-            return date.replace(microsecond=0)
-        return None
+        if timezone != 'deprecated':
+            log.warning(
+                "Deprecation Warning: Issue.parse_date's timezone parameter is deprecated and will "
+                "be removed in a future API version."
+            )
+
+        if not date:
+            return None
+
+        _date = parse_date(date)
+        if not _date.tzinfo:
+            _date = _date.replace(
+                tzinfo=datetime.timezone.utc
+                if timezone == 'deprecated'
+                else zoneinfo.ZoneInfo(timezone)
+            )
+
+        return _date.replace(microsecond=0)
 
     def build_default_description(
         self, title='', url='', number='', cls="issue"

@@ -3,7 +3,6 @@ import logging
 import typing
 
 from pydantic import model_validator
-import pytz
 import requests
 
 from bugwarrior import config
@@ -69,7 +68,7 @@ class PagureIssue(Issue):
             self.TITLE: self.record['title'],
             self.ID: self.record['id'],
             self.DATE_CREATED: datetime.datetime.fromtimestamp(
-                int(self.record['date_created']), pytz.UTC
+                int(self.record['date_created']), datetime.timezone.utc
             ),
         }
 

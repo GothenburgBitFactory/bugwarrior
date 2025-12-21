@@ -4,7 +4,6 @@ import re
 import typing
 from urllib.parse import urlparse
 
-from dateutil.tz.tz import tzutc
 from kanboard import Client
 
 from bugwarrior import config
@@ -104,7 +103,7 @@ class KanboardIssue(Issue):
     def _convert_timestamp_from_field(self, field):
         timestamp = int(self.record.get(field, 0))
         if timestamp:
-            return datetime.datetime.fromtimestamp(timestamp).astimezone(tzutc())
+            return datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
 
 
 class KanboardService(Service):

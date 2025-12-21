@@ -2,7 +2,6 @@ import datetime
 import logging
 import typing
 
-from dateutil.tz import tzutc
 import requests
 
 from bugwarrior import config
@@ -96,7 +95,7 @@ class NextcloudDeckIssue(Issue):
             'annotations': self.extra['annotations'],
             'tags': self.get_tags(),
             'entry': datetime.datetime.fromtimestamp(
-                self.record.get('createdAt'), tz=tzutc()
+                self.record.get('createdAt'), tz=datetime.timezone.utc
             ),
             'due': self.parse_date(self.record.get('duedate')),
             self.AUTHOR: self.record['owner']['uid'],

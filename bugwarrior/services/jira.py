@@ -4,7 +4,6 @@ import logging
 import sys
 import typing
 
-from dateutil.tz.tz import tzutc
 from jira.client import JIRA as BaseJIRA
 from pydantic import BeforeValidator, model_validator
 from requests.cookies import RequestsCookieJar
@@ -223,7 +222,7 @@ class JiraIssue(Issue):
     def get_entry(self):
         created_at = self.record['fields']['created']
         # Convert timestamp to an offset-aware datetime
-        date = self.parse_date(created_at).astimezone(tzutc())
+        date = self.parse_date(created_at)
         return date
 
     def get_tags(self):

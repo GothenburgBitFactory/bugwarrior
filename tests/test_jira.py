@@ -1,8 +1,6 @@
 from collections import namedtuple
+from datetime import datetime, timezone
 from unittest import mock
-
-from dateutil.tz import datetime
-from dateutil.tz.tz import tzutc
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.config import schema
@@ -141,7 +139,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'annotations': arbitrary_extra['annotations'],
             'due': None,
             'tags': [],
-            'entry': datetime.datetime(2016, 6, 6, 13, 7, 8, tzinfo=tzutc()),
+            'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=timezone.utc),
             'jirafixversion': '1.2.3',
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
@@ -184,9 +182,9 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'project': self.arbitrary_project,
             'priority': (issue.PRIORITY_MAP[record_with_goal['fields']['priority']]),
             'annotations': arbitrary_extra['annotations'],
-            'due': datetime.datetime(2016, 9, 23, 16, 8, tzinfo=tzutc()),
+            'due': datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc),
             'tags': [],
-            'entry': datetime.datetime(2016, 6, 6, 13, 7, 8, tzinfo=tzutc()),
+            'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=timezone.utc),
             'jirafixversion': '1.2.3',
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
@@ -218,7 +216,7 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             'description': (
                 '(bw)Is#10 - lkjaldsfjaldf .. https://two.org/browse/DONUT-10'
             ),
-            'entry': datetime.datetime(2016, 6, 6, 13, 7, 8, tzinfo=tzutc()),
+            'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=timezone.utc),
             'jiradescription': None,
             'jiraestimate': 1,
             'jirafixversion': '1.2.3',
@@ -244,5 +242,5 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             extra={'sprint_field_names': self.service.sprint_field_names},
         )
         self.assertEqual(
-            issue.get_due(), datetime.datetime(2016, 9, 23, 16, 8, tzinfo=tzutc())
+            issue.get_due(), datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc)
         )

@@ -1,10 +1,10 @@
+from datetime import datetime, timezone
 import email
 import logging
 import multiprocessing
 import os
 import pickle
 import re
-import time
 import typing
 
 from google.auth.transport.requests import Request
@@ -93,10 +93,9 @@ class GmailIssue(Issue):
         return self.extra.get('annotations', [])
 
     def get_entry(self):
-        date_string = time.strftime(
-            '%Y-%m-%d %H:%M:%S', time.gmtime(int(self.extra['internal_date']) / 1000)
-        )
-        return self.parse_date(date_string)
+        # internal_date is in milliseconds, convert to seconds and create UTC datetime
+        timestamp_seconds = int(self.extra['internal_date']) / 1000
+        return datetime.fromtimestamp(timestamp_seconds, tz=timezone.utc)
 
 
 class GmailService(Service):

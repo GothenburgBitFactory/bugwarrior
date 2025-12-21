@@ -1,6 +1,5 @@
-import datetime
+from datetime import datetime, timezone
 
-from dateutil.tz import tzutc
 import responses
 
 from bugwarrior.collect import TaskConstructor
@@ -266,9 +265,9 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
                     'updated_at': '2019-05-14T12:00:00Z',
                 },
             ],
-            'pivotalclosed': datetime.datetime(2019, 5, 14, 12, 0, tzinfo=tzutc()),
-            'pivotalcreated': datetime.datetime(2019, 5, 14, 12, 0, tzinfo=tzutc()),
-            'pivotalupdated': datetime.datetime(2019, 5, 14, 12, 0, tzinfo=tzutc()),
+            'pivotalclosed': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
+            'pivotalcreated': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
+            'pivotalupdated': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
             'pivotalurl': 'http://localhost/story/show/561',
             'pivotalblockers': [
                 {
@@ -300,7 +299,7 @@ class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def test_issues(self):
         story = next(self.service.issues())
-        story_date = datetime.datetime(2019, 5, 14, 12, 0, tzinfo=tzutc())
+        story_date = datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc)
         expected = {
             'annotations': [
                 '@task - status: False - Port 0',

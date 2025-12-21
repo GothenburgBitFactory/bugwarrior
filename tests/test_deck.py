@@ -1,8 +1,6 @@
 import dataclasses
-import datetime
+from datetime import datetime, timezone
 from unittest import mock
-
-from dateutil.tz import tzutc
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.deck import NextcloudDeckClient, NextcloudDeckService
@@ -126,8 +124,8 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'annotations': ['@Lena - testcomment'],
-            'entry': datetime.datetime(2022, 8, 17, 20, 16, 22, tzinfo=tzutc()),
-            'due': datetime.datetime(2022, 11, 20, 23, 0, tzinfo=tzutc()),
+            'entry': datetime(2022, 8, 17, 20, 16, 22, tzinfo=timezone.utc),
+            'due': datetime(2022, 11, 20, 23, 0, tzinfo=timezone.utc),
             'nextclouddeckassignee': 'rainbow',
             'nextclouddeckauthor': 'unicorn',
             'nextclouddeckboardid': 5,
@@ -151,8 +149,8 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
 
         expected = {
             'annotations': ['@Lena - testcomment'],
-            'entry': datetime.datetime(2022, 8, 17, 20, 16, 22, tzinfo=tzutc()),
-            'due': datetime.datetime(2022, 11, 20, 23, 0, tzinfo=tzutc()),
+            'entry': datetime(2022, 8, 17, 20, 16, 22, tzinfo=timezone.utc),
+            'due': datetime(2022, 11, 20, 23, 0, tzinfo=timezone.utc),
             'description': '(bw)Is# - check that nextcloud deck integration works',
             'nextclouddeckassignee': 'rainbow',
             'nextclouddeckauthor': 'unicorn',
