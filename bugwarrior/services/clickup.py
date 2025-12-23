@@ -74,9 +74,9 @@ class ClickupIssue(Issue):
         FOLDER: {"type": "string", "label": "Clickup Folder id"},
         SPACE: {"type": "string", "label": "Clickup Space id"},
     }
-    UNIQUE_KEY = [ID]
+    UNIQUE_KEY = (ID,)
 
-    PRIORITY_MAP = {"urgent": "H", "high": "M", "normal": "L", "low": "", None: ""}
+    PRIORITY_MAP = {"urgent": "H", "high": "M", "normal": "L", "low": ""}
 
     def to_taskwarrior(self):
         self.title = self.record["name"]
@@ -88,7 +88,7 @@ class ClickupIssue(Issue):
 
         return {
             "project": project,
-            "priority": self.record["priority"],
+            "priority": self.get_priority(),
             "annotations": self.extra.get("annotations", []),
             "due": self.parse_timestamp(self.record["due_date"]),
             "entry": self.parse_timestamp(self.record["date_created"]),
@@ -125,7 +125,7 @@ class ClickupService(Service):
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
-        self.client = ClickupClient(token=self.config.token)
+        self.client = ClickupClient(token=self.get_secret('token'))
 
     @staticmethod
     def get_keyring_service(config):
