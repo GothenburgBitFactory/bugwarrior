@@ -89,7 +89,6 @@ class ClickupIssue(Issue):
         return {
             "project": project,
             "priority": self.get_priority(),
-            "annotations": self.extra.get("annotations", []),
             "due": self.parse_timestamp(self.record["due_date"]),
             "entry": self.parse_timestamp(self.record["date_created"]),
             self.ID: self.record["id"],
