@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 class ClickupConfig(config.ServiceConfig):
     service: typing.Literal["clickup"]
     token: str
-    team: int
+    team_id: int
 
     default_priority: str = ""
 
@@ -145,6 +145,6 @@ class ClickupService(Service):
         return False
 
     def issues(self):
-        for task in self.client.get_tasks_for_team(self.config.team):
+        for task in self.client.get_tasks_for_team(self.config.team_id):
             if self.is_assigned(task):
                 yield self.get_issue_for_record(task)
