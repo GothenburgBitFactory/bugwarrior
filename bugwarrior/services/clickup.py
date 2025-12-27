@@ -29,7 +29,7 @@ class ClickupClient(Client):
     def _get_url_for_tasks(team_id: int, page: int = 0):
         base_url = "https://api.clickup.com/api/v2/"
         query = f"include_closed=false&page={page}"
-        return f"{base_url}/team/{team_id}/task?{query}"
+        return f"{base_url}team/{team_id}/task?{query}"
 
     def get_tasks_for_team(self, team_id: int) -> Generator[dict, None, None]:
         headers = {"Authorization": self.token}
@@ -131,7 +131,7 @@ class ClickupService(Service):
         return "clickup://"
 
     def is_assigned(self, issue: dict) -> bool:
-        if self.config.only_if_assigned is None:
+        if self.config.only_if_assigned is None or self.config.only_if_assigned == "":
             return True
 
         if self.config.also_unassigned and len(issue["assignees"]) == 0:
