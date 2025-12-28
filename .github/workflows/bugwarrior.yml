@@ -30,19 +30,10 @@ jobs:
           source .venv/bin/activate
           pip install --upgrade pip setuptools
 
-          pip install codecov
-          pip install pytest-cov
           pip install -e ".[all]"
 
           bugwarrior --version
-          pytest --cov=bugwarrior --cov-branch tests
-      - name: Coverage
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./.coverage
-        # Fragile way to only run codecov once.
-        # See https://github.com/codecov/codecov-action/issues/40.
-        if: matrix.python-version == 3.13
+          pytest
   bugwarrior-multiarch-test:
     runs-on: ubuntu-latest
     # We're currently seeing these complete in 10-30 minutes.
