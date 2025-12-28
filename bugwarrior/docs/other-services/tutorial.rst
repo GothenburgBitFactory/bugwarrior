@@ -8,7 +8,7 @@ In this tutorial we will walk through the process of writing a new service from 
 
 The first step is figuring out how you're going to establish a connection to your service's API.
 
-You may choose to use an existing python client for accessing the API if an existing library already exists. If you're going this route, be sure to add an entry to the ``extras`` dictionary in ``setup.py``. You should also go ahead and test this library out in a python interpreter and make sure you can authenticate with an external server if necessary.
+You may choose to use an existing python client for accessing the API if an existing library already exists. If you're going this route, be sure to add an entry to the ``[project.optional-dependencies]`` table in ``pyproject.toml``. You should also go ahead and test this library out in a python interpreter and make sure you can authenticate with an external server if necessary.
 
 More likely you'll be writing your own client using an http API, so start off by making sure you can access it on the command line with, for example, curl.
 
@@ -135,22 +135,10 @@ We will now implement an ``Issue`` class, which is essentially a wrapper for eac
       TITLE = 'gitbugtitle'
 
       UDAS = {
-          AUTHOR: {
-              'type': 'string',
-              'label': 'Gitbug Issue Author',
-          },
-          ID: {
-              'type': 'string',
-              'label': 'Gitbug UUID',
-          },
-          STATE: {
-              'type': 'string',
-              'label': 'Gitbug state',
-          },
-          TITLE: {
-              'type': 'string',
-              'label': 'Gitbug Title',
-          },
+          AUTHOR: {'type': 'string', 'label': 'Gitbug Issue Author'},
+          ID: {'type': 'string', 'label': 'Gitbug UUID'},
+          STATE: {'type': 'string', 'label': 'Gitbug state'},
+          TITLE: {'type': 'string', 'label': 'Gitbug Title'},
       }
 
       UNIQUE_KEY = (ID,)
@@ -174,7 +162,7 @@ We will now implement an ``Issue`` class, which is essentially a wrapper for eac
               [label['name'] for label in self.record['labels']])
 
       def get_default_description(self):
-          return self.build_default_description(title=self.record['title'])
+          return self.build_default_description(title=self.record['title'], cls='bug')
 
 The first thing you see here is the declaration of which UDAs this service will assign to each task. The first set of class attributes define the UDA names -- e.g. the author will be assigned to ``gitbugauthor`` -- and the ``UDAS`` dictionary provides additional metadata about them.
 
@@ -252,18 +240,14 @@ The ``issues`` method is a generator which yields individual issue dictionaries.
 7. Service Registration
 -----------------------
 
-If you're developing your service in a separate package, it's time to create a ``setup.py`` if you have not done so already, and register the name of your service with the path to your ``Service`` class.
+If you're developing your service in a separate package, it's time to create a ``pyproject.toml`` if you have not done so already, and register the name of your service with the path to your ``Service`` class.
 
-.. code:: python
+.. code:: toml
 
-  setup(...
-    entry_points="""
-    [bugwarrior.service]
-    gitbug=bugwarrior_gitbug:GitBugService
-    """
-  )
+  [project.entry-points."bugwarrior.service"]
+  gitbug = "bugwarrior.services.gitbug:GitBugService"
 
-If you're developing in the bugwarrior repo, you can simply add your entry to the existing ``[bugwarrior.service]`` group.
+If you're developing in the bugwarrior repo, you can simply add your entry to the existing ``[project.entry-points."bugwarrior.service"]`` table.
 
 8. Tests
 ----------
