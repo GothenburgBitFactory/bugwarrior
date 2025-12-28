@@ -5,6 +5,7 @@ import sys
 import typing
 
 from jira.client import JIRA as BaseJIRA
+from jira.exceptions import JIRAError
 from pydantic import BeforeValidator, model_validator
 from requests.cookies import RequestsCookieJar
 
@@ -400,7 +401,10 @@ class JiraService(Service):
         )
 
     def issues(self):
-        cases = self.jira.enhanced_search_issues(self.query, maxResults=False)
+        try:
+            cases = self.jira.search_issues(self.query, maxResults=False)
+        except JIRAError:  # Jira Cloud
+            cases = self.jira.enhanced_search_issues(self.query, maxResults=False)
 
         for case in cases:
             issue = self.get_issue_for_record(
