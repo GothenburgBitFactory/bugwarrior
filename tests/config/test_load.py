@@ -20,13 +20,16 @@ class ExampleTest(ConfigTest):
         self.basedir = pathlib.Path(__file__).parent
         super().setUp()
 
-    def test_example_bugwarriorrc(self):
-        os.environ['BUGWARRIORRC'] = str(self.basedir / 'example-bugwarriorrc')
-        load.load_config('general', False, False)
+    def test_example(self):
+        for rcfile in ('example-bugwarriorrc', 'example-bugwarrior.toml'):
+            with self.subTest(rcfile=rcfile):
+                os.environ['BUGWARRIORRC'] = str(self.basedir / rcfile)
+                config = load.load_config('general', False, False)
 
-    def test_example_bugwarrior_toml(self):
-        os.environ['BUGWARRIORRC'] = str(self.basedir / 'example-bugwarrior.toml')
-        load.load_config('general', False, False)
+                self.assertEqual(
+                    config['flavor.myflavor'].targets,
+                    ["gitlab_config", "jira_project", "my_github"],
+                )
 
 
 class LoadTest(ConfigTest):
@@ -141,19 +144,6 @@ class TestParseFile(LoadTest):
 
         load.parse_file(config_path)
 
-    def test_toml_invalid(self):
-        config_path = self.create('.bugwarrior.toml')
-        with open(config_path, 'w') as fout:
-            fout.write(
-                textwrap.dedent("""
-                [general
-                foo = "bar"
-            """)
-            )
-
-        with self.assertRaises(tomllib.TOMLDecodeError):
-            load.parse_file(config_path)
-
     def test_ini(self):
         config_path = self.create('.bugwarriorrc')
         with open(config_path, 'w') as fout:
@@ -167,6 +157,19 @@ class TestParseFile(LoadTest):
 
         self.assertEqual(config, {'general': {'foo': 'bar'}})
 
+    def test_toml_invalid(self):
+        config_path = self.create('.bugwarrior.toml')
+        with open(config_path, 'w') as fout:
+            fout.write(
+                textwrap.dedent("""
+                [general
+                foo = "bar"
+            """)
+            )
+
+        with self.assertRaises(tomllib.TOMLDecodeError):
+            load.parse_file(config_path)
+
     def test_ini_invalid(self):
         config_path = self.create('.bugwarriorrc')
         with open(config_path, 'w') as fout:
@@ -179,6 +182,30 @@ class TestParseFile(LoadTest):
 
         with self.assertRaises(configparser.MissingSectionHeaderError):
             load.parse_file(config_path)
+
+    def test_toml_flavors(self):
+        config_path = self.create('.bugwarrior.toml')
+        for section in ('["flavor.myflavor"]', '[flavor.myflavor]'):
+            with self.subTest(section=section):
+                with open(config_path, 'w') as fout:
+                    fout.write(f'{section}\ntargets = ["my_gitlab"]')
+                config = load.parse_file(config_path)
+                self.assertEqual(
+                    config, {'flavor.myflavor': {'targets': ['my_gitlab']}}
+                )
+
+    def test_ini_flavors(self):
+        config_path = self.create('.bugwarriorrc')
+        with open(config_path, 'w') as fout:
+            fout.write(
+                textwrap.dedent("""
+                [flavor.myflavor]
+                targets = my_gitlab
+            """)
+            )
+        config = load.parse_file(config_path)
+
+        self.assertEqual(config, {'flavor.myflavor': {'targets': 'my_gitlab'}})
 
     def test_ini_options_renamed(self):
         """

@@ -123,7 +123,14 @@ def process_values(doc: IntermediateRepr) -> IntermediateRepr:
     return doc
 
 
+def unquote_flavors(file_contents: str) -> str:
+    return re.sub(
+        r'\n\["flavor\.(?P<flavor>[^"]*)"\]', r'\n[flavor.\g<flavor>]', file_contents
+    )
+
+
 def activate(translator: Translator):
     profile = translator["bugwarriorrc"]
     profile.description = "Convert 'bugwarriorrc' files to 'bugwarrior.toml'"
     profile.intermediate_processors.append(process_values)
+    profile.post_processors.append(unquote_flavors)
