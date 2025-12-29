@@ -56,6 +56,10 @@ def parse_file(configpath: str) -> dict:
     if os.path.splitext(configpath)[-1] == '.toml':
         with open(configpath, 'rb') as f:
             config = tomllib.load(f)
+        # Flatten flavors into top-level sections (if they're unquoted).
+        for k, v in config.get('flavor', {}).items():
+            config[f'flavor.{k}'] = v
+        config.pop('flavor', None)
     else:
         rawconfig = BugwarriorConfigParser()
         with codecs.open(configpath, "r", "utf-8") as buff:
@@ -69,7 +73,7 @@ def parse_file(configpath: str) -> dict:
                     k.replace('log.', 'log_'): v for k, v in rawconfig[section].items()
                 }
             elif section.startswith('flavor.'):
-                config['flavor'][section.split('.')[-1]] = {
+                config[section] = {
                     k.replace('.', '_'): v for k, v in rawconfig[section].items()
                 }
             else:

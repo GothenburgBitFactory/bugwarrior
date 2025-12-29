@@ -239,6 +239,12 @@ class TestValidation(ConfigTest):
         self.config['my_redmine']['project_name'] = 'myproject'
         self.validate()
 
+    def test_flavors(self):
+        self.config.setdefault('flavor', {})['myflavor'] = {
+            'targets': ['my_service', 'my_gitlab']
+        }
+        self.validate()
+
 
 class TestComputeTemplates(unittest.TestCase):
     def test_template(self):

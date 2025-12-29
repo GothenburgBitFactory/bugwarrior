@@ -143,7 +143,7 @@ class MainSectionConfig(BaseConfig):
 
     # added during configuration loading
     #: Interactive status.
-    interactive: bool
+    interactive: bool = False
 
     @computed_field
     @property
@@ -268,19 +268,20 @@ def validate_config(config: dict, main_section: str, config_path: str) -> dict:
         for target, service in servicemap.items()
     }
 
+    # Construct Flavors
+    flavor_schemas = {
+        section: (MainSectionConfig, ...)
+        for section in config.keys()
+        if section.startswith('flavor.')
+    }
+
     # Construct Validation Model
     bugwarrior_config_model = pydantic.create_model(
         'bugwarriorrc',
         __base__=SchemaBase,
         __validators__={'compute_target': get_target_validator(targets)},
         general=(MainSectionConfig, ...),
-        flavor=(
-            dict[str, MainSectionConfig],
-            {
-                flavor: (MainSectionConfig, ...)
-                for flavor in config.get('flavor', {}).values()
-            },
-        ),
+        **flavor_schemas,
         **target_schemas,
     )
 

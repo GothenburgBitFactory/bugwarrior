@@ -37,6 +37,9 @@ log_level = "DEBUG"
 log_file = "/var/log/bugwarrior.log"
 # Configure the default description or annotation length.
 # annotation_length = 45
+
+[flavor.myflavor]
+targets = ["gitlab_config", "jira_project", "my_github"]
 # Use hooks to run commands prior to importing from `bugwarrior pull`.
 # `bugwarrior pull` will run the commands in the order that they are specified
 # below.
