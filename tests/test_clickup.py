@@ -214,7 +214,7 @@ class TestClickupIssue(AbstractServiceTest, ServiceTest):
         task = self.data.get_task()
         expected_output = {
             "project": None,
-            "priority": '',
+            "priority": 'M',
             "due": None,
             "entry": datetime.fromtimestamp(int(task["date_created"]) / 1e3),
             issue.ID: task["id"],
@@ -244,7 +244,7 @@ class TestClickupIssue(AbstractServiceTest, ServiceTest):
         task = self.data.get_task()
         expected_output = {
             "project": None,
-            "priority": '',
+            "priority": 'M',
             "due": None,
             "tags": [],
             "entry": datetime.fromtimestamp(int(task["date_created"]) / 1e3),
