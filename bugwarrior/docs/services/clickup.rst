@@ -20,5 +20,10 @@ The above example is the minimum required to import tasks from
 Clickup. 
 
 The ``token`` is your private API token. Check 
-https://developer.clickup.com/docs/authentication
-The ``team_id`` is the numeric identification of the team
+https://developer.clickup.com/docs/authentication.
+The ``team_id`` is the numeric identification of the team.
+
+Provided UDA Fields
+-------------------
+
+.. udas:: bugwarrior.services.clickup.ClickupIssue

@@ -16,8 +16,6 @@ class ClickupConfig(config.ServiceConfig):
     token: str
     team_id: int
 
-    default_priority: str = ""
-
 
 class ClickupClient(Client):
     """Abstraction of Clickup API v2"""
@@ -79,8 +77,6 @@ class ClickupIssue(Issue):
     PRIORITY_MAP = {"urgent": "H", "high": "M", "normal": "L", "low": ""}
 
     def to_taskwarrior(self):
-        self.title = self.record["name"]
-
         if not self.record["project"]["hidden"]:
             project = self.record["project"]["name"]
         else:
@@ -104,7 +100,9 @@ class ClickupIssue(Issue):
         }
 
     def get_default_description(self):
-        return self.build_default_description(title=self.title, url=self.record["url"])
+        return self.build_default_description(
+            title=self.record["name"], url=self.record["url"]
+        )
 
     @staticmethod
     def parse_timestamp(
@@ -131,7 +129,7 @@ class ClickupService(Service):
         return "clickup://"
 
     def is_assigned(self, issue: dict) -> bool:
-        if self.config.only_if_assigned is None or self.config.only_if_assigned == "":
+        if not self.config.only_if_assigned:
             return True
 
         if self.config.also_unassigned and len(issue["assignees"]) == 0:
