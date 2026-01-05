@@ -232,6 +232,7 @@ class TestClickupIssue(AbstractServiceTest, ServiceTest):
             issue.PROJECT: task["project"]["id"],
             issue.FOLDER: task["folder"]["id"],
             issue.SPACE: task["space"]["id"],
+            issue.NAME: task["name"],
         }
         actual_output = issue.to_taskwarrior()
 
@@ -268,6 +269,7 @@ class TestClickupIssue(AbstractServiceTest, ServiceTest):
             issue.PROJECT: task["project"]["id"],
             issue.FOLDER: task["folder"]["id"],
             issue.SPACE: task["space"]["id"],
+            issue.NAME: task["name"],
         }
 
         self.assertEqual(

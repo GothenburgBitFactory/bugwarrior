@@ -60,6 +60,7 @@ class ClickupIssue(Issue):
     PROJECT = "clickupproject"
     FOLDER = "clickupfolder"
     SPACE = "clickupspace"
+    NAME = "clickupname"
 
     UDAS = {
         ID: {"type": "string", "label": "Clickup id"},
@@ -72,6 +73,7 @@ class ClickupIssue(Issue):
         PROJECT: {"type": "string", "label": "Clickup Project id"},
         FOLDER: {"type": "string", "label": "Clickup Folder id"},
         SPACE: {"type": "string", "label": "Clickup Space id"},
+        NAME: {"type": "string", "label": "Clickup Title"},
     }
     UNIQUE_KEY = (ID,)
 
@@ -98,6 +100,7 @@ class ClickupIssue(Issue):
             self.PROJECT: self.record["project"]["id"],
             self.FOLDER: self.record["folder"]["id"],
             self.SPACE: self.record["space"]["id"],
+            self.NAME: self.record["name"],
         }
 
     def get_default_description(self):
