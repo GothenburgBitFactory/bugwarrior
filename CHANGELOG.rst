@@ -14,6 +14,7 @@ Dependency Updates
 Bug Fixes
 =========
 
+- Fix --flavor feature. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1172)
 - jira: Fix non-cloud services, which were broken in 2.0.0. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1171)
 - todoist: Removed typing_extensions import, which was not in project dependencies. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1155)
 
