@@ -42,6 +42,7 @@ extensions = [
     'udas',
     'config',
     'sphinx_inline_tabs',
+    'extras',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
