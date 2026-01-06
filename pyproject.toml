@@ -90,6 +90,7 @@ pivotaltracker = "bugwarrior.services.pivotaltracker:PivotalTrackerService"
 linear = "bugwarrior.services.linear:LinearService"
 logseq = "bugwarrior.services.logseq:LogseqService"
 todoist = "bugwarrior.services.todoist:TodoistService"
+clickup = "bugwarrior.services.clickup:ClickupService"
 
 [project.entry-points."ini2toml.processing"]
 bugwarrior = "bugwarrior.config.ini2toml_plugin:activate"
