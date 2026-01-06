@@ -1,10 +1,10 @@
 import importlib
+from importlib.metadata import entry_points
 import os
 from pathlib import Path
 import re
 import unittest
 
-from importlib_metadata import entry_points
 import pydantic
 from pydantic import TypeAdapter
 
