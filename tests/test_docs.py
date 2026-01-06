@@ -1,4 +1,5 @@
 import glob
+from importlib.metadata import entry_points
 import os.path
 import pathlib
 import re
@@ -8,7 +9,6 @@ import tempfile
 import unittest
 
 import docutils.core
-from importlib_metadata import entry_points
 
 DOCS_PATH = pathlib.Path(__file__).parent / '../bugwarrior/docs'
 

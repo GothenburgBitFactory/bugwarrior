@@ -17,7 +17,6 @@ classifiers=[
 dependencies = [
   "click",
   "dogpile.cache>=0.5.3",
-  "importlib-metadata",
   "jinja2>=2.7.2",
   "lockfile>=0.9.1",
   "pydantic[email]>=2",

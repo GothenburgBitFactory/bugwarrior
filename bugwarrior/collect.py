@@ -1,9 +1,9 @@
 import copy
+from importlib.metadata import entry_points
 import logging
 import multiprocessing
 import time
 
-from importlib_metadata import entry_points
 from jinja2 import Template
 from taskw.task import Task
 
