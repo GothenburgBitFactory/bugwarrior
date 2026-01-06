@@ -3,7 +3,6 @@ import logging
 import typing
 from typing import Generator, Optional
 
-from dateutil.tz import tzutc
 import requests
 
 from bugwarrior import config
@@ -116,8 +115,7 @@ class ClickupIssue(Issue):
             return None
 
         seconds_unix = float(milliseconds_unix) // 1e3
-        timestamp_datetime = datetime.datetime.fromtimestamp(seconds_unix)
-        return timestamp_datetime.replace(tzinfo=tzutc())
+        return datetime.datetime.fromtimestamp(seconds_unix, tz=datetime.timezone.utc)
 
 
 class ClickupService(Service):

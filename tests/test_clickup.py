@@ -1,6 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from dateutil.tz import tzutc
 import responses
 
 from bugwarrior.collect import TaskConstructor
@@ -217,15 +216,15 @@ class TestClickupIssue(AbstractServiceTest, ServiceTest):
             "project": None,
             "priority": 'M',
             "due": None,
-            "entry": datetime.fromtimestamp(int(task["date_created"]) // 1e3).replace(
-                tzinfo=tzutc()
+            "entry": datetime.fromtimestamp(
+                int(task["date_created"]) // 1e3, tz=timezone.utc
             ),
             issue.ID: task["id"],
             issue.DESCRIPTION: task["description"],
             issue.STATUS: task["status"]["status"],
             issue.UPDATED_AT: datetime.fromtimestamp(
-                int(task["date_updated"]) // 1e3
-            ).replace(tzinfo=tzutc()),
+                int(task["date_updated"]) // 1e3, tz=timezone.utc
+            ),
             issue.CREATOR: task["creator"]["username"],
             issue.URL: task["url"],
             issue.LIST_NAME: task["list"]["name"],
@@ -253,16 +252,16 @@ class TestClickupIssue(AbstractServiceTest, ServiceTest):
             "priority": 'M',
             "due": None,
             "tags": [],
-            "entry": datetime.fromtimestamp(int(task["date_created"]) // 1e3).replace(
-                tzinfo=tzutc()
+            "entry": datetime.fromtimestamp(
+                int(task["date_created"]) // 1e3, tz=timezone.utc
             ),
             "description": "(bw)Is# - My task .. https://app.clickup.com/t/86adrdd2j",
             issue.ID: task["id"],
             issue.DESCRIPTION: task["description"],
             issue.STATUS: task["status"]["status"],
             issue.UPDATED_AT: datetime.fromtimestamp(
-                int(task["date_updated"]) // 1e3
-            ).replace(tzinfo=tzutc()),
+                int(task["date_updated"]) // 1e3, tz=timezone.utc
+            ),
             issue.CREATOR: task["creator"]["username"],
             issue.URL: task["url"],
             issue.LIST_NAME: task["list"]["name"],
