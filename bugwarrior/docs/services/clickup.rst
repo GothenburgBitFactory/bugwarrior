@@ -1,4 +1,4 @@
-Clickup
+ClickUp
 =======
 
 You can import tasks from a Clickup space using

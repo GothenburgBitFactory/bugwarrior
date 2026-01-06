@@ -28,24 +28,19 @@ Installing from https://pypi.python.org/pypi/bugwarrior is easy with
 
     $ pip install bugwarrior
 
-By default, ``bugwarrior`` will be installed with support for the following
-services: Bitbucket, Clickup, Github, Gitlab, Pagure, Phabricator, Redmine, Teamlab
-and Versionone. There is optional support for Jira, Kanboard, Megaplan.ru, Active Collab,
-Debian BTS, Trac, Bugzilla, and but those require extra dependencies that are
-installed by specifying ``bugwarrior[service]`` in the commands above. For
+Many services are supported by default, but others require extra dependencies that
+are installed by specifying ``bugwarrior[<extra>]`` in the commands above. For
 example, if you want to use bugwarrior with Jira::
 
     $ pip install "bugwarrior[jira]"
 
 The following extra dependency sets are available:
 
-- keyring (See also `linux installation instructions <https://github.com/jaraco/keyring#linux>`_.)
-- jira
-- kanboard
-- bts
-- trac
-- bugzilla
-- gmail
+.. extras::
+
+.. note::
+
+    For keyring, see also `linux installation instructions <https://github.com/jaraco/keyring#linux>`_.
 
 Installing from Distribution Packages
 -------------------------------------
