@@ -7,7 +7,7 @@ Dependency Updates
 ==================
 
 - Support python-3.14 by migrating our pydantic models from v1 to v2 api. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1155)
-- Add importlib-metadata. This was actually required in 2.0.0 so this fixes a packaging bug. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1159)
+- Drop importlib-metadata. This was actually an undeclared dependency in 2.0.0 so this fixes a packaging bug. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1177)
 - Drop pytz. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1164)
 - Drop tomli for all but python-3.10 (https://github.com/GothenburgBitFactory/bugwarrior/pull/1157)
 
