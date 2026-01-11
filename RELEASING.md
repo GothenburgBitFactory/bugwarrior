@@ -20,6 +20,12 @@ git tag X.Y.Z
 git push upstream tag X.Y.Z
 ```
 - Publish to Pypi.
+```sh
+python -m build
+twine upload dist/*
+# These files can confuse development environment.
+rm -rf dist/
+```
 - Navigate to the tag in the GitHub releases UI and create a release, probably just copying from the CHANGELOG.
 
 ## Postliminary
