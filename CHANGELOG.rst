@@ -1,3 +1,27 @@
+2.1.0
+-----
+
+Big thanks to new contributor Laurent Tramoy who set the agenda and implemented the most substantial improvements for this release!
+
+Dependency Updates
+==================
+
+- Support python-3.14 by migrating our pydantic models from v1 to v2 api. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1155)
+- Drop importlib-metadata. This was actually an undeclared dependency in 2.0.0 so this fixes a packaging bug. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1177)
+- Drop pytz. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1164)
+- Drop tomli for all but python-3.10 (https://github.com/GothenburgBitFactory/bugwarrior/pull/1157)
+
+Bug Fixes
+=========
+
+- Fix --flavor feature. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1172)
+- jira: Fix non-cloud services, which were broken in 2.0.0. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1171)
+- todoist: Removed typing_extensions import, which was not in project dependencies. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1155)
+
+New Services
+============
+- Added ClickUp Service. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1161)
+
 2.0.0
 -----
 
