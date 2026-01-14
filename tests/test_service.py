@@ -1,56 +1,16 @@
 import pathlib
 import re
-import typing
 import unittest.mock
 
-from bugwarrior import config, services
+from bugwarrior import services
 from bugwarrior.config import schema
 
-from .base import ConfigTest
+from .base import ConfigTest, DumbService
 
 LONG_MESSAGE = """\
 Some message that is over 100 characters. This message is so long it's
 going to fill up your floppy disk taskwarrior backup. Actually it's not
 that long.""".replace('\n', ' ')
-
-
-class DumbConfig(config.ServiceConfig):
-    service: typing.Literal['test']
-
-    import_labels_as_tags: bool = False
-    label_template: str = '{{label}}'
-
-
-class DumbIssue(services.Issue):
-    """
-    Implement the required methods but they shouldn't be called.
-    """
-
-    def get_default_description(self):
-        raise NotImplementedError
-
-    def to_taskwarrior(self):
-        raise NotImplementedError
-
-
-class DumbService(services.Service):
-    """
-    Implement the required methods but they shouldn't be called.
-    """
-
-    API_VERSION = 1.0
-    ISSUE_CLASS = DumbIssue
-    CONFIG_SCHEMA = DumbConfig
-
-    @staticmethod
-    def get_keyring_service(_):
-        raise NotImplementedError
-
-    def get_owner(self, _):
-        raise NotImplementedError
-
-    def issues(self):
-        raise NotImplementedError
 
 
 class ServiceBase(ConfigTest):

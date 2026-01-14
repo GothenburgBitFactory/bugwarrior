@@ -2,13 +2,53 @@ import abc
 import os.path
 import shutil
 import tempfile
+import typing
 import unittest
 
 import pytest
 import responses
 
-from bugwarrior import config
+from bugwarrior import config, services
 from bugwarrior.config import schema
+
+
+class DumbConfig(config.ServiceConfig):
+    service: typing.Literal["test"] = "test"
+
+    import_labels_as_tags: bool = False
+    label_template: str = "{{label}}"
+
+    @property
+    def service_class(cls) -> type["DumbService"]:
+        return DumbService
+
+
+class DumbIssue(services.Issue):
+    UDAS: dict = {}
+    UNIQUE_KEY: tuple[str, ...] = ("id",)
+    PRIORITY_MAP: dict = {}
+
+    def get_default_description(self):
+        raise NotImplementedError
+
+    def to_taskwarrior(self):
+        raise NotImplementedError
+
+
+class DumbService(services.Service):
+    API_VERSION = 1.0
+    ISSUE_CLASS = DumbIssue
+    CONFIG_SCHEMA = DumbConfig
+
+    @staticmethod
+    def get_keyring_service(_):
+        raise NotImplementedError
+
+    def get_owner(self, _):
+        raise NotImplementedError
+
+    def issues(self):
+        raise NotImplementedError
 
 
 class AbstractServiceTest(abc.ABC):

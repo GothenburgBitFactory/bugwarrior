@@ -10,7 +10,7 @@ from pydantic import TypeAdapter
 
 from bugwarrior.config import schema
 
-from ..base import ConfigTest
+from ..base import ConfigTest, DumbConfig
 
 
 class TestExpandedPath(unittest.TestCase):
@@ -249,7 +249,7 @@ class TestValidation(ConfigTest):
 class TestComputeTemplates(unittest.TestCase):
     def test_template(self):
         raw_values = {'templates': {}, 'project_template': 'foo'}
-        computed_values = schema.ServiceConfig().compute_templates(raw_values)
+        computed_values = DumbConfig.compute_templates(raw_values)
         self.assertEqual(computed_values['templates'], {'project': 'foo'})
 
     def test_empty_template(self):
@@ -262,7 +262,7 @@ class TestComputeTemplates(unittest.TestCase):
         https://github.com/ralphbean/bugwarrior/issues/970
         """
         raw_values = {'templates': {}, 'project_template': ''}
-        computed_values = schema.ServiceConfig().compute_templates(raw_values)
+        computed_values = DumbConfig.compute_templates(raw_values)
         self.assertEqual(computed_values['templates'], {'project': ''})
 
 
