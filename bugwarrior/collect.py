@@ -1,11 +1,17 @@
 import copy
+from functools import cache
 from importlib.metadata import entry_points
 import logging
 import multiprocessing
 import time
+from typing import TYPE_CHECKING
 
 from jinja2 import Template
 from taskw.task import Task
+
+if TYPE_CHECKING:
+    from bugwarrior.config.validation import Config
+    from bugwarrior.services import Service
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +20,8 @@ SERVICE_FINISHED_OK = 0
 SERVICE_FINISHED_ERROR = 1
 
 
-def get_service(service_name: str):
+@cache
+def get_service(service_name: str) -> type["Service"]:
     try:
         (service,) = entry_points(group='bugwarrior.service', name=service_name)
     except ValueError as e:
@@ -33,16 +40,22 @@ def get_service(service_name: str):
     return service.load()
 
 
-def _aggregate_issues(conf, main_section, target, queue):
+def get_service_instances(conf: "Config") -> list["Service"]:
+    return [
+        get_service(service_config.service)(service_config, conf.main)
+        for service_config in conf.service_configs
+    ]
+
+
+def _aggregate_issues(service: "Service", queue: multiprocessing.Queue):
     """This worker function is separated out from the main
     :func:`aggregate_issues` func only so that we can use multiprocessing
     on it for speed reasons.
     """
 
     start = time.time()
-
+    target = service.config.target
     try:
-        service = get_service(conf[target].service)(conf[target], conf[main_section])
         issue_count = 0
         for issue in service.issues():
             queue.put(issue)
@@ -67,24 +80,23 @@ def _aggregate_issues(conf, main_section, target, queue):
         log.info(f"Done with [{target}] in {duration}.")
 
 
-def aggregate_issues(conf, main_section, debug):
+def aggregate_issues(conf: "Config", debug: bool):
     """Return all issues from every target."""
     log.info("Starting to aggregate remote issues.")
 
-    # Create and call service objects for every target in the config
-    targets = conf[main_section].targets
-
     queue = multiprocessing.Queue()
 
-    log.info("Spawning %i workers." % len(targets))
+    services = get_service_instances(conf)
+
+    log.info("Spawning %i workers." % len(services))
 
     if debug:
-        for target in targets:
-            _aggregate_issues(conf, main_section, target, queue)
+        for service in services:
+            _aggregate_issues(service, queue)
     else:
-        for target in targets:
+        for service in services:
             proc = multiprocessing.Process(
-                target=_aggregate_issues, args=(conf, main_section, target, queue)
+                target=_aggregate_issues, args=(service, queue)
             )
             proc.start()
 
@@ -94,7 +106,7 @@ def aggregate_issues(conf, main_section, debug):
             # and tell some of our workers some incomplete things.
             time.sleep(1)
 
-    currently_running = len(targets)
+    currently_running = len(services)
     while currently_running > 0:
         issue = queue.get(True)
         try:

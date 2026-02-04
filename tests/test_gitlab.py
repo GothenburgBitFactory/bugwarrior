@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import responses
 
-from bugwarrior.collect import TaskConstructor
+from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.services.gitlab import GitlabClient, GitlabService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -523,23 +523,26 @@ class TestGitlabService(ConfigTest):
         }
 
     @property
+    def conf(self):
+        return self.validate()
+
+    @property
     def service(self):
-        conf = self.validate()
-        service = GitlabService(conf['myservice'], conf['general'])
+        service = get_service_instances(self.conf)[0]
         service.gitlab_client.repo_cache = {
             1: {'id': 1, 'path_with_namespace': 'arbitrary_namespace/arbitrary_project'}
         }
         return service
 
     def test_get_keyring_service_default_host(self):
-        conf = self.validate()['myservice']
+        conf = self.conf.service_configs[0]
         self.assertEqual(
             GitlabService.get_keyring_service(conf), 'gitlab://foobar@gitlab.com'
         )
 
     def test_get_keyring_service_custom_host(self):
         self.config['myservice']['host'] = 'my-git.org'
-        conf = self.validate()['myservice']
+        conf = self.conf.service_configs[0]
         self.assertEqual(
             GitlabService.get_keyring_service(conf), 'gitlab://foobar@my-git.org'
         )

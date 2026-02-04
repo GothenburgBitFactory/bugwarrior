@@ -2,8 +2,8 @@ import dataclasses
 from datetime import datetime, timezone
 from unittest import mock
 
-from bugwarrior.collect import TaskConstructor
-from bugwarrior.services.deck import NextcloudDeckClient, NextcloudDeckService
+from bugwarrior.collect import TaskConstructor, get_service_instances
+from bugwarrior.services.deck import NextcloudDeckClient
 
 from .base import AbstractServiceTest, ServiceTest
 
@@ -93,7 +93,7 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
     @property
     def service(self):
         conf = self.validate()
-        service = NextcloudDeckService(conf['deck'], conf['general'])
+        service = get_service_instances(conf)[0]
         service.client = mock.MagicMock(spec=NextcloudDeckClient)
         service.client.get_boards = mock.MagicMock(
             return_value=[{'id': 5, 'title': 'testboard'}]

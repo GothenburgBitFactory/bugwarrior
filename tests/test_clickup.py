@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 import responses
 
-from bugwarrior.collect import TaskConstructor
+from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.services.clickup import ClickupClient, ClickupService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -166,11 +166,11 @@ class TestClickupService(ConfigTest):
     @property
     def service(self):
         conf = self.validate()
-        service = ClickupService(conf['myservice'], conf['general'])
+        service = get_service_instances(conf)[0]
         return service
 
     def test_get_keyring_service(self):
-        conf = self.validate()['myservice']
+        conf = self.validate().service_configs[0]
         self.assertEqual(ClickupService.get_keyring_service(conf), 'clickup://')
 
     def test_is_assigned(self):

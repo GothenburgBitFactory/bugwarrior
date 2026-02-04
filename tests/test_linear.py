@@ -106,20 +106,20 @@ class TestLinearServiceConfig(ConfigTest):
         self.config["linear"].update({"api_token": "abc123"})
         conf = self.validate()
         self.assertEqual(
-            conf["linear"].status_types, ["backlog", "unstarted", "started"]
+            conf.service_configs[0].status_types, ["backlog", "unstarted", "started"]
         )
 
     def test_statuses_only(self):
         self.config["linear"].update({"api_token": "abc123", "statuses": "Done, Todo"})
         conf = self.validate()
-        self.assertEqual(conf["linear"].statuses, ["Done", "Todo"])
-        self.assertIsNone(conf["linear"].status_types)
+        self.assertEqual(conf.service_configs[0].statuses, ["Done", "Todo"])
+        self.assertIsNone(conf.service_configs[0].status_types)
 
     def test_status_types_only(self):
         self.config["linear"].update({"api_token": "abc123", "status_types": "started"})
         conf = self.validate()
-        self.assertEqual(conf["linear"].status_types, ["started"])
-        self.assertEqual(conf["linear"].statuses, [])
+        self.assertEqual(conf.service_configs[0].status_types, ["started"])
+        self.assertEqual(conf.service_configs[0].statuses, [])
 
 
 class TestLinearIssue(AbstractServiceTest, ServiceTest):

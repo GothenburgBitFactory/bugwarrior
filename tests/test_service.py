@@ -3,7 +3,8 @@ import re
 import unittest.mock
 
 from bugwarrior import services
-from bugwarrior.config import schema
+from bugwarrior.config import validation
+from bugwarrior.config.load import format_config
 
 from .base import ConfigTest, DumbService
 
@@ -23,10 +24,11 @@ class ServiceBase(ConfigTest):
 
     def makeService(self):
         with unittest.mock.patch(
-            'bugwarrior.config.schema.get_service', lambda x: DumbService
+            'bugwarrior.config.validation.get_service', lambda x: DumbService
         ):
-            conf = schema.validate_config(self.config, 'general', 'configpath')
-        return DumbService(conf['test'], conf['general'])
+            formatted = format_config(self.config)
+            conf = validation.validate_config(formatted, 'general', 'configpath')
+        return DumbService(conf.service_configs[0], conf.main)
 
     def makeIssue(self):
         service = self.makeService()

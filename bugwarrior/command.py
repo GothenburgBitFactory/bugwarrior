@@ -3,6 +3,7 @@ import getpass
 import logging
 import os
 import sys
+from typing import TYPE_CHECKING
 
 import click
 from lockfile import LockTimeout
@@ -12,6 +13,8 @@ from bugwarrior.collect import aggregate_issues, get_service
 from bugwarrior.config import get_config_path, get_keyring, load_config
 from bugwarrior.db import get_defined_udas_as_strings, synchronize
 
+if TYPE_CHECKING:
+    from bugwarrior.config.validation import Config
 log = logging.getLogger(__name__)
 
 
@@ -25,7 +28,9 @@ def _get_section_name(flavor):
     return 'general'
 
 
-def _try_load_config(main_section, interactive=False, quiet=False):
+def _try_load_config(
+    main_section: str, interactive: bool = False, quiet: bool = False
+) -> "Config":
     try:
         return load_config(main_section, interactive, quiet)
     except OSError:
@@ -99,17 +104,15 @@ def pull(dry_run, flavor, interactive, debug, quiet):
         main_section = _get_section_name(flavor)
         config = _try_load_config(main_section, interactive, quiet)
 
-        lockfile_path = os.path.join(
-            config[main_section].data.path, 'bugwarrior.lockfile'
-        )
+        lockfile_path = os.path.join(config.main.data.path, 'bugwarrior.lockfile')
         lockfile = PIDLockFile(lockfile_path)
         lockfile.acquire(timeout=10)
         try:
             # Get all the issues.  This can take a while.
-            issue_generator = aggregate_issues(config, main_section, debug)
+            issue_generator = aggregate_issues(config, debug)
 
             # Stuff them in the taskwarrior db as necessary
-            synchronize(issue_generator, config, main_section, dry_run)
+            synchronize(issue_generator, config, dry_run)
         finally:
             lockfile.release()
     except LockTimeout:
@@ -138,11 +141,12 @@ def vault():
 
 def targets():
     config = _try_load_config('general')
-    for target in config['general'].targets:
-        service_class = get_service(config[target].service)
-        for value in [v for v in dict(config[target]).values() if isinstance(v, str)]:
-            if '@oracle:use_keyring' in value:
-                yield service_class.get_keyring_service(config[target])
+    for service_config in config.service_configs:
+        for value in dict(service_config).values():
+            if isinstance(value, str) and '@oracle:use_keyring' in value:
+                yield get_service(service_config.service).get_keyring_service(
+                    service_config
+                )
 
 
 @vault.command()
@@ -214,7 +218,7 @@ def uda(flavor):
     main_section = _get_section_name(flavor)
     conf = _try_load_config(main_section)
     print("# Bugwarrior UDAs")
-    for uda in get_defined_udas_as_strings(conf, main_section):
+    for uda in get_defined_udas_as_strings(conf):
         print(uda)
     print("# END Bugwarrior UDAs")
 

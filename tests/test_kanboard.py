@@ -38,7 +38,7 @@ class TestKanboardServiceConfig(ConfigTest):
         self.config["kb"].update(
             {"url": "http://example.com/", "username": "myuser", "password": "mypass"}
         )
-        service_config = self.validate()['kb']
+        service_config = self.validate().service_configs[0]
         self.assertEqual(
             KanboardService.get_keyring_service(service_config),
             "kanboard://myuser@example.com",

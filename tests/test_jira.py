@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 from unittest import mock
 
 from bugwarrior.collect import TaskConstructor
-from bugwarrior.config import schema
+from bugwarrior.config import validation
+from bugwarrior.config.load import format_config
 from bugwarrior.services.jira import JiraExtraFields, JiraService
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -41,16 +42,18 @@ class testJiraService(ConfigTest):
     def test_body_length_no_limit(self):
         description = "A very short issue body.  Fixes #828."
         self.config['myjira']['body_length'] = '5'
-        conf = schema.validate_config(self.config, 'general', 'configpath')
-        service = JiraService(conf['myjira'], conf['general'], _skip_server=True)
+        formatted = format_config(self.config)
+        conf = validation.validate_config(formatted, 'general', 'configpath')
+        service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
         self.assertEqual(description[:5], service.body(issue))
 
     def test_body_length_limit(self):
         description = "A very short issue body.  Fixes #828."
-        conf = schema.validate_config(self.config, 'general', 'configpath')
-        service = JiraService(conf['myjira'], conf['general'], _skip_server=True)
+        formatted = format_config(self.config)
+        conf = validation.validate_config(formatted, 'general', 'configpath')
+        service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
         self.assertEqual(description, service.body(issue))

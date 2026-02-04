@@ -1,14 +1,20 @@
+from collections.abc import Iterable
 import itertools
 import json
 import logging
 import re
 import subprocess
+from typing import TYPE_CHECKING
 
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
 from bugwarrior.collect import get_service
 from bugwarrior.notifications import send_notification
+
+if TYPE_CHECKING:
+    from bugwarrior.config.schema import ServiceConfig
+    from bugwarrior.config.validation import Config
 
 log = logging.getLogger(__name__)
 
@@ -240,13 +246,9 @@ def run_hooks(pre_import):
             raise RuntimeError(msg)
 
 
-def synchronize(issue_generator, conf, main_section, dry_run=False):
-    main_config = conf[main_section]
-
-    targets = main_config.targets.copy()
-    services = set([conf[target].service for target in targets])
-    key_list = build_key_list(services)
-    uda_list = build_uda_config_overrides(services)
+def synchronize(issue_generator, conf: "Config", dry_run: bool = False):
+    key_list = build_key_list(conf.service_configs)
+    uda_list = build_uda_config_overrides(conf.service_configs)
 
     if uda_list:
         log.info(
@@ -256,20 +258,24 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         )
 
     # Before running CRUD operations, call the pre_import hook(s).
-    run_hooks(conf['hooks'].pre_import)
+    run_hooks(conf.hooks.pre_import)
 
-    notify = conf['notifications'].notifications and not dry_run
+    notify = conf.notifications.notifications and not dry_run
 
     tw = TaskWarriorShellout(
-        config_filename=main_config.taskrc, config_overrides=uda_list, marshal=True
+        config_filename=conf.main.taskrc, config_overrides=uda_list, marshal=True
     )
 
     issue_updates = {'new': [], 'existing': [], 'changed': [], 'closed': []}
 
     issue_map = {}  # unique identifier -> issue
+    successful_config_map = {
+        service_config.target: service_config for service_config in conf.service_configs
+    }
+
     for issue in issue_generator:
         if isinstance(issue, tuple) and issue[0] == 'SERVICE FAILED':
-            targets.remove(issue[1])
+            successful_config_map.pop(issue[1])
             continue
 
         # De-duplicate issues coming in
@@ -303,7 +309,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             issue['priority'] = None
 
         # Target was only tacked on to pass configuration to this function.
-        service_config = conf[issue.pop('target')]
+        service_config = successful_config_map[issue.pop('target')]
 
         try:
             existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
@@ -323,18 +329,18 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             # Drop static fields from the upstream issue.  We don't want to
             # overwrite local changes to fields we declare static.
             for field in itertools.chain(
-                main_config.static_fields, service_config.static_fields
+                conf.main.static_fields, service_config.static_fields
             ):
                 if field in issue:
                     del issue[field]
 
             # Merge annotations & tags from online into our task object
-            if main_config.merge_annotations:
+            if conf.main.merge_annotations:
                 merge_left('annotations', task, issue, hamming=True)
 
-            if main_config.merge_tags:
-                if main_config.replace_tags:
-                    replace_left('tags', task, issue, list(main_config.static_tags))
+            if conf.main.merge_tags:
+                if conf.main.replace_tags:
+                    replace_left('tags', task, issue, list(conf.main.static_tags))
                 else:
                     merge_left('tags', task, issue)
 
@@ -357,7 +363,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         if dry_run:
             continue
         if notify:
-            send_notification(issue, 'Created', conf['notifications'])
+            send_notification(issue, 'Created', conf.notifications)
 
         try:
             new_task = tw.task_add(**issue)
@@ -393,9 +399,9 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
         except TaskwarriorError as e:
             log.exception("Unable to modify task: %s" % e.stderr)
 
-    log.debug(f'Closing tasks for succeeding services: {targets}.')
+    log.debug(f'Closing tasks for succeeding services: {list(successful_config_map)}.')
     succeeded_service_task_uuids = get_managed_task_uuids(
-        tw, build_key_list(set([conf[target].service for target in targets]))
+        tw, build_key_list(successful_config_map.values())
     )
     issue_updates['closed'] = succeeded_service_task_uuids - seen_uuids
     log.info("Closing %i tasks", len(issue_updates['closed']))
@@ -411,7 +417,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             continue
 
         if notify:
-            send_notification(task_info, 'Completed', conf['notifications'])
+            send_notification(task_info, 'Completed', conf.notifications)
 
         try:
             tw.task_done(uuid=issue)
@@ -425,7 +431,7 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
             + len(issue_updates['changed'])
             + len(issue_updates['closed'])
         )
-        if not conf['notifications'].only_on_new_tasks or updates > 0:
+        if not conf.notifications.only_on_new_tasks or updates > 0:
             send_notification(
                 dict(
                     description="New: %d, Changed: %d, Completed: %d"
@@ -436,26 +442,25 @@ def synchronize(issue_generator, conf, main_section, dry_run=False):
                     )
                 ),
                 'bw_finished',
-                conf['notifications'],
+                conf.notifications,
             )
 
 
-def build_key_list(targets):
-    keys = {}
-    for target in targets:
-        keys[target] = get_service(target).ISSUE_CLASS.UNIQUE_KEY
-    return keys
+def build_key_list(service_configs: "Iterable[ServiceConfig]"):
+    return {
+        service_config.service: get_service(
+            service_config.service
+        ).ISSUE_CLASS.UNIQUE_KEY
+        for service_config in service_configs
+    }
 
 
-def get_defined_udas_as_strings(conf, main_section):
-    targets = conf[main_section].targets
-    services = set([conf[target].service for target in targets])
-    uda_list = build_uda_config_overrides(services)
-
+def get_defined_udas_as_strings(conf: "Config"):
+    uda_list = build_uda_config_overrides(conf.service_configs)
     yield from convert_override_args_to_taskrc_settings(uda_list)
 
 
-def build_uda_config_overrides(targets):
+def build_uda_config_overrides(service_configs: "Iterable[ServiceConfig]"):
     """Returns a list of UDAs defined by given targets
 
     For all targets in `targets`, build a dictionary of configuration overrides
@@ -486,8 +491,8 @@ def build_uda_config_overrides(targets):
 
     """
     targets_udas = {}
-    for target in targets:
-        targets_udas.update(get_service(target).ISSUE_CLASS.UDAS)
+    for service_config in service_configs:
+        targets_udas.update(get_service(service_config.service).ISSUE_CLASS.UDAS)
     return {'uda': targets_udas}
 
 

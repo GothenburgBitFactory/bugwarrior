@@ -268,14 +268,14 @@ class TestGithubService(ServiceTest):
 
     def test_keyring_service(self):
         """Checks that the keyring service name"""
-        service_config = GithubConfig(**self.SERVICE_CONFIG)
+        service_config = GithubConfig(**self.SERVICE_CONFIG, target="myservice")
         keyring_service = GithubService.get_keyring_service(service_config)
         self.assertEqual("github://tintin@github.com/milou", keyring_service)
 
     def test_keyring_service_host(self):
         """Checks that the keyring key depends on the github host."""
         service_config = GithubConfig(
-            **{'host': 'github.example.com'}, **self.SERVICE_CONFIG
+            **{'host': 'github.example.com'}, **self.SERVICE_CONFIG, target="myservice"
         )
         keyring_service = GithubService.get_keyring_service(service_config)
         self.assertEqual("github://tintin@github.example.com/milou", keyring_service)

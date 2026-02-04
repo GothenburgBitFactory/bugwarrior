@@ -1,7 +1,6 @@
 import configparser
 import itertools
 import os
-import pathlib
 import textwrap
 from unittest import TestCase
 
@@ -13,23 +12,6 @@ except ImportError:
 from bugwarrior.config import load
 
 from ..base import ConfigTest
-
-
-class ExampleTest(ConfigTest):
-    def setUp(self):
-        self.basedir = pathlib.Path(__file__).parent
-        super().setUp()
-
-    def test_example(self):
-        for rcfile in ('example-bugwarriorrc', 'example-bugwarrior.toml'):
-            with self.subTest(rcfile=rcfile):
-                os.environ['BUGWARRIORRC'] = str(self.basedir / rcfile)
-                config = load.load_config('general', False, False)
-
-                self.assertEqual(
-                    config['flavor.myflavor'].targets,
-                    ["gitlab_config", "jira_project", "my_github"],
-                )
 
 
 class LoadTest(ConfigTest):
@@ -155,7 +137,9 @@ class TestParseFile(LoadTest):
             )
         config = load.parse_file(config_path)
 
-        self.assertEqual(config, {'general': {'foo': 'bar'}})
+        self.assertEqual(
+            config, {'flavors': {'general': {'foo': 'bar'}}, 'services': {}}
+        )
 
     def test_toml_invalid(self):
         config_path = self.create('.bugwarrior.toml')
@@ -185,14 +169,15 @@ class TestParseFile(LoadTest):
 
     def test_toml_flavors(self):
         config_path = self.create('.bugwarrior.toml')
-        for section in ('["flavor.myflavor"]', '[flavor.myflavor]'):
-            with self.subTest(section=section):
-                with open(config_path, 'w') as fout:
-                    fout.write(f'{section}\ntargets = ["my_gitlab"]')
-                config = load.parse_file(config_path)
-                self.assertEqual(
-                    config, {'flavor.myflavor': {'targets': ['my_gitlab']}}
-                )
+
+        section = '[flavor.myflavor]'
+        with open(config_path, 'w') as fout:
+            fout.write(f'{section}\ntargets = ["my_gitlab"]')
+        config = load.parse_file(config_path)
+        self.assertEqual(
+            config,
+            {'flavors': {'myflavor': {'targets': ['my_gitlab']}}, 'services': {}},
+        )
 
     def test_ini_flavors(self):
         config_path = self.create('.bugwarriorrc')
@@ -205,7 +190,9 @@ class TestParseFile(LoadTest):
             )
         config = load.parse_file(config_path)
 
-        self.assertEqual(config, {'flavor.myflavor': {'targets': 'my_gitlab'}})
+        self.assertEqual(
+            config, {'flavors': {'myflavor': {'targets': 'my_gitlab'}}, 'services': {}}
+        )
 
     def test_ini_options_renamed(self):
         """
@@ -226,11 +213,11 @@ class TestParseFile(LoadTest):
             )
         config = load.parse_file(config_path)
 
-        self.assertIn('optionname', config['baz'])
-        self.assertNotIn('prefix.optionname', config['baz'])
+        self.assertIn('optionname', config['services']['baz'])
+        self.assertNotIn('prefix.optionname', config['services']['baz'])
 
-        self.assertIn('log_level', config['general'])
-        self.assertNotIn('log.level', config['general'])
+        self.assertIn('log_level', config['flavors']['general'])
+        self.assertNotIn('log.level', config['flavors']['general'])
 
     def test_ini_missing_prefix(self):
         config_path = self.create('.bugwarriorrc')

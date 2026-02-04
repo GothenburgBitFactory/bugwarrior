@@ -9,7 +9,8 @@ import pytest
 import responses
 
 from bugwarrior import config, services
-from bugwarrior.config import schema
+from bugwarrior.config import schema, validation
+from bugwarrior.config.load import format_config
 
 
 class DumbConfig(config.ServiceConfig):
@@ -17,10 +18,6 @@ class DumbConfig(config.ServiceConfig):
 
     import_labels_as_tags: bool = False
     label_template: str = "{{label}}"
-
-    @property
-    def service_class(cls) -> type["DumbService"]:
-        return DumbService
 
 
 class DumbIssue(services.Issue):
@@ -103,10 +100,12 @@ class ConfigTest(unittest.TestCase):
     def inject_fixtures(self, caplog):
         self.caplog = caplog
 
-    def validate(self):
-        self.config['general'] = self.config.get('general', {})
-        self.config['general']['interactive'] = False
-        return schema.validate_config(self.config, 'general', 'configpath')
+    def validate(self) -> validation.Config:
+        config = self.config.copy()
+        config['general'] = config.get('general', {})
+        config['general']['interactive'] = False
+        formatted_config = format_config(config)
+        return validation.validate_config(formatted_config, 'general', 'configpath')
 
     def assertValidationError(self, expected):
         with self.assertRaises(SystemExit):
