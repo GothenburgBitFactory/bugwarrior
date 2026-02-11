@@ -141,13 +141,17 @@ class GitlabClient(Client):
 
         self.repo_cache = {}
 
-        # If we're only fetching assigned issues we can reduce requests by
-        # filtering in the query.
-        assignee_id = (
-            self._fetch(f'users?username={only_if_assigned}')[-1]['id']
-            if only_if_assigned and not also_unassigned
-            else None
-        )
+        assignee_id = None
+        if only_if_assigned and not also_unassigned:
+            users = self._fetch(f'users?username={only_if_assigned}')
+            if not users:
+                log.warning(f"User '{only_if_assigned}' not found on GitLab instance")
+            elif len(users) > 1:
+                log.warning(f"Multiple users found for '{only_if_assigned}', using first match")
+                assignee_id = users[0]['id']
+            else:
+                assignee_id = users[0]['id']
+
         self.assignee_query = f'assignee_id={assignee_id}' if assignee_id else ''
 
     def _base_url(self):

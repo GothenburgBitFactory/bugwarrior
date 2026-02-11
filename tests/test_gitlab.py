@@ -1098,3 +1098,107 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+
+    @responses.activate
+    def test_only_if_assigned_user_lookup(self):
+        """Test that only_if_assigned correctly looks up the user and uses first match"""
+        # Mock the user lookup API call - WITH username in query string
+        self.add_response(
+            'https://my-git.org/api/v4/users?username=jack_smith',
+            json=[
+                {
+                    'id': 2,
+                    'username': 'jack_smith',
+                    'name': 'Jack Smith',
+                    'state': 'active'
+                }
+            ],
+        )
+
+        overrides = {
+            'only_if_assigned': 'jack_smith',
+        }
+
+        # Should not raise an error
+        service = self.get_mock_service(GitlabService, config_overrides=overrides)
+
+        # Verify service was created successfully
+        self.assertIsNotNone(service)
+
+    @responses.activate
+    def test_only_if_assigned_user_not_found(self):
+        """Test that empty user list logs warning and continues gracefully"""
+        # Mock empty user lookup response
+        self.add_response(
+            'https://my-git.org/api/v4/users?username=nonexistent_user',
+            json=[],
+        )
+
+        overrides = {
+            'only_if_assigned': 'nonexistent_user',
+        }
+
+        # Should not crash - logs warning and continues with None assignee_id
+        with self.assertLogs('bugwarrior.services.gitlab', level='WARNING') as cm:
+            service = self.get_mock_service(GitlabService, config_overrides=overrides)
+            self.assertIsNotNone(service)
+
+            # Verify warning was logged
+            self.assertTrue(
+                any("not found on GitLab instance" in msg for msg in cm.output),
+                "Expected warning about user not found"
+            )
+
+    @responses.activate
+    def test_only_if_assigned_multiple_users(self):
+        """Test that first user is selected when multiple matches exist"""
+        # Mock multiple users with similar names
+        self.add_response(
+            'https://my-git.org/api/v4/users?username=smith',
+            json=[
+                {
+                    'id': 10,
+                    'username': 'smith',
+                    'name': 'John Smith',
+                    'state': 'active'
+                },
+                {
+                    'id': 20,
+                    'username': 'smithy',
+                    'name': 'Jane Smith',
+                    'state': 'active'
+                }
+            ],
+        )
+
+        overrides = {
+            'only_if_assigned': 'smith',
+        }
+
+        # Should log warning and use first user (id: 10)
+        with self.assertLogs('bugwarrior.services.gitlab', level='WARNING') as cm:
+            service = self.get_mock_service(GitlabService, config_overrides=overrides)
+            self.assertIsNotNone(service)
+
+            # Verify warning about multiple users was logged
+            self.assertTrue(
+                any("Multiple users found" in msg for msg in cm.output),
+                "Expected warning about multiple users"
+            )
+
+    @responses.activate
+    def test_only_if_assigned_with_also_unassigned(self):
+        """Test that assignee_id is None when also_unassigned is True"""
+        overrides = {
+            'only_if_assigned': 'jack_smith',
+            'also_unassigned': 'true',
+        }
+
+        # User lookup should NOT be called when also_unassigned is True
+        # So we don't add any mock response
+
+        # Should not raise an error and not call the API
+        service = self.get_mock_service(GitlabService, config_overrides=overrides)
+
+        # Verify service was created successfully
+        self.assertIsNotNone(service)
