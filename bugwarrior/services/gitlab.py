@@ -142,15 +142,22 @@ class GitlabClient(Client):
         self.repo_cache = {}
 
         assignee_id = None
+
         if only_if_assigned and not also_unassigned:
+            # GitLab API returns:
+            #   - a single-element list if the username exists
+            #   - an empty list if it does not
             users = self._fetch(f'users?username={only_if_assigned}')
-            if not users:
-                log.warning(f"User '{only_if_assigned}' not found on GitLab instance")
-            elif len(users) > 1:
-                log.warning(f"Multiple users found for '{only_if_assigned}', using first match")
-                assignee_id = users[0]['id']
+
+            if len(users) != 1:
+                log.warning(
+                    "Expected exactly one user for '%s', got %d. "
+                    "Assignee filter will be ignored.",
+                    only_if_assigned,
+                    len(users),
+                )
             else:
-                assignee_id = users[0]['id']
+                assignee_id = users[0]["id"]
 
         self.assignee_query = f'assignee_id={assignee_id}' if assignee_id else ''
 
