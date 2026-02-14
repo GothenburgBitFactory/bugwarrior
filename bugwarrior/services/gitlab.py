@@ -150,14 +150,14 @@ class GitlabClient(Client):
             users = self._fetch(f'users?username={only_if_assigned}')
 
             if len(users) != 1:
-                log.warning(
+                log.critical(
                     "Expected exactly one user for '%s', got %d. "
-                    "Assignee filter will be ignored.",
+                    "Is only_if_assigned configured to a valid username?",
                     only_if_assigned,
                     len(users),
                 )
-            else:
-                assignee_id = users[0]["id"]
+                sys.exit(1)
+            assignee_id = users[0]["id"]
 
         self.assignee_query = f'assignee_id={assignee_id}' if assignee_id else ''
 
