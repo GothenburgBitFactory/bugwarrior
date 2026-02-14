@@ -1110,14 +1110,12 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
                     'id': 2,
                     'username': 'jack_smith',
                     'name': 'Jack Smith',
-                    'state': 'active'
+                    'state': 'active',
                 }
             ],
         )
 
-        overrides = {
-            'only_if_assigned': 'jack_smith',
-        }
+        overrides = {'only_if_assigned': 'jack_smith'}
 
         # Should not raise an error
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
@@ -1127,31 +1125,22 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_only_if_assigned_user_not_found(self):
-        """Test that empty user list logs warning and continues gracefully"""
+        """Test that empty user list causes SystemExit"""
         # Mock empty user lookup response
         self.add_response(
-            'https://my-git.org/api/v4/users?username=nonexistent_user',
-            json=[],
+            'https://my-git.org/api/v4/users?username=nonexistent_user', json=[]
         )
 
-        overrides = {
-            'only_if_assigned': 'nonexistent_user',
-        }
+        overrides = {'only_if_assigned': 'nonexistent_user'}
 
-        # Should not crash - logs warning and continues with None assignee_id
-        with self.assertLogs('bugwarrior.services.gitlab', level='WARNING') as cm:
-            service = self.get_mock_service(GitlabService, config_overrides=overrides)
-            self.assertIsNotNone(service)
-
-            # Verify warning was logged
-            self.assertTrue(
-                any("not found on GitLab instance" in msg for msg in cm.output),
-                "Expected warning about user not found"
-            )
+        # Should exit with 1
+        with self.assertRaises(SystemExit) as cm:
+            self.get_mock_service(GitlabService, config_overrides=overrides)
+        self.assertEqual(cm.exception.code, 1)
 
     @responses.activate
     def test_only_if_assigned_multiple_users(self):
-        """Test that first user is selected when multiple matches exist"""
+        """Test that multiple users found causes SystemExit"""
         # Mock multiple users with similar names
         self.add_response(
             'https://my-git.org/api/v4/users?username=smith',
@@ -1160,39 +1149,28 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
                     'id': 10,
                     'username': 'smith',
                     'name': 'John Smith',
-                    'state': 'active'
+                    'state': 'active',
                 },
                 {
                     'id': 20,
                     'username': 'smithy',
                     'name': 'Jane Smith',
-                    'state': 'active'
-                }
+                    'state': 'active',
+                },
             ],
         )
 
-        overrides = {
-            'only_if_assigned': 'smith',
-        }
+        overrides = {'only_if_assigned': 'smith'}
 
-        # Should log warning and use first user (id: 10)
-        with self.assertLogs('bugwarrior.services.gitlab', level='WARNING') as cm:
-            service = self.get_mock_service(GitlabService, config_overrides=overrides)
-            self.assertIsNotNone(service)
-
-            # Verify warning about multiple users was logged
-            self.assertTrue(
-                any("Multiple users found" in msg for msg in cm.output),
-                "Expected warning about multiple users"
-            )
+        # Should exit with 1
+        with self.assertRaises(SystemExit) as cm:
+            self.get_mock_service(GitlabService, config_overrides=overrides)
+        self.assertEqual(cm.exception.code, 1)
 
     @responses.activate
     def test_only_if_assigned_with_also_unassigned(self):
         """Test that assignee_id is None when also_unassigned is True"""
-        overrides = {
-            'only_if_assigned': 'jack_smith',
-            'also_unassigned': 'true',
-        }
+        overrides = {'only_if_assigned': 'jack_smith', 'also_unassigned': 'true'}
 
         # User lookup should NOT be called when also_unassigned is True
         # So we don't add any mock response
