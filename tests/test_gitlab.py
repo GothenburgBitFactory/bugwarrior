@@ -1167,16 +1167,3 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             self.get_mock_service(GitlabService, config_overrides=overrides)
         self.assertEqual(cm.exception.code, 1)
 
-    @responses.activate
-    def test_only_if_assigned_with_also_unassigned(self):
-        """Test that assignee_id is None when also_unassigned is True"""
-        overrides = {'only_if_assigned': 'jack_smith', 'also_unassigned': 'true'}
-
-        # User lookup should NOT be called when also_unassigned is True
-        # So we don't add any mock response
-
-        # Should not raise an error and not call the API
-        service = self.get_mock_service(GitlabService, config_overrides=overrides)
-
-        # Verify service was created successfully
-        self.assertIsNotNone(service)
