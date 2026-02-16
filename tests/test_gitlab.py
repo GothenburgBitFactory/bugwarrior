@@ -1166,4 +1166,3 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         with self.assertRaises(SystemExit) as cm:
             self.get_mock_service(GitlabService, config_overrides=overrides)
         self.assertEqual(cm.exception.code, 1)
-
