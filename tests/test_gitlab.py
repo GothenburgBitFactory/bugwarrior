@@ -1098,3 +1098,71 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
         }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+
+    @responses.activate
+    def test_only_if_assigned_user_lookup(self):
+        """Test that only_if_assigned correctly looks up the user and uses first match"""
+        # Mock the user lookup API call - WITH username in query string
+        self.add_response(
+            'https://my-git.org/api/v4/users?username=jack_smith',
+            json=[
+                {
+                    'id': 2,
+                    'username': 'jack_smith',
+                    'name': 'Jack Smith',
+                    'state': 'active',
+                }
+            ],
+        )
+
+        overrides = {'only_if_assigned': 'jack_smith'}
+
+        # Should not raise an error
+        service = self.get_mock_service(GitlabService, config_overrides=overrides)
+
+        # Verify service was created successfully
+        self.assertIsNotNone(service)
+
+    @responses.activate
+    def test_only_if_assigned_user_not_found(self):
+        """Test that empty user list causes SystemExit"""
+        # Mock empty user lookup response
+        self.add_response(
+            'https://my-git.org/api/v4/users?username=nonexistent_user', json=[]
+        )
+
+        overrides = {'only_if_assigned': 'nonexistent_user'}
+
+        # Should exit with 1
+        with self.assertRaises(SystemExit) as cm:
+            self.get_mock_service(GitlabService, config_overrides=overrides)
+        self.assertEqual(cm.exception.code, 1)
+
+    @responses.activate
+    def test_only_if_assigned_multiple_users(self):
+        """Test that multiple users found causes SystemExit"""
+        # Mock multiple users with similar names
+        self.add_response(
+            'https://my-git.org/api/v4/users?username=smith',
+            json=[
+                {
+                    'id': 10,
+                    'username': 'smith',
+                    'name': 'John Smith',
+                    'state': 'active',
+                },
+                {
+                    'id': 20,
+                    'username': 'smithy',
+                    'name': 'Jane Smith',
+                    'state': 'active',
+                },
+            ],
+        )
+
+        overrides = {'only_if_assigned': 'smith'}
+
+        # Should exit with 1
+        with self.assertRaises(SystemExit) as cm:
+            self.get_mock_service(GitlabService, config_overrides=overrides)
+        self.assertEqual(cm.exception.code, 1)
