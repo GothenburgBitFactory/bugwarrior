@@ -27,7 +27,7 @@ def _get_metadata(issue):
     priority = ''
     metadata = ''
     project = ''
-    if 'project' in issue:
+    if 'project' in issue and issue['project']:
         project = "Project: " + issue['project']
     # if 'due' in issue:
     #     due = "Due: " + datetime.datetime.fromtimestamp(
