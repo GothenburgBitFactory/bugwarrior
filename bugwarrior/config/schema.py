@@ -197,6 +197,7 @@ class ServiceConfig(_ServiceConfig):
     .. _Pydantic: https://docs.pydantic.dev/latest/
     """
 
+    # Added before validation (computed field)
     service: str
     target: str
 

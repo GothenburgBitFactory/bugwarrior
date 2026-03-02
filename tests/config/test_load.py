@@ -138,7 +138,7 @@ class TestParseFile(LoadTest):
         config = load.parse_file(config_path)
 
         self.assertEqual(
-            config, {'flavors': {'general': {'foo': 'bar'}}, 'services': {}}
+            config, {'flavor': {'general': {'foo': 'bar'}}, 'services': []}
         )
 
     def test_toml_invalid(self):
@@ -175,8 +175,7 @@ class TestParseFile(LoadTest):
             fout.write(f'{section}\ntargets = ["my_gitlab"]')
         config = load.parse_file(config_path)
         self.assertEqual(
-            config,
-            {'flavors': {'myflavor': {'targets': ['my_gitlab']}}, 'services': {}},
+            config, {'flavor': {'myflavor': {'targets': ['my_gitlab']}}, 'services': []}
         )
 
     def test_ini_flavors(self):
@@ -191,7 +190,7 @@ class TestParseFile(LoadTest):
         config = load.parse_file(config_path)
 
         self.assertEqual(
-            config, {'flavors': {'myflavor': {'targets': 'my_gitlab'}}, 'services': {}}
+            config, {'flavor': {'myflavor': {'targets': 'my_gitlab'}}, 'services': []}
         )
 
     def test_ini_options_renamed(self):
@@ -213,11 +212,12 @@ class TestParseFile(LoadTest):
             )
         config = load.parse_file(config_path)
 
-        self.assertIn('optionname', config['services']['baz'])
-        self.assertNotIn('prefix.optionname', config['services']['baz'])
+        baz_service = next(svc for svc in config['services'] if svc['target'] == 'baz')
+        self.assertIn('optionname', baz_service)
+        self.assertNotIn('prefix.optionname', baz_service)
 
-        self.assertIn('log_level', config['flavors']['general'])
-        self.assertNotIn('log.level', config['flavors']['general'])
+        self.assertIn('log_level', config['flavor']['general'])
+        self.assertNotIn('log.level', config['flavor']['general'])
 
     def test_ini_missing_prefix(self):
         config_path = self.create('.bugwarriorrc')

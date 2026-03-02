@@ -183,3 +183,24 @@ class TestValidation(ConfigTest):
                 'TracConfig',
             },
         )
+
+    def test_hooks_invalid_option(self):
+        self.config['hooks'] = {'invalid_option': 'value'}
+        self.assertValidationError(
+            '[hooks]\ninvalid_option = value  <- unrecognized option'
+        )
+
+    def test_notifications_invalid_backend(self):
+        self.config['notifications'] = {'backend': 'invalid_backend'}
+        self.assertValidationError(
+            "[notifications]\nbackend = invalid_backend  <- Input should be "
+            "'gobject', 'growlnotify' or 'applescript'"
+        )
+
+    def test_service_and_hooks_errors_reported_together(self):
+        del self.config['my_service']['service']
+        self.config['hooks'] = {'invalid_option': 'value'}
+        self.assertValidationError("No option 'service' in section: 'my_service'")
+        self.assertValidationError(
+            '[hooks]\ninvalid_option = value  <- unrecognized option'
+        )

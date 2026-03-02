@@ -9,7 +9,7 @@ try:
 except ImportError:
     import tomli as tomllib  # backport
 
-from bugwarrior.config.validation import Config, validate_config
+from .validation import Config, validate_config
 
 # The name of the environment variable that can be used to ovewrite the path
 # to the bugwarriorrc file
@@ -54,26 +54,15 @@ def get_config_path():
 
 
 def format_config(config: dict) -> dict[str, Any]:
-    # Build flavors from 'flavor' table
-    flavors = {
-        name: flavor_config for name, flavor_config in config.pop("flavor", {}).items()
-    }
-
-    # Handle 'general' as top-level key (TOML format, tests)
     if "general" in config:
-        flavors["general"] = config.pop("general")
+        config.setdefault("flavor", {})["general"] = config.pop("general")
 
-    services = {
-        section: {**config.pop(section), "target": section}
+    config["services"] = [
+        {**config.pop(section), "target": section}
         for section in list(config)
-        if section not in {"hooks", "notifications"}
-    }
-
-    return {
-        "flavors": flavors,
-        "services": services,
-        **config,  # remaining: "hooks" and "notifications" (if present)
-    }
+        if section not in {"hooks", "notifications", "flavor"}
+    ]
+    return config
 
 
 def parse_toml_file(configpath: str) -> dict:
@@ -130,7 +119,7 @@ def parse_file(configpath: str) -> dict:
 def load_config(main_section, interactive, quiet) -> Config:
     configpath = get_config_path()
     rawconfig = parse_file(configpath)
-    rawconfig['flavors'][main_section]['interactive'] = interactive
+    rawconfig['flavor'][main_section]['interactive'] = interactive
     config = validate_config(rawconfig, main_section, configpath)
     configure_logging(
         config.main.log_file, 'WARNING' if quiet else config.main.log_level
