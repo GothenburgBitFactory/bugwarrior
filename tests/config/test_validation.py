@@ -32,6 +32,14 @@ class TestValidation(ConfigTest):
             },
         }
 
+    def validate_and_get_service(self, target):
+        conf = self.validate()
+        return next(
+            service_config
+            for service_config in conf.service_configs
+            if service_config.target == target
+        )
+
     def test_valid(self):
         self.validate()
 
@@ -53,7 +61,11 @@ class TestValidation(ConfigTest):
     def test_target_section_missing(self):
         del self.config['my_service']
 
-        self.assertValidationError("[general] missing targets: my_service")
+        self.assertValidationError(
+            "[general]\ntargets = "
+            "['my_service', 'my_kan', 'my_gitlab']"
+            "  <- No [my_service] section found"
+        )
 
     def test_service_missing(self):
         del self.config['my_service']['service']
@@ -76,22 +88,12 @@ class TestValidation(ConfigTest):
         )
 
     def test_no_scheme_url_validator_default(self):
-        conf = self.validate()
-        service_config = next(
-            service_config
-            for service_config in conf.service_configs
-            if service_config.target == "my_service"
-        )
+        service_config = self.validate_and_get_service("my_service")
         self.assertEqual(service_config.host, 'github.com')
 
     def test_no_scheme_url_validator_set(self):
         self.config['my_service']['host'] = 'github.com'
-        conf = self.validate()
-        service_config = next(
-            service_config
-            for service_config in conf.service_configs
-            if service_config.target == "my_service"
-        )
+        service_config = self.validate_and_get_service("my_service")
         self.assertEqual(service_config.host, 'github.com')
 
     def test_no_scheme_url_validator_scheme(self):
@@ -102,30 +104,15 @@ class TestValidation(ConfigTest):
 
     def test_stripped_trailing_slash_url(self):
         self.config['my_kan']['url'] = 'https://kanboard.example.org/'
-        conf = self.validate()
-        service_config = next(
-            service_config
-            for service_config in conf.service_configs
-            if service_config.target == "my_kan"
-        )
+        service_config = self.validate_and_get_service("my_kan")
         self.assertEqual(service_config.url, 'https://kanboard.example.org')
 
     def test_deprecated_filter_merge_requests(self):
-        conf = self.validate()
-        service_config = next(
-            service_config
-            for service_config in conf.service_configs
-            if service_config.target == "my_gitlab"
-        )
+        service_config = self.validate_and_get_service("my_gitlab")
         self.assertEqual(service_config.include_merge_requests, True)
 
         self.config['my_gitlab']['filter_merge_requests'] = 'true'
-        conf = self.validate()
-        service_config = next(
-            service_config
-            for service_config in conf.service_configs
-            if service_config.target == "my_gitlab"
-        )
+        service_config = self.validate_and_get_service("my_gitlab")
         self.assertEqual(service_config.include_merge_requests, False)
 
     def test_deprecated_filter_merge_requests_and_include_merge_requests(self):
@@ -164,14 +151,14 @@ class TestValidation(ConfigTest):
             '["flavor.myflavor"]  <- Did you mean [flavor.myflavor]?'
         )
 
-    def test_load_and_validate_example_toml(self):
-        config_path = Path(__file__).parent / 'example-bugwarrior.toml'
-        raw_config = parse_file(str(config_path))
-        config = validation.validate_config(raw_config, 'general', str(config_path))
-
-        self.assertEqual(
-            {conf.__class__.__name__ for conf in config.service_configs},
-            {
+    def test_load_and_validate_example_files(self):
+        example_dir = Path(__file__).parent
+        config_files = [
+            example_dir / 'example-bugwarrior.toml',
+            example_dir / 'example-bugwarriorrc',
+        ]
+        expected_by_flavor = {
+            'general': {
                 'GithubConfig',
                 'GitlabConfig',
                 'GmailConfig',
@@ -182,7 +169,19 @@ class TestValidation(ConfigTest):
                 'RedMineConfig',
                 'TracConfig',
             },
-        )
+            'myflavor': {'GitlabConfig', 'JiraConfig', 'GithubConfig'},
+        }
+        for config_path in config_files:
+            for main_section, expected_configs in expected_by_flavor.items():
+                with self.subTest(config=config_path.name, main_section=main_section):
+                    formatted_config = parse_file(str(config_path))
+                    config = validation.validate_config(
+                        formatted_config, main_section, str(config_path)
+                    )
+                    self.assertEqual(
+                        {conf.__class__.__name__ for conf in config.service_configs},
+                        expected_configs,
+                    )
 
     def test_hooks_invalid_option(self):
         self.config['hooks'] = {'invalid_option': 'value'}

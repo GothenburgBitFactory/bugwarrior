@@ -13,7 +13,6 @@ from bugwarrior.collect import get_service
 from bugwarrior.notifications import send_notification
 
 if TYPE_CHECKING:
-    from bugwarrior.config.schema import ServiceConfig
     from bugwarrior.config.validation import Config
 
 log = logging.getLogger(__name__)
@@ -247,8 +246,9 @@ def run_hooks(pre_import):
 
 
 def synchronize(issue_generator, conf: "Config", dry_run: bool = False):
-    key_list = build_key_list(conf.service_configs)
-    uda_list = build_uda_config_overrides(conf.service_configs)
+    services = [service_config.service for service_config in conf.service_configs]
+    key_list = build_key_list(services)
+    uda_list = build_uda_config_overrides(services)
 
     if uda_list:
         log.info(
@@ -401,7 +401,10 @@ def synchronize(issue_generator, conf: "Config", dry_run: bool = False):
 
     log.debug(f'Closing tasks for succeeding services: {list(successful_config_map)}.')
     succeeded_service_task_uuids = get_managed_task_uuids(
-        tw, build_key_list(successful_config_map.values())
+        tw,
+        build_key_list(
+            service_config.service for service_config in successful_config_map.values()
+        ),
     )
     issue_updates['closed'] = succeeded_service_task_uuids - seen_uuids
     log.info("Closing %i tasks", len(issue_updates['closed']))
@@ -446,21 +449,20 @@ def synchronize(issue_generator, conf: "Config", dry_run: bool = False):
             )
 
 
-def build_key_list(service_configs: "Iterable[ServiceConfig]"):
+def build_key_list(services: Iterable[str]):
     return {
-        service_config.service: get_service(
-            service_config.service
-        ).ISSUE_CLASS.UNIQUE_KEY
-        for service_config in service_configs
+        service: get_service(service).ISSUE_CLASS.UNIQUE_KEY for service in services
     }
 
 
 def get_defined_udas_as_strings(conf: "Config"):
-    uda_list = build_uda_config_overrides(conf.service_configs)
+    uda_list = build_uda_config_overrides(
+        service_config.service for service_config in conf.service_configs
+    )
     yield from convert_override_args_to_taskrc_settings(uda_list)
 
 
-def build_uda_config_overrides(service_configs: "Iterable[ServiceConfig]"):
+def build_uda_config_overrides(services: Iterable[str]):
     """Returns a list of UDAs defined by given targets
 
     For all targets in `targets`, build a dictionary of configuration overrides
@@ -491,8 +493,8 @@ def build_uda_config_overrides(service_configs: "Iterable[ServiceConfig]"):
 
     """
     targets_udas = {}
-    for service_config in service_configs:
-        targets_udas.update(get_service(service_config.service).ISSUE_CLASS.UDAS)
+    for service in services:
+        targets_udas.update(get_service(service).ISSUE_CLASS.UDAS)
     return {'uda': targets_udas}
 
 

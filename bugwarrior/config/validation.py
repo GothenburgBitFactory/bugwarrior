@@ -1,10 +1,8 @@
 import logging
 import sys
-import typing
-from typing import TYPE_CHECKING, Annotated, Any, Union
+from typing import TYPE_CHECKING, Annotated, Any, NoReturn, Union
 
-import pydantic
-from pydantic import Field, TypeAdapter
+from pydantic import Field, TypeAdapter, ValidationError
 from pydantic_core import ErrorDetails
 
 from bugwarrior.collect import get_service
@@ -34,10 +32,10 @@ def _format_field_error(
 def _format_service_error(
     error: ErrorDetails | dict, services: list[dict[str, Any]]
 ) -> str:
-    """Format validation error for service configs (discriminated union).
+    """Format validation error for service configs.
 
     loc structure:
-    - (index,) - discriminator error (missing 'service')
+    - (index,) - 'service' key is missing, can't determine which model to validate against
     - (index, service_type) - model-level error
     - (index, service_type, '__root__') - model validator
     - (index, service_type, field) - field error
@@ -48,7 +46,7 @@ def _format_service_error(
         msg = "unrecognized option"
 
     index = int(loc[0])
-    target = services[index].get("target", f"service[{index}]")
+    target = services[index]["target"]
 
     if len(loc) == 1:
         return _format_section_error(
@@ -73,7 +71,10 @@ def _format_flavor_error(error: ErrorDetails | dict) -> str:
 
     flavor_name = loc[0]
 
-    if len(loc) == 1 or loc[-1] == "__root__":
+    if len(loc) == 1:
+        raise ValueError(f"Unexpected error loc with single element: {loc}")
+
+    if loc[-1] == "__root__":
         return _format_section_error(flavor_name, msg)
 
     return _format_field_error(flavor_name, loc[1], msg, error)
@@ -93,13 +94,16 @@ def _format_extra_section_error(error: ErrorDetails | dict) -> str:
 
     section_name = str(loc[0])
 
-    if len(loc) == 1 or loc[-1] == "__root__":
+    if len(loc) == 1:
+        raise ValueError(f"Unexpected error loc with single element: {loc}")
+
+    if loc[-1] == "__root__":
         return _format_section_error(section_name, msg)
 
     return _format_field_error(section_name, loc[1], msg, error)
 
 
-def raise_validation_error(msg, config_path, error_count=1) -> typing.NoReturn:
+def raise_validation_error(msg, config_path, error_count=1) -> NoReturn:
     log.error(
         ("Validation error" if error_count == 1 else f"{error_count} validation errors")
         + f" found in {config_path}\n"
@@ -138,7 +142,7 @@ def validate_config(config: dict, main_section: str, config_path: str) -> "Confi
     # Validate flavors
     try:
         flavors = TypeAdapter(dict[str, MainSectionConfig]).validate_python(raw_flavors)
-    except pydantic.ValidationError as error:
+    except ValidationError as error:
         flavors = {}
         error_messages.extend(_format_flavor_error(err) for err in error.errors())
 
@@ -160,7 +164,7 @@ def validate_config(config: dict, main_section: str, config_path: str) -> "Confi
         service_configs = TypeAdapter(list[ServiceConfigType]).validate_python(
             services_list
         )
-    except pydantic.ValidationError as error:
+    except ValidationError as error:
         error_messages.extend(
             _format_service_error(err, services_list) for err in error.errors()
         )
@@ -173,10 +177,10 @@ def validate_config(config: dict, main_section: str, config_path: str) -> "Confi
     # Check targets exist for all flavors
     available_targets = {service_config["target"] for service_config in services_list}
     for flavor_name, flavor in flavors.items():
-        missing = set(flavor.targets) - available_targets
-        if missing:
+        missing = sorted(set(flavor.targets) - available_targets)
+        for target in missing:
             error_messages.append(
-                f"[{flavor_name}] missing targets: {', '.join(sorted(missing))}\n"
+                f"[{flavor_name}]\ntargets = {flavor.targets}  <- No [{target}] section found\n"
             )
 
     main = flavors.get(main_section, MainSectionConfig(targets=[]))
@@ -188,7 +192,7 @@ def validate_config(config: dict, main_section: str, config_path: str) -> "Confi
 
     try:
         _config = Config(service_configs=filtered_service_configs, main=main, **config)
-    except pydantic.ValidationError as error:
+    except ValidationError as error:
         error_messages.extend(
             _format_extra_section_error(err) for err in error.errors()
         )

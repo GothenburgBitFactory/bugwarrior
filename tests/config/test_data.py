@@ -51,10 +51,14 @@ class TestGetDataPath(ConfigTest):
             },
         }
         formatted = format_config(rawconfig)
-        self.config = validation.validate_config(formatted, 'general', 'configpath')
+        self.validated_config = validation.validate_config(
+            formatted, 'general', 'configpath'
+        )
 
     def assertDataPath(self, expected_datapath):
-        self.assertEqual(expected_datapath, data.get_data_path(self.config.main.taskrc))
+        self.assertEqual(
+            expected_datapath, data.get_data_path(self.validated_config.main.taskrc)
+        )
 
     def test_TASKDATA(self):
         """

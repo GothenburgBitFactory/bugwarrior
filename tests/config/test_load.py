@@ -170,9 +170,8 @@ class TestParseFile(LoadTest):
     def test_toml_flavors(self):
         config_path = self.create('.bugwarrior.toml')
 
-        section = '[flavor.myflavor]'
         with open(config_path, 'w') as fout:
-            fout.write(f'{section}\ntargets = ["my_gitlab"]')
+            fout.write('[flavor.myflavor]\ntargets = ["my_gitlab"]')
         config = load.parse_file(config_path)
         self.assertEqual(
             config, {'flavor': {'myflavor': {'targets': ['my_gitlab']}}, 'services': []}
