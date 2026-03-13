@@ -1,6 +1,7 @@
 import configparser
 import itertools
 import os
+from pathlib import Path
 import textwrap
 from unittest import TestCase
 
@@ -24,6 +25,18 @@ class LoadTest(ConfigTest):
             os.makedirs(os.path.dirname(fpath))
         open(fpath, 'a').close()
         return fpath
+
+
+class ExampleTest(ConfigTest):
+    def setUp(self):
+        self.basedir = Path(__file__).parent
+        super().setUp()
+
+    def test_example(self):
+        for rcfile in ('example-bugwarriorrc', 'example-bugwarrior.toml'):
+            with self.subTest(rcfile=rcfile):
+                os.environ['BUGWARRIORRC'] = str(self.basedir / rcfile)
+                load.load_config('general', False, False)
 
 
 class TestGetConfigPath(LoadTest):

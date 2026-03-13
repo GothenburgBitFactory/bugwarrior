@@ -523,26 +523,25 @@ class TestGitlabService(ConfigTest):
         }
 
     @property
-    def conf(self):
-        return self.validate()
-
-    @property
     def service(self):
-        service = get_service_instances(self.conf)[0]
+        conf = self.validate()
+        service = get_service_instances(conf)[0]
         service.gitlab_client.repo_cache = {
             1: {'id': 1, 'path_with_namespace': 'arbitrary_namespace/arbitrary_project'}
         }
         return service
 
     def test_get_keyring_service_default_host(self):
-        conf = self.conf.service_configs[0]
+        conf = self.validate()
+        conf = conf.service_configs[0]
         self.assertEqual(
             GitlabService.get_keyring_service(conf), 'gitlab://foobar@gitlab.com'
         )
 
     def test_get_keyring_service_custom_host(self):
         self.config['myservice']['host'] = 'my-git.org'
-        conf = self.conf.service_configs[0]
+        conf = self.validate()
+        conf = conf.service_configs[0]
         self.assertEqual(
             GitlabService.get_keyring_service(conf), 'gitlab://foobar@my-git.org'
         )

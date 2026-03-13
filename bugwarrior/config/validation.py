@@ -16,12 +16,12 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-def _format_section_error(section: str | int, msg: str) -> str:
+def _format_section_error(section: str, msg: str) -> str:
     return f"[{section}]  <- {msg}\n"
 
 
 def _format_field_error(
-    section: str | int, field: str | int, msg: str, error: ErrorDetails | dict
+    section: str, field: str, msg: str, error: ErrorDetails | dict
 ) -> str:
     formatted = f"[{section}]\n{field}"
     if error["type"] != "missing":
@@ -56,6 +56,7 @@ def _format_service_error(
     if len(loc) == 2 or loc[-1] == "__root__":
         return _format_section_error(target, msg)
 
+    assert isinstance(loc[2], str)
     return _format_field_error(target, loc[2], msg, error)
 
 
@@ -70,6 +71,7 @@ def _format_flavor_error(error: ErrorDetails | dict) -> str:
     msg = error["msg"]
 
     flavor_name = loc[0]
+    assert isinstance(flavor_name, str)
 
     if len(loc) == 1:
         raise ValueError(f"Unexpected error loc with single element: {loc}")
@@ -77,6 +79,7 @@ def _format_flavor_error(error: ErrorDetails | dict) -> str:
     if loc[-1] == "__root__":
         return _format_section_error(flavor_name, msg)
 
+    assert isinstance(loc[1], str)
     return _format_field_error(flavor_name, loc[1], msg, error)
 
 
@@ -100,6 +103,7 @@ def _format_extra_section_error(error: ErrorDetails | dict) -> str:
     if loc[-1] == "__root__":
         return _format_section_error(section_name, msg)
 
+    assert isinstance(loc[1], str)
     return _format_field_error(section_name, loc[1], msg, error)
 
 
@@ -147,7 +151,7 @@ def validate_config(config: dict, main_section: str, config_path: str) -> "Confi
         error_messages.extend(_format_flavor_error(err) for err in error.errors())
 
     # Check for misquoted flavor sections (e.g., ["flavor.myflavor"] instead of [flavor.myflavor])
-    services_list = []
+    raw_service_configs = []
     for service in config.pop("services", []):
         target = service["target"]
         if target.startswith("flavor."):
@@ -156,17 +160,17 @@ def validate_config(config: dict, main_section: str, config_path: str) -> "Confi
                 "Use [flavor.name] (not quoted) to define a flavor.\n"
             )
         else:
-            services_list.append(service)
+            raw_service_configs.append(service)
 
     # Validate service configs
-    ServiceConfigType = get_service_config_union_type(services_list)
+    ServiceConfigType = get_service_config_union_type(raw_service_configs)
     try:
         service_configs = TypeAdapter(list[ServiceConfigType]).validate_python(
-            services_list
+            raw_service_configs
         )
     except ValidationError as error:
         error_messages.extend(
-            _format_service_error(err, services_list) for err in error.errors()
+            _format_service_error(err, raw_service_configs) for err in error.errors()
         )
         service_configs = []
 
@@ -175,7 +179,9 @@ def validate_config(config: dict, main_section: str, config_path: str) -> "Confi
         error_messages.append(f"No section: '{main_section}'\n")
 
     # Check targets exist for all flavors
-    available_targets = {service_config["target"] for service_config in services_list}
+    available_targets = {
+        service_config["target"] for service_config in raw_service_configs
+    }
     for flavor_name, flavor in flavors.items():
         missing = sorted(set(flavor.targets) - available_targets)
         for target in missing:
