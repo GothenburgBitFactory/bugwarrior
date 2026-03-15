@@ -2,7 +2,6 @@ import logging
 import os
 from pathlib import Path
 import re
-import sys
 import typing
 from typing import Annotated, Any, Generic, Literal
 
@@ -13,7 +12,6 @@ from pydantic import (
     BeforeValidator,
     ConfigDict,
     Field,
-    TypeAdapter,
     ValidationInfo,
     computed_field,
     field_validator,
@@ -21,8 +19,6 @@ from pydantic import (
 )
 from pydantic_core import PydanticCustomError
 import taskw
-
-from bugwarrior.collect import get_service
 
 from .data import BugwarriorData, get_data_path
 
@@ -184,117 +180,6 @@ class Notifications(BaseConfig):
     only_on_new_tasks: bool = False
 
 
-class SchemaBase(BaseConfig):
-    # Allow extra top-level sections so all targets don't have to be selected.
-    model_config = ConfigDict(extra="ignore")
-
-    hooks: Hooks = Hooks()
-    notifications: Notifications = Notifications()
-
-
-def get_validation_error_enhanced_messages(
-    error: pydantic.ValidationError,
-) -> list[str]:
-    errors = []
-    for _error in error.errors():
-        msg = _error["msg"]
-        if _error["type"] == "extra_forbidden":
-            msg = "unrecognized option"
-        loc = _error["loc"]
-        loc_len = len(loc)
-
-        if loc_len == 1 or (loc_len > 1 and loc[1] == "__root__"):
-            formatted_error_loc = f"[{loc[0]}]"
-        elif loc_len == 2:
-            formatted_error_loc = f"[{loc[0]}]\n{loc[1]}"
-            if _error["type"] != "missing":
-                formatted_error_loc = f"{formatted_error_loc} = {_error['input']}"
-        else:
-            raise ValueError(
-                "Configuration should not be nested more than two layers deep."
-            )
-        errors.append(f"{formatted_error_loc}  <- {msg}\n")
-    return errors
-
-
-def raise_validation_error(msg, config_path, no_errors=1) -> typing.NoReturn:
-    log.error(
-        ("Validation error" if no_errors == 1 else f"{no_errors} validation errors")
-        + f" found in {config_path}\n"
-        f"See https://bugwarrior.readthedocs.io\n\n{msg}"
-    )
-    sys.exit(1)
-
-
-def get_target_validator(targets):
-    @model_validator(mode='before')
-    @classmethod
-    def compute_target(cls, values):
-        for target in targets:
-            values[target]['target'] = target
-        return values
-
-    return compute_target
-
-
-def validate_config(config: dict, main_section: str, config_path: str) -> dict:
-    # Pre-validate the minimum requirements to build our pydantic models.
-    try:
-        main = config[main_section]
-    except KeyError:
-        raise_validation_error(f"No section: '{main_section}'", config_path)
-    try:
-        targets = TypeAdapter(ConfigList).validate_python(main['targets'])
-    except KeyError:
-        raise_validation_error(
-            f"No option 'targets' in section: '{main_section}'", config_path
-        )
-    try:
-        configmap = {target: config[target] for target in targets}
-    except KeyError as e:
-        raise_validation_error(f"No section: '{e.args[0]}'", config_path)
-    servicemap = {}
-    for target, serviceconfig in configmap.items():
-        try:
-            servicemap[target] = serviceconfig['service']
-        except KeyError:
-            raise_validation_error(
-                f"No option 'service' in section: '{target}'", config_path
-            )
-
-    # Construct Service Models
-    target_schemas = {
-        target: (get_service(service).CONFIG_SCHEMA, ...)
-        for target, service in servicemap.items()
-    }
-
-    # Construct Flavors
-    flavor_schemas = {
-        section: (MainSectionConfig, ...)
-        for section in config.keys()
-        if section.startswith('flavor.')
-    }
-
-    # Construct Validation Model
-    bugwarrior_config_model = pydantic.create_model(
-        'bugwarriorrc',
-        __base__=SchemaBase,
-        __validators__={'compute_target': get_target_validator(targets)},
-        general=(MainSectionConfig, ...),
-        **flavor_schemas,
-        **target_schemas,
-    )
-
-    # Validate
-    try:
-        # Convert top-level model to dict since target names are dynamic and
-        # a bunch of calls to getattr(config, target) inhibits readability.
-        return dict(bugwarrior_config_model.model_validate(config))
-    except pydantic.ValidationError as e:
-        errors = get_validation_error_enhanced_messages(e)
-        raise_validation_error("\n".join(errors), config_path, no_errors=len(errors))
-
-
 # Dynamically add template fields to model.
 _ServiceConfig = pydantic.create_model(
     "_ServiceConfig",
@@ -312,9 +197,12 @@ class ServiceConfig(_ServiceConfig):
     .. _Pydantic: https://docs.pydantic.dev/latest/
     """
 
+    # Added before validation (computed field)
+    service: str
+    target: str
+
     # Added during validation (computed field)
     templates: dict = {}
-    target: typing.Optional[str] = None
 
     # Optional fields shared by all services.
     only_if_assigned: str = ""

@@ -1,56 +1,17 @@
 import pathlib
 import re
-import typing
 import unittest.mock
 
-from bugwarrior import config, services
-from bugwarrior.config import schema
+from bugwarrior import services
+from bugwarrior.config import validation
+from bugwarrior.config.load import format_config
 
-from .base import ConfigTest
+from .base import ConfigTest, DumbService
 
 LONG_MESSAGE = """\
 Some message that is over 100 characters. This message is so long it's
 going to fill up your floppy disk taskwarrior backup. Actually it's not
 that long.""".replace('\n', ' ')
-
-
-class DumbConfig(config.ServiceConfig):
-    service: typing.Literal['test']
-
-    import_labels_as_tags: bool = False
-    label_template: str = '{{label}}'
-
-
-class DumbIssue(services.Issue):
-    """
-    Implement the required methods but they shouldn't be called.
-    """
-
-    def get_default_description(self):
-        raise NotImplementedError
-
-    def to_taskwarrior(self):
-        raise NotImplementedError
-
-
-class DumbService(services.Service):
-    """
-    Implement the required methods but they shouldn't be called.
-    """
-
-    API_VERSION = 1.0
-    ISSUE_CLASS = DumbIssue
-    CONFIG_SCHEMA = DumbConfig
-
-    @staticmethod
-    def get_keyring_service(_):
-        raise NotImplementedError
-
-    def get_owner(self, _):
-        raise NotImplementedError
-
-    def issues(self):
-        raise NotImplementedError
 
 
 class ServiceBase(ConfigTest):
@@ -63,10 +24,11 @@ class ServiceBase(ConfigTest):
 
     def makeService(self):
         with unittest.mock.patch(
-            'bugwarrior.config.schema.get_service', lambda x: DumbService
+            'bugwarrior.config.validation.get_service', lambda x: DumbService
         ):
-            conf = schema.validate_config(self.config, 'general', 'configpath')
-        return DumbService(conf['test'], conf['general'])
+            formatted = format_config(self.config)
+            conf = validation.validate_config(formatted, 'general', 'configpath')
+        return DumbService(conf.service_configs[0], conf.main)
 
     def makeIssue(self):
         service = self.makeService()

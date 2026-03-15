@@ -86,7 +86,9 @@ class TestGitBugIssue(AbstractServiceTest, ServiceTest):
 class TestGitBugConfig(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = GitBugConfig(service="gitbug", path="~/custom-gitbug-repo")
+        self.config = GitBugConfig(
+            service="gitbug", path="~/custom-gitbug-repo", target="mygitbug"
+        )
 
     def test_home_path_expansion(self):
         expected = self.tempdir + "/custom-gitbug-repo"

@@ -1,14 +1,15 @@
-import codecs
 import configparser
 import logging
 import os
+from pathlib import Path
+from typing import Any
 
 try:
     import tomllib  # python>=3.11
 except ImportError:
     import tomli as tomllib  # backport
 
-from . import schema
+from .validation import Config, validate_config
 
 # The name of the environment variable that can be used to ovewrite the path
 # to the bugwarriorrc file
@@ -52,58 +53,76 @@ def get_config_path():
     return paths[0]
 
 
-def parse_file(configpath: str) -> dict:
-    if os.path.splitext(configpath)[-1] == '.toml':
-        with open(configpath, 'rb') as f:
-            config = tomllib.load(f)
-        # Flatten flavors into top-level sections (if they're unquoted).
-        for k, v in config.get('flavor', {}).items():
-            config[f'flavor.{k}'] = v
-        config.pop('flavor', None)
-    else:
-        rawconfig = BugwarriorConfigParser()
-        with codecs.open(configpath, "r", "utf-8") as buff:
-            rawconfig.read_file(buff)
-        config = {}
-        for section in rawconfig.sections():
-            if section in ['hooks', 'notifications']:
-                config[section] = dict(rawconfig[section])
-            elif section == 'general':
-                config[section] = {
-                    k.replace('log.', 'log_'): v for k, v in rawconfig[section].items()
-                }
-            elif section.startswith('flavor.'):
-                config[section] = {
-                    k.replace('.', '_'): v for k, v in rawconfig[section].items()
-                }
-            else:
-                service = rawconfig[section].pop('service')
-                service_prefix = 'ado' if service == 'azuredevops' else service
-                config[section] = {'service': service}
-                for k, v in rawconfig[section].items():
-                    try:
-                        prefix, key = k.split('.')
-                    except ValueError:  # missing prefix
-                        prefix = None
-                        key = k
-                    if prefix != service_prefix:
-                        raise SystemExit(
-                            f"[{section}]\n{k} <-expected prefix "
-                            f"'{service_prefix}': did you mean "
-                            f"'{service_prefix}.{key}'?"
-                        )
-                    config[section][key] = v
+def format_config(config: dict) -> dict[str, Any]:
+    if "general" in config:
+        config.setdefault("flavor", {})["general"] = config.pop("general")
+
+    config["services"] = [
+        {**config.pop(section), "target": section}
+        for section in list(config)
+        if section not in {"hooks", "notifications", "flavor"}
+    ]
     return config
 
 
-def load_config(main_section, interactive, quiet) -> dict:
+def parse_toml_file(configpath: str) -> dict:
+    with open(configpath, 'rb') as file:
+        return tomllib.load(file)
+
+
+def parse_ini_file(configpath: str) -> dict:
+    rawconfig = BugwarriorConfigParser()
+    with open(configpath, encoding="utf-8") as buff:
+        rawconfig.read_file(buff)
+
+    config = {"flavor": {}}
+    for section in rawconfig.sections():
+        if section in ['hooks', 'notifications']:
+            config[section] = dict(rawconfig[section])
+        elif section == 'general' or section.startswith('flavor.'):
+            name = section.removeprefix('flavor.')
+            config["flavor"][name] = {
+                key.replace('.', '_'): value
+                for key, value in rawconfig[section].items()
+            }
+
+        # All other sections are assumed to be services
+        else:
+            service = rawconfig[section].pop('service')
+            service_prefix = 'ado' if service == 'azuredevops' else service
+            config[section] = {'service': service}
+            for key, value in rawconfig[section].items():
+                try:
+                    prefix, unprefixed_key = key.split('.')
+                except ValueError:  # missing prefix
+                    prefix = None
+                    unprefixed_key = key
+                if prefix != service_prefix:
+                    raise SystemExit(
+                        f"[{section}]\n{key} <-expected prefix "
+                        f"'{service_prefix}': did you mean "
+                        f"'{service_prefix}.{unprefixed_key}'?"
+                    )
+                config[section][unprefixed_key] = value
+
+    return config
+
+
+def parse_file(configpath: str) -> dict:
+    if Path(configpath).suffix == '.toml':
+        config = parse_toml_file(configpath)
+    else:
+        config = parse_ini_file(configpath)
+    return format_config(config)
+
+
+def load_config(main_section, interactive, quiet) -> Config:
     configpath = get_config_path()
     rawconfig = parse_file(configpath)
-    rawconfig[main_section]['interactive'] = interactive
-    config = schema.validate_config(rawconfig, main_section, configpath)
+    rawconfig['flavor'][main_section]['interactive'] = interactive
+    config = validate_config(rawconfig, main_section, configpath)
     configure_logging(
-        config[main_section].log_file,
-        'WARNING' if quiet else config[main_section].log_level,
+        config.main.log_file, 'WARNING' if quiet else config.main.log_level
     )
     return config
 

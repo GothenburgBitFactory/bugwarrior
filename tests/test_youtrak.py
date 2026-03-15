@@ -16,7 +16,7 @@ class TestYoutrackService(ConfigTest):
 
     def test_get_keyring_service(self):
         self.config['myservice']['host'] = 'youtrack.example.com'
-        service_config = self.validate()['myservice']
+        service_config = self.validate().service_configs[0]
         self.assertEqual(
             YoutrackService.get_keyring_service(service_config),
             'youtrack://foobar@youtrack.example.com',

@@ -2,13 +2,50 @@ import abc
 import os.path
 import shutil
 import tempfile
+import typing
 import unittest
 
 import pytest
 import responses
 
-from bugwarrior import config
-from bugwarrior.config import schema
+from bugwarrior import config, services
+from bugwarrior.config import schema, validation
+from bugwarrior.config.load import format_config
+
+
+class DumbConfig(config.ServiceConfig):
+    service: typing.Literal["test"] = "test"
+
+    import_labels_as_tags: bool = False
+    label_template: str = "{{label}}"
+
+
+class DumbIssue(services.Issue):
+    UDAS: dict = {}
+    UNIQUE_KEY: tuple[str, ...] = ("id",)
+    PRIORITY_MAP: dict = {}
+
+    def get_default_description(self):
+        raise NotImplementedError
+
+    def to_taskwarrior(self):
+        raise NotImplementedError
+
+
+class DumbService(services.Service):
+    API_VERSION = 1.0
+    ISSUE_CLASS = DumbIssue
+    CONFIG_SCHEMA = DumbConfig
+
+    @staticmethod
+    def get_keyring_service(_):
+        raise NotImplementedError
+
+    def get_owner(self, _):
+        raise NotImplementedError
+
+    def issues(self):
+        raise NotImplementedError
 
 
 class AbstractServiceTest(abc.ABC):
@@ -63,10 +100,12 @@ class ConfigTest(unittest.TestCase):
     def inject_fixtures(self, caplog):
         self.caplog = caplog
 
-    def validate(self):
-        self.config['general'] = self.config.get('general', {})
-        self.config['general']['interactive'] = False
-        return schema.validate_config(self.config, 'general', 'configpath')
+    def validate(self) -> validation.Config:
+        config = self.config.copy()
+        config['general'] = config.get('general', {})
+        config['general']['interactive'] = False
+        formatted_config = format_config(config)
+        return validation.validate_config(formatted_config, 'general', 'configpath')
 
     def assertValidationError(self, expected):
         with self.assertRaises(SystemExit):

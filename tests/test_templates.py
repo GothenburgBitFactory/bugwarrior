@@ -1,8 +1,7 @@
 from bugwarrior.collect import TaskConstructor
-from bugwarrior.config.schema import MainSectionConfig, ServiceConfig
+from bugwarrior.config.schema import MainSectionConfig
 
-from .base import ServiceTest
-from .test_service import DumbIssue
+from .base import DumbConfig, DumbIssue, ServiceTest
 
 
 class TestTemplates(ServiceTest):
@@ -14,7 +13,7 @@ class TestTemplates(ServiceTest):
     def get_issue(self, templates=None, issue=None, description=None, add_tags=None):
         templates = {} if templates is None else templates
         template_kwargs = {f'{key}_template': value for key, value in templates.items()}
-        config = ServiceConfig(
+        config = DumbConfig(
             target='dummy', add_tags=add_tags if add_tags else [], **template_kwargs
         )
         main_config = MainSectionConfig(interactive=False, targets=[])

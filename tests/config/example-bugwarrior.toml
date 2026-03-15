@@ -58,10 +58,11 @@ pre_import = ["/home/someuser/backup.sh", "/home/someuser/sometask.sh"]
 # - applescript        macOS      no external dependencies
 # - gobject            Linux      python gobject must be installed
 # 
-# [notifications]
-# notifications = True
-# backend = gobject
-# only_on_new_tasks = True
+
+[notifications]
+notifications = true
+backend = "gobject"
+only_on_new_tasks = true
 # This is a github example.  It says, "scrape every issue from every repository
 # on http://github.com/ralphbean.  It doesn't matter if ralphbean owns the issue
 # or not."

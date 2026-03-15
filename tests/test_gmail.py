@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from google.oauth2.credentials import Credentials
 
-from bugwarrior.collect import TaskConstructor
+from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.services import gmail
 
 from .base import AbstractServiceTest, ConfigTest, ServiceTest
@@ -37,7 +37,7 @@ class TestGmailService(ConfigTest):
         gmail.GmailService.build_api = mock_api
 
         conf = self.validate()
-        self.service = gmail.GmailService(conf['myservice'], conf['general'])
+        self.service = get_service_instances(conf)[0]
 
     def test_get_credentials_exists_and_valid(self):
         expected = Credentials(**copy(TEST_CREDENTIAL))
