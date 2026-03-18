@@ -244,6 +244,18 @@ class TestJiraIssue(AbstractServiceTest, ServiceTest):
             self.arbitrary_record_with_due,
             extra={'sprint_field_names': self.service.sprint_field_names},
         )
+
         self.assertEqual(
             issue.get_due(), datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc)
         )
+
+    def test_get_due_sprint_dict_missing_end_date(self):
+        record = self.arbitrary_record.copy()
+        record['fields'] = self.arbitrary_record['fields'].copy()
+        record['fields']['Sprint'] = [{'id': 1, 'state': 'active', 'name': 'Sprint 1'}]
+
+        issue = self.service.get_issue_for_record(
+            record, extra={'sprint_field_names': self.service.sprint_field_names}
+        )
+
+        self.assertIsNone(issue.get_due())

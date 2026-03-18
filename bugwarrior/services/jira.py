@@ -244,7 +244,7 @@ class JiraIssue(Issue):
         # Otherwise, if the issue is in a sprint, use the end date of that sprint.
         sprints = self.__get_sprints()
         for sprint in filter(lambda e: e.get('state', '').lower() != 'closed', sprints):
-            endDate = sprint['endDate']
+            endDate = sprint.get('endDate')
             if endDate != '<null>':
                 return self.parse_date(endDate)
 
