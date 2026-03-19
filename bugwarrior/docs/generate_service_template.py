@@ -1,4 +1,4 @@
-from functools import reduce
+from functools import cmp_to_key, reduce
 import inspect
 import os
 import sys
@@ -83,7 +83,7 @@ if __name__ == '__main__':
                     ]
                 )
 
-    rows = sorted(rows, cmp=row_comparator)
+    rows = sorted(rows, key=cmp_to_key(row_comparator))
     rows.insert(0, ['Field Name', 'Description', 'Type'])
 
     filename = os.path.join(os.path.dirname(__file__), 'service_template.html')

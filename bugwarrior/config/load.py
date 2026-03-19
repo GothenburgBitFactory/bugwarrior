@@ -2,12 +2,13 @@ import configparser
 import logging
 import os
 from pathlib import Path
+import sys
 from typing import Any
 
-try:
-    import tomllib  # python>=3.11
-except ImportError:
-    import tomli as tomllib  # backport
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib  # type: ignore[unresolved-import]
 
 from .validation import Config, validate_config
 
@@ -28,7 +29,7 @@ def configure_logging(logfile, loglevel):
         'requests.packages.urllib3.connectionpool',
     ]
     for spammer in spammers:
-        logging.getLogger(spammer).setLevel(logging.WARN)
+        logging.getLogger(spammer).setLevel(logging.WARNING)
 
 
 def get_config_path():
@@ -134,10 +135,10 @@ class BugwarriorConfigParser(configparser.ConfigParser):
             *args, allow_no_value=allow_no_value, interpolation=None, **kwargs
         )
 
-    def getint(self, section, option):
+    def getint(self, section, option, **kwargs):
         """Accepts both integers and empty values."""
         try:
-            return super().getint(section, option)
+            return super().getint(section, option, **kwargs)
         except ValueError:
             if self.get(section, option) == '':
                 return None
@@ -148,7 +149,6 @@ class BugwarriorConfigParser(configparser.ConfigParser):
                     )
                 )
 
-    @staticmethod
-    def optionxform(option):
+    def optionxform(self, optionstr):
         """Do not lowercase key names."""
-        return option
+        return optionstr

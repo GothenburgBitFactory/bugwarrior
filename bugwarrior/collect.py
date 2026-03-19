@@ -64,12 +64,12 @@ def _aggregate_issues(service: "Service", queue: multiprocessing.Queue):
         log.critical(f"Worker for [{target}] exited: {e}")
         queue.put((SERVICE_FINISHED_ERROR, target))
     except BaseException as e:
-        if hasattr(e, 'request') and e.request:
+        if (request := getattr(e, 'request', None)) is not None:
             # Exceptions raised by requests library have the HTTP request
             # object stored as attribute. The request can have hooks attached
             # to it, and we need to remove them, as there can be unpickleable
             # methods. There is no one left to call these hooks anyway.
-            e.request.hooks = {}
+            request.hooks = {}
         log.exception(f"Worker for [{target}] failed: {e}")
         queue.put((SERVICE_FINISHED_ERROR, target))
     else:

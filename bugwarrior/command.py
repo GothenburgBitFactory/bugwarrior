@@ -38,11 +38,10 @@ def _try_load_config(
         # configuration file which just failed to load.
         logging.basicConfig()
 
-        exc_info = sys.exc_info()
         log.critical(
             "Could not load configuration. "
             "Maybe you have not created a configuration file.",
-            exc_info=(exc_info[0], exc_info[1], None),
+            exc_info=True,
         )
         sys.exit(1)
 
@@ -75,8 +74,8 @@ class AliasedCli(click.Group):
     def list_commands(self, ctx):
         return ctx.command.commands.keys()
 
-    def get_command(self, ctx, name):
-        return ctx.command.commands[name]
+    def get_command(self, ctx, cmd_name):
+        return ctx.command.commands[cmd_name]
 
 
 @click.command(cls=AliasedCli)

@@ -3,6 +3,7 @@ import typing
 
 from pydantic import computed_field
 import requests
+import urllib3
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
@@ -84,7 +85,7 @@ class YoutrackIssue(Issue):
         return "%s/issue/%s" % (self.config.base_url, self.get_issue())
 
     def get_project(self):
-        return self.record.get('project').get('shortName')
+        return self.record.get('project', {}).get('shortName')
 
     def get_number_in_project(self):
         return self.record.get('numberInProject')
@@ -119,7 +120,7 @@ class YoutrackService(Service, Client):
         self.session = requests.Session()
         self.session.headers['Accept'] = 'application/json'
         if not self.config.verify_ssl:
-            requests.packages.urllib3.disable_warnings()
+            urllib3.disable_warnings()
             self.session.verify = False
 
         token = self.get_secret('token', self.config.login)

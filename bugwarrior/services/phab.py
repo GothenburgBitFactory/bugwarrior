@@ -71,10 +71,9 @@ class PhabricatorIssue(Issue):
 
     @property
     def priority(self):
-        return (
-            self.PRIORITY_MAP.get(self.record.get('priority'))
-            or self.config.default_priority
-        )
+        if "severity" not in self.record:
+            return self.config.default_priority
+        return self.PRIORITY_MAP.get(self.record['severity'])
 
 
 class PhabricatorService(Service):
@@ -143,7 +142,7 @@ class PhabricatorService(Service):
                 tasks = self.api.maniphest.query(status='status-open')
                 tasks = tasks.items()
         except phabricator.APIError as err:
-            log.warn("Could not read tasks from Maniphest: %s" % err)
+            log.warning("Could not read tasks from Maniphest: %s" % err)
             return
 
         log.info("Found %i tasks" % len(tasks))
@@ -191,7 +190,7 @@ class PhabricatorService(Service):
         try:
             diffs = self.api.differential.query(status='status-open')
         except phabricator.APIError as err:
-            log.warn("Could not read revisions from Differential: %s" % err)
+            log.warning("Could not read revisions from Differential: %s" % err)
             return
 
         diffs = list(diffs)

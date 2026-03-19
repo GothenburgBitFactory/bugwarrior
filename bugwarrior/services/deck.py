@@ -95,7 +95,7 @@ class NextcloudDeckIssue(Issue):
             'annotations': self.extra['annotations'],
             'tags': self.get_tags(),
             'entry': datetime.datetime.fromtimestamp(
-                self.record.get('createdAt'), tz=datetime.timezone.utc
+                self.record['createdAt'], tz=datetime.timezone.utc
             ),
             'due': self.parse_date(self.record.get('duedate')),
             self.AUTHOR: self.record['owner']['uid'],

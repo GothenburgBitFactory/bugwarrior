@@ -208,6 +208,6 @@ class LinearService(Service, Client):
             messages = [
                 error.get("message", "Unknown error") for error in res['errors']
             ]
-            raise ValueError(messages.join("; "))
+            raise ValueError("; ".join(messages))
 
         return res.get("data", {}).get("issues", {}).get("nodes", [])

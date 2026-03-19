@@ -302,7 +302,7 @@ def synchronize(issue_generator, conf: "Config", dry_run: bool = False):
                 try:
                     issue[key] = issue[key].decode('utf-8')
                 except UnicodeDecodeError:
-                    log.warn("Failed to interpret %r as utf-8" % key)
+                    log.warning("Failed to interpret %r as utf-8" % key)
 
         # Blank priority should mean *no* priority
         if issue['priority'] == '':

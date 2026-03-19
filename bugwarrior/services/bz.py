@@ -3,7 +3,7 @@ import logging
 import time
 import typing
 from typing import Annotated
-import urllib
+import urllib.parse
 import xmlrpc.client
 
 import bugzilla
@@ -39,20 +39,18 @@ class BugzillaConfig(config.ServiceConfig):
     password: str = ''
     api_key: str = ''
     ignore_cc: bool = False
-    open_statuses: config.ConfigList = config.ConfigList(
-        [
-            'NEW',
-            'ASSIGNED',
-            'NEEDINFO',
-            'ON_DEV',
-            'MODIFIED',
-            'POST',
-            'REOPENED',
-            'ON_QA',
-            'FAILS_QA',
-            'PASSES_QA',
-        ]
-    )
+    open_statuses: config.ConfigList = [
+        'NEW',
+        'ASSIGNED',
+        'NEEDINFO',
+        'ON_DEV',
+        'MODIFIED',
+        'POST',
+        'REOPENED',
+        'ON_QA',
+        'FAILS_QA',
+        'PASSES_QA',
+    ]
     include_needinfos: bool = False
     query_url: typing.Optional[pydantic.AnyUrl] = None
     force_rest: bool = False

@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
 import email
+import email.utils
 import logging
 import multiprocessing
 import os
+from pathlib import Path
 import pickle
 import re
 import typing
@@ -20,9 +22,7 @@ log = logging.getLogger(__name__)
 class GmailConfig(config.ServiceConfig):
     service: typing.Literal['gmail']
 
-    client_secret_path: config.ExpandedPath = config.ExpandedPath(
-        '~/.gmail_client_secret.json'
-    )
+    client_secret_path: config.ExpandedPath = Path('~/.gmail_client_secret.json')
     query: str = 'label:Starred'
     login_name: str = 'me'
     thread_limit: int = 100

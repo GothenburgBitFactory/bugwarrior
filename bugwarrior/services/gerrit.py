@@ -3,6 +3,7 @@ import logging
 import typing
 
 import requests
+import requests.auth
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service

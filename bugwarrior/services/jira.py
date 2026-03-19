@@ -124,13 +124,14 @@ class JIRA(BaseJIRA):
         # XXX: JIRA logs the web user out if we send the session cookies we get
         # back from the first request in any subsequent requests. As we don't
         # need cookies when accessing the API anyway, just ignore all of them.
+        assert self._session is not None
         self._session.cookies = ObliviousCookieJar()
 
     def close(self):
         # this is called in a destructor, which may occur before the session
         # has been created, so be resilient to a missing session
-        if hasattr(self, "_session"):
-            self._session.close()
+        if (session := getattr(self, "_session", None)) is not None:
+            session.close()
 
 
 def _parse_sprint_string(sprint):
@@ -347,27 +348,8 @@ class JiraService(Service):
         )
         self.query = self.config.query or default_query
 
-        if self.config.PAT:
-            pat = self.get_secret('PAT', self.config.username)
-            auth = dict(token_auth=pat)
-        else:
-            password = self.get_secret('password', self.config.username)
-            if password == '@kerberos':
-                auth = dict(kerberos=True)
-            else:
-                if self.config.use_cookies:
-                    auth = dict(auth=(self.config.username, password))
-                else:
-                    auth = dict(basic_auth=(self.config.username, password))
         if not _skip_server:
-            self.jira = JIRA(
-                options={
-                    'server': self.config.base_uri,
-                    'rest_api_version': 'latest',
-                    'verify': self.config.verify_ssl,
-                },
-                **auth,
-            )
+            self.jira = self._build_jira_client()
 
         self.sprint_field_names = []
         if self.config.import_sprints_as_tags:
@@ -375,11 +357,28 @@ class JiraService(Service):
                 field for field in self.jira.fields() if field['name'] == 'Sprint'
             ]
             if len(field_names) < 1:
-                log.warn("No sprint custom field found.  Ignoring sprints.")
+                log.warning("No sprint custom field found.  Ignoring sprints.")
                 self.config.import_sprints_as_tags = False
             else:
                 log.info("Found %i distinct sprint fields." % len(field_names))
                 self.sprint_field_names = [field['id'] for field in field_names]
+
+    def _build_jira_client(self) -> JIRA:
+        jira_options = {
+            'server': self.config.base_uri,
+            'rest_api_version': 'latest',
+            'verify': self.config.verify_ssl,
+        }
+        if self.config.PAT:
+            pat = self.get_secret('PAT', self.config.username)
+            return JIRA(options=jira_options, token_auth=pat)
+
+        password = self.get_secret('password', self.config.username)
+        if password == '@kerberos':
+            return JIRA(options=jira_options, kerberos=True)
+        if self.config.use_cookies:
+            return JIRA(options=jira_options, auth=(self.config.username, password))
+        return JIRA(options=jira_options, basic_auth=(self.config.username, password))
 
     @staticmethod
     def get_keyring_service(config):

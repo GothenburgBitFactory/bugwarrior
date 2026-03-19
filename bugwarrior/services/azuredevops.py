@@ -133,7 +133,7 @@ class AzureDevopsIssue(Issue):
     PRIORITY_MAP = {"1": "H", "2": "M", "3": "L", "4": "L"}
 
     def get_priority(self):
-        value = self.record.get("fields").get(
+        value = self.record["fields"].get(
             "Microsoft.VSTS.Common.Priority", self.config.default_priority
         )
         return self.PRIORITY_MAP.get(value, self.config.default_priority)
@@ -151,17 +151,17 @@ class AzureDevopsIssue(Issue):
             ),
             self.TITLE: self.record["fields"]["System.Title"],
             self.DESCRIPTION: format_item(
-                self.record.get("fields").get("System.Description")
+                self.record["fields"].get("System.Description")
             ),
             self.ID: self.record["id"],
             self.URL: self.record["_links"]["html"]["href"],
             self.TYPE: self.record["fields"]["System.WorkItemType"],
             self.STATE: self.record["fields"]["System.State"],
-            self.ACTIVITY: self.record.get("fields").get("System.Activity", ""),
-            self.PRIORITY: self.record.get("fields").get(
+            self.ACTIVITY: self.record["fields"].get("System.Activity", ""),
+            self.PRIORITY: self.record["fields"].get(
                 "Microsoft.VSTS.Common.Priority", self.config.default_priority
             ),
-            self.REMAINING_WORK: self.record.get("fields").get(
+            self.REMAINING_WORK: self.record["fields"].get(
                 "Microsoft.VSTS.Scheduling.RemainingWork"
             ),
             self.PARENT: self.record.get("ParentTitle"),

@@ -32,19 +32,16 @@ class Webui:
         self.port = port
 
     def __enter__(self):
-        self.windows = True
-        try:  # Windows
-            kwargs = {'creationflags': (subprocess.CREATE_NEW_PROCESS_GROUP,)}
-        except AttributeError:  # Posix
-            self.windows = False
-            kwargs = {'start_new_session': True}
-
+        if sys.platform == "win32":
+            popen_kwargs = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+        else:
+            popen_kwargs: dict[str, typing.Any] = {"start_new_session": True}
         self.webui = subprocess.Popen(
             ['git', 'bug', 'webui', '--no-open', f'--port={self.port}'],
             stderr=subprocess.PIPE,
             cwd=self.path,
             text=True,
-            **kwargs,
+            **popen_kwargs,
         )
 
         # Give server a chance to spin up and make sure it's still running.
@@ -60,7 +57,7 @@ class Webui:
 
     def __exit__(self, *exc):
         if self.webui.returncode is None:
-            if self.windows:
+            if sys.platform == "win32":
                 os.kill(self.webui.pid, signal.SIGTERM)
             else:
                 os.killpg(os.getpgid(self.webui.pid), signal.SIGTERM)

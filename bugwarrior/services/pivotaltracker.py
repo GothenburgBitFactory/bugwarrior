@@ -102,7 +102,7 @@ class PivotalTrackerIssue(Issue):
         return self.build_default_description(
             title=self.record.get('name'),
             url=self.record.get('url'),
-            number=int(self.record.get('id')),
+            number=int(self.record['id']),
             cls=self.record.get('story_type'),
         )
 
