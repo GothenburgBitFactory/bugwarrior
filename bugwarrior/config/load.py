@@ -120,7 +120,8 @@ def parse_file(configpath: str) -> dict:
 def load_config(main_section, interactive, quiet) -> Config:
     configpath = get_config_path()
     rawconfig = parse_file(configpath)
-    rawconfig['flavor'][main_section]['interactive'] = interactive
+    for flavor in rawconfig['flavor'].values():
+        flavor['interactive'] = interactive
     config = validate_config(rawconfig, main_section, configpath)
     configure_logging(
         config.main.log_file, 'WARNING' if quiet else config.main.log_level
