@@ -263,3 +263,31 @@ class TestParseFile(LoadTest):
 
         with self.assertRaises(SystemExit):
             load.parse_file(config_path)
+
+
+class TestLoadConfig(LoadTest):
+    def setUp(self):
+        self.basedir = Path(__file__).parent
+        super().setUp()
+
+    def test_main_section_does_not_exist(self):
+        config_path = self.create(".bugwarriorrc")
+        with open(config_path, 'w') as fout:
+            fout.write(
+                textwrap.dedent("""
+                [redmine]
+                service = redmine
+                redmine.url = example.com
+            """)
+            )
+
+        with self.assertRaises(SystemExit):
+            load.load_config("general", False, False)
+
+        self.assertEqual(len(self.caplog.records), 1)
+        self.assertIn("No section: 'general'", self.caplog.records[0].message)
+
+    def test_interactive_flag_propagated(self):
+        os.environ['BUGWARRIORRC'] = str(self.basedir / 'example-bugwarriorrc')
+        config = load.load_config('general', interactive=True, quiet=False)
+        self.assertTrue(config.main.interactive)
