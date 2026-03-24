@@ -19,18 +19,22 @@ Now use your favorite tool to attain an editable installation.
 
 .. tab:: pip
 
+   Requires pip >= 25.1 for `dependency group <https://peps.python.org/pep-0735/>`_ support.
+
    .. code-block:: bash
 
     $ mkdir .venv
     $ python -m venv .venv
     $ source .venv/bin/activate
+    $ pip install --upgrade "pip>=25.1"
     $ pip install -e .[all]
+    $ pip install --group test
 
 .. tab:: uv
 
    .. code-block:: bash
 
-    $ uv sync --all-extras
+    $ uv sync --all-extras --group test
 
 The following will actually run it...be careful and back up your task directory!
 
@@ -61,10 +65,11 @@ To run the tests, use ``pytest``:
 
     $ uv run pytest
 
-We use ruff for linting and formatting. This is checked in the test suite, so
-you don't necessarily need to worry about it separately, but you may find it
-convenient to run ``ruff check`` and ``ruff format`` or `integrate ruff with
-your editor <https://docs.astral.sh/ruff/editors/setup/>`_.
+We use ruff for linting and formatting and ty for type checking. These are
+checked in the test suite, so you don't necessarily need to worry about them
+separately, but you may find it convenient to run ``ruff check``, ``ruff
+format``, and ``ty check``, or integrate `ruff <https://docs.astral.sh/ruff/editors/setup/>`_
+and `ty <https://docs.astral.sh/ty/editors/>`_ with your editor.
 
 Making a pull request
 ---------------------

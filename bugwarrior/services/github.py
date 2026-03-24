@@ -180,7 +180,7 @@ class GithubClient(Client):
         # Warn about the mis-leading 404 error code.  See:
         # https://github.com/ralphbean/bugwarrior/issues/374
         if response.status_code == 404 and 'token' in self.auth:
-            log.warn(
+            log.warning(
                 "A '404' from github may indicate an auth "
                 "failure. Make sure both that your token is correct "
                 "and that it has 'public_repo' and not 'public "
@@ -329,7 +329,9 @@ class GithubService(Service):
         issues = {}
         for url_path in self.config.issue_urls:
             issue = self.client.get_issue_for_url_path(url_path)
-            repo = re.search(r'(?<=^/)(.*/.*)(?=/(issues|pull)/[0-9]*$)', url_path)[0]
+            match = re.search(r'(?<=^/)(.*/.*)(?=/(issues|pull)/[0-9]*$)', url_path)
+            assert match is not None
+            repo = match[0]
             issues[url_path] = (repo, issue)
         return issues
 

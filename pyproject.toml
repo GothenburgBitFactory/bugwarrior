@@ -22,6 +22,9 @@ dependencies = [
   "pydantic[email]>=2",
   "python-dateutil",
   "requests",
+  # Needed at runtime: phabricator and ini2toml import pkg_resources,
+  # which is no longer bundled in venvs since Python 3.12 (see #1150).
+  "setuptools",
   "taskw>=0.8",
   "tomli ; python_version <= '3.10'",
 ]
@@ -35,24 +38,10 @@ jira = ["jira>=3.10.0"]
 kanboard = ["kanboard"]
 keyring = ["keyring"]
 phabricator = ["phabricator"]
-test = [
-   # sphinx-inline-tabs is incompatible with docutils-0.22 https://github.com/pradyunsg/sphinx-inline-tabs/pull/51
-   "docutils<0.22",
-   "pytest",
-   "pytest-subtests",
-   "responses",
-   "ruff",
-   "sphinx>=1.0,<9.0 ; python_version <= '3.10'",
-   "sphinx>=9.0.3 ; python_version >= '3.11'",
-   "sphinx-click",
-   "sphinx-inline-tabs",
-   # To make this installable with uvx/pipx and no additional options needed.
-   "setuptools",
-]
 todoist = ["todoist_api_python>=3.0.0"]
 trac = ["offtrac"]
 
-all = ["bugwarrior[bts,bugzilla,gmail,ini2toml,jira,kanboard,keyring,phabricator,test,todoist,trac]"]
+all = ["bugwarrior[bts,bugzilla,gmail,ini2toml,jira,kanboard,keyring,phabricator,todoist,trac]"]
 
 [project.urls]
 documentation = "https://bugwarrior.readthedocs.io/en/stable/"
@@ -112,6 +101,33 @@ max-line-length = 100
 [tool.setuptools.packages.find]
 include = ["bugwarrior*"]
 
+[tool.ty.environment]
+python-version = "3.10"
+
+[tool.ty.src]
+exclude = ["tests/", "bugwarrior/docs/"]
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+# PEP 735 — Dependency Groups in pyproject.toml
+# https://peps.python.org/pep-0735/
+[dependency-groups]
+docs = [
+    # sphinx-inline-tabs is incompatible with docutils-0.22 https://github.com/pradyunsg/sphinx-inline-tabs/pull/51
+    "docutils<0.22",
+    "sphinx>=1.0,<9.0 ; python_version <= '3.10'",
+    "sphinx>=9.0.3 ; python_version >= '3.11'",
+    "sphinx-click",
+    "sphinx-inline-tabs",
+]
+test = [
+    {include-group = "docs"},
+    "pytest",
+    "pytest-subtests",
+    "responses",
+    # ruff and ty are required by tests/test_general.py
+    "ruff",
+    "ty>=0.0.23",
+]

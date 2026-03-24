@@ -54,12 +54,6 @@ class TeamworkIssue(Issue):
     UNIQUE_KEY = (URL,)
     PRIORITY_MAP = {"low": "L", "medium": "M", "high": "H"}
 
-    def get_owner(self):
-        if self.record.get(
-            "responsible-party-ids", ""
-        ) and self.user_id in self.record.get("responsible-party-ids", ""):
-            return self.name
-
     def get_task_url(self):
         return self.extra["host"] + "/#/tasks/" + str(self.record["id"])
 

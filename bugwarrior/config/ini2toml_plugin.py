@@ -131,6 +131,6 @@ def unquote_flavors(file_contents: str) -> str:
 
 def activate(translator: Translator):
     profile = translator["bugwarriorrc"]
-    profile.description = "Convert 'bugwarriorrc' files to 'bugwarrior.toml'"
+    profile.help_text = "Convert 'bugwarriorrc' files to 'bugwarrior.toml'"
     profile.intermediate_processors.append(process_values)
     profile.post_processors.append(unquote_flavors)

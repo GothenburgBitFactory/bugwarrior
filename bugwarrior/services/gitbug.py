@@ -3,7 +3,7 @@ import os
 import signal
 import subprocess
 import sys
-import typing
+from typing import Any, Literal
 
 import requests
 
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class GitBugConfig(config.ServiceConfig):
-    service: typing.Literal['gitbug']
+    service: Literal['gitbug']
 
     path: config.ExpandedPath
 
@@ -32,19 +32,17 @@ class Webui:
         self.port = port
 
     def __enter__(self):
-        self.windows = True
-        try:  # Windows
-            kwargs = {'creationflags': (subprocess.CREATE_NEW_PROCESS_GROUP,)}
-        except AttributeError:  # Posix
-            self.windows = False
-            kwargs = {'start_new_session': True}
-
+        popen_kwargs: dict[str, Any] = {}
+        if sys.platform == "win32":
+            popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        else:
+            popen_kwargs["start_new_session"] = True
         self.webui = subprocess.Popen(
             ['git', 'bug', 'webui', '--no-open', f'--port={self.port}'],
             stderr=subprocess.PIPE,
             cwd=self.path,
             text=True,
-            **kwargs,
+            **popen_kwargs,
         )
 
         # Give server a chance to spin up and make sure it's still running.
@@ -60,7 +58,7 @@ class Webui:
 
     def __exit__(self, *exc):
         if self.webui.returncode is None:
-            if self.windows:
+            if sys.platform == "win32":
                 os.kill(self.webui.pid, signal.SIGTERM)
             else:
                 os.killpg(os.getpgid(self.webui.pid), signal.SIGTERM)

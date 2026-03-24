@@ -2,13 +2,14 @@ import configparser
 import itertools
 import os
 from pathlib import Path
+import sys
 import textwrap
 from unittest import TestCase
 
-try:
-    import tomllib  # python>=3.11
-except ImportError:
-    import tomli as tomllib  # backport
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib  # type: ignore[unresolved-import]
 
 from bugwarrior.config import load
 

@@ -132,7 +132,4 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
             "annotations": ['@Demo User - A test comment'],
             "tags": [],
         }
-        issue.user_id = "5"
-        issue.name = "Greg McCoy"
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected_data)
-        self.assertEqual(issue.get_owner(), "Greg McCoy")

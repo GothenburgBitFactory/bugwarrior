@@ -71,7 +71,7 @@ class TracIssue(Issue):
 
     def get_priority(self):
         return self.PRIORITY_MAP.get(
-            self.record.get('priority'), self.config.default_priority
+            self.record.get('priority', ''), self.config.default_priority
         )
 
 
@@ -105,7 +105,9 @@ class TracService(Service):
         # without offtrac, we can't get issue comments
         if self.trac is None:
             return annotations
-        changelog = self.trac.server.ticket.changeLog(issue['number'])
+        changelog = typing.cast(
+            list, self.trac.server.ticket.changeLog(issue['number'])
+        )
         for time, author, field, oldvalue, newvalue, permanent in changelog:
             if field == 'comment':
                 annotations.append((author, newvalue))

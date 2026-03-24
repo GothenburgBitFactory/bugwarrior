@@ -4,6 +4,7 @@ Service API
 """
 
 import abc
+from collections.abc import Iterable
 import datetime
 import logging
 import math
@@ -299,7 +300,7 @@ class Service(abc.ABC):
         return self.ISSUE_CLASS(record, self.config, self.main_config, extra=extra)
 
     def build_annotations(
-        self, annotations: list, url: typing.Optional[str] = None
+        self, annotations: Iterable, url: typing.Optional[str] = None
     ) -> list:
         """Format annotations, respecting configuration values.
 
@@ -358,7 +359,7 @@ class Service(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def get_keyring_service(service_config) -> str:
+    def get_keyring_service(config: schema.ServiceConfig) -> str:
         """Return the keyring name for this service."""
         raise NotImplementedError
 

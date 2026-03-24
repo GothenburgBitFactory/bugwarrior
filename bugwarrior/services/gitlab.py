@@ -5,6 +5,7 @@ from urllib.parse import quote, urlencode
 
 from pydantic import ValidationInfo, field_validator, model_validator
 import requests
+import urllib3
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
@@ -179,7 +180,7 @@ class GitlabClient(Client):
         url = self._base_url() + relative_url
 
         if not self.verify_ssl:
-            requests.packages.urllib3.disable_warnings()
+            urllib3.disable_warnings()
         response = requests.get(url, headers=headers, verify=self.verify_ssl, **kwargs)
 
         if skip_403 and response.status_code == 403:
@@ -601,17 +602,13 @@ class GitlabService(Service):
 
     def _get_todo_objs(self, todos):
         for project, todo in todos:
-            if project is not None:
-                repo = project
-            else:
-                repo = {'path': 'the instance'}
-            todo['repo'] = repo['path']
+            todo['repo'] = project['path'] if project is not None else 'the instance'
 
             todo_obj = self.get_issue_for_record(todo)
             todo_url = todo['target_url']
-            project_name = repo['path']
-            if self.config.project_owner_prefix:
-                project_name = repo['namespace']['path'] + "." + project_name
+            project_name = todo['repo']
+            if self.config.project_owner_prefix and project is not None:
+                project_name = project['namespace']['path'] + "." + project_name
             extra = {
                 'issue_url': todo_url,
                 'project': project_name,

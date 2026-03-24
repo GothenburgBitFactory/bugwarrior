@@ -68,7 +68,7 @@ def send_notification(issue, op, conf):
             'Deprecation Warning: The growlnotify project is deprecated upstream. We recommend '
             'using the applescript backend instead.'
         )
-        import gntp.notifier
+        import gntp.notifier  # type: ignore[unresolved-import]  # optional dependency
 
         growl = gntp.notifier.GrowlNotifier(
             applicationName="Bugwarrior",
@@ -113,10 +113,10 @@ def send_notification(issue, op, conf):
     elif notify_backend == 'gobject':
         _cache_logo()
 
-        import gi
+        import gi  # type: ignore[unresolved-import]  # optional dependency
 
         gi.require_version('Notify', '0.7')
-        from gi.repository import Notify
+        from gi.repository import Notify  # type: ignore[unresolved-import]
 
         Notify.init("bugwarrior")
 

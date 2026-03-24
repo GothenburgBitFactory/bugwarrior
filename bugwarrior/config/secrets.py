@@ -76,6 +76,8 @@ def oracle_eval(command):
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     p.wait()
+    assert p.stdout is not None
+    assert p.stderr is not None
     if p.returncode == 0:
         return p.stdout.readline().strip().decode('utf-8')
     else:

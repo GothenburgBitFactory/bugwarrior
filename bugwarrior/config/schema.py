@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import re
 import typing
-from typing import Annotated, Any, Generic, Literal
+from typing import Annotated, Literal
 
 import pydantic
 from pydantic import (
@@ -19,6 +19,7 @@ from pydantic import (
 )
 from pydantic_core import PydanticCustomError
 import taskw
+import taskw.task
 
 from .data import BugwarriorData, get_data_path
 
@@ -120,9 +121,7 @@ def _validate_unsupported(value: T) -> T:
     return value
 
 
-class UnsupportedOption(Generic[T]):
-    def __class_getitem__(cls, item: type) -> Any:
-        return Annotated[item, AfterValidator(_validate_unsupported)]
+UnsupportedOption = Annotated[T, AfterValidator(_validate_unsupported)]
 
 
 class BaseConfig(pydantic.BaseModel):
@@ -181,7 +180,7 @@ class Notifications(BaseConfig):
 
 
 # Dynamically add template fields to model.
-_ServiceConfig = pydantic.create_model(
+_ServiceConfig = pydantic.create_model(  # type: ignore[no-matching-overload]
     "_ServiceConfig",
     __base__=BaseConfig,
     **{
