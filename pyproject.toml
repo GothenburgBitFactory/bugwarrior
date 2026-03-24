@@ -127,9 +127,7 @@ test = [
     "pytest",
     "pytest-subtests",
     "responses",
-]
-dev = [
-    {include-group = "test"},
+    # ruff and ty are required by tests/test_general.py
     "ruff",
     "ty>=0.0.23",
 ]
