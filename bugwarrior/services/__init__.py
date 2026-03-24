@@ -359,7 +359,7 @@ class Service(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def get_keyring_service(config) -> str:
+    def get_keyring_service(config: schema.ServiceConfig) -> str:
         """Return the keyring name for this service."""
         raise NotImplementedError
 

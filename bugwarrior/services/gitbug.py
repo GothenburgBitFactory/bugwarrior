@@ -3,7 +3,7 @@ import os
 import signal
 import subprocess
 import sys
-import typing
+from typing import Any, Literal
 
 import requests
 
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class GitBugConfig(config.ServiceConfig):
-    service: typing.Literal['gitbug']
+    service: Literal['gitbug']
 
     path: config.ExpandedPath
 
@@ -32,10 +32,11 @@ class Webui:
         self.port = port
 
     def __enter__(self):
+        popen_kwargs: dict[str, Any] = {}
         if sys.platform == "win32":
-            popen_kwargs = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+            popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
         else:
-            popen_kwargs: dict[str, typing.Any] = {"start_new_session": True}
+            popen_kwargs["start_new_session"] = True
         self.webui = subprocess.Popen(
             ['git', 'bug', 'webui', '--no-open', f'--port={self.port}'],
             stderr=subprocess.PIPE,

@@ -602,15 +602,11 @@ class GitlabService(Service):
 
     def _get_todo_objs(self, todos):
         for project, todo in todos:
-            if project is not None:
-                repo = project
-            else:
-                repo = {'path': 'the instance'}
-            todo['repo'] = repo['path']
+            todo['repo'] = project['path'] if project is not None else 'the instance'
 
             todo_obj = self.get_issue_for_record(todo)
             todo_url = todo['target_url']
-            project_name = repo['path']
+            project_name = todo['repo']
             if self.config.project_owner_prefix and project is not None:
                 project_name = project['namespace']['path'] + "." + project_name
             extra = {

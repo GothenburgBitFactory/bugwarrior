@@ -70,10 +70,8 @@ class TracIssue(Issue):
         )
 
     def get_priority(self):
-        if "priority" not in self.record:
-            return self.config.default_priority
         return self.PRIORITY_MAP.get(
-            self.record['priority'], self.config.default_priority
+            self.record.get('priority', ''), self.config.default_priority
         )
 
 

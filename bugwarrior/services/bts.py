@@ -94,9 +94,9 @@ class BTSIssue(Issue):
         )
 
     def get_priority(self):
-        if "severity" not in self.record:
-            return self.config.default_priority
-        return self.PRIORITY_MAP.get(self.record['severity'])
+        return self.PRIORITY_MAP.get(
+            self.record.get('severity', ''), self.config.default_priority
+        )
 
 
 class BTSService(Service, Client):
