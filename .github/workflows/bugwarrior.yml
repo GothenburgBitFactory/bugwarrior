@@ -24,6 +24,30 @@ jobs:
           uv sync --all-extras --group test --python ${{ matrix.python-version }}
           uv run bugwarrior --version
           uv run pytest
+  bugwarrior-development-pip-test:
+    runs-on: ubuntu-latest
+    # We're currently seeing these complete in 1 minute.
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+      - name: Run tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y taskwarrior
+          task --version
+
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade "pip>=25.1" setuptools
+
+          pip install -e ".[all]"
+          pip install --group test
+
+          bugwarrior --version
+          pytest
   # Cannot migrate to uv: astral-sh/setup-uv does not support ppc64le,
   # and uraimo/run-on-arch-action runs inside a Docker container.
   bugwarrior-multiarch-test:
