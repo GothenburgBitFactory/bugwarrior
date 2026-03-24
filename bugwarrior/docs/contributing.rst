@@ -68,8 +68,8 @@ To run the tests, use ``pytest``:
 We use ruff for linting and formatting and ty for type checking. These are
 checked in the test suite, so you don't necessarily need to worry about them
 separately, but you may find it convenient to run ``ruff check``, ``ruff
-format``, and ``ty check``, or `integrate ruff with your editor
-<https://docs.astral.sh/ruff/editors/setup/>`_.
+format``, and ``ty check``, or integrate `ruff <https://docs.astral.sh/ruff/editors/setup/>`_
+and `ty <https://docs.astral.sh/ty/editors/>`_ with your editor.
 
 Making a pull request
 ---------------------
