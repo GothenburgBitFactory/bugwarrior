@@ -138,7 +138,7 @@ class MainSectionConfig(BaseConfig):
 
     # added during configuration loading
     #: Interactive status.
-    interactive: bool = False
+    interactive: bool
 
     @computed_field
     @property
