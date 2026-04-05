@@ -141,7 +141,9 @@ class TestValidation(ConfigTest):
         self.validate()
 
     def test_flavors(self):
-        self.config['flavor'] = {'myflavor': {'targets': ['my_service', 'my_gitlab']}}
+        self.config['flavor'] = {
+            'myflavor': {'targets': ['my_service', 'my_gitlab'], 'interactive': False}
+        }
         self.validate()
 
     def test_quoted_flavor_key_error(self):
@@ -175,6 +177,10 @@ class TestValidation(ConfigTest):
             for main_section, expected_configs in expected_by_flavor.items():
                 with self.subTest(config=config_path.name, main_section=main_section):
                     formatted_config = parse_file(str(config_path))
+
+                    for flavor in formatted_config['flavor'].values():
+                        flavor['interactive'] = False
+
                     config = validation.validate_config(
                         formatted_config, main_section, str(config_path)
                     )
