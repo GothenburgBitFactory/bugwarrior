@@ -214,3 +214,39 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
             "tags": [],
         }
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+
+    @responses.activate
+    def test_issues_paginates(self):
+        """Drains every page when Linear signals ``hasNextPage``."""
+        # Reset the default mock registered in setUp so we can control page order.
+        responses.reset()
+
+        page_one = {
+            "data": {
+                "issues": {
+                    "nodes": [RESPONSE["data"]["issues"]["nodes"][0]],
+                    "pageInfo": {"hasNextPage": True, "endCursor": "cursor-page-2"},
+                }
+            }
+        }
+        page_two = {
+            "data": {
+                "issues": {
+                    "nodes": [RESPONSE["data"]["issues"]["nodes"][1]],
+                    "pageInfo": {"hasNextPage": False, "endCursor": None},
+                }
+            }
+        }
+        responses.add(responses.POST, "https://api.linear.app/graphql", json=page_one)
+        responses.add(responses.POST, "https://api.linear.app/graphql", json=page_two)
+
+        identifiers = [issue.record["identifier"] for issue in self.service.issues()]
+        self.assertEqual(identifiers, ["DUS-5", "DUS-1"])
+
+        # Two HTTP calls were made, and the second one carried the cursor
+        # returned by the first.
+        self.assertEqual(len(responses.calls), 2)
+        first_body = json.loads(responses.calls[0].request.body)
+        second_body = json.loads(responses.calls[1].request.body)
+        self.assertIsNone(first_body["variables"]["after"])
+        self.assertEqual(second_body["variables"]["after"], "cursor-page-2")
