@@ -11,8 +11,8 @@ class Config(SphinxDirective):
 
     def _make_tab(self, lang: str):
         self.arguments = [lang]
-        tab = TabDirective.run(self)[0]  # type: ignore[arg-type]
-        tab[1][0] = CodeBlock.run(self)[0]  # type: ignore[arg-type]
+        tab = TabDirective.run(self)[0]  # type: ignore[ty:arg-type]
+        tab[1][0] = CodeBlock.run(self)[0]  # type: ignore[ty:arg-type]
         # While line breaks were previously separate elements, they're now
         # within the single CodeBlock element.
         del tab[1][1:]
