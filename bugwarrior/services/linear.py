@@ -90,6 +90,7 @@ class LinearIssue(Issue):
                 or None
             ),
             "priority": self.config.default_priority,
+            "entry": created,
             "annotations": get(self.extra, "annotations", []),
             "tags": self.get_tags(),
             self.URL: self.record["url"],

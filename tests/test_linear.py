@@ -144,6 +144,7 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
         expected_output = {
             "project": "prj",
             "priority": "M",
+            "entry": created_timestamp,
             "annotations": [],
             "tags": [],
             "linearurl": "https://linear.app/dustins-doings/issue/DUS-5/do-stuff",
@@ -170,6 +171,7 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
         expected_output = {
             "project": None,
             "priority": "M",
+            "entry": created_timestamp,
             "annotations": [],
             "tags": ["Improvement", "Feature"],
             "linearurl": "https://linear.app/dustins-doings/issue/DUS-1/bugwarrior",
@@ -198,6 +200,7 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
             "annotations": [],
             "description": "(bw)#DUS-5 - DO STUFF .. "
             "https://linear.app/dustins-doings/issue/DUS-5/do-stuff",
+            "entry": created_timestamp,
             "linearassignee": "djmitche@gmail.com",
             "linearclosed": closed_timestamp,
             "linearcreated": created_timestamp,
