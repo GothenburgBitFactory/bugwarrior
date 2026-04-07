@@ -180,7 +180,7 @@ class Notifications(BaseConfig):
 
 
 # Dynamically add template fields to model.
-_ServiceConfig = pydantic.create_model(  # type: ignore[no-matching-overload]
+_ServiceConfig = pydantic.create_model(  # type: ignore[ty:no-matching-overload]
     "_ServiceConfig",
     __base__=BaseConfig,
     **{
