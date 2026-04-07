@@ -1,9 +1,10 @@
+from collections.abc import Callable, Iterator
 import functools
 import getpass
 import logging
 import os
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import click
 from lockfile import LockTimeout
@@ -22,7 +23,7 @@ log = logging.getLogger(__name__)
 lst = list
 
 
-def _get_section_name(flavor):
+def _get_section_name(flavor: str | None) -> str:
     if flavor:
         return 'flavor.' + flavor
     return 'general'
@@ -46,10 +47,14 @@ def _try_load_config(
         sys.exit(1)
 
 
-def _legacy_cli_deprecation_warning(subcommand_callback):
+def _legacy_cli_deprecation_warning(
+    subcommand_callback: Callable[..., Any],
+) -> Callable[..., Any]:
     @functools.wraps(subcommand_callback)
     @click.pass_context
-    def wrapped_subcommand_callback(ctx, *args, **kwargs):
+    def wrapped_subcommand_callback(
+        ctx: click.Context, *args: Any, **kwargs: Any
+    ) -> Any:
         if ctx.find_root().command_path != 'bugwarrior':
             old_command = ctx.command_path
             new_command = ctx.command_path.replace('-', ' ')
@@ -71,16 +76,18 @@ class AliasedCli(click.Group):
     with the old cli api.
     """
 
-    def list_commands(self, ctx):
-        return ctx.command.commands.keys()
+    def list_commands(self, ctx: click.Context) -> list[str]:
+        assert isinstance(ctx.command, click.Group)
+        return list(ctx.command.commands)
 
-    def get_command(self, ctx, cmd_name):
-        return ctx.command.commands[cmd_name]
+    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
+        assert isinstance(ctx.command, click.Group)
+        return ctx.command.commands.get(cmd_name)
 
 
 @click.command(cls=AliasedCli)
 @click.version_option()
-def cli():
+def cli() -> None:
     pass
 
 
@@ -93,7 +100,9 @@ def cli():
 )
 @click.option('--quiet', is_flag=True, help='Set logging level to WARNING.')
 @_legacy_cli_deprecation_warning
-def pull(dry_run, flavor, interactive, debug, quiet):
+def pull(
+    dry_run: bool, flavor: str | None, interactive: bool, debug: bool, quiet: bool
+) -> None:
     """Pull down tasks from forges and add them to your taskwarrior tasks.
 
     Relies on configuration file.
@@ -128,7 +137,7 @@ def pull(dry_run, flavor, interactive, debug, quiet):
 
 @cli.group()
 @_legacy_cli_deprecation_warning
-def vault():
+def vault() -> None:
     """Password/keyring management for bugwarrior.
 
     If you use the keyring password oracle in your bugwarrior config, this tool
@@ -138,7 +147,7 @@ def vault():
     pass
 
 
-def targets():
+def targets() -> Iterator[str]:
     config = _try_load_config('general')
     for service_config in config.service_configs:
         for value in dict(service_config).values():
@@ -149,7 +158,7 @@ def targets():
 
 
 @vault.command()
-def list():
+def list() -> None:
     pws = lst(targets())
     print("%i @oracle:use_keyring passwords in bugwarriorrc" % len(pws))
     for section in pws:
@@ -159,7 +168,7 @@ def list():
 @vault.command()
 @click.argument('target')
 @click.argument('username')
-def clear(target, username):
+def clear(target: str, username: str) -> None:
     target_list = lst(targets())
     if target not in target_list:
         raise ValueError("%s must be one of %r" % (target, target_list))
@@ -175,7 +184,7 @@ def clear(target, username):
 @vault.command()
 @click.argument('target')
 @click.argument('username')
-def set(target, username):
+def set(target: str, username: str) -> None:
     target_list = lst(targets())
     if target not in target_list:
         log.warning(
@@ -192,7 +201,7 @@ def set(target, username):
 @cli.command()
 @click.option('--flavor', default=None, help='The flavor to use')
 @_legacy_cli_deprecation_warning
-def uda(flavor):
+def uda(flavor: str | None) -> None:
     """
     List bugwarrior-managed uda's.
 
@@ -226,7 +235,7 @@ def uda(flavor):
 @click.argument(
     'rcfile', required=False, default=get_config_path(), type=click.Path(exists=True)
 )
-def ini2toml(rcfile):
+def ini2toml(rcfile: str) -> None:
     """Convert ini bugwarriorrc to toml and print result to stdout."""
     try:
         from ini2toml.api import Translator

@@ -88,7 +88,19 @@ quote-style = "preserve"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "W", "I", "E501"]
+select = ["E4", "E7", "E9", "F", "W", "I", "E501", "ANN"]
+ignore = ["ANN401"]
+# ANN rules (flake8-annotations) detect untyped code — useful for gradual typing.
+# Currently enforced in: bugwarrior/config/, command.py, db.py, collect.py, notifications.py
+# ANN401 (disallow Any) is too strict for wrappers, *args/**kwargs, and data storage.
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN"]
+"bugwarrior/services/**" = ["ANN"]
+"bugwarrior/docs/**" = ["ANN"]
+
+[tool.ruff.lint.flake8-annotations]
+suppress-dummy-args = true
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

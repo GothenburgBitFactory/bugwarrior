@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import re
 import typing
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 import pydantic
 from pydantic import (
@@ -26,7 +26,7 @@ from .data import BugwarriorData, get_data_path
 log = logging.getLogger(__name__)
 
 
-def validate_url(url: str):
+def validate_url(url: str) -> str:
     return str(AnyUrl(url)).rstrip("/")
 
 
@@ -201,7 +201,7 @@ class ServiceConfig(_ServiceConfig):
     target: str
 
     # Added during validation (computed field)
-    templates: dict = {}
+    templates: dict[str, str] = {}
 
     # Optional fields shared by all services.
     only_if_assigned: str = ""
@@ -212,7 +212,7 @@ class ServiceConfig(_ServiceConfig):
 
     @model_validator(mode="before")
     @classmethod
-    def compute_templates(cls, values):
+    def compute_templates(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Get any defined templates for configuration values.
 
         Users can override the value of any Taskwarrior field using
@@ -249,7 +249,9 @@ class ServiceConfig(_ServiceConfig):
 
     @field_validator('include_merge_requests', mode='after', check_fields=False)
     @classmethod
-    def deprecate_filter_merge_requests(cls, value, info: ValidationInfo):
+    def deprecate_filter_merge_requests(
+        cls, value: bool | str, info: ValidationInfo
+    ) -> bool | str:
         if not hasattr(cls, '_DEPRECATE_FILTER_MERGE_REQUESTS'):
             return value
 
@@ -269,7 +271,7 @@ class ServiceConfig(_ServiceConfig):
 
     @field_validator('project_name', mode='after', check_fields=False)
     @classmethod
-    def deprecate_project_name(cls, value):
+    def deprecate_project_name(cls, value: str) -> str:
         if hasattr(cls, '_DEPRECATE_PROJECT_NAME'):
             if value != '':
                 log.warning('project_name is deprecated in favor of project_template')

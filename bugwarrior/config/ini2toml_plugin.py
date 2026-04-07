@@ -18,7 +18,7 @@ from .schema import (
 log = logging.getLogger(__name__)
 
 
-def to_type(section: IntermediateRepr, key: str, converter: typing.Callable):
+def to_type(section: IntermediateRepr, key: str, converter: typing.Callable) -> None:
     try:
         val = section[key]
     except KeyError:
@@ -27,15 +27,15 @@ def to_type(section: IntermediateRepr, key: str, converter: typing.Callable):
         section[key] = converter(val)
 
 
-def to_bool(section: IntermediateRepr, key: str):
+def to_bool(section: IntermediateRepr, key: str) -> None:
     to_type(section, key, pydantic.TypeAdapter(bool).validate_python)
 
 
-def to_int(section: IntermediateRepr, key: str):
+def to_int(section: IntermediateRepr, key: str) -> None:
     to_type(section, key, int)
 
 
-def to_list(section: IntermediateRepr, key: str):
+def to_list(section: IntermediateRepr, key: str) -> None:
     to_type(section, key, parse_config_list)
 
 
@@ -53,7 +53,9 @@ def get_field_type(attrs: dict) -> typing.Optional[str]:
     return None
 
 
-def convert_section(section: IntermediateRepr, schema: type[pydantic.BaseModel]):
+def convert_section(
+    section: IntermediateRepr, schema: type[pydantic.BaseModel]
+) -> None:
     for prop, attrs in schema.model_json_schema()['properties'].items():
         field_type = get_field_type(attrs)
         if field_type == 'boolean':
@@ -129,7 +131,7 @@ def unquote_flavors(file_contents: str) -> str:
     )
 
 
-def activate(translator: Translator):
+def activate(translator: Translator) -> None:
     profile = translator["bugwarriorrc"]
     profile.help_text = "Convert 'bugwarriorrc' files to 'bugwarrior.toml'"
     profile.intermediate_processors.append(process_values)

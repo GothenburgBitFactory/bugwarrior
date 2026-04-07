@@ -1,10 +1,10 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 import itertools
 import json
 import logging
 import re
 import subprocess
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
@@ -26,11 +26,11 @@ class MultipleMatches(Exception):
     pass
 
 
-def get_normalized_annotation(annotation):
+def get_normalized_annotation(annotation: str) -> str:
     return re.sub(r'[\W_]', '', str(annotation))
 
 
-def get_annotation_hamming_distance(left, right):
+def get_annotation_hamming_distance(left: str, right: str) -> int:
     left = get_normalized_annotation(left)
     right = get_normalized_annotation(right)
     if len(left) > len(right):
@@ -40,7 +40,7 @@ def get_annotation_hamming_distance(left, right):
     return hamdist(left, right)
 
 
-def hamdist(str1, str2):
+def hamdist(str1: str, str2: str) -> int:
     """Count the # of differences between equal length strings str1 and str2"""
     diffs = 0
     for ch1, ch2 in zip(str1, str2):
@@ -49,7 +49,9 @@ def hamdist(str1, str2):
     return diffs
 
 
-def get_managed_task_uuids(tw, key_list):
+def get_managed_task_uuids(
+    tw: TaskWarriorShellout, key_list: dict[str, list[str]]
+) -> set[str]:
     expected_task_ids = set()
     for keys in key_list.values():
         tasks = tw.filter_tasks(
@@ -63,7 +65,7 @@ def get_managed_task_uuids(tw, key_list):
     return expected_task_ids
 
 
-def make_unique_identifier(keys: dict, issue: dict) -> str:
+def make_unique_identifier(keys: dict[str, list[str]], issue: dict[str, Any]) -> str:
     """For a given issue, make an identifier from its unique keys.
 
     This is not the same as the taskwarrior uuid, which is assigned
@@ -76,7 +78,9 @@ def make_unique_identifier(keys: dict, issue: dict) -> str:
     raise RuntimeError("Could not determine unique identifier for %s" % issue)
 
 
-def find_taskwarrior_uuid(tw, keys, issue):
+def find_taskwarrior_uuid(
+    tw: TaskWarriorShellout, keys: dict[str, list[str]], issue: dict[str, Any]
+) -> str:
     """For a given issue issue, find its local taskwarrior UUID.
 
     Assembles a list of task IDs existing in taskwarrior
@@ -151,7 +155,12 @@ def find_taskwarrior_uuid(tw, keys, issue):
     raise NotFound("No issue was found matching %s" % issue)
 
 
-def replace_left(field, local_task, remote_issue, keep_items=[]):
+def replace_left(
+    field: str,
+    local_task: dict[str, Any],
+    remote_issue: dict[str, Any],
+    keep_items: list[str] = [],
+) -> None:
     """Replace array field from the remote_issue to the local_task
 
     * Local 'left' entries are suppressed, unless those listed in keep_items.
@@ -188,7 +197,12 @@ def replace_left(field, local_task, remote_issue, keep_items=[]):
         local_task[field] += remote_field
 
 
-def merge_left(field, local_task, remote_issue, hamming=False):
+def merge_left(
+    field: str,
+    local_task: dict[str, Any],
+    remote_issue: dict[str, Any],
+    hamming: bool = False,
+) -> None:
     """Merge array field from the remote_issue into local_task
 
     * Local 'left' entries are preserved without modification
@@ -236,7 +250,7 @@ def merge_left(field, local_task, remote_issue, hamming=False):
         )
 
 
-def run_hooks(pre_import):
+def run_hooks(pre_import: list[str]) -> None:
     for hook in pre_import:
         exit_code = subprocess.call(hook, shell=True)
         if exit_code != 0:
@@ -245,7 +259,11 @@ def run_hooks(pre_import):
             raise RuntimeError(msg)
 
 
-def synchronize(issue_generator, conf: "Config", dry_run: bool = False):
+def synchronize(
+    issue_generator: Iterable[dict | tuple[str, str]],
+    conf: "Config",
+    dry_run: bool = False,
+) -> None:
     services = [service_config.service for service_config in conf.service_configs]
     key_list = build_key_list(services)
     uda_list = build_uda_config_overrides(services)
@@ -274,7 +292,10 @@ def synchronize(issue_generator, conf: "Config", dry_run: bool = False):
     }
 
     for issue in issue_generator:
-        if isinstance(issue, tuple) and issue[0] == 'SERVICE FAILED':
+        if isinstance(issue, tuple):
+            assert issue[0] == 'SERVICE FAILED', (
+                "'issue' should only be a tuple in case of a failure"
+            )
             successful_config_map.pop(issue[1])
             continue
 
@@ -406,7 +427,7 @@ def synchronize(issue_generator, conf: "Config", dry_run: bool = False):
             service_config.service for service_config in successful_config_map.values()
         ),
     )
-    issue_updates['closed'] = succeeded_service_task_uuids - seen_uuids
+    issue_updates['closed'] = list(succeeded_service_task_uuids - seen_uuids)
     log.info("Closing %i tasks", len(issue_updates['closed']))
     for issue in issue_updates['closed']:
         _, task_info = tw.get_task(uuid=issue)
@@ -449,20 +470,20 @@ def synchronize(issue_generator, conf: "Config", dry_run: bool = False):
             )
 
 
-def build_key_list(services: Iterable[str]):
+def build_key_list(services: Iterable[str]) -> dict[str, list[str]]:
     return {
         service: get_service(service).ISSUE_CLASS.UNIQUE_KEY for service in services
     }
 
 
-def get_defined_udas_as_strings(conf: "Config"):
+def get_defined_udas_as_strings(conf: "Config") -> Iterator[str]:
     uda_list = build_uda_config_overrides(
         service_config.service for service_config in conf.service_configs
     )
     yield from convert_override_args_to_taskrc_settings(uda_list)
 
 
-def build_uda_config_overrides(services: Iterable[str]):
+def build_uda_config_overrides(services: Iterable[str]) -> dict[str, Any]:
     """Returns a list of UDAs defined by given targets
 
     For all targets in `targets`, build a dictionary of configuration overrides
@@ -498,7 +519,9 @@ def build_uda_config_overrides(services: Iterable[str]):
     return {'uda': targets_udas}
 
 
-def convert_override_args_to_taskrc_settings(config, prefix=''):
+def convert_override_args_to_taskrc_settings(
+    config: dict[str, Any], prefix: str = ''
+) -> list[str]:
     args = []
     for k, v in config.items():
         if isinstance(v, dict):

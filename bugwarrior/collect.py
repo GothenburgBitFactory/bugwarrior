@@ -1,17 +1,18 @@
+from collections.abc import Iterator
 import copy
 from functools import cache
 from importlib.metadata import entry_points
 import logging
 import multiprocessing
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from jinja2 import Template
 from taskw.task import Task
 
 if TYPE_CHECKING:
     from bugwarrior.config.validation import Config
-    from bugwarrior.services import Service
+    from bugwarrior.services import Issue, Service
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ def get_service_instances(conf: "Config") -> list["Service"]:
     ]
 
 
-def _aggregate_issues(service: "Service", queue: multiprocessing.Queue):
+def _aggregate_issues(service: "Service", queue: multiprocessing.Queue) -> None:
     """This worker function is separated out from the main
     :func:`aggregate_issues` func only so that we can use multiprocessing
     on it for speed reasons.
@@ -80,7 +81,7 @@ def _aggregate_issues(service: "Service", queue: multiprocessing.Queue):
         log.info(f"Done with [{target}] in {duration}.")
 
 
-def aggregate_issues(conf: "Config", debug: bool):
+def aggregate_issues(conf: "Config", debug: bool) -> Iterator[dict | tuple[str, str]]:
     """Return all issues from every target."""
     log.info("Starting to aggregate remote issues.")
 
@@ -129,10 +130,10 @@ def aggregate_issues(conf: "Config", debug: bool):
 class TaskConstructor:
     """Construct a taskwarrior task from a foreign record."""
 
-    def __init__(self, issue):
+    def __init__(self, issue: "Issue") -> None:
         self.issue = issue
 
-    def get_added_tags(self):
+    def get_added_tags(self) -> list[str]:
         added_tags = []
         for tag in self.issue.config.add_tags:
             tag = Template(tag).render(self.get_template_context())
@@ -141,7 +142,7 @@ class TaskConstructor:
 
         return added_tags
 
-    def get_taskwarrior_record(self, refined=True) -> dict:
+    def get_taskwarrior_record(self, refined: bool = True) -> dict[str, Any]:
         if not getattr(self, '_taskwarrior_record', None):
             self._taskwarrior_record = self.issue.to_taskwarrior()
         record = copy.deepcopy(self._taskwarrior_record)
@@ -153,13 +154,13 @@ class TaskConstructor:
             record['tags'].extend(self.get_added_tags())
         return record
 
-    def get_template_context(self):
+    def get_template_context(self) -> dict[str, Any]:
         context = self.get_taskwarrior_record(refined=False).copy()
         context.update(self.issue.extra)
         context.update({'description': self.issue.get_default_description()})
         return context
 
-    def refine_record(self, record):
+    def refine_record(self, record: dict[str, Any]) -> dict[str, Any]:
         for field in Task.FIELDS.keys():
             if field in self.issue.config.templates:
                 template = Template(self.issue.config.templates[field])
