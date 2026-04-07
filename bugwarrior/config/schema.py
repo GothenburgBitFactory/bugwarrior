@@ -25,6 +25,8 @@ from .data import BugwarriorData, get_data_path
 
 log = logging.getLogger(__name__)
 
+Priority = Literal['', 'L', 'M', 'H']
+
 
 def validate_url(url: str) -> str:
     return str(AnyUrl(url)).rstrip("/")
@@ -206,7 +208,7 @@ class ServiceConfig(_ServiceConfig):
     # Optional fields shared by all services.
     only_if_assigned: str = ""
     also_unassigned: bool = False
-    default_priority: Literal["", "L", "M", "H"] = "M"
+    default_priority: Priority = "M"
     add_tags: ConfigList = []
     static_fields: ConfigList = []
 

@@ -10,6 +10,7 @@ from .schema import (
     ExpandedPath,  # noqa: F401
     MainSectionConfig,
     NoSchemeUrl,  # noqa: F401
+    Priority,  # noqa: F401
     ServiceConfig,
     StrippedTrailingSlashUrl,  # noqa: F401
     TaskrcPath,  # noqa: F401

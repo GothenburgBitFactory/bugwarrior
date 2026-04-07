@@ -2,7 +2,7 @@ import base64
 import logging
 import re
 import sys
-import typing
+from typing import Annotated, Any, Iterator, Literal
 from urllib.parse import quote
 
 from pydantic import BeforeValidator
@@ -13,11 +13,11 @@ from bugwarrior.services import Client, Issue, Service
 
 log = logging.getLogger(__name__)
 
-EscapedStr = typing.Annotated[str, BeforeValidator(quote)]
+EscapedStr = Annotated[str, BeforeValidator(quote)]
 
 
 class AzureDevopsConfig(config.ServiceConfig):
-    service: typing.Literal['azuredevops']
+    service: Literal['azuredevops']
     PAT: str
     project: EscapedStr
     organization: EscapedStr
@@ -26,12 +26,12 @@ class AzureDevopsConfig(config.ServiceConfig):
     wiql_filter: str = ''
 
 
-def striphtml(data):
+def striphtml(data: str) -> str:
     p = re.compile(r"<.*?>")
     return p.sub("", data)
 
 
-def format_item(item):
+def format_item(item: str | None) -> str | None:
     """Removes HTML Elements, splits by line"""
     if item:
         item_lines = re.split(r"<br>|</.*?>|&nbsp;", item)
@@ -41,7 +41,7 @@ def format_item(item):
 
 
 class AzureDevopsClient(Client):
-    def __init__(self, pat, org, project, host):
+    def __init__(self, pat: str, org: str, project: str, host: str) -> None:
         if pat[0] != ":":
             pat = f":{pat}"
         self.pat = base64.b64encode(pat.encode("ascii")).decode("ascii")
@@ -57,7 +57,7 @@ class AzureDevopsClient(Client):
         }
         self.params = {"api-version": "6.0-preview.2"}
 
-    def get_work_item(self, workitemid):
+    def get_work_item(self, workitemid: str | int) -> dict[str, Any]:
         queryset = self.params.copy()
         queryset.update({"$expand": "all"})
         resp = self.session.get(
@@ -65,7 +65,7 @@ class AzureDevopsClient(Client):
         )
         return resp.json()
 
-    def get_work_items_from_query(self, query):
+    def get_work_items_from_query(self, query: str) -> list[int]:
         data = str({"query": query})
         resp = self.session.post(f"{self.base_url}/wiql", data=data, params=self.params)
         if resp.status_code == 401:
@@ -85,13 +85,16 @@ class AzureDevopsClient(Client):
             sys.exit(1)
         return [workitem['id'] for workitem in resp.json()["workItems"]]
 
-    def get_workitem_comments(self, workitem):
+    def get_workitem_comments(
+        self, workitem: dict[str, Any]
+    ) -> list[dict[str, Any]] | None:
         comment_link = workitem["_links"]["workItemComments"]["href"]
         resp = self.session.get(comment_link)
         return resp.json().get("comments", None)
 
-    def get_parent_name(self, workitem):
-        parent_id = workitem.get("fields").get("System.Parent", None)
+    def get_parent_name(self, workitem: dict[str, Any]) -> str | None:
+        parent_id = workitem.get("fields", {}).get("System.Parent", None)
+
         if parent_id:
             parent_item = self.get_work_item(parent_id)
             return parent_item["fields"]["System.Title"]
@@ -130,15 +133,15 @@ class AzureDevopsIssue(Issue):
     }
     UNIQUE_KEY = (URL,)
 
-    PRIORITY_MAP = {"1": "H", "2": "M", "3": "L", "4": "L"}
+    PRIORITY_MAP: dict[str, config.Priority] = {"1": "H", "2": "M", "3": "L", "4": "L"}
 
-    def get_priority(self):
+    def get_priority(self) -> config.Priority:
         value = self.record["fields"].get(
             "Microsoft.VSTS.Common.Priority", self.config.default_priority
         )
         return self.PRIORITY_MAP.get(value, self.config.default_priority)
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         return {
             "project": self.extra['project'],
             "priority": self.get_priority(),
@@ -168,7 +171,7 @@ class AzureDevopsIssue(Issue):
             self.NAMESPACE: self.extra.get("namespace"),
         }
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record["fields"]["System.Title"],
             url=self.record["_links"]["html"]["href"],
@@ -177,12 +180,12 @@ class AzureDevopsIssue(Issue):
         )
 
 
-class AzureDevopsService(Service):
+class AzureDevopsService(Service[AzureDevopsIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = AzureDevopsIssue
     CONFIG_SCHEMA = AzureDevopsConfig
 
-    def __init__(self, *args, **kw):
+    def __init__(self, *args: Any, **kw: Any) -> None:
         super().__init__(*args, **kw)
         self.client = AzureDevopsClient(
             pat=self.get_secret('PAT'),
@@ -191,7 +194,7 @@ class AzureDevopsService(Service):
             host=self.config.host,
         )
 
-    def get_query(self):
+    def get_query(self) -> list[int]:
         default_query = "SELECT [System.Id] FROM workitems"
 
         # Test for Clauses, add WHERE if any exist
@@ -222,7 +225,7 @@ class AzureDevopsService(Service):
         list_of_items = self.client.get_work_items_from_query(default_query)
         return list_of_items
 
-    def annotations(self, issue):
+    def annotations(self, issue: dict[str, Any]) -> list[str]:
         # Build Annotations based on comments by commenter and comment text
         url = issue["_links"]["html"]["href"]
         annotations = []
@@ -238,7 +241,7 @@ class AzureDevopsService(Service):
                     annotations.append((name, text))
         return self.build_annotations(annotations, url)
 
-    def issues(self):
+    def issues(self) -> Iterator[AzureDevopsIssue]:
         issue_ids = self.get_query()
         for issue_id in issue_ids:
             issue = self.client.get_work_item(issue_id)
@@ -254,5 +257,5 @@ class AzureDevopsService(Service):
             yield issue_obj
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: AzureDevopsConfig) -> str:
         return f"azuredevops://{config.organization}@{config.host}"

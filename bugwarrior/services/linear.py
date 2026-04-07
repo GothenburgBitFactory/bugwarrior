@@ -114,9 +114,9 @@ class LinearIssue(Issue):
 
     def get_default_description(self):
         return self.build_default_description(
-            title=self.record.get("title"),
-            url=self.record.get("url"),
-            number=self.record.get("identifier"),
+            title=self.record.get("title", ""),
+            url=self.record.get("url", ""),
+            number=self.record.get("identifier", ""),
             cls="task",
         )
 

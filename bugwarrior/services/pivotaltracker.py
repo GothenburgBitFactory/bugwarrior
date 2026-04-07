@@ -100,10 +100,10 @@ class PivotalTrackerIssue(Issue):
 
     def get_default_description(self):
         return self.build_default_description(
-            title=self.record.get('name'),
-            url=self.record.get('url'),
+            title=self.record.get('name', ''),
+            url=self.record.get('url', ''),
             number=int(self.record['id']),
-            cls=self.record.get('story_type'),
+            cls=self.record.get('story_type', 'issue'),
         )
 
 
