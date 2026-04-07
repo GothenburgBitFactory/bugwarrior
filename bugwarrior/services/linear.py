@@ -149,8 +149,8 @@ class LinearService(Service, Client):
             )
 
         self.query = """
-            query Issues($filter: IssueFilter!) {
-              issues(filter: $filter) {
+            query Issues($filter: IssueFilter!, $after: String) {
+              issues(filter: $filter, first: 250, after: $after) {
                 nodes {
                   url
                   title
@@ -181,6 +181,10 @@ class LinearService(Service, Client):
                     name
                   }
                 }
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
               }
             }
             """
@@ -195,19 +199,35 @@ class LinearService(Service, Client):
 
     def get_issues(self):
         """
-        Make a Linear API request, using the query defined in the constructor.
+        Make Linear API requests, paginating with cursors until exhausted.
+
+        Linear's GraphQL API uses Relay-style cursor pagination on the
+        ``issues`` connection. Without an explicit ``first`` argument, the
+        server returns its default page size (50) and we silently lose any
+        remaining issues. We request the maximum page size (250) and follow
+        ``pageInfo.endCursor`` until ``hasNextPage`` is false.
         """
-        data = {
-            "query": self.query,
-            "variables": {"filter": {"and": self.filter} if self.filter else {}},
-        }
-        response = self.session.post(self.config.host, data=json.dumps(data))
-        res = self.json_response(response)
+        cursor = None
+        filter_arg = {"and": self.filter} if self.filter else {}
+        while True:
+            data = {
+                "query": self.query,
+                "variables": {"filter": filter_arg, "after": cursor},
+            }
+            response = self.session.post(self.config.host, data=json.dumps(data))
+            res = self.json_response(response)
 
-        if "errors" in res:
-            messages = [
-                error.get("message", "Unknown error") for error in res['errors']
-            ]
-            raise ValueError("; ".join(messages))
+            if "errors" in res:
+                messages = [
+                    error.get("message", "Unknown error") for error in res['errors']
+                ]
+                raise ValueError("; ".join(messages))
 
-        return res.get("data", {}).get("issues", {}).get("nodes", [])
+            issues = res.get("data", {}).get("issues", {})
+            for node in issues.get("nodes", []):
+                yield node
+
+            page_info = issues.get("pageInfo", {})
+            if not page_info.get("hasNextPage"):
+                return
+            cursor = page_info.get("endCursor")
