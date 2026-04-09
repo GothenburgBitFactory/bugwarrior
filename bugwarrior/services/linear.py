@@ -67,6 +67,7 @@ class LinearIssue(Issue):
     # Linear exposes issue priority as an integer:
     #   0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.
     PRIORITY_MAP = {1: "H", 2: "H", 3: "M", 4: "L"}
+
     def to_taskwarrior(self):
         description = self.record.get("description")
         created = self.parse_date(self.record.get("createdAt"))
