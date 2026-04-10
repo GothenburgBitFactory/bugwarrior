@@ -64,6 +64,10 @@ class LinearIssue(Issue):
 
     UNIQUE_KEY = (URL,)
 
+    # Linear exposes issue priority as an integer:
+    #   0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.
+    PRIORITY_MAP = {1: "H", 2: "H", 3: "M", 4: "L"}
+
     def to_taskwarrior(self):
         description = self.record.get("description")
         created = self.parse_date(self.record.get("createdAt"))
@@ -89,7 +93,7 @@ class LinearIssue(Issue):
                 ).lower()
                 or None
             ),
-            "priority": self.config.default_priority,
+            "priority": self.get_priority(),
             "entry": created,
             "annotations": get(self.extra, "annotations", []),
             "tags": self.get_tags(),
@@ -178,6 +182,7 @@ class LinearService(Service, Client):
                     name
                   }
                   identifier
+                  priority
                   team {
                     name
                   }

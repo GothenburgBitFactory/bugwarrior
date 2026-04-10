@@ -35,6 +35,7 @@ RESPONSE = json.loads(
                         "name": "Done"
                     },
                     "identifier": "DUS-5",
+                    "priority": 4,
                     "team": {
                         "name": "Dustin's Doings"
                     }
@@ -65,6 +66,7 @@ RESPONSE = json.loads(
                         "name": "Todo"
                     },
                     "identifier": "DUS-1",
+                    "priority": 1,
                     "team": {
                         "name": "Dustin's Doings"
                     }
@@ -143,7 +145,7 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
         closed_timestamp = datetime(2025, 7, 26, 17, 3, 4, 0, tzinfo=timezone.utc)
         expected_output = {
             "project": "prj",
-            "priority": "M",
+            "priority": "L",
             "entry": created_timestamp,
             "annotations": [],
             "tags": [],
@@ -170,7 +172,7 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
         updated_timestamp = datetime(2025, 7, 24, 17, 8, 33, 0, tzinfo=timezone.utc)
         expected_output = {
             "project": None,
-            "priority": "M",
+            "priority": "H",
             "entry": created_timestamp,
             "annotations": [],
             "tags": ["Improvement", "Feature"],
@@ -212,11 +214,40 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
             "linearteam": "Dustin's Doings",
             "linearupdated": updated_timestamp,
             "linearurl": "https://linear.app/dustins-doings/issue/DUS-5/do-stuff",
-            "priority": "M",
+            "priority": "L",
             "project": 'prj',
             "tags": [],
         }
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+
+    def test_priority_mapping(self):
+        # Linear priority integers must map onto taskwarrior's H/M/L buckets,
+        # with "No priority" (0) and a missing field both falling back to the
+        # service-wide default.
+        cases = [
+            (0, "M"),  # No priority -> default_priority (M)
+            (1, "H"),  # Urgent
+            (2, "H"),  # High
+            (3, "M"),  # Medium
+            (4, "L"),  # Low
+        ]
+        for linear_priority, expected in cases:
+            with self.subTest(linear_priority=linear_priority):
+                record = {
+                    **RESPONSE["data"]["issues"]["nodes"][0],
+                    "priority": linear_priority,
+                }
+                issue = self.service.get_issue_for_record(record, {})
+                self.assertEqual(issue.to_taskwarrior()["priority"], expected)
+
+        # A record without a priority key at all should also fall back.
+        record = {
+            k: v
+            for k, v in RESPONSE["data"]["issues"]["nodes"][0].items()
+            if k != "priority"
+        }
+        issue = self.service.get_issue_for_record(record, {})
+        self.assertEqual(issue.to_taskwarrior()["priority"], "M")
 
     @responses.activate
     def test_issues_paginates(self):
