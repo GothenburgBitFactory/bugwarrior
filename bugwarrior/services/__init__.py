@@ -4,13 +4,13 @@ Service API
 """
 
 import abc
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 import datetime
 import logging
 import math
 import os
 import re
-import typing
+from typing import Any, Generic, Optional, TypeVar
 import zoneinfo
 
 from dateutil.parser import parse as parse_date
@@ -43,20 +43,20 @@ LATEST_API_VERSION = 1.0
 class URLShortener:
     _instance = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args: Any, **kwargs: Any) -> "URLShortener":
         if not cls._instance:
             cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
     @CACHE_REGION.cache_on_arguments()
-    def shorten(self, url):
+    def shorten(self, url: str) -> str:
         if not url:
             return ''
         base = 'https://da.gd/s'
         return requests.get(base, params=dict(url=url)).text.strip()
 
 
-def get_processed_url(main_config: schema.MainSectionConfig, url: str):
+def get_processed_url(main_config: schema.MainSectionConfig, url: str) -> str:
     """Returns a URL with conditional processing.
 
     If the following config key are set:
@@ -105,23 +105,23 @@ class Issue(abc.ABC):
 
     def __init__(
         self,
-        foreign_record: dict,
+        foreign_record: dict[str, Any],
         config: schema.ServiceConfig,
         main_config: schema.MainSectionConfig,
-        extra: dict,
-    ):
+        extra: dict[str, Any],
+    ) -> None:
         #: Data retrieved from the external service.
-        self.record: dict = foreign_record
+        self.record = foreign_record
         #: An object whose attributes are this service's configuration values.
         self.config: schema.ServiceConfig = config
         #: An object whose attributes are the
         #: :ref:`common_configuration:Main Section` configuration values.
         self.main_config: schema.MainSectionConfig = main_config
         #: Data computed by the :class:`Service` class.
-        self.extra: dict = extra
+        self.extra = extra
 
     @abc.abstractmethod
-    def to_taskwarrior(self) -> dict:
+    def to_taskwarrior(self) -> dict[str, Any]:
         """Transform a foreign record into a taskwarrior dictionary."""
         raise NotImplementedError()
 
@@ -136,10 +136,10 @@ class Issue(abc.ABC):
 
     def get_tags_from_labels(
         self,
-        labels: list,
-        toggle_option='import_labels_as_tags',
-        template_option='label_template',
-        template_variable='label',
+        labels: list[str],
+        toggle_option: str = 'import_labels_as_tags',
+        template_option: str = 'label_template',
+        template_variable: str = 'label',
     ) -> list[str]:
         """Transform labels into suitable taskwarrior tags, respecting configuration options.
 
@@ -166,14 +166,14 @@ class Issue(abc.ABC):
 
         return tags
 
-    def get_priority(self) -> typing.Literal['', 'L', 'M', 'H']:
+    def get_priority(self) -> schema.Priority:
         """Return the priority of this issue, falling back to ``default_priority`` configuration."""
         return self.PRIORITY_MAP.get(
             self.record.get('priority'), self.config.default_priority
         )
 
     def parse_date(
-        self, date: str | None, timezone='deprecated'
+        self, date: str | None, timezone: str = 'deprecated'
     ) -> datetime.datetime | None:
         """Parse a date string into a datetime object.
 
@@ -201,7 +201,7 @@ class Issue(abc.ABC):
         return _date.replace(microsecond=0)
 
     def build_default_description(
-        self, title='', url='', number='', cls="issue"
+        self, title: str = '', url: str = '', number: str | int = '', cls: str = "issue"
     ) -> str:
         """Return a default description, respecting configuration options.
 
@@ -236,7 +236,10 @@ class Issue(abc.ABC):
         )
 
 
-class Service(abc.ABC):
+T_Issue = TypeVar("T_Issue", bound="Issue")
+
+
+class Service(abc.ABC, Generic[T_Issue]):
     """Base class for fetching issues from the service.
 
     The upper case attributes and abstract methods need to be defined by
@@ -247,13 +250,13 @@ class Service(abc.ABC):
     #: Which version of the API does this service implement?
     API_VERSION: float
     #: Which class should this service instantiate for holding these issues?
-    ISSUE_CLASS: type[Issue]
+    ISSUE_CLASS: type[T_Issue]
     #: Which class defines this service's configuration options?
     CONFIG_SCHEMA: type[schema.ServiceConfig]
 
     def __init__(
         self, config: schema.ServiceConfig, main_config: schema.MainSectionConfig
-    ):
+    ) -> None:
         over_version = math.floor(LATEST_API_VERSION) + 1
         if self.API_VERSION >= over_version:
             raise ValueError(
@@ -270,7 +273,7 @@ class Service(abc.ABC):
 
         log.info("Working on [%s]", self.config.target)
 
-    def get_secret(self, key, login='nousername') -> str:
+    def get_secret(self, key: str, login: str = 'nousername') -> str:
         """Get a secret value, potentially from an :ref:`oracle <Secret Management>`.
 
         The secret key need not be a *password*, per se.
@@ -290,7 +293,9 @@ class Service(abc.ABC):
             )
         return password
 
-    def get_issue_for_record(self, record, extra=None) -> Issue:
+    def get_issue_for_record(
+        self, record: dict[str, Any], extra: dict[str, Any] | None = None
+    ) -> T_Issue:
         """Instantiate and return an issue for the given record.
 
         :param `record`: Foreign record.
@@ -300,8 +305,8 @@ class Service(abc.ABC):
         return self.ISSUE_CLASS(record, self.config, self.main_config, extra=extra)
 
     def build_annotations(
-        self, annotations: Iterable, url: typing.Optional[str] = None
-    ) -> list:
+        self, annotations: Iterable[tuple[str, str]], url: Optional[str] = None
+    ) -> list[str]:
         """Format annotations, respecting configuration values.
 
         :param `annotations`: Comments from service.
@@ -329,7 +334,7 @@ class Service(abc.ABC):
         return final
 
     @abc.abstractmethod
-    def issues(self):
+    def issues(self) -> Iterator[T_Issue]:
         """A generator yielding Issue instances representing issues from a remote service.
 
         Each item in the list should be a dict that looks something like this:
@@ -373,20 +378,14 @@ class Client:
     """
 
     @staticmethod
-    def json_response(response: requests.Response):
+    def json_response(response: requests.Response) -> Any:
         """Return json if response is OK."""
         # If we didn't get good results, just bail.
         if response.status_code != 200:
             raise OSError(
-                "Non-200 status code %r; %r; %r"
-                % (response.status_code, response.url, response.text)
+                f"Non-200 status code {response.status_code}; {response.url}; {response.text}"
             )
-        if callable(response.json):
-            # Newer python-requests
-            return response.json()
-        else:
-            # Older python-requests
-            return response.json
+        return response.json()
 
 
 # NOTE: __all__ determines the stable, public API.

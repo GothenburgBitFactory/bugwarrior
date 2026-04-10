@@ -1,11 +1,12 @@
 import logging
 import subprocess
 import sys
+from types import ModuleType
 
 log = logging.getLogger(__name__)
 
 
-def get_keyring():
+def get_keyring() -> ModuleType:
     """Try to import and return optional keyring dependency."""
     try:
         import keyring
@@ -17,7 +18,9 @@ def get_keyring():
     return keyring
 
 
-def get_service_password(service, username, oracle=None, interactive=False):
+def get_service_password(
+    service: str, username: str, oracle: str | None = None, interactive: bool = False
+) -> str:
     """
     Retrieve the sensitive password for a service by:
 
@@ -70,7 +73,7 @@ def get_service_password(service, username, oracle=None, interactive=False):
     return password
 
 
-def oracle_eval(command):
+def oracle_eval(command: str) -> str:
     """Retrieve password from the given command"""
     p = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE

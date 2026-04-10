@@ -17,7 +17,7 @@ from .validation import Config, validate_config
 BUGWARRIORRC = "BUGWARRIORRC"
 
 
-def configure_logging(logfile, loglevel):
+def configure_logging(logfile: str | Path | None, loglevel: str) -> None:
     logging.basicConfig(filename=logfile, level=loglevel)
 
     # In general, its nice to log "everything", but some of the loggers from
@@ -32,7 +32,7 @@ def configure_logging(logfile, loglevel):
         logging.getLogger(spammer).setLevel(logging.WARNING)
 
 
-def get_config_path():
+def get_config_path() -> str:
     """Determine path to config file. See docs/manpage.rst for precedence."""
     if os.environ.get(BUGWARRIORRC):
         return os.environ[BUGWARRIORRC]
@@ -66,12 +66,12 @@ def format_config(config: dict) -> dict[str, Any]:
     return config
 
 
-def parse_toml_file(configpath: str) -> dict:
+def parse_toml_file(configpath: str) -> dict[str, Any]:
     with open(configpath, 'rb') as file:
         return tomllib.load(file)
 
 
-def parse_ini_file(configpath: str) -> dict:
+def parse_ini_file(configpath: str) -> dict[str, Any]:
     rawconfig = BugwarriorConfigParser()
     with open(configpath, encoding="utf-8") as buff:
         rawconfig.read_file(buff)
@@ -109,7 +109,7 @@ def parse_ini_file(configpath: str) -> dict:
     return config
 
 
-def parse_file(configpath: str) -> dict:
+def parse_file(configpath: str) -> dict[str, Any]:
     if Path(configpath).suffix == '.toml':
         config = parse_toml_file(configpath)
     else:
@@ -117,7 +117,7 @@ def parse_file(configpath: str) -> dict:
     return format_config(config)
 
 
-def load_config(main_section, interactive, quiet) -> Config:
+def load_config(main_section: str, interactive: bool, quiet: bool) -> Config:
     configpath = get_config_path()
     rawconfig = parse_file(configpath)
     for flavor in rawconfig['flavor'].values():
@@ -131,12 +131,12 @@ def load_config(main_section, interactive, quiet) -> Config:
 
 # ConfigParser is not a new-style class, so inherit from object to fix super().
 class BugwarriorConfigParser(configparser.ConfigParser):
-    def __init__(self, *args, allow_no_value=True, **kwargs):
+    def __init__(self, *args: Any, allow_no_value: bool = True, **kwargs: Any) -> None:
         super().__init__(
             *args, allow_no_value=allow_no_value, interpolation=None, **kwargs
         )
 
-    def getint(self, section, option, **kwargs):
+    def getint(self, section: str, option: str, **kwargs: Any) -> int | None:  # ty: ignore[invalid-method-override]
         """Accepts both integers and empty values."""
         try:
             return super().getint(section, option, **kwargs)
@@ -150,6 +150,6 @@ class BugwarriorConfigParser(configparser.ConfigParser):
                     )
                 )
 
-    def optionxform(self, optionstr):
+    def optionxform(self, optionstr: str) -> str:
         """Do not lowercase key names."""
         return optionstr

@@ -107,7 +107,9 @@ def _format_extra_section_error(error: ErrorDetails | dict) -> str:
     return _format_field_error(section_name, loc[1], msg, error)
 
 
-def raise_validation_error(msg, config_path, error_count=1) -> NoReturn:
+def raise_validation_error(
+    msg: str, config_path: str, error_count: int = 1
+) -> NoReturn:
     log.error(
         ("Validation error" if error_count == 1 else f"{error_count} validation errors")
         + f" found in {config_path}\n"
@@ -116,7 +118,7 @@ def raise_validation_error(msg, config_path, error_count=1) -> NoReturn:
     sys.exit(1)
 
 
-def get_service_config_union_type(services: list[dict[str, Any]]):
+def get_service_config_union_type(services: list[dict[str, Any]]) -> Any:
     """
     Return a Union type of the ServiceConfig subclasses of the services actually configured.
 

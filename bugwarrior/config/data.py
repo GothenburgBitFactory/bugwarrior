@@ -1,19 +1,20 @@
 import json
 import os
+from pathlib import Path
 import subprocess
 import typing
 
 from lockfile.pidlockfile import PIDLockFile
 
 
-def get_data_path(taskrc):
+def get_data_path(taskrc: str | Path) -> str:
     # We cannot use the taskw module here because it doesn't really support
     # the `_` subcommands properly (`rc:` can't be used for them).
     line_prefix = 'data.location='
 
     # Take a copy of the environment and add our taskrc to it.
     env = dict(os.environ)
-    env['TASKRC'] = taskrc
+    env['TASKRC'] = str(taskrc)
 
     tw_show = subprocess.Popen(('task', '_show'), stdout=subprocess.PIPE, env=env)
     data_location = subprocess.check_output(
@@ -36,7 +37,7 @@ class BugwarriorData:
     key-value store.
     """
 
-    def __init__(self, data_path):
+    def __init__(self, data_path: str) -> None:
         self._datafile = os.path.join(data_path, 'bugwarrior.data')
         self._lockfile = os.path.join(data_path, 'bugwarrior-data.lockfile')
         #: Taskwarrior's ``data.location`` configuration value. If necessary,
@@ -44,23 +45,25 @@ class BugwarriorData:
         self.path = data_path
 
     @classmethod
-    def __get_pydantic_json_schema__(cls, core_schema, handler):
+    def __get_pydantic_json_schema__(
+        cls, core_schema: typing.Any, handler: typing.Any
+    ) -> dict[str, str]:
         """Fix schema generation in pydantic v2."""
         return {"type": "object", "description": "Local data storage"}
 
-    def get_data(self) -> dict:
+    def get_data(self) -> dict[str, typing.Any]:
         """Return all data from the ``bugwarrior.data`` file."""
         with open(self._datafile) as jsondata:
             return json.load(jsondata)
 
-    def get(self, key) -> typing.Any:
+    def get(self, key: str) -> typing.Any:
         """Return a value stored in the ``bugwarrior.data`` file."""
         try:
             return self.get_data()[key]
         except OSError:  # File does not exist.
             return None
 
-    def set(self, key, value):
+    def set(self, key: str, value: typing.Any) -> None:
         """Set a value in the ``bugwarrior.data`` file."""
         with PIDLockFile(self._lockfile):
             try:

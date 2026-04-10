@@ -1,15 +1,19 @@
 import os
 import subprocess
+from typing import TYPE_CHECKING, Any
 import warnings
 
 import requests
+
+if TYPE_CHECKING:
+    from bugwarrior.config.schema import Notifications
 
 cache_dir = os.path.expanduser(os.getenv('XDG_CACHE_HOME', "~/.cache") + "/bugwarrior")
 logo_path = cache_dir + "/logo.png"
 logo_url = "https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png"
 
 
-def _cache_logo():
+def _cache_logo() -> None:
     if os.path.exists(logo_path):
         return
 
@@ -21,7 +25,7 @@ def _cache_logo():
         f.write(response.content)
 
 
-def _get_metadata(issue):
+def _get_metadata(issue: dict[str, Any]) -> str:
     due = ''
     tags = ''
     priority = ''
@@ -47,7 +51,7 @@ def _get_metadata(issue):
     return metadata
 
 
-def send_notification(issue, op, conf):
+def send_notification(issue: dict[str, Any], op: str, conf: "Notifications") -> None:
     notify_backend = conf.backend
 
     if notify_backend == 'pynotify':
