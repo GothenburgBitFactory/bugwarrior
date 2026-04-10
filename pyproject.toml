@@ -21,7 +21,7 @@ dependencies = [
   "lockfile>=0.9.1",
   "pydantic[email]>=2",
   "python-dateutil",
-  "requests",
+  "requests>=1",
   # Needed at runtime: phabricator and ini2toml import pkg_resources,
   # which is no longer bundled in venvs since Python 3.12 (see #1150).
   "setuptools",
