@@ -73,6 +73,7 @@ class LinearIssue(Issue):
         created = self.parse_date(self.record.get("createdAt"))
         modified = self.parse_date(self.record.get("updatedAt"))
         closed = self.parse_date(self.record.get("completedAt"))
+        due = self.parse_date(self.record.get("dueDate"))
 
         # Get a value, defaulting empty results to the given default. Some
         # GraphQL response values, such as for `project`, are either an object
@@ -94,6 +95,7 @@ class LinearIssue(Issue):
                 or None
             ),
             "priority": self.get_priority(),
+            "due": due,
             "entry": created,
             "annotations": get(self.extra, "annotations", []),
             "tags": self.get_tags(),
@@ -169,6 +171,7 @@ class LinearService(Service, Client):
                   completedAt
                   updatedAt
                   createdAt
+                  dueDate
                   project {
                     name
                   }

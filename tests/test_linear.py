@@ -51,6 +51,7 @@ RESPONSE = json.loads(
                     "completedAt": null,
                     "updatedAt": "2025-07-24T17:08:33.286Z",
                     "createdAt": "2025-07-24T15:34:07.968Z",
+                    "dueDate": "2025-08-22",
                     "project": null,
                     "labels": {
                         "nodes": [
@@ -146,6 +147,7 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
         expected_output = {
             "project": "prj",
             "priority": "L",
+            "due": None,
             "entry": created_timestamp,
             "annotations": [],
             "tags": [],
@@ -170,9 +172,11 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
 
         created_timestamp = datetime(2025, 7, 24, 15, 34, 7, 0, tzinfo=timezone.utc)
         updated_timestamp = datetime(2025, 7, 24, 17, 8, 33, 0, tzinfo=timezone.utc)
+        due_timestamp = datetime(2025, 8, 22, 0, 0, 0, 0, tzinfo=timezone.utc)
         expected_output = {
             "project": None,
             "priority": "H",
+            "due": due_timestamp,
             "entry": created_timestamp,
             "annotations": [],
             "tags": ["Improvement", "Feature"],
@@ -202,6 +206,7 @@ class TestLinearIssue(AbstractServiceTest, ServiceTest):
             "annotations": [],
             "description": "(bw)#DUS-5 - DO STUFF .. "
             "https://linear.app/dustins-doings/issue/DUS-5/do-stuff",
+            "due": None,
             "entry": created_timestamp,
             "linearassignee": "djmitche@gmail.com",
             "linearclosed": closed_timestamp,
