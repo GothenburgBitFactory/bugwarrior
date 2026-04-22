@@ -180,7 +180,7 @@ class BitbucketService(Service[BitbucketIssue], Client):
         """Return true if the issue in question should be included"""
         if self.config.only_if_assigned:
             owner = self.get_owner(issue)
-            include_owners = [self.config.only_if_assigned]
+            include_owners: list[str | None] = [self.config.only_if_assigned]
 
             if self.config.also_unassigned:
                 include_owners.append(None)
