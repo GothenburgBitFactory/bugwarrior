@@ -64,7 +64,7 @@ class RedMineClient(Client):
 
     def call_api(self, uri: str, params: dict[str, Any]) -> dict[str, Any]:
         url = self.url.rstrip("/") + uri
-        kwargs = {
+        kwargs: dict[str, Any] = {
             'headers': {'X-Redmine-API-Key': self.key},
             'params': params,
             'verify': self.verify_ssl,
