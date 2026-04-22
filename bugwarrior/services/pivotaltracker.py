@@ -1,7 +1,9 @@
+from collections.abc import Iterator
 import logging
 import operator
 import re
 import typing
+from typing import Any
 
 from jinja2 import Template
 import requests
@@ -68,7 +70,7 @@ class PivotalTrackerIssue(Issue):
 
     UNIQUE_KEY = (URL,)
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         description = self.record.get('description')
         created = self.parse_date(self.record.get('created_at'))
         modified = self.parse_date(self.record.get('updated_at'))
@@ -94,11 +96,11 @@ class PivotalTrackerIssue(Issue):
             self.CLOSED_AT: closed,
         }
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         labels = [label['name'] for label in self.record.get('labels', [])]
         return self.get_tags_from_labels(labels)
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record.get('name', ''),
             url=self.record.get('url', ''),
@@ -107,13 +109,15 @@ class PivotalTrackerIssue(Issue):
         )
 
 
-class PivotalTrackerService(Service, Client):
+class PivotalTrackerService(Service[PivotalTrackerIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = PivotalTrackerIssue
     CONFIG_SCHEMA = PivotalTrackerConfig
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self, config: PivotalTrackerConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         self.path = f"{self.config.host}/{self.config.version}"
 
@@ -139,10 +143,12 @@ class PivotalTrackerService(Service, Client):
                 self.query += f" requester:{self.config.user_id}"
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: PivotalTrackerConfig) -> str:
         return f'pivotaltracker://{config.user_id}@{config.host}'
 
-    def annotations(self, annotations, story):
+    def annotations(
+        self, annotations: list[dict[str, Any]], story: dict[str, Any]
+    ) -> list[str]:
         final_annotations = []
         if self.main_config.annotation_comments:
             annotation_template = Template(self.config.annotation_template)
@@ -152,11 +158,11 @@ class PivotalTrackerService(Service, Client):
                 )
         return self.build_annotations(final_annotations, story.get('url'))
 
-    def blockers(self, blocker_list):
+    def blockers(self, blocker_list: list[dict[str, Any]]) -> str | None:
         blockers = []
 
         if not self.config.import_blockers:
-            return blockers
+            return None
 
         blocker_template = Template(self.config.blocker_template)
         for blocker in blocker_list:
@@ -164,12 +170,14 @@ class PivotalTrackerService(Service, Client):
 
         return ', '.join(blockers) or None
 
-    def issues(self):
+    def issues(self) -> Iterator[PivotalTrackerIssue]:
         for project in self.get_projects(self.config.account_ids):
             project_id = project.get('id')
             if project_id not in self.config.exclude_projects:
                 for story in self.get_query(project_id, query=self.query):
                     story_id = story.get('id')
+                    if story_id is None:
+                        continue
                     tasks = self.get_tasks(project_id, story_id)
                     blockers = self.get_blockers(project_id, story_id)
                     extra = {
@@ -185,47 +193,36 @@ class PivotalTrackerService(Service, Client):
                     }
                     yield self.get_issue_for_record(story, extra)
 
-    def api_request(self, endpoint, params={}):
+    def api_request(self, endpoint: str, params: dict[str, Any] | None = None) -> Any:
         """
         Make a PivotalTracker API request. This takes an absolute urland a list
         of argumnets and return a GET request with the key and token from the
         configuration.
         """
-        subkey = params.pop('subkey', None)
 
-        url = "{path}/{endpoint}".format(path=self.path, endpoint=endpoint)
-        response = self.session.get(url, params=params)
-        json_res = self.json_response(response)
+        response = self.session.get(f"{self.path}/{endpoint}", params=params or {})
+        return Client.json_response(response)
 
-        if subkey is not None:
-            json_res = json_res[subkey]
-
-        return json_res
-
-    def get_projects(self, account_ids):
+    def get_projects(self, account_ids: list[str]) -> list[dict[str, Any]]:
         params = {'account_ids': ','.join(account_ids)}
         projects = self.api_request('projects', params=params)
         return projects
 
-    def get_query(self, project_id, **params):
-        params['subkey'] = 'stories'
+    def get_query(self, project_id: str | int, **params: Any) -> list[dict[str, Any]]:
         query = self.api_request(f"projects/{project_id}/search", params=params)
+        return query['stories']['stories']
 
-        return query['stories']
-
-    def get_tasks(self, project_id, story_id):
-        tasks = self.api_request(
-            "projects/{project_id}/stories/{story_id}/tasks".format(
-                project_id=project_id, story_id=story_id
-            )
-        )
+    def get_tasks(
+        self, project_id: str | int, story_id: str | int
+    ) -> list[dict[str, Any]]:
+        tasks = self.api_request(f"projects/{project_id}/stories/{story_id}/tasks")
         return tasks
 
-    def get_blockers(self, project_id, story_id):
+    def get_blockers(
+        self, project_id: str | int, story_id: str | int
+    ) -> list[dict[str, Any]]:
         blockers = self.api_request(
-            "projects/{project_id}/stories/{story_id}/blockers".format(
-                project_id=project_id, story_id=story_id
-            )
+            f"projects/{project_id}/stories/{story_id}/blockers"
         )
         blocker_results = []
         for blocker in blockers:
@@ -233,10 +230,8 @@ class PivotalTrackerService(Service, Client):
             blocker_results.append(blocker)
         return blocker_results
 
-    def get_user_by_id(self, project_id, user_ids):
-        persons = self.api_request(
-            "projects/{project_id}/memberships".format(project_id=project_id)
-        )
+    def get_user_by_id(self, project_id: str | int, user_ids: list[Any]) -> str | None:
+        persons = self.api_request(f"projects/{project_id}/memberships")
         user_list = filter(
             lambda x: x.get('id') in user_ids,
             map(operator.itemgetter('person'), persons),

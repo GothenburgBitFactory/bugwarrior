@@ -169,6 +169,21 @@ class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
+    def test_get_owner(self):
+        # Regression test: the old get_owner did `issue[issue.ASSIGNEE]`, treating
+        # the NextcloudDeckIssue as a dict. Issue has no __getitem__, so this raised
+        # TypeError whenever only_if_assigned was configured.
+        self.config['deck']['only_if_assigned'] = 'rainbow'
+        issue = self.service.get_issue_for_record(
+            self.data.arbitrary_card,
+            {
+                'board': {'title': 'testboard', 'id': 5},
+                'stack': {'title': 'teststack', 'id': 13},
+                'annotations': [],
+            },
+        )
+        self.assertEqual(self.service.get_owner(issue), 'rainbow')
+
     def test_filter_boards_include(self):
         self.config['deck']['include_board_ids'] = '5'
         self.assertTrue(self.service.filter_boards({'title': 'testboard', 'id': 5}))

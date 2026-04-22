@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 import logging
 import os
 import signal
@@ -27,11 +28,11 @@ class GitBugConfig(config.ServiceConfig):
 
 
 class Webui:
-    def __init__(self, path, port):
+    def __init__(self, path: str, port: int) -> None:
         self.path = path
         self.port = port
 
-    def __enter__(self):
+    def __enter__(self) -> "Webui":
         popen_kwargs: dict[str, Any] = {}
         if sys.platform == "win32":
             popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
@@ -56,7 +57,7 @@ class Webui:
 
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, *exc: Any) -> Literal[False]:
         if self.webui.returncode is None:
             if sys.platform == "win32":
                 os.kill(self.webui.pid, signal.SIGTERM)
@@ -67,19 +68,19 @@ class Webui:
 
 
 class GitBugClient(Client):
-    def __init__(self, path, port, annotation_comments):
+    def __init__(self, path: str, port: int, annotation_comments: bool) -> None:
         self.path = path
         self.port = port
         self.annotation_comments = annotation_comments
 
-    def _query_graphql(self, query):
+    def _query_graphql(self, query: str) -> dict[str, Any]:
         with Webui(self.path, self.port):
             response = requests.post(
                 f'http://127.0.0.1:{self.port}/graphql', json={'query': query}
             )
         return self.json_response(response)['data']
 
-    def get_issues(self):
+    def get_issues(self) -> list[dict[str, Any]]:
         return self._query_graphql(
             '{ repository { allBugs { nodes { %s } } } }'
             % ' '.join(
@@ -114,7 +115,7 @@ class GitBugIssue(Issue):
 
     UNIQUE_KEY = (ID,)
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         return {
             'project': self.config.target,
             'priority': self.config.default_priority,
@@ -127,22 +128,24 @@ class GitBugIssue(Issue):
             self.TITLE: self.record['title'],
         }
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(
             [label['name'] for label in self.record['labels']]
         )
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(title=self.record['title'], cls='bug')
 
 
-class GitBugService(Service):
+class GitBugService(Service[GitBugIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = GitBugIssue
     CONFIG_SCHEMA = GitBugConfig
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self, config: GitBugConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         self.client = GitBugClient(
             path=self.config.path,
@@ -151,10 +154,10 @@ class GitBugService(Service):
         )
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: GitBugConfig) -> str:
         return f'gitbug://{config.path}'
 
-    def issues(self):
+    def issues(self) -> Iterator[GitBugIssue]:
         for issue in self.client.get_issues():
             comments = issue.pop('comments')
             issue['description'] = comments['nodes'].pop(0)['message']

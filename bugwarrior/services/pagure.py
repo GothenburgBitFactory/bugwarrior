@@ -1,6 +1,8 @@
+from collections.abc import Iterator
 import datetime
 import logging
 import typing
+from typing import Any
 
 from pydantic import model_validator
 import requests
@@ -27,7 +29,7 @@ class PagureConfig(config.ServiceConfig):
     tag_template: str = '{{label}}'
 
     @model_validator(mode='after')
-    def require_tag_or_repo(self):
+    def require_tag_or_repo(self) -> "PagureConfig":
         if not self.tag and not self.repo:
             raise ValueError('section requires one of:\n    tag\n    repo')
         return self
@@ -51,7 +53,7 @@ class PagureIssue(Issue):
     }
     UNIQUE_KEY = (URL, TYPE)
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         if self.extra['type'] == 'pull_request':
             priority = 'H'
         else:
@@ -72,14 +74,14 @@ class PagureIssue(Issue):
             ),
         }
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(
             self.record.get('tags', []),
             toggle_option='import_tags',
             template_option='tag_template',
         )
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record['title'],
             url=self.record['html_url'],
@@ -88,17 +90,21 @@ class PagureIssue(Issue):
         )
 
 
-class PagureService(Service):
+class PagureService(Service[PagureIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = PagureIssue
     CONFIG_SCHEMA = PagureConfig
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: PagureConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         self.session = requests.Session()
 
-    def get_issues(self, repo, keys):
+    def get_issues(
+        self, repo: str, keys: tuple[str, str]
+    ) -> list[tuple[str, dict[str, Any]]]:
         """Grab all the issues"""
         key1, key2 = keys
         key3 = key1[:-1]  # Just the singular form of key1
@@ -122,17 +128,17 @@ class PagureService(Service):
 
         return issues
 
-    def annotations(self, issue):
+    def annotations(self, issue: dict[str, Any]) -> list[str]:
         url = issue['html_url']
         return self.build_annotations(
             ((c['user']['name'], c['comment']) for c in issue['comments']), url
         )
 
-    def get_owner(self, issue):
+    def get_owner(self, issue: tuple[str, dict[str, Any]]) -> str | None:
         if issue[1]['assignee']:
             return issue[1]['assignee']['name']
 
-    def include(self, issue):
+    def include(self, issue: tuple[str, dict[str, Any]]) -> bool:
         """Return true if the issue in question should be included"""
         if self.config.only_if_assigned:
             owner = self.get_owner(issue)
@@ -145,7 +151,7 @@ class PagureService(Service):
 
         return True
 
-    def filter_repos(self, repo):
+    def filter_repos(self, repo: str) -> bool:
         if repo in self.config.exclude_repos:
             return False
 
@@ -157,7 +163,7 @@ class PagureService(Service):
 
         return True
 
-    def issues(self):
+    def issues(self) -> Iterator[PagureIssue]:
         if self.config.tag:
             url = self.config.base_url + "/api/0/projects?tags=" + self.config.tag
             response = self.session.get(url)

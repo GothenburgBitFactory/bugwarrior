@@ -1,7 +1,9 @@
+from collections.abc import Iterator
 from dataclasses import asdict
 from datetime import datetime, time
 import logging
 import typing
+from typing import Any
 
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Task
@@ -23,19 +25,19 @@ class TodoistConfig(config.ServiceConfig):
 
 
 class TodoistClient(Client):
-    def __init__(self, token, filter):
+    def __init__(self, token: str, filter: str) -> None:
         self._api = TodoistAPI(token)
         self.filter = filter
 
     @classmethod
-    def task_to_dict(cls, task: Task):
+    def task_to_dict(cls, task: Task) -> dict[str, Any]:
         record = asdict(task)
         # add data items for additional properties
         record["is_completed"] = task.is_completed
         record["url"] = task.url
         return record
 
-    def get_projects(self):
+    def get_projects(self) -> list[Any]:
         all_projects = []
         projects_iter = self._api.get_projects()
         for projects in projects_iter:
@@ -43,7 +45,7 @@ class TodoistClient(Client):
                 all_projects.append(project)
         return all_projects
 
-    def get_sections(self):
+    def get_sections(self) -> list[Any]:
         all_sections = []
         sections_iter = self._api.get_sections()
         for sections in sections_iter:
@@ -51,7 +53,7 @@ class TodoistClient(Client):
                 all_sections.append(section)
         return all_sections
 
-    def get_users(self, project_id):
+    def get_users(self, project_id: Any) -> list[Any]:
         all_users = []
         users_iter = self._api.get_collaborators(project_id)
         for users in users_iter:
@@ -59,14 +61,14 @@ class TodoistClient(Client):
                 all_users.append(user)
         return all_users
 
-    def get_issues(self):
+    def get_issues(self) -> Iterator[dict[str, Any]]:
         tasks_iter = self._api.filter_tasks(query=self.filter)
         for tasks in tasks_iter:
             for task in tasks:
                 record = self.task_to_dict(task)
                 yield record
 
-    def get_comments(self, task_id):
+    def get_comments(self, task_id: str) -> list[Any]:
         all_comments = []
         comments_iter = self._api.get_comments(task_id=task_id)
         for comments in comments_iter:
@@ -88,7 +90,7 @@ class TodoistIssue(Issue):
     SECTION = "todoistsection"
     URL = "todoisturl"
 
-    PRIORITY_MAP = {4: "H", 3: "M", 2: "L", 1: None}
+    PRIORITY_MAP: dict[int, config.Priority | None] = {4: "H", 3: "M", 2: "L", 1: None}
 
     UDAS = {
         ID: {"type": "string", "label": "Todoist ID"},
@@ -108,14 +110,14 @@ class TodoistIssue(Issue):
 
     # replace characters that cause escaping issues like [] and "
     # this is a workaround for https://github.com/ralphbean/taskw/issues/172
-    def _unescape_content(self, content):
+    def _unescape_content(self, content: str) -> str:
         return (
             content.replace('"', "'")  # prevent &dquote; in task details
             .replace("[", self.config.char_open_bracket)  # prevent &open; and &close;
             .replace("]", self.config.char_close_bracket)
         )
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         default_time = time(0, 0, 0)
         # adjust timezone to use local time for "floating" dates
         if self.record["due"]:
@@ -169,7 +171,7 @@ class TodoistIssue(Issue):
         }
         return task
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         description = self.build_default_description(
             title=self._unescape_content(self.record["content"]),
             url=self.record["url"],
@@ -179,13 +181,15 @@ class TodoistIssue(Issue):
         return description
 
 
-class TodoistService(Service):
+class TodoistService(Service[TodoistIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = TodoistIssue
     CONFIG_SCHEMA = TodoistConfig
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self, config: TodoistConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
         self.token = self.get_secret("token")
 
         # apply additional filters
@@ -204,10 +208,12 @@ class TodoistService(Service):
         self.client = TodoistClient(token=self.token, filter=filter)
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: TodoistConfig) -> str:
         return "todoist://"
 
-    def annotations(self, user_index, issue):
+    def annotations(
+        self, user_index: dict[Any, str], issue: dict[str, Any]
+    ) -> list[str]:
         comments = (
             self.client.get_comments(issue["id"])
             if self.main_config.annotation_comments
@@ -215,13 +221,13 @@ class TodoistService(Service):
         )
         return self.build_annotations(
             [
-                (user_index.get(comment.poster_id), comment.content)
+                (user_index.get(comment.poster_id) or "", comment.content)
                 for comment in comments
             ],
             issue["url"],
         )
 
-    def issues(self):
+    def issues(self) -> Iterator[TodoistIssue]:
         project_index = {
             project.id: project.name for project in self.client.get_projects()
         }

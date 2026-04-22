@@ -1,6 +1,8 @@
+from collections.abc import Callable, Iterator
 import logging
 import sys
 import typing
+from typing import Any
 from urllib.parse import quote, urlencode
 
 from pydantic import ValidationInfo, field_validator, model_validator
@@ -13,6 +15,13 @@ from bugwarrior.services import Client, Issue, Service
 log = logging.getLogger(__name__)
 
 DefaultPriority = typing.Literal['', 'L', 'M', 'H', 'unassigned']
+
+# (project_id, issue_data)
+GitlabIssueEntry = tuple[int, dict[str, Any]]
+# {issue_id: (project_id, issue_data)}
+GitlabIssueMap = dict[int, GitlabIssueEntry]
+# (project_data | None, todo_data)
+GitlabTodoEntry = tuple[dict[str, Any] | None, dict[str, Any]]
 
 
 class GitlabConfig(config.ServiceConfig):
@@ -80,7 +89,7 @@ class GitlabConfig(config.ServiceConfig):
         return value
 
     @model_validator(mode='after')
-    def filter_gitlab_dot_com(self):
+    def filter_gitlab_dot_com(self) -> "GitlabConfig":
         """
         There must be a repository filter if the host is gitlab.com.
 
@@ -107,7 +116,7 @@ class GitlabConfig(config.ServiceConfig):
 
     @field_validator('owned', mode='before')
     @classmethod
-    def require_owned(cls, v):
+    def require_owned(cls, v: bool | None) -> bool:
         """
         Migrate 'owned' field from default False to default True.
 
@@ -129,8 +138,14 @@ class GitlabClient(Client):
     """Abstraction of Gitlab API v4"""
 
     def __init__(
-        self, host, token, only_if_assigned, also_unassigned, use_https, verify_ssl
-    ):
+        self,
+        host: str,
+        token: str,
+        only_if_assigned: str,
+        also_unassigned: bool,
+        use_https: bool,
+        verify_ssl: bool,
+    ) -> None:
         if use_https:
             self.scheme = 'https'
         else:
@@ -162,10 +177,10 @@ class GitlabClient(Client):
 
         self.assignee_query = f'assignee_id={assignee_id}' if assignee_id else ''
 
-    def _base_url(self):
+    def _base_url(self) -> str:
         return f"{self.scheme}://{self.host}/api/v4/"
 
-    def _fetch(self, relative_url: str, skip_403: bool = False, **kwargs) -> dict:
+    def _fetch(self, relative_url: str, skip_403: bool = False, **kwargs: Any) -> Any:
         """Perform a fetch operation on the gitlab server
 
         :param relative_url: This part will be appended to the base api URL for the call
@@ -227,7 +242,7 @@ class GitlabClient(Client):
         return full
 
     def get_repos(
-        self, include_repos: list, only_membership: bool, only_owned: bool
+        self, include_repos: list[str], only_membership: bool, only_owned: bool | None
     ) -> list:
         """Returns a list of repo objects for all repositories accessible. Respects
         config.include_repos.
@@ -243,7 +258,7 @@ class GitlabClient(Client):
         :rtype: list
         """
 
-        all_repos = []
+        all_repos: list = []
         if include_repos:
             for repo in include_repos:
                 if repo.startswith("id:"):
@@ -266,7 +281,7 @@ class GitlabClient(Client):
             self.repo_cache[item['id']] = item
         return all_repos
 
-    def _get_repo(self, repo_id: int) -> dict:
+    def _get_repo(self, repo_id: int) -> dict[str, Any]:
         """Queries information about a single repository as JSON dictionary
 
         :param repo_id: Project ID in the Gitlab instance
@@ -275,7 +290,7 @@ class GitlabClient(Client):
         """
         return self._fetch('projects/' + str(repo_id))
 
-    def get_repo_cached(self, repo_id: int) -> dict:
+    def get_repo_cached(self, repo_id: int) -> dict[str, Any]:
         """Get repo information with a repo cache. Repo information will only be fetched the first
         time information about a certain repository is fetched.
 
@@ -301,7 +316,7 @@ class GitlabClient(Client):
         """
         return self._fetch_paged(f'projects/{rid}/{issue_type}/{issueid}/notes')
 
-    def get_repo_issues(self, rid: int) -> dict:
+    def get_repo_issues(self, rid: int) -> GitlabIssueMap:
         """Get all issues from a repository as JSON dictionary
 
         :param rid: Project ID in the Gitlab instance
@@ -312,7 +327,7 @@ class GitlabClient(Client):
             f'projects/{rid}/issues?state=opened&{self.assignee_query}'
         )
 
-    def get_repo_merge_requests(self, rid: int) -> dict:
+    def get_repo_merge_requests(self, rid: int) -> GitlabIssueMap:
         """Get all merge_requests from a repository as JSON dictionary
 
         :param rid: Project ID in the Gitlab instance
@@ -324,7 +339,9 @@ class GitlabClient(Client):
             skip_403=True,
         )
 
-    def get_issues_from_query(self, query: str, skip_403: bool = False) -> dict:
+    def get_issues_from_query(
+        self, query: str, skip_403: bool = False
+    ) -> GitlabIssueMap:
         """Get objects matching a query. Results will be returned in a dictionary where the key
         matches their project ID.
 
@@ -332,20 +349,20 @@ class GitlabClient(Client):
         :type query: str
         :rtype: dict
         """
-        issues = {}
+        issues: GitlabIssueMap = {}
         result = self._fetch_paged(query, skip_403=skip_403)
         for issue in result:
             issues[issue['id']] = (issue['project_id'], issue)
         return issues
 
-    def get_todos(self, query: str) -> list:
+    def get_todos(self, query: str) -> list[GitlabTodoEntry]:
         """Get all todo objects matching a query returned as list of (project_id, todo) tuples
 
         :param query: API query string that should get sent to the server
         :type query: str
         :rtype: list
         """
-        todos = []
+        todos: list[GitlabTodoEntry] = []
         fetched_todos = self._fetch_paged(query)
         for todo in fetched_todos:
             todos.append((todo.get('project'), todo))
@@ -398,7 +415,7 @@ class GitlabIssue(Issue):
     UNIQUE_KEY = (REPO, TYPE, NUMBER)
 
     # Override the method from parent class
-    def get_priority(self):
+    def get_priority(self) -> config.Priority:
         default_priority_map = {
             'todo': self.config.default_todo_priority,
             'merge_request': self.config.default_mr_priority,
@@ -410,7 +427,7 @@ class GitlabIssue(Issue):
 
         return default_priority_map.get(type_str, default_priority)
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         author = self.record['author']
         milestone = self.record.get('milestone')
         created = self.record['created_at']
@@ -487,10 +504,10 @@ class GitlabIssue(Issue):
             self.WEIGHT: weight,
         }
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(self.record.get('labels', []))
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.title,
             url=self.extra['issue_url'],
@@ -499,13 +516,15 @@ class GitlabIssue(Issue):
         )
 
 
-class GitlabService(Service):
+class GitlabService(Service[GitlabIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = GitlabIssue
     CONFIG_SCHEMA = GitlabConfig
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: GitlabConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         token = self.get_secret('token', self.config.login)
         self.gitlab_client = GitlabClient(
@@ -516,20 +535,20 @@ class GitlabService(Service):
             use_https=self.config.use_https,
             verify_ssl=self.config.verify_ssl,
         )
-        self.repo_map = dict()
+        self.repo_map: dict[int, dict[str, Any]] = {}
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: GitlabConfig) -> str:
         return f"gitlab://{config.login}@{config.host}"
 
-    def get_owner(self, issue):
+    def get_owner(self, issue: GitlabIssueEntry) -> list[str]:
         return [assignee['username'] for assignee in issue[1]['assignees']]
 
-    def get_author(self, issue):
+    def get_author(self, issue: GitlabIssueEntry) -> str | None:
         if issue[1]['author'] is not None and issue[1]['author']['username']:
             return issue[1]['author']['username']
 
-    def filter_repos(self, repo):
+    def filter_repos(self, repo: dict[str, Any]) -> bool:
         if (
             repo['path_with_namespace'] in self.config.exclude_repos
             or "id:%d" % repo['id'] in self.config.exclude_repos
@@ -560,7 +579,9 @@ class GitlabService(Service):
 
         return is_included
 
-    def annotations(self, repo, url, issue_type, issue):
+    def annotations(
+        self, repo: dict[str, Any], url: str, issue_type: str, issue: dict[str, Any]
+    ) -> list[str]:
         annotations = []
 
         if self.main_config.annotation_comments:
@@ -569,16 +590,20 @@ class GitlabService(Service):
 
         return self.build_annotations(annotations, url)
 
-    def include_todo(self, repos):
+    def include_todo(
+        self, repos: list[dict[str, Any]]
+    ) -> Callable[[GitlabTodoEntry], bool]:
         ids = list(r['id'] for r in repos)
 
-        def include_todo(todo):
-            project, todo = todo
+        def include_todo(item: GitlabTodoEntry) -> bool:
+            project, _todo = item
             return project is None or project['id'] in ids
 
         return include_todo
 
-    def _get_issue_objs(self, issues, issue_type):
+    def _get_issue_objs(
+        self, issues: list[GitlabIssueEntry], issue_type: str
+    ) -> Iterator[GitlabIssue]:
         type_plural = issue_type + 's'
 
         for rid, issue in issues:
@@ -600,7 +625,7 @@ class GitlabService(Service):
             issue_obj.extra.update(extra)
             yield issue_obj
 
-    def _get_todo_objs(self, todos):
+    def _get_todo_objs(self, todos: list[GitlabTodoEntry]) -> Iterator[GitlabIssue]:
         for project, todo in todos:
             todo['repo'] = project['path'] if project is not None else 'the instance'
 
@@ -619,7 +644,7 @@ class GitlabService(Service):
             todo_obj.extra.update(extra)
             yield todo_obj
 
-    def include(self, issue):
+    def include(self, issue: GitlabIssueEntry) -> bool:
         """Return true if the issue in question should be included"""
         if not self.filter_repos(self.gitlab_client.get_repo_cached(issue[0])):
             return False
@@ -637,15 +662,15 @@ class GitlabService(Service):
 
         return True
 
-    def get_issues_from_projects(self, repos):
-        issues = {}
+    def get_issues_from_projects(self, repos: list[dict[str, Any]]) -> GitlabIssueMap:
+        issues: GitlabIssueMap = {}
         for repo in repos:
             rid = repo['id']
             self.repo_map[rid] = repo
             issues.update(self.gitlab_client.get_repo_issues(rid))
         return issues
 
-    def get_all_repos(self):
+    def get_all_repos(self) -> list:
         include_repos = list()
         if not self.config.include_regex:
             include_repos = self.config.include_repos
@@ -657,7 +682,7 @@ class GitlabService(Service):
         repos = list(filter(self.filter_repos, all_repos))
         return repos
 
-    def description(self, issue):
+    def description(self, issue: dict[str, Any]) -> str | None:
         description = issue['description']
 
         if description:
@@ -666,9 +691,9 @@ class GitlabService(Service):
 
         return description
 
-    def issues(self):
+    def issues(self) -> Iterator[GitlabIssue]:
         # List of repos will only be queried if needed
-        repos = []
+        repos: list = []
 
         # Issues
         if self.config.include_issues:
@@ -695,7 +720,7 @@ class GitlabService(Service):
             else:
                 if not repos:
                     repos = self.get_all_repos()
-                merge_requests = {}
+                merge_requests: GitlabIssueMap = {}
                 for repo in repos:
                     rid = repo['id']
                     merge_requests.update(

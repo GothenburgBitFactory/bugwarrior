@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from datetime import datetime, timezone
 import email
 import email.utils
@@ -8,8 +9,10 @@ from pathlib import Path
 import pickle
 import re
 import typing
+from typing import Any
 
 from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 import googleapiclient.discovery
 
@@ -61,7 +64,7 @@ class GmailIssue(Issue):
         'SENT',
     ]
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         return {
             'annotations': self.get_annotations(),
             'entry': self.get_entry(),
@@ -81,7 +84,7 @@ class GmailIssue(Issue):
             self.LABELS: " ".join(sorted(self.extra['labels'])),
         }
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.extra['subject'],
             url=self.extra['url'],
@@ -89,16 +92,16 @@ class GmailIssue(Issue):
             cls='issue',
         )
 
-    def get_annotations(self):
+    def get_annotations(self) -> list[str]:
         return self.extra.get('annotations', [])
 
-    def get_entry(self):
+    def get_entry(self) -> datetime:
         # internal_date is in milliseconds, convert to seconds and create UTC datetime
         timestamp_seconds = int(self.extra['internal_date']) / 1000
         return datetime.fromtimestamp(timestamp_seconds, tz=timezone.utc)
 
 
-class GmailService(Service):
+class GmailService(Service[GmailIssue]):
     APPLICATION_NAME = 'Bugwarrior Gmail Service'
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
@@ -107,8 +110,10 @@ class GmailService(Service):
     CONFIG_SCHEMA = GmailConfig
     AUTHENTICATION_LOCK = multiprocessing.Lock()
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: GmailConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         credentials_name = clean_filename(
             self.config.login_name
@@ -122,16 +127,16 @@ class GmailService(Service):
         self.gmail_api = self.build_api()
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: GmailConfig) -> str:
         return f'gmail://{config.login_name}'
 
-    def build_api(self):
+    def build_api(self) -> googleapiclient.discovery.Resource:
         credentials = self.get_credentials()
         return googleapiclient.discovery.build(
             'gmail', 'v1', credentials=credentials, cache_discovery=False
         )
 
-    def get_credentials(self):
+    def get_credentials(self) -> Credentials:
         """Gets valid user credentials from storage.
 
         If nothing has been stored, or if the stored credentials are invalid,
@@ -167,17 +172,17 @@ class GmailService(Service):
                 log.info('Storing credentials to %r', self.credentials_path)
             return credentials
 
-    def get_labels(self):
+    def get_labels(self) -> dict[str, str]:
         result = (
-            self.gmail_api.users()
+            self.gmail_api.users()  # ty: ignore[unresolved-attribute]
             .labels()
             .list(userId=self.config.login_name)
             .execute()
         )
         return {label['id']: label['name'] for label in result['labels']}
 
-    def get_threads(self):
-        thread_service = self.gmail_api.users().threads()
+    def get_threads(self) -> list[dict[str, Any]]:
+        thread_service = self.gmail_api.users().threads()  # ty: ignore[unresolved-attribute]
         threads = []
 
         pageToken = None
@@ -203,13 +208,13 @@ class GmailService(Service):
 
         return threads
 
-    def annotations(self, issue):
+    def annotations(self, issue: GmailIssue) -> list[str]:
         sender = issue.extra['last_sender_name']
         subj = issue.extra['subject']
         issue_url = issue.extra['url']
         return self.build_annotations([(sender, subj)], issue_url)
 
-    def issues(self):
+    def issues(self) -> Iterator[GmailIssue]:
         labels = self.get_labels()
         for thread in self.get_threads():
             issue = self.get_issue_for_record(thread, thread_extras(thread, labels))
@@ -218,7 +223,7 @@ class GmailService(Service):
             yield issue
 
 
-def thread_extras(thread, labels):
+def thread_extras(thread: dict[str, Any], labels: dict[str, str]) -> dict[str, Any]:
     name, address = thread_last_sender(thread)
     last_message_id = thread_last_message_id(thread)
     return {
@@ -233,44 +238,44 @@ def thread_extras(thread, labels):
     }
 
 
-def thread_labels(thread):
+def thread_labels(thread: dict[str, Any]) -> set[str]:
     return {label for message in thread['messages'] for label in message['labelIds']}
 
 
-def thread_subject(thread):
+def thread_subject(thread: dict[str, Any]) -> str | None:
     return message_header(thread['messages'][0], 'Subject')
 
 
-def thread_last_sender(thread):
+def thread_last_sender(thread: dict[str, Any]) -> tuple[str, str]:
     from_header = message_header(thread['messages'][-1], 'From')
-    name, address = email.utils.parseaddr(from_header)
+    name, address = email.utils.parseaddr(from_header or "")
     return name if name else address, address
 
 
-def thread_last_message_id(thread):
+def thread_last_message_id(thread: dict[str, Any]) -> str:
     message_id_header = message_header(thread['messages'][-1], 'Message-ID')
     if not message_id_header or message_id_header == '':
         return ''
     return message_id_header[1:-1]  # remove the enclosing < >.
 
 
-def thread_timestamp(thread):
+def thread_timestamp(thread: dict[str, Any]) -> str:
     return thread['messages'][-1]['internalDate']
 
 
-def thread_snippet(thread):
+def thread_snippet(thread: dict[str, Any]) -> str:
     return thread['messages'][-1]['snippet']
 
 
-def thread_url(thread):
+def thread_url(thread: dict[str, Any]) -> str:
     return "https://mail.google.com/mail/u/0/#all/%s" % (thread['id'],)
 
 
-def message_header(message, header_name):
+def message_header(message: dict[str, Any], header_name: str) -> str | None:
     for item in message['payload']['headers']:
         if item['name'] == header_name:
             return item['value']
 
 
-def clean_filename(name):
+def clean_filename(name: str) -> str:
     return re.sub(r'[^A-Za-z0-9_]+', '_', name)

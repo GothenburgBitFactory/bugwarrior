@@ -1,7 +1,8 @@
+from collections.abc import Iterator
 import datetime
 import logging
 import typing
-from typing import Generator, Optional
+from typing import Any, Generator, Optional
 
 import requests
 
@@ -20,11 +21,11 @@ class ClickupConfig(config.ServiceConfig):
 class ClickupClient(Client):
     """Abstraction of Clickup API v2"""
 
-    def __init__(self, token):
+    def __init__(self, token: str) -> None:
         self.token = token
 
     @staticmethod
-    def _get_url_for_tasks(team_id: int, page: int = 0):
+    def _get_url_for_tasks(team_id: int, page: int = 0) -> str:
         base_url = "https://api.clickup.com/api/v2/"
         query = f"include_closed=false&page={page}"
         return f"{base_url}team/{team_id}/task?{query}"
@@ -78,7 +79,7 @@ class ClickupIssue(Issue):
 
     PRIORITY_MAP = {"urgent": "H", "high": "M", "normal": "L", "low": ""}
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         if not self.record["project"]["hidden"]:
             project = self.record["project"]["name"]
         else:
@@ -102,7 +103,7 @@ class ClickupIssue(Issue):
             self.NAME: self.record["name"],
         }
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record["name"], url=self.record["url"]
         )
@@ -118,17 +119,19 @@ class ClickupIssue(Issue):
         return datetime.datetime.fromtimestamp(seconds_unix, tz=datetime.timezone.utc)
 
 
-class ClickupService(Service):
+class ClickupService(Service[ClickupIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = ClickupIssue
     CONFIG_SCHEMA = ClickupConfig
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: ClickupConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
         self.client = ClickupClient(token=self.get_secret('token'))
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: ClickupConfig) -> str:
         return "clickup://"
 
     def is_assigned(self, issue: dict) -> bool:
@@ -144,7 +147,7 @@ class ClickupService(Service):
 
         return False
 
-    def issues(self):
+    def issues(self) -> Iterator[ClickupIssue]:
         for task in self.client.get_tasks_for_team(self.config.team_id):
             if self.is_assigned(task):
                 yield self.get_issue_for_record(task)

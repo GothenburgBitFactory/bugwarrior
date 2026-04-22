@@ -185,8 +185,10 @@ class AzureDevopsService(Service[AzureDevopsIssue]):
     ISSUE_CLASS = AzureDevopsIssue
     CONFIG_SCHEMA = AzureDevopsConfig
 
-    def __init__(self, *args: Any, **kw: Any) -> None:
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: AzureDevopsConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
         self.client = AzureDevopsClient(
             pat=self.get_secret('PAT'),
             project=self.config.project,

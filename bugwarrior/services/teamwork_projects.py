@@ -1,5 +1,7 @@
+from collections.abc import Iterator
 import logging
 import typing
+from typing import Any
 
 import requests
 
@@ -19,18 +21,12 @@ class TeamworkConfig(config.ServiceConfig):
 
 
 class TeamworkClient(Client):
-    def __init__(self, host, token):
+    def __init__(self, host: str, token: str) -> None:
         self.host = host
         self.token = token
 
-    def authenticate(self):
-        response = requests.get(self.host + "/authenticate.json", auth=(self.token, ""))
-        return self.json_response(response)
-
-    def call_api(self, method, endpoint, data=None):
-        response = requests.get(
-            self.host + endpoint, auth=(self.token, ""), params=data
-        )
+    def _get(self, endpoint: str) -> dict[str, Any]:
+        response = requests.get(f"{self.host}/{endpoint}", auth=(self.token, ""))
         return self.json_response(response)
 
 
@@ -54,17 +50,17 @@ class TeamworkIssue(Issue):
     UNIQUE_KEY = (URL,)
     PRIORITY_MAP = {"low": "L", "medium": "M", "high": "H"}
 
-    def get_task_url(self):
+    def get_task_url(self) -> str:
         return self.extra["host"] + "/#/tasks/" + str(self.record["id"])
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record["content"],
             url=self.get_task_url(),
             number=self.record["id"],
         )
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         task_url = self.get_task_url()
         status = self.record["status"]
 
@@ -96,27 +92,29 @@ class TeamworkIssue(Issue):
         }
 
 
-class TeamworkService(Service):
+class TeamworkService(Service[TeamworkIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = TeamworkIssue
     CONFIG_SCHEMA = TeamworkConfig
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self, config: TeamworkConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
         self.client = TeamworkClient(self.config.host, self.config.token)
-        user = self.client.authenticate()
+        user = self.client._get("authenticate.json")
         self.user_id = user["account"]["userId"]
         self.name = user["account"]["firstname"] + " " + user["account"]["lastname"]
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: TeamworkConfig) -> str:
         return f'teamwork_projects://{config.host}'
 
-    def get_comments(self, issue):
+    def get_comments(self, issue: dict[str, Any]) -> list[str]:
         if self.main_config.annotation_comments:
             if issue.get("comments-count", 0) > 0:
-                endpoint = "/tasks/{task_id}/comments.json".format(task_id=issue["id"])
-                comments = self.client.call_api("GET", endpoint)
+                endpoint = f"tasks/{issue['id']}/comments.json"
+                comments = self.client._get(endpoint)
                 comment_list = []
                 for comment in comments["comments"]:
                     author = "{first} {last}".format(
@@ -128,8 +126,8 @@ class TeamworkService(Service):
                 return self.build_annotations(comment_list, None)
         return []
 
-    def issues(self):
-        response = self.client.call_api("GET", "/tasks.json")
+    def issues(self) -> Iterator[TeamworkIssue]:
+        response = self.client._get("tasks.json")
         for issue in response["todo-items"]:
             # Determine if issue is need by if following comments, changes or assigned
             if (

@@ -1,5 +1,7 @@
+from collections.abc import Iterator
 import logging
 import typing
+from typing import Any
 
 from pydantic import computed_field
 import requests
@@ -61,9 +63,9 @@ class YoutrackIssue(Issue):
         NUMBER: {'type': 'string', 'label': 'YouTrack Project Issue Number'},
     }
     UNIQUE_KEY = (URL,)
-    PRIORITY_MAP = {}  # FIXME
+    PRIORITY_MAP: dict[str, config.Priority] = {}
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         return {
             'project': self.get_project(),
             'priority': self.get_priority(),
@@ -75,30 +77,30 @@ class YoutrackIssue(Issue):
             self.NUMBER: self.get_number_in_project(),
         }
 
-    def get_issue(self):
-        return self.get_project() + '-' + str(self.get_number_in_project())
+    def get_issue(self) -> str:
+        return (self.get_project() or '') + '-' + str(self.get_number_in_project())
 
-    def get_issue_summary(self):
+    def get_issue_summary(self) -> str | None:
         return self.record.get('summary')
 
-    def get_issue_url(self):
+    def get_issue_url(self) -> str:
         return "%s/issue/%s" % (self.config.base_url, self.get_issue())
 
-    def get_project(self):
+    def get_project(self) -> str | None:
         return self.record.get('project', {}).get('shortName')
 
-    def get_number_in_project(self):
+    def get_number_in_project(self) -> int | None:
         return self.record.get('numberInProject')
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
-            title=self.get_issue_summary(),
+            title=self.get_issue_summary() or '',
             url=self.get_issue_url(),
             number=self.get_issue(),
             cls='issue',
         )
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(
             [tag['name'] for tag in self.record.get('tags', [])],
             toggle_option='import_tags',
@@ -107,13 +109,15 @@ class YoutrackIssue(Issue):
         )
 
 
-class YoutrackService(Service, Client):
+class YoutrackService(Service[YoutrackIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = YoutrackIssue
     CONFIG_SCHEMA = YoutrackConfig
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: YoutrackConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         self.rest_url = self.config.base_url + '/api'
 
@@ -127,17 +131,17 @@ class YoutrackService(Service, Client):
         self.session.headers['Authorization'] = f'Bearer {token}'
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: YoutrackConfig) -> str:
         return f"youtrack://{config.login}@{config.host}"
 
-    def issues(self):
+    def issues(self) -> Iterator[YoutrackIssue]:
         params = {
             'query': self.config.query,
             'max': self.config.query_limit,
             'fields': 'id,summary,project(shortName),numberInProject,tags(name)',
         }
         resp = self.session.get(self.rest_url + '/issues', params=params)
-        issues = self.json_response(resp)
+        issues = Client.json_response(resp)
         log.debug(" Found %i total.", len(issues))
 
         for issue in issues:

@@ -1,7 +1,9 @@
+from collections.abc import Iterator
 import json
 import logging
 import re
 import typing
+from typing import Any
 
 from pydantic import model_validator
 import requests
@@ -25,7 +27,7 @@ class LinearConfig(config.ServiceConfig):
 
     @model_validator(mode='before')
     @classmethod
-    def statuses_or_status_types(cls, values):
+    def statuses_or_status_types(cls, values: Any) -> dict[str, Any]:
         statuses = values.get("statuses")
         status_types = values.get("status_types")
         if statuses and status_types:
@@ -66,9 +68,9 @@ class LinearIssue(Issue):
 
     # Linear exposes issue priority as an integer:
     #   0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.
-    PRIORITY_MAP = {1: "H", 2: "H", 3: "M", 4: "L"}
+    PRIORITY_MAP: dict[int, config.Priority] = {1: "H", 2: "H", 3: "M", 4: "L"}
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         description = self.record.get("description")
         created = self.parse_date(self.record.get("createdAt"))
         modified = self.parse_date(self.record.get("updatedAt"))
@@ -79,11 +81,8 @@ class LinearIssue(Issue):
         # GraphQL response values, such as for `project`, are either an object
         # or None, rather than being omitted when empty, so this allows chained
         # traversal of such values.
-        def get(v, k, default=None):
-            r = v.get(k, default)
-            if not r:
-                return default
-            return r
+        def get(v: Any, k: str, default: Any = None) -> Any:
+            return v.get(k, default) or default
 
         return {
             "project": (
@@ -112,13 +111,13 @@ class LinearIssue(Issue):
             self.CLOSED_AT: closed,
         }
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         labels = [
             label["name"] for label in self.record.get("labels", {}).get("nodes", [])
         ]
         return self.get_tags_from_labels(labels)
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record.get("title", ""),
             url=self.record.get("url", ""),
@@ -127,13 +126,15 @@ class LinearIssue(Issue):
         )
 
 
-class LinearService(Service, Client):
+class LinearService(Service[LinearIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = LinearIssue
     CONFIG_SCHEMA = LinearConfig
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self, config: LinearConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         self.session = requests.Session()
         self.session.headers.update(
@@ -143,7 +144,7 @@ class LinearService(Service, Client):
             }
         )
 
-        self.filter = []
+        self.filter: list[dict[str, Any]] = []
         if self.config.only_if_assigned:
             self.filter.append(
                 {"assignee": {"email": {"eq": self.config.only_if_assigned}}}
@@ -199,14 +200,14 @@ class LinearService(Service, Client):
             """
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: LinearConfig) -> str:
         return f"linear://{config.host}"
 
-    def issues(self):
+    def issues(self) -> Iterator[LinearIssue]:
         for issue in self.get_issues():
             yield self.get_issue_for_record(issue, {})
 
-    def get_issues(self):
+    def get_issues(self) -> Iterator[dict[str, Any]]:
         """
         Make Linear API requests, paginating with cursors until exhausted.
 
@@ -224,7 +225,7 @@ class LinearService(Service, Client):
                 "variables": {"filter": filter_arg, "after": cursor},
             }
             response = self.session.post(self.config.host, data=json.dumps(data))
-            res = self.json_response(response)
+            res = Client.json_response(response)
 
             if "errors" in res:
                 messages = [

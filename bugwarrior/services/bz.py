@@ -1,8 +1,9 @@
+from collections.abc import Iterator
 import datetime
 import logging
 import time
 import typing
-from typing import Annotated
+from typing import Annotated, Any
 import urllib.parse
 import xmlrpc.client
 
@@ -17,7 +18,7 @@ from bugwarrior.services import Issue, Service
 log = logging.getLogger(__name__)
 
 
-def validate_url(value: str):
+def validate_url(value: str) -> str:
     if not urllib.parse.urlparse(value).scheme:
         value = f'https://{value}'
         log.warning(
@@ -87,7 +88,7 @@ class BugzillaIssue(Issue):
         'urgent': 'H',
     }
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         task = {
             'project': self.record['component'],
             'priority': self.get_priority(),
@@ -107,7 +108,7 @@ class BugzillaIssue(Issue):
 
         return task
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record['summary'],
             url=self.extra['url'],
@@ -116,7 +117,7 @@ class BugzillaIssue(Issue):
         )
 
 
-class BugzillaService(Service):
+class BugzillaService(Service[BugzillaIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = BugzillaIssue
     CONFIG_SCHEMA = BugzillaConfig
@@ -133,8 +134,10 @@ class BugzillaService(Service):
         'assigned_to',
     ]
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: BugzillaConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
         log.debug(" filtering on statuses: %r", self.config.open_statuses)
 
         force_rest_kwargs = {}
@@ -156,13 +159,13 @@ class BugzillaService(Service):
                 self.bz.login(self.config.username, password)
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: BugzillaConfig) -> str:
         return f"bugzilla://{config.username}@{config.base_uri}"
 
-    def get_owner(self, issue):
+    def get_owner(self, issue: dict[str, Any]) -> str:
         return issue['assigned_to']
 
-    def include(self, issue):
+    def include(self, issue: dict[str, Any]) -> bool:
         """Return true if the issue in question should be included"""
         if self.config.only_if_assigned:
             owner = self.get_owner(issue)
@@ -175,7 +178,7 @@ class BugzillaService(Service):
 
         return True
 
-    def annotations(self, tag, issue):
+    def annotations(self, tag: str, issue: dict[str, Any]) -> list[str]:
         base_url = "%s/show_bug.cgi?id=" % self.config.base_uri
         long_url = base_url + str(issue['id'])
         url = long_url
@@ -192,20 +195,21 @@ class BugzillaService(Service):
             # version of bugzilla itself.  :(
             comments = issue.get('longdescs', [])
 
-            def _parse_author(obj):
+            def _parse_author(obj: dict[str, Any] | str) -> str:
                 if isinstance(obj, dict):
                     return obj['login_name'].split('@')[0]
                 else:
                     return obj
 
-            def _parse_body(obj):
+            def _parse_body(obj: dict[str, Any]) -> str | None:
                 return obj.get('text', obj.get('body'))
 
             return self.build_annotations(
-                ((_parse_author(c['author']), _parse_body(c)) for c in comments), url
+                ((_parse_author(c['author']), _parse_body(c) or "") for c in comments),
+                url,
             )
 
-    def issues(self):
+    def issues(self) -> Iterator[BugzillaIssue]:
         email = self.config.username
         # TODO -- doing something with blockedby would be nice.
 
@@ -286,7 +290,7 @@ class BugzillaService(Service):
             issue_obj.extra.update(extra)
             yield issue_obj
 
-    def _get_assigned_date(self, issue):
+    def _get_assigned_date(self, issue: dict[str, Any]) -> str | None:
         bug = self.bz.getbug(issue['id'])
         history = bug.get_history_raw()['bugs'][0]['history']
 
@@ -297,7 +301,7 @@ class BugzillaService(Service):
                     return _ensure_datetime(h['when']).isoformat()
 
 
-def _get_bug_attr(bug, attr):
+def _get_bug_attr(bug: Any, attr: str) -> Any:
     """Default longdescs/flags case to [] since they may not be present."""
     if attr in ("longdescs", "flags"):
         return getattr(bug, attr, [])
