@@ -1,5 +1,7 @@
+from collections.abc import Iterable, Iterator
 import logging
 import typing
+from typing import Any
 
 import debianbts
 import pydantic
@@ -7,6 +9,7 @@ from pydantic import model_validator
 import requests
 
 from bugwarrior import config
+from bugwarrior.config import Priority
 from bugwarrior.services import Client, Issue, Service
 
 log = logging.getLogger(__name__)
@@ -30,13 +33,13 @@ class BTSConfig(config.ServiceConfig):
     also_unassigned: config.UnsupportedOption[bool] = False
 
     @model_validator(mode='after')
-    def require_email_or_packages(self):
+    def require_email_or_packages(self) -> "BTSConfig":
         if not self.email and not self.packages:
             raise ValueError('section requires one of:\n    email\n    packages')
         return self
 
     @model_validator(mode='after')
-    def udd_needs_email(self):
+    def udd_needs_email(self) -> "BTSConfig":
         if self.udd and not self.email:
             raise ValueError("no 'email' but UDD search was requested")
         return self
@@ -62,7 +65,7 @@ class BTSIssue(Issue):
     }
     UNIQUE_KEY = (URL,)
 
-    PRIORITY_MAP = {
+    PRIORITY_MAP: dict[str, Priority] = {
         'wishlist': 'L',
         'minor': 'L',
         'normal': 'M',
@@ -72,7 +75,7 @@ class BTSIssue(Issue):
         'critical': 'H',
     }
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         return {
             'priority': self.get_priority(),
             'annotations': self.extra.get('annotations', []),
@@ -85,7 +88,7 @@ class BTSIssue(Issue):
             self.STATUS: self.record['status'],
         }
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record['subject'],
             url=self.record['url'],
@@ -93,22 +96,22 @@ class BTSIssue(Issue):
             cls='issue',
         )
 
-    def get_priority(self):
+    def get_priority(self) -> config.Priority:
         return self.PRIORITY_MAP.get(
             self.record.get('severity', ''), self.config.default_priority
         )
 
 
-class BTSService(Service, Client):
+class BTSService(Service[BTSIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = BTSIssue
     CONFIG_SCHEMA = BTSConfig
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: BTSConfig) -> str:
         return 'bts://'
 
-    def _record_for_bug(self, bug):
+    def _record_for_bug(self, bug: debianbts.Bugreport) -> dict[str, Any]:
         return {
             'number': bug.bug_num,
             'url': 'https://bugs.debian.org/' + str(bug.bug_num),
@@ -120,17 +123,17 @@ class BTSService(Service, Client):
             'status': bug.pending,
         }
 
-    def _get_udd_bugs(self):
+    def _get_udd_bugs(self) -> Iterable[dict[str, Any]]:
         request_params = {'format': 'json', 'dmd': 1, 'email1': self.config.email}
         if self.config.udd_ignore_sponsor:
             request_params['nosponsor1'] = "on"
         resp = requests.get(UDD_BUGS_SEARCH, request_params)
-        return self.json_response(resp)
+        return Client.json_response(resp)
 
-    def annotations(self, issue):
+    def annotations(self, issue: dict[str, Any]) -> list[str]:
         return self.build_annotations([], issue['url'])
 
-    def issues(self):
+    def issues(self) -> Iterator[BTSIssue]:
         # Initialise empty list of bug numbers
         collected_bugs = []
 

@@ -1,6 +1,8 @@
+from collections.abc import Iterator
 import logging
 import re
 import typing
+from typing import Any
 
 import requests
 from taskw import TaskWarriorShellout
@@ -29,14 +31,23 @@ class RedMineConfig(config.ServiceConfig):
 
 
 class RedMineClient(Client):
-    def __init__(self, url, key, auth, issue_limit, verify_ssl):
+    def __init__(
+        self,
+        url: str,
+        key: str,
+        auth: tuple[str, str] | None,
+        issue_limit: int | None,
+        verify_ssl: bool,
+    ) -> None:
         self.url = url
         self.key = key
         self.auth = auth
         self.issue_limit = issue_limit
         self.verify_ssl = verify_ssl
 
-    def find_issues(self, issue_limit, query, only_if_assigned=False):
+    def find_issues(
+        self, issue_limit: int | None, query: str, only_if_assigned: bool | str = False
+    ) -> list[dict[str, Any]]:
         args = {}
         url = "/issues.json?" + query
 
@@ -51,14 +62,16 @@ class RedMineClient(Client):
 
         return self.call_api(url, args)["issues"]
 
-    def call_api(self, uri, params):
+    def call_api(self, uri: str, params: dict[str, Any]) -> dict[str, Any]:
         url = self.url.rstrip("/") + uri
-        kwargs = {'headers': {'X-Redmine-API-Key': self.key}, 'params': params}
+        kwargs: dict[str, Any] = {
+            'headers': {'X-Redmine-API-Key': self.key},
+            'params': params,
+            'verify': self.verify_ssl,
+        }
 
         if self.auth:
             kwargs['auth'] = self.auth
-
-        kwargs['verify'] = self.verify_ssl
 
         return self.json_response(requests.get(url, **kwargs))
 
@@ -101,7 +114,7 @@ class RedMineIssue(Issue):
     }
     UNIQUE_KEY = (ID,)
 
-    PRIORITY_MAP = {
+    PRIORITY_MAP: dict[str, config.Priority] = {
         'Low': 'L',
         'Normal': 'M',
         'High': 'H',
@@ -109,7 +122,7 @@ class RedMineIssue(Issue):
         'Immediate': 'H',
     }
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         due_date = self.record.get('due_date')
         start_date = self.record.get('start_date')
         updated_on = self.record.get('updated_on')
@@ -160,20 +173,20 @@ class RedMineIssue(Issue):
             self.SPENT_HOURS: spent_hours,
         }
 
-    def get_priority(self):
+    def get_priority(self) -> config.Priority:
         return self.PRIORITY_MAP.get(
             self.record.get('priority', {}).get('name'), self.config.default_priority
         )
 
-    def get_issue_url(self):
+    def get_issue_url(self) -> str:
         return self.config.url + "/issues/" + str(self.record["id"])
 
-    def get_converted_hours(self, estimated_hours):
+    def get_converted_hours(self, estimated_hours: str) -> str:
         tw = TaskWarriorShellout(config_filename=self.main_config.taskrc)
         calc = tw._execute('calc', estimated_hours)
         return calc[0].rstrip()
 
-    def get_project_name(self):
+    def get_project_name(self) -> str:
         if self.config.project_name:
             return self.config.project_name
         # TODO: It would be nice to use the project slug (if the Redmine
@@ -182,7 +195,7 @@ class RedMineIssue(Issue):
         # project ID contained in self.record and the list of projects.
         return re.sub(r'[^a-zA-Z0-9]', '', self.record["project"]["name"]).lower()
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record['subject'],
             url=self.get_issue_url(),
@@ -191,13 +204,15 @@ class RedMineIssue(Issue):
         )
 
 
-class RedMineService(Service):
+class RedMineService(Service[RedMineIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = RedMineIssue
     CONFIG_SCHEMA = RedMineConfig
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: RedMineConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         self.key = self.get_secret('key')
 
@@ -218,10 +233,10 @@ class RedMineService(Service):
         )
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: RedMineConfig) -> str:
         return f"redmine://{config.login}@{config.url}/"
 
-    def issues(self):
+    def issues(self) -> Iterator[RedMineIssue]:
         issues = self.client.find_issues(
             self.config.issue_limit, self.config.query, self.config.only_if_assigned
         )

@@ -79,7 +79,7 @@ class BitbucketIssue(Issue):
         )
 
 
-class BitbucketService(Service[BitbucketIssue], Client):
+class BitbucketService(Service[BitbucketIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = BitbucketIssue
     CONFIG_SCHEMA = BitbucketConfig
@@ -87,8 +87,10 @@ class BitbucketService(Service[BitbucketIssue], Client):
     BASE_API2 = 'https://api.bitbucket.org/2.0'
     BASE_URL = 'https://bitbucket.org/'
 
-    def __init__(self, *args: Any, **kw: Any) -> None:
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: BitbucketConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         oauth = (self.config.key, self.get_secret('secret', self.config.key))
         refresh_token = self.main_config.data.get('bitbucket_refresh_token')
@@ -135,7 +137,7 @@ class BitbucketService(Service[BitbucketIssue], Client):
 
     def get_data(self, url: str) -> dict[str, Any]:
         """Perform a request to the fully qualified url and return json."""
-        return self.json_response(requests.get(url, **self.requests_kwargs))
+        return Client.json_response(requests.get(url, **self.requests_kwargs))
 
     def get_collection(self, url: str) -> Iterator[Any]:
         """Pages through an object collection from the bitbucket API.

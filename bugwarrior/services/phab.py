@@ -1,5 +1,7 @@
+from collections.abc import Iterator
 import logging
 import typing
+from typing import Any
 
 import phabricator
 import pydantic
@@ -41,7 +43,7 @@ class PhabricatorIssue(Issue):
     }
     UNIQUE_KEY = (URL,)
 
-    PRIORITY_MAP = {
+    PRIORITY_MAP: dict[str, config.Priority | None] = {
         'Needs Triage': None,
         'Unbreak Now!': 'H',
         'High': 'H',
@@ -50,7 +52,7 @@ class PhabricatorIssue(Issue):
         'Wishlist': 'L',
     }
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         return {
             'project': self.extra['project'],
             'priority': self.priority,
@@ -61,7 +63,7 @@ class PhabricatorIssue(Issue):
             self.OBJECT_NAME: self.record['uri'].split('/')[-1],
         }
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record['title'],
             url=self.record['uri'],
@@ -70,20 +72,22 @@ class PhabricatorIssue(Issue):
         )
 
     @property
-    def priority(self):
+    def priority(self) -> config.Priority:
         return (
             self.PRIORITY_MAP.get(self.record.get('priority', ''))
             or self.config.default_priority
         )
 
 
-class PhabricatorService(Service):
+class PhabricatorService(Service[PhabricatorIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = PhabricatorIssue
     CONFIG_SCHEMA = PhabricatorConfig
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: PhabricatorConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         # These read login credentials from ~/.arcrc
         if self.config.host:
@@ -103,10 +107,10 @@ class PhabricatorService(Service):
         )
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: PhabricatorConfig) -> str:
         return f'phabricator://{config.host if config.host else ""}'
 
-    def tasks(self):
+    def tasks(self) -> Iterator[PhabricatorIssue]:
         # If self.config.user_phids or self.config.project_phids is set,
         # retrict API calls to user_phids or project_phids to avoid time out
         # with Phabricator installations with huge userbase.
@@ -187,7 +191,7 @@ class PhabricatorService(Service):
 
             yield self.get_issue_for_record(task, extra)
 
-    def revisions(self):
+    def revisions(self) -> Iterator[PhabricatorIssue]:
         try:
             diffs = self.api.differential.query(status='status-open')
         except phabricator.APIError as err:
@@ -242,6 +246,6 @@ class PhabricatorService(Service):
             }
             yield self.get_issue_for_record(diff, extra)
 
-    def issues(self):
+    def issues(self) -> Iterator[PhabricatorIssue]:
         yield from self.tasks()
         yield from self.revisions()

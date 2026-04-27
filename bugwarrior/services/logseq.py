@@ -1,7 +1,9 @@
+from collections.abc import Iterator
 from datetime import datetime
 import logging
 import re
 import typing
+from typing import Any
 
 import requests
 
@@ -39,7 +41,7 @@ class LogseqConfig(config.ServiceConfig):
 
 
 class LogseqClient(Client):
-    def __init__(self, host, port, token, filter):
+    def __init__(self, host: str, port: int, token: str, filter: str) -> None:
         self.host = host
         self.port = port
         self.token = token
@@ -50,7 +52,7 @@ class LogseqClient(Client):
             "content-type": "application/json; charset=utf-8",
         }
 
-    def _datascript_query(self, query):
+    def _datascript_query(self, query: str) -> Any:
         try:
             response = requests.post(
                 f"http://{self.host}:{self.port}/api",
@@ -62,7 +64,7 @@ class LogseqClient(Client):
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
             exit(1)
 
-    def _get_current_graph(self):
+    def _get_current_graph(self) -> dict[str, Any]:
         try:
             response = requests.post(
                 f"http://{self.host}:{self.port}/api",
@@ -74,11 +76,11 @@ class LogseqClient(Client):
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
             exit(1)
 
-    def get_graph_name(self):
+    def get_graph_name(self) -> str | None:
         graph = self._get_current_graph()
         return graph["name"] if graph else None
 
-    def get_page(self, page_id):
+    def get_page(self, page_id: int) -> dict[str, Any]:
         try:
             response = requests.post(
                 f"http://{self.host}:{self.port}/api",
@@ -90,7 +92,7 @@ class LogseqClient(Client):
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
             exit(1)
 
-    def get_issues(self):
+    def get_issues(self) -> Any:
         query = f"""
             [:find (pull ?b [*])
                 :where [?b :block/marker ?marker]
@@ -137,11 +139,11 @@ class LogseqIssue(Issue):
     UNIQUE_KEY = (ID, UUID)
 
     # map A B C priority to H M L
-    PRIORITY_MAP = {"A": "H", "B": "M", "C": "L"}
+    PRIORITY_MAP: dict[str, config.Priority] = {"A": "H", "B": "M", "C": "L"}
 
     # `pending` is the defuault state. Taskwarrior will dynamcily change task to `waiting`
     # state if wait date is set to a future date.
-    STATE_MAP = {
+    STATE_MAP: dict[str, str] = {
         "IN-PROGRESS": "pending",
         "DOING": "pending",
         "TODO": "pending",
@@ -156,7 +158,7 @@ class LogseqIssue(Issue):
 
     # replace characters that cause escaping issues like [] and "
     # this is a workaround for https://github.com/ralphbean/taskw/issues/172
-    def _unescape_content(self, content):
+    def _unescape_content(self, content: str) -> str:
         return (
             content.replace('"', "'")  # prevent &dquote; in task details
             .replace(
@@ -169,7 +171,7 @@ class LogseqIssue(Issue):
 
     # remove brackets and spaces to compress display format of mutli work tags
     # e.g from #[[Multi Word]] to #MultiWord
-    def _compress_tag_format(self, tag):
+    def _compress_tag_format(self, tag: str) -> str:
         return (
             tag.replace(self.config.char_open_link, "")
             .replace(" ", "")
@@ -177,7 +179,7 @@ class LogseqIssue(Issue):
         )
 
     # get an optimized and formatted title
-    def get_formatted_title(self):
+    def get_formatted_title(self) -> str:
         # use first line only and remove state and priority
         first_line = (
             self.record["content"]
@@ -190,7 +192,7 @@ class LogseqIssue(Issue):
         return self._unescape_content(first_line)
 
     # get a list of tags from the task content
-    def get_tags_from_content(self):
+    def get_tags_from_content(self) -> list[str]:
         # pattern match for #[[multi word]] tags and #single word tags
         # but ignore any non-tag use of the # character in URLs
         # like http://example.com/page#test or in `#code`
@@ -212,7 +214,9 @@ class LogseqIssue(Issue):
         return tags
 
     # get a list of annotations from the content
-    def get_annotations_from_content(self):
+    def get_annotations_from_content(
+        self,
+    ) -> tuple[list[str], datetime | None, datetime | None]:
         annotations = []
         scheduled_date = None
         deadline_date = None
@@ -242,13 +246,13 @@ class LogseqIssue(Issue):
         annotations.pop(0)  # remove first line
         return annotations, scheduled_date, deadline_date
 
-    def get_url(self):
+    def get_url(self) -> str:
         return f'logseq://graph/{self.extra["graph"]}?block-id={self.record["uuid"]}'
 
-    def get_logseq_state(self):
+    def get_logseq_state(self) -> str:
         return self.record["marker"]
 
-    def get_scheduled_date(self, scheduled):
+    def get_scheduled_date(self, scheduled: str) -> datetime | None:
         # format is <YYYY-MO-DD DAY HH:MM .+1d>
         # e.g. <2024-06-20 Thu 10:55 .+1d>
         date_split = (
@@ -282,10 +286,10 @@ class LogseqIssue(Issue):
             log.warning(f"Could not parse date {date} from {scheduled}")
         return None
 
-    def _is_waiting(self):
+    def _is_waiting(self) -> bool:
         return self.get_logseq_state() in ["WAIT", "WAITING"]
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         annotations, scheduled_date, deadline_date = self.get_annotations_from_content()
         wait_date = min(
             [d for d in [scheduled_date, deadline_date, self.SOMEDAY] if d is not None]
@@ -309,7 +313,7 @@ class LogseqIssue(Issue):
             self.PAGE: self.extra["page_title"],
         }
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.get_formatted_title(),
             url=self.get_url() if self.config.inline_links else "",
@@ -318,13 +322,15 @@ class LogseqIssue(Issue):
         )
 
 
-class LogseqService(Service):
+class LogseqService(Service[LogseqIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = LogseqIssue
     CONFIG_SCHEMA = LogseqConfig
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self, config: LogseqConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
         self.token = self.get_secret('token')
         filter = '"' + '" "'.join(self.config.task_state) + '"'
         self.client = LogseqClient(
@@ -335,10 +341,10 @@ class LogseqService(Service):
         )
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: LogseqConfig) -> str:
         return f"http://{config.host}:{config.port}"
 
-    def issues(self):
+    def issues(self) -> Iterator[LogseqIssue]:
         graph_name = self.client.get_graph_name()
         for issue in self.client.get_issues():
             parent_page = self.client.get_page(issue[0]["parent"]["id"])

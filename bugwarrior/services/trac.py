@@ -1,7 +1,9 @@
+from collections.abc import Iterator
 import csv
 import io as StringIO
 import logging
 import typing
+from typing import Any
 import urllib.parse
 
 import offtrac
@@ -37,7 +39,7 @@ class TracIssue(Issue):
     }
     UNIQUE_KEY = (URL,)
 
-    PRIORITY_MAP = {
+    PRIORITY_MAP: dict[str, config.Priority] = {
         'trivial': 'L',
         'minor': 'L',
         'major': 'M',
@@ -45,7 +47,7 @@ class TracIssue(Issue):
         'blocker': 'H',
     }
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         return {
             'project': self.extra['project'],
             'priority': self.get_priority(),
@@ -56,7 +58,7 @@ class TracIssue(Issue):
             self.COMPONENT: self.record['component'],
         }
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         if 'number' in self.record:
             number = self.record['number']
         else:
@@ -69,19 +71,22 @@ class TracIssue(Issue):
             cls='issue',
         )
 
-    def get_priority(self):
+    def get_priority(self) -> config.Priority:
         return self.PRIORITY_MAP.get(
             self.record.get('priority', ''), self.config.default_priority
         )
 
 
-class TracService(Service):
+class TracService(Service[TracIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = TracIssue
     CONFIG_SCHEMA = TracConfig
+    trac: offtrac.TracServer | None
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: TracConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
         if self.config.username:
             password = self.get_secret('password', self.config.username)
 
@@ -89,18 +94,18 @@ class TracService(Service):
         else:
             auth = ''
 
-        self.trac = None
         uri = f'{self.config.scheme}://{auth}{self.config.base_uri}/'
         if self.config.no_xmlrpc:
             self.uri = uri
+            self.trac = None
         else:
             self.trac = offtrac.TracServer(uri + 'login/xmlrpc')
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: TracConfig) -> str:
         return f"https://{config.username}@{config.base_uri}/"
 
-    def annotations(self, issue):
+    def annotations(self, issue: dict[str, Any]) -> list[str]:
         annotations = []
         # without offtrac, we can't get issue comments
         if self.trac is None:
@@ -114,11 +119,10 @@ class TracService(Service):
 
         return self.build_annotations(annotations, issue['url'])
 
-    def get_owner(self, issue):
-        tag, issue = issue
-        return issue.get('owner', None) or None
+    def get_owner(self, issue: tuple[str, dict[str, Any]]) -> str | None:
+        return issue[1].get('owner', None) or None
 
-    def include(self, issue):
+    def include(self, issue: tuple[str, dict[str, Any]]) -> bool:
         """Return true if the issue in question should be included"""
         if self.config.only_if_assigned:
             owner = self.get_owner(issue)
@@ -131,7 +135,7 @@ class TracService(Service):
 
         return True
 
-    def issues(self):
+    def issues(self) -> Iterator[TracIssue]:
         base_url = "https://" + self.config.base_uri
         if self.trac:
             tickets = self.trac.query_tickets('status!=closed&max=0')

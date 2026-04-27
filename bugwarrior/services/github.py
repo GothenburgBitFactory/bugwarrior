@@ -1,7 +1,9 @@
+from collections.abc import Iterator
 import logging
 import re
 import sys
 import typing
+from typing import Any
 import urllib.parse
 
 from pydantic import ValidationInfo, field_validator, model_validator
@@ -11,6 +13,11 @@ from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
 
 log = logging.getLogger(__name__)
+
+# (repo_name, issue_data)
+GithubIssueEntry = tuple[str, dict[str, Any]]
+# {issue_url: (repo_name, issue_data)}
+GithubIssueMap = dict[str, GithubIssueEntry]
 
 
 class GithubConfig(config.ServiceConfig):
@@ -42,7 +49,7 @@ class GithubConfig(config.ServiceConfig):
     ignore_user_comments: config.ConfigList = []
 
     @model_validator(mode='after')
-    def deprecate_password(self):
+    def deprecate_password(self) -> "GithubConfig":
         if self.password != 'Deprecated':
             log.warning(
                 'Basic auth is no longer supported. Please remove '
@@ -51,14 +58,16 @@ class GithubConfig(config.ServiceConfig):
         return self
 
     @model_validator(mode='after')
-    def require_username_or_query(self):
+    def require_username_or_query(self) -> "GithubConfig":
         if not self.username and not self.query:
             raise ValueError('section requires one of:\n    username\n    query')
         return self
 
     @field_validator('issue_urls', mode='after')
     @classmethod
-    def issue_urls_consistent_with_host(cls, value, info: ValidationInfo):
+    def issue_urls_consistent_with_host(
+        cls, value: list[str], info: ValidationInfo
+    ) -> list[str]:
         issue_url_paths = []
 
         # host can be None if it raised a ValidationError (e.g. if it has a scheme)
@@ -78,7 +87,7 @@ class GithubConfig(config.ServiceConfig):
         return issue_url_paths
 
     @model_validator(mode='after')
-    def require_username_if_include_user_repos(self):
+    def require_username_if_include_user_repos(self) -> "GithubConfig":
         if self.include_user_repos and not self.username:
             raise ValueError(
                 'username required when include_user_repos is True (default)'
@@ -87,7 +96,7 @@ class GithubConfig(config.ServiceConfig):
 
 
 class GithubClient(Client):
-    def __init__(self, host, auth):
+    def __init__(self, host: str, auth: dict[str, Any]) -> None:
         self.host = host
         self.auth = auth
         self.session = requests.Session()
@@ -99,7 +108,7 @@ class GithubClient(Client):
         if 'basic' in self.auth:
             self.kwargs['auth'] = self.auth['basic']
 
-    def _api_url(self, path, **context):
+    def _api_url(self, path: str, **context: Any) -> str:
         """Build the full url to the API endpoint"""
         if self.host == 'github.com':
             baseurl = "https://api.github.com"
@@ -107,25 +116,25 @@ class GithubClient(Client):
             baseurl = f"https://{self.host}/api/v3"
         return baseurl + path.format(**context)
 
-    def get_repos(self, username):
+    def get_repos(self, username: str) -> list[Any]:
         user_repos = self._getter(self._api_url("/user/repos?per_page=100"))
         public_repos = self._getter(
             self._api_url("/users/{username}/repos?per_page=100", username=username)
         )
         return user_repos + public_repos
 
-    def get_query(self, query):
+    def get_query(self, query: str) -> list[Any]:
         """Run a generic issue/PR query"""
         url = self._api_url("/search/issues?q={query}&per_page=100", query=query)
         return self._getter(url, subkey='items')
 
-    def get_issues(self, username, repo):
+    def get_issues(self, username: str, repo: str) -> list[Any]:
         url = self._api_url(
             "/repos/{username}/{repo}/issues?per_page=100", username=username, repo=repo
         )
         return self._getter(url)
 
-    def get_directly_assigned_issues(self):
+    def get_directly_assigned_issues(self) -> list[Any]:
         """Returns all issues assigned to authenticated user.
 
         List issues assigned to the authenticated user across all visible
@@ -135,13 +144,13 @@ class GithubClient(Client):
         url = self._api_url("/issues?per_page=100")
         return self._getter(url)
 
-    def get_issue_for_url_path(self, url_path):
+    def get_issue_for_url_path(self, url_path: str) -> dict[str, Any]:
         # The pull request url is '/pull/' but the api path is '/pulls/'.
         api_path = re.sub(r'pull(?=/[0-9]*$)', 'pulls', url_path)
         url = self._api_url(f'/repos{api_path}')
         return self.json_response(self._request(url))
 
-    def get_comments(self, username, repo, number):
+    def get_comments(self, username: str, repo: str, number: int) -> list[Any]:
         url = self._api_url(
             "/repos/{username}/{repo}/issues/{number}/comments?per_page=100",
             username=username,
@@ -150,13 +159,13 @@ class GithubClient(Client):
         )
         return self._getter(url)
 
-    def get_pulls(self, username, repo):
+    def get_pulls(self, username: str, repo: str) -> list[Any]:
         url = self._api_url(
             "/repos/{username}/{repo}/pulls?per_page=100", username=username, repo=repo
         )
         return self._getter(url)
 
-    def _getter(self, url, subkey=None):
+    def _getter(self, url: str, subkey: str | None = None) -> list[Any]:
         """Pagination utility.  Obnoxious."""
         results = []
         link = dict(next=url)
@@ -174,7 +183,7 @@ class GithubClient(Client):
 
         return results
 
-    def _request(self, url):
+    def _request(self, url: str) -> requests.Response:
         response = self.session.get(url, **self.kwargs)
 
         # Warn about the mis-leading 404 error code.  See:
@@ -190,7 +199,7 @@ class GithubClient(Client):
         return response
 
     @staticmethod
-    def _link_field_to_dict(field):
+    def _link_field_to_dict(field: str | None) -> dict[str, str]:
         """Utility for ripping apart github's Link header field.
         It's kind of ugly.
         """
@@ -238,7 +247,7 @@ class GithubIssue(Issue):
     }
     UNIQUE_KEY = (URL, TYPE)
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         milestone = self.record['milestone']
         if milestone:
             milestone = milestone['title']
@@ -270,11 +279,11 @@ class GithubIssue(Issue):
             self.DRAFT: int(self.record.get('draft', 0)),
         }
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         labels = [label['name'] for label in self.record.get('labels', [])]
         return self.get_tags_from_labels(labels)
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record['title'],
             url=self.record['html_url'],
@@ -283,29 +292,31 @@ class GithubIssue(Issue):
         )
 
 
-class GithubService(Service):
+class GithubService(Service[GithubIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = GithubIssue
     CONFIG_SCHEMA = GithubConfig
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: GithubConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
 
         auth = {'token': self.get_secret('token', self.config.login)}
         self.client = GithubClient(self.config.host, auth)
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: GithubConfig) -> str:
         return f"github://{config.login}@{config.host}/{config.username}"
 
-    def get_owned_repo_issues(self, tag):
+    def get_owned_repo_issues(self, tag: str) -> GithubIssueMap:
         """Grab all the issues"""
         issues = {}
         for issue in self.client.get_issues(*tag.split('/')):
             issues[issue['url']] = (tag, issue)
         return issues
 
-    def get_query(self, query):
+    def get_query(self, query: str) -> GithubIssueMap:
         """Grab all issues matching a github query"""
         issues = {}
         for issue in self.client.get_query(query):
@@ -318,14 +329,14 @@ class GithubService(Service):
                 issues[url] = (repo, issue)
         return issues
 
-    def get_directly_assigned_issues(self):
+    def get_directly_assigned_issues(self) -> GithubIssueMap:
         issues = {}
         for issue in self.client.get_directly_assigned_issues():
             repo = self.get_repository_from_issue(issue)
             issues[issue['url']] = (repo, issue)
         return issues
 
-    def get_issues_by_url(self):
+    def get_issues_by_url(self) -> GithubIssueMap:
         issues = {}
         for url_path in self.config.issue_urls:
             issue = self.client.get_issue_for_url_path(url_path)
@@ -336,7 +347,7 @@ class GithubService(Service):
         return issues
 
     @classmethod
-    def get_repository_from_issue(cls, issue):
+    def get_repository_from_issue(cls, issue: dict[str, Any]) -> str:
         if 'repo' in issue:
             return issue['repo']
         if 'repos_url' in issue:
@@ -350,11 +361,11 @@ class GithubService(Service):
             raise ValueError(f"Unrecognized URL: {url}.")
         return tag.group(1)
 
-    def _comments(self, tag, number):
+    def _comments(self, tag: str, number: int) -> list[Any]:
         user, repo = tag.split('/')
         return self.client.get_comments(user, repo, number)
 
-    def annotations(self, tag, issue):
+    def annotations(self, tag: str, issue: dict[str, Any]) -> list[str]:
         url = issue['html_url']
         annotations = []
         if self.main_config.annotation_comments:
@@ -369,7 +380,7 @@ class GithubService(Service):
                 annotations.append((login, c['body']))
         return self.build_annotations(annotations, url)
 
-    def body(self, issue):
+    def body(self, issue: dict[str, Any]) -> str | None:
         body = issue['body']
 
         if body:
@@ -379,25 +390,25 @@ class GithubService(Service):
 
         return body
 
-    def _reqs(self, tag):
+    def _reqs(self, tag: str) -> list[tuple[str, Any]]:
         """Grab all the pull requests"""
         return [(tag, i) for i in self.client.get_pulls(*tag.split('/'))]
 
-    def get_owner(self, issue):
+    def get_owner(self, issue: GithubIssueEntry) -> str | None:
         if issue[1]['assignee']:
             return issue[1]['assignee']['login']
 
-    def filter_issues(self, issue):
+    def filter_issues(self, issue: Any) -> bool:
         repo, _ = issue
         return self.filter_repo_name(repo.split('/')[-3])
 
-    def filter_repos(self, repo):
+    def filter_repos(self, repo: dict[str, Any]) -> bool:
         if repo['owner']['login'] != self.config.username:
             return False
 
         return self.filter_repo_name(repo['name'])
 
-    def filter_repo_name(self, name):
+    def filter_repo_name(self, name: str) -> bool:
         if name in self.config.exclude_repos:
             return False
 
@@ -409,7 +420,7 @@ class GithubService(Service):
 
         return True
 
-    def include(self, issue):
+    def include(self, issue: GithubIssueEntry) -> bool:
         """Return true if the issue in question should be included"""
         if 'pull_request' in issue[1]:
             if self.config.exclude_pull_requests:
@@ -428,7 +439,7 @@ class GithubService(Service):
 
         return True
 
-    def issues(self):
+    def issues(self) -> Iterator[GithubIssue]:
         issues = {}
         if self.config.query:
             issues.update(self.get_query(self.config.query))

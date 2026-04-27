@@ -1,12 +1,14 @@
+from collections.abc import Iterator
 import json
 import logging
 import typing
+from typing import Any
 
 import requests
 import requests.auth
 
 from bugwarrior import config
-from bugwarrior.services import Client, Issue, Service
+from bugwarrior.services import Issue, Service
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ class GerritIssue(Issue):
     }
     UNIQUE_KEY = (URL,)
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         return {
             'project': self.record['project'],
             'annotations': self.extra['annotations'],
@@ -60,7 +62,7 @@ class GerritIssue(Issue):
             self.WORK_IN_PROGRESS: int(self.record.get('work_in_progress', 0)),
         }
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         return self.build_default_description(
             title=self.record['subject'],
             url=self.extra['url'],
@@ -69,13 +71,15 @@ class GerritIssue(Issue):
         )
 
 
-class GerritService(Service, Client):
+class GerritService(Service[GerritIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = GerritIssue
     CONFIG_SCHEMA = GerritConfig
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(
+        self, config: GerritConfig, main_config: config.MainSectionConfig
+    ) -> None:
+        super().__init__(config, main_config)
         self.password = self.get_secret('password', self.config.username)
         self.session = requests.session()
         self.session.headers.update(
@@ -99,10 +103,10 @@ class GerritService(Service, Client):
             )
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: GerritConfig) -> str:
         return f"gerrit://{config.base_uri}"
 
-    def issues(self):
+    def issues(self) -> Iterator[GerritIssue]:
         # Construct the whole url by hand here, because otherwise requests will
         # percent-encode the ':' characters, which gerrit doesn't like.
         url = self.config.base_uri + '/a/changes/?q=' + self.query_string
@@ -119,10 +123,10 @@ class GerritService(Service, Client):
             }
             yield self.get_issue_for_record(change, extra)
 
-    def build_url(self, change):
+    def build_url(self, change: dict[str, Any]) -> str:
         return '%s/#/c/%i/' % (self.config.base_uri, change['_number'])
 
-    def annotations(self, change):
+    def annotations(self, change: dict[str, Any]) -> list[str]:
         entries = []
         for item in change['messages']:
             for key in ['name', 'username', 'email']:

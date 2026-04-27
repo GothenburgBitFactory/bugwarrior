@@ -6,7 +6,9 @@ Pulls trello cards as tasks.
 Trello API documentation available at https://developers.trello.com/
 """
 
+from collections.abc import Iterator
 import typing
+from typing import Any
 
 import requests
 
@@ -50,7 +52,7 @@ class TrelloIssue(Issue):
     }
     UNIQUE_KEY = (CARDID,)
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         """Return the old-style verbose description from bugwarrior."""
         return self.build_default_description(
             title=self.record['name'],
@@ -59,12 +61,12 @@ class TrelloIssue(Issue):
             cls='task',
         )
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(
             [label['name'] for label in self.record['labels']]
         )
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         return {
             'project': self.extra['boardname'],
             'due': self.parse_date(self.record['due']),
@@ -83,16 +85,16 @@ class TrelloIssue(Issue):
         }
 
 
-class TrelloService(Service, Client):
+class TrelloService(Service[TrelloIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = TrelloIssue
     CONFIG_SCHEMA = TrelloConfig
 
     @staticmethod
-    def get_keyring_service(config):
+    def get_keyring_service(config: TrelloConfig) -> str:
         return f"trello://{config.api_key}@trello.com"
 
-    def issues(self):
+    def issues(self) -> Iterator[TrelloIssue]:
         """
         Returns a list of dicts representing issues from a remote service.
         """
@@ -104,7 +106,7 @@ class TrelloService(Service, Client):
                     issue.extra.update({"annotations": self.annotations(card)})
                     yield issue
 
-    def annotations(self, card_json):
+    def annotations(self, card_json: dict[str, Any]) -> list[str]:
         """A wrapper around get_comments that build the taskwarrior
         annotations."""
         comments = self.get_comments(card_json['id'])
@@ -114,7 +116,7 @@ class TrelloService(Service, Client):
         )
         return annotations
 
-    def get_boards(self):
+    def get_boards(self) -> Iterator[dict[str, Any]]:
         """
         Get the list of boards to pull cards from.  If the user gave a value to
         trello.include_boards use that, otherwise ask the Trello API for the
@@ -124,11 +126,12 @@ class TrelloService(Service, Client):
             for boardid in self.config.include_boards:
                 # Get the board name
                 yield self.api_request(f"/1/boards/{boardid}", fields='name')
+
         else:
             boards = self.api_request("/1/members/me/boards", fields='name')
             yield from boards
 
-    def get_lists(self, board):
+    def get_lists(self, board: str) -> list[dict[str, Any]]:
         """
         Returns a list of the filtered lists for the given board
         This filters the trello lists according to the configuration values of
@@ -146,7 +149,7 @@ class TrelloService(Service, Client):
 
         return lists
 
-    def get_cards(self, list_id):
+    def get_cards(self, list_id: str) -> Iterator[dict[str, Any]]:
         """Returns an iterator for the cards in a given list, filtered
         according to configuration values of trello.only_if_assigned and
         trello.also_unassigned"""
@@ -164,7 +167,7 @@ class TrelloService(Service, Client):
             ):
                 yield card
 
-    def get_comments(self, card_id):
+    def get_comments(self, card_id: str) -> Iterator[dict[str, Any]]:
         """Returns an iterator for the comments on a certain card."""
         params = {'filter': 'commentCard', 'memberCreator_fields': 'username'}
         comments = self.api_request(f"/1/cards/{card_id}/actions", **params)
@@ -172,7 +175,7 @@ class TrelloService(Service, Client):
             assert comment['type'] == 'commentCard'
             yield comment
 
-    def api_request(self, url, **params):
+    def api_request(self, url: str, **params: Any) -> Any:
         """
         Make a trello API request. This takes an absolute url (without protocol
         and host) and a list of argumnets and return a GET request with the
@@ -181,4 +184,4 @@ class TrelloService(Service, Client):
         params['key'] = self.config.api_key
         params['token'] = self.get_secret('token')
         url = "https://api.trello.com" + url
-        return self.json_response(requests.get(url, params=params))
+        return Client.json_response(requests.get(url, params=params))
