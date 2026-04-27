@@ -25,7 +25,7 @@ class TeamworkClient(Client):
         self.host = host
         self.token = token
 
-    def _get(self, endpoint: str) -> dict[str, Any]:
+    def get(self, endpoint: str) -> dict[str, Any]:
         response = requests.get(f"{self.host}/{endpoint}", auth=(self.token, ""))
         return self.json_response(response)
 
@@ -102,7 +102,7 @@ class TeamworkService(Service[TeamworkIssue]):
     ) -> None:
         super().__init__(config, main_config)
         self.client = TeamworkClient(self.config.host, self.config.token)
-        user = self.client._get("authenticate.json")
+        user = self.client.get("authenticate.json")
         self.user_id = user["account"]["userId"]
         self.name = user["account"]["firstname"] + " " + user["account"]["lastname"]
 
@@ -114,7 +114,7 @@ class TeamworkService(Service[TeamworkIssue]):
         if self.main_config.annotation_comments:
             if issue.get("comments-count", 0) > 0:
                 endpoint = f"tasks/{issue['id']}/comments.json"
-                comments = self.client._get(endpoint)
+                comments = self.client.get(endpoint)
                 comment_list = []
                 for comment in comments["comments"]:
                     author = "{first} {last}".format(
@@ -127,7 +127,7 @@ class TeamworkService(Service[TeamworkIssue]):
         return []
 
     def issues(self) -> Iterator[TeamworkIssue]:
-        response = self.client._get("tasks.json")
+        response = self.client.get("tasks.json")
         for issue in response["todo-items"]:
             # Determine if issue is need by if following comments, changes or assigned
             if (

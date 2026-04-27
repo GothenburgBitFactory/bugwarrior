@@ -114,7 +114,6 @@ include = ["bugwarrior*"]
 
 [tool.ty.environment]
 python-version = "3.13"
-python = ".venv"
 
 [tool.ty.src]
 exclude = ["tests/", "bugwarrior/docs/"]
