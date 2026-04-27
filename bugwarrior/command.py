@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 from typing import TYPE_CHECKING, Any
+import warnings
 
 import click
 from lockfile import LockTimeout
@@ -110,8 +111,6 @@ def pull(
     Relies on configuration file.
     """
     if interactive:
-        import warnings
-
         warnings.warn(
             "The --interactive flag is deprecated and has no effect. "
             "Interactive mode is now detected automatically via sys.stdin.isatty().",

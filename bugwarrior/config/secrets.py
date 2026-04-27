@@ -1,3 +1,4 @@
+import getpass
 import logging
 import subprocess
 import sys
@@ -19,8 +20,6 @@ def get_keyring() -> ModuleType:
 
 
 def _ask_password(service: str) -> str:
-    import getpass
-
     if not sys.stdin.isatty():
         log.error(
             f"Unable to retrieve password for service {service}. "

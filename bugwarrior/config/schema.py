@@ -138,6 +138,9 @@ class MainSectionConfig(BaseConfig):
     # required
     targets: ConfigList
 
+    #: *DEPRECATED*
+    interactive: bool = True
+
     @computed_field
     @property
     def data(self) -> BugwarriorData:

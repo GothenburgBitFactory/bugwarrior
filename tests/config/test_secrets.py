@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+import keyring.errors
+
 from bugwarrior.config import secrets
 
 
@@ -24,8 +26,6 @@ class TestGetServicePassword(unittest.TestCase):
         If "locked" is True, get_password raises KeyringLocked.
         Otherwise it returns the given password.
         """
-        import keyring.errors
-
         mock = MagicMock()
         if locked:
             mock.get_password.side_effect = keyring.errors.KeyringLocked()
