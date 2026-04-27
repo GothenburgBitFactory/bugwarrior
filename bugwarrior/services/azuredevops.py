@@ -97,7 +97,7 @@ class AzureDevopsClient(Client):
 
         if parent_id:
             parent_item = self.get_work_item(parent_id)
-            return parent_item["fields"]["System.Title"]
+            return parent_item.get("fields", {}).get("System.Title", None)
         else:
             return None
 
