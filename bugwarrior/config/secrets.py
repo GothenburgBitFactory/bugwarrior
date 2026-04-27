@@ -18,9 +18,7 @@ def get_keyring() -> ModuleType:
     return keyring
 
 
-def get_service_password(
-    service: str, username: str, oracle: str | None = None, interactive: bool = False
-) -> str:
+def get_service_password(service: str, username: str, oracle: str | None = None) -> str:
     """
     Retrieve the sensitive password for a service by:
 
@@ -31,6 +29,7 @@ def get_service_password(
 
     Note that the keyring may or may not be locked
     which requires that the user provides a password (interactive mode).
+    Interactive mode is detected automatically via sys.stdin.isatty().
 
     :param service:     Service name, may be key into secure store (as string).
     :param username:    Username for the service (as string).
@@ -42,6 +41,7 @@ def get_service_password(
     """
     import getpass
 
+    interactive = sys.stdin.isatty()
     password = None
     if not oracle or oracle == "@oracle:use_keyring":
         keyring = get_keyring()
@@ -49,13 +49,13 @@ def get_service_password(
         if interactive and password is None:
             # -- LEARNING MODE: Password is not stored in keyring yet.
             oracle = "@oracle:ask_password"
-            password = get_service_password(service, username, oracle, interactive=True)
+            password = get_service_password(service, username, oracle)
             if password:
                 keyring.set_password(service, username, password)
         elif not interactive and password is None:
             log.error(
                 'Unable to retrieve password from keyring. '
-                'Re-run in interactive mode to set a password'
+                'Not running in an interactive terminal; cannot prompt for password.'
             )
     elif interactive and oracle == "@oracle:ask_password":
         prompt = "%s password: " % service
@@ -67,7 +67,7 @@ def get_service_password(
     if password is None:
         log.critical(
             "MISSING PASSWORD: oracle='%s', interactive=%s for service=%s"
-            % (oracle, interactive, service)
+            % (oracle, sys.stdin.isatty(), service)
         )
         sys.exit(1)
     return password

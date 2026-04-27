@@ -17,10 +17,7 @@ that long.""".replace('\n', ' ')
 class ServiceBase(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = {
-            'general': {'targets': ['test'], 'interactive': 'false'},
-            'test': {'service': 'test'},
-        }
+        self.config = {'general': {'targets': ['test']}, 'test': {'service': 'test'}}
 
     def makeService(self):
         with unittest.mock.patch(

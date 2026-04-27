@@ -37,7 +37,7 @@ class ExampleTest(ConfigTest):
         for rcfile in ('example-bugwarriorrc', 'example-bugwarrior.toml'):
             with self.subTest(rcfile=rcfile):
                 os.environ['BUGWARRIORRC'] = str(self.basedir / rcfile)
-                load.load_config('general', False, False)
+                load.load_config('general', False)
 
 
 class TestGetConfigPath(LoadTest):
@@ -282,12 +282,7 @@ class TestLoadConfig(LoadTest):
             )
 
         with self.assertRaises(SystemExit):
-            load.load_config("general", False, False)
+            load.load_config("general", False)
 
         self.assertEqual(len(self.caplog.records), 1)
         self.assertIn("No section: 'general'", self.caplog.records[0].message)
-
-    def test_interactive_flag_propagated(self):
-        os.environ['BUGWARRIORRC'] = str(self.basedir / 'example-bugwarriorrc')
-        config = load.load_config('general', interactive=True, quiet=False)
-        self.assertTrue(config.main.interactive)

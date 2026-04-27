@@ -138,10 +138,6 @@ class MainSectionConfig(BaseConfig):
     # required
     targets: ConfigList
 
-    # added during configuration loading
-    #: Interactive status.
-    interactive: bool
-
     @computed_field
     @property
     def data(self) -> BugwarriorData:

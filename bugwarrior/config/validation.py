@@ -191,7 +191,7 @@ def validate_config(config: dict, main_section: str, config_path: str) -> "Confi
                 f"[{flavor_name}]\ntargets = {flavor.targets}  <- No [{target}] section found\n"
             )
 
-    main = flavors.get(main_section, MainSectionConfig(targets=[], interactive=False))
+    main = flavors.get(main_section, MainSectionConfig(targets=[]))
     filtered_service_configs = [
         service_config
         for service_config in service_configs

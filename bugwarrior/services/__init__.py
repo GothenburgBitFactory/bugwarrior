@@ -286,10 +286,7 @@ class Service(abc.ABC, Generic[T_Issue]):
         keyring_service = self.get_keyring_service(self.config)
         if not password or password.startswith("@oracle:"):
             password = secrets.get_service_password(
-                keyring_service,
-                login,
-                oracle=password,
-                interactive=self.main_config.interactive,
+                keyring_service, login, oracle=password
             )
         return password
 

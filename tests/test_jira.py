@@ -26,7 +26,7 @@ class testJiraService(ConfigTest):
     def setUp(self):
         super().setUp()
         self.config = {
-            'general': {'targets': ['myjira'], 'interactive': 'false'},
+            'general': {'targets': ['myjira']},
             'myjira': {
                 'service': 'jira',
                 'base_uri': 'https://example.com',

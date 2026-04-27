@@ -29,11 +29,9 @@ def _get_section_name(flavor: str | None) -> str:
     return 'general'
 
 
-def _try_load_config(
-    main_section: str, interactive: bool = False, quiet: bool = False
-) -> "Config":
+def _try_load_config(main_section: str, quiet: bool = False) -> "Config":
     try:
-        return load_config(main_section, interactive, quiet)
+        return load_config(main_section, quiet)
     except OSError:
         # Our standard logging configuration depends on the bugwarrior
         # configuration file which just failed to load.
@@ -94,7 +92,11 @@ def cli() -> None:
 @cli.command()
 @click.option('--dry-run', is_flag=True)
 @click.option('--flavor', default=None, help='The flavor to use')
-@click.option('--interactive', is_flag=True)
+@click.option(
+    '--interactive',
+    is_flag=True,
+    help='Deprecated. Interactive mode is now detected automatically via isatty().',
+)
 @click.option(
     '--debug', is_flag=True, help='Do not use multiprocessing (which breaks pdb).'
 )
@@ -107,10 +109,19 @@ def pull(
 
     Relies on configuration file.
     """
+    if interactive:
+        import warnings
+
+        warnings.warn(
+            "The --interactive flag is deprecated and has no effect. "
+            "Interactive mode is now detected automatically via sys.stdin.isatty().",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     try:
         main_section = _get_section_name(flavor)
-        config = _try_load_config(main_section, interactive, quiet)
+        config = _try_load_config(main_section, quiet)
 
         lockfile_path = os.path.join(config.main.data.path, 'bugwarrior.lockfile')
         lockfile = PIDLockFile(lockfile_path)
