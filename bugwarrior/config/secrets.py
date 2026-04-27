@@ -18,6 +18,19 @@ def get_keyring() -> ModuleType:
     return keyring
 
 
+def _ask_password(service: str) -> str:
+    import getpass
+
+    if not sys.stdin.isatty():
+        log.error(
+            f"Unable to retrieve password for service {service}. "
+            "Not running in an interactive terminal; cannot prompt for password."
+        )
+        sys.exit(1)
+
+    return getpass.getpass(f"{service} password: ")
+
+
 def get_service_password(service: str, username: str, oracle: str | None = None) -> str:
     """
     Retrieve the sensitive password for a service by:
@@ -31,46 +44,46 @@ def get_service_password(service: str, username: str, oracle: str | None = None)
     which requires that the user provides a password (interactive mode).
     Interactive mode is detected automatically via sys.stdin.isatty().
 
-    :param service:     Service name, may be key into secure store (as string).
-    :param username:    Username for the service (as string).
-    :param oracle:      Hint which password oracle strategy to use.
-    :return: Retrieved password (as string)
-
     .. seealso::
         https://bitbucket.org/kang/python-keyring-lib
     """
-    import getpass
 
-    interactive = sys.stdin.isatty()
-    password = None
-    if not oracle or oracle == "@oracle:use_keyring":
-        keyring = get_keyring()
-        password = keyring.get_password(service, username)
-        if interactive and password is None:
-            # -- LEARNING MODE: Password is not stored in keyring yet.
-            oracle = "@oracle:ask_password"
-            password = get_service_password(service, username, oracle)
-            if password:
-                keyring.set_password(service, username, password)
-        elif not interactive and password is None:
-            log.error(
-                'Unable to retrieve password from keyring. '
-                'Not running in an interactive terminal; cannot prompt for password.'
+    oracle = oracle.removeprefix("@oracle:") if oracle else "use_keyring"
+
+    match oracle:
+        case "ask_password":
+            return _ask_password(service)
+
+        case "use_keyring":
+            keyring = get_keyring()
+            try:
+                password = keyring.get_password(service, username)
+            except keyring.errors.KeyringLocked:
+                # keyring unlocking failed.
+                # TODO we should probably have a timeout, otherwise the dialog could block
+                log.error(
+                    f"Keyring is locked for service {service}. "
+                    "Unlock your keyring and try again."
+                )
+                sys.exit(1)
+
+            if password is not None:
+                return password
+
+            # LEARNING MODE: password not in keyring yet, prompt and store it.
+            log.info(
+                f"password for {service} is not in keyring, trying to ask for new password"
             )
-    elif interactive and oracle == "@oracle:ask_password":
-        prompt = "%s password: " % service
-        password = getpass.getpass(prompt)
-    elif oracle.startswith('@oracle:eval:'):
-        command = oracle[13:]
-        return oracle_eval(command)
+            password = _ask_password(service)
+            keyring.set_password(service, username, password)
+            return password
 
-    if password is None:
-        log.critical(
-            "MISSING PASSWORD: oracle='%s', interactive=%s for service=%s"
-            % (oracle, sys.stdin.isatty(), service)
-        )
-        sys.exit(1)
-    return password
+        case _:
+            if not oracle.startswith("eval:"):
+                log.error(f"Unknown oracle for service {service}: {oracle}")
+                sys.exit(1)
+
+            return oracle_eval(oracle.removeprefix("eval:"))
 
 
 def oracle_eval(command: str) -> str:
