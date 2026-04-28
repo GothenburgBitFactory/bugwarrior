@@ -103,7 +103,6 @@ class ConfigTest(unittest.TestCase):
     def validate(self) -> validation.Config:
         config = self.config.copy()
         config['general'] = config.get('general', {})
-        config['general']['interactive'] = False
         formatted_config = format_config(config)
         return validation.validate_config(formatted_config, 'general', 'configpath')
 
@@ -121,11 +120,7 @@ class ConfigTest(unittest.TestCase):
 
 
 class ServiceTest(ConfigTest):
-    GENERAL_CONFIG = {
-        'interactive': False,
-        'annotation_length': 100,
-        'description_length': 100,
-    }
+    GENERAL_CONFIG = {'annotation_length': 100, 'description_length': 100}
     SERVICE_CONFIG = {}
 
     @classmethod

@@ -138,9 +138,8 @@ class MainSectionConfig(BaseConfig):
     # required
     targets: ConfigList
 
-    # added during configuration loading
-    #: Interactive status.
-    interactive: bool
+    #: *DEPRECATED*
+    interactive: bool = True
 
     @computed_field
     @property

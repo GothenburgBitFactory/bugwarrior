@@ -16,7 +16,7 @@ class TestTemplates(ServiceTest):
         config = DumbConfig(
             target='dummy', add_tags=add_tags if add_tags else [], **template_kwargs
         )
-        main_config = MainSectionConfig(interactive=False, targets=[])
+        main_config = MainSectionConfig(targets=[])
 
         issue = DumbIssue({}, config, main_config, {})
         issue.to_taskwarrior = lambda: (

@@ -33,7 +33,7 @@ class TestTrelloIssue(ServiceTest):
             target="mytrello",
         )
         main_config = MainSectionConfig(
-            interactive=False, targets=[], inline_links=True, description_length=31
+            targets=[], inline_links=True, description_length=31
         )
         extra = {'boardname': 'Hyperspatial express route', 'listname': 'Something'}
         self.issue = TrelloIssue(self.JSON, config, main_config, extra)

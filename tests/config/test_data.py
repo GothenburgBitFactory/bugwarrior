@@ -42,7 +42,7 @@ class TestGetDataPath(ConfigTest):
     def setUp(self):
         super().setUp()
         rawconfig = {
-            'general': {'targets': ['my_service'], 'interactive': False},
+            'general': {'targets': ['my_service']},
             'my_service': {
                 'service': 'github',
                 'login': 'ralphbean',
