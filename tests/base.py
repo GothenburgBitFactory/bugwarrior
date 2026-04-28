@@ -94,7 +94,9 @@ class ConfigTest(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.tempdir, ignore_errors=True)
-        os.environ = self.old_environ
+
+        os.environ.clear()
+        os.environ.update(self.old_environ)
 
     @pytest.fixture(autouse=True)
     def inject_fixtures(self, caplog):
