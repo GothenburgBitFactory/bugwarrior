@@ -93,11 +93,11 @@ class AzureDevopsClient(Client):
         return resp.json().get("comments", None)
 
     def get_parent_name(self, workitem: dict[str, Any]) -> str | None:
-        parent_id = workitem.get("fields", {}).get("System.Parent", None)
+        parent_id = workitem.get("fields", {}).get("System.Parent")
 
         if parent_id:
             parent_item = self.get_work_item(parent_id)
-            return parent_item["fields"]["System.Title"]
+            return parent_item.get("fields", {}).get("System.Title")
         else:
             return None
 
