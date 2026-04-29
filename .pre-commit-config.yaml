@@ -1,2 +1,22 @@
 ci: {}
-repos: []
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: scripts/run.sh ruff format --force-exclude --check
+        language: system
+        types_or: [python, pyi]
+
+      - id: ruff-lint
+        name: ruff lint
+        entry: scripts/run.sh ruff check --force-exclude
+        language: system
+        types_or: [python, pyi]
+
+      - id: ty
+        name: ty check
+        entry: scripts/run.sh ty check
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false
