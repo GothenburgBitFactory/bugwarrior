@@ -45,7 +45,7 @@ class Config(SphinxDirective):
 
         toml = self._make_tab('toml')
 
-        return [ini, toml]
+        return [toml, ini]
 
 
 def setup(app):
