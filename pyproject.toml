@@ -135,8 +135,7 @@ docs = [
 ]
 test = [
     {include-group = "docs"},
-    "pytest",
-    "pytest-subtests",
+    "pytest>=9",
     "responses",
     # ruff and ty are required by tests/test_general.py
     "ruff",
