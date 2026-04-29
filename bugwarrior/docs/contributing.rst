@@ -71,6 +71,28 @@ separately, but you may find it convenient to run ``ruff check``, ``ruff
 format``, and ``ty check``, or integrate `ruff <https://docs.astral.sh/ruff/editors/setup/>`_
 and `ty <https://docs.astral.sh/ty/editors/>`_ with your editor.
 
+Optionally, you can install the provided hooks to have ruff and ty run
+automatically before each commit. The hooks use `prek <https://github.com/j178/prek>`_
+(or `pre-commit <https://pre-commit.com/>`_ as an alternative):
+
+.. tab:: pip
+
+   .. code-block:: bash
+
+    $ pip install prek
+    $ prek install
+
+.. tab:: uv
+
+   .. code-block:: bash
+
+    $ uv tool install prek
+    $ prek install
+
+The hooks use ``scripts/run.sh`` to invoke ruff and ty from the project's
+virtualenv (via ``uv run`` for uv users, or ``.venv`` for pip users), so they
+always run the same versions as the test suite.
+
 Making a pull request
 ---------------------
 
