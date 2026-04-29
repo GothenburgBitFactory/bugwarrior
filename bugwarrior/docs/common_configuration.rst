@@ -1,7 +1,7 @@
 How to Configure
 ================
 
-Bugwarrior's configuration file can be written either in `ini <https://en.wikipedia.org/wiki/INI_file#Format>`_ or `toml <https://toml.io>`_ format. See :ref:`the man page <configuration-files>` to determine the name and location of this file.
+Bugwarrior's configuration file can be written in `toml <https://toml.io>`_ (recommended) or `ini <https://en.wikipedia.org/wiki/INI_file#Format>`_ format. See :ref:`the man page <configuration-files>` to determine the name and location of this file.
 
 A basic configuration might look like this:
 
