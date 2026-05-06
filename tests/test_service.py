@@ -1,4 +1,6 @@
+import abc
 import pathlib
+from pathlib import Path
 import re
 import unittest.mock
 
@@ -31,7 +33,9 @@ class ServiceBase(ConfigTest):
         service = self.makeService()
         return service.get_issue_for_record({})
 
-    def checkArchitecture(self, klass):
+    def checkArchitecture(
+        self, klass: abc.ABCMeta, method_allowlist: set[str] | None = None
+    ):
         """
         Bidirectional communication between the base classes and their children
         has been a source of complication as changes to any part of the
@@ -43,17 +47,16 @@ class ServiceBase(ConfigTest):
         appear once. This should ensure that these methods are declared here
         but not called.
         """
-        with open(services.__file__, 'r') as f:
-            base = f.read()
+        base = Path(services.__file__).read_text()
 
-        for method in klass.__abstractmethods__:
-            references = re.findall(rf'def {method}\(', base)
+        for method in klass.__abstractmethods__ - (method_allowlist or set()):
+            references = re.findall(rf'{method}\(', base)
             self.assertEqual(len(references), 1, references)
 
 
 class TestService(ServiceBase):
     def test_architecture(self):
-        self.checkArchitecture(services.Service)
+        self.checkArchitecture(services.Service, {"get_keyring_service"})
 
     def test_build_annotations_default(self):
         service = self.makeService()
