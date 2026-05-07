@@ -30,25 +30,6 @@ def get_normalized_annotation(annotation: str) -> str:
     return re.sub(r'[\W_]', '', str(annotation))
 
 
-def get_annotation_hamming_distance(left: str, right: str) -> int:
-    left = get_normalized_annotation(left)
-    right = get_normalized_annotation(right)
-    if len(left) > len(right):
-        left = left[0 : len(right)]
-    elif len(right) > len(left):
-        right = right[0 : len(left)]
-    return hamdist(left, right)
-
-
-def hamdist(str1: str, str2: str) -> int:
-    """Count the # of differences between equal length strings str1 and str2"""
-    diffs = 0
-    for ch1, ch2 in zip(str1, str2):
-        if ch1 != ch2:
-            diffs += 1
-    return diffs
-
-
 def get_managed_task_uuids(
     tw: TaskWarriorShellout, key_list: dict[str, list[str]]
 ) -> set[str]:
@@ -234,7 +215,11 @@ def merge_left(
         for local in local_field:
             if (
                 # For annotations, they don't have to match *exactly*.
-                (hamming and get_annotation_hamming_distance(remote, local) == 0)
+                (
+                    hamming
+                    and get_normalized_annotation(remote)
+                    == get_normalized_annotation(local)
+                )
                 # But for everything else, they should.
                 or (remote == local)
             ):
