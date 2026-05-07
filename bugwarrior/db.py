@@ -4,7 +4,7 @@ import json
 import logging
 import re
 import subprocess
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
@@ -31,13 +31,13 @@ def get_normalized_annotation(annotation: str) -> str:
 
 
 def get_managed_task_uuids(
-    tw: TaskWarriorShellout, key_list: dict[str, list[str]]
+    tw: TaskWarriorShellout, key_lists: Iterable[Iterable[str]]
 ) -> set[str]:
     expected_task_ids = set()
-    for keys in key_list.values():
+    for key_list in key_lists:
         tasks = tw.filter_tasks(
             {
-                'and': [('%s.any' % key, None) for key in keys],
+                'and': [('%s.any' % key, None) for key in key_list],
                 'or': [('status', 'pending'), ('status', 'waiting')],
             }
         )
@@ -46,21 +46,23 @@ def get_managed_task_uuids(
     return expected_task_ids
 
 
-def make_unique_identifier(keys: dict[str, list[str]], issue: dict[str, Any]) -> str:
+def make_unique_identifier(
+    key_lists: Iterable[list[str]], issue: dict[str, Any]
+) -> str:
     """For a given issue, make an identifier from its unique keys.
 
     This is not the same as the taskwarrior uuid, which is assigned
     only once the task is created.
     """
-    for service, key_list in keys.items():
-        if all([key in issue for key in key_list]):
+    for key_list in key_lists:
+        if all(key in issue for key in key_list):
             subset = {key: issue[key] for key in key_list}
             return json.dumps(subset, sort_keys=True)
     raise RuntimeError("Could not determine unique identifier for %s" % issue)
 
 
 def find_taskwarrior_uuid(
-    tw: TaskWarriorShellout, keys: dict[str, list[str]], issue: dict[str, Any]
+    tw: TaskWarriorShellout, key_lists: Iterable[Sequence[str]], issue: dict[str, Any]
 ) -> str:
     """For a given issue issue, find its local taskwarrior UUID.
 
@@ -97,8 +99,8 @@ def find_taskwarrior_uuid(
 
     possibilities = set()
 
-    for service, key_list in keys.items():
-        if any([key in issue for key in key_list]):
+    for key_list in key_lists:
+        if any(key in issue for key in key_list):
             results = tw.filter_tasks(
                 {
                     'and': [("%s.is" % key, issue[key]) for key in key_list],
@@ -250,7 +252,7 @@ def synchronize(
     dry_run: bool = False,
 ) -> None:
     services = [service_config.service for service_config in conf.service_configs]
-    key_list = build_key_list(services)
+    key_lists = build_key_lists(services)
     uda_list = build_uda_config_overrides(services)
 
     if uda_list:
@@ -285,7 +287,7 @@ def synchronize(
             continue
 
         # De-duplicate issues coming in
-        unique_identifier = make_unique_identifier(key_list, issue)
+        unique_identifier = make_unique_identifier(key_lists, issue)
         if unique_identifier in issue_map:
             log.debug(f"Merging tags and skipping. Seen {unique_identifier} of {issue}")
             # Merge and deduplicate tags.
@@ -318,7 +320,7 @@ def synchronize(
         service_config = successful_config_map[issue.pop('target')]
 
         try:
-            existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_list, issue)
+            existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_lists, issue)
         except MultipleMatches as e:
             log.exception("Multiple matches: %s", str(e))
         except NotFound:  # Create new task
@@ -408,7 +410,7 @@ def synchronize(
     log.debug(f'Closing tasks for succeeding services: {list(successful_config_map)}.')
     succeeded_service_task_uuids = get_managed_task_uuids(
         tw,
-        build_key_list(
+        build_key_lists(
             service_config.service for service_config in successful_config_map.values()
         ),
     )
@@ -455,10 +457,8 @@ def synchronize(
             )
 
 
-def build_key_list(services: Iterable[str]) -> dict[str, list[str]]:
-    return {
-        service: get_service(service).ISSUE_CLASS.UNIQUE_KEY for service in services
-    }
+def build_key_lists(services: Iterable[str]) -> set[tuple[str, ...]]:
+    return {get_service(service).ISSUE_CLASS.UNIQUE_KEY for service in services}
 
 
 def get_defined_udas_as_strings(conf: "Config") -> Iterator[str]:
