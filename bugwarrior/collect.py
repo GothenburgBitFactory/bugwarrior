@@ -1,7 +1,8 @@
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 import copy
 from functools import cache
 from importlib.metadata import entry_points
+import json
 import logging
 import multiprocessing
 import time
@@ -9,6 +10,8 @@ from typing import TYPE_CHECKING, Any
 
 from jinja2 import Template
 from taskw.task import Task
+
+from bugwarrior.types import CollectedIssue, CollectionErrorData, TaskwarriorData
 
 if TYPE_CHECKING:
     from bugwarrior.config.validation import Config
@@ -81,7 +84,9 @@ def _aggregate_issues(service: "Service", queue: multiprocessing.Queue) -> None:
         log.info(f"Done with [{target}] in {duration}.")
 
 
-def aggregate_issues(conf: "Config", debug: bool) -> Iterator[dict | tuple[str, str]]:
+def aggregate_issues(
+    conf: "Config", debug: bool
+) -> Iterator[CollectedIssue | CollectionErrorData]:
     """Return all issues from every target."""
     log.info("Starting to aggregate remote issues.")
 
@@ -111,8 +116,7 @@ def aggregate_issues(conf: "Config", debug: bool) -> Iterator[dict | tuple[str, 
     while currently_running > 0:
         issue = queue.get(True)
         try:
-            record = TaskConstructor(issue).get_taskwarrior_record()
-            record['target'] = issue.config.target
+            record = TaskConstructor(issue).get_data_to_sync()
             yield record
         except AttributeError:
             if isinstance(issue, tuple):
@@ -120,11 +124,24 @@ def aggregate_issues(conf: "Config", debug: bool) -> Iterator[dict | tuple[str, 
                 completion_type, target = issue
                 if completion_type == SERVICE_FINISHED_ERROR:
                     log.error(f"Aborted [{target}] due to critical error.")
-                    yield ('SERVICE FAILED', target)
+                    yield CollectionErrorData('SERVICE FAILED', target)
                 continue
             raise
 
     log.info("Done aggregating remote issues.")
+
+
+# NOTE: should this be a method of Issue instead ?
+def make_unique_identifier(
+    key_list: Iterable[str], taskwarrior_data: TaskwarriorData
+) -> str:
+    """For a given issue, make an identifier from its unique keys.
+
+    This is not the same as the taskwarrior uuid, which is assigned
+    only once the task is created.
+    """
+    subset = {key: taskwarrior_data[key] for key in key_list}
+    return json.dumps(subset, sort_keys=True)
 
 
 class TaskConstructor:
@@ -152,6 +169,10 @@ class TaskConstructor:
             record['tags'] = []
         if refined:
             record['tags'].extend(self.get_added_tags())
+
+        # Blank priority should mean *no* priority
+        if record['priority'] == '':
+            record['priority'] = None
         return record
 
     def get_template_context(self) -> dict[str, Any]:
@@ -168,3 +189,11 @@ class TaskConstructor:
             elif field == 'description':
                 record['description'] = self.issue.get_default_description()
         return record
+
+    def get_data_to_sync(self) -> CollectedIssue:
+        taskwarrior_data = self.get_taskwarrior_record()
+        return CollectedIssue(
+            taskwarrior_data=taskwarrior_data,
+            identifier=make_unique_identifier(self.issue.UNIQUE_KEY, taskwarrior_data),
+            target=self.issue.config.target,
+        )

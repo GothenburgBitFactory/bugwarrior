@@ -4,6 +4,7 @@ import unittest
 import taskw.task
 
 from bugwarrior import db
+from bugwarrior.types import CollectedIssue
 
 from .base import ConfigTest
 
@@ -71,19 +72,8 @@ class TestReplaceLeft(unittest.TestCase):
 
 
 class TestSynchronize(ConfigTest):
-    def test_synchronize(self):
-        def remove_non_deterministic_keys(tasks):
-            for status in ['pending', 'completed']:
-                for task in tasks[status]:
-                    del task['modified']
-                    del task['entry']
-                    del task['uuid']
-                    task['tags'] = sorted(task['tags'])
-            return tasks
-
-        def get_tasks(tw):
-            return remove_non_deterministic_keys(tw.load_tasks())
-
+    def setUp(self):
+        super().setUp()
         self.config = {
             'general': {
                 'targets': ['my_service'],
@@ -97,10 +87,38 @@ class TestSynchronize(ConfigTest):
                 'token': 'abc123',
             },
         }
-        bwconfig = self.validate()
+        self.bwconfig = self.validate()
+        self.tw = taskw.TaskWarrior(self.taskrc)
 
-        tw = taskw.TaskWarrior(self.taskrc)
-        self.assertEqual(tw.load_tasks(), {'completed': [], 'pending': []})
+    def synchronize(self, issues_data):
+
+        issue_generator = [
+            CollectedIssue(
+                taskwarrior_data=copy.deepcopy(issue_data),
+                target="my_service",
+                identifier="abcd",
+            )
+            for issue_data in issues_data
+        ]
+        db.synchronize(iter(issue_generator), self.bwconfig)
+
+    def remove_non_deterministic_keys(self, tasks):
+        for status in ['pending', 'completed']:
+            for task in tasks[status]:
+                del task['modified']
+                del task['entry']
+                del task['uuid']
+                task['tags'] = sorted(task['tags'])
+
+        return tasks
+
+    def get_tasks(self):
+
+        return self.remove_non_deterministic_keys(self.tw.load_tasks())
+
+    def test_synchronize(self):
+
+        self.assertEqual(self.tw.load_tasks(), {'completed': [], 'pending': []})
 
         issue = {
             'description': 'Blah blah blah. ☃',
@@ -109,7 +127,6 @@ class TestSynchronize(ConfigTest):
             'githuburl': 'https://example.com',
             'priority': 'M',
             'tags': ['foo'],
-            'target': 'my_service',
         }
         duplicate_issue = copy.deepcopy(issue)
         duplicate_issue['tags'] = ['bar']
@@ -120,11 +137,10 @@ class TestSynchronize(ConfigTest):
             # These should be de-duplicated in db.synchronize before
             # writing out to taskwarrior.
             # https://github.com/ralphbean/bugwarrior/issues/601
-            issue_generator = iter((copy.deepcopy(issue), duplicate_issue))
-            db.synchronize(issue_generator, bwconfig)
+            self.synchronize([issue, duplicate_issue])
 
             self.assertEqual(
-                get_tasks(tw),
+                self.get_tasks(),
                 {
                     'completed': [],
                     'pending': [
@@ -148,11 +164,10 @@ class TestSynchronize(ConfigTest):
 
         # Change static field
         issue['project'] = 'other_project'
-
-        db.synchronize(iter((copy.deepcopy(issue),)), bwconfig)
+        self.synchronize([issue])
 
         self.assertEqual(
-            get_tasks(tw),
+            self.get_tasks(),
             {
                 'completed': [],
                 'pending': [
@@ -172,11 +187,11 @@ class TestSynchronize(ConfigTest):
         )
 
         # TEST CLOSED ISSUE.
-        db.synchronize(iter(()), bwconfig)
+        self.synchronize([])
 
-        completed_tasks = tw.load_tasks()
+        completed_tasks = self.tw.load_tasks()
 
-        tasks = remove_non_deterministic_keys(copy.deepcopy(completed_tasks))
+        tasks = self.remove_non_deterministic_keys(copy.deepcopy(completed_tasks))
         del tasks['completed'][0]['end']
         self.assertEqual(
             tasks,
@@ -199,14 +214,14 @@ class TestSynchronize(ConfigTest):
         )
 
         # TEST REOPENED ISSUE
-        db.synchronize(iter((copy.deepcopy(issue),)), bwconfig)
+        self.synchronize([issue])
 
-        tasks = tw.load_tasks()
+        tasks = self.tw.load_tasks()
         self.assertEqual(
             completed_tasks['completed'][0]['uuid'], tasks['pending'][0]['uuid']
         )
 
-        tasks = remove_non_deterministic_keys(tasks)
+        tasks = self.remove_non_deterministic_keys(tasks)
         self.assertEqual(
             tasks,
             {

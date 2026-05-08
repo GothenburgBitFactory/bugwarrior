@@ -1,6 +1,5 @@
 from collections.abc import Iterable, Iterator
 import itertools
-import json
 import logging
 import re
 import subprocess
@@ -11,6 +10,7 @@ from taskw.exceptions import TaskwarriorError
 
 from bugwarrior.collect import get_service
 from bugwarrior.notifications import send_notification
+from bugwarrior.types import CollectedIssue, CollectionErrorData
 
 if TYPE_CHECKING:
     from bugwarrior.config.validation import Config
@@ -44,21 +44,6 @@ def get_managed_task_uuids(
         expected_task_ids = expected_task_ids | set([task['uuid'] for task in tasks])
 
     return expected_task_ids
-
-
-def make_unique_identifier(
-    key_lists: Iterable[list[str]], issue: dict[str, Any]
-) -> str:
-    """For a given issue, make an identifier from its unique keys.
-
-    This is not the same as the taskwarrior uuid, which is assigned
-    only once the task is created.
-    """
-    for key_list in key_lists:
-        if all(key in issue for key in key_list):
-            subset = {key: issue[key] for key in key_list}
-            return json.dumps(subset, sort_keys=True)
-    raise RuntimeError("Could not determine unique identifier for %s" % issue)
 
 
 def find_taskwarrior_uuid(
@@ -247,7 +232,7 @@ def run_hooks(pre_import: list[str]) -> None:
 
 
 def synchronize(
-    issue_generator: Iterable[dict | tuple[str, str]],
+    issue_generator: Iterator[CollectedIssue | CollectionErrorData],
     conf: "Config",
     dry_run: bool = False,
 ) -> None:
@@ -279,27 +264,26 @@ def synchronize(
     }
 
     for issue in issue_generator:
-        if isinstance(issue, tuple):
-            assert issue[0] == 'SERVICE FAILED', (
-                "'issue' should only be a tuple in case of a failure"
-            )
-            successful_config_map.pop(issue[1])
+        if isinstance(issue, CollectionErrorData):
+            successful_config_map.pop(issue.target)
             continue
 
         # De-duplicate issues coming in
-        unique_identifier = make_unique_identifier(key_lists, issue)
-        if unique_identifier in issue_map:
-            log.debug(f"Merging tags and skipping. Seen {unique_identifier} of {issue}")
+        if issue.identifier in issue_map:
+            log.debug(f"Merging tags and skipping. Seen {issue.identifier} of {issue}")
             # Merge and deduplicate tags.
-            issue_map[unique_identifier]['tags'] += issue['tags']
-            issue_map[unique_identifier]['tags'] = list(
-                set(issue_map[unique_identifier]['tags'])
+            # NOTE: as taskwarrior handle them as a set (ordered), we could do the same
+            new_tags = sorted(
+                set(issue_map[issue.identifier].taskwarrior_data['tags'])
+                | set(issue.taskwarrior_data['tags'])
             )
+            issue_map[issue.identifier].taskwarrior_data['tags'] = new_tags
+
         else:
-            issue_map[unique_identifier] = issue
+            issue_map[issue.identifier] = issue
 
     seen_uuids = set()
-    for issue in issue_map.values():
+    for issue, target, _ in issue_map.values():
         # We received this issue from The Internet, but we're not sure what
         # kind of encoding the service providers may have handed us. Let's try
         # and decode all byte strings from UTF8 off the bat.  If we encounter
@@ -312,12 +296,8 @@ def synchronize(
                 except UnicodeDecodeError:
                     log.warning("Failed to interpret %r as utf-8" % key)
 
-        # Blank priority should mean *no* priority
-        if issue['priority'] == '':
-            issue['priority'] = None
-
         # Target was only tacked on to pass configuration to this function.
-        service_config = successful_config_map[issue.pop('target')]
+        service_config = successful_config_map[target]
 
         try:
             existing_taskwarrior_uuid = find_taskwarrior_uuid(tw, key_lists, issue)
