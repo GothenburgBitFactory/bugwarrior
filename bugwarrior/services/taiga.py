@@ -35,19 +35,19 @@ class TaigaIssue(Issue):
     }
     UNIQUE_KEY = (URL,)
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self) -> dict[str, Any]:
         task = {
-            "project": self.extra["project"],
-            "annotations": self.extra["annotations"],
-            self.URL: self.extra["url"],
-            "priority": self.config.default_priority,
-            "tags": self.get_tags(),
-            self.FOREIGN_ID: self.record["ref"],
-            self.SUMMARY: self.record["subject"],
+            'project': self.extra['project'],
+            'annotations': self.extra['annotations'],
+            self.URL: self.extra['url'],
+            'priority': self.config.default_priority,
+            'tags': self.get_tags(),
+            self.FOREIGN_ID: self.record['ref'],
+            self.SUMMARY: self.record['subject'],
         }
 
-        if self.record.get("due_date"):
-            task["due"] = self.parse_date(self.record["due_date"])
+        if self.record.get('due_date'):
+            task['due'] = self.parse_date(self.record['due_date'])
 
         return task
 
