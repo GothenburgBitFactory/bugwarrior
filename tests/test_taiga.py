@@ -18,6 +18,7 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
         'ref': 40,
         'subject': 'this is a title',
         'tags': ['single', ['bugwarrior', None], ['task', '#c0ffee']],
+        'due_date': '2026-05-18'
     }
 
     def setUp(self):
@@ -43,6 +44,7 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
             'taigaid': 40,
             'taigasummary': 'this is a title',
             'taigaurl': 'this is a url',
+            'due': issue.parse_date('2026-05-18')
         }
 
         self.assertEqual(actual, expected)
@@ -81,6 +83,7 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
             'taigaid': 40,
             'taigasummary': 'this is a title',
             'taigaurl': 'https://one/project/something/us/40',
+            'due': issue.parse_date('2026-05-18')
         }
 
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
