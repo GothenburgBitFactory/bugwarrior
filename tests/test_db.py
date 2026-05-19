@@ -1,5 +1,5 @@
 import copy
-import unittest
+from types import SimpleNamespace
 
 import taskw.task
 
@@ -8,66 +8,50 @@ from bugwarrior import db
 from .base import ConfigTest
 
 
-class TestMergeLeft(unittest.TestCase):
-    def setUp(self):
-        self.issue_dict = {'annotations': ['testing']}
+class TestMergeAnnotations:
+    def test_merges_local_and_remote_annotations(self):
+        local = {'annotations': ['existing']}
+        remote = {'annotations': ['new', 'new']}
 
-    def assertMerged(self, local, remote, **kwargs):
-        db.merge_left('annotations', local, remote, **kwargs)
-        self.assertEqual(local, remote)
+        assert db.merge_annotations(local, remote) == ['existing', 'new', 'new']
 
-    def test_with_dict(self):
-        self.assertMerged({}, self.issue_dict)
-
-    def test_with_taskw(self):
-        self.assertMerged(taskw.task.Task({}), self.issue_dict)
-
-    def test_already_in_sync(self):
-        self.assertMerged(self.issue_dict, self.issue_dict)
-
-    def test_rough_equality_hamming_false(self):
-        """When hamming=False, rough equivalents are duplicated."""
+    def test_skips_normalized_matches(self):
+        local = {'annotations': ['testing']}
         remote = {'annotations': ['\n  testing  \n']}
 
-        db.merge_left('annotations', self.issue_dict, remote, hamming=False)
-        self.assertEqual(len(self.issue_dict['annotations']), 2)
+        assert db.merge_annotations(local, remote) == ['testing']
 
-    def test_rough_equality_hamming_true(self):
-        """When hamming=True, rough equivalents are not duplicated."""
-        remote = {'annotations': ['\n  testing  \n']}
+    def test_skips_matches_up_to_shortest_annotation_length(self):
+        local = {'annotations': ['testing']}
+        remote = {'annotations': ['testing with more detail']}
 
-        db.merge_left('annotations', self.issue_dict, remote, hamming=True)
-        self.assertEqual(len(self.issue_dict['annotations']), 1)
+        assert db.merge_annotations(local, remote) == ['testing']
+
+    def test_handles_missing_annotations(self):
+        assert db.merge_annotations({}, {}) == []
+        assert db.merge_annotations({}, {'annotations': ['new']}) == ['new']
 
 
-class TestReplaceLeft(unittest.TestCase):
-    def setUp(self):
-        self.issue_dict = {'tags': ['test', 'test2']}
-        self.remote = {'tags': ['remote_tag1', 'remote_tag2']}
+class TestMergeTags:
+    def test_merges_and_sorts_unique_tags(self):
+        main_conf = SimpleNamespace(replace_tags=False, static_tags=[])
+        local = {'tags': ['existing', 'shared']}
+        remote = {'tags': ['new', 'shared']}
 
-    def assertReplaced(self, local, remote, **kwargs):
-        db.replace_left('tags', local, remote, **kwargs)
-        self.assertEqual(local, remote)
+        assert db.merge_tags(main_conf, local, remote) == ['existing', 'new', 'shared']
 
-    def test_with_dict(self):
-        self.assertReplaced({}, self.issue_dict)
+    def test_replaces_non_static_local_tags_when_configured(self):
+        main_conf = SimpleNamespace(replace_tags=True, static_tags=['keep'])
+        local = {'tags': ['drop', 'keep']}
+        remote = {'tags': ['new']}
 
-    def test_with_taskw(self):
-        self.assertReplaced(taskw.task.Task({}), self.issue_dict)
+        assert db.merge_tags(main_conf, local, remote) == ['keep', 'new']
 
-    def test_already_in_sync(self):
-        self.assertReplaced(self.issue_dict, self.issue_dict)
+    def test_handles_missing_tags(self):
+        main_conf = SimpleNamespace(replace_tags=False, static_tags=[])
 
-    def test_replace(self):
-        self.assertReplaced(self.issue_dict, self.remote)
-
-    def test_replace_with_keeped_item(self):
-        """When keeped_item is set, all item in this list are keeped"""
-        result = {'tags': ['test', 'remote_tag1', 'remote_tag2']}
-        print(self.issue_dict)
-        keeped_items = ['test']
-        db.replace_left('tags', self.issue_dict, self.remote, keeped_items)
-        self.assertEqual(self.issue_dict, result)
+        assert db.merge_tags(main_conf, {}, {}) == []
+        assert db.merge_tags(main_conf, {}, {'tags': ['new']}) == ['new']
 
 
 class TestSynchronize(ConfigTest):

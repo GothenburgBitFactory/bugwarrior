@@ -13,6 +13,7 @@ from bugwarrior.collect import get_service
 from bugwarrior.notifications import send_notification
 
 if TYPE_CHECKING:
+    from bugwarrior.config.schema import MainSectionConfig
     from bugwarrior.config.validation import Config
 
 log = logging.getLogger(__name__)
@@ -26,27 +27,8 @@ class MultipleMatches(Exception):
     pass
 
 
-def get_normalized_annotation(annotation: str) -> str:
+def normalize_annotation(annotation: str) -> str:
     return re.sub(r'[\W_]', '', str(annotation))
-
-
-def get_annotation_hamming_distance(left: str, right: str) -> int:
-    left = get_normalized_annotation(left)
-    right = get_normalized_annotation(right)
-    if len(left) > len(right):
-        left = left[0 : len(right)]
-    elif len(right) > len(left):
-        right = right[0 : len(left)]
-    return hamdist(left, right)
-
-
-def hamdist(str1: str, str2: str) -> int:
-    """Count the # of differences between equal length strings str1 and str2"""
-    diffs = 0
-    for ch1, ch2 in zip(str1, str2):
-        if ch1 != ch2:
-            diffs += 1
-    return diffs
 
 
 def get_managed_task_uuids(
@@ -155,99 +137,36 @@ def find_taskwarrior_uuid(
     raise NotFound("No issue was found matching %s" % issue)
 
 
-def replace_left(
-    field: str,
-    local_task: dict[str, Any],
-    remote_issue: dict[str, Any],
-    keep_items: list[str] = [],
-) -> None:
-    """Replace array field from the remote_issue to the local_task
+def are_normalized_annotations_equal(left: str, right: str) -> bool:
+    _left, _right = map(normalize_annotation, (left, right))
+    min_length = min(len(_left), len(_right))
+    return _left[:min_length] == _right[:min_length]
 
-    * Local 'left' entries are suppressed, unless those listed in keep_items.
-    * Remote 'left' are appended to task, if not present in local.
 
-    :param `field`: Task field to merge.
-    :param `local_task`: `taskw.task.Task` object into which to replace
-        remote changes.
-    :param `remote_issue`: `dict` instance from which to add into
-        local task.
-    :param `keep_items`: list of items to keep into local_task even if not
-        present in remote_issue
+def merge_annotations(local: dict[str, Any], remote: dict[str, Any]) -> list[str]:
     """
-
-    # Ensure that empty default are present
-    local_field = local_task.get(field, []).copy()
-    remote_field = remote_issue.get(field, [])
-
-    # We need to make sure an array exists for this field because
-    # we will be appending to it in a moment.
-    if field not in local_task:
-        local_task[field] = []
-
-    # Delete all items in local_task, unless they are in keep_items or in remote_issue
-    # This ensure that the task is not being updated if there is no changes
-    for item in local_field:
-        if keep_items.count(item) == 0 and remote_field.count(item) == 0:
-            log.debug('found %s to remove' % (item))
-            local_task[field].remove(item)
-        elif remote_field.count(item) > 0:
-            remote_field.remove(item)
-
-    if len(remote_field) > 0:
-        local_task[field] += remote_field
-
-
-def merge_left(
-    field: str,
-    local_task: dict[str, Any],
-    remote_issue: dict[str, Any],
-    hamming: bool = False,
-) -> None:
-    """Merge array field from the remote_issue into local_task
-
-    * Local 'left' entries are preserved without modification
-    * Remote 'left' are appended to task if not present in local.
-
-    :param `field`: Task field to merge.
-    :param `local_task`: `taskw.task.Task` object into which to merge
-        remote changes.
-    :param `remote_issue`: `dict` instance from which to merge into
-        local task.
-    :param `hamming`: (default `False`) If `True`, compare entries by
-        truncating to maximum length, and comparing hamming distances.
-        Useful generally only for annotations.
-
+    Merge annotations. Order and duplication are preserved.
     """
-
-    # Ensure that empty defaults are present
-    local_field = local_task.get(field, [])
-    remote_field = remote_issue.get(field, [])
-
-    # We need to make sure an array exists for this field because
-    # we will be appending to it in a moment.
-    if field not in local_task:
-        local_task[field] = []
-
-    # If a remote does not appear in local, add it to the local task
-    new_count = 0
-    for remote in remote_field:
-        for local in local_field:
-            if (
-                # For annotations, they don't have to match *exactly*.
-                (hamming and get_annotation_hamming_distance(remote, local) == 0)
-                # But for everything else, they should.
-                or (remote == local)
-            ):
-                break
-        else:
-            log.debug("%s not found in %r" % (remote, local_field))
-            local_task[field].append(remote)
-            new_count += 1
-    if new_count > 0:
-        log.debug(
-            'Added %s new values to %s (total: %s)'
-            % (new_count, field, len(local_task[field]))
+    local_annotations = local.get("annotations", [])
+    new_annotations = [
+        annotation
+        for annotation in remote.get("annotations", [])
+        if not any(
+            are_normalized_annotations_equal(annotation, local_annotation)
+            for local_annotation in local_annotations
         )
+    ]
+    return [*local_annotations, *new_annotations]
+
+
+def merge_tags(
+    main_conf: "MainSectionConfig", local: dict[str, Any], remote: dict[str, Any]
+) -> list[str]:
+    task_tags: set[str] = set(local.get("tags", []))
+    if main_conf.replace_tags:
+        task_tags &= set(main_conf.static_tags)
+
+    return sorted(task_tags | set(remote.get("tags", [])))
 
 
 def run_hooks(pre_import: list[str]) -> None:
@@ -357,13 +276,10 @@ def synchronize(
 
             # Merge annotations & tags from online into our task object
             if conf.main.merge_annotations:
-                merge_left('annotations', task, issue, hamming=True)
+                task["annotations"] = merge_annotations(task, issue)
 
             if conf.main.merge_tags:
-                if conf.main.replace_tags:
-                    replace_left('tags', task, issue, list(conf.main.static_tags))
-                else:
-                    merge_left('tags', task, issue)
+                task["tags"] = merge_tags(conf.main, task, issue)
 
             issue.pop('annotations', None)
             issue.pop('tags', None)
