@@ -50,11 +50,13 @@ class AzureDevopsClient(Client):
         self.host = host
         self.base_url = f"https://{host}/{org}/{project}/_apis/wit"
         self.session = requests.Session()
-        self.session.headers = {
-            "authorization": f"Basic {self.pat}",
-            "accept": "application/json",
-            "content-type": "application/json",
-        }
+        self.session.headers.update(
+            {
+                "authorization": f"Basic {self.pat}",
+                "accept": "application/json",
+                "content-type": "application/json",
+            }
+        )
         self.params = {"api-version": "6.0-preview.2"}
 
     def get_work_item(self, workitemid: str | int) -> dict[str, Any]:
