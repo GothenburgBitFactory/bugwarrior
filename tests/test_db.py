@@ -21,11 +21,14 @@ class TestMergeAnnotations:
 
         assert db.merge_annotations(local, remote) == ['testing']
 
-    def test_skips_matches_up_to_shortest_annotation_length(self):
+    def test_adds_annotation_that_extends_existing_one(self):
         local = {'annotations': ['testing']}
         remote = {'annotations': ['testing with more detail']}
 
-        assert db.merge_annotations(local, remote) == ['testing']
+        assert db.merge_annotations(local, remote) == [
+            'testing',
+            'testing with more detail',
+        ]
 
     def test_handles_missing_annotations(self):
         assert db.merge_annotations({}, {}) == []

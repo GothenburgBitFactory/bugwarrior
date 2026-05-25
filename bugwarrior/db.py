@@ -27,10 +27,6 @@ class MultipleMatches(Exception):
     pass
 
 
-def normalize_annotation(annotation: str) -> str:
-    return re.sub(r'[\W_]', '', str(annotation))
-
-
 def get_managed_task_uuids(
     tw: TaskWarriorShellout, key_list: dict[str, list[str]]
 ) -> set[str]:
@@ -137,24 +133,20 @@ def find_taskwarrior_uuid(
     raise NotFound("No issue was found matching %s" % issue)
 
 
-def are_normalized_annotations_equal(left: str, right: str) -> bool:
-    _left, _right = map(normalize_annotation, (left, right))
-    min_length = min(len(_left), len(_right))
-    return _left[:min_length] == _right[:min_length]
-
-
 def merge_annotations(local: dict[str, Any], remote: dict[str, Any]) -> list[str]:
     """
     Merge annotations. Order and duplication are preserved.
     """
+
+    def normalize_annotation(annotation: str) -> str:
+        return re.sub(r'[\W_]', '', str(annotation))
+
     local_annotations = local.get("annotations", [])
+    normalized_local = set(map(normalize_annotation, local_annotations))
     new_annotations = [
         annotation
         for annotation in remote.get("annotations", [])
-        if not any(
-            are_normalized_annotations_equal(annotation, local_annotation)
-            for local_annotation in local_annotations
-        )
+        if normalize_annotation(annotation) not in normalized_local
     ]
     return [*local_annotations, *new_annotations]
 
