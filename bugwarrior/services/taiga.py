@@ -44,6 +44,7 @@ class TaigaIssue(Issue):
             'tags': self.get_tags(),
             self.FOREIGN_ID: self.record['ref'],
             self.SUMMARY: self.record['subject'],
+            'due': self.parse_date(self.record.get('due_date')),
         }
 
     def get_tags(self) -> list[str]:
