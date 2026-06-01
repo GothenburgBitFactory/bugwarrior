@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 
 class LogseqConfig(config.ServiceConfig):
     service: typing.Literal["logseq"]
+    KEYRING_SERVICE = "http://{host}:{port}"
     host: str = "localhost"
     port: int = 12315
     token: str
@@ -339,10 +340,6 @@ class LogseqService(Service[LogseqIssue]):
             token=self.token,
             filter=filter,
         )
-
-    @staticmethod
-    def get_keyring_service(config: LogseqConfig) -> str:
-        return f"http://{config.host}:{config.port}"
 
     def issues(self) -> Iterator[LogseqIssue]:
         graph_name = self.client.get_graph_name()

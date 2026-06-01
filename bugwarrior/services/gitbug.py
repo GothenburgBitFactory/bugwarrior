@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 class GitBugConfig(config.ServiceConfig):
     service: Literal['gitbug']
+    KEYRING_SERVICE = 'gitbug://{path}'
 
     path: config.ExpandedPath
 
@@ -152,10 +153,6 @@ class GitBugService(Service[GitBugIssue]):
             port=self.config.port,
             annotation_comments=self.main_config.annotation_comments,
         )
-
-    @staticmethod
-    def get_keyring_service(config: GitBugConfig) -> str:
-        return f'gitbug://{config.path}'
 
     def issues(self) -> Iterator[GitBugIssue]:
         for issue in self.client.get_issues():

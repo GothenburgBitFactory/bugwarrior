@@ -283,10 +283,9 @@ class Service(abc.ABC, Generic[T_Issue]):
             applicable.
         """
         password = getattr(self.config, key)
-        keyring_service = self.get_keyring_service(self.config)
         if not password or password.startswith("@oracle:"):
             password = secrets.get_service_password(
-                keyring_service, login, oracle=password
+                self.config.keyring_service, login, oracle=password
             )
         return password
 
@@ -298,7 +297,7 @@ class Service(abc.ABC, Generic[T_Issue]):
         :param `record`: Foreign record.
         :param `extra`: Computed data which is not directly from the service.
         """
-        extra = extra if extra is not None else {}
+        extra = extra or {}
         return self.ISSUE_CLASS(record, self.config, self.main_config, extra=extra)
 
     def build_annotations(
@@ -358,12 +357,6 @@ class Service(abc.ABC, Generic[T_Issue]):
         The priority should be one of "H", "M", or "L".
         """
         raise NotImplementedError()
-
-    @staticmethod
-    @abc.abstractmethod
-    def get_keyring_service(config: schema.ServiceConfig) -> str:
-        """Return the keyring name for this service."""
-        raise NotImplementedError
 
 
 class Client:

@@ -18,6 +18,7 @@ class RedMineConfig(config.ServiceConfig):
     project_name: str = ''
 
     service: typing.Literal['redmine']
+    KEYRING_SERVICE = "redmine://{login}@{url}/"
     url: config.StrippedTrailingSlashUrl
     key: str
 
@@ -231,10 +232,6 @@ class RedMineService(Service[RedMineIssue]):
             self.config.issue_limit,
             self.config.verify_ssl,
         )
-
-    @staticmethod
-    def get_keyring_service(config: RedMineConfig) -> str:
-        return f"redmine://{config.login}@{config.url}/"
 
     def issues(self) -> Iterator[RedMineIssue]:
         issues = self.client.find_issues(

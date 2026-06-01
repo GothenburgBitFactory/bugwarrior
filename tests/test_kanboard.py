@@ -34,14 +34,13 @@ class TestKanboardServiceConfig(ConfigTest):
 
         self.assertValidationError('[kb]\npassword  <- Field required')
 
-    def test_get_keyring_service(self):
+    def test_keyring_service(self):
         self.config["kb"].update(
             {"url": "http://example.com/", "username": "myuser", "password": "mypass"}
         )
         service_config = self.validate().service_configs[0]
         self.assertEqual(
-            KanboardService.get_keyring_service(service_config),
-            "kanboard://myuser@example.com",
+            service_config.keyring_service, "kanboard://myuser@example.com"
         )
 
 

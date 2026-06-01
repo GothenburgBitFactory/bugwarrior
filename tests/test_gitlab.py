@@ -531,20 +531,16 @@ class TestGitlabService(ConfigTest):
         }
         return service
 
-    def test_get_keyring_service_default_host(self):
+    def test_keyring_service_default_host(self):
         conf = self.validate()
         conf = conf.service_configs[0]
-        self.assertEqual(
-            GitlabService.get_keyring_service(conf), 'gitlab://foobar@gitlab.com'
-        )
+        self.assertEqual(conf.keyring_service, 'gitlab://foobar@gitlab.com')
 
-    def test_get_keyring_service_custom_host(self):
+    def test_keyring_service_custom_host(self):
         self.config['myservice']['host'] = 'my-git.org'
         conf = self.validate()
         conf = conf.service_configs[0]
-        self.assertEqual(
-            GitlabService.get_keyring_service(conf), 'gitlab://foobar@my-git.org'
-        )
+        self.assertEqual(conf.keyring_service, 'gitlab://foobar@my-git.org')
 
     def test_filter_gitlab_dot_com(self):
         self.config['myservice'].update({'host': 'gitlab.com', 'owned': 'false'})

@@ -169,9 +169,9 @@ class TestClickupService(ConfigTest):
         service = get_service_instances(conf)[0]
         return service
 
-    def test_get_keyring_service(self):
+    def test_keyring_service(self):
         conf = self.validate().service_configs[0]
-        self.assertEqual(ClickupService.get_keyring_service(conf), 'clickup://')
+        self.assertEqual(conf.keyring_service, 'clickup://')
 
     def test_is_assigned(self):
         task = self.data.get_task()

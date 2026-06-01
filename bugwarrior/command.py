@@ -12,7 +12,7 @@ from lockfile import LockTimeout
 from lockfile.pidlockfile import PIDLockFile
 
 from bugwarrior.collect import aggregate_issues
-from bugwarrior.config import get_config_path, get_keyring, get_service, load_config
+from bugwarrior.config import get_config_path, get_keyring, load_config
 from bugwarrior.db import get_defined_udas_as_strings, synchronize
 
 if TYPE_CHECKING:
@@ -162,9 +162,7 @@ def targets() -> Iterator[str]:
     for service_config in config.service_configs:
         for value in dict(service_config).values():
             if isinstance(value, str) and '@oracle:use_keyring' in value:
-                yield get_service(service_config.service).get_keyring_service(
-                    service_config
-                )
+                yield service_config.keyring_service
 
 
 @vault.command()

@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 
 class TaigaConfig(config.ServiceConfig):
     service: typing.Literal['taiga']
+    KEYRING_SERVICE = "taiga://{base_uri}"
     base_uri: config.StrippedTrailingSlashUrl
     auth_token: str
 
@@ -76,10 +77,6 @@ class TaigaService(Service[TaigaIssue]):
                 'Authorization': 'Bearer %s' % self.auth_token,
             }
         )
-
-    @staticmethod
-    def get_keyring_service(config: TaigaConfig) -> str:
-        return f"taiga://{config.base_uri}"
 
     def _issues(
         self, userid: int, task_type: str, task_type_plural: str, task_type_short: str

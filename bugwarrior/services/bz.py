@@ -34,6 +34,7 @@ OptionalSchemeUrl = Annotated[StrippedTrailingSlashUrl, BeforeValidator(validate
 
 class BugzillaConfig(config.ServiceConfig):
     service: typing.Literal['bugzilla']
+    KEYRING_SERVICE = "bugzilla://{username}@{base_uri}"
     username: str
     base_uri: OptionalSchemeUrl
 
@@ -157,10 +158,6 @@ class BugzillaService(Service[BugzillaIssue]):
             if self.config.password:
                 password = self.get_secret('password', self.config.username)
                 self.bz.login(self.config.username, password)
-
-    @staticmethod
-    def get_keyring_service(config: BugzillaConfig) -> str:
-        return f"bugzilla://{config.username}@{config.base_uri}"
 
     def get_owner(self, issue: dict[str, Any]) -> str:
         return issue['assigned_to']

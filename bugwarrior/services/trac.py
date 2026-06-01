@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 
 class TracConfig(config.ServiceConfig):
     service: typing.Literal['trac']
+    KEYRING_SERVICE = "https://{username}@{base_uri}/"
     base_uri: config.NoSchemeUrl
 
     scheme: str = 'https'
@@ -100,10 +101,6 @@ class TracService(Service[TracIssue]):
             self.trac = None
         else:
             self.trac = offtrac.TracServer(uri + 'login/xmlrpc')
-
-    @staticmethod
-    def get_keyring_service(config: TracConfig) -> str:
-        return f"https://{config.username}@{config.base_uri}/"
 
     def annotations(self, issue: dict[str, Any]) -> list[str]:
         annotations = []

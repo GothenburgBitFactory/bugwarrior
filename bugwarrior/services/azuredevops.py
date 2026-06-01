@@ -18,6 +18,7 @@ EscapedStr = Annotated[str, BeforeValidator(quote)]
 
 class AzureDevopsConfig(config.ServiceConfig):
     service: Literal['azuredevops']
+    KEYRING_SERVICE = "azuredevops://{organization}@{host}"
     PAT: str
     project: EscapedStr
     organization: EscapedStr
@@ -259,7 +260,3 @@ class AzureDevopsService(Service[AzureDevopsIssue]):
             }
             issue_obj.extra.update(extra)
             yield issue_obj
-
-    @staticmethod
-    def get_keyring_service(config: AzureDevopsConfig) -> str:
-        return f"azuredevops://{config.organization}@{config.host}"

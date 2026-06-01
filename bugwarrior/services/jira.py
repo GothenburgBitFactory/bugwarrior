@@ -78,6 +78,7 @@ JiraExtraFields = typing.Annotated[
 
 class JiraConfig(config.ServiceConfig):
     service: typing.Literal['jira']
+    KEYRING_SERVICE = "jira://{username}@{base_uri}"
     base_uri: config.StrippedTrailingSlashUrl
     username: str
 
@@ -387,10 +388,6 @@ class JiraService(Service[JiraIssue]):
         if self.config.use_cookies:
             return JIRA(options=jira_options, auth=(self.config.username, password))
         return JIRA(options=jira_options, basic_auth=(self.config.username, password))
-
-    @staticmethod
-    def get_keyring_service(config: JiraConfig) -> str:
-        return f"jira://{config.username}@{config.base_uri}"
 
     def body(self, issue: JiraIssue) -> str | None:
         body = issue.record.get('fields', {}).get('description')

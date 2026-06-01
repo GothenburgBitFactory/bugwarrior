@@ -18,6 +18,7 @@ from bugwarrior.services import Client, Issue, Service
 
 class TrelloConfig(config.ServiceConfig):
     service: typing.Literal['trello']
+    KEYRING_SERVICE = "trello://{api_key}@trello.com"
     api_key: str
     token: str
 
@@ -89,10 +90,6 @@ class TrelloService(Service[TrelloIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = TrelloIssue
     CONFIG_SCHEMA = TrelloConfig
-
-    @staticmethod
-    def get_keyring_service(config: TrelloConfig) -> str:
-        return f"trello://{config.api_key}@trello.com"
 
     def issues(self) -> Iterator[TrelloIssue]:
         """

@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 
 class TeamworkConfig(config.ServiceConfig):
     service: typing.Literal['teamwork_projects']
+    KEYRING_SERVICE = 'teamwork_projects://{host}'
     host: config.StrippedTrailingSlashUrl
     token: str
 
@@ -105,10 +106,6 @@ class TeamworkService(Service[TeamworkIssue]):
         user = self.client.get("authenticate.json")
         self.user_id = user["account"]["userId"]
         self.name = user["account"]["firstname"] + " " + user["account"]["lastname"]
-
-    @staticmethod
-    def get_keyring_service(config: TeamworkConfig) -> str:
-        return f'teamwork_projects://{config.host}'
 
     def get_comments(self, issue: dict[str, Any]) -> list[str]:
         if self.main_config.annotation_comments:

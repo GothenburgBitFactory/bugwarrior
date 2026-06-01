@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 
 class GerritConfig(config.ServiceConfig):
     service: typing.Literal['gerrit']
+    KEYRING_SERVICE = "gerrit://{base_uri}"
     base_uri: config.StrippedTrailingSlashUrl
     username: str
     password: str
@@ -101,10 +102,6 @@ class GerritService(Service[GerritIssue]):
             self.session.auth = requests.auth.HTTPBasicAuth(
                 self.config.username, self.password
             )
-
-    @staticmethod
-    def get_keyring_service(config: GerritConfig) -> str:
-        return f"gerrit://{config.base_uri}"
 
     def issues(self) -> Iterator[GerritIssue]:
         # Construct the whole url by hand here, because otherwise requests will
