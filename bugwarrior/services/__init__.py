@@ -19,7 +19,6 @@ from jinja2 import Template
 import requests
 
 from bugwarrior.config import schema, secrets
-from bugwarrior.types import TaskwarriorData
 
 log = logging.getLogger(__name__)
 
@@ -122,7 +121,7 @@ class Issue(abc.ABC):
         self.extra = extra
 
     @abc.abstractmethod
-    def to_taskwarrior(self) -> TaskwarriorData:
+    def to_taskwarrior(self) -> dict[str, Any]:
         """Transform a foreign record into a taskwarrior dictionary."""
         raise NotImplementedError()
 
