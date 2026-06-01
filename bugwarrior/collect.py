@@ -1,17 +1,15 @@
 from collections.abc import Iterable, Iterator
 import copy
-from functools import cache
-from importlib.metadata import entry_points
 import json
 import logging
 import multiprocessing
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from jinja2 import Template
 from taskw.task import Task
 
-from bugwarrior.types import CollectedIssue, CollectionErrorData, TaskwarriorData
+from bugwarrior.config import get_service
 
 if TYPE_CHECKING:
     from bugwarrior.config.validation import Config
@@ -24,24 +22,15 @@ SERVICE_FINISHED_OK = 0
 SERVICE_FINISHED_ERROR = 1
 
 
-@cache
-def get_service(service_name: str) -> type["Service"]:
-    try:
-        (service,) = entry_points(group='bugwarrior.service', name=service_name)
-    except ValueError as e:
-        if service_name in [
-            'activecollab',
-            'activecollab2',
-            'megaplan',
-            'teamlab',
-            'versionone',
-        ]:
-            log.warning(f"The {service_name} service has been removed.")
-        raise ValueError(
-            f"Configured service '{service_name}' not found. "
-            "Is it installed? Or misspelled?"
-        ) from e
-    return service.load()
+class CollectedIssue(NamedTuple):
+    taskwarrior_data: dict[str, Any]
+    target: str
+    identifier: str
+
+
+class CollectionErrorData(NamedTuple):
+    error_message: str
+    target: str
 
 
 def get_service_instances(conf: "Config") -> list["Service"]:
@@ -132,7 +121,7 @@ def aggregate_issues(
 
 
 def make_unique_identifier(
-    unique_keys: Iterable[str], taskwarrior_data: TaskwarriorData
+    unique_keys: Iterable[str], taskwarrior_data: dict[str, Any]
 ) -> str:
     """For a given issue, make an identifier from its unique keys.
 

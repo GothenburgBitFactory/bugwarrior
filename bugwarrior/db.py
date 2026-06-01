@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Any
 from taskw import TaskWarriorShellout
 from taskw.exceptions import TaskwarriorError
 
-from bugwarrior.collect import get_service
+from bugwarrior.collect import CollectedIssue, CollectionErrorData
+from bugwarrior.config import get_service
 from bugwarrior.notifications import send_notification
-from bugwarrior.types import CollectedIssue, CollectionErrorData
 
 if TYPE_CHECKING:
     from bugwarrior.config.schema import MainSectionConfig

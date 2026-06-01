@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import taskw.task
 
 from bugwarrior import db
-from bugwarrior.types import CollectedIssue
+from bugwarrior.collect import CollectedIssue
 
 from .base import ConfigTest
 

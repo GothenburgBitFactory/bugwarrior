@@ -11,8 +11,8 @@ import click
 from lockfile import LockTimeout
 from lockfile.pidlockfile import PIDLockFile
 
-from bugwarrior.collect import aggregate_issues, get_service
-from bugwarrior.config import get_config_path, get_keyring, load_config
+from bugwarrior.collect import aggregate_issues
+from bugwarrior.config import get_config_path, get_keyring, get_service, load_config
 from bugwarrior.db import get_defined_udas_as_strings, synchronize
 
 if TYPE_CHECKING:
