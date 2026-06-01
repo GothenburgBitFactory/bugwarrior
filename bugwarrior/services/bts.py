@@ -19,6 +19,7 @@ UDD_BUGS_SEARCH = "https://udd.debian.org/bugs/"
 
 class BTSConfig(config.ServiceConfig):
     service: typing.Literal['bts']
+    KEYRING_SERVICE = 'bts://'
 
     email: pydantic.EmailStr = ''
     packages: config.ConfigList = []
@@ -106,10 +107,6 @@ class BTSService(Service[BTSIssue]):
     API_VERSION = 1.0
     ISSUE_CLASS = BTSIssue
     CONFIG_SCHEMA = BTSConfig
-
-    @staticmethod
-    def get_keyring_service(config: BTSConfig) -> str:
-        return 'bts://'
 
     def _record_for_bug(self, bug: debianbts.Bugreport) -> dict[str, Any]:
         return {

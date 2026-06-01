@@ -33,9 +33,7 @@ class ServiceBase(ConfigTest):
         service = self.makeService()
         return service.get_issue_for_record({})
 
-    def checkArchitecture(
-        self, klass: abc.ABCMeta, method_allowlist: set[str] | None = None
-    ):
+    def checkArchitecture(self, klass: abc.ABCMeta):
         """
         Bidirectional communication between the base classes and their children
         has been a source of complication as changes to any part of the
@@ -49,14 +47,14 @@ class ServiceBase(ConfigTest):
         """
         base = Path(services.__file__).read_text()
 
-        for method in klass.__abstractmethods__ - (method_allowlist or set()):
+        for method in klass.__abstractmethods__:
             references = re.findall(rf'{method}\(', base)
             self.assertEqual(len(references), 1, references)
 
 
 class TestService(ServiceBase):
     def test_architecture(self):
-        self.checkArchitecture(services.Service, {"get_keyring_service"})
+        self.checkArchitecture(services.Service)
 
     def test_build_annotations_default(self):
         service = self.makeService()

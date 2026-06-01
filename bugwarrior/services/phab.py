@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 
 class PhabricatorConfig(config.ServiceConfig):
     service: typing.Literal['phabricator']
+    KEYRING_SERVICE = 'phabricator://{keyring_host}'
 
     user_phids: config.ConfigList = []
     project_phids: config.ConfigList = []
@@ -27,6 +28,11 @@ class PhabricatorConfig(config.ServiceConfig):
     only_if_assigned: bool = False
 
     also_unassigned: config.UnsupportedOption[bool] = False
+
+    @pydantic.computed_field
+    @property
+    def keyring_host(self) -> str:
+        return str(self.host) if self.host else ''
 
 
 class PhabricatorIssue(Issue):
@@ -105,10 +111,6 @@ class PhabricatorService(Service[PhabricatorIssue]):
             if self.config.ignore_author is not None
             else self.config.only_if_assigned
         )
-
-    @staticmethod
-    def get_keyring_service(config: PhabricatorConfig) -> str:
-        return f'phabricator://{config.host if config.host else ""}'
 
     def tasks(self) -> Iterator[PhabricatorIssue]:
         # If self.config.user_phids or self.config.project_phids is set,

@@ -25,6 +25,7 @@ class GithubConfig(config.ServiceConfig):
 
     # strictly required
     service: typing.Literal['github']
+    KEYRING_SERVICE = "github://{login}@{host}/{username}"
     login: str
     token: str
 
@@ -304,10 +305,6 @@ class GithubService(Service[GithubIssue]):
 
         auth = {'token': self.get_secret('token', self.config.login)}
         self.client = GithubClient(self.config.host, auth)
-
-    @staticmethod
-    def get_keyring_service(config: GithubConfig) -> str:
-        return f"github://{config.login}@{config.host}/{config.username}"
 
     def get_owned_repo_issues(self, tag: str) -> GithubIssueMap:
         """Grab all the issues"""

@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 class PagureConfig(config.ServiceConfig):
     # strictly required
     service: typing.Literal['pagure']
+    KEYRING_SERVICE = "pagure://{base_url}"
     base_url: config.StrippedTrailingSlashUrl
 
     # conditionally required

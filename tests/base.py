@@ -15,6 +15,7 @@ from bugwarrior.config.load import format_config
 
 class DumbConfig(config.ServiceConfig):
     service: typing.Literal["test"] = "test"
+    KEYRING_SERVICE = 'test://'
 
     import_labels_as_tags: bool = False
     label_template: str = "{{label}}"
@@ -36,10 +37,6 @@ class DumbService(services.Service):
     API_VERSION = 1.0
     ISSUE_CLASS = DumbIssue
     CONFIG_SCHEMA = DumbConfig
-
-    @staticmethod
-    def get_keyring_service(_):
-        raise NotImplementedError
 
     def get_owner(self, _):
         raise NotImplementedError

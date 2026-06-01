@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 
 class NextcloudDeckConfig(config.ServiceConfig):
     service: typing.Literal['deck']
+    KEYRING_SERVICE = 'deck://{username}@{base_uri}'
     base_uri: config.StrippedTrailingSlashUrl
     username: str
 
@@ -140,10 +141,6 @@ class NextcloudDeckService(Service[NextcloudDeckIssue]):
             username=self.config.username,
             password=self.config.password,
         )
-
-    @staticmethod
-    def get_keyring_service(config: NextcloudDeckConfig) -> str:
-        return f'deck://{config.username}@{config.base_uri}'
 
     def get_owner(self, issue: NextcloudDeckIssue) -> str | None:
         rec = issue.record

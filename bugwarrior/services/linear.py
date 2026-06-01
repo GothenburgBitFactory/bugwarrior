@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 class LinearConfig(config.ServiceConfig):
     service: typing.Literal["linear"]
+    KEYRING_SERVICE = "linear://{host}"
     api_token: str
 
     host: config.StrippedTrailingSlashUrl = "https://api.linear.app/graphql"
@@ -198,10 +199,6 @@ class LinearService(Service[LinearIssue]):
               }
             }
             """
-
-    @staticmethod
-    def get_keyring_service(config: LinearConfig) -> str:
-        return f"linear://{config.host}"
 
     def issues(self) -> Iterator[LinearIssue]:
         for issue in self.get_issues():

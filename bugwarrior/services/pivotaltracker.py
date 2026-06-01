@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 class PivotalTrackerConfig(config.ServiceConfig):
     service: typing.Literal['pivotaltracker']
+    KEYRING_SERVICE = 'pivotaltracker://{user_id}@{host}'
     user_id: int
     account_ids: config.ConfigList
     token: str
@@ -141,10 +142,6 @@ class PivotalTrackerService(Service[PivotalTrackerIssue]):
                 )
             if self.config.only_if_author:
                 self.query += f" requester:{self.config.user_id}"
-
-    @staticmethod
-    def get_keyring_service(config: PivotalTrackerConfig) -> str:
-        return f'pivotaltracker://{config.user_id}@{config.host}'
 
     def annotations(
         self, annotations: list[dict[str, Any]], story: dict[str, Any]

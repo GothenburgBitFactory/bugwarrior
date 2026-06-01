@@ -7,6 +7,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from kanboard import Client
+from pydantic import computed_field
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
@@ -16,6 +17,7 @@ log = logging.getLogger(__name__)
 
 class KanboardConfig(config.ServiceConfig):
     service: typing.Literal['kanboard']
+    KEYRING_SERVICE = "kanboard://{username}@{url_netloc}"
     url: config.StrippedTrailingSlashUrl
     username: str
     password: str
@@ -24,6 +26,11 @@ class KanboardConfig(config.ServiceConfig):
 
     only_if_assigned: config.UnsupportedOption[str] = ''
     also_unassigned: config.UnsupportedOption[bool] = False
+
+    @computed_field
+    @property
+    def url_netloc(self) -> str:
+        return urlparse(self.url).netloc
 
 
 class KanboardIssue(Issue):
@@ -169,8 +176,3 @@ class KanboardService(Service[KanboardIssue]):
             extra["annotations"] = self.annotations(task, extra["url"])
 
             yield self.get_issue_for_record(task, extra)
-
-    @staticmethod
-    def get_keyring_service(config: KanboardConfig) -> str:
-        parsed = urlparse(config.url)
-        return f"kanboard://{config.username}@{parsed.netloc}"

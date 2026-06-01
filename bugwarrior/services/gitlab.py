@@ -29,6 +29,7 @@ class GitlabConfig(config.ServiceConfig):
     filter_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = 'Undefined'
 
     service: typing.Literal['gitlab']
+    KEYRING_SERVICE = "gitlab://{login}@{host}"
     login: str
     token: str
     host: config.NoSchemeUrl
@@ -536,10 +537,6 @@ class GitlabService(Service[GitlabIssue]):
             verify_ssl=self.config.verify_ssl,
         )
         self.repo_map: dict[int, dict[str, Any]] = {}
-
-    @staticmethod
-    def get_keyring_service(config: GitlabConfig) -> str:
-        return f"gitlab://{config.login}@{config.host}"
 
     def get_owner(self, issue: GitlabIssueEntry) -> list[str]:
         return [assignee['username'] for assignee in issue[1]['assignees']]

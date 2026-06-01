@@ -15,6 +15,7 @@ class BitbucketConfig(config.ServiceConfig):
     filter_merge_requests: Union[bool, Literal['Undefined']] = 'Undefined'
 
     service: Literal['bitbucket']
+    KEYRING_SERVICE = "bitbucket://{key}/{username}"
 
     username: str
 
@@ -115,10 +116,6 @@ class BitbucketService(Service[BitbucketIssue]):
         self.requests_kwargs = {
             'headers': {'Authorization': f"Bearer {response['access_token']}"}
         }
-
-    @staticmethod
-    def get_keyring_service(config: BitbucketConfig) -> str:
-        return f"bitbucket://{config.key}/{config.username}"
 
     def filter_repos(self, repo_tag: str) -> bool:
         repo = repo_tag.split('/').pop()

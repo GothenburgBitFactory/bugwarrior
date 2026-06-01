@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 class TodoistConfig(config.ServiceConfig):
     service: typing.Literal["todoist"]
+    KEYRING_SERVICE = "todoist://"
     token: str
     filter: str = "(view all)"
     import_labels_as_tags: bool = False
@@ -206,10 +207,6 @@ class TodoistService(Service[TodoistIssue]):
         log.info(f"Using Todoist filter: {filter}")
 
         self.client = TodoistClient(token=self.token, filter=filter)
-
-    @staticmethod
-    def get_keyring_service(config: TodoistConfig) -> str:
-        return "todoist://"
 
     def annotations(
         self, user_index: dict[Any, str], issue: dict[str, Any]

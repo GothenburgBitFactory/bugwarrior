@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 
 class ClickupConfig(config.ServiceConfig):
     service: typing.Literal["clickup"]
+    KEYRING_SERVICE = "clickup://"
     token: str
     team_id: int
 
@@ -129,10 +130,6 @@ class ClickupService(Service[ClickupIssue]):
     ) -> None:
         super().__init__(config, main_config)
         self.client = ClickupClient(token=self.get_secret('token'))
-
-    @staticmethod
-    def get_keyring_service(config: ClickupConfig) -> str:
-        return "clickup://"
 
     def is_assigned(self, issue: dict) -> bool:
         if not self.config.only_if_assigned:

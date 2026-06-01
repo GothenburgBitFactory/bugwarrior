@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 
 class GmailConfig(config.ServiceConfig):
     service: typing.Literal['gmail']
+    KEYRING_SERVICE = 'gmail://{login_name}'
 
     client_secret_path: config.ExpandedPath = Path('~/.gmail_client_secret.json')
     query: str = 'label:Starred'
@@ -125,10 +126,6 @@ class GmailService(Service[GmailIssue]):
             'gmail_credentials_%s.pickle' % (credentials_name,),
         )
         self.gmail_api = self.build_api()
-
-    @staticmethod
-    def get_keyring_service(config: GmailConfig) -> str:
-        return f'gmail://{config.login_name}'
 
     def build_api(self) -> googleapiclient.discovery.Resource:
         credentials = self.get_credentials()

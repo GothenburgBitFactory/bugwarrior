@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 
 class YoutrackConfig(config.ServiceConfig):
     service: typing.Literal['youtrack']
+    KEYRING_SERVICE = "youtrack://{login}@{host}"
     host: config.NoSchemeUrl
     login: str
     token: str
@@ -129,10 +130,6 @@ class YoutrackService(Service[YoutrackIssue]):
 
         token = self.get_secret('token', self.config.login)
         self.session.headers['Authorization'] = f'Bearer {token}'
-
-    @staticmethod
-    def get_keyring_service(config: YoutrackConfig) -> str:
-        return f"youtrack://{config.login}@{config.host}"
 
     def issues(self) -> Iterator[YoutrackIssue]:
         params = {

@@ -197,9 +197,15 @@ class ServiceConfig(_ServiceConfig):
     .. _Pydantic: https://docs.pydantic.dev/latest/
     """
 
+    KEYRING_SERVICE: typing.ClassVar[str]
+
     # Added before validation (computed field)
     service: str
     target: str
+
+    @property
+    def keyring_service(self) -> str:
+        return self.KEYRING_SERVICE.format(**self.model_dump())
 
     # Added during validation (computed field)
     templates: dict[str, str] = {}

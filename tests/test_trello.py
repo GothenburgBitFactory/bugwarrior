@@ -3,7 +3,7 @@ import responses
 
 from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.config.schema import MainSectionConfig
-from bugwarrior.services.trello import TrelloConfig, TrelloIssue, TrelloService
+from bugwarrior.services.trello import TrelloConfig, TrelloIssue
 
 from .base import ConfigTest, ServiceTest
 
@@ -256,5 +256,5 @@ class TestTrelloService(ConfigTest):
     def test_keyring_service(self):
         """Checks that the keyring service name"""
         conf = self.validate()
-        keyring_service = TrelloService.get_keyring_service(conf.service_configs[0])
+        keyring_service = conf.service_configs[0].keyring_service
         self.assertEqual("trello://XXXX@trello.com", keyring_service)

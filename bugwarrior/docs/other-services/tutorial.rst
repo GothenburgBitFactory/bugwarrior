@@ -75,6 +75,7 @@ Now define an initial configuration schema as follows. Don't worry, we're about 
 
   class GitbugConfig(config.ServiceConfig):
       service: typing.Literal['gitbug']
+      KEYRING_SERVICE = 'gitbug://{path}'
 
       path: pathlib.Path
 
@@ -92,6 +93,8 @@ The ``service`` attribute is how bugwarrior will know to assign a given section 
   service = gitbug
 
 The ``path`` is the only particular detail required to access our local git-bug instance. You'll likely need additional details such as a username and token to authenticate to the service. Look at how you accessed the API in step 1 and ask yourself which components need to be configurable.
+
+The ``KEYRING_SERVICE`` attribute is a format string that returns a string identifier for secrets in the keyring. Ideally, this string uniquely identifies a given instance of the service when it is possible to have multiple instances of the service configured. Service configuration values may be referenced by field name, such as ``{path}``.
 
 The ``import_labels_as_tags`` and ``port`` attributes create optional configuration fields to allow customization of bugwarrior behavior.
 
@@ -199,10 +202,6 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
               port=self.config.port,
               annotation_comments=self.main_config.annotation_comments)
 
-      @staticmethod
-      def get_keyring_service(config):
-          return f'gitbug://{config.path}'
-
       def issues(self):
           for issue in self.client.get_issues():
               comments = issue.pop('comments')
@@ -217,11 +216,9 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
 
               yield self.get_issue_for_record(issue)
 
-Here we see three required class attributes and two required methods.
+Here we see three required class attributes and one required method.
 
-The ``API_VERSION`` is set to the latest, while the other two attributes point to our previously defined classes.
-
-The ``get_keyring_service`` method returns a string identifier for secrets in the keyring. Ideally, this string uniquely identifies a given instance of the service when it is possible to have multiple instances of the service configured.
+The ``API_VERSION`` is set to the latest, while ``ISSUE_CLASS`` and ``CONFIG_SCHEMA`` point to our previously defined classes.
 
 The ``issues`` method is a generator which yields individual issue dictionaries.
 
