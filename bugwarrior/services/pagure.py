@@ -14,7 +14,6 @@ log = logging.getLogger(__name__)
 
 
 class PagureConfig(config.ServiceConfig):
-    # strictly required
     service: typing.Literal['pagure']
     KEYRING_SERVICE = "pagure://{base_url}"
     base_url: config.StrippedTrailingSlashUrl
@@ -92,7 +91,7 @@ class PagureIssue(Issue):
 
 
 class PagureService(Service[PagureIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = PagureIssue
     CONFIG_SCHEMA = PagureConfig
 

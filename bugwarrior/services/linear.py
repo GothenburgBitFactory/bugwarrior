@@ -128,7 +128,7 @@ class LinearIssue(Issue):
 
 
 class LinearService(Service[LinearIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = LinearIssue
     CONFIG_SCHEMA = LinearConfig
 

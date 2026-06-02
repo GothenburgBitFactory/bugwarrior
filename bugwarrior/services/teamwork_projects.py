@@ -94,7 +94,7 @@ class TeamworkIssue(Issue):
 
 
 class TeamworkService(Service[TeamworkIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = TeamworkIssue
     CONFIG_SCHEMA = TeamworkConfig
 

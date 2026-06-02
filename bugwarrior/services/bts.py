@@ -104,7 +104,7 @@ class BTSIssue(Issue):
 
 
 class BTSService(Service[BTSIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = BTSIssue
     CONFIG_SCHEMA = BTSConfig
 

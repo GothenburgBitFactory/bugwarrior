@@ -1,4 +1,4 @@
-Python API v1.0
+Python API v2.0
 ===============
 
 The interfaces documented here are considered stable. All other interfaces

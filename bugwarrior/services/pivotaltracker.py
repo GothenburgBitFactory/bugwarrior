@@ -111,7 +111,7 @@ class PivotalTrackerIssue(Issue):
 
 
 class PivotalTrackerService(Service[PivotalTrackerIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = PivotalTrackerIssue
     CONFIG_SCHEMA = PivotalTrackerConfig
 

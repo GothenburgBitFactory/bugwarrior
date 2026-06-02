@@ -79,7 +79,7 @@ class TracIssue(Issue):
 
 
 class TracService(Service[TracIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = TracIssue
     CONFIG_SCHEMA = TracConfig
     trac: offtrac.TracServer | None

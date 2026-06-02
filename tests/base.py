@@ -34,7 +34,7 @@ class DumbIssue(services.Issue):
 
 
 class DumbService(services.Service):
-    API_VERSION = 1.0
+    API_VERSION = services.LATEST_API_VERSION
     ISSUE_CLASS = DumbIssue
     CONFIG_SCHEMA = DumbConfig
 

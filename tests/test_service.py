@@ -5,7 +5,7 @@ import re
 import unittest.mock
 
 from bugwarrior import services
-from bugwarrior.config import validation
+from bugwarrior.config import ServiceConfig, validation
 from bugwarrior.config.load import format_config
 
 from .base import ConfigTest, DumbService
@@ -100,6 +100,20 @@ class TestService(ServiceBase):
             latest_documented = float(match.groupdict()['version'])
 
         self.assertEqual(latest_documented, services.LATEST_API_VERSION)
+
+    def test_api_v1_keyring_service_backwards_compatibility(self):
+        class LegacyService:
+            API_VERSION = 1.0
+
+            @staticmethod
+            def get_keyring_service(config):
+                return f'legacy://{config.target}'
+
+        service_config = ServiceConfig(service='legacy', target='legacy-target')
+        with unittest.mock.patch(
+            'bugwarrior.collect.get_service', lambda _: LegacyService
+        ):
+            self.assertEqual(service_config.keyring_service, 'legacy://legacy-target')
 
 
 class TestIssue(ServiceBase):

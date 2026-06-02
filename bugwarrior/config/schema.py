@@ -203,10 +203,6 @@ class ServiceConfig(_ServiceConfig):
     service: str
     target: str
 
-    @property
-    def keyring_service(self) -> str:
-        return self.KEYRING_SERVICE.format(**self.model_dump())
-
     # Added during validation (computed field)
     templates: dict[str, str] = {}
 
@@ -216,6 +212,18 @@ class ServiceConfig(_ServiceConfig):
     default_priority: Priority = "M"
     add_tags: ConfigList = []
     static_fields: ConfigList = []
+
+    @property
+    def keyring_service(self) -> str:
+        # FIXME change this import and move it outside method after rebase
+        from bugwarrior.collect import get_service
+
+        service = get_service(self.service)
+        if service.API_VERSION < 2:
+            assert hasattr(service, "get_keyring_service")
+            return service.get_keyring_service(self)  # ty: ignore
+
+        return self.KEYRING_SERVICE.format(**self.model_dump())
 
     @model_validator(mode="before")
     @classmethod

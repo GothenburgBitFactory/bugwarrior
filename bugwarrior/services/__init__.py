@@ -37,7 +37,7 @@ CACHE_REGION = dogpile.cache.make_region().configure(
 # spec will cause breakages with older bugwarrior releases.
 # MINOR versions signal extensions of the spec which enhance future releases of
 # bugwarrior without breaking past releases.
-LATEST_API_VERSION = 1.0
+LATEST_API_VERSION = 2.0
 
 
 class URLShortener:
