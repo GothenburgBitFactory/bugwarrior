@@ -81,7 +81,7 @@ class TestSynchronize(ConfigTest):
 
         issue_generator = [
             CollectedIssue(
-                taskwarrior_data=copy.deepcopy(issue_data),
+                task_data=copy.deepcopy(issue_data),
                 target="my_service",
                 identifier="abcd",
             )
