@@ -201,10 +201,10 @@ def synchronize(
             log.debug(f"Merging tags and skipping. Seen {issue.identifier} of {issue}")
             # Merge and deduplicate tags.
             new_tags = sorted(
-                set(issue_map[issue.identifier].taskwarrior_data['tags'])
-                | set(issue.taskwarrior_data['tags'])
+                set(issue_map[issue.identifier].task_data['tags'])
+                | set(issue.task_data['tags'])
             )
-            issue_map[issue.identifier].taskwarrior_data['tags'] = new_tags
+            issue_map[issue.identifier].task_data['tags'] = new_tags
 
         else:
             issue_map[issue.identifier] = issue

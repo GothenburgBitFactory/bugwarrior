@@ -23,7 +23,7 @@ SERVICE_FINISHED_ERROR = 1
 
 
 class CollectedIssue(NamedTuple):
-    taskwarrior_data: dict[str, Any]
+    task_data: dict[str, Any]
     target: str
     identifier: str
 
@@ -105,8 +105,7 @@ def aggregate_issues(
     while currently_running > 0:
         issue = queue.get(True)
         try:
-            record = TaskConstructor(issue).get_data_to_sync()
-            yield record
+            yield TaskConstructor(issue).get_data_to_sync()
         except AttributeError:
             if isinstance(issue, tuple):
                 currently_running -= 1
@@ -121,14 +120,14 @@ def aggregate_issues(
 
 
 def make_unique_identifier(
-    unique_keys: Iterable[str], taskwarrior_data: dict[str, Any]
+    unique_keys: Iterable[str], task_data: dict[str, Any]
 ) -> str:
     """For a given issue, make an identifier from its unique keys.
 
     This is not the same as the taskwarrior uuid, which is assigned
     only once the task is created.
     """
-    subset = {key: taskwarrior_data[key] for key in unique_keys}
+    subset = {key: task_data[key] for key in unique_keys}
     return json.dumps(subset, sort_keys=True)
 
 
@@ -179,9 +178,9 @@ class TaskConstructor:
         return record
 
     def get_data_to_sync(self) -> CollectedIssue:
-        taskwarrior_data = self.get_taskwarrior_record()
+        task_data = self.get_taskwarrior_record()
         return CollectedIssue(
-            taskwarrior_data=taskwarrior_data,
-            identifier=make_unique_identifier(self.issue.UNIQUE_KEY, taskwarrior_data),
+            task_data=task_data,
+            identifier=make_unique_identifier(self.issue.UNIQUE_KEY, task_data),
             target=self.issue.config.target,
         )
