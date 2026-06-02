@@ -337,7 +337,7 @@ class JiraIssue(Issue):
 
 
 class JiraService(Service[JiraIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = JiraIssue
     CONFIG_SCHEMA = JiraConfig
 

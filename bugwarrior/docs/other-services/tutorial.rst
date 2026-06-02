@@ -190,7 +190,7 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
 .. code:: python
 
   class GitBugService(Service):
-      API_VERSION = 1.0
+      API_VERSION = 2.0
       ISSUE_CLASS = GitBugIssue
       CONFIG_SCHEMA = GitBugConfig
 

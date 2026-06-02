@@ -119,7 +119,7 @@ class BugzillaIssue(Issue):
 
 
 class BugzillaService(Service[BugzillaIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = BugzillaIssue
     CONFIG_SCHEMA = BugzillaConfig
 

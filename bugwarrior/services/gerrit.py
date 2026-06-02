@@ -73,7 +73,7 @@ class GerritIssue(Issue):
 
 
 class GerritService(Service[GerritIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = GerritIssue
     CONFIG_SCHEMA = GerritConfig
 

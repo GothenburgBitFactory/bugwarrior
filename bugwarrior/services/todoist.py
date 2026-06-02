@@ -183,7 +183,7 @@ class TodoistIssue(Issue):
 
 
 class TodoistService(Service[TodoistIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = TodoistIssue
     CONFIG_SCHEMA = TodoistConfig
 

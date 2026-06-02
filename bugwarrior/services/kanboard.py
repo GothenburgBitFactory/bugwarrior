@@ -121,7 +121,7 @@ class KanboardIssue(Issue):
 
 
 class KanboardService(Service[KanboardIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = KanboardIssue
     CONFIG_SCHEMA = KanboardConfig
 

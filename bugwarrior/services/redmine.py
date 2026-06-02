@@ -206,7 +206,7 @@ class RedMineIssue(Issue):
 
 
 class RedMineService(Service[RedMineIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = RedMineIssue
     CONFIG_SCHEMA = RedMineConfig
 

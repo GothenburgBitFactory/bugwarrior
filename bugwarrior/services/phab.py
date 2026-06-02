@@ -86,7 +86,7 @@ class PhabricatorIssue(Issue):
 
 
 class PhabricatorService(Service[PhabricatorIssue]):
-    API_VERSION = 1.0
+    API_VERSION = 2.0
     ISSUE_CLASS = PhabricatorIssue
     CONFIG_SCHEMA = PhabricatorConfig
 
