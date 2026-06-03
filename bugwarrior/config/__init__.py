@@ -15,9 +15,9 @@ from .schema import (
     StrippedTrailingSlashUrl,  # noqa: F401
     TaskrcPath,  # noqa: F401
     UnsupportedOption,  # noqa: F401
+    get_service,  # noqa:F401
 )
 from .secrets import get_keyring  # noqa: F401
-from .validation import get_service  # noqa:F401
 
 # NOTE: __all__ determines the stable, public API.
 __all__ = [BugwarriorData.__name__, MainSectionConfig.__name__, ServiceConfig.__name__]

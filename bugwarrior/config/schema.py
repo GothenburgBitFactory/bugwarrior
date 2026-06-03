@@ -1,9 +1,11 @@
+from functools import cache
+from importlib.metadata import entry_points
 import logging
 import os
 from pathlib import Path
 import re
 import typing
-from typing import Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 import pydantic
 from pydantic import (
@@ -22,6 +24,9 @@ import taskw
 import taskw.task
 
 from .data import BugwarriorData, get_data_path
+
+if TYPE_CHECKING:
+    from bugwarrior.services import Service
 
 log = logging.getLogger(__name__)
 
@@ -215,8 +220,6 @@ class ServiceConfig(_ServiceConfig):
 
     @property
     def keyring_service(self) -> str:
-        # FIXME change this import and move it outside method after rebase
-        from bugwarrior.collect import get_service
 
         service = get_service(self.service)
         if service.API_VERSION < 2:
@@ -291,3 +294,23 @@ class ServiceConfig(_ServiceConfig):
             if value != '':
                 log.warning('project_name is deprecated in favor of project_template')
         return value
+
+
+@cache
+def get_service(service_name: str) -> type["Service"]:
+    try:
+        (service,) = entry_points(group='bugwarrior.service', name=service_name)
+    except ValueError as e:
+        if service_name in [
+            'activecollab',
+            'activecollab2',
+            'megaplan',
+            'teamlab',
+            'versionone',
+        ]:
+            log.warning(f"The {service_name} service has been removed.")
+        raise ValueError(
+            f"Configured service '{service_name}' not found. "
+            "Is it installed? Or misspelled?"
+        ) from e
+    return service.load()

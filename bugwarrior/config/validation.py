@@ -1,5 +1,3 @@
-from functools import cache
-from importlib.metadata import entry_points
 import logging
 import sys
 from typing import TYPE_CHECKING, Annotated, Any, NoReturn, Union
@@ -7,31 +5,17 @@ from typing import TYPE_CHECKING, Annotated, Any, NoReturn, Union
 from pydantic import Field, TypeAdapter, ValidationError
 from pydantic_core import ErrorDetails
 
-from .schema import BaseConfig, Hooks, MainSectionConfig, Notifications, ServiceConfig
+from .schema import (
+    BaseConfig,
+    Hooks,
+    MainSectionConfig,
+    Notifications,
+    ServiceConfig,
+    get_service,
+)
 
 if TYPE_CHECKING:
     ServiceConfigType = ServiceConfig
-    from bugwarrior.services import Service
-
-
-@cache
-def get_service(service_name: str) -> type["Service"]:
-    try:
-        (service,) = entry_points(group='bugwarrior.service', name=service_name)
-    except ValueError as e:
-        if service_name in [
-            'activecollab',
-            'activecollab2',
-            'megaplan',
-            'teamlab',
-            'versionone',
-        ]:
-            log.warning(f"The {service_name} service has been removed.")
-        raise ValueError(
-            f"Configured service '{service_name}' not found. "
-            "Is it installed? Or misspelled?"
-        ) from e
-    return service.load()
 
 
 log = logging.getLogger(__name__)

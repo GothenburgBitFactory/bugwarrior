@@ -111,7 +111,7 @@ class TestService(ServiceBase):
 
         service_config = ServiceConfig(service='legacy', target='legacy-target')
         with unittest.mock.patch(
-            'bugwarrior.collect.get_service', lambda _: LegacyService
+            'bugwarrior.config.schema.get_service', lambda _: LegacyService
         ):
             self.assertEqual(service_config.keyring_service, 'legacy://legacy-target')
 
