@@ -15,3 +15,14 @@ warning, release notes, or semantic version bumping.
    :exclude-members: __init__,compute_templates,model_config
    :imported-members:
    :member-order: bysource
+
+Changelog
+---------
+
+v2.0
+~~~~
+
+- Removed ``Service.get_keyring_service(config)``. Service configurations should
+  define ``KEYRING_SERVICE`` instead.
+- Added ``ServiceConfig.KEYRING_SERVICE`` as a format string for generating the
+  keyring service identifier from service configuration fields.
