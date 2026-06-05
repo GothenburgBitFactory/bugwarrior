@@ -173,6 +173,26 @@ class TestPull(ConfigTest):
         self.assertNotIn('Closing 1 tasks', logs)
         self.assertNotIn('Completing task', logs)
 
+    @mock.patch('bugwarrior.command.FileLock')
+    def test_locked_repository(self, file_lock):
+        """
+        A locked task repository should abort the pull.
+        """
+        lockfile_path = pathlib.Path(self.lists_path) / 'bugwarrior.lockfile'
+        file_lock.return_value.__enter__.side_effect = command.Timeout(
+            str(lockfile_path)
+        )
+
+        with self.caplog.at_level(logging.CRITICAL):
+            result = self.runner.invoke(command.cli, args=('pull', '--debug'))
+
+        self.assertEqual(result.exit_code, 1)
+        file_lock.assert_called_once_with(str(lockfile_path), timeout=10)
+        logs = [rec.message for rec in self.caplog.records]
+        self.assertTrue(
+            any('Your taskrc repository is currently locked.' in log for log in logs)
+        )
+
     @mock.patch('bugwarrior.services.github.GithubService.issues', fake_github_issues)
     def test_legacy_cli(self):
         """

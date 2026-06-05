@@ -8,8 +8,7 @@ from typing import TYPE_CHECKING, Any
 import warnings
 
 import click
-from lockfile import LockTimeout
-from lockfile.pidlockfile import PIDLockFile
+from filelock import FileLock, Timeout
 
 from bugwarrior.collect import aggregate_issues
 from bugwarrior.config import get_config_path, get_keyring, load_config
@@ -123,21 +122,17 @@ def pull(
         config = _try_load_config(main_section, quiet)
 
         lockfile_path = os.path.join(config.main.data.path, 'bugwarrior.lockfile')
-        lockfile = PIDLockFile(lockfile_path)
-        lockfile.acquire(timeout=10)
-        try:
+        with FileLock(lockfile_path, timeout=10):
             # Get all the issues.  This can take a while.
             issue_generator = aggregate_issues(config, debug)
 
             # Stuff them in the taskwarrior db as necessary
             synchronize(issue_generator, config, dry_run)
-        finally:
-            lockfile.release()
-    except LockTimeout:
+    except Timeout:
         log.critical(
             'Your taskrc repository is currently locked. '
-            'Remove the file at %s if you are sure no other '
-            'bugwarrior processes are currently running.' % (lockfile_path)
+            'Wait for any running bugwarrior processes to finish and try again. '
+            f'Lock file:{lockfile_path}'
         )
         sys.exit(1)
     except RuntimeError as e:
