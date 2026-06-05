@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import typing
 
-from lockfile.pidlockfile import PIDLockFile
+from filelock import FileLock
 
 
 def get_data_path(taskrc: str | Path) -> str:
@@ -65,7 +65,7 @@ class BugwarriorData:
 
     def set(self, key: str, value: typing.Any) -> None:
         """Set a value in the ``bugwarrior.data`` file."""
-        with PIDLockFile(self._lockfile):
+        with FileLock(self._lockfile):
             try:
                 data = self.get_data()
             except OSError:  # File does not exist.

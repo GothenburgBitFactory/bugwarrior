@@ -18,7 +18,7 @@ dependencies = [
   "click",
   "dogpile.cache>=0.5.3",
   "jinja2>=2.7.2",
-  "lockfile>=0.9.1",
+  "filelock>=3",
   "pydantic[email]>=2",
   "python-dateutil",
   "requests>=1",
