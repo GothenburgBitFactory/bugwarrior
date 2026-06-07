@@ -1,3 +1,19 @@
+TBD
+---
+
+Highlights
+==========
+- Deprecation of the --interactive flag. All invocations are now interactive. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1204)
+- Service API 2.0 (with backwards compatiblity for 1.0 services). See https://bugwarrior.readthedocs.io/en/stable/other-services/api.html#changelog. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1209)
+
+Dependency Updates
+==================
+- Replaced lockfile with filelock. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1217)
+
+Service-Specific Changes
+========================
+- linear: Support for pagination if there are more than 50 issues and mapping of entry, priority, and due fields. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1196, https://github.com/GothenburgBitFactory/bugwarrior/pull/1198, https://github.com/GothenburgBitFactory/bugwarrior/pull/1200)
+
 2.1.0
 -----
 
