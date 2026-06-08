@@ -3,7 +3,13 @@ import logging
 import typing
 from typing import Any
 
-from pydantic import computed_field
+from pydantic import (
+    AliasChoices,
+    Field,
+    computed_field,
+    field_validator,
+    model_validator,
+)
 import requests
 import urllib3
 
@@ -27,11 +33,41 @@ class YoutrackConfig(config.ServiceConfig):
     incloud_instance: bool = False
     query: str = 'for:me #Unresolved'
     query_limit: int = 100
-    import_tags: bool = True
-    tag_template: str = '{{tag|lower}}'
+    import_labels_as_tags: bool = Field(
+        True, validation_alias=AliasChoices('import_labels_as_tags', 'import_tags')
+    )
+    label_template: str = Field(
+        '{{label|lower}}',
+        validation_alias=AliasChoices('label_template', 'tag_template'),
+    )
 
     only_if_assigned: config.UnsupportedOption[str] = ''
     also_unassigned: config.UnsupportedOption[bool] = False
+
+    @model_validator(mode='before')
+    @classmethod
+    def deprecate_legacy_tag_options(cls, values: Any) -> Any:
+        if not isinstance(values, dict):
+            return values
+
+        if 'import_tags' in values:
+            log.warning('import_tags is deprecated in favor of import_labels_as_tags')
+        if 'tag_template' in values:
+            log.warning('tag_template is deprecated in favor of label_template')
+
+        template = values.get('label_template', values.get('tag_template'))
+        if isinstance(template, str) and 'tag' in template:
+            log.warning(
+                "The 'tag' variable in YouTrack label templates is deprecated "
+                "in favor of 'label'."
+            )
+
+        return values
+
+    @field_validator('label_template', mode='after')
+    @classmethod
+    def migrate_legacy_tag_template(cls, value: str) -> str:
+        return value.replace('tag', 'label')
 
     @computed_field
     @property
@@ -103,10 +139,7 @@ class YoutrackIssue(Issue):
 
     def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(
-            [tag['name'] for tag in self.record.get('tags', [])],
-            toggle_option='import_tags',
-            template_option='tag_template',
-            template_variable='tag',
+            [tag['name'] for tag in self.record.get('tags', [])]
         )
 
 

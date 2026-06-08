@@ -110,7 +110,7 @@ to tasks by default. To disable this behavior, set:
 .. config::
     :fragment: youtrack
 
-    youtrack.import_tags = False
+    youtrack.import_labels_as_tags = False
 
 If you would like to control how these tags are formatted, you can
 specify a template used for converting the YouTrack tag into a Taskwarrior
@@ -123,9 +123,9 @@ add the following configuration option:
 .. config::
     :fragment: youtrack
 
-    youtrack.tag_template = yt_{{tag|lower}}
+    youtrack.label_template = yt_{{label|lower}}
 
-In addition to the context variable ``{{tag}}``, you also have access
+In addition to the context variable ``{{label}}``, you also have access
 to all fields on the Taskwarrior task if needed.
 
 .. note::

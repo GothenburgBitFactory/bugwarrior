@@ -49,6 +49,40 @@ class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
         super().setUp()
         self.service = self.get_mock_service(YoutrackService)
 
+    def test_get_tags_from_labels_uses_legacy_tag_options(self):
+        service = self.get_mock_service(
+            YoutrackService,
+            config_overrides={'import_tags': True, 'tag_template': 'yt_{{tag|lower}}'},
+        )
+        issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
+
+        self.assertEqual(service.config.label_template, 'yt_{{label|lower}}')
+        self.assertEqual(issue.get_tags(), ['yt_bug', 'yt_new_feature'])
+        self.assertIn(
+            'import_tags is deprecated in favor of import_labels_as_tags',
+            self.caplog.text,
+        )
+        self.assertIn(
+            'tag_template is deprecated in favor of label_template', self.caplog.text
+        )
+        self.assertIn(
+            "The 'tag' variable in YouTrack label templates is deprecated in favor of 'label'.",
+            self.caplog.text,
+        )
+
+    def test_refine_record_does_not_apply_legacy_tag_template_as_field_template(self):
+        service = self.get_mock_service(
+            YoutrackService,
+            config_overrides={'import_tags': True, 'tag_template': 'yt_{{tag|lower}}'},
+        )
+        issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
+
+        self.assertEqual(service.config.templates, {})
+        self.assertEqual(
+            TaskConstructor(issue).get_taskwarrior_record()['tags'],
+            ['yt_bug', 'yt_new_feature'],
+        )
+
     def test_to_taskwarrior(self):
         self.service.import_tags = True
         issue = self.service.get_issue_for_record(
