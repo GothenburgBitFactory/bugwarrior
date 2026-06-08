@@ -236,8 +236,10 @@ class JiraIssue(Issue):
         label_tags = self.get_tags_from_labels(labels)
 
         sprints = [sprint['name'] for sprint in self.__get_sprints()]
-        sprint_tags = self.get_tags_from_labels(
-            sprints, toggle_option='import_sprints_as_tags'
+        sprint_tags = (
+            self.render_tags_from_labels(sprints)
+            if self.config.import_sprints_as_tags
+            else []
         )
 
         return label_tags + sprint_tags

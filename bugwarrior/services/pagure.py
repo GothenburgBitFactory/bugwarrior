@@ -4,7 +4,7 @@ import logging
 import typing
 from typing import Any
 
-from pydantic import model_validator
+from pydantic import AliasChoices, Field, model_validator
 import requests
 
 from bugwarrior import config
@@ -25,8 +25,25 @@ class PagureConfig(config.ServiceConfig):
     # optional
     include_repos: config.ConfigList = []
     exclude_repos: config.ConfigList = []
-    import_tags: bool = False
-    tag_template: str = '{{label}}'
+    import_labels_as_tags: bool = Field(
+        False, validation_alias=AliasChoices('import_labels_as_tags', 'import_tags')
+    )
+    label_template: str = Field(
+        '{{label}}', validation_alias=AliasChoices('label_template', 'tag_template')
+    )
+
+    @model_validator(mode='before')
+    @classmethod
+    def deprecate_legacy_tag_options(cls, values: Any) -> Any:
+        if not isinstance(values, dict):
+            return values
+
+        if 'import_tags' in values:
+            log.warning('import_tags is deprecated in favor of import_labels_as_tags')
+        if 'tag_template' in values:
+            log.warning('tag_template is deprecated in favor of label_template')
+
+        return values
 
     @model_validator(mode='after')
     def require_tag_or_repo(self) -> "PagureConfig":
@@ -75,11 +92,7 @@ class PagureIssue(Issue):
         }
 
     def get_tags(self) -> list[str]:
-        return self.get_tags_from_labels(
-            self.record.get('tags', []),
-            toggle_option='import_tags',
-            template_option='tag_template',
-        )
+        return self.get_tags_from_labels(self.record.get('tags', []))
 
     def get_default_description(self) -> str:
         return self.build_default_description(

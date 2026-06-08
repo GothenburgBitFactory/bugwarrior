@@ -26,3 +26,5 @@ v2.0
   define ``KEYRING_SERVICE`` instead.
 - Added ``ServiceConfig.KEYRING_SERVICE`` as a format string for generating the
   keyring service identifier from service configuration fields.
+- Added ``Issue.render_tags_from_labels(labels)`` for rendering taskwarrior tags
+  from service labels with ``label_template``.
