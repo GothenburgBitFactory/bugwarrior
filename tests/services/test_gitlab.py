@@ -6,7 +6,7 @@ import responses
 from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.services.gitlab import GitlabClient, GitlabService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 
 class TestData:
@@ -657,7 +657,7 @@ class TestGitlabService(ConfigTest):
         )
 
 
-class TestGitlabIssue(AbstractServiceTest, ServiceTest):
+class TestGitlabIssue(ServiceIssueTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'gitlab',

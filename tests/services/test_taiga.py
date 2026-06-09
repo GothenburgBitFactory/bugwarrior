@@ -3,10 +3,10 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.taiga import TaigaService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestTaigaIssue(AbstractServiceTest, ServiceTest):
+class TestTaigaIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'taiga',
         'base_uri': 'https://one',

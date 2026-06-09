@@ -3,10 +3,10 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bitbucket import BitbucketService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
+class TestBitbucketIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'bitbucket',
         'username': 'somename',

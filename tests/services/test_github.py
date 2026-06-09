@@ -6,7 +6,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.github import GithubClient, GithubConfig, GithubService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest, ServiceTest
 
 ARBITRARY_CREATED = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(
     microsecond=0
@@ -41,7 +41,7 @@ ARBITRARY_EXTRA = {
 IGNORABLE = {'user': {'login': 'cibot'}, 'body': 'Ignore this comment.'}
 
 
-class TestGithubIssue(AbstractServiceTest, ServiceTest):
+class TestGithubIssue(ServiceIssueTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'github',
@@ -174,7 +174,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
 
-class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
+class TestGithubIssueQuery(ServiceIssueTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'github',

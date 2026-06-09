@@ -7,7 +7,7 @@ from bugwarrior.config import validation
 from bugwarrior.config.load import format_config
 from bugwarrior.services.jira import JiraExtraFields, JiraService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 
 class FakeJiraClient:
@@ -59,7 +59,7 @@ class testJiraService(ConfigTest):
         self.assertEqual(description, service.body(issue))
 
 
-class TestJiraIssue(AbstractServiceTest, ServiceTest):
+class TestJiraIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'jira',
         'username': 'one',

@@ -5,10 +5,10 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.teamwork_projects import TeamworkService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
+class TestTeamworkIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'teamwork_projects',
         'host': 'https://test.teamwork_projects.com',

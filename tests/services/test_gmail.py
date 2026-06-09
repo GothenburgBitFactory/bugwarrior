@@ -10,7 +10,7 @@ from google.oauth2.credentials import Credentials
 from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.services import gmail
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 TEST_CREDENTIAL = {
     "token": "itsatokeneveryone",
@@ -106,7 +106,7 @@ TEST_LABELS = [
 ]
 
 
-class TestGmailIssue(AbstractServiceTest, ServiceTest):
+class TestGmailIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'gmail',
         'add_tags': 'added',
