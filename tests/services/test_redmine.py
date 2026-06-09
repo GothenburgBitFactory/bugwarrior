@@ -10,7 +10,6 @@ from .base import ServiceIssueTest
 
 
 class TestRedmineIssue(ServiceIssueTest):
-    maxDiff = None
     SERVICE_CONFIG = {
         'service': 'redmine',
         'url': 'https://something',
