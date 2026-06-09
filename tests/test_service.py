@@ -5,10 +5,9 @@ import re
 import unittest.mock
 
 from bugwarrior import services
-from bugwarrior.config import ServiceConfig, validation
-from bugwarrior.config.load import format_config
+from bugwarrior.config import ServiceConfig, schema
 
-from .base import ConfigTest, DumbService
+from .base import ConfigTest, DumbConfig, DumbService
 
 LONG_MESSAGE = """\
 Some message that is over 100 characters. This message is so long it's
@@ -17,20 +16,15 @@ that long.""".replace('\n', ' ')
 
 
 class ServiceBase(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.config = {'general': {'targets': ['test']}, 'test': {'service': 'test'}}
+    def makeService(self, general_overrides=None, config_overrides=None):
+        main_config = schema.MainSectionConfig(
+            targets=['test'], **(general_overrides or {})
+        )
+        service_config = DumbConfig(target='test', **(config_overrides or {}))
+        return DumbService(service_config, main_config)
 
-    def makeService(self):
-        with unittest.mock.patch(
-            'bugwarrior.config.validation.get_service', lambda x: DumbService
-        ):
-            formatted = format_config(self.config)
-            conf = validation.validate_config(formatted, 'general', 'configpath')
-        return DumbService(conf.service_configs[0], conf.main)
-
-    def makeIssue(self):
-        service = self.makeService()
+    def makeIssue(self, general_overrides=None, config_overrides=None):
+        service = self.makeService(general_overrides, config_overrides)
         return service.get_issue_for_record({})
 
     def checkArchitecture(self, klass: abc.ABCMeta):
@@ -68,8 +62,7 @@ class TestService(ServiceBase):
         )
 
     def test_build_annotations_limited(self):
-        self.config['general']['annotation_length'] = '20'
-        service = self.makeService()
+        service = self.makeService(general_overrides={'annotation_length': '20'})
 
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com'
@@ -77,8 +70,7 @@ class TestService(ServiceBase):
         self.assertEqual(annotations, ['@some_author - Some message that is...'])
 
     def test_build_annotations_limitless(self):
-        self.config['general']['annotation_length'] = None
-        service = self.makeService()
+        service = self.makeService(general_overrides={'annotation_length': None})
 
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com'
@@ -127,21 +119,18 @@ class TestIssue(ServiceBase):
         self.assertEqual(description, '(bw)Is# - Some message that is over 100 chara')
 
     def test_build_default_description_limited(self):
-        self.config['general']['description_length'] = '20'
-        issue = self.makeIssue()
+        issue = self.makeIssue(general_overrides={'description_length': '20'})
 
         description = issue.build_default_description(LONG_MESSAGE)
         self.assertEqual(description, '(bw)Is# - Some message that is')
 
     def test_build_default_description_limitless(self):
-        self.config['general']['description_length'] = None
-        issue = self.makeIssue()
+        issue = self.makeIssue(general_overrides={'description_length': None})
 
         description = issue.build_default_description(LONG_MESSAGE)
         self.assertEqual(description, f'(bw)Is# - {LONG_MESSAGE}')
 
     def test_get_tags_from_labels_normalization(self):
-        self.config['test']['import_labels_as_tags'] = True
-        issue = self.makeIssue()
+        issue = self.makeIssue(config_overrides={'import_labels_as_tags': True})
 
         self.assertEqual(issue.get_tags_from_labels(['needs work']), ['needs_work'])
