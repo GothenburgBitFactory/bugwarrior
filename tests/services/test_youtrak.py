@@ -23,7 +23,6 @@ class TestYoutrackService(ConfigTest):
 
 
 class TestYoutrackIssue(ServiceIssueTest):
-    maxDiff = None
     SERVICE_CONFIG = {
         'service': 'youtrack',
         'host': 'youtrack.example.com',

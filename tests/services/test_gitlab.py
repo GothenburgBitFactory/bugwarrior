@@ -658,7 +658,6 @@ class TestGitlabService(ConfigTest):
 
 
 class TestGitlabIssue(ServiceIssueTest):
-    maxDiff = None
     SERVICE_CONFIG = {
         'service': 'gitlab',
         'host': 'my-git.org',

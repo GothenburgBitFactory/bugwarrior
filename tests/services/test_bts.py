@@ -30,8 +30,6 @@ class FakeBTSLib:
 
 
 class TestBTSService(ServiceIssueTest):
-    maxDiff = None
-
     SERVICE_CONFIG = {
         'service': 'bts',
         'email': 'irl@debian.org',

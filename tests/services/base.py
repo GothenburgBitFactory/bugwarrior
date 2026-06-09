@@ -2,7 +2,6 @@ import abc
 
 from bugwarrior.config import schema
 
-# ConfigTest is also re-exported so service tests can import it from here.
 from ..base import ConfigTest
 
 

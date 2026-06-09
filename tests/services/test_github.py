@@ -42,7 +42,6 @@ IGNORABLE = {'user': {'login': 'cibot'}, 'body': 'Ignore this comment.'}
 
 
 class TestGithubIssue(ServiceIssueTest):
-    maxDiff = None
     SERVICE_CONFIG = {
         'service': 'github',
         'login': 'arbitrary_login',
@@ -175,7 +174,6 @@ class TestGithubIssue(ServiceIssueTest):
 
 
 class TestGithubIssueQuery(ServiceIssueTest):
-    maxDiff = None
     SERVICE_CONFIG = {
         'service': 'github',
         'login': 'arbitrary_login',

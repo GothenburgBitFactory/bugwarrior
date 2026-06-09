@@ -7,7 +7,6 @@ from .base import ServiceIssueTest
 
 
 class TestPhabricatorIssue(ServiceIssueTest):
-    maxDiff = None
     SERVICE_CONFIG = {
         'service': 'phabricator',
         'host': 'https://phabricator.example.com',
