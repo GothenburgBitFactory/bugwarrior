@@ -6,7 +6,7 @@ import responses
 from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.services.clickup import ClickupClient, ClickupService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 
 class TestData:
@@ -200,7 +200,7 @@ class TestClickupService(ConfigTest):
         self.assertTrue(self.service.is_assigned(task))
 
 
-class TestClickupIssue(AbstractServiceTest, ServiceTest):
+class TestClickupIssue(ServiceIssueTest):
     SERVICE_CONFIG = {'service': 'clickup', 'team_id': 1234, 'token': 'arbitrary_token'}
 
     def setUp(self):

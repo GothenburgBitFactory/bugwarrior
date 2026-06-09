@@ -4,7 +4,7 @@ from unittest import mock
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.kanboard import KanboardService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 
 class TestKanboardServiceConfig(ConfigTest):
@@ -44,7 +44,7 @@ class TestKanboardServiceConfig(ConfigTest):
         )
 
 
-class TestKanboardService(AbstractServiceTest, ServiceTest):
+class TestKanboardService(ServiceIssueTest):
     SERVICE_CONFIG = {
         "service": "kanboard",
         "url": "http://example.com",

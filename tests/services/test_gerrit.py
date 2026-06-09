@@ -5,10 +5,10 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gerrit import GerritService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestGerritIssue(AbstractServiceTest, ServiceTest):
+class TestGerritIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'gerrit',
         'base_uri': 'https://one.com',

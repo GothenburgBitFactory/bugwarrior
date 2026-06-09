@@ -15,10 +15,10 @@ from todoist_api_python.models import (
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.todoist import TodoistClient, TodoistService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestTodoistIssue(AbstractServiceTest, ServiceTest):
+class TestTodoistIssue(ServiceIssueTest):
     SERVICE_CONFIG = {"service": "todoist", "token": "TESTTOKEN"}
 
     # Base test record

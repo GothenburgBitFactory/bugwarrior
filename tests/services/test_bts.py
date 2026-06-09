@@ -3,7 +3,7 @@ from unittest import mock
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import bts
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
 class FakeBTSBug:
@@ -29,7 +29,7 @@ class FakeBTSLib:
             return [FakeBTSBug]
 
 
-class TestBTSService(AbstractServiceTest, ServiceTest):
+class TestBTSService(ServiceIssueTest):
     maxDiff = None
 
     SERVICE_CONFIG = {

@@ -3,10 +3,10 @@ import unittest
 
 from bugwarrior.services.phab import PhabricatorService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestPhabricatorIssue(AbstractServiceTest, ServiceTest):
+class TestPhabricatorIssue(ServiceIssueTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'phabricator',

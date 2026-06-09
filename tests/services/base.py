@@ -6,27 +6,6 @@ from bugwarrior.config import schema
 from ..base import ConfigTest
 
 
-class AbstractServiceTest(abc.ABC):
-    """Ensures that certain test methods are implemented for each service."""
-
-    @abc.abstractmethod
-    def test_to_taskwarrior(self):
-        """Test Service.to_taskwarrior()."""
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def test_issues(self):
-        """
-        Test Service.issues().
-
-        - When the API is accessed via requests, use the responses library to
-        mock requests.
-        - When the API is accessed via a third party library, substitute a fake
-        implementation class for it.
-        """
-        raise NotImplementedError
-
-
 class ServiceTest(ConfigTest):
     GENERAL_CONFIG = {'annotation_length': 100, 'description_length': 100}
     SERVICE_CONFIG = {}
@@ -55,3 +34,24 @@ class ServiceTest(ConfigTest):
         main_config = schema.MainSectionConfig(**options['general'])
 
         return service_class(service_config, main_config)
+
+
+class ServiceIssueTest(ServiceTest, abc.ABC):
+    """Ensures that certain test methods are implemented for each service."""
+
+    @abc.abstractmethod
+    def test_to_taskwarrior(self):
+        """Test Service.to_taskwarrior()."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def test_issues(self):
+        """
+        Test Service.issues().
+
+        - When the API is accessed via requests, use the responses library to
+        mock requests.
+        - When the API is accessed via a third party library, substitute a fake
+        implementation class for it.
+        """
+        raise NotImplementedError

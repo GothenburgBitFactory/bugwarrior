@@ -5,7 +5,7 @@ from unittest import mock
 from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.services.deck import NextcloudDeckClient
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
 @dataclasses.dataclass
@@ -62,7 +62,7 @@ class TestData:
     }
 
 
-class TestNextcloudDeckIssue(AbstractServiceTest, ServiceTest):
+class TestNextcloudDeckIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'deck',
         'base_uri': 'http://localhost:8080',

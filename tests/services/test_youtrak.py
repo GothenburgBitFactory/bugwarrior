@@ -3,7 +3,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.youtrack import YoutrackService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 
 class TestYoutrackService(ConfigTest):
@@ -22,7 +22,7 @@ class TestYoutrackService(ConfigTest):
         )
 
 
-class TestYoutrackIssue(AbstractServiceTest, ServiceTest):
+class TestYoutrackIssue(ServiceIssueTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'youtrack',

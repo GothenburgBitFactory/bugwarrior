@@ -6,10 +6,10 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.redmine import RedMineService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestRedmineIssue(AbstractServiceTest, ServiceTest):
+class TestRedmineIssue(ServiceIssueTest):
     maxDiff = None
     SERVICE_CONFIG = {
         'service': 'redmine',

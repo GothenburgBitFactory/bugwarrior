@@ -5,7 +5,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.pivotaltracker import PivotalTrackerService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 PROJECT = {
     'account_id': 100,
@@ -200,7 +200,7 @@ class TestPivotalTrackerServiceConfig(ConfigTest):
         )
 
 
-class TestPivotalTrackerIssue(AbstractServiceTest, ServiceTest):
+class TestPivotalTrackerIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'pivotaltracker',
         'token': '123456',
