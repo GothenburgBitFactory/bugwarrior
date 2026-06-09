@@ -18,7 +18,7 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
     @responses.activate
     def setUp(self):
         super().setUp()
-        self.add_response(
+        responses.get(
             'https://test.teamwork_projects.com/authenticate.json',
             json={'account': {'userId': 5, 'firstname': 'Greg', 'lastname': 'McCoy'}},
         )
@@ -106,11 +106,11 @@ class TestTeamworkIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        self.add_response(
+        responses.get(
             'https://test.teamwork_projects.com/tasks/5/comments.json',
             json=self.arbitrary_comments,
         )
-        self.add_response(
+        responses.get(
             'https://test.teamwork_projects.com/tasks.json', json=self.arbitrary_issue
         )
         issue = next(self.service.issues())

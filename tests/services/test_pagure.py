@@ -2,10 +2,10 @@ from bugwarrior.collect import TaskConstructor
 from bugwarrior.config import schema
 from bugwarrior.services.pagure import PagureIssue, PagureService
 
-from .base import ServiceTest
+from .base import ConfigTest
 
 
-class TestPagureIssue(ServiceTest):
+class TestPagureIssue(ConfigTest):
     arbitrary_issue = {
         'html_url': 'https://pagure.io/repo/issue/1',
         'repo': 'repo',
