@@ -1,7 +1,5 @@
 import abc
 
-import responses
-
 from bugwarrior.config import schema
 
 # ConfigTest is also re-exported so service tests can import it from here.
@@ -57,9 +55,3 @@ class ServiceTest(ConfigTest):
         main_config = schema.MainSectionConfig(**options['general'])
 
         return service_class(service_config, main_config)
-
-    @staticmethod
-    def add_response(url, method='GET', **kwargs):
-        responses.add(
-            responses.Response(url=url, method=method, match_querystring=True, **kwargs)
-        )

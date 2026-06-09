@@ -5,10 +5,10 @@ from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.config.schema import MainSectionConfig
 from bugwarrior.services.trello import TrelloConfig, TrelloIssue
 
-from .base import ConfigTest, ServiceTest
+from .base import ConfigTest
 
 
-class TestTrelloIssue(ServiceTest):
+class TestTrelloIssue(ConfigTest):
     JSON = {
         "due": "2018-12-02T12:59:00.000Z",
         "id": "542bbb6583d705eb05bbe491",
