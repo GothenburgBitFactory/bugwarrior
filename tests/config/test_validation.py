@@ -42,7 +42,7 @@ class ValidationService(DumbService):
 class TestValidation(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.enter_context(register_services({"test": ValidationService}))
+        self.enterContext(register_services({"test": ValidationService}))
         self.config = {
             "general": {"targets": ["my_service"]},
             "my_service": {"service": "test", "username": "ralph"},
@@ -82,6 +82,16 @@ class TestValidation(ConfigTest):
         del self.config['my_service']['service']
 
         self.assertValidationError("No option 'service' in section: 'my_service'")
+
+    def test_service_missing_without_other_service(self):
+        del self.config['my_service']['service']
+
+        self.assertValidationError(
+            "2 validation errors found in configpath\n"
+            "See https://bugwarrior.readthedocs.io\n\n"
+            "[my_service]  <- Field required\n"
+            "[my_service]  <- unrecognized option"
+        )
 
     def test_extra_field(self):
         """Undeclared fields are forbidden."""
@@ -135,8 +145,6 @@ class TestValidation(ConfigTest):
 
     def test_deprecated_project_name(self):
         """We're just testing that deprecation doesn't break validation."""
-        self.validate()
-
         self.config['my_service']['project_name'] = 'myproject'
         self.validate()
 
