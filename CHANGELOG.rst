@@ -1,3 +1,12 @@
+Unreleased
+----------
+
+Dependency Updates
+==================
+
+- Drop python-3.10 support.
+- Drop tomli.
+
 2.1.0
 -----
 

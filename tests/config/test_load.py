@@ -2,14 +2,9 @@ import configparser
 import itertools
 import os
 from pathlib import Path
-import sys
 import textwrap
+import tomllib
 from unittest import TestCase
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 from bugwarrior.config import load
 

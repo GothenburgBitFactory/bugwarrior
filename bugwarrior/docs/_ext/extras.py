@@ -1,13 +1,8 @@
 import pathlib
-import sys
+import tomllib
 
 from docutils import nodes
 from sphinx.util.docutils import SphinxDirective
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 
 class Extras(SphinxDirective):
