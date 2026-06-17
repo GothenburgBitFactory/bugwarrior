@@ -1,7 +1,6 @@
 import contextlib
 import os.path
 import shutil
-import sys
 import tempfile
 import typing
 import unittest
@@ -132,14 +131,6 @@ class ConfigTest(unittest.TestCase):
     @pytest.fixture(autouse=True)
     def inject_fixtures(self, caplog):
         self.caplog = caplog
-
-    if sys.version_info < (3, 11):
-
-        def enterContext(self, cm):
-            """Backport of unittest.TestCase.enterContext for Python 3.10."""
-            value = cm.__enter__()
-            self.addCleanup(cm.__exit__, None, None, None)
-            return value
 
     def validate(self) -> validation.Config:
         config = self.config.copy()

@@ -2,13 +2,8 @@ import configparser
 import logging
 import os
 from pathlib import Path
-import sys
+import tomllib
 from typing import Any
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 from .validation import Config, validate_config
 

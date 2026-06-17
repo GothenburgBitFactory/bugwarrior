@@ -3,7 +3,7 @@ name = "bugwarrior"
 version = "2.1.0.post"
 description = "a command line utility for updating your local taskwarrior database from your forge issue trackers"
 readme = "bugwarrior/README.rst"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE.txt"]
 keywords=["task", "taskwarrior", "todo", "github"]
@@ -11,6 +11,10 @@ classifiers=[
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Software Development :: Bug Tracking",
   "Topic :: Utilities",
 ]
@@ -26,7 +30,6 @@ dependencies = [
   # which is no longer bundled in venvs since Python 3.12 (see #1150).
   "setuptools",
   "taskw>=0.8",
-  "tomli ; python_version <= '3.10'",
 ]
 
 [project.optional-dependencies]
@@ -128,8 +131,7 @@ build-backend = "setuptools.build_meta"
 docs = [
     # sphinx-inline-tabs is incompatible with docutils-0.22 https://github.com/pradyunsg/sphinx-inline-tabs/pull/51
     "docutils<0.22",
-    "sphinx>=1.0,<9.0 ; python_version <= '3.10'",
-    "sphinx>=9.0.3 ; python_version >= '3.11'",
+    "sphinx>=9.0.3",
     "sphinx-click",
     "sphinx-inline-tabs",
 ]
