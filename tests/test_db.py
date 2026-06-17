@@ -63,8 +63,7 @@ class TestMergeTags:
 class TestSynchronize(ConfigTest):
     def setUp(self):
         super().setUp()
-        # synchronize() resolves the service via get_service for UNIQUE_KEY/UDAS.
-        self.enter_context(register_services())
+        self.enterContext(register_services())
         self.bwconfig = Config(
             service_configs=[DumbConfig(target='my_service')],
             main=schema.MainSectionConfig(

@@ -1,6 +1,7 @@
 import contextlib
 import os.path
 import shutil
+import sys
 import tempfile
 import typing
 import unittest
@@ -96,7 +97,7 @@ def register_services(mapping=None):
             stack.enter_context(
                 unittest.mock.patch(f'{module}.get_service', fake_get_service)
             )
-        yield mapping
+        yield
 
 
 class ConfigTest(unittest.TestCase):
@@ -132,15 +133,13 @@ class ConfigTest(unittest.TestCase):
     def inject_fixtures(self, caplog):
         self.caplog = caplog
 
-    def enter_context(self, cm):
-        """Enter a context manager for the duration of the test.
+    if sys.version_info < (3, 11):
 
-        Backport of unittest.TestCase.enterContext, which is only available on
-        Python 3.11+ (we still support 3.10).
-        """
-        value = cm.__enter__()
-        self.addCleanup(cm.__exit__, None, None, None)
-        return value
+        def enterContext(self, cm):
+            """Backport of unittest.TestCase.enterContext for Python 3.10."""
+            value = cm.__enter__()
+            self.addCleanup(cm.__exit__, None, None, None)
+            return value
 
     def validate(self) -> validation.Config:
         config = self.config.copy()

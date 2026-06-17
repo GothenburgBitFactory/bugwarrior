@@ -41,17 +41,22 @@ class SecondaryService(DumbService):
     ISSUE_CLASS = SecondaryIssue
 
 
-ARBITRARY_RECORD = {
-    'title': 'Hallo',
-    'url': 'https://example.com',
-    'number': 10,
-    'labels': [],
-}
-ARBITRARY_EXTRA = {'project': 'one', 'type': 'issue', 'annotations': []}
+def yields_one(target_specific_url=False):
+    def issues(self):
+        record = {
+            'title': 'Hallo',
+            'url': 'https://example.com',
+            'number': 10,
+            'labels': [],
+        }
 
+        if target_specific_url:
+            record['url'] = f'https://example.com/{self.config.target}'
 
-def yields_one(self):
-    yield self.get_issue_for_record(ARBITRARY_RECORD, ARBITRARY_EXTRA)
+        extra = {'project': 'one', 'type': 'issue', 'annotations': []}
+        yield self.get_issue_for_record(record, extra)
+
+    return issues
 
 
 def yields_none(self):
@@ -60,12 +65,6 @@ def yields_none(self):
 
 def raises(self):
     raise Exception('message')
-
-
-def yields_per_target(self):
-    """Yield one issue whose url is unique per target."""
-    record = dict(ARBITRARY_RECORD, url=f'https://example.com/{self.config.target}')
-    yield self.get_issue_for_record(record, ARBITRARY_EXTRA)
 
 
 def fake_service(issues, base=DumbService):
@@ -106,9 +105,10 @@ class TestPull(ConfigTest):
         """
         A normal `bugwarrior pull` invocation.
         """
-        self.enter_context(register_services({'test': fake_service(yields_one)}))
-
-        with self.caplog.at_level(logging.INFO):
+        with (
+            register_services({'test': fake_service(yields_one())}),
+            self.caplog.at_level(logging.INFO),
+        ):
             self.runner.invoke(command.cli, args=('pull', '--debug'))
 
         logs = [rec.message for rec in self.caplog.records]
@@ -121,9 +121,10 @@ class TestPull(ConfigTest):
         """
         A broken `bugwarrior pull` invocation.
         """
-        self.enter_context(register_services({'test': fake_service(raises)}))
-
-        with self.caplog.at_level(logging.ERROR):
+        with (
+            register_services({'test': fake_service(raises)}),
+            self.caplog.at_level(logging.ERROR),
+        ):
             self.runner.invoke(command.cli, args=('pull', '--debug'))
 
         self.assertNotEqual(self.caplog.records, [])
@@ -147,16 +148,15 @@ class TestPull(ConfigTest):
         self.config['my_broken_service'] = {'service': 'secondary'}
         self.write_rc(self.config)
 
-        self.enter_context(
+        with (
             register_services(
                 {
                     'test': fake_service(yields_none),
                     'secondary': fake_service(raises, base=SecondaryService),
                 }
-            )
-        )
-
-        with self.caplog.at_level(logging.INFO):
+            ),
+            self.caplog.at_level(logging.INFO),
+        ):
             self.runner.invoke(command.cli, args=('pull', '--debug'))
 
         logs = [rec.message for rec in self.caplog.records]
@@ -175,23 +175,23 @@ class TestPull(ConfigTest):
 
         # Add a task to each service.
         both_working = {
-            'test': fake_service(yields_per_target),
-            'secondary': fake_service(yields_per_target, base=SecondaryService),
+            'test': fake_service(yields_one(target_specific_url=True)),
+            'secondary': fake_service(
+                yields_one(target_specific_url=True), base=SecondaryService
+            ),
         }
-        with register_services(both_working):
-            with self.caplog.at_level(logging.DEBUG):
-                self.runner.invoke(command.cli, args=('pull', '--debug'))
+        with register_services(both_working), self.caplog.at_level(logging.DEBUG):
+            self.runner.invoke(command.cli, args=('pull', '--debug'))
         logs = [rec.message for rec in self.caplog.records]
         self.assertIn('Adding 2 tasks', logs)
 
         # Break the secondary service and run pull again.
         secondary_broken = {
-            'test': fake_service(yields_per_target),
+            'test': fake_service(yields_one(target_specific_url=True)),
             'secondary': fake_service(raises, base=SecondaryService),
         }
-        with register_services(secondary_broken):
-            with self.caplog.at_level(logging.INFO):
-                self.runner.invoke(command.cli, args=('pull', '--debug'))
+        with register_services(secondary_broken), self.caplog.at_level(logging.INFO):
+            self.runner.invoke(command.cli, args=('pull', '--debug'))
         logs = [rec.message for rec in self.caplog.records]
 
         # Make sure my_broken_service failed while my_service succeeded.
@@ -209,13 +209,15 @@ class TestPull(ConfigTest):
         """
         # The service is never collected (the lock fails first), but config
         # loading still resolves it.
-        self.enter_context(register_services({'test': DumbService}))
         lockfile_path = pathlib.Path(self.lists_path) / 'bugwarrior.lockfile'
         file_lock.return_value.__enter__.side_effect = command.Timeout(
             str(lockfile_path)
         )
 
-        with self.caplog.at_level(logging.CRITICAL):
+        with (
+            register_services({'test': DumbService}),
+            self.caplog.at_level(logging.CRITICAL),
+        ):
             result = self.runner.invoke(command.cli, args=('pull', '--debug'))
 
         self.assertEqual(result.exit_code, 1)
@@ -231,9 +233,10 @@ class TestPull(ConfigTest):
 
         Also test that it logs a deprecation warning.
         """
-        self.enter_context(register_services({'test': fake_service(yields_one)}))
-
-        with self.caplog.at_level(logging.INFO):
+        with (
+            register_services({'test': fake_service(yields_one())}),
+            self.caplog.at_level(logging.INFO),
+        ):
             self.runner.invoke(command.pull, args=('--debug'))
 
         logs = [rec.message for rec in self.caplog.records]
