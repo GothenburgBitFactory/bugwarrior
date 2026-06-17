@@ -86,6 +86,9 @@ clickup = "bugwarrior.services.clickup:ClickupService"
 [project.entry-points."ini2toml.processing"]
 bugwarrior = "bugwarrior.config.ini2toml_plugin:activate"
 
+[tool.uv]
+exclude-newer = "3 days"
+
 [tool.ruff.format]
 quote-style = "preserve"
 skip-magic-trailing-comma = true
