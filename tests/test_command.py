@@ -207,8 +207,6 @@ class TestPull(ConfigTest):
         """
         A locked task repository should abort the pull.
         """
-        # The service is never collected (the lock fails first), but config
-        # loading still resolves it.
         lockfile_path = pathlib.Path(self.lists_path) / 'bugwarrior.lockfile'
         file_lock.return_value.__enter__.side_effect = command.Timeout(
             str(lockfile_path)
