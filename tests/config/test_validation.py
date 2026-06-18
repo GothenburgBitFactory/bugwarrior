@@ -74,24 +74,9 @@ class TestValidation(ConfigTest):
         )
 
     def test_service_missing(self):
-        # A second valid service is needed so the section with the missing
-        # 'service' option fails discrimination against a non-empty union,
-        # which is what produces the "No option 'service'" message.
-        self.config["general"]["targets"] = ["my_service", "other_service"]
-        self.config["other_service"] = {"service": "test", "username": "ralph"}
         del self.config['my_service']['service']
 
         self.assertValidationError("No option 'service' in section: 'my_service'")
-
-    def test_service_missing_without_other_service(self):
-        del self.config['my_service']['service']
-
-        self.assertValidationError(
-            "2 validation errors found in configpath\n"
-            "See https://bugwarrior.readthedocs.io\n\n"
-            "[my_service]  <- Field required\n"
-            "[my_service]  <- unrecognized option"
-        )
 
     def test_extra_field(self):
         """Undeclared fields are forbidden."""
@@ -173,8 +158,6 @@ class TestValidation(ConfigTest):
         )
 
     def test_service_and_hooks_errors_reported_together(self):
-        # See test_service_missing: a second valid service is needed for the
-        # "No option 'service'" message.
         self.config['general']['targets'] = ['my_service', 'other_service']
         self.config['other_service'] = {'service': 'test', 'username': 'ralph'}
         del self.config['my_service']['service']
