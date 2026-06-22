@@ -41,7 +41,9 @@ jobs:
 
           python3 -m venv .venv
           source .venv/bin/activate
-          pip install --upgrade "pip>=25.1" setuptools
+          pip install --upgrade "pip>=26.1"
+          pip config --site set install.uploaded-prior-to P3D
+          pip install --upgrade setuptools
 
           pip install -e ".[all]"
           pip install --group test
@@ -80,7 +82,9 @@ jobs:
             mkdir .venv
             python3 -m venv .venv
             source .venv/bin/activate
-            pip install --upgrade "pip>=25.1" setuptools
+            pip install --upgrade "pip>=26.1"
+            pip config --site set install.uploaded-prior-to P3D
+            pip install --upgrade setuptools
 
             pip install -e .[all]
             pip install --group test
