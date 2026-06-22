@@ -158,8 +158,6 @@ class TestValidation(ConfigTest):
         )
 
     def test_service_and_hooks_errors_reported_together(self):
-        self.config['general']['targets'] = ['my_service', 'other_service']
-        self.config['other_service'] = {'service': 'test', 'username': 'ralph'}
         del self.config['my_service']['service']
         self.config['hooks'] = {'invalid_option': 'value'}
         self.assertValidationError("No option 'service' in section: 'my_service'")
