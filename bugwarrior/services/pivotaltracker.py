@@ -170,25 +170,25 @@ class PivotalTrackerService(Service[PivotalTrackerIssue]):
     def issues(self) -> Iterator[PivotalTrackerIssue]:
         for project in self.get_projects(self.config.account_ids):
             project_id = project.get('id')
-            if project_id not in self.config.exclude_projects:
-                for story in self.get_query(project_id, query=self.query):
-                    story_id = story.get('id')
-                    if story_id is None:
-                        continue
-                    tasks = self.get_tasks(project_id, story_id)
-                    blockers = self.get_blockers(project_id, story_id)
-                    extra = {
-                        'project_name': project.get('name'),
-                        'annotations': self.annotations(tasks, story),
-                        'owned_user': self.get_user_by_id(
-                            project_id, story['owner_ids']
-                        ),
-                        'request_user': self.get_user_by_id(
-                            project_id, [story['requested_by_id']]
-                        ),
-                        'blockers': self.blockers(blockers),
-                    }
-                    yield self.get_issue_for_record(story, extra)
+            if project_id is None or project_id in self.config.exclude_projects:
+                continue
+
+            for story in self.get_query(project_id, query=self.query):
+                story_id = story.get('id')
+                if story_id is None:
+                    continue
+                tasks = self.get_tasks(project_id, story_id)
+                blockers = self.get_blockers(project_id, story_id)
+                extra = {
+                    'project_name': project.get('name'),
+                    'annotations': self.annotations(tasks, story),
+                    'owned_user': self.get_user_by_id(project_id, story['owner_ids']),
+                    'request_user': self.get_user_by_id(
+                        project_id, [story['requested_by_id']]
+                    ),
+                    'blockers': self.blockers(blockers),
+                }
+                yield self.get_issue_for_record(story, extra)
 
     def api_request(self, endpoint: str, params: dict[str, Any] | None = None) -> Any:
         """

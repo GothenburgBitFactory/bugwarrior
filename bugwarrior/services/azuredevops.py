@@ -242,7 +242,7 @@ class AzureDevopsService(Service[AzureDevopsIssue]):
                         name = comment["revisedBy"]["displayName"]
                     except KeyError:
                         name = comment["modifiedBy"]["displayName"]
-                    text = format_item(comment["text"])
+                    text = format_item(comment["text"]) or ""
                     annotations.append((name, text))
         return self.build_annotations(annotations, url)
 

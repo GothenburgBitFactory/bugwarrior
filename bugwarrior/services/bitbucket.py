@@ -113,7 +113,7 @@ class BitbucketService(Service[BitbucketIssue]):
                 'bitbucket_refresh_token', response['refresh_token']
             )
 
-        self.requests_kwargs = {
+        self.requests_kwargs: dict[str, Any] = {
             'headers': {'Authorization': f"Bearer {response['access_token']}"}
         }
 
