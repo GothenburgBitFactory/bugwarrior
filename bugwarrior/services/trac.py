@@ -106,7 +106,7 @@ class TracService(Service[TracIssue]):
         annotations = []
         # without offtrac, we can't get issue comments
         if self.trac is None:
-            return annotations
+            return []
         changelog = typing.cast(
             list, self.trac.server.ticket.changeLog(issue['number'])
         )

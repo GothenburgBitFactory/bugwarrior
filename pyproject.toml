@@ -141,5 +141,5 @@ test = [
     "responses",
     # ruff and ty are required by tests/test_general.py
     "ruff",
-    "ty==0.0.32",
+    "ty==0.0.51",
 ]
