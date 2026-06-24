@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta, timezone
-import unittest
+
+import pytest
 
 from bugwarrior.services.phab import PhabricatorService
 
@@ -52,6 +53,6 @@ class TestPhabricatorIssue(ServiceIssueTest):
 
         assert actual_output == expected_output
 
-    @unittest.skip('The phabricator library is hard to mock.')
+    @pytest.mark.skip(reason='The phabricator library is hard to mock.')
     def test_issues(self):
         pass
