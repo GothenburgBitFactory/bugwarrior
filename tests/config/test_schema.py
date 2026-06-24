@@ -35,9 +35,8 @@ class TestExpandedPath(unittest.TestCase):
         os.chdir(self.dir)
 
 
-class TestConfigList(unittest.TestCase):
-    def setUp(self):
-        self.adapter = TypeAdapter(schema.ConfigList)
+class TestConfigList:
+    adapter = TypeAdapter(schema.ConfigList)
 
     def test_configlist(self):
         assert self.adapter.validate_python('project_bar,project_baz') == [
@@ -102,9 +101,8 @@ class TestTaskrcPath(ConfigTest):
             self.validate()
 
 
-class TestUnsupportedOption(unittest.TestCase):
-    def setUp(self):
-        self.adapter = TypeAdapter(schema.UnsupportedOption[str])
+class TestUnsupportedOption:
+    adapter = TypeAdapter(schema.UnsupportedOption[str])
 
     def test_unsupportedoption_falsey(self):
         assert self.adapter.validate_python('') == ''
