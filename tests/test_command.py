@@ -2,7 +2,7 @@ import logging
 import os
 import pathlib
 import typing
-from unittest import TestCase, mock
+from unittest import mock
 
 from click.testing import CliRunner
 
@@ -242,19 +242,15 @@ class TestPull(ConfigTest):
         assert 'Closing 0 tasks' in logs
 
 
-class TestIni2Toml(TestCase):
-    def setUp(self):
-        super().setUp()
-        self.runner = CliRunner()
-
+class TestIni2Toml:
     def test_bugwarriorrc(self):
         basedir = pathlib.Path(__file__).parent
-        result = self.runner.invoke(
+        runner = CliRunner()
+        result = runner.invoke(
             command.cli, args=('ini2toml', str(basedir / 'config/example-bugwarriorrc'))
         )
 
         assert result.exit_code == 0
 
-        self.maxDiff = None
         with open(basedir / 'config/example-bugwarrior.toml', 'r') as f:
             assert result.stdout == f.read()

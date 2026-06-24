@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 import textwrap
 import tomllib
-from unittest import TestCase
 
 import pytest
 
@@ -103,24 +102,22 @@ class TestGetConfigPath(LoadTest):
         assert load.get_config_path() == rc
 
 
-class TestBugwarriorConfigParser(TestCase):
-    def setUp(self):
-        self.config = load.BugwarriorConfigParser()
-        self.config['general'] = {
-            'someint': '4',
-            'somenone': '',
-            'somechar': 'somestring',
-        }
+class TestBugwarriorConfigParser:
+    @pytest.fixture
+    def config(self):
+        config = load.BugwarriorConfigParser()
+        config['general'] = {'someint': '4', 'somenone': '', 'somechar': 'somestring'}
+        return config
 
-    def test_getint(self):
-        assert self.config.getint('general', 'someint') == 4
+    def test_getint(self, config):
+        assert config.getint('general', 'someint') == 4
 
-    def test_getint_none(self):
-        assert self.config.getint('general', 'somenone') is None
+    def test_getint_none(self, config):
+        assert config.getint('general', 'somenone') is None
 
-    def test_getint_valueerror(self):
+    def test_getint_valueerror(self, config):
         with pytest.raises(ValueError):
-            self.config.getint('general', 'somechar')
+            config.getint('general', 'somechar')
 
 
 class TestParseFile(LoadTest):

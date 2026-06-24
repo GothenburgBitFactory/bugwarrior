@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from unittest import TestCase
 
 import responses
 
@@ -123,12 +122,7 @@ class TestData:
         return self.get_task_contents()[0]
 
 
-class TestClickupClient(TestCase):
-    def setUp(self):
-        super().setUp()
-        self.client = ClickupClient('XXXXXX')
-        self.data = TestData()
-
+class TestClickupClient:
     def test_init(self):
         http_client = ClickupClient('12345')
         assert (
@@ -138,16 +132,18 @@ class TestClickupClient(TestCase):
 
     @responses.activate
     def test_get_repo(self):
+        client = ClickupClient('XXXXXX')
+        data = TestData()
         responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0",
-            json=self.data.get_page(0),
+            json=data.get_page(0),
         )
         responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=1",
-            json=self.data.get_page(1),
+            json=data.get_page(1),
         )
-        result = [item for item in self.client.get_tasks_for_team(team_id=1234)]
-        assert self.data.get_task_contents() == result
+        result = [item for item in client.get_tasks_for_team(team_id=1234)]
+        assert data.get_task_contents() == result
 
 
 class TestClickupService(ConfigTest):
