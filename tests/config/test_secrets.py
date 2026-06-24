@@ -2,13 +2,14 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import keyring.errors
+import pytest
 
 from bugwarrior.config import secrets
 
 
 class TestOracleEval(unittest.TestCase):
     def test_echo(self):
-        self.assertEqual(secrets.oracle_eval("echo fööbår"), "fööbår")
+        assert secrets.oracle_eval("echo fööbår") == "fööbår"
 
 
 class TestGetServicePassword(unittest.TestCase):
@@ -38,7 +39,7 @@ class TestGetServicePassword(unittest.TestCase):
         with patch.object(secrets, "oracle_eval", return_value="s3cr3t") as mock_eval:
             result = self._call(oracle="@oracle:eval:echo s3cr3t")
         mock_eval.assert_called_once_with("echo s3cr3t")
-        self.assertEqual(result, "s3cr3t")
+        assert result == "s3cr3t"
 
     def test_ask_password_interactive_prompts_user(self):
         with (
@@ -48,12 +49,12 @@ class TestGetServicePassword(unittest.TestCase):
             mock_stdin.isatty.return_value = True
             result = self._call(oracle="@oracle:ask_password")
         mock_getpass.assert_called_once()
-        self.assertEqual(result, "typed")
+        assert result == "typed"
 
     def test_ask_password_non_interactive_exits(self):
         with patch("sys.stdin") as mock_stdin, patch("getpass.getpass") as mock_getpass:
             mock_stdin.isatty.return_value = False
-            with self.assertRaises(SystemExit):
+            with pytest.raises(SystemExit):
                 self._call(oracle="@oracle:ask_password")
         mock_getpass.assert_not_called()
 
@@ -62,21 +63,21 @@ class TestGetServicePassword(unittest.TestCase):
         with patch.object(secrets, "get_keyring", return_value=mock):
             result = self._call(oracle="@oracle:use_keyring")
         mock.get_password.assert_called_once_with(self.SERVICE, self.USERNAME)
-        self.assertEqual(result, "stored")
+        assert result == "stored"
 
     def test_default_oracle_also_uses_keyring(self):
         """Passing oracle=None should behave identically to @oracle:use_keyring."""
         mock = self._mock_keyring(password="stored")
         with patch.object(secrets, "get_keyring", return_value=mock):
             result = self._call(oracle=None)
-        self.assertEqual(result, "stored")
+        assert result == "stored"
 
     def test_keyring_locked_exits(self):
         """When the keyring is locked and the unlock dialog is dismissed,
         keyring raises KeyringLocked. bugwarrior should exit fatally."""
         mock = self._mock_keyring(locked=True)
         with patch.object(secrets, "get_keyring", return_value=mock):
-            with self.assertRaises(SystemExit):
+            with pytest.raises(SystemExit):
                 self._call(oracle="@oracle:use_keyring")
 
     def test_keyring_empty_interactive_prompts_and_stores(self):
@@ -90,7 +91,7 @@ class TestGetServicePassword(unittest.TestCase):
         ):
             mock_stdin.isatty.return_value = True
             result = self._call(oracle="@oracle:use_keyring")
-        self.assertEqual(result, "newpass")
+        assert result == "newpass"
         mock.set_password.assert_called_once_with(
             self.SERVICE, self.USERNAME, "newpass"
         )
@@ -104,10 +105,10 @@ class TestGetServicePassword(unittest.TestCase):
             patch("getpass.getpass") as mock_getpass,
         ):
             mock_stdin.isatty.return_value = False
-            with self.assertRaises(SystemExit):
+            with pytest.raises(SystemExit):
                 self._call(oracle="@oracle:use_keyring")
         mock_getpass.assert_not_called()
 
     def test_unknown_oracle_exits(self):
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             self._call(oracle="@oracle:unknown_strategy")

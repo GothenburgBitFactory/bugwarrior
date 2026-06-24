@@ -124,7 +124,7 @@ class TestTodoistIssue(ServiceIssueTest):
 
         actual = issue.to_taskwarrior()
 
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     def test_to_taskwarrior_with_labels(self):
         # Test lables when `import_labels_as_tags` is enabled
@@ -132,7 +132,7 @@ class TestTodoistIssue(ServiceIssueTest):
         service = self.get_mock_service(TodoistService, config_overrides=overrides)
         issue = service.get_issue_for_record(self.test_record, self.test_extra)
         actual = issue.to_taskwarrior()
-        self.assertEqual(actual.get("tags"), ["TESTLABEL"])
+        assert actual.get("tags") == ["TESTLABEL"]
 
     def test_to_taskwarrior_task_with_low_priority(self):
         # Test with priority set to lowest (1 in the API, which is P4 on the Todoist UI)
@@ -140,7 +140,7 @@ class TestTodoistIssue(ServiceIssueTest):
         test_record["priority"] = 1
         issue = self.service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
-        self.assertIs(actual.get("priority"), None)
+        assert actual.get("priority") is None
 
     def test_to_taskwarrior_subtask(self):
         # subtasks have a parent id
@@ -149,12 +149,11 @@ class TestTodoistIssue(ServiceIssueTest):
         test_record["parent_id"] = "1212121212121212"
         issue = self.service.get_issue_for_record(test_record, test_extras)
         actual = issue.to_taskwarrior()
-        self.assertIs(actual.get("todoistparentid"), "1212121212121212")
-        self.assertEqual(
-            issue.get_default_description(),
-            "(bw)Subtask ##1111111111111111"
+        assert actual.get("todoistparentid") == "1212121212121212"
+        assert (
+            issue.get_default_description() == "(bw)Subtask ##1111111111111111"
             " - TESTTASK .."
-            " https://app.todoist.com/app/task/testtask-1111111111111111",
+            " https://app.todoist.com/app/task/testtask-1111111111111111"
         )
 
     def test_issues(self):
@@ -189,4 +188,4 @@ class TestTodoistIssue(ServiceIssueTest):
             issue.PARENT_ID: None,
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected

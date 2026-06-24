@@ -74,7 +74,7 @@ class TestGerritIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     def test_work_in_progress(self):
         wip_record = dict(self.record)  # make a copy of the dict
@@ -96,7 +96,7 @@ class TestGerritIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     @responses.activate
     def test_issues(self):
@@ -123,4 +123,4 @@ class TestGerritIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected

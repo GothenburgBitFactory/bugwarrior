@@ -108,21 +108,23 @@ class TestLinearServiceConfig(ConfigTest):
     def test_status_types_defaults_when_neither_set(self):
         self.config["linear"].update({"api_token": "abc123"})
         conf = self.validate()
-        self.assertEqual(
-            conf.service_configs[0].status_types, ["backlog", "unstarted", "started"]
-        )
+        assert conf.service_configs[0].status_types == [
+            "backlog",
+            "unstarted",
+            "started",
+        ]
 
     def test_statuses_only(self):
         self.config["linear"].update({"api_token": "abc123", "statuses": "Done, Todo"})
         conf = self.validate()
-        self.assertEqual(conf.service_configs[0].statuses, ["Done", "Todo"])
-        self.assertIsNone(conf.service_configs[0].status_types)
+        assert conf.service_configs[0].statuses == ["Done", "Todo"]
+        assert conf.service_configs[0].status_types is None
 
     def test_status_types_only(self):
         self.config["linear"].update({"api_token": "abc123", "status_types": "started"})
         conf = self.validate()
-        self.assertEqual(conf.service_configs[0].status_types, ["started"])
-        self.assertEqual(conf.service_configs[0].statuses, [])
+        assert conf.service_configs[0].status_types == ["started"]
+        assert conf.service_configs[0].statuses == []
 
 
 class TestLinearIssue(ServiceIssueTest):
@@ -165,7 +167,7 @@ class TestLinearIssue(ServiceIssueTest):
         }
 
         actual_output = issue.to_taskwarrior()
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
         issue = RESPONSE["data"]["issues"]["nodes"][1]
         issue = self.service.get_issue_for_record(issue, {})
@@ -194,7 +196,7 @@ class TestLinearIssue(ServiceIssueTest):
         }
 
         actual_output = issue.to_taskwarrior()
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     @responses.activate
     def test_issues(self):
@@ -223,7 +225,7 @@ class TestLinearIssue(ServiceIssueTest):
             "project": 'prj',
             "tags": [],
         }
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     def test_priority_mapping(self):
         # Linear priority integers must map onto taskwarrior's H/M/L buckets,
@@ -243,7 +245,7 @@ class TestLinearIssue(ServiceIssueTest):
                     "priority": linear_priority,
                 }
                 issue = self.service.get_issue_for_record(record, {})
-                self.assertEqual(issue.to_taskwarrior()["priority"], expected)
+                assert issue.to_taskwarrior()["priority"] == expected
 
         # A record without a priority key at all should also fall back.
         record = {
@@ -252,7 +254,7 @@ class TestLinearIssue(ServiceIssueTest):
             if k != "priority"
         }
         issue = self.service.get_issue_for_record(record, {})
-        self.assertEqual(issue.to_taskwarrior()["priority"], "M")
+        assert issue.to_taskwarrior()["priority"] == "M"
 
     @responses.activate
     def test_issues_paginates(self):
@@ -280,12 +282,12 @@ class TestLinearIssue(ServiceIssueTest):
         responses.add(responses.POST, "https://api.linear.app/graphql", json=page_two)
 
         identifiers = [issue.record["identifier"] for issue in self.service.issues()]
-        self.assertEqual(identifiers, ["DUS-5", "DUS-1"])
+        assert identifiers == ["DUS-5", "DUS-1"]
 
         # Two HTTP calls were made, and the second one carried the cursor
         # returned by the first.
-        self.assertEqual(len(responses.calls), 2)
+        assert len(responses.calls) == 2
         first_body = json.loads(responses.calls[0].request.body)
         second_body = json.loads(responses.calls[1].request.body)
-        self.assertIsNone(first_body["variables"]["after"])
-        self.assertEqual(second_body["variables"]["after"], "cursor-page-2")
+        assert first_body["variables"]["after"] is None
+        assert second_body["variables"]["after"] == "cursor-page-2"

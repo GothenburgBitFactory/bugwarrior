@@ -71,7 +71,7 @@ class TestRedmineIssue(ServiceIssueTest):
         with mock.patch.object(issue, 'get_issue_url', side_effect=get_url):
             actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     @responses.activate
     def test_issues(self):
@@ -106,4 +106,4 @@ class TestRedmineIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected

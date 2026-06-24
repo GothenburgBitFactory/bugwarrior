@@ -47,7 +47,7 @@ class TestTaigaIssue(ServiceIssueTest):
             'due': issue.parse_date('2026-05-18'),
         }
 
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     @responses.activate
     def test_issues(self):
@@ -86,4 +86,4 @@ class TestTaigaIssue(ServiceIssueTest):
             'due': issue.parse_date('2026-05-18'),
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected

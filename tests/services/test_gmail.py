@@ -41,16 +41,16 @@ class TestGmailService(ConfigTest):
 
     def test_get_credentials_exists_and_valid(self):
         expected = Credentials(**copy(TEST_CREDENTIAL))
-        self.assertEqual(expected.valid, True)
+        assert expected.valid is True
         with open(self.service.credentials_path, "wb") as token:
             pickle.dump(expected, token)
 
-        self.assertEqual(self.service.get_credentials().to_json(), expected.to_json())
+        assert self.service.get_credentials().to_json() == expected.to_json()
 
     def test_get_credentials_with_refresh(self):
         expired_credential = Credentials(**copy(TEST_CREDENTIAL))
         expired_credential.expiry = datetime.now(timezone.utc).replace(tzinfo=None)
-        self.assertEqual(expired_credential.valid, False)
+        assert expired_credential.valid is False
         with open(self.service.credentials_path, "wb") as token:
             pickle.dump(expired_credential, token)
 
@@ -70,7 +70,7 @@ class TestGmailService(ConfigTest):
                 rapt_token,
             )
             refreshed_credential = self.service.get_credentials()
-        self.assertEqual(refreshed_credential.valid, True)
+        assert refreshed_credential.valid is True
 
 
 TEST_THREAD = {
@@ -132,7 +132,7 @@ class TestGmailIssue(ServiceIssueTest):
             self.service.main_config.data.path,
             'gmail_credentials_test_example_com.pickle',
         )
-        self.assertEqual(self.service.credentials_path, credentials_path)
+        assert self.service.credentials_path == credentials_path
 
     def test_to_taskwarrior(self):
         thread = TEST_THREAD
@@ -157,7 +157,7 @@ class TestGmailIssue(ServiceIssueTest):
         taskwarrior = issue.to_taskwarrior()
         taskwarrior['tags'] = set(taskwarrior['tags'])
 
-        self.assertEqual(taskwarrior, expected)
+        assert taskwarrior == expected
 
     def test_issues(self):
         issue = next(self.service.issues())
@@ -180,7 +180,7 @@ class TestGmailIssue(ServiceIssueTest):
         taskwarrior = TaskConstructor(issue).get_taskwarrior_record()
         taskwarrior['tags'] = set(taskwarrior['tags'])
 
-        self.assertEqual(taskwarrior, expected)
+        assert taskwarrior == expected
 
     def test_last_sender(self):
         test_thread = {
@@ -199,6 +199,7 @@ class TestGmailIssue(ServiceIssueTest):
                 },
             ]
         }
-        self.assertEqual(
-            gmail.thread_last_sender(test_thread), ('Foo Bar', 'foobar@example.com')
+        assert gmail.thread_last_sender(test_thread) == (
+            'Foo Bar',
+            'foobar@example.com',
         )

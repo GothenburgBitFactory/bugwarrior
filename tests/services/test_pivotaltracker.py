@@ -294,7 +294,7 @@ class TestPivotalTrackerIssue(ServiceIssueTest):
             'tags': ['look_sir_metal'],
         }
         actual_output = story.to_taskwarrior()
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     @responses.activate
     def test_issues(self):
@@ -326,4 +326,4 @@ class TestPivotalTrackerIssue(ServiceIssueTest):
             'project': 'death_star',
             'tags': ['look_sir_metal'],
         }
-        self.assertEqual(TaskConstructor(story).get_taskwarrior_record(), expected)
+        assert TaskConstructor(story).get_taskwarrior_record() == expected

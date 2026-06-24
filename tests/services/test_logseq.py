@@ -106,7 +106,7 @@ class TestLogseqIssue(ServiceIssueTest):
 
         actual = issue.to_taskwarrior()
 
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     def test_to_taskwarrior_with_tags(self):
         overrides = {"import_labels_as_tags": "True"}
@@ -114,7 +114,7 @@ class TestLogseqIssue(ServiceIssueTest):
         issue = service.get_issue_for_record(self.test_record, self.test_extra)
 
         actual = issue.to_taskwarrior()
-        self.assertEqual(actual["tags"], ["Testtagone", "TestTagTwo", "TestTagThree"])
+        assert actual["tags"] == ["Testtagone", "TestTagTwo", "TestTagThree"]
 
     def test_to_taskwarrior_todo(self):
         test_record = copy.copy(self.test_record)
@@ -122,7 +122,7 @@ class TestLogseqIssue(ServiceIssueTest):
         test_record["marker"] = "TODO"
         issue = self.service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
-        self.assertEqual(actual["status"], "pending")
+        assert actual["status"] == "pending"
 
     def test_to_taskwarrior_waiting(self):
         test_record = copy.copy(self.test_record)
@@ -130,8 +130,8 @@ class TestLogseqIssue(ServiceIssueTest):
         test_record["marker"] = "WAITING"
         issue = self.service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
-        self.assertEqual(actual["status"], "pending")
-        self.assertEqual(actual["wait"], LogseqIssue.SOMEDAY)
+        assert actual["status"] == "pending"
+        assert actual["wait"] == LogseqIssue.SOMEDAY
 
     def test_to_taskwarrior_dates_with_time(self):
         test_record = copy.copy(self.test_record)
@@ -147,10 +147,10 @@ class TestLogseqIssue(ServiceIssueTest):
 
         scheduled = datetime.datetime(year=2025, month=7, day=1, hour=12, minute=30)
         deadline = datetime.datetime(year=2025, month=7, day=31, hour=12, minute=30)
-        self.assertEqual(actual["scheduled"], scheduled)
-        self.assertEqual(actual["due"], deadline)
-        self.assertEqual(actual[issue.SCHEDULED], scheduled)
-        self.assertEqual(actual[issue.DEADLINE], deadline)
+        assert actual["scheduled"] == scheduled
+        assert actual["due"] == deadline
+        assert actual[issue.SCHEDULED] == scheduled
+        assert actual[issue.DEADLINE] == deadline
 
     def test_to_taskwarrior_dates_with_repeat(self):
         test_record = copy.copy(self.test_record)
@@ -166,10 +166,10 @@ class TestLogseqIssue(ServiceIssueTest):
 
         scheduled = datetime.datetime(year=2025, month=7, day=1, hour=12, minute=30)
         deadline = datetime.datetime(year=2025, month=7, day=31)
-        self.assertEqual(actual["scheduled"], scheduled)
-        self.assertEqual(actual["due"], deadline)
-        self.assertEqual(actual[issue.SCHEDULED], scheduled)
-        self.assertEqual(actual[issue.DEADLINE], deadline)
+        assert actual["scheduled"] == scheduled
+        assert actual["due"] == deadline
+        assert actual[issue.SCHEDULED] == scheduled
+        assert actual[issue.DEADLINE] == deadline
 
     def test_issues(self):
         self.service.client.get_graph_name.return_value = self.test_extra["graph"]
@@ -203,4 +203,4 @@ class TestLogseqIssue(ServiceIssueTest):
             issue.PAGE: "Jul 1st, 2025",
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected

@@ -39,9 +39,7 @@ class TestKanboardServiceConfig(ConfigTest):
             {"url": "http://example.com/", "username": "myuser", "password": "mypass"}
         )
         service_config = self.validate().service_configs[0]
-        self.assertEqual(
-            service_config.keyring_service, "kanboard://myuser@example.com"
-        )
+        assert service_config.keyring_service == "kanboard://myuser@example.com"
 
 
 class TestKanboardService(ServiceIssueTest):
@@ -68,7 +66,7 @@ class TestKanboardService(ServiceIssueTest):
 
         annotations = self.service.annotations(task, url)
 
-        self.assertListEqual(annotations, [])
+        assert annotations == []
         self.service.client.get_all_comments.assert_not_called()
 
     def test_annotations_some_comments(self):
@@ -81,7 +79,7 @@ class TestKanboardService(ServiceIssueTest):
         ]
         annotations = self.service.annotations(task, url)
 
-        self.assertListEqual(annotations, ["@a - c1", "@b - c2"])
+        assert annotations == ["@a - c1", "@b - c2"]
         self.service.client.get_all_comments.assert_called_once_with(task_id=1)
 
     def test_to_taskwarrior(self):
@@ -120,7 +118,7 @@ class TestKanboardService(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     def test_issues(self):
         # Setup the fake client
@@ -205,4 +203,4 @@ class TestKanboardService(ServiceIssueTest):
             "priority": "M",  # default priority
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected

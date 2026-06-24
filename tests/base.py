@@ -139,13 +139,13 @@ class ConfigTest(unittest.TestCase):
         return validation.validate_config(formatted_config, 'general', 'configpath')
 
     def assertValidationError(self, expected):
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             self.validate()
 
         # Only one message should be logged.
-        self.assertEqual(len(self.caplog.records), 1)
+        assert len(self.caplog.records) == 1
 
-        self.assertIn(expected, self.caplog.records[0].message)
+        assert expected in self.caplog.records[0].message
 
         # We may want to use this assertion more than once per test.
         self.caplog.clear()

@@ -142,7 +142,7 @@ class TestNextcloudDeckIssue(ServiceIssueTest):
         }
         actual = issue.to_taskwarrior()
 
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     def test_issues(self):
         issue = next(self.service.issues())
@@ -167,7 +167,7 @@ class TestNextcloudDeckIssue(ServiceIssueTest):
             'tags': ['Later'],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     def test_get_owner(self):
         # Regression test: the old get_owner did `issue[issue.ASSIGNEE]`, treating
@@ -182,14 +182,14 @@ class TestNextcloudDeckIssue(ServiceIssueTest):
                 'annotations': [],
             },
         )
-        self.assertEqual(self.service.get_owner(issue), 'rainbow')
+        assert self.service.get_owner(issue) == 'rainbow'
 
     def test_filter_boards_include(self):
         self.config['deck']['include_board_ids'] = '5'
-        self.assertTrue(self.service.filter_boards({'title': 'testboard', 'id': 5}))
-        self.assertFalse(self.service.filter_boards({'title': 'testboard', 'id': 6}))
+        assert self.service.filter_boards({'title': 'testboard', 'id': 5})
+        assert not self.service.filter_boards({'title': 'testboard', 'id': 6})
 
     def test_filter_boards_exclude(self):
         self.config['deck']['exclude_board_ids'] = '5'
-        self.assertFalse(self.service.filter_boards({'title': 'testboard', 'id': 5}))
-        self.assertTrue(self.service.filter_boards({'title': 'testboard', 'id': 6}))
+        assert not self.service.filter_boards({'title': 'testboard', 'id': 5})
+        assert self.service.filter_boards({'title': 'testboard', 'id': 6})

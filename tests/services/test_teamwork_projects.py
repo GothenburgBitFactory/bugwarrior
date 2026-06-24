@@ -102,7 +102,7 @@ class TestTeamworkIssue(ServiceIssueTest):
             "annotations": [('Greg McCoy', 'Test comment'), ('Bob Test', 'testing')],
         }
         actual_output = issue.to_taskwarrior()
-        self.assertEqual(actual_output, expected_data)
+        assert actual_output == expected_data
 
     @responses.activate
     def test_issues(self):
@@ -132,4 +132,4 @@ class TestTeamworkIssue(ServiceIssueTest):
             "annotations": ['@Demo User - A test comment'],
             "tags": [],
         }
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected_data)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected_data

@@ -36,7 +36,7 @@ class TestTemplates(ConfigTest):
             {'description': self.arbitrary_default_description, 'tags': []}
         )
 
-        self.assertEqual(record, expected_record)
+        assert record == expected_record
 
     def test_override_description(self):
         description_template = "{{ priority }} - {{ description }}"
@@ -56,7 +56,7 @@ class TestTemplates(ConfigTest):
             }
         )
 
-        self.assertEqual(record, expected_record)
+        assert record == expected_record
 
     def test_override_project(self):
         project_template = "wat_{{ project|upper }}"
@@ -73,7 +73,7 @@ class TestTemplates(ConfigTest):
             }
         )
 
-        self.assertEqual(record, expected_record)
+        assert record == expected_record
 
     def test_tag_templates(self):
         issue = self.get_issue(add_tags=['one', '{{ project }}'])
@@ -87,4 +87,4 @@ class TestTemplates(ConfigTest):
             }
         )
 
-        self.assertEqual(record, expected_record)
+        assert record == expected_record

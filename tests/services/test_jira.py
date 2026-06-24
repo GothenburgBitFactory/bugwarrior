@@ -47,7 +47,7 @@ class testJiraService(ConfigTest):
         service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
-        self.assertEqual(description[:5], service.body(issue))
+        assert description[:5] == service.body(issue)
 
     def test_body_length_limit(self):
         description = "A very short issue body.  Fixes #828."
@@ -56,7 +56,7 @@ class testJiraService(ConfigTest):
         service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
-        self.assertEqual(description, service.body(issue))
+        assert description == service.body(issue)
 
 
 class TestJiraIssue(ServiceIssueTest):
@@ -163,7 +163,7 @@ class TestJiraIssue(ServiceIssueTest):
         with mock.patch.object(issue, 'get_url', side_effect=get_url):
             actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     def test_to_taskwarrior_sprint_with_goal(self):
         record_with_goal = self.arbitrary_record.copy()
@@ -208,7 +208,7 @@ class TestJiraIssue(ServiceIssueTest):
         with mock.patch.object(issue, 'get_url', side_effect=get_url):
             actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     def test_issues(self):
         issue = next(self.service.issues())
@@ -237,7 +237,7 @@ class TestJiraIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     def test_get_due(self):
         issue = self.service.get_issue_for_record(
@@ -245,9 +245,7 @@ class TestJiraIssue(ServiceIssueTest):
             extra={'sprint_field_names': self.service.sprint_field_names},
         )
 
-        self.assertEqual(
-            issue.get_due(), datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc)
-        )
+        assert issue.get_due() == datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc)
 
     def test_get_due_sprint_dict_missing_end_date(self):
         record = self.arbitrary_record.copy()
@@ -258,4 +256,4 @@ class TestJiraIssue(ServiceIssueTest):
             record, extra={'sprint_field_names': self.service.sprint_field_names}
         )
 
-        self.assertIsNone(issue.get_due())
+        assert issue.get_due() is None

@@ -14,7 +14,7 @@ class TestData(ConfigTest):
     def assert0600(self):
         permissions = oct(os.stat(self.data._datafile).st_mode & 0o777)
         # python2 -> 0600, python3 -> 0o600
-        self.assertIn(permissions, ['0600', '0o600'])
+        assert permissions in ['0600', '0o600']
 
     def test_get_set(self):
         # "touch" data file.
@@ -23,18 +23,18 @@ class TestData(ConfigTest):
 
         self.data.set('key', 'value')
 
-        self.assertEqual(self.data.get('key'), 'value')
-        self.assertEqual(self.data.get_data(), {'old': 'stuff', 'key': 'value'})
+        assert self.data.get('key') == 'value'
+        assert self.data.get_data() == {'old': 'stuff', 'key': 'value'}
         self.assert0600()
 
     def test_set_first_time(self):
         self.data.set('key', 'value')
 
-        self.assertEqual(self.data.get('key'), 'value')
+        assert self.data.get('key') == 'value'
         self.assert0600()
 
     def test_path_attribute(self):
-        self.assertEqual(self.data.path, self.lists_path)
+        assert self.data.path == self.lists_path
 
 
 class TestGetDataPath(ConfigTest):
@@ -43,7 +43,7 @@ class TestGetDataPath(ConfigTest):
         self.main_config = schema.MainSectionConfig(targets=[])
 
     def assertDataPath(self, expected_datapath):
-        self.assertEqual(expected_datapath, data.get_data_path(self.main_config.taskrc))
+        assert expected_datapath == data.get_data_path(self.main_config.taskrc)
 
     def test_TASKDATA(self):
         """
@@ -56,7 +56,7 @@ class TestGetDataPath(ConfigTest):
         """
         When TASKDATA is not set, data.location in taskrc should be respected.
         """
-        self.assertTrue('TASKDATA' not in os.environ)
+        assert 'TASKDATA' not in os.environ
         self.assertDataPath(self.lists_path)
 
     def test_unassigned(self):
@@ -67,6 +67,6 @@ class TestGetDataPath(ConfigTest):
         with open(self.taskrc, 'w'):
             pass
 
-        self.assertTrue('TASKDATA' not in os.environ)
+        assert 'TASKDATA' not in os.environ
 
         self.assertDataPath(os.path.expanduser('~/.task'))

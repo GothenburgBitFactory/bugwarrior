@@ -113,9 +113,9 @@ class TestPull(ConfigTest):
 
         logs = [rec.message for rec in self.caplog.records]
 
-        self.assertIn('Adding 1 tasks', logs)
-        self.assertIn('Updating 0 tasks', logs)
-        self.assertIn('Closing 0 tasks', logs)
+        assert 'Adding 1 tasks' in logs
+        assert 'Updating 0 tasks' in logs
+        assert 'Closing 0 tasks' in logs
 
     def test_failure(self):
         """
@@ -127,14 +127,14 @@ class TestPull(ConfigTest):
         ):
             self.runner.invoke(command.cli, args=('pull', '--debug'))
 
-        self.assertNotEqual(self.caplog.records, [])
-        self.assertEqual(len(self.caplog.records), 2)
-        self.assertEqual(
-            self.caplog.records[0].message, "Worker for [my_service] failed: message"
+        assert self.caplog.records != []
+        assert len(self.caplog.records) == 2
+        assert (
+            self.caplog.records[0].message == "Worker for [my_service] failed: message"
         )
-        self.assertEqual(
-            self.caplog.records[1].message,
-            "Aborted [my_service] due to critical error.",
+        assert (
+            self.caplog.records[1].message
+            == "Aborted [my_service] due to critical error."
         )
 
     def test_partial_failure_survival(self):
@@ -160,8 +160,8 @@ class TestPull(ConfigTest):
             self.runner.invoke(command.cli, args=('pull', '--debug'))
 
         logs = [rec.message for rec in self.caplog.records]
-        self.assertIn('Aborted [my_broken_service] due to critical error.', logs)
-        self.assertIn('Adding 0 tasks', logs)
+        assert 'Aborted [my_broken_service] due to critical error.' in logs
+        assert 'Adding 0 tasks' in logs
 
     def test_partial_failure_database_integrity(self):
         """
@@ -183,7 +183,7 @@ class TestPull(ConfigTest):
         with register_services(both_working), self.caplog.at_level(logging.DEBUG):
             self.runner.invoke(command.cli, args=('pull', '--debug'))
         logs = [rec.message for rec in self.caplog.records]
-        self.assertIn('Adding 2 tasks', logs)
+        assert 'Adding 2 tasks' in logs
 
         # Break the secondary service and run pull again.
         secondary_broken = {
@@ -195,12 +195,12 @@ class TestPull(ConfigTest):
         logs = [rec.message for rec in self.caplog.records]
 
         # Make sure my_broken_service failed while my_service succeeded.
-        self.assertIn('Aborted [my_broken_service] due to critical error.', logs)
-        self.assertNotIn('Aborted my_service due to critical error.', logs)
+        assert 'Aborted [my_broken_service] due to critical error.' in logs
+        assert 'Aborted my_service due to critical error.' not in logs
 
         # Assert that issues weren't closed or marked complete.
-        self.assertNotIn('Closing 1 tasks', logs)
-        self.assertNotIn('Completing task', logs)
+        assert 'Closing 1 tasks' not in logs
+        assert 'Completing task' not in logs
 
     @mock.patch('bugwarrior.command.FileLock')
     def test_locked_repository(self, file_lock):
@@ -218,12 +218,10 @@ class TestPull(ConfigTest):
         ):
             result = self.runner.invoke(command.cli, args=('pull', '--debug'))
 
-        self.assertEqual(result.exit_code, 1)
+        assert result.exit_code == 1
         file_lock.assert_called_once_with(str(lockfile_path), timeout=10)
         logs = [rec.message for rec in self.caplog.records]
-        self.assertTrue(
-            any('Your taskrc repository is currently locked.' in log for log in logs)
-        )
+        assert any('Your taskrc repository is currently locked.' in log for log in logs)
 
     def test_legacy_cli(self):
         """
@@ -239,9 +237,9 @@ class TestPull(ConfigTest):
 
         logs = [rec.message for rec in self.caplog.records]
 
-        self.assertIn('Adding 1 tasks', logs)
-        self.assertIn('Updating 0 tasks', logs)
-        self.assertIn('Closing 0 tasks', logs)
+        assert 'Adding 1 tasks' in logs
+        assert 'Updating 0 tasks' in logs
+        assert 'Closing 0 tasks' in logs
 
 
 class TestIni2Toml(TestCase):
@@ -255,8 +253,8 @@ class TestIni2Toml(TestCase):
             command.cli, args=('ini2toml', str(basedir / 'config/example-bugwarriorrc'))
         )
 
-        self.assertEqual(result.exit_code, 0)
+        assert result.exit_code == 0
 
         self.maxDiff = None
         with open(basedir / 'config/example-bugwarrior.toml', 'r') as f:
-            self.assertEqual(result.stdout, f.read())
+            assert result.stdout == f.read()

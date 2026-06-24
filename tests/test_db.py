@@ -102,7 +102,7 @@ class TestSynchronize(ConfigTest):
 
     def test_synchronize(self):
 
-        self.assertEqual(self.tw.load_tasks(), {'completed': [], 'pending': []})
+        assert self.tw.load_tasks() == {'completed': [], 'pending': []}
 
         issue = {
             'description': 'Blah blah blah. ☃',
@@ -123,25 +123,22 @@ class TestSynchronize(ConfigTest):
             # https://github.com/ralphbean/bugwarrior/issues/601
             self.synchronize([issue, duplicate_issue])
 
-            self.assertEqual(
-                self.get_tasks(),
-                {
-                    'completed': [],
-                    'pending': [
-                        {
-                            'project': 'sample_project',
-                            'priority': 'M',
-                            'status': 'pending',
-                            'description': 'Blah blah blah. ☃',
-                            'dumburl': 'https://example.com',
-                            'dumbtype': 'issue',
-                            'id': 1,
-                            'tags': ['bar', 'foo'],
-                            'urgency': 5.8,
-                        }
-                    ],
-                },
-            )
+            assert self.get_tasks() == {
+                'completed': [],
+                'pending': [
+                    {
+                        'project': 'sample_project',
+                        'priority': 'M',
+                        'status': 'pending',
+                        'description': 'Blah blah blah. ☃',
+                        'dumburl': 'https://example.com',
+                        'dumbtype': 'issue',
+                        'id': 1,
+                        'tags': ['bar', 'foo'],
+                        'urgency': 5.8,
+                    }
+                ],
+            }
 
         # TEST CHANGED ISSUE.
         issue['description'] = 'Yada yada yada.'
@@ -150,25 +147,22 @@ class TestSynchronize(ConfigTest):
         issue['project'] = 'other_project'
         self.synchronize([issue])
 
-        self.assertEqual(
-            self.get_tasks(),
-            {
-                'completed': [],
-                'pending': [
-                    {
-                        'priority': 'M',
-                        'project': 'sample_project',
-                        'status': 'pending',
-                        'description': 'Yada yada yada.',
-                        'dumburl': 'https://example.com',
-                        'dumbtype': 'issue',
-                        'id': 1,
-                        'tags': ['bar', 'foo'],
-                        'urgency': 5.8,
-                    }
-                ],
-            },
-        )
+        assert self.get_tasks() == {
+            'completed': [],
+            'pending': [
+                {
+                    'priority': 'M',
+                    'project': 'sample_project',
+                    'status': 'pending',
+                    'description': 'Yada yada yada.',
+                    'dumburl': 'https://example.com',
+                    'dumbtype': 'issue',
+                    'id': 1,
+                    'tags': ['bar', 'foo'],
+                    'urgency': 5.8,
+                }
+            ],
+        }
 
         # TEST CLOSED ISSUE.
         self.synchronize([])
@@ -177,54 +171,46 @@ class TestSynchronize(ConfigTest):
 
         tasks = self.remove_non_deterministic_keys(copy.deepcopy(completed_tasks))
         del tasks['completed'][0]['end']
-        self.assertEqual(
-            tasks,
-            {
-                'completed': [
-                    {
-                        'project': 'sample_project',
-                        'description': 'Yada yada yada.',
-                        'dumbtype': 'issue',
-                        'dumburl': 'https://example.com',
-                        'id': 0,
-                        'priority': 'M',
-                        'status': 'completed',
-                        'tags': ['bar', 'foo'],
-                        'urgency': 5.8,
-                    }
-                ],
-                'pending': [],
-            },
-        )
+        assert tasks == {
+            'completed': [
+                {
+                    'project': 'sample_project',
+                    'description': 'Yada yada yada.',
+                    'dumbtype': 'issue',
+                    'dumburl': 'https://example.com',
+                    'id': 0,
+                    'priority': 'M',
+                    'status': 'completed',
+                    'tags': ['bar', 'foo'],
+                    'urgency': 5.8,
+                }
+            ],
+            'pending': [],
+        }
 
         # TEST REOPENED ISSUE
         self.synchronize([issue])
 
         tasks = self.tw.load_tasks()
-        self.assertEqual(
-            completed_tasks['completed'][0]['uuid'], tasks['pending'][0]['uuid']
-        )
+        assert completed_tasks['completed'][0]['uuid'] == tasks['pending'][0]['uuid']
 
         tasks = self.remove_non_deterministic_keys(tasks)
-        self.assertEqual(
-            tasks,
-            {
-                'completed': [],
-                'pending': [
-                    {
-                        'priority': 'M',
-                        'project': 'sample_project',
-                        'status': 'pending',
-                        'description': 'Yada yada yada.',
-                        'dumburl': 'https://example.com',
-                        'dumbtype': 'issue',
-                        'id': 1,
-                        'tags': ['bar', 'foo'],
-                        'urgency': 5.8,
-                    }
-                ],
-            },
-        )
+        assert tasks == {
+            'completed': [],
+            'pending': [
+                {
+                    'priority': 'M',
+                    'project': 'sample_project',
+                    'status': 'pending',
+                    'description': 'Yada yada yada.',
+                    'dumburl': 'https://example.com',
+                    'dumbtype': 'issue',
+                    'id': 1,
+                    'tags': ['bar', 'foo'],
+                    'urgency': 5.8,
+                }
+            ],
+        }
 
 
 class TestUDAs(ConfigTest):
@@ -237,12 +223,9 @@ class TestUDAs(ConfigTest):
                 ),
             )
             udas = sorted(db.get_defined_udas_as_strings(conf))
-        self.assertEqual(
-            udas,
-            [
-                'uda.dumbtype.label=Dumb Type',
-                'uda.dumbtype.type=string',
-                'uda.dumburl.label=Dumb URL',
-                'uda.dumburl.type=string',
-            ],
-        )
+        assert udas == [
+            'uda.dumbtype.label=Dumb Type',
+            'uda.dumbtype.type=string',
+            'uda.dumburl.label=Dumb URL',
+            'uda.dumburl.type=string',
+        ]

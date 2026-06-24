@@ -60,7 +60,7 @@ class TestGitBugIssue(ServiceIssueTest):
         }
         actual = issue.to_taskwarrior()
 
-        self.assertEqual(actual, expected)
+        assert actual == expected
 
     def test_issues(self):
         issue = next(self.service.issues())
@@ -80,7 +80,7 @@ class TestGitBugIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
 
 class TestGitBugConfig(ConfigTest):
@@ -92,4 +92,4 @@ class TestGitBugConfig(ConfigTest):
 
     def test_home_path_expansion(self):
         expected = self.tempdir + "/custom-gitbug-repo"
-        self.assertEqual(str(self.config.path), expected)
+        assert str(self.config.path) == expected

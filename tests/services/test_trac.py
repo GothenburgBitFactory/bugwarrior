@@ -68,7 +68,7 @@ class TestTracIssue(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     def test_issues(self):
         issue = next(self.service.issues())
@@ -85,4 +85,4 @@ class TestTracIssue(ServiceIssueTest):
             'traccomponent': 'testcomponent',
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected

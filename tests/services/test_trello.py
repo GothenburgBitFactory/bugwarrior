@@ -43,14 +43,12 @@ class TestTrelloIssue(ConfigTest):
         expected_desc = (
             "(bw)#42 - So long, and thanks for all the .. https://trello.com/c/AAaaBBbb"
         )
-        self.assertEqual(expected_desc, self.issue.get_default_description())
+        assert expected_desc == self.issue.get_default_description()
 
     def test_to_taskwarrior__project(self):
         """By default, the project is the board name"""
         expected_project = "Hyperspatial express route"
-        self.assertEqual(
-            expected_project, self.issue.to_taskwarrior().get('project', None)
-        )
+        assert expected_project == self.issue.to_taskwarrior().get('project', None)
 
 
 class TestTrelloService(ConfigTest):
@@ -125,24 +123,24 @@ class TestTrelloService(ConfigTest):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         boards = service.get_boards()
-        self.assertEqual(
-            list(boards),
-            [{'id': 'F00', 'name': 'Foo Board'}, {'id': 'B4R', 'name': 'Bar Board'}],
-        )
+        assert list(boards) == [
+            {'id': 'F00', 'name': 'Foo Board'},
+            {'id': 'B4R', 'name': 'Bar Board'},
+        ]
 
     @responses.activate
     def test_get_boards_api(self):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         boards = service.get_boards()
-        self.assertEqual(list(boards), [self.BOARD])
+        assert list(boards) == [self.BOARD]
 
     @responses.activate
     def test_get_lists(self):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         lists = service.get_lists('B04RD')
-        self.assertEqual(list(lists), [self.LIST1, self.LIST2])
+        assert list(lists) == [self.LIST1, self.LIST2]
 
     @responses.activate
     def test_get_lists_include(self):
@@ -150,7 +148,7 @@ class TestTrelloService(ConfigTest):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         lists = service.get_lists('B04RD')
-        self.assertEqual(list(lists), [self.LIST1])
+        assert list(lists) == [self.LIST1]
 
     @responses.activate
     def test_get_lists_exclude(self):
@@ -158,14 +156,14 @@ class TestTrelloService(ConfigTest):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         lists = service.get_lists('B04RD')
-        self.assertEqual(list(lists), [self.LIST2])
+        assert list(lists) == [self.LIST2]
 
     @responses.activate
     def test_get_cards(self):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         cards = service.get_cards('L15T')
-        self.assertEqual(list(cards), [self.CARD1, self.CARD2, self.CARD3])
+        assert list(cards) == [self.CARD1, self.CARD2, self.CARD3]
 
     @responses.activate
     def test_get_cards_assigned(self):
@@ -173,7 +171,7 @@ class TestTrelloService(ConfigTest):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         cards = service.get_cards('L15T')
-        self.assertEqual(list(cards), [self.CARD1])
+        assert list(cards) == [self.CARD1]
 
     @responses.activate
     def test_get_cards_assigned_unassigned(self):
@@ -183,21 +181,21 @@ class TestTrelloService(ConfigTest):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         cards = service.get_cards('L15T')
-        self.assertEqual(list(cards), [self.CARD1, self.CARD3])
+        assert list(cards) == [self.CARD1, self.CARD3]
 
     @responses.activate
     def test_get_comments(self):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         comments = service.get_comments('C4RD')
-        self.assertEqual(list(comments), [self.COMMENT1, self.COMMENT2])
+        assert list(comments) == [self.COMMENT1, self.COMMENT2]
 
     @responses.activate
     def test_annotations(self):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         annotations = service.annotations(self.CARD1)
-        self.assertEqual(list(annotations), ["@luidgi - Preums", "@mario - Deuz"])
+        assert list(annotations) == ["@luidgi - Preums", "@mario - Deuz"]
 
     @responses.activate
     def test_annotations_with_link(self):
@@ -205,10 +203,11 @@ class TestTrelloService(ConfigTest):
         conf = self.validate()
         service = get_service_instances(conf)[0]
         annotations = service.annotations(self.CARD1)
-        self.assertEqual(
-            list(annotations),
-            ["https://trello.com/c/AAaaBBbb", "@luidgi - Preums", "@mario - Deuz"],
-        )
+        assert list(annotations) == [
+            "https://trello.com/c/AAaaBBbb",
+            "@luidgi - Preums",
+            "@mario - Deuz",
+        ]
 
     @responses.activate
     def test_issues(self):
@@ -236,7 +235,7 @@ class TestTrelloService(ConfigTest):
             'tags': [],
         }
         actual = TaskConstructor(next(issues)).get_taskwarrior_record()
-        self.assertEqual(expected, actual)
+        assert expected == actual
 
     maxDiff = None
 
@@ -257,4 +256,4 @@ class TestTrelloService(ConfigTest):
         """Checks that the keyring service name"""
         conf = self.validate()
         keyring_service = conf.service_configs[0].keyring_service
-        self.assertEqual("trello://XXXX@trello.com", keyring_service)
+        assert "trello://XXXX@trello.com" == keyring_service

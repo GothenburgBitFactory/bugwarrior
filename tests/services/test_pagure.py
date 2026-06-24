@@ -35,20 +35,20 @@ class TestPagureIssue(ConfigTest):
     def test_get_tags_from_labels_uses_legacy_tag_options(self):
         issue = self.get_issue()
 
-        self.assertEqual(issue.get_tags(), ['pg_Bug', 'pg_Needs_Work'])
-        self.assertIn(
-            'import_tags is deprecated in favor of import_labels_as_tags',
-            self.caplog.text,
+        assert issue.get_tags() == ['pg_Bug', 'pg_Needs_Work']
+        assert (
+            'import_tags is deprecated in favor of import_labels_as_tags'
+            in self.caplog.text
         )
-        self.assertIn(
-            'tag_template is deprecated in favor of label_template', self.caplog.text
+        assert (
+            'tag_template is deprecated in favor of label_template' in self.caplog.text
         )
 
     def test_refine_record_does_not_apply_legacy_tag_template_as_field_template(self):
         issue = self.get_issue()
 
-        self.assertEqual(issue.config.templates, {})
-        self.assertEqual(
-            TaskConstructor(issue).get_taskwarrior_record()['tags'],
-            ['pg_Bug', 'pg_Needs_Work'],
-        )
+        assert issue.config.templates == {}
+        assert TaskConstructor(issue).get_taskwarrior_record()['tags'] == [
+            'pg_Bug',
+            'pg_Needs_Work',
+        ]
