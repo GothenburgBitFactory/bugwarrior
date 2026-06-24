@@ -1,8 +1,7 @@
 import subprocess
-import unittest
 
 
-class TestGeneral(unittest.TestCase):
+class TestGeneral:
     def test_ruff_check(self):
         subprocess.run(['ruff', 'check'], check=True)
 
