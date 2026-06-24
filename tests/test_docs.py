@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 import docutils.core
+import pytest
 
 DOCS_PATH = pathlib.Path(__file__).parent / '../bugwarrior/docs'
 
@@ -53,14 +54,14 @@ class ReadmeTest(unittest.TestCase):
 
 
 class DocsTest(unittest.TestCase):
-    @unittest.skipIf(not INTERNET, 'no internet')
+    @pytest.mark.skipif(not INTERNET, reason='no internet')
     def test_docs_build_without_warning(self):
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
                 ['sphinx-build', '-n', '-W', '-v', str(DOCS_PATH), buildDir], check=True
             )
 
-    @unittest.skipIf(not INTERNET, 'no internet')
+    @pytest.mark.skipif(not INTERNET, reason='no internet')
     def test_manpage_build_without_warning(self):
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
