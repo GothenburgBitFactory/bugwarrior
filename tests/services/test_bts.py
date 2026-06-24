@@ -58,7 +58,7 @@ class TestBTSService(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     def test_issues(self):
         with mock.patch('bugwarrior.services.bts.debianbts', FakeBTSLib()):
@@ -86,4 +86,4 @@ class TestBTSService(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected

@@ -80,7 +80,7 @@ class TestGithubIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     def test_to_taskwarrior(self):
         service = self.get_mock_service(
@@ -112,7 +112,7 @@ class TestGithubIssue(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     @responses.activate
     def test_issues(self):
@@ -170,7 +170,7 @@ class TestGithubIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
 
 class TestGithubIssueQuery(ServiceIssueTest):
@@ -229,7 +229,7 @@ class TestGithubIssueQuery(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
 
 class TestGithubService(ServiceTest):
@@ -246,27 +246,27 @@ class TestGithubService(ServiceTest):
             GithubService,
             config_overrides={'token': '@oracle:eval:echo 1234567890ABCDEF'},
         )
-        self.assertEqual(
-            service.client.session.headers['Authorization'], "token 1234567890ABCDEF"
+        assert (
+            service.client.session.headers['Authorization'] == "token 1234567890ABCDEF"
         )
 
     def test_default_host(self):
         """Check that if host is not set, we default to github.com"""
         service = self.get_mock_service(GithubService)
-        self.assertEqual("github.com", service.config.host)
+        assert "github.com" == service.config.host
 
     def test_overwrite_host(self):
         """Check that if host is set, we use its value as host"""
         service = self.get_mock_service(
             GithubService, config_overrides={'host': 'github.example.com'}
         )
-        self.assertEqual("github.example.com", service.config.host)
+        assert "github.example.com" == service.config.host
 
     def test_keyring_service(self):
         """Checks that the keyring service name"""
         service_config = GithubConfig(**self.SERVICE_CONFIG, target="myservice")
         keyring_service = service_config.keyring_service
-        self.assertEqual("github://tintin@github.com/milou", keyring_service)
+        assert "github://tintin@github.com/milou" == keyring_service
 
     def test_keyring_service_host(self):
         """Checks that the keyring key depends on the github host."""
@@ -274,39 +274,39 @@ class TestGithubService(ServiceTest):
             **{'host': 'github.example.com'}, **self.SERVICE_CONFIG, target="myservice"
         )
         keyring_service = service_config.keyring_service
-        self.assertEqual("github://tintin@github.example.com/milou", keyring_service)
+        assert "github://tintin@github.example.com/milou" == keyring_service
 
     def test_get_repository_from_issue_url__issue(self):
         issue = dict(repos_url="https://github.com/foo/bar")
         repository = GithubService.get_repository_from_issue(issue)
-        self.assertEqual("foo/bar", repository)
+        assert "foo/bar" == repository
 
     def test_get_repository_from_issue_url__pull_request(self):
         issue = dict(repos_url="https://github.com/foo/bar")
         repository = GithubService.get_repository_from_issue(issue)
-        self.assertEqual("foo/bar", repository)
+        assert "foo/bar" == repository
 
     def test_get_repository_from_issue__enterprise_github(self):
         issue = dict(repos_url="https://github.acme.biz/foo/bar")
         repository = GithubService.get_repository_from_issue(issue)
-        self.assertEqual("foo/bar", repository)
+        assert "foo/bar" == repository
 
     def test_body_no_limit(self):
         service = self.get_mock_service(GithubService)
         issue = dict(body="A very short issue body.  Fixes #42.")
-        self.assertEqual(issue["body"], service.body(issue))
+        assert issue["body"] == service.body(issue)
 
     def test_body_newline_style(self):
         service = self.get_mock_service(GithubService)
         issue = dict(body="An\r\nIssue\r\nWith\r\nNewlines")
-        self.assertEqual("An\nIssue\nWith\nNewlines", service.body(issue))
+        assert "An\nIssue\nWith\nNewlines" == service.body(issue)
 
     def test_body_length_limit(self):
         service = self.get_mock_service(
             GithubService, config_overrides={'body_length': 5}
         )
         issue = dict(body="A very short issue body.  Fixes #42.")
-        self.assertEqual(issue["body"][:5], service.body(issue))
+        assert issue["body"][:5] == service.body(issue)
 
 
 class TestGithubValidation(ConfigTest):
@@ -362,22 +362,21 @@ class TestGithubClient(TestCase):
     def test_api_url(self):
         auth = {'token': 'xxxx'}
         client = GithubClient('github.com', auth)
-        self.assertEqual(
-            client._api_url('/some/path'), 'https://api.github.com/some/path'
-        )
+        assert client._api_url('/some/path') == 'https://api.github.com/some/path'
 
     def test_api_url_with_context(self):
         auth = {'token': 'xxxx'}
         client = GithubClient('github.com', auth)
-        self.assertEqual(
-            client._api_url('/some/path/{foo}', foo='bar'),
-            'https://api.github.com/some/path/bar',
+        assert (
+            client._api_url('/some/path/{foo}', foo='bar')
+            == 'https://api.github.com/some/path/bar'
         )
 
     def test_api_url_with_custom_host(self):
         """Test generating an API URL with a custom host"""
         auth = {'token': 'xxxx'}
         client = GithubClient('github.example.com', auth)
-        self.assertEqual(
-            client._api_url('/some/path'), 'https://github.example.com/api/v3/some/path'
+        assert (
+            client._api_url('/some/path')
+            == 'https://github.example.com/api/v3/some/path'
         )

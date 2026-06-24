@@ -2,6 +2,7 @@ from pathlib import Path
 import typing
 
 import pydantic
+import pytest
 
 from bugwarrior import config
 from bugwarrior.config import validation
@@ -54,12 +55,12 @@ class TestValidation(ConfigTest):
     def test_main_section_required(self):
         del self.config['general']
 
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             formatted = format_config(self.config)
             validation.validate_config(formatted, 'general', 'configpath')
 
-        self.assertEqual(len(self.caplog.records), 1)
-        self.assertIn("No section: 'general'", self.caplog.records[0].message)
+        assert len(self.caplog.records) == 1
+        assert "No section: 'general'" in self.caplog.records[0].message
 
     def test_main_section_missing_targets_option(self):
         del self.config['general']['targets']
@@ -95,12 +96,12 @@ class TestValidation(ConfigTest):
 
     def test_no_scheme_url_validator_default(self):
         service_config = self.validate().service_configs[0]
-        self.assertEqual(service_config.host, 'example.com')
+        assert service_config.host == 'example.com'
 
     def test_no_scheme_url_validator_set(self):
         self.config['my_service']['host'] = 'example.com'
         service_config = self.validate().service_configs[0]
-        self.assertEqual(service_config.host, 'example.com')
+        assert service_config.host == 'example.com'
 
     def test_no_scheme_url_validator_scheme(self):
         self.config['my_service']['host'] = 'https://example.com'
@@ -111,15 +112,15 @@ class TestValidation(ConfigTest):
     def test_stripped_trailing_slash_url(self):
         self.config['my_service']['url'] = 'https://example.org/'
         service_config = self.validate().service_configs[0]
-        self.assertEqual(service_config.url, 'https://example.org')
+        assert service_config.url == 'https://example.org'
 
     def test_deprecated_filter_merge_requests(self):
         service_config = self.validate().service_configs[0]
-        self.assertEqual(service_config.include_merge_requests, True)
+        assert service_config.include_merge_requests is True
 
         self.config['my_service']['filter_merge_requests'] = 'true'
         service_config = self.validate().service_configs[0]
-        self.assertEqual(service_config.include_merge_requests, False)
+        assert service_config.include_merge_requests is False
 
     def test_deprecated_filter_merge_requests_and_include_merge_requests(self):
         self.config['my_service']['filter_merge_requests'] = 'true'
@@ -201,7 +202,6 @@ class TestExampleFiles(ConfigTest):
                     config = validation.validate_config(
                         formatted_config, main_section, str(config_path)
                     )
-                    self.assertEqual(
-                        {conf.__class__.__name__ for conf in config.service_configs},
-                        expected_configs,
-                    )
+                    assert {
+                        conf.__class__.__name__ for conf in config.service_configs
+                    } == expected_configs

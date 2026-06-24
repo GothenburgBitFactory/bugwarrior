@@ -2,6 +2,8 @@ from collections import namedtuple
 import datetime
 from unittest import mock
 
+import pytest
+
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bz import BugzillaService
 
@@ -55,10 +57,10 @@ class TestBugzillaServiceConfig(ConfigTest):
 
         self.validate()
 
-        self.assertEqual(len(self.caplog.records), 1)
-        self.assertIn(
-            'bugzilla.base_uri should include the scheme',
-            self.caplog.records[0].message,
+        assert len(self.caplog.records) == 1
+        assert (
+            'bugzilla.base_uri should include the scheme'
+            in self.caplog.records[0].message
         )
 
 
@@ -127,7 +129,7 @@ class TestBugzillaService(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     def test_issues(self):
         issue = next(self.service.issues())
@@ -149,7 +151,7 @@ class TestBugzillaService(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     def test_only_if_assigned(self):
         with mock.patch('bugzilla.Bugzilla'):
@@ -201,12 +203,11 @@ class TestBugzillaService(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(
-            TaskConstructor(next(issues)).get_taskwarrior_record(), expected
-        )
+        assert TaskConstructor(next(issues)).get_taskwarrior_record() == expected
 
         # Only one issue is assigned.
-        self.assertRaises(StopIteration, lambda: next(issues))
+        with pytest.raises(StopIteration):
+            next(issues)
 
     def test_also_unassigned(self):
         with mock.patch('bugzilla.Bugzilla'):
@@ -241,13 +242,12 @@ class TestBugzillaService(ServiceIssueTest):
 
         issues = self.service.issues()
 
-        self.assertIn(
-            TaskConstructor(next(issues)).get_taskwarrior_record()['bugzillabugid'],
-            [1234567, 1234568],
-        )
-        self.assertIn(
-            TaskConstructor(next(issues)).get_taskwarrior_record()['bugzillabugid'],
-            [1234567, 1234568],
-        )
+        assert TaskConstructor(next(issues)).get_taskwarrior_record()[
+            'bugzillabugid'
+        ] in [1234567, 1234568]
+        assert TaskConstructor(next(issues)).get_taskwarrior_record()[
+            'bugzillabugid'
+        ] in [1234567, 1234568]
         # Only two issues are assigned to the user or unassigned.
-        self.assertRaises(StopIteration, lambda: next(issues))
+        with pytest.raises(StopIteration):
+            next(issues)

@@ -6,6 +6,8 @@ import textwrap
 import tomllib
 from unittest import TestCase
 
+import pytest
+
 from bugwarrior.config import load
 
 from ..base import ConfigTest
@@ -60,7 +62,7 @@ class TestGetConfigPath(LoadTest):
                 try:
                     config1 = self.create(path1)
                     self.create(path2)
-                    self.assertEqual(load.get_config_path(), config1)
+                    assert load.get_config_path() == config1
                 finally:
                     self.tearDown()
 
@@ -69,16 +71,15 @@ class TestGetConfigPath(LoadTest):
         Falls back on .bugwarriorrc if it exists
         """
         rc = self.create('.bugwarriorrc')
-        self.assertEqual(load.get_config_path(), rc)
+        assert load.get_config_path() == rc
 
     def test_no_file(self):
         """
         If no bugwarriorrc exist anywhere, the path to the prefered one is
         returned.
         """
-        self.assertEqual(
-            load.get_config_path(),
-            os.path.join(self.tempdir, '.config/bugwarrior/bugwarriorrc'),
+        assert load.get_config_path() == os.path.join(
+            self.tempdir, '.config/bugwarrior/bugwarriorrc'
         )
 
     def test_BUGWARRIORRC(self):
@@ -90,7 +91,7 @@ class TestGetConfigPath(LoadTest):
         os.environ['BUGWARRIORRC'] = rc
         self.create('.bugwarriorrc')
         self.create('.config/bugwarrior/bugwarriorrc')
-        self.assertEqual(load.get_config_path(), rc)
+        assert load.get_config_path() == rc
 
     def test_BUGWARRIORRC_empty(self):
         """
@@ -99,7 +100,7 @@ class TestGetConfigPath(LoadTest):
         """
         os.environ['BUGWARRIORRC'] = ''
         rc = self.create('.config/bugwarrior/bugwarriorrc')
-        self.assertEqual(load.get_config_path(), rc)
+        assert load.get_config_path() == rc
 
 
 class TestBugwarriorConfigParser(TestCase):
@@ -112,13 +113,13 @@ class TestBugwarriorConfigParser(TestCase):
         }
 
     def test_getint(self):
-        self.assertEqual(self.config.getint('general', 'someint'), 4)
+        assert self.config.getint('general', 'someint') == 4
 
     def test_getint_none(self):
-        self.assertEqual(self.config.getint('general', 'somenone'), None)
+        assert self.config.getint('general', 'somenone') is None
 
     def test_getint_valueerror(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.config.getint('general', 'somechar')
 
 
@@ -146,9 +147,7 @@ class TestParseFile(LoadTest):
             )
         config = load.parse_file(config_path)
 
-        self.assertEqual(
-            config, {'flavor': {'general': {'foo': 'bar'}}, 'services': []}
-        )
+        assert config == {'flavor': {'general': {'foo': 'bar'}}, 'services': []}
 
     def test_toml_invalid(self):
         config_path = self.create('.bugwarrior.toml')
@@ -160,7 +159,7 @@ class TestParseFile(LoadTest):
             """)
             )
 
-        with self.assertRaises(tomllib.TOMLDecodeError):
+        with pytest.raises(tomllib.TOMLDecodeError):
             load.parse_file(config_path)
 
     def test_ini_invalid(self):
@@ -173,7 +172,7 @@ class TestParseFile(LoadTest):
             """)
             )
 
-        with self.assertRaises(configparser.MissingSectionHeaderError):
+        with pytest.raises(configparser.MissingSectionHeaderError):
             load.parse_file(config_path)
 
     def test_toml_flavors(self):
@@ -182,9 +181,10 @@ class TestParseFile(LoadTest):
         with open(config_path, 'w') as fout:
             fout.write('[flavor.myflavor]\ntargets = ["my_gitlab"]')
         config = load.parse_file(config_path)
-        self.assertEqual(
-            config, {'flavor': {'myflavor': {'targets': ['my_gitlab']}}, 'services': []}
-        )
+        assert config == {
+            'flavor': {'myflavor': {'targets': ['my_gitlab']}},
+            'services': [],
+        }
 
     def test_ini_flavors(self):
         config_path = self.create('.bugwarriorrc')
@@ -197,9 +197,10 @@ class TestParseFile(LoadTest):
             )
         config = load.parse_file(config_path)
 
-        self.assertEqual(
-            config, {'flavor': {'myflavor': {'targets': 'my_gitlab'}}, 'services': []}
-        )
+        assert config == {
+            'flavor': {'myflavor': {'targets': 'my_gitlab'}},
+            'services': [],
+        }
 
     def test_ini_options_renamed(self):
         """
@@ -221,11 +222,11 @@ class TestParseFile(LoadTest):
         config = load.parse_file(config_path)
 
         baz_service = next(svc for svc in config['services'] if svc['target'] == 'baz')
-        self.assertIn('optionname', baz_service)
-        self.assertNotIn('prefix.optionname', baz_service)
+        assert 'optionname' in baz_service
+        assert 'prefix.optionname' not in baz_service
 
-        self.assertIn('log_level', config['flavor']['general'])
-        self.assertNotIn('log.level', config['flavor']['general'])
+        assert 'log_level' in config['flavor']['general']
+        assert 'log.level' not in config['flavor']['general']
 
     def test_ini_missing_prefix(self):
         config_path = self.create('.bugwarriorrc')
@@ -240,7 +241,7 @@ class TestParseFile(LoadTest):
             """)
             )
 
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             load.parse_file(config_path)
 
     def test_ini_wrong_prefix(self):
@@ -256,7 +257,7 @@ class TestParseFile(LoadTest):
             """)
             )
 
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             load.parse_file(config_path)
 
 
@@ -276,8 +277,8 @@ class TestLoadConfig(LoadTest):
             """)
             )
 
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             load.load_config("general", False)
 
-        self.assertEqual(len(self.caplog.records), 1)
-        self.assertIn("No section: 'general'", self.caplog.records[0].message)
+        assert len(self.caplog.records) == 1
+        assert "No section: 'general'" in self.caplog.records[0].message

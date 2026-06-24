@@ -50,7 +50,7 @@ class TestPhabricatorIssue(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     @unittest.skip('The phabricator library is hard to mock.')
     def test_issues(self):

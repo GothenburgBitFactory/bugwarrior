@@ -33,7 +33,7 @@ class ReadmeTest(unittest.TestCase):
 
         readme_document = docutils.core.publish_doctree(readme)
         service_list_search = readme_document.traverse(condition=is_services)
-        self.assertEqual(len(service_list_search), 1)
+        assert len(service_list_search) == 1
         service_list_element = service_list_search.pop()
         readme_listed_services = set(
             list_item.astext() for list_item in service_list_element.children
@@ -49,7 +49,7 @@ class ReadmeTest(unittest.TestCase):
                     firstline = f.readline().strip()
                 documented_services.add(firstline)
 
-        self.assertEqual(documented_services, readme_listed_services)
+        assert documented_services == readme_listed_services
 
 
 class DocsTest(unittest.TestCase):
@@ -88,4 +88,4 @@ class DocsTest(unittest.TestCase):
             if re.match(r'.*\.rst$', p):
                 documented_services.add(re.sub(r'\.rst$', '', p))
 
-        self.assertEqual(registered_services, documented_services)
+        assert registered_services == documented_services

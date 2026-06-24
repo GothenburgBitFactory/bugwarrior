@@ -131,9 +131,9 @@ class TestClickupClient(TestCase):
 
     def test_init(self):
         http_client = ClickupClient('12345')
-        self.assertEqual(
-            "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0",
-            http_client._get_url_for_tasks(1234, 0),
+        assert (
+            "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0"
+            == http_client._get_url_for_tasks(1234, 0)
         )
 
     @responses.activate
@@ -147,7 +147,7 @@ class TestClickupClient(TestCase):
             json=self.data.get_page(1),
         )
         result = [item for item in self.client.get_tasks_for_team(team_id=1234)]
-        self.assertSequenceEqual(self.data.get_task_contents(), result)
+        assert self.data.get_task_contents() == result
 
 
 class TestClickupService(ConfigTest):
@@ -172,20 +172,20 @@ class TestClickupService(ConfigTest):
 
     def test_keyring_service(self):
         conf = self.validate().service_configs[0]
-        self.assertEqual(conf.keyring_service, 'clickup://')
+        assert conf.keyring_service == 'clickup://'
 
     def test_is_assigned(self):
         task = self.data.get_task()
 
-        self.assertTrue(self.service.is_assigned(task))
+        assert self.service.is_assigned(task)
 
         self.config["myservice"]["only_if_assigned"] = "Pedro Manobrista"
 
-        self.assertTrue(self.service.is_assigned(task))
+        assert self.service.is_assigned(task)
 
         self.config["myservice"]["also_unassigned"] = False
 
-        self.assertFalse(self.service.is_assigned(task))
+        assert not self.service.is_assigned(task)
 
         task["assignees"] = [
             {
@@ -197,7 +197,7 @@ class TestClickupService(ConfigTest):
                 "profilePicture": None,
             }
         ]
-        self.assertTrue(self.service.is_assigned(task))
+        assert self.service.is_assigned(task)
 
 
 class TestClickupIssue(ServiceIssueTest):
@@ -236,7 +236,7 @@ class TestClickupIssue(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     @responses.activate
     def test_issues(self):
@@ -272,6 +272,4 @@ class TestClickupIssue(ServiceIssueTest):
             issue.NAME: task["name"],
         }
 
-        self.assertEqual(
-            TaskConstructor(issue).get_taskwarrior_record(), expected_output
-        )
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected_output

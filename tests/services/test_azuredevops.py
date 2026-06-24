@@ -195,7 +195,7 @@ class TestAzureDevopsService(ServiceIssueTest):
             "adoparent": None,
         }
         actual_output = issue.to_taskwarrior()
-        self.assertEqual(actual_output, expected)
+        assert actual_output == expected
 
     def test_issues(self):
         expected = {
@@ -219,7 +219,7 @@ class TestAzureDevopsService(ServiceIssueTest):
             "tags": [],
         }
         issue = next(self.service.issues())
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     def test_issues_wiql_filter(self):
         expected = {
@@ -244,4 +244,4 @@ class TestAzureDevopsService(ServiceIssueTest):
         }
         service = self.get_service(config_overrides={'wiql_filter': 'something'})
         issue = next(service.issues())
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected

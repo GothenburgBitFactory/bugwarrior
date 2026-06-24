@@ -44,7 +44,7 @@ class TestBitbucketIssue(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     @responses.activate
     def test_issues(self):
@@ -106,9 +106,7 @@ class TestBitbucketIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(
-            TaskConstructor(issue).get_taskwarrior_record(), expected_issue
-        )
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected_issue
 
         expected_pr = {
             'annotations': ['@nobody - Some comment.'],
@@ -121,15 +119,15 @@ class TestBitbucketIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(pr).get_taskwarrior_record(), expected_pr)
+        assert TaskConstructor(pr).get_taskwarrior_record() == expected_pr
 
     def test_get_owner(self):
         issue = {'title': 'Foobar', 'assignee': {'username': 'tintin'}}
-        self.assertEqual(self.service.get_owner(('foo', issue)), 'tintin')
+        assert self.service.get_owner(('foo', issue)) == 'tintin'
 
     def test_get_owner_none(self):
         issue = {'title': 'Foobar', 'assignee': None}
-        self.assertIsNone(self.service.get_owner(('foo', issue)))
+        assert self.service.get_owner(('foo', issue)) is None
 
     @responses.activate
     def test_fetch_issues_pagination(self):
@@ -181,4 +179,4 @@ class TestBitbucketIssue(ServiceIssueTest):
                 },
             ),
         ]
-        self.assertEqual(issues, expected)
+        assert issues == expected

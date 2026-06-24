@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 from unittest import TestCase
 
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor, get_service_instances
@@ -318,7 +319,7 @@ class TestGitlabClient(TestCase):
             verify_ssl=False,
         )
         expected_base_url = 'http://my-git.org/api/v4/'
-        self.assertEqual(expected_base_url, http_client._base_url())
+        assert expected_base_url == http_client._base_url()
         http_client = GitlabClient(
             'my-git.org',
             '12345',
@@ -328,7 +329,7 @@ class TestGitlabClient(TestCase):
             verify_ssl=True,
         )
         expected_base_url = 'http://my-git.org/api/v4/'
-        self.assertEqual(expected_base_url, http_client._base_url())
+        assert expected_base_url == http_client._base_url()
         http_client = GitlabClient(
             'my-git.org',
             '12345',
@@ -338,7 +339,7 @@ class TestGitlabClient(TestCase):
             verify_ssl=False,
         )
         expected_base_url = 'https://my-git.org/api/v4/'
-        self.assertEqual(expected_base_url, http_client._base_url())
+        assert expected_base_url == http_client._base_url()
         http_client = GitlabClient(
             'my-git.org',
             '12345',
@@ -348,7 +349,7 @@ class TestGitlabClient(TestCase):
             verify_ssl=True,
         )
         expected_base_url = 'https://my-git.org/api/v4/'
-        self.assertEqual(expected_base_url, http_client._base_url())
+        assert expected_base_url == http_client._base_url()
 
     @responses.activate
     def test_get_repo(self):
@@ -356,7 +357,7 @@ class TestGitlabClient(TestCase):
             'https://my-git.org/api/v4/projects/8', json=self.data.arbitrary_project
         )
         result = self.client.get_repo_cached(repo_id=8)
-        self.assertEqual(result, self.data.arbitrary_project)
+        assert result == self.data.arbitrary_project
 
     @responses.activate
     def test_get_repos(self):
@@ -400,34 +401,34 @@ class TestGitlabClient(TestCase):
         result = self.client.get_repos(
             include_repos=[], only_membership=False, only_owned=False
         )
-        self.assertEqual(result, [self.data.arbitrary_project])
+        assert result == [self.data.arbitrary_project]
 
         result = self.client.get_repos(
             include_repos=[], only_membership=True, only_owned=False
         )
-        self.assertEqual(result, [self.data.arbitrary_project])
+        assert result == [self.data.arbitrary_project]
 
         result = self.client.get_repos(
             include_repos=[], only_membership=True, only_owned=True
         )
-        self.assertEqual(result, [])
+        assert result == []
 
         result = self.client.get_repos(
             include_repos=['arbitrary_namespace/arbitrary_project'],
             only_membership=False,
             only_owned=False,
         )
-        self.assertEqual(result, [self.data.arbitrary_project])
+        assert result == [self.data.arbitrary_project]
 
         result = self.client.get_repos(
             include_repos=['id:8'], only_membership=False, only_owned=False
         )
-        self.assertEqual(result, [self.data.arbitrary_project])
+        assert result == [self.data.arbitrary_project]
 
         result = self.client.get_repos(
             include_repos=['non_existing'], only_membership=False, only_owned=False
         )
-        self.assertRaises(OSError)
+        pytest.raises(OSError)
 
     @responses.activate
     def test_get_notes(self):
@@ -441,7 +442,7 @@ class TestGitlabClient(TestCase):
             'issues',
             self.data.arbitrary_issue['iid'],
         )
-        self.assertEqual(result, expected)
+        assert result == expected
 
     @responses.activate
     def test_get_repo_issues(self):
@@ -449,15 +450,12 @@ class TestGitlabClient(TestCase):
             'https://my-git.org/api/v4/projects/8/issues?state=opened&page=1&per_page=100',
             json=[self.data.arbitrary_issue],
         )
-        self.assertEqual(
-            self.client.get_repo_issues(self.data.arbitrary_issue['project_id']),
-            {
-                self.data.arbitrary_issue['id']: (
-                    self.data.arbitrary_issue['project_id'],
-                    self.data.arbitrary_issue,
-                )
-            },
-        )
+        assert self.client.get_repo_issues(self.data.arbitrary_issue['project_id']) == {
+            self.data.arbitrary_issue['id']: (
+                self.data.arbitrary_issue['project_id'],
+                self.data.arbitrary_issue,
+            )
+        }
 
     @responses.activate
     def test_get_repo_merge_requests(self):
@@ -465,17 +463,14 @@ class TestGitlabClient(TestCase):
             'https://my-git.org/api/v4/projects/8/merge_requests?state=opened&page=1&per_page=100',
             json=[self.data.arbitrary_mr],
         )
-        self.assertEqual(
-            self.client.get_repo_merge_requests(
-                self.data.arbitrary_issue['project_id']
-            ),
-            {
-                self.data.arbitrary_mr['id']: (
-                    self.data.arbitrary_issue['project_id'],
-                    self.data.arbitrary_mr,
-                )
-            },
-        )
+        assert self.client.get_repo_merge_requests(
+            self.data.arbitrary_issue['project_id']
+        ) == {
+            self.data.arbitrary_mr['id']: (
+                self.data.arbitrary_issue['project_id'],
+                self.data.arbitrary_mr,
+            )
+        }
 
     @responses.activate
     def test_get_issues_from_query(self):
@@ -484,17 +479,14 @@ class TestGitlabClient(TestCase):
             + 'issues?assignee_id=2&state=opened&scope=all&page=1&per_page=100',
             json=[self.data.arbitrary_issue],
         )
-        self.assertEqual(
-            self.client.get_issues_from_query(
-                'issues?assignee_id=2&state=opened&scope=all'
-            ),
-            {
-                self.data.arbitrary_issue['id']: (
-                    self.data.arbitrary_issue['project_id'],
-                    self.data.arbitrary_issue,
-                )
-            },
-        )
+        assert self.client.get_issues_from_query(
+            'issues?assignee_id=2&state=opened&scope=all'
+        ) == {
+            self.data.arbitrary_issue['id']: (
+                self.data.arbitrary_issue['project_id'],
+                self.data.arbitrary_issue,
+            )
+        }
 
     @responses.activate
     def test_get_todos(self):
@@ -502,10 +494,9 @@ class TestGitlabClient(TestCase):
             'https://my-git.org/api/v4/todos?state=pending&page=1&per_page=100',
             json=[self.data.arbitrary_todo],
         )
-        self.assertEqual(
-            self.client.get_todos('todos?state=pending'),
-            [(self.data.arbitrary_todo['project'], self.data.arbitrary_todo)],
-        )
+        assert self.client.get_todos('todos?state=pending') == [
+            (self.data.arbitrary_todo['project'], self.data.arbitrary_todo)
+        ]
 
 
 class TestGitlabService(ConfigTest):
@@ -535,13 +526,13 @@ class TestGitlabService(ConfigTest):
     def test_keyring_service_default_host(self):
         conf = self.validate()
         conf = conf.service_configs[0]
-        self.assertEqual(conf.keyring_service, 'gitlab://foobar@gitlab.com')
+        assert conf.keyring_service == 'gitlab://foobar@gitlab.com'
 
     def test_keyring_service_custom_host(self):
         self.config['myservice']['host'] = 'my-git.org'
         conf = self.validate()
         conf = conf.service_configs[0]
-        self.assertEqual(conf.keyring_service, 'gitlab://foobar@my-git.org')
+        assert conf.keyring_service == 'gitlab://foobar@my-git.org'
 
     def test_filter_gitlab_dot_com(self):
         self.config['myservice'].update({'host': 'gitlab.com', 'owned': 'false'})
@@ -569,46 +560,42 @@ class TestGitlabService(ConfigTest):
 
     def test_add_default_namespace_to_included_repos(self):
         self.config['myservice']['include_repos'] = 'baz, banana/tree'
-        self.assertEqual(
-            self.service.config.include_repos, ['foobar/baz', 'banana/tree']
-        )
+        assert self.service.config.include_repos == ['foobar/baz', 'banana/tree']
 
     def test_add_default_namespace_to_excluded_repos(self):
         self.config['myservice']['exclude_repos'] = 'baz, banana/tree'
-        self.assertEqual(
-            self.service.config.exclude_repos, ['foobar/baz', 'banana/tree']
-        )
+        assert self.service.config.exclude_repos == ['foobar/baz', 'banana/tree']
 
     def test_filter_repos_default(self):
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
-        self.assertTrue(self.service.filter_repos(repo))
+        assert self.service.filter_repos(repo)
 
     def test_filter_repos_exclude(self):
         self.config['myservice']['exclude_repos'] = 'foobar/baz'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
-        self.assertFalse(self.service.filter_repos(repo))
+        assert not self.service.filter_repos(repo)
 
     def test_filter_repos_exclude_id(self):
         self.config['myservice']['exclude_repos'] = 'id:1234'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
-        self.assertFalse(self.service.filter_repos(repo))
+        assert not self.service.filter_repos(repo)
 
     def test_filter_repos_include(self):
         self.config['myservice']['include_repos'] = 'foobar/baz'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
-        self.assertTrue(self.service.filter_repos(repo))
+        assert self.service.filter_repos(repo)
 
     def test_filter_repos_include_id(self):
         self.config['myservice']['include_repos'] = 'id:1234'
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
-        self.assertTrue(self.service.filter_repos(repo))
+        assert self.service.filter_repos(repo)
 
     def test_include_only_if_assigned(self):
         self.config['myservice']['only_if_assigned'] = 'jack_smith'
         data = TestData()
-        self.assertTrue(self.service.include((1, data.arbitrary_issue)))
+        assert self.service.include((1, data.arbitrary_issue))
         self.config['myservice']['only_if_assigned'] = 'smack_jith'
-        self.assertFalse(self.service.include((1, data.arbitrary_issue)))
+        assert not self.service.include((1, data.arbitrary_issue))
 
     def test_default_priorities(self):
         self.config['myservice'].update(
@@ -618,42 +605,40 @@ class TestGitlabService(ConfigTest):
                 'default_todo_priority': 'H',
             }
         )
-        self.assertEqual('L', self.service.config.default_issue_priority)
-        self.assertEqual('M', self.service.config.default_mr_priority)
-        self.assertEqual('H', self.service.config.default_todo_priority)
+        assert 'L' == self.service.config.default_issue_priority
+        assert 'M' == self.service.config.default_mr_priority
+        assert 'H' == self.service.config.default_todo_priority
 
     def test_default_priorities_fallback(self):
         self.config['myservice']['default_priority'] = 'H'
-        self.assertEqual('H', self.service.config.default_issue_priority)
-        self.assertEqual('H', self.service.config.default_mr_priority)
-        self.assertEqual('H', self.service.config.default_todo_priority)
+        assert 'H' == self.service.config.default_issue_priority
+        assert 'H' == self.service.config.default_mr_priority
+        assert 'H' == self.service.config.default_todo_priority
 
     def test_body_zero_limit(self):
         self.config['myservice']['body_length'] = 0
         issue = dict(description="A very short issue body.  Fixes #42.")
-        self.assertEqual("", self.service.description(issue))
+        assert "" == self.service.description(issue)
 
     def test_body_short_limit(self):
         size_limit = 5
         self.config['myservice']['body_length'] = size_limit
         issue = dict(description="A very short issue body.  Fixes #42.")
-        self.assertEqual(
-            issue["description"][:size_limit], self.service.description(issue)
-        )
+        assert issue["description"][:size_limit] == self.service.description(issue)
 
     def test_body_no_limit(self):
         issue = dict(description="A very short issue body.  Fixes #42.")
-        self.assertEqual(issue["description"], self.service.description(issue))
+        assert issue["description"] == self.service.description(issue)
 
     def test_undefined_owned_warning(self):
         self.config['myservice'].pop('owned')
         self.config['myservice']['membership'] = 'true'
         self.validate()
-        self.assertEqual(len(self.caplog.records), 1)
-        self.assertIn(
+        assert len(self.caplog.records) == 1
+        assert (
             "WARNING: Gitlab's 'owned' configuration field should be set "
-            "explicitly. In a future release, this will be an error.",
-            self.caplog.records[0].message,
+            "explicitly. In a future release, this will be an error."
+            in self.caplog.records[0].message
         )
 
 
@@ -704,7 +689,7 @@ class TestGitlabIssue(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     def test_custom_issue_priority(self):
         overrides = {'default_issue_priority': 'L'}
@@ -740,7 +725,7 @@ class TestGitlabIssue(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     def test_custom_todo_priority(self):
         overrides = {'default_todo_priority': 'H'}
@@ -781,7 +766,7 @@ class TestGitlabIssue(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     def test_custom_mr_priority(self):
         overrides = {'default_mr_priority': '', 'import_labels_as_tags': True}
@@ -817,7 +802,7 @@ class TestGitlabIssue(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     def test_work_in_progress(self):
         self.data.arbitrary_issue['work_in_progress'] = False
@@ -853,7 +838,7 @@ class TestGitlabIssue(ServiceIssueTest):
         }
         actual_output = issue.to_taskwarrior()
 
-        self.assertEqual(actual_output, expected_output)
+        assert actual_output == expected_output
 
     @responses.activate
     def test_issues_from_query(self):
@@ -905,7 +890,7 @@ class TestGitlabIssue(ServiceIssueTest):
             'project': 'arbitrary_username/project',
             'tags': [],
         }
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     @responses.activate
     def test_mrs_from_query(self):
@@ -963,7 +948,7 @@ class TestGitlabIssue(ServiceIssueTest):
             'project': 'arbitrary_username/project',
             'tags': [],
         }
-        self.assertEqual(TaskConstructor(mr).get_taskwarrior_record(), expected)
+        assert TaskConstructor(mr).get_taskwarrior_record() == expected
 
     @responses.activate
     def test_todos_from_query(self):
@@ -1027,7 +1012,7 @@ class TestGitlabIssue(ServiceIssueTest):
             'project': 'project',
             'tags': [],
         }
-        self.assertEqual(TaskConstructor(todo).get_taskwarrior_record(), expected)
+        assert TaskConstructor(todo).get_taskwarrior_record() == expected
 
         overrides = {
             'include_issues': 'false',
@@ -1038,7 +1023,7 @@ class TestGitlabIssue(ServiceIssueTest):
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
         todo = next(service.issues())
-        self.assertEqual(TaskConstructor(todo).get_taskwarrior_record(), expected)
+        assert TaskConstructor(todo).get_taskwarrior_record() == expected
 
     @responses.activate
     def test_issues(self):
@@ -1095,7 +1080,7 @@ class TestGitlabIssue(ServiceIssueTest):
             'tags': [],
         }
 
-        self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+        assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     @responses.activate
     def test_only_if_assigned_user_lookup(self):
@@ -1119,7 +1104,7 @@ class TestGitlabIssue(ServiceIssueTest):
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
 
         # Verify service was created successfully
-        self.assertIsNotNone(service)
+        assert service is not None
 
     @responses.activate
     def test_only_if_assigned_user_not_found(self):
@@ -1132,9 +1117,9 @@ class TestGitlabIssue(ServiceIssueTest):
         overrides = {'only_if_assigned': 'nonexistent_user'}
 
         # Should exit with 1
-        with self.assertRaises(SystemExit) as cm:
+        with pytest.raises(SystemExit) as cm:
             self.get_mock_service(GitlabService, config_overrides=overrides)
-        self.assertEqual(cm.exception.code, 1)
+        assert cm.value.code == 1
 
     @responses.activate
     def test_only_if_assigned_multiple_users(self):
@@ -1161,6 +1146,6 @@ class TestGitlabIssue(ServiceIssueTest):
         overrides = {'only_if_assigned': 'smith'}
 
         # Should exit with 1
-        with self.assertRaises(SystemExit) as cm:
+        with pytest.raises(SystemExit) as cm:
             self.get_mock_service(GitlabService, config_overrides=overrides)
-        self.assertEqual(cm.exception.code, 1)
+        assert cm.value.code == 1
