@@ -1,4 +1,3 @@
-import unittest
 from unittest.mock import MagicMock, patch
 
 import keyring.errors
@@ -7,12 +6,12 @@ import pytest
 from bugwarrior.config import secrets
 
 
-class TestOracleEval(unittest.TestCase):
+class TestOracleEval:
     def test_echo(self):
         assert secrets.oracle_eval("echo fööbår") == "fööbår"
 
 
-class TestGetServicePassword(unittest.TestCase):
+class TestGetServicePassword:
     """Tests for get_service_password, covering every oracle code path."""
 
     SERVICE = "myservice"

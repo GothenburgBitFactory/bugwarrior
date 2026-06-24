@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-from unittest import TestCase
 
 import responses
 
@@ -358,7 +357,7 @@ class TestGithubValidation(ConfigTest):
         self.validate()
 
 
-class TestGithubClient(TestCase):
+class TestGithubClient:
     def test_api_url(self):
         auth = {'token': 'xxxx'}
         client = GithubClient('github.com', auth)

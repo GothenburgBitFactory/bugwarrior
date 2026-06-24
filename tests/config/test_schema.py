@@ -114,7 +114,7 @@ class TestUnsupportedOption(unittest.TestCase):
             self.adapter.validate_python('foo')
 
 
-class TestComputeTemplates(unittest.TestCase):
+class TestComputeTemplates:
     def test_template(self):
         raw_values = {'templates': {}, 'project_template': 'foo'}
         computed_values = DumbConfig.compute_templates(raw_values)

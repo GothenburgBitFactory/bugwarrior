@@ -6,7 +6,6 @@ import re
 import socket
 import subprocess
 import tempfile
-import unittest
 
 import docutils.core
 import pytest
@@ -20,7 +19,7 @@ except OSError:
     INTERNET = False
 
 
-class ReadmeTest(unittest.TestCase):
+class TestReadme:
     def test_service_list(self):
         # GET README LISTED SERVICES
         def is_services(node):
@@ -53,7 +52,7 @@ class ReadmeTest(unittest.TestCase):
         assert documented_services == readme_listed_services
 
 
-class DocsTest(unittest.TestCase):
+class TestDocs:
     @pytest.mark.skipif(not INTERNET, reason='no internet')
     def test_docs_build_without_warning(self):
         with tempfile.TemporaryDirectory() as buildDir:
