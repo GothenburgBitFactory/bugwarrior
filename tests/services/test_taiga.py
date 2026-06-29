@@ -3,10 +3,10 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.taiga import TaigaService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestTaigaIssue(AbstractServiceTest, ServiceTest):
+class TestTaigaIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'taiga',
         'base_uri': 'https://one',
@@ -53,21 +53,21 @@ class TestTaigaIssue(AbstractServiceTest, ServiceTest):
     def test_issues(self):
         userid = 1
 
-        self.add_response('https://one/api/v1/users/me', json={'id': userid})
+        responses.get('https://one/api/v1/users/me', json={'id': userid})
 
-        self.add_response(
+        responses.get(
             'https://one/api/v1/userstories?status__is_closed=false&assigned_to={}'.format(
                 userid
             ),
             json=[self.record],
         )
 
-        self.add_response(
+        responses.get(
             'https://one/api/v1/projects/{}'.format(self.record['project']),
             json={'slug': 'something'},
         )
 
-        self.add_response(
+        responses.get(
             'https://one/api/v1/history/userstory/{}'.format(self.record['id']),
             json=[{'user': {'username': 'you'}, 'comment': 'Blah blah blah!'}],
         )

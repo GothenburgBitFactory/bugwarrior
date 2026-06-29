@@ -1,11 +1,12 @@
 from datetime import date, datetime, timedelta, timezone
+from unittest import TestCase
 
 import responses
 
 from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.services.gitlab import GitlabClient, GitlabService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 
 class TestData:
@@ -294,7 +295,7 @@ class TestData:
         }
 
 
-class TestGitlabClient(ServiceTest):
+class TestGitlabClient(TestCase):
     def setUp(self):
         super().setUp()
         self.client = GitlabClient(
@@ -351,7 +352,7 @@ class TestGitlabClient(ServiceTest):
 
     @responses.activate
     def test_get_repo(self):
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8', json=self.data.arbitrary_project
         )
         result = self.client.get_repo_cached(repo_id=8)
@@ -359,38 +360,38 @@ class TestGitlabClient(ServiceTest):
 
     @responses.activate
     def test_get_repos(self):
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects?simple=True&archived=False&page=1&per_page=100',
             json=[self.data.arbitrary_project],
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects'
             + '?simple=True&archived=False&membership=True&page=1&per_page=100',
             json=[self.data.arbitrary_project],
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects'
             + '?simple=True&archived=False&owned=True&page=1&per_page=100',
             json=[],
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/'
             + 'arbitrary_namespace%2Farbitrary_project?simple=true',
             json=self.data.arbitrary_project,
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8?simple=true',
             json=self.data.arbitrary_project,
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/non_existing?simple=true', json=[]
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects'
             + '?simple=True&membership=True&owned=False&page=1&per_page=100',
             json=[self.data.arbitrary_project],
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects'
             + '?simple=True&archived=False&membership=True&owned=True&page=1&per_page=100',
             json=[],
@@ -430,7 +431,7 @@ class TestGitlabClient(ServiceTest):
 
     @responses.activate
     def test_get_notes(self):
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8/issues/3/notes?page=1&per_page=100',
             json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
         )
@@ -444,7 +445,7 @@ class TestGitlabClient(ServiceTest):
 
     @responses.activate
     def test_get_repo_issues(self):
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8/issues?state=opened&page=1&per_page=100',
             json=[self.data.arbitrary_issue],
         )
@@ -460,7 +461,7 @@ class TestGitlabClient(ServiceTest):
 
     @responses.activate
     def test_get_repo_merge_requests(self):
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8/merge_requests?state=opened&page=1&per_page=100',
             json=[self.data.arbitrary_mr],
         )
@@ -478,7 +479,7 @@ class TestGitlabClient(ServiceTest):
 
     @responses.activate
     def test_get_issues_from_query(self):
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/'
             + 'issues?assignee_id=2&state=opened&scope=all&page=1&per_page=100',
             json=[self.data.arbitrary_issue],
@@ -497,7 +498,7 @@ class TestGitlabClient(ServiceTest):
 
     @responses.activate
     def test_get_todos(self):
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/todos?state=pending&page=1&per_page=100',
             json=[self.data.arbitrary_todo],
         )
@@ -656,8 +657,7 @@ class TestGitlabService(ConfigTest):
         )
 
 
-class TestGitlabIssue(AbstractServiceTest, ServiceTest):
-    maxDiff = None
+class TestGitlabIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'gitlab',
         'host': 'my-git.org',
@@ -859,11 +859,11 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     def test_issues_from_query(self):
         overrides = {'issue_query': 'issues?state=opened'}
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/issues?state=opened&per_page=100&page=1',
             json=[self.data.arbitrary_issue],
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8',
             json={
                 'id': 8,
@@ -873,7 +873,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
                 'path_with_namespace': 'arbitrary_username/project',
             },
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8/issues/3/notes?page=1&per_page=100',
             json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
         )
@@ -916,11 +916,11 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'merge_request_query': 'merge_requests?state=opened',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/merge_requests?state=opened&per_page=100&page=1',
             json=[self.data.arbitrary_mr],
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8',
             json={
                 'id': 8,
@@ -930,7 +930,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
                 'path_with_namespace': 'arbitrary_username/project',
             },
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8/'
             + 'merge_requests/3/notes?page=1&per_page=100',
             json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
@@ -974,11 +974,11 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             'todo_query': 'todos?state=pending',
         }
         service = self.get_mock_service(GitlabService, config_overrides=overrides)
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/todos?state=pending&per_page=100&page=1',
             json=[self.data.arbitrary_todo],
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/2',
             json={
                 "id": 2,
@@ -988,7 +988,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
                 'path_with_namespace': 'arbitrary_namespace/project',
             },
         )
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/arbitrary_namespace%2Fproject?simple=true',
             json={
                 'id': 2,
@@ -1042,7 +1042,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects?simple=True&archived=False&per_page=100&page=1',
             json=[
                 {
@@ -1055,12 +1055,12 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
             ],
         )
 
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8/issues?state=opened&per_page=100&page=1',
             json=[self.data.arbitrary_issue],
         )
 
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/projects/8/issues/3/notes?per_page=100&page=1',
             json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
         )
@@ -1101,7 +1101,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     def test_only_if_assigned_user_lookup(self):
         """Test that only_if_assigned correctly looks up the user and uses first match"""
         # Mock the user lookup API call - WITH username in query string
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/users?username=jack_smith',
             json=[
                 {
@@ -1125,7 +1125,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     def test_only_if_assigned_user_not_found(self):
         """Test that empty user list causes SystemExit"""
         # Mock empty user lookup response
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/users?username=nonexistent_user', json=[]
         )
 
@@ -1140,7 +1140,7 @@ class TestGitlabIssue(AbstractServiceTest, ServiceTest):
     def test_only_if_assigned_multiple_users(self):
         """Test that multiple users found causes SystemExit"""
         # Mock multiple users with similar names
-        self.add_response(
+        responses.get(
             'https://my-git.org/api/v4/users?username=smith',
             json=[
                 {

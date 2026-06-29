@@ -4,7 +4,7 @@ from unittest import mock
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.azuredevops import AzureDevopsService, striphtml
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 TEST_ISSUE = {
     "_links": {
@@ -142,7 +142,7 @@ class TestAzureDevopsServiceConfig(ConfigTest):
         self.assertValidationError('[test_ado]\nPAT  <- Field required')
 
 
-class TestAzureDevopsService(AbstractServiceTest, ServiceTest):
+class TestAzureDevopsService(ServiceIssueTest):
     SERVICE_CONFIG = {
         "service": "azuredevops",
         "organization": "test_organization",

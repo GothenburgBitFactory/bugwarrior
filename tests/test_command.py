@@ -1,6 +1,7 @@
 import logging
 import os
 import pathlib
+import typing
 from unittest import TestCase, mock
 
 from click.testing import CliRunner
@@ -8,31 +9,69 @@ from click.testing import CliRunner
 from bugwarrior import command
 from bugwarrior.config.load import BugwarriorConfigParser
 
-from .base import ConfigTest
-from .test_github import ARBITRARY_EXTRA, ARBITRARY_ISSUE
+from .base import ConfigTest, DumbConfig, DumbIssue, DumbService, register_services
 
 
-def fake_github_issues(self):
-    yield from [self.get_issue_for_record(ARBITRARY_ISSUE, ARBITRARY_EXTRA)]
+class SecondaryConfig(DumbConfig):
+    service: typing.Literal['secondary'] = 'secondary'
+    KEYRING_SERVICE = 'secondary://'
 
 
-def fake_bz_issues(self):
-    yield from [
-        self.get_issue_for_record(
-            {
-                'id': 1234567,
-                'status': 'NEW',
-                'summary': 'This is the issue summary',
-                'product': 'Product',
-                'component': 'Something',
-                'description': '(bw)Is#1234567 - This is the issue summary .. https://http://one.com//show_bug.cgi?id=1234567',  # noqa: E501
-                'priority': 'H',
-                'project': 'Something',
-                'tags': [],
-            },
-            {'url': 'https://http://one.com//show_bug.cgi?id=1234567'},
-        )
-    ]
+class SecondaryIssue(DumbIssue):
+    """
+    A second fake issue with a distinct UNIQUE_KEY.
+
+    Multi-service tests need two services whose unique keys differ, mirroring
+    real services (e.g. GitHub vs Bugzilla); otherwise the close-stale-tasks
+    logic cannot tell their tasks apart.
+    """
+
+    URL = 'secondaryurl'
+    TYPE = 'secondarytype'
+
+    UDAS = {
+        URL: {'type': 'string', 'label': 'Secondary URL'},
+        TYPE: {'type': 'string', 'label': 'Secondary Type'},
+    }
+    UNIQUE_KEY = (URL,)
+
+
+class SecondaryService(DumbService):
+    CONFIG_SCHEMA = SecondaryConfig
+    ISSUE_CLASS = SecondaryIssue
+
+
+def yields_one(target_specific_url=False):
+    def issues(self):
+        record = {
+            'title': 'Hallo',
+            'url': 'https://example.com',
+            'number': 10,
+            'labels': [],
+        }
+
+        if target_specific_url:
+            record['url'] = f'https://example.com/{self.config.target}'
+
+        extra = {'project': 'one', 'type': 'issue', 'annotations': []}
+        yield self.get_issue_for_record(record, extra)
+
+    return issues
+
+
+def yields_none(self):
+    return iter([])
+
+
+def raises(self):
+    raise Exception('message')
+
+
+def fake_service(issues, base=DumbService):
+    """
+    Build a fake service class whose issues() is the given function.
+    """
+    return type('FakeService', (base,), {'issues': issues})
 
 
 class TestPull(ConfigTest):
@@ -47,12 +86,7 @@ class TestPull(ConfigTest):
             'static_fields': 'project, priority',
             'taskrc': self.taskrc,
         }
-        self.config['my_service'] = {
-            'service': 'github',
-            'github.login': 'ralphbean',
-            'github.token': 'abc123',
-            'github.username': 'ralphbean',
-        }
+        self.config['my_service'] = {'service': 'test'}
 
         self.write_rc(self.config)
 
@@ -67,12 +101,14 @@ class TestPull(ConfigTest):
             conf.write(configfile)
         return rcfile
 
-    @mock.patch('bugwarrior.services.github.GithubService.issues', fake_github_issues)
     def test_success(self):
         """
         A normal `bugwarrior pull` invocation.
         """
-        with self.caplog.at_level(logging.INFO):
+        with (
+            register_services({'test': fake_service(yields_one())}),
+            self.caplog.at_level(logging.INFO),
+        ):
             self.runner.invoke(command.cli, args=('pull', '--debug'))
 
         logs = [rec.message for rec in self.caplog.records]
@@ -81,15 +117,14 @@ class TestPull(ConfigTest):
         self.assertIn('Updating 0 tasks', logs)
         self.assertIn('Closing 0 tasks', logs)
 
-    @mock.patch(
-        'bugwarrior.services.github.GithubService.issues',
-        lambda self: (_ for _ in ()).throw(Exception('message')),
-    )
     def test_failure(self):
         """
         A broken `bugwarrior pull` invocation.
         """
-        with self.caplog.at_level(logging.ERROR):
+        with (
+            register_services({'test': fake_service(raises)}),
+            self.caplog.at_level(logging.ERROR),
+        ):
             self.runner.invoke(command.cli, args=('pull', '--debug'))
 
         self.assertNotEqual(self.caplog.records, [])
@@ -102,11 +137,6 @@ class TestPull(ConfigTest):
             "Aborted [my_service] due to critical error.",
         )
 
-    @mock.patch('bugwarrior.services.github.GithubService.issues', lambda self: [])
-    @mock.patch(
-        'bugwarrior.services.bz.BugzillaService.issues',
-        lambda self: (_ for _ in ()).throw(Exception('message')),
-    )
     def test_partial_failure_survival(self):
         """
         One service is broken but the other succeeds.
@@ -115,54 +145,53 @@ class TestPull(ConfigTest):
         fails.  See https://github.com/ralphbean/bugwarrior/issues/279.
         """
         self.config['general']['targets'] = 'my_service,my_broken_service'
-        self.config['my_broken_service'] = {
-            'service': 'bugzilla',
-            'bugzilla.base_uri': 'https://bugzilla.redhat.com',
-            'bugzilla.username': 'rbean@redhat.com',
-        }
-
+        self.config['my_broken_service'] = {'service': 'secondary'}
         self.write_rc(self.config)
 
-        with self.caplog.at_level(logging.INFO):
+        with (
+            register_services(
+                {
+                    'test': fake_service(yields_none),
+                    'secondary': fake_service(raises, base=SecondaryService),
+                }
+            ),
+            self.caplog.at_level(logging.INFO),
+        ):
             self.runner.invoke(command.cli, args=('pull', '--debug'))
 
         logs = [rec.message for rec in self.caplog.records]
         self.assertIn('Aborted [my_broken_service] due to critical error.', logs)
         self.assertIn('Adding 0 tasks', logs)
 
-    @mock.patch('bugwarrior.services.github.GithubService.issues', fake_github_issues)
-    @mock.patch('bugzilla.Bugzilla')
-    def test_partial_failure_database_integrity(self, bugzillalib):
+    def test_partial_failure_database_integrity(self):
         """
         When a service fails and is terminated, don't close existing tasks.
 
         See https://github.com/ralphbean/bugwarrior/issues/821.
         """
-        # Add the broken service to the configuration.
         self.config['general']['targets'] = 'my_service,my_broken_service'
-        self.config['my_broken_service'] = {
-            'service': 'bugzilla',
-            'bugzilla.base_uri': 'https://bugzilla.redhat.com',
-            'bugzilla.username': 'rbean@redhat.com',
-        }
+        self.config['my_broken_service'] = {'service': 'secondary'}
         self.write_rc(self.config)
 
         # Add a task to each service.
-        with self.caplog.at_level(logging.DEBUG):
-            with mock.patch(
-                'bugwarrior.services.bz.BugzillaService.issues', fake_bz_issues
-            ):
-                self.runner.invoke(command.cli, args=('pull', '--debug'))
+        both_working = {
+            'test': fake_service(yields_one(target_specific_url=True)),
+            'secondary': fake_service(
+                yields_one(target_specific_url=True), base=SecondaryService
+            ),
+        }
+        with register_services(both_working), self.caplog.at_level(logging.DEBUG):
+            self.runner.invoke(command.cli, args=('pull', '--debug'))
         logs = [rec.message for rec in self.caplog.records]
         self.assertIn('Adding 2 tasks', logs)
 
-        # Break the service and run pull again.
-        with self.caplog.at_level(logging.INFO):
-            with mock.patch(
-                'bugwarrior.services.bz.BugzillaService.issues',
-                lambda self: (_ for _ in ()).throw(Exception('message')),
-            ):
-                self.runner.invoke(command.cli, args=('pull', '--debug'))
+        # Break the secondary service and run pull again.
+        secondary_broken = {
+            'test': fake_service(yields_one(target_specific_url=True)),
+            'secondary': fake_service(raises, base=SecondaryService),
+        }
+        with register_services(secondary_broken), self.caplog.at_level(logging.INFO):
+            self.runner.invoke(command.cli, args=('pull', '--debug'))
         logs = [rec.message for rec in self.caplog.records]
 
         # Make sure my_broken_service failed while my_service succeeded.
@@ -173,14 +202,39 @@ class TestPull(ConfigTest):
         self.assertNotIn('Closing 1 tasks', logs)
         self.assertNotIn('Completing task', logs)
 
-    @mock.patch('bugwarrior.services.github.GithubService.issues', fake_github_issues)
+    @mock.patch('bugwarrior.command.FileLock')
+    def test_locked_repository(self, file_lock):
+        """
+        A locked task repository should abort the pull.
+        """
+        lockfile_path = pathlib.Path(self.lists_path) / 'bugwarrior.lockfile'
+        file_lock.return_value.__enter__.side_effect = command.Timeout(
+            str(lockfile_path)
+        )
+
+        with (
+            register_services({'test': DumbService}),
+            self.caplog.at_level(logging.CRITICAL),
+        ):
+            result = self.runner.invoke(command.cli, args=('pull', '--debug'))
+
+        self.assertEqual(result.exit_code, 1)
+        file_lock.assert_called_once_with(str(lockfile_path), timeout=10)
+        logs = [rec.message for rec in self.caplog.records]
+        self.assertTrue(
+            any('Your taskrc repository is currently locked.' in log for log in logs)
+        )
+
     def test_legacy_cli(self):
         """
         Test that invoking the subcommand function directly still works.
 
         Also test that it logs a deprecation warning.
         """
-        with self.caplog.at_level(logging.INFO):
+        with (
+            register_services({'test': fake_service(yields_one())}),
+            self.caplog.at_level(logging.INFO),
+        ):
             self.runner.invoke(command.pull, args=('--debug'))
 
         logs = [rec.message for rec in self.caplog.records]

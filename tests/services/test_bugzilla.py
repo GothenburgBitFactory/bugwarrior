@@ -5,7 +5,7 @@ from unittest import mock
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bz import BugzillaService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 
 class FakeBugzillaLib:
@@ -62,7 +62,7 @@ class TestBugzillaServiceConfig(ConfigTest):
         )
 
 
-class TestBugzillaService(AbstractServiceTest, ServiceTest):
+class TestBugzillaService(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'bugzilla',
         'base_uri': 'https://one.com/',

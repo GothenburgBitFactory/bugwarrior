@@ -6,7 +6,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.linear import LinearService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 RESPONSE = json.loads(
     """
@@ -125,7 +125,7 @@ class TestLinearServiceConfig(ConfigTest):
         self.assertEqual(conf.service_configs[0].statuses, [])
 
 
-class TestLinearIssue(AbstractServiceTest, ServiceTest):
+class TestLinearIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         "service": "linear",
         "api_token": "abc123",

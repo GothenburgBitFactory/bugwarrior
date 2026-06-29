@@ -1,10 +1,10 @@
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.config.schema import MainSectionConfig
 
-from .base import DumbConfig, DumbIssue, ServiceTest
+from .base import ConfigTest, DumbConfig, DumbIssue
 
 
-class TestTemplates(ServiceTest):
+class TestTemplates(ConfigTest):
     def setUp(self):
         super().setUp()
         self.arbitrary_default_description = 'Construct Library on Terminus'

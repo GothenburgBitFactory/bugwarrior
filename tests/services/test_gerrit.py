@@ -5,10 +5,10 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gerrit import GerritService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestGerritIssue(AbstractServiceTest, ServiceTest):
+class TestGerritIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'gerrit',
         'base_uri': 'https://one.com',
@@ -100,7 +100,7 @@ class TestGerritIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        self.add_response(
+        responses.get(
             'https://one.com/a/changes/?q=is:open+is:reviewer&o=MESSAGES&o=DETAILED_ACCOUNTS',
             # The response has some ")]}'" garbage prefixed.
             body=")]}'" + json.dumps([self.record]),

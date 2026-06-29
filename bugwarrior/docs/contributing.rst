@@ -19,14 +19,20 @@ Now use your favorite tool to attain an editable installation.
 
 .. tab:: pip
 
-   Requires pip >= 25.1 for `dependency group <https://peps.python.org/pep-0735/>`_ support.
+   Requires pip >= 26.1 for `dependency group <https://peps.python.org/pep-0735/>`_
+   support and ``--uploaded-prior-to`` duration support. The commands below
+   configure the virtual environment's pip installation to use the same ``P3D``
+   dependency cooldown as the uv ``exclude-newer = "3 days"`` setting in
+   ``pyproject.toml``.
 
    .. code-block:: bash
 
     $ mkdir .venv
     $ python -m venv .venv
     $ source .venv/bin/activate
-    $ pip install --upgrade "pip>=25.1"
+    $ pip install --upgrade "pip>=26.1"
+    $ pip config --site set install.uploaded-prior-to P3D
+    $ pip install --upgrade setuptools
     $ pip install -e .[all]
     $ pip install --group test
 

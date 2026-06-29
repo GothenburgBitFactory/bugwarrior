@@ -3,10 +3,10 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bitbucket import BitbucketService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
+class TestBitbucketIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'bitbucket',
         'username': 'somename',
@@ -18,9 +18,8 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
     def setUp(self):
         super().setUp()
 
-        self.add_response(
+        responses.post(
             'https://bitbucket.org/site/oauth2/access_token',
-            method='POST',
             json={'access_token': 'sometoken', 'refresh_token': 'anothertoken'},
         )
         self.service = self.get_mock_service(BitbucketService)
@@ -49,12 +48,12 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        self.add_response(
+        responses.get(
             'https://api.bitbucket.org/2.0/repositories/somename/',
             json={'values': [{'full_name': 'somename/somerepo', 'has_issues': True}]},
         )
 
-        self.add_response(
+        responses.get(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/',
             json={
                 'values': [
@@ -68,7 +67,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
             },
         )
 
-        self.add_response(
+        responses.get(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/pullrequests/',
             json={
                 'values': [
@@ -82,7 +81,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
             },
         )
 
-        self.add_response(
+        responses.get(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/pullrequests/1/comments',
             json={
                 'values': [
@@ -134,7 +133,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_fetch_issues_pagination(self):
-        self.add_response(
+        responses.get(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/',
             json={
                 'values': [
@@ -148,7 +147,7 @@ class TestBitbucketIssue(AbstractServiceTest, ServiceTest):
                 'next': 'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/?page=2',  # noqa: E501
             },
         )
-        self.add_response(
+        responses.get(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/?page=2',
             json={
                 'values': [

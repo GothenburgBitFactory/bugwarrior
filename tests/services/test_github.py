@@ -6,17 +6,15 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.github import GithubClient, GithubConfig, GithubService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest, ServiceTest
 
 ARBITRARY_CREATED = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(
-    tzinfo=timezone.utc, microsecond=0
+    microsecond=0
 )
 ARBITRARY_CLOSED = (datetime.now(timezone.utc) - timedelta(minutes=30)).replace(
-    tzinfo=timezone.utc, microsecond=0
+    microsecond=0
 )
-ARBITRARY_UPDATED = datetime.now(timezone.utc).replace(
-    tzinfo=timezone.utc, microsecond=0
-)
+ARBITRARY_UPDATED = datetime.now(timezone.utc).replace(microsecond=0)
 ARBITRARY_ISSUE = {
     'title': 'Hallo',
     'html_url': 'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
@@ -43,8 +41,7 @@ ARBITRARY_EXTRA = {
 IGNORABLE = {'user': {'login': 'cibot'}, 'body': 'Ignore this comment.'}
 
 
-class TestGithubIssue(AbstractServiceTest, ServiceTest):
-    maxDiff = None
+class TestGithubIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'github',
         'login': 'arbitrary_login',
@@ -119,26 +116,26 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        self.add_response(
+        responses.get(
             'https://api.github.com/user/repos?per_page=100',
             json=[{'name': 'some_repo', 'owner': {'login': 'some_username'}}],
         )
 
-        self.add_response(
+        responses.get(
             'https://api.github.com/users/arbitrary_username/repos?per_page=100',
             json=[{'name': 'arbitrary_repo', 'owner': {'login': 'arbitrary_username'}}],
         )
 
-        self.add_response(
+        responses.get(
             'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues?per_page=100',
             json=[ARBITRARY_ISSUE],
         )
 
-        self.add_response(
+        responses.get(
             'https://api.github.com/issues?per_page=100', json=[ARBITRARY_ISSUE]
         )
 
-        self.add_response(
+        responses.get(
             'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',  # noqa: E501
             json=[
                 {'user': {'login': 'arbitrary_login'}, 'body': 'Arbitrary comment.'},
@@ -176,8 +173,7 @@ class TestGithubIssue(AbstractServiceTest, ServiceTest):
         self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
 
 
-class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
-    maxDiff = None
+class TestGithubIssueQuery(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'github',
         'login': 'arbitrary_login',
@@ -197,12 +193,12 @@ class TestGithubIssueQuery(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        self.add_response(
+        responses.get(
             'https://api.github.com/search/issues?q=is%3Aopen+reviewer%3Aoctocat&per_page=100',
             json={'items': [ARBITRARY_ISSUE]},
         )
 
-        self.add_response(
+        responses.get(
             'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',  # noqa: E501
             json=[{'user': {'login': 'arbitrary_login'}, 'body': 'Arbitrary comment.'}],
         )
@@ -313,7 +309,7 @@ class TestGithubService(ServiceTest):
         self.assertEqual(issue["body"][:5], service.body(issue))
 
 
-class TestGithubValidation(ServiceTest):
+class TestGithubValidation(ConfigTest):
     SERVICE_CONFIG = {'service': 'github', 'login': 'tintin', 'token': 't0ps3cr3t'}
 
     def setUp(self):

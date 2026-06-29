@@ -1,15 +1,15 @@
-import abc
+import contextlib
 import os.path
 import shutil
 import tempfile
 import typing
 import unittest
+import unittest.mock
 
 import pytest
-import responses
 
 from bugwarrior import config, services
-from bugwarrior.config import schema, validation
+from bugwarrior.config import validation
 from bugwarrior.config.load import format_config
 
 
@@ -22,15 +22,32 @@ class DumbConfig(config.ServiceConfig):
 
 
 class DumbIssue(services.Issue):
-    UDAS: dict = {}
-    UNIQUE_KEY: tuple[str, ...] = ("id",)
+    URL = "dumburl"
+    TYPE = "dumbtype"
+
+    UDAS = {
+        URL: {"type": "string", "label": "Dumb URL"},
+        TYPE: {"type": "string", "label": "Dumb Type"},
+    }
+    UNIQUE_KEY = (URL,)
     PRIORITY_MAP: dict = {}
 
     def get_default_description(self):
-        raise NotImplementedError
+        return self.build_default_description(
+            title=self.record.get("title", ""),
+            url=self.record.get("url", ""),
+            number=self.record.get("number", ""),
+        )
 
     def to_taskwarrior(self):
-        raise NotImplementedError
+        return {
+            "project": self.extra.get("project"),
+            "priority": self.config.default_priority,
+            "annotations": self.extra.get("annotations", []),
+            "tags": self.get_tags_from_labels(self.record.get("labels", [])),
+            self.URL: self.record.get("url", ""),
+            self.TYPE: self.extra.get("type", "issue"),
+        }
 
 
 class DumbService(services.Service):
@@ -38,32 +55,48 @@ class DumbService(services.Service):
     ISSUE_CLASS = DumbIssue
     CONFIG_SCHEMA = DumbConfig
 
-    def get_owner(self, _):
-        raise NotImplementedError
-
     def issues(self):
         raise NotImplementedError
 
 
-class AbstractServiceTest(abc.ABC):
-    """Ensures that certain test methods are implemented for each service."""
+#: Modules that import get_service by name and must be patched together so the
+#: fake service resolves consistently across config loading, collection, and db.
+_GET_SERVICE_MODULES = (
+    'bugwarrior.config.schema',
+    'bugwarrior.config.validation',
+    'bugwarrior.config',
+    'bugwarrior.db',
+    'bugwarrior.collect',
+)
 
-    @abc.abstractmethod
-    def test_to_taskwarrior(self):
-        """Test Service.to_taskwarrior()."""
-        raise NotImplementedError
 
-    @abc.abstractmethod
-    def test_issues(self):
-        """
-        Test Service.issues().
+@contextlib.contextmanager
+def register_services(mapping=None):
+    """
+    Make fake services resolvable via get_service for the duration of a block.
 
-        - When the API is accessed via requests, use the responses library to
-        mock requests.
-        - When the API is accessed via a third party library, substitute a fake
-        implementation class for it.
-        """
-        raise NotImplementedError
+    Patches get_service in every module that imports it so that orchestration
+    code (config loading, collection, db) resolves the given name-to-class
+    mapping instead of the real entry points. Defaults to mapping the "test"
+    service to DumbService.
+    """
+    mapping = mapping or {'test': DumbService}
+
+    def fake_get_service(name):
+        try:
+            return mapping[name]
+        except KeyError:
+            raise ValueError(
+                f"Configured service '{name}' not found. "
+                "Is it installed? Or misspelled?"
+            )
+
+    with contextlib.ExitStack() as stack:
+        for module in _GET_SERVICE_MODULES:
+            stack.enter_context(
+                unittest.mock.patch(f'{module}.get_service', fake_get_service)
+            )
+        yield
 
 
 class ConfigTest(unittest.TestCase):
@@ -116,39 +149,3 @@ class ConfigTest(unittest.TestCase):
 
         # We may want to use this assertion more than once per test.
         self.caplog.clear()
-
-
-class ServiceTest(ConfigTest):
-    GENERAL_CONFIG = {'annotation_length': 100, 'description_length': 100}
-    SERVICE_CONFIG = {}
-
-    @classmethod
-    def setUpClass(cls):
-        cls.maxDiff = None
-
-    def get_mock_service(
-        self,
-        service_class,
-        section='unspecified',
-        config_overrides=None,
-        general_overrides=None,
-    ):
-        options = {
-            'general': {**self.GENERAL_CONFIG, 'targets': [section]},
-            section: {**self.SERVICE_CONFIG.copy(), 'target': section},
-        }
-        if config_overrides:
-            options[section].update(config_overrides)
-        if general_overrides:
-            options['general'].update(general_overrides)
-
-        service_config = service_class.CONFIG_SCHEMA(**options[section])
-        main_config = schema.MainSectionConfig(**options['general'])
-
-        return service_class(service_config, main_config)
-
-    @staticmethod
-    def add_response(url, method='GET', **kwargs):
-        responses.add(
-            responses.Response(url=url, method=method, match_querystring=True, **kwargs)
-        )

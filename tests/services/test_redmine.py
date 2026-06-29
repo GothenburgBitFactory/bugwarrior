@@ -6,11 +6,10 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.redmine import RedMineService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
-class TestRedmineIssue(AbstractServiceTest, ServiceTest):
-    maxDiff = None
+class TestRedmineIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'redmine',
         'url': 'https://something',
@@ -76,7 +75,7 @@ class TestRedmineIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        self.add_response(
+        responses.get(
             'https://something/issues.json?limit=100',
             json={'issues': [self.arbitrary_issue]},
         )

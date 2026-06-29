@@ -5,7 +5,7 @@ from unittest import mock
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gitbug import GitBugClient, GitBugConfig, GitBugService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 
 @dataclasses.dataclass
@@ -28,7 +28,7 @@ class TestData:
     }
 
 
-class TestGitBugIssue(AbstractServiceTest, ServiceTest):
+class TestGitBugIssue(ServiceIssueTest):
     SERVICE_CONFIG = {'service': 'gitbug', 'path': '/dev/null'}
 
     def setUp(self):

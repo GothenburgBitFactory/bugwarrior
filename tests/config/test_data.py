@@ -1,8 +1,7 @@
 import json
 import os
 
-from bugwarrior.config import data, validation
-from bugwarrior.config.load import format_config
+from bugwarrior.config import data, schema
 
 from ..base import ConfigTest
 
@@ -41,24 +40,10 @@ class TestData(ConfigTest):
 class TestGetDataPath(ConfigTest):
     def setUp(self):
         super().setUp()
-        rawconfig = {
-            'general': {'targets': ['my_service']},
-            'my_service': {
-                'service': 'github',
-                'login': 'ralphbean',
-                'token': 'abc123',
-                'username': 'ralphbean',
-            },
-        }
-        formatted = format_config(rawconfig)
-        self.validated_config = validation.validate_config(
-            formatted, 'general', 'configpath'
-        )
+        self.main_config = schema.MainSectionConfig(targets=[])
 
     def assertDataPath(self, expected_datapath):
-        self.assertEqual(
-            expected_datapath, data.get_data_path(self.validated_config.main.taskrc)
-        )
+        self.assertEqual(expected_datapath, data.get_data_path(self.main_config.taskrc))
 
     def test_TASKDATA(self):
         """

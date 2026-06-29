@@ -70,12 +70,12 @@ Import Labels as Tags
 
 The Pagure issue tracker allows you to attach tags to issues; to
 use those pagure tags as taskwarrior tags, you can use the
-``import_tags`` option:
+``import_labels_as_tags`` option:
 
 .. config::
     :fragment: pagure
 
-    pagure.import_tags = True
+    pagure.import_labels_as_tags = True
 
 Also, if you would like to control how these taskwarrior tags are created, you
 can specify a template used for converting the Pagure tag into a Taskwarrior
@@ -88,7 +88,7 @@ add the following configuration option:
 .. config::
     :fragment: pagure
 
-    pagure.tag_template = pagure_{{label}}
+    pagure.label_template = pagure_{{label}}
 
 In addition to the context variable ``{{label}}``, you also have access
 to all fields on the Taskwarrior task if needed.

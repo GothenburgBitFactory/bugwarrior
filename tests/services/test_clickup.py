@@ -1,11 +1,12 @@
 from datetime import datetime, timezone
+from unittest import TestCase
 
 import responses
 
 from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.services.clickup import ClickupClient, ClickupService
 
-from .base import AbstractServiceTest, ConfigTest, ServiceTest
+from .base import ConfigTest, ServiceIssueTest
 
 
 class TestData:
@@ -122,7 +123,7 @@ class TestData:
         return self.get_task_contents()[0]
 
 
-class TestClickupClient(ServiceTest):
+class TestClickupClient(TestCase):
     def setUp(self):
         super().setUp()
         self.client = ClickupClient('XXXXXX')
@@ -137,11 +138,11 @@ class TestClickupClient(ServiceTest):
 
     @responses.activate
     def test_get_repo(self):
-        self.add_response(
+        responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0",
             json=self.data.get_page(0),
         )
-        self.add_response(
+        responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=1",
             json=self.data.get_page(1),
         )
@@ -199,7 +200,7 @@ class TestClickupService(ConfigTest):
         self.assertTrue(self.service.is_assigned(task))
 
 
-class TestClickupIssue(AbstractServiceTest, ServiceTest):
+class TestClickupIssue(ServiceIssueTest):
     SERVICE_CONFIG = {'service': 'clickup', 'team_id': 1234, 'token': 'arbitrary_token'}
 
     def setUp(self):
@@ -239,7 +240,7 @@ class TestClickupIssue(AbstractServiceTest, ServiceTest):
 
     @responses.activate
     def test_issues(self):
-        self.add_response(
+        responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0",
             json=self.data.get_page(1),
         )

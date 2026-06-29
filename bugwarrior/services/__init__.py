@@ -134,6 +134,16 @@ class Issue(abc.ABC):
         """
         raise NotImplementedError()
 
+    def render_tags_from_labels(self, labels: list[str]) -> list[str]:
+        """Transform labels into suitable taskwarrior tags using the label template."""
+
+        return [
+            Template(self.config.label_template).render(
+                {**self.record, "label": re.sub(r'[^a-zA-Z0-9]', '_', label)}
+            )
+            for label in labels
+        ]
+
     def get_tags_from_labels(
         self,
         labels: list[str],
@@ -141,23 +151,29 @@ class Issue(abc.ABC):
         template_option: str = 'label_template',
         template_variable: str = 'label',
     ) -> list[str]:
-        """Transform labels into suitable taskwarrior tags, respecting configuration options.
-
-        :param `labels`: Returned from the service.
-        :param `toggle_option`: Option which, if false, would not import labels as tags.
-        :param `template_option`: Configuration to use as the
-            :ref:`field template<common_configuration:Field Templates>` for each label.
-        :param `template_variable`: Name to use in the
-            :ref:`field template<common_configuration:Field Templates>` context to refer to the
-            label.
-        """
-        tags: list[str] = []
+        """Transform labels into suitable taskwarrior tags, respecting configuration options."""
+        using_deprecated_parameters = (
+            toggle_option != 'import_labels_as_tags'
+            or template_option != 'label_template'
+            or template_variable != 'label'
+        )
+        if using_deprecated_parameters:
+            log.warning(
+                "Deprecation Warning: Issue.get_tags_from_labels's toggle_option, "
+                "template_option, and template_variable parameters are deprecated and "
+                "will be removed in a future API version."
+            )
 
         if not getattr(self.config, toggle_option):
-            return tags
+            return []
 
+        if not using_deprecated_parameters:
+            return self.render_tags_from_labels(labels)
+
+        # deprecated path, to be removed once we remove the deprecated parameters.
         context = self.record.copy()
         label_template = Template(getattr(self.config, template_option))
+        tags = []
 
         for label in labels:
             normalized_label = re.sub(r'[^a-zA-Z0-9]', '_', label)

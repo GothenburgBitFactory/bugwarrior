@@ -1,7 +1,7 @@
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.trac import TracService
 
-from .base import AbstractServiceTest, ServiceTest
+from .base import ServiceIssueTest
 
 
 class FakeTracTicket:
@@ -28,7 +28,7 @@ class FakeTracLib:
         return (1, None, None, self.record)
 
 
-class TestTracIssue(AbstractServiceTest, ServiceTest):
+class TestTracIssue(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'trac',
         'base_uri': 'ljlkajsdfl.com',

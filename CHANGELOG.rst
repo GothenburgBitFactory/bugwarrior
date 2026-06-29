@@ -1,5 +1,5 @@
-TBD
----
+Unreleased
+----------
 
 Highlights
 ==========
@@ -9,6 +9,8 @@ Highlights
 Dependency Updates
 ==================
 - Replaced lockfile with filelock. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1217)
+- Drop python-3.10 support. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1220)
+- Drop tomli. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1220)
 
 Service-Specific Changes
 ========================

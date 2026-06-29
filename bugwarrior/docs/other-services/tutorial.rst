@@ -255,15 +255,15 @@ If you're developing in the bugwarrior repo, you can simply add your entry to th
 
 
 
-Create a test file and implement at least the minimal service tests by inheriting from ``AbstractServiceTest``.
+Create a test file and implement at least the minimal service tests by inheriting from ``ServiceIssueTest``.
 
 .. code:: bash
 
-   touch tests/test_gitbug.py
+   touch tests/services/test_gitbug.py
 
 .. code:: python
 
-  class TestGitBugIssue(AbstractServiceTest, ServiceTest):
+  class TestGitBugIssue(ServiceIssueTest):
       SERVICE_CONFIG = {
           'service': 'gitbug',
           'path': '/dev/null',

@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import TYPE_CHECKING, Annotated, Any, NoReturn, Union
+from typing import Annotated, Any, Literal, NoReturn, Union
 
 from pydantic import Field, TypeAdapter, ValidationError
 from pydantic_core import ErrorDetails
@@ -13,10 +13,6 @@ from .schema import (
     ServiceConfig,
     get_service,
 )
-
-if TYPE_CHECKING:
-    ServiceConfigType = ServiceConfig
-
 
 log = logging.getLogger(__name__)
 
@@ -123,6 +119,18 @@ def raise_validation_error(
     sys.exit(1)
 
 
+class _MissingServiceDiscriminator(BaseConfig):
+    """
+    Placeholder schema used to report missing service discriminators.
+
+    We need 'service' to be a Literal, so we can use it in a discriminator Field.
+    Regular ServiceConfig base class defines it as a plain str, which does not work
+    with discriminators.
+    """
+
+    service: Literal["__bugwarrior_missing_service__"]
+
+
 def get_service_config_union_type(services: list[dict[str, Any]]) -> Any:
     """
     Return a Union type of the ServiceConfig subclasses of the services actually configured.
@@ -134,16 +142,14 @@ def get_service_config_union_type(services: list[dict[str, Any]]) -> Any:
     to ensure that each service configuration is validated against
     the ServiceConfig corresponding to the correct service.
     """
-    service_config_classes = tuple(
-        get_service(service["service"]).CONFIG_SCHEMA
-        for service in services
-        if "service" in service
+    service_config_classes = (
+        tuple(
+            get_service(service["service"]).CONFIG_SCHEMA
+            for service in services
+            if "service" in service
+        )
+        or _MissingServiceDiscriminator
     )
-
-    # Default to generic ServiceConfig if no service defined, mostly for tests
-    if not service_config_classes:
-        return ServiceConfig
-
     return Annotated[Union[service_config_classes], Field(discriminator="service")]
 
 

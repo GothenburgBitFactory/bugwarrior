@@ -5,8 +5,10 @@ import taskw.task
 
 from bugwarrior import db
 from bugwarrior.collect import CollectedIssue
+from bugwarrior.config import schema
+from bugwarrior.config.validation import Config
 
-from .base import ConfigTest
+from .base import ConfigTest, DumbConfig, register_services
 
 
 class TestMergeAnnotations:
@@ -61,20 +63,15 @@ class TestMergeTags:
 class TestSynchronize(ConfigTest):
     def setUp(self):
         super().setUp()
-        self.config = {
-            'general': {
-                'targets': ['my_service'],
-                'taskrc': self.taskrc,
-                'static_fields': ['project', 'priority'],
-            },
-            'my_service': {
-                'service': 'github',
-                'login': 'ralphbean',
-                'username': 'ralphbean',
-                'token': 'abc123',
-            },
-        }
-        self.bwconfig = self.validate()
+        self.enterContext(register_services())
+        self.bwconfig = Config(
+            service_configs=[DumbConfig(target='my_service')],
+            main=schema.MainSectionConfig(
+                targets=['my_service'],
+                taskrc=self.taskrc,
+                static_fields=['project', 'priority'],
+            ),
+        )
         self.tw = taskw.TaskWarrior(self.taskrc)
 
     def synchronize(self, issues_data):
@@ -110,8 +107,8 @@ class TestSynchronize(ConfigTest):
         issue = {
             'description': 'Blah blah blah. ☃',
             'project': 'sample_project',
-            'githubtype': 'issue',
-            'githuburl': 'https://example.com',
+            'dumbtype': 'issue',
+            'dumburl': 'https://example.com',
             'priority': 'M',
             'tags': ['foo'],
         }
@@ -136,8 +133,8 @@ class TestSynchronize(ConfigTest):
                             'priority': 'M',
                             'status': 'pending',
                             'description': 'Blah blah blah. ☃',
-                            'githuburl': 'https://example.com',
-                            'githubtype': 'issue',
+                            'dumburl': 'https://example.com',
+                            'dumbtype': 'issue',
                             'id': 1,
                             'tags': ['bar', 'foo'],
                             'urgency': 5.8,
@@ -163,8 +160,8 @@ class TestSynchronize(ConfigTest):
                         'project': 'sample_project',
                         'status': 'pending',
                         'description': 'Yada yada yada.',
-                        'githuburl': 'https://example.com',
-                        'githubtype': 'issue',
+                        'dumburl': 'https://example.com',
+                        'dumbtype': 'issue',
                         'id': 1,
                         'tags': ['bar', 'foo'],
                         'urgency': 5.8,
@@ -187,8 +184,8 @@ class TestSynchronize(ConfigTest):
                     {
                         'project': 'sample_project',
                         'description': 'Yada yada yada.',
-                        'githubtype': 'issue',
-                        'githuburl': 'https://example.com',
+                        'dumbtype': 'issue',
+                        'dumburl': 'https://example.com',
                         'id': 0,
                         'priority': 'M',
                         'status': 'completed',
@@ -219,8 +216,8 @@ class TestSynchronize(ConfigTest):
                         'project': 'sample_project',
                         'status': 'pending',
                         'description': 'Yada yada yada.',
-                        'githuburl': 'https://example.com',
-                        'githubtype': 'issue',
+                        'dumburl': 'https://example.com',
+                        'dumbtype': 'issue',
                         'id': 1,
                         'tags': ['bar', 'foo'],
                         'urgency': 5.8,
@@ -232,48 +229,20 @@ class TestSynchronize(ConfigTest):
 
 class TestUDAs(ConfigTest):
     def test_udas(self):
-        self.config = {
-            'general': {'targets': ['my_service']},
-            'my_service': {
-                'service': 'github',
-                'login': 'ralphbean',
-                'username': 'ralphbean',
-                'token': 'abc123',
-            },
-        }
-
-        conf = self.validate()
-        udas = sorted(list(db.get_defined_udas_as_strings(conf)))
+        with register_services():
+            conf = Config(
+                service_configs=[DumbConfig(target='my_service')],
+                main=schema.MainSectionConfig(
+                    targets=['my_service'], taskrc=self.taskrc
+                ),
+            )
+            udas = sorted(db.get_defined_udas_as_strings(conf))
         self.assertEqual(
             udas,
             [
-                'uda.githubbody.label=Github Body',
-                'uda.githubbody.type=string',
-                'uda.githubclosedon.label=GitHub Closed',
-                'uda.githubclosedon.type=date',
-                'uda.githubcreatedon.label=Github Created',
-                'uda.githubcreatedon.type=date',
-                'uda.githubdraft.label=GitHub Draft',
-                'uda.githubdraft.type=numeric',
-                'uda.githubmilestone.label=Github Milestone',
-                'uda.githubmilestone.type=string',
-                'uda.githubnamespace.label=Github Namespace',
-                'uda.githubnamespace.type=string',
-                'uda.githubnumber.label=Github Issue/PR #',
-                'uda.githubnumber.type=numeric',
-                'uda.githubrepo.label=Github Repo Slug',
-                'uda.githubrepo.type=string',
-                'uda.githubstate.label=GitHub State',
-                'uda.githubstate.type=string',
-                'uda.githubtitle.label=Github Title',
-                'uda.githubtitle.type=string',
-                'uda.githubtype.label=Github Type',
-                'uda.githubtype.type=string',
-                'uda.githubupdatedat.label=Github Updated',
-                'uda.githubupdatedat.type=date',
-                'uda.githuburl.label=Github URL',
-                'uda.githuburl.type=string',
-                'uda.githubuser.label=Github User',
-                'uda.githubuser.type=string',
+                'uda.dumbtype.label=Dumb Type',
+                'uda.dumbtype.type=string',
+                'uda.dumburl.label=Dumb URL',
+                'uda.dumburl.type=string',
             ],
         )
