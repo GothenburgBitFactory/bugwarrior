@@ -16,11 +16,12 @@ def get_data_path(taskrc: str | Path) -> str:
     env = dict(os.environ)
     env['TASKRC'] = str(taskrc)
 
-    tw_show = subprocess.Popen(('task', '_show'), stdout=subprocess.PIPE, env=env)
-    data_location = subprocess.check_output(
-        ('grep', '-e', '^' + line_prefix), stdin=tw_show.stdout
-    )
-    tw_show.wait()
+    with subprocess.Popen(
+        ('task', '_show'), stdout=subprocess.PIPE, env=env
+    ) as tw_show:
+        data_location = subprocess.check_output(
+            ('grep', '-e', '^' + line_prefix), stdin=tw_show.stdout
+        )
     data_path = data_location[len(line_prefix) :].rstrip().decode('utf-8')
 
     if not data_path:
