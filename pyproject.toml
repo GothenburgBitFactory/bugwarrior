@@ -94,11 +94,12 @@ quote-style = "preserve"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "W", "I", "E501", "ANN"]
+select = ["E4", "E7", "E9", "F", "W", "I", "E501", "ANN", "PT"]
 ignore = ["ANN401"]
 # ANN rules (flake8-annotations) detect untyped code — useful for gradual typing.
 # Enforced in application code under bugwarrior/ (excluding tests/ and bugwarrior/docs/).
 # ANN401 (disallow Any) is too strict for wrappers, *args/**kwargs, and data storage.
+# PT rules (flake8-pytest-style) enforce pytest conventions in the test suite.
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ANN"]
@@ -114,6 +115,14 @@ split-on-trailing-comma = false
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "error",
+    # taskw still uses deprecated distutils version classes.
+    "ignore::DeprecationWarning:taskw",
+]
 
 [tool.setuptools.packages.find]
 include = ["bugwarrior*"]
