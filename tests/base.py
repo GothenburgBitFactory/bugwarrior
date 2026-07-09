@@ -1,12 +1,6 @@
 import contextlib
-import os.path
-import shutil
-import tempfile
 import typing
-import unittest
 import unittest.mock
-
-import pytest
 
 from bugwarrior import config, services
 from bugwarrior.config import validation
@@ -99,53 +93,6 @@ def register_services(mapping=None):
         yield
 
 
-class ConfigTest(unittest.TestCase):
-    """
-    Creates config files, configures the environment, and cleans up afterwards.
-    """
-
-    def setUp(self):
-        self.old_environ = os.environ.copy()
-        self.tempdir = tempfile.mkdtemp(prefix='bugwarrior')
-
-        # Create temporary config files.
-        self.taskrc = os.path.join(self.tempdir, '.taskrc')
-        self.lists_path = os.path.join(self.tempdir, 'lists')
-        os.mkdir(self.lists_path)
-        with open(self.taskrc, 'w+') as fout:
-            fout.write('data.location=%s\n' % self.lists_path)
-
-        # Configure environment.
-        os.environ['HOME'] = self.tempdir
-        os.environ['XDG_CONFIG_HOME'] = os.path.join(self.tempdir, '.config')
-        os.environ.pop(config.BUGWARRIORRC, None)
-        os.environ.pop('TASKRC', None)
-        os.environ.pop('XDG_CONFIG_DIRS', None)
-
-    def tearDown(self):
-        shutil.rmtree(self.tempdir, ignore_errors=True)
-
-        os.environ.clear()
-        os.environ.update(self.old_environ)
-
-    @pytest.fixture(autouse=True)
-    def inject_fixtures(self, caplog):
-        self.caplog = caplog
-
-    def validate(self) -> validation.Config:
-        config = self.config.copy()
-        config['general'] = config.get('general', {})
-        formatted_config = format_config(config)
-        return validation.validate_config(formatted_config, 'general', 'configpath')
-
-    def assertValidationError(self, expected):
-        with pytest.raises(SystemExit):
-            self.validate()
-
-        # Only one message should be logged.
-        assert len(self.caplog.records) == 1
-
-        assert expected in self.caplog.records[0].message
-
-        # We may want to use this assertion more than once per test.
-        self.caplog.clear()
+def validate(config) -> validation.Config:
+    formatted_config = format_config(config)
+    return validation.validate_config(formatted_config, 'general', 'configpath')

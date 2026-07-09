@@ -1,56 +1,26 @@
-import abc
-
 from bugwarrior.config import schema
 
-from ..base import ConfigTest
+GENERAL_CONFIG = {'annotation_length': 100, 'description_length': 100}
 
 
-class ServiceTest(ConfigTest):
-    GENERAL_CONFIG = {'annotation_length': 100, 'description_length': 100}
-    SERVICE_CONFIG = {}
+def get_mock_service(
+    service_class,
+    service_config=None,
+    *,
+    section='unspecified',
+    config_overrides=None,
+    general_overrides=None,
+):
+    options = {
+        'general': {**GENERAL_CONFIG, 'targets': [section]},
+        section: {**(service_config or {}), 'target': section},
+    }
+    if config_overrides:
+        options[section].update(config_overrides)
+    if general_overrides:
+        options['general'].update(general_overrides)
 
-    @classmethod
-    def setUpClass(cls):
-        cls.maxDiff = None
+    validated_config = service_class.CONFIG_SCHEMA(**options[section])
+    main_config = schema.MainSectionConfig(**options['general'])
 
-    def get_mock_service(
-        self,
-        service_class,
-        section='unspecified',
-        config_overrides=None,
-        general_overrides=None,
-    ):
-        options = {
-            'general': {**self.GENERAL_CONFIG, 'targets': [section]},
-            section: {**self.SERVICE_CONFIG.copy(), 'target': section},
-        }
-        if config_overrides:
-            options[section].update(config_overrides)
-        if general_overrides:
-            options['general'].update(general_overrides)
-
-        service_config = service_class.CONFIG_SCHEMA(**options[section])
-        main_config = schema.MainSectionConfig(**options['general'])
-
-        return service_class(service_config, main_config)
-
-
-class ServiceIssueTest(ServiceTest, abc.ABC):
-    """Ensures that certain test methods are implemented for each service."""
-
-    @abc.abstractmethod
-    def test_to_taskwarrior(self):
-        """Test Service.to_taskwarrior()."""
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def test_issues(self):
-        """
-        Test Service.issues().
-
-        - When the API is accessed via requests, use the responses library to
-        mock requests.
-        - When the API is accessed via a third party library, substitute a fake
-        implementation class for it.
-        """
-        raise NotImplementedError
+    return service_class(validated_config, main_config)
