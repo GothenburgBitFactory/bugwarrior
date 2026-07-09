@@ -155,8 +155,10 @@ class TestAzureDevopsService:
     def service(self):
         return self.get_service()
 
-    def get_service(self, **kwargs):
-        service = get_mock_service(AzureDevopsService, self.SERVICE_CONFIG, **kwargs)
+    def get_service(self, **overrides):
+        service = get_mock_service(
+            AzureDevopsService, {**self.SERVICE_CONFIG, **overrides}
+        )
         service.client = mock.MagicMock()
         service.client.get_parent_name.return_value = None
         service.client.get_work_items_from_query.return_value = [1]
@@ -239,6 +241,6 @@ class TestAzureDevopsService:
             "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',  # noqa: E501
             "tags": [],
         }
-        service = self.get_service(config_overrides={'wiql_filter': 'something'})
+        service = self.get_service(wiql_filter='something')
         issue = next(service.issues())
         assert TaskConstructor(issue).get_taskwarrior_record() == expected

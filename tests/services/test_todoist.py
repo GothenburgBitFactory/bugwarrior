@@ -130,9 +130,7 @@ class TestTodoistIssue:
     def test_to_taskwarrior_with_labels(self):
         # Test lables when `import_labels_as_tags` is enabled
         overrides = {"import_labels_as_tags": "True"}
-        service = get_mock_service(
-            TodoistService, self.SERVICE_CONFIG, config_overrides=overrides
-        )
+        service = get_mock_service(TodoistService, {**self.SERVICE_CONFIG, **overrides})
         issue = service.get_issue_for_record(self.test_record, self.test_extra)
         actual = issue.to_taskwarrior()
         assert actual.get("tags") == ["TESTLABEL"]

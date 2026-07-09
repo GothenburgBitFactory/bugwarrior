@@ -53,8 +53,11 @@ class TestYoutrackIssue:
     def test_get_tags_from_labels_uses_legacy_tag_options(self, caplog):
         service = get_mock_service(
             YoutrackService,
-            self.SERVICE_CONFIG,
-            config_overrides={'import_tags': True, 'tag_template': 'yt_{{tag|lower}}'},
+            {
+                **self.SERVICE_CONFIG,
+                'import_tags': True,
+                'tag_template': 'yt_{{tag|lower}}',
+            },
         )
         issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
 
@@ -72,8 +75,11 @@ class TestYoutrackIssue:
     def test_refine_record_does_not_apply_legacy_tag_template_as_field_template(self):
         service = get_mock_service(
             YoutrackService,
-            self.SERVICE_CONFIG,
-            config_overrides={'import_tags': True, 'tag_template': 'yt_{{tag|lower}}'},
+            {
+                **self.SERVICE_CONFIG,
+                'import_tags': True,
+                'tag_template': 'yt_{{tag|lower}}',
+            },
         )
         issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
 

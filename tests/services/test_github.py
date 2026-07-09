@@ -85,9 +85,7 @@ class TestGithubIssue:
 
     def test_to_taskwarrior(self):
         service = get_mock_service(
-            GithubService,
-            self.SERVICE_CONFIG,
-            config_overrides={'import_labels_as_tags': True},
+            GithubService, {**self.SERVICE_CONFIG, 'import_labels_as_tags': True}
         )
         issue = service.get_issue_for_record(ARBITRARY_ISSUE, ARBITRARY_EXTRA)
 
@@ -247,8 +245,7 @@ class TestGithubService:
         service = get_mock_service(GithubService, self.SERVICE_CONFIG)
         service = get_mock_service(
             GithubService,
-            self.SERVICE_CONFIG,
-            config_overrides={'token': '@oracle:eval:echo 1234567890ABCDEF'},
+            {**self.SERVICE_CONFIG, 'token': '@oracle:eval:echo 1234567890ABCDEF'},
         )
         assert (
             service.client.session.headers['Authorization'] == "token 1234567890ABCDEF"
@@ -262,9 +259,7 @@ class TestGithubService:
     def test_overwrite_host(self):
         """Check that if host is set, we use its value as host"""
         service = get_mock_service(
-            GithubService,
-            self.SERVICE_CONFIG,
-            config_overrides={'host': 'github.example.com'},
+            GithubService, {**self.SERVICE_CONFIG, 'host': 'github.example.com'}
         )
         assert "github.example.com" == service.config.host
 
@@ -309,7 +304,7 @@ class TestGithubService:
 
     def test_body_length_limit(self):
         service = get_mock_service(
-            GithubService, self.SERVICE_CONFIG, config_overrides={'body_length': 5}
+            GithubService, {**self.SERVICE_CONFIG, 'body_length': 5}
         )
         issue = dict(body="A very short issue body.  Fixes #42.")
         assert issue["body"][:5] == service.body(issue)

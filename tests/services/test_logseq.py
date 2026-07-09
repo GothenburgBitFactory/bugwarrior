@@ -112,9 +112,7 @@ class TestLogseqIssue:
 
     def test_to_taskwarrior_with_tags(self):
         overrides = {"import_labels_as_tags": "True"}
-        service = get_mock_service(
-            LogseqService, self.SERVICE_CONFIG, config_overrides=overrides
-        )
+        service = get_mock_service(LogseqService, {**self.SERVICE_CONFIG, **overrides})
         issue = service.get_issue_for_record(self.test_record, self.test_extra)
 
         actual = issue.to_taskwarrior()

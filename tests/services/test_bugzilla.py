@@ -84,9 +84,11 @@ class TestBugzillaService:
         microsecond=0
     )
 
-    def make_service(self, **kwargs):
+    def make_service(self, **overrides):
         with mock.patch('bugzilla.Bugzilla'):
-            service = get_mock_service(BugzillaService, self.SERVICE_CONFIG, **kwargs)
+            service = get_mock_service(
+                BugzillaService, {**self.SERVICE_CONFIG, **overrides}
+            )
         service.bz = FakeBugzillaLib([self.arbitrary_record])
         service._get_assigned_date = lambda issues: self.arbitrary_datetime.isoformat()
         return service
@@ -96,13 +98,7 @@ class TestBugzillaService:
         return self.make_service()
 
     def test_api_key_supplied(self):
-        self.make_service(
-            config_overrides={
-                'base_uri': 'https://one.com/',
-                'username': 'me',
-                'api_key': '123',
-            }
-        )
+        self.make_service(base_uri='https://one.com/', username='me', api_key='123')
 
     def test_to_taskwarrior(self, service):
         arbitrary_extra = {'url': 'http://path/to/issue/', 'annotations': ['Two']}
@@ -147,7 +143,7 @@ class TestBugzillaService:
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     def test_only_if_assigned(self):
-        service = self.make_service(config_overrides={'only_if_assigned': 'hello'})
+        service = self.make_service(only_if_assigned='hello')
 
         assigned_records = [
             {
@@ -200,9 +196,7 @@ class TestBugzillaService:
             next(issues)
 
     def test_also_unassigned(self):
-        service = self.make_service(
-            config_overrides={'only_if_assigned': 'hello', 'also_unassigned': True}
-        )
+        service = self.make_service(only_if_assigned='hello', also_unassigned=True)
 
         assigned_records = [
             {
