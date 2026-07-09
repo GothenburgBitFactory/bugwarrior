@@ -13,7 +13,7 @@ import pytest
 DOCS_PATH = pathlib.Path(__file__).parent / '../bugwarrior/docs'
 
 try:
-    socket.create_connection(('1.1.1.1', 80))
+    socket.create_connection(('1.1.1.1', 80)).close()
     INTERNET = True
 except OSError:
     INTERNET = False
@@ -32,7 +32,7 @@ class TestReadme:
             readme = f.read()
 
         readme_document = docutils.core.publish_doctree(readme)
-        service_list_search = readme_document.traverse(condition=is_services)
+        service_list_search = list(readme_document.findall(condition=is_services))
         assert len(service_list_search) == 1
         service_list_element = service_list_search.pop()
         readme_listed_services = set(
