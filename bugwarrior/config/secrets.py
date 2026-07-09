@@ -90,15 +90,13 @@ def oracle_eval(command: str) -> str:
     p = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    p.wait()
-    assert p.stdout is not None
-    assert p.stderr is not None
+    stdout, stderr = p.communicate()
     if p.returncode == 0:
-        return p.stdout.readline().strip().decode('utf-8')
+        return stdout.split(b'\n', 1)[0].strip().decode('utf-8')
     else:
         log.critical(
             "Error retrieving password: `{command}` returned '{error}'".format(
-                command=command, error=p.stderr.read().strip()
+                command=command, error=stderr.strip()
             )
         )
         sys.exit(1)
