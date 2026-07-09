@@ -1,125 +1,116 @@
 from datetime import datetime, timezone
 
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.services.clickup import ClickupClient, ClickupService
 
-from .base import ConfigTest, ServiceIssueTest
+from ..base import validate
+from .base import get_mock_service
 
 
-class TestData:
-    def __init__(self):
-        self.tasks = {
-            "tasks": [
-                {
-                    "id": "86adrdd2j",
-                    "custom_id": None,
-                    "custom_item_id": 0,
-                    "name": "My task",
-                    "text_content": "",
-                    "description": "",
-                    "status": {
-                        "status": "mystatus",
-                        "id": "p901312298283_rBjB6Xxi",
-                        "color": "#b660e0",
-                        "type": "custom",
-                        "orderindex": 4,
-                    },
-                    "orderindex": "1.00000282100000000000000000000000",
-                    "date_created": "1765390998981",
-                    "date_updated": "1765391016301",
-                    "date_closed": None,
-                    "date_done": None,
-                    "archived": False,
-                    "creator": {
-                        "id": 261642312,
-                        "username": "Me",
-                        "color": "#595d66",
-                        "email": "me@example.com",
-                        "profilePicture": None,
-                    },
-                    "assignees": [],
-                    "group_assignees": [],
-                    "watchers": [
-                        {
-                            "id": 261642312,
-                            "username": "Me",
-                            "color": "#595d66",
-                            "initials": "M",
-                            "email": "me@example.com",
-                            "profilePicture": None,
-                        }
-                    ],
-                    "checklists": [],
-                    "tags": [],
-                    "parent": None,
-                    "top_level_parent": None,
-                    "priority": None,
-                    "due_date": None,
-                    "start_date": None,
-                    "points": None,
-                    "time_estimate": None,
-                    "custom_fields": [],
-                    "dependencies": [],
-                    "linked_tasks": [],
-                    "locations": [],
-                    "team_id": "90232846929",
-                    "url": "https://app.clickup.com/t/86adrdd2j",
-                    "sharing": {
-                        "public": False,
-                        "public_share_expires_on": None,
-                        "public_fields": [
-                            "assignees",
-                            "priority",
-                            "due_date",
-                            "content",
-                            "comments",
-                            "attachments",
-                            "customFields",
-                            "subtasks",
-                            "tags",
-                            "checklists",
-                            "coverimage",
-                        ],
-                        "token": None,
-                        "seo_optimized": False,
-                    },
-                    "permission_level": "create",
-                    "list": {"id": "901323335746", "name": "List", "access": True},
-                    "project": {
-                        "id": "901515652835",
-                        "name": "hidden",
-                        "hidden": True,
-                        "access": True,
-                    },
-                    "folder": {
-                        "id": "901315352835",
-                        "name": "hidden",
-                        "hidden": True,
-                        "access": True,
-                    },
-                    "space": {"id": "901312298283"},
-                }
+@pytest.fixture
+def task():
+    return {
+        "id": "86adrdd2j",
+        "custom_id": None,
+        "custom_item_id": 0,
+        "name": "My task",
+        "text_content": "",
+        "description": "",
+        "status": {
+            "status": "mystatus",
+            "id": "p901312298283_rBjB6Xxi",
+            "color": "#b660e0",
+            "type": "custom",
+            "orderindex": 4,
+        },
+        "orderindex": "1.00000282100000000000000000000000",
+        "date_created": "1765390998981",
+        "date_updated": "1765391016301",
+        "date_closed": None,
+        "date_done": None,
+        "archived": False,
+        "creator": {
+            "id": 261642312,
+            "username": "Me",
+            "color": "#595d66",
+            "email": "me@example.com",
+            "profilePicture": None,
+        },
+        "assignees": [],
+        "group_assignees": [],
+        "watchers": [
+            {
+                "id": 261642312,
+                "username": "Me",
+                "color": "#595d66",
+                "initials": "M",
+                "email": "me@example.com",
+                "profilePicture": None,
+            }
+        ],
+        "checklists": [],
+        "tags": [],
+        "parent": None,
+        "top_level_parent": None,
+        "priority": None,
+        "due_date": None,
+        "start_date": None,
+        "points": None,
+        "time_estimate": None,
+        "custom_fields": [],
+        "dependencies": [],
+        "linked_tasks": [],
+        "locations": [],
+        "team_id": "90232846929",
+        "url": "https://app.clickup.com/t/86adrdd2j",
+        "sharing": {
+            "public": False,
+            "public_share_expires_on": None,
+            "public_fields": [
+                "assignees",
+                "priority",
+                "due_date",
+                "content",
+                "comments",
+                "attachments",
+                "customFields",
+                "subtasks",
+                "tags",
+                "checklists",
+                "coverimage",
             ],
-            "last_page": True,
-        }
+            "token": None,
+            "seo_optimized": False,
+        },
+        "permission_level": "create",
+        "list": {"id": "901323335746", "name": "List", "access": True},
+        "project": {
+            "id": "901515652835",
+            "name": "hidden",
+            "hidden": True,
+            "access": True,
+        },
+        "folder": {
+            "id": "901315352835",
+            "name": "hidden",
+            "hidden": True,
+            "access": True,
+        },
+        "space": {"id": "901312298283"},
+    }
 
-    def get_page(self, page_number: int):
-        if page_number == 0:
-            tasks = self.tasks.copy()
-            tasks["last_page"] = False
-            return tasks
-        else:
-            return self.tasks
 
-    def get_task_contents(self):
-        tasks = self.tasks["tasks"]
-        tasks += tasks
-        return tasks
+@pytest.fixture
+def task_page(task):
+    """Return a one-task API response page, the last one for page_number > 0."""
 
-    def get_task(self):
-        return self.get_task_contents()[0]
+    def get(page_number):
+        return {"tasks": [task], "last_page": page_number > 0}
+
+    return get
 
 
 class TestClickupClient:
@@ -131,26 +122,24 @@ class TestClickupClient:
         )
 
     @responses.activate
-    def test_get_repo(self):
+    def test_get_repo(self, task, task_page):
         client = ClickupClient('XXXXXX')
-        data = TestData()
         responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0",
-            json=data.get_page(0),
+            json=task_page(0),
         )
         responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=1",
-            json=data.get_page(1),
+            json=task_page(1),
         )
         result = [item for item in client.get_tasks_for_team(team_id=1234)]
-        assert data.get_task_contents() == result
+        assert result == [task, task]
 
 
-class TestClickupService(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.data = TestData()
-        self.config = {
+class TestClickupService:
+    @pytest.fixture
+    def config(self):
+        return {
             'general': {'targets': ['myservice']},
             'myservice': {
                 'service': 'clickup',
@@ -160,28 +149,25 @@ class TestClickupService(ConfigTest):
             },
         }
 
-    @property
-    def service(self):
-        conf = self.validate()
+    def get_service(self, config):
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         return service
 
-    def test_keyring_service(self):
-        conf = self.validate().service_configs[0]
+    def test_keyring_service(self, config):
+        conf = validate(config).service_configs[0]
         assert conf.keyring_service == 'clickup://'
 
-    def test_is_assigned(self):
-        task = self.data.get_task()
+    def test_is_assigned(self, config, task):
+        assert self.get_service(config).is_assigned(task)
 
-        assert self.service.is_assigned(task)
+        config["myservice"]["only_if_assigned"] = "Pedro Manobrista"
 
-        self.config["myservice"]["only_if_assigned"] = "Pedro Manobrista"
+        assert self.get_service(config).is_assigned(task)
 
-        assert self.service.is_assigned(task)
+        config["myservice"]["also_unassigned"] = False
 
-        self.config["myservice"]["also_unassigned"] = False
-
-        assert not self.service.is_assigned(task)
+        assert not self.get_service(config).is_assigned(task)
 
         task["assignees"] = [
             {
@@ -193,22 +179,19 @@ class TestClickupService(ConfigTest):
                 "profilePicture": None,
             }
         ]
-        assert self.service.is_assigned(task)
+        assert self.get_service(config).is_assigned(task)
 
 
-class TestClickupIssue(ServiceIssueTest):
+class TestClickupIssue:
     SERVICE_CONFIG = {'service': 'clickup', 'team_id': 1234, 'token': 'arbitrary_token'}
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(ClickupService)
+    @pytest.fixture
+    def service(self):
+        return get_mock_service(ClickupService, self.SERVICE_CONFIG)
 
-        self.data = TestData()
+    def test_to_taskwarrior(self, service, task):
+        issue = service.get_issue_for_record(task)
 
-    def test_to_taskwarrior(self):
-        issue = self.service.get_issue_for_record(self.data.get_task())
-
-        task = self.data.get_task()
         expected_output = {
             "project": None,
             "priority": 'M',
@@ -235,15 +218,14 @@ class TestClickupIssue(ServiceIssueTest):
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues(self):
+    def test_issues(self, service, task, task_page):
         responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0",
-            json=self.data.get_page(1),
+            json=task_page(1),
         )
 
-        issue = next(self.service.issues())
+        issue = next(service.issues())
 
-        task = self.data.get_task()
         expected_output = {
             "project": None,
             "priority": 'M',

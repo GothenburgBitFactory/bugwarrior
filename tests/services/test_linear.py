@@ -1,12 +1,14 @@
 from datetime import datetime, timezone
 import json
 
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.linear import LinearService
 
-from .base import ConfigTest, ServiceIssueTest
+from ..base import validate
+from .base import get_mock_service
 
 RESPONSE = json.loads(
     """
@@ -79,69 +81,73 @@ RESPONSE = json.loads(
 )
 
 
-class TestLinearServiceConfig(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.config = {
-            "general": {"targets": ["linear"]},
-            "linear": {"service": "linear"},
-        }
+class TestLinearServiceConfig:
+    @pytest.fixture
+    def config(self):
+        return {"general": {"targets": ["linear"]}, "linear": {"service": "linear"}}
 
-    def test_validate_config(self):
-        self.config["linear"].update(
+    def test_validate_config(self, config):
+        config["linear"].update(
             {"only_if_assigned": "foo@bar.com", "api_token": "abc123"}
         )
 
-        self.validate()
+        validate(config)
 
-    def test_validate_config_no_api_token(self):
-        self.config["linear"].update({"only_if_assigned": "foo@bar.com"})
+    def test_validate_config_no_api_token(self, config, assert_validation_error):
+        config["linear"].update({"only_if_assigned": "foo@bar.com"})
 
-        self.assertValidationError("[linear]\napi_token  <- Field required")
+        assert_validation_error(config, "[linear]\napi_token  <- Field required")
 
-    def test_statuses_and_status_types_incompatible(self):
-        self.config["linear"].update(
+    def test_statuses_and_status_types_incompatible(
+        self, config, assert_validation_error
+    ):
+        config["linear"].update(
             {"api_token": "abc123", "statuses": "Done, Todo", "status_types": "started"}
         )
-        self.assertValidationError("statuses and status_types are incompatible")
+        assert_validation_error(config, "statuses and status_types are incompatible")
 
-    def test_status_types_defaults_when_neither_set(self):
-        self.config["linear"].update({"api_token": "abc123"})
-        conf = self.validate()
+    def test_status_types_defaults_when_neither_set(self, config):
+        config["linear"].update({"api_token": "abc123"})
+        conf = validate(config)
         assert conf.service_configs[0].status_types == [
             "backlog",
             "unstarted",
             "started",
         ]
 
-    def test_statuses_only(self):
-        self.config["linear"].update({"api_token": "abc123", "statuses": "Done, Todo"})
-        conf = self.validate()
+    def test_statuses_only(self, config):
+        config["linear"].update({"api_token": "abc123", "statuses": "Done, Todo"})
+        conf = validate(config)
         assert conf.service_configs[0].statuses == ["Done", "Todo"]
         assert conf.service_configs[0].status_types is None
 
-    def test_status_types_only(self):
-        self.config["linear"].update({"api_token": "abc123", "status_types": "started"})
-        conf = self.validate()
+    def test_status_types_only(self, config):
+        config["linear"].update({"api_token": "abc123", "status_types": "started"})
+        conf = validate(config)
         assert conf.service_configs[0].status_types == ["started"]
         assert conf.service_configs[0].statuses == []
 
 
-class TestLinearIssue(ServiceIssueTest):
+class TestLinearIssue:
     SERVICE_CONFIG = {
         "service": "linear",
         "api_token": "abc123",
         "import_labels_as_tags": True,
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(LinearService)
-        responses.add(responses.POST, "https://api.linear.app/graphql", json=RESPONSE)
+    @pytest.fixture
+    def service(self):
+        return get_mock_service(LinearService, self.SERVICE_CONFIG)
 
-    def test_to_taskwarrior(self):
+    @pytest.fixture(autouse=True)
+    def mock_api(self):
+        with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
+            rsps.add(responses.POST, "https://api.linear.app/graphql", json=RESPONSE)
+            yield rsps
+
+    def test_to_taskwarrior(self, service):
         issue = RESPONSE["data"]["issues"]["nodes"][0]
-        issue = self.service.get_issue_for_record(issue, {})
+        issue = service.get_issue_for_record(issue, {})
 
         created_timestamp = datetime(2025, 7, 24, 17, 3, 4, 0, tzinfo=timezone.utc)
         updated_timestamp = datetime(2025, 7, 25, 17, 3, 4, 0, tzinfo=timezone.utc)
@@ -170,7 +176,7 @@ class TestLinearIssue(ServiceIssueTest):
         assert actual_output == expected_output
 
         issue = RESPONSE["data"]["issues"]["nodes"][1]
-        issue = self.service.get_issue_for_record(issue, {})
+        issue = service.get_issue_for_record(issue, {})
 
         created_timestamp = datetime(2025, 7, 24, 15, 34, 7, 0, tzinfo=timezone.utc)
         updated_timestamp = datetime(2025, 7, 24, 17, 8, 33, 0, tzinfo=timezone.utc)
@@ -198,9 +204,8 @@ class TestLinearIssue(ServiceIssueTest):
         actual_output = issue.to_taskwarrior()
         assert actual_output == expected_output
 
-    @responses.activate
-    def test_issues(self):
-        issue = next(self.service.issues())
+    def test_issues(self, service):
+        issue = next(service.issues())
         created_timestamp = datetime(2025, 7, 24, 17, 3, 4, 0, tzinfo=timezone.utc)
         updated_timestamp = datetime(2025, 7, 25, 17, 3, 4, 0, tzinfo=timezone.utc)
         closed_timestamp = datetime(2025, 7, 26, 17, 3, 4, 0, tzinfo=timezone.utc)
@@ -227,41 +232,37 @@ class TestLinearIssue(ServiceIssueTest):
         }
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_priority_mapping(self):
-        # Linear priority integers must map onto taskwarrior's H/M/L buckets,
-        # with "No priority" (0) and a missing field both falling back to the
-        # service-wide default.
-        cases = [
+    # Linear priority integers must map onto taskwarrior's H/M/L buckets,
+    # with "No priority" (0) falling back to the service-wide default.
+    @pytest.mark.parametrize(
+        ('linear_priority', 'expected'),
+        [
             (0, "M"),  # No priority -> default_priority (M)
             (1, "H"),  # Urgent
             (2, "H"),  # High
             (3, "M"),  # Medium
             (4, "L"),  # Low
-        ]
-        for linear_priority, expected in cases:
-            with self.subTest(linear_priority=linear_priority):
-                record = {
-                    **RESPONSE["data"]["issues"]["nodes"][0],
-                    "priority": linear_priority,
-                }
-                issue = self.service.get_issue_for_record(record, {})
-                assert issue.to_taskwarrior()["priority"] == expected
+        ],
+    )
+    def test_priority_mapping(self, service, linear_priority, expected):
+        record = {**RESPONSE["data"]["issues"]["nodes"][0], "priority": linear_priority}
+        issue = service.get_issue_for_record(record, {})
+        assert issue.to_taskwarrior()["priority"] == expected
 
-        # A record without a priority key at all should also fall back.
+    def test_priority_missing(self, service):
+        # A record without a priority key at all should also fall back to the
+        # service-wide default.
         record = {
             k: v
             for k, v in RESPONSE["data"]["issues"]["nodes"][0].items()
             if k != "priority"
         }
-        issue = self.service.get_issue_for_record(record, {})
+        issue = service.get_issue_for_record(record, {})
         assert issue.to_taskwarrior()["priority"] == "M"
 
     @responses.activate
-    def test_issues_paginates(self):
-        """Drains every page when Linear signals ``hasNextPage``."""
-        # Reset the default mock registered in setUp so we can control page order.
-        responses.reset()
-
+    def test_issues_paginates(self, service):
+        """Drains every page when Linear signals hasNextPage."""
         page_one = {
             "data": {
                 "issues": {
@@ -281,7 +282,7 @@ class TestLinearIssue(ServiceIssueTest):
         responses.add(responses.POST, "https://api.linear.app/graphql", json=page_one)
         responses.add(responses.POST, "https://api.linear.app/graphql", json=page_two)
 
-        identifiers = [issue.record["identifier"] for issue in self.service.issues()]
+        identifiers = [issue.record["identifier"] for issue in service.issues()]
         assert identifiers == ["DUS-5", "DUS-1"]
 
         # Two HTTP calls were made, and the second one carried the cursor

@@ -1,12 +1,13 @@
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.taiga import TaigaService
 
-from .base import ServiceIssueTest
+from .base import get_mock_service
 
 
-class TestTaigaIssue(ServiceIssueTest):
+class TestTaigaIssue:
     SERVICE_CONFIG = {
         'service': 'taiga',
         'base_uri': 'https://one',
@@ -21,11 +22,11 @@ class TestTaigaIssue(ServiceIssueTest):
         'due_date': '2026-05-18',
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(TaigaService)
+    @pytest.fixture
+    def service(self):
+        return get_mock_service(TaigaService, self.SERVICE_CONFIG)
 
-    def test_to_taskwarrior(self):
+    def test_to_taskwarrior(self, service):
         extra = {
             'project': 'awesome',
             'annotations': [
@@ -34,7 +35,7 @@ class TestTaigaIssue(ServiceIssueTest):
             'url': 'this is a url',
         }
 
-        issue = self.service.get_issue_for_record(self.record, extra)
+        issue = service.get_issue_for_record(self.record, extra)
         actual = issue.to_taskwarrior()
         expected = {
             'annotations': [],
@@ -50,7 +51,7 @@ class TestTaigaIssue(ServiceIssueTest):
         assert actual == expected
 
     @responses.activate
-    def test_issues(self):
+    def test_issues(self, service):
         userid = 1
 
         responses.get('https://one/api/v1/users/me', json={'id': userid})
@@ -72,7 +73,7 @@ class TestTaigaIssue(ServiceIssueTest):
             json=[{'user': {'username': 'you'}, 'comment': 'Blah blah blah!'}],
         )
 
-        issue = next(self.service.issues())
+        issue = next(service.issues())
 
         expected = {
             'annotations': ['@you - Blah blah blah!'],

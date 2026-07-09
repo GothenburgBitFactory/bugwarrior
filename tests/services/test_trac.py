@@ -1,7 +1,9 @@
+import pytest
+
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.trac import TracService
 
-from .base import ServiceIssueTest
+from .base import get_mock_service
 
 
 class FakeTracTicket:
@@ -28,7 +30,7 @@ class FakeTracLib:
         return (1, None, None, self.record)
 
 
-class TestTracIssue(ServiceIssueTest):
+class TestTracIssue:
     SERVICE_CONFIG = {
         'service': 'trac',
         'base_uri': 'ljlkajsdfl.com',
@@ -43,19 +45,16 @@ class TestTracIssue(ServiceIssueTest):
         'component': 'testcomponent',
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(TracService)
-
-    def get_mock_service(self, *args, **kwargs):
-        service = super().get_mock_service(*args, **kwargs)
+    @pytest.fixture
+    def service(self):
+        service = get_mock_service(TracService, self.SERVICE_CONFIG)
         service.trac = FakeTracLib(self.arbitrary_issue)
         return service
 
-    def test_to_taskwarrior(self):
+    def test_to_taskwarrior(self, service):
         arbitrary_extra = {'annotations': ['alpha', 'beta'], 'project': 'some project'}
 
-        issue = self.service.get_issue_for_record(self.arbitrary_issue, arbitrary_extra)
+        issue = service.get_issue_for_record(self.arbitrary_issue, arbitrary_extra)
 
         expected_output = {
             'project': arbitrary_extra['project'],
@@ -70,8 +69,8 @@ class TestTracIssue(ServiceIssueTest):
 
         assert actual_output == expected_output
 
-    def test_issues(self):
-        issue = next(self.service.issues())
+    def test_issues(self, service):
+        issue = next(service.issues())
 
         expected = {
             'annotations': [],

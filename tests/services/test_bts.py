@@ -1,9 +1,11 @@
 from unittest import mock
 
+import pytest
+
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import bts
 
-from .base import ServiceIssueTest
+from .base import get_mock_service
 
 
 class FakeBTSBug:
@@ -29,21 +31,19 @@ class FakeBTSLib:
             return [FakeBTSBug]
 
 
-class TestBTSService(ServiceIssueTest):
+class TestBTSService:
     SERVICE_CONFIG = {
         'service': 'bts',
         'email': 'irl@debian.org',
         'packages': 'bugwarrior',
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(bts.BTSService)
+    @pytest.fixture
+    def service(self):
+        return get_mock_service(bts.BTSService, self.SERVICE_CONFIG)
 
-    def test_to_taskwarrior(self):
-        issue = self.service.get_issue_for_record(
-            self.service._record_for_bug(FakeBTSBug)
-        )
+    def test_to_taskwarrior(self, service):
+        issue = service.get_issue_for_record(service._record_for_bug(FakeBTSBug))
 
         expected_output = {
             'priority': issue.PRIORITY_MAP[FakeBTSBug.severity],
@@ -60,9 +60,9 @@ class TestBTSService(ServiceIssueTest):
 
         assert actual_output == expected_output
 
-    def test_issues(self):
+    def test_issues(self, service):
         with mock.patch('bugwarrior.services.bts.debianbts', FakeBTSLib()):
-            issue = next(self.service.issues())
+            issue = next(service.issues())
 
         expected = {
             'annotations': [],

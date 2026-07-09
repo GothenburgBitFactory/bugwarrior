@@ -1,15 +1,16 @@
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.redmine import RedMineService
 
-from .base import ServiceIssueTest
+from .base import get_mock_service
 
 
-class TestRedmineIssue(ServiceIssueTest):
+class TestRedmineIssue:
     SERVICE_CONFIG = {
         'service': 'redmine',
         'url': 'https://something',
@@ -34,14 +35,14 @@ class TestRedmineIssue(ServiceIssueTest):
         "updated_on": arbitrary_updated.isoformat(),
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(RedMineService)
+    @pytest.fixture
+    def service(self):
+        return get_mock_service(RedMineService, self.SERVICE_CONFIG)
 
-    def test_to_taskwarrior(self):
+    def test_to_taskwarrior(self, service):
         arbitrary_url = 'http://lkjlj.com'
 
-        issue = self.service.get_issue_for_record(self.arbitrary_issue)
+        issue = service.get_issue_for_record(self.arbitrary_issue)
 
         expected_output = {
             'annotations': [],
@@ -74,13 +75,13 @@ class TestRedmineIssue(ServiceIssueTest):
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues(self):
+    def test_issues(self, service):
         responses.get(
             'https://something/issues.json?limit=100',
             json={'issues': [self.arbitrary_issue]},
         )
 
-        issue = next(self.service.issues())
+        issue = next(service.issues())
 
         expected = {
             'annotations': [],

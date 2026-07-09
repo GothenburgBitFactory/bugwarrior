@@ -2,13 +2,15 @@ import copy
 import datetime
 from unittest import mock
 
+import pytest
+
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.logseq import LogseqClient, LogseqIssue, LogseqService
 
-from .base import ServiceIssueTest
+from .base import get_mock_service
 
 
-class TestLogseqIssue(ServiceIssueTest):
+class TestLogseqIssue:
     SERVICE_CONFIG = {
         "service": "logseq",
         "host": "localhost",
@@ -75,14 +77,14 @@ class TestLogseqIssue(ServiceIssueTest):
         "format": "markdown",
     }
 
-    def setUp(self):
-        super().setUp()
+    @pytest.fixture
+    def service(self):
+        service = get_mock_service(LogseqService, self.SERVICE_CONFIG)
+        service.client = mock.MagicMock(spec=LogseqClient)
+        return service
 
-        self.service = self.get_mock_service(LogseqService)
-        self.service.client = mock.MagicMock(spec=LogseqClient)
-
-    def test_to_taskwarrior(self):
-        issue = self.service.get_issue_for_record(self.test_record, self.test_extra)
+    def test_to_taskwarrior(self, service):
+        issue = service.get_issue_for_record(self.test_record, self.test_extra)
 
         expected = {
             "annotations": [],
@@ -110,30 +112,32 @@ class TestLogseqIssue(ServiceIssueTest):
 
     def test_to_taskwarrior_with_tags(self):
         overrides = {"import_labels_as_tags": "True"}
-        service = self.get_mock_service(LogseqService, config_overrides=overrides)
+        service = get_mock_service(
+            LogseqService, self.SERVICE_CONFIG, config_overrides=overrides
+        )
         issue = service.get_issue_for_record(self.test_record, self.test_extra)
 
         actual = issue.to_taskwarrior()
         assert actual["tags"] == ["Testtagone", "TestTagTwo", "TestTagThree"]
 
-    def test_to_taskwarrior_todo(self):
+    def test_to_taskwarrior_todo(self, service):
         test_record = copy.copy(self.test_record)
         test_record["content"] = "TODO test task in todo state\n"
         test_record["marker"] = "TODO"
-        issue = self.service.get_issue_for_record(test_record, self.test_extra)
+        issue = service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
         assert actual["status"] == "pending"
 
-    def test_to_taskwarrior_waiting(self):
+    def test_to_taskwarrior_waiting(self, service):
         test_record = copy.copy(self.test_record)
         test_record["content"] = "WAITING test task in waiting state\n"
         test_record["marker"] = "WAITING"
-        issue = self.service.get_issue_for_record(test_record, self.test_extra)
+        issue = service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
         assert actual["status"] == "pending"
         assert actual["wait"] == LogseqIssue.SOMEDAY
 
-    def test_to_taskwarrior_dates_with_time(self):
+    def test_to_taskwarrior_dates_with_time(self, service):
         test_record = copy.copy(self.test_record)
         test_record["content"] = (
             "DOING test schedule and deadline dates with times\n"
@@ -142,7 +146,7 @@ class TestLogseqIssue(ServiceIssueTest):
         )
         print(test_record)
 
-        issue = self.service.get_issue_for_record(test_record, self.test_extra)
+        issue = service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
 
         scheduled = datetime.datetime(year=2025, month=7, day=1, hour=12, minute=30)
@@ -152,7 +156,7 @@ class TestLogseqIssue(ServiceIssueTest):
         assert actual[issue.SCHEDULED] == scheduled
         assert actual[issue.DEADLINE] == deadline
 
-    def test_to_taskwarrior_dates_with_repeat(self):
+    def test_to_taskwarrior_dates_with_repeat(self, service):
         test_record = copy.copy(self.test_record)
         test_record["content"] = (
             "DOING test schedule and deadline dates with times\n"
@@ -161,7 +165,7 @@ class TestLogseqIssue(ServiceIssueTest):
         )
         print(test_record)
 
-        issue = self.service.get_issue_for_record(test_record, self.test_extra)
+        issue = service.get_issue_for_record(test_record, self.test_extra)
         actual = issue.to_taskwarrior()
 
         scheduled = datetime.datetime(year=2025, month=7, day=1, hour=12, minute=30)
@@ -171,11 +175,11 @@ class TestLogseqIssue(ServiceIssueTest):
         assert actual[issue.SCHEDULED] == scheduled
         assert actual[issue.DEADLINE] == deadline
 
-    def test_issues(self):
-        self.service.client.get_graph_name.return_value = self.test_extra["graph"]
-        self.service.client.get_issues.return_value = [[self.test_record]]
-        self.service.client.get_page.return_value = self.test_page
-        issue = next(self.service.issues())
+    def test_issues(self, service):
+        service.client.get_graph_name.return_value = self.test_extra["graph"]
+        service.client.get_issues.return_value = [[self.test_record]]
+        service.client.get_page.return_value = self.test_page
+        issue = next(service.issues())
 
         expected = {
             "annotations": [],

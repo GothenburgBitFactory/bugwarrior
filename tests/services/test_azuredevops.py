@@ -1,10 +1,13 @@
 from datetime import datetime, timezone
 from unittest import mock
 
+import pytest
+
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.azuredevops import AzureDevopsService, striphtml
 
-from .base import ConfigTest, ServiceIssueTest
+from ..base import validate
+from .base import get_mock_service
 
 TEST_ISSUE = {
     "_links": {
@@ -104,45 +107,43 @@ TEST_ISSUE = {
 }
 
 
-class TestAzureDevopsServiceConfig(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.config = {
+class TestAzureDevopsServiceConfig:
+    @pytest.fixture
+    def config(self):
+        return {
             "general": {"targets": ["test_ado"]},
             "test_ado": {"service": "azuredevops"},
         }
 
-    def test_validate_config_required_fields(self):
-        self.config["test_ado"].update(
+    def test_validate_config_required_fields(self, config):
+        config["test_ado"].update(
             {
                 "organization": "test_organization",
                 "project": "test_project",
                 "PAT": "myPAT",
             }
         )
-        self.validate()
+        validate(config)
 
-    def test_validate_config_no_organization(self):
-        self.config["test_ado"].update({"project": "test_project", "PAT": "myPAT"})
+    def test_validate_config_no_organization(self, config, assert_validation_error):
+        config["test_ado"].update({"project": "test_project", "PAT": "myPAT"})
 
-        self.assertValidationError('[test_ado]\norganization  <- Field required')
+        assert_validation_error(config, '[test_ado]\norganization  <- Field required')
 
-    def test_validate_config_no_project(self):
-        self.config["test_ado"].update(
-            {"organization": "http://one.com/", "PAT": "myPAT"}
-        )
+    def test_validate_config_no_project(self, config, assert_validation_error):
+        config["test_ado"].update({"organization": "http://one.com/", "PAT": "myPAT"})
 
-        self.assertValidationError('[test_ado]\nproject  <- Field required')
+        assert_validation_error(config, '[test_ado]\nproject  <- Field required')
 
-    def test_validate_config_no_PAT(self):
-        self.config["test_ado"].update(
+    def test_validate_config_no_PAT(self, config, assert_validation_error):
+        config["test_ado"].update(
             {"organization": "http://one.com/", "project": "test_project"}
         )
 
-        self.assertValidationError('[test_ado]\nPAT  <- Field required')
+        assert_validation_error(config, '[test_ado]\nPAT  <- Field required')
 
 
-class TestAzureDevopsService(ServiceIssueTest):
+class TestAzureDevopsService:
     SERVICE_CONFIG = {
         "service": "azuredevops",
         "organization": "test_organization",
@@ -150,25 +151,21 @@ class TestAzureDevopsService(ServiceIssueTest):
         "PAT": "myPAT",
     }
 
-    @property
+    @pytest.fixture
     def service(self):
         return self.get_service()
 
-    def get_service(self, *args, **kwargs):
-        service = self.get_mock_service(AzureDevopsService, *args, **kwargs)
+    def get_service(self, **kwargs):
+        service = get_mock_service(AzureDevopsService, self.SERVICE_CONFIG, **kwargs)
+        service.client = mock.MagicMock()
         service.client.get_parent_name.return_value = None
         service.client.get_work_items_from_query.return_value = [1]
         service.client.get_work_item.return_value = TEST_ISSUE
         return service
 
-    def get_mock_service(self, *args, **kwargs):
-        service = super().get_mock_service(*args, **kwargs)
-        service.client = mock.MagicMock()
-        return service
-
-    def test_to_taskwarrior(self):
+    def test_to_taskwarrior(self, service):
         record = TEST_ISSUE
-        issue = self.service.get_issue_for_record(record)
+        issue = service.get_issue_for_record(record)
         extra = {
             "project": None,
             "annotations": [],
@@ -197,7 +194,7 @@ class TestAzureDevopsService(ServiceIssueTest):
         actual_output = issue.to_taskwarrior()
         assert actual_output == expected
 
-    def test_issues(self):
+    def test_issues(self, service):
         expected = {
             "project": None,
             "priority": "M",
@@ -218,7 +215,7 @@ class TestAzureDevopsService(ServiceIssueTest):
             "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',  # noqa: E501
             "tags": [],
         }
-        issue = next(self.service.issues())
+        issue = next(service.issues())
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     def test_issues_wiql_filter(self):

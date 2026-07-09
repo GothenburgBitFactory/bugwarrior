@@ -2,12 +2,14 @@ from collections import namedtuple
 from datetime import datetime, timezone
 from unittest import mock
 
+import pytest
+
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.config import validation
 from bugwarrior.config.load import format_config
 from bugwarrior.services.jira import JiraExtraFields, JiraService
 
-from .base import ConfigTest, ServiceIssueTest
+from .base import get_mock_service
 
 
 class FakeJiraClient:
@@ -22,10 +24,10 @@ class FakeJiraClient:
         return None
 
 
-class testJiraService(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.config = {
+class TestJiraService:
+    @pytest.fixture
+    def config(self):
+        return {
             'general': {'targets': ['myjira']},
             'myjira': {
                 'service': 'jira',
@@ -39,19 +41,19 @@ class testJiraService(ConfigTest):
             },
         }
 
-    def test_body_length_no_limit(self):
+    def test_body_length_no_limit(self, config):
         description = "A very short issue body.  Fixes #828."
-        self.config['myjira']['body_length'] = '5'
-        formatted = format_config(self.config)
+        config['myjira']['body_length'] = '5'
+        formatted = format_config(config)
         conf = validation.validate_config(formatted, 'general', 'configpath')
         service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)
         issue = mock.Mock()
         issue.record = dict(fields=dict(description=description))
         assert description[:5] == service.body(issue)
 
-    def test_body_length_limit(self):
+    def test_body_length_limit(self, config):
         description = "A very short issue body.  Fixes #828."
-        formatted = format_config(self.config)
+        formatted = format_config(config)
         conf = validation.validate_config(formatted, 'general', 'configpath')
         service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)
         issue = mock.Mock()
@@ -59,7 +61,7 @@ class testJiraService(ConfigTest):
         assert description == service.body(issue)
 
 
-class TestJiraIssue(ServiceIssueTest):
+class TestJiraIssue:
     SERVICE_CONFIG = {
         'service': 'jira',
         'username': 'one',
@@ -106,13 +108,10 @@ class TestJiraIssue(ServiceIssueTest):
                     55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]'
     ]
 
-    def setUp(self):
-        super().setUp()
+    @pytest.fixture
+    def service(self):
         with mock.patch('jira.client.JIRA._get_json'):
-            self.service = self.get_mock_service(JiraService)
-
-    def get_mock_service(self, *args, **kwargs):
-        service = super().get_mock_service(*args, **kwargs)
+            service = get_mock_service(JiraService, self.SERVICE_CONFIG)
         service.jira = FakeJiraClient(self.arbitrary_record)
         service.sprint_field_names = ['Sprint']
         return service
@@ -122,7 +121,7 @@ class TestJiraIssue(ServiceIssueTest):
             ['jiraextra1:customfield_10000', 'jiraextra2:namedfield.valueinside']
         )
 
-    def test_to_taskwarrior(self):
+    def test_to_taskwarrior(self, service):
         arbitrary_url = 'http://one'
         arbitrary_extra = {
             'annotations': ['an annotation'],
@@ -130,9 +129,7 @@ class TestJiraIssue(ServiceIssueTest):
             'sprint_field_names': [],
         }
 
-        issue = self.service.get_issue_for_record(
-            self.arbitrary_record, arbitrary_extra
-        )
+        issue = service.get_issue_for_record(self.arbitrary_record, arbitrary_extra)
 
         expected_output = {
             'project': self.arbitrary_project,
@@ -165,7 +162,7 @@ class TestJiraIssue(ServiceIssueTest):
 
         assert actual_output == expected_output
 
-    def test_to_taskwarrior_sprint_with_goal(self):
+    def test_to_taskwarrior_sprint_with_goal(self, service):
         record_with_goal = self.arbitrary_record.copy()
         record_with_goal['fields'] = self.arbitrary_record_with_due['fields'].copy()
         record_with_goal['fields']['Sprint'] = [
@@ -176,10 +173,10 @@ class TestJiraIssue(ServiceIssueTest):
         arbitrary_url = 'http://one'
         arbitrary_extra = {
             'annotations': ['an annotation'],
-            'sprint_field_names': self.service.sprint_field_names,
+            'sprint_field_names': service.sprint_field_names,
         }
 
-        issue = self.service.get_issue_for_record(record_with_goal, arbitrary_extra)
+        issue = service.get_issue_for_record(record_with_goal, arbitrary_extra)
 
         expected_output = {
             'project': self.arbitrary_project,
@@ -210,8 +207,8 @@ class TestJiraIssue(ServiceIssueTest):
 
         assert actual_output == expected_output
 
-    def test_issues(self):
-        issue = next(self.service.issues())
+    def test_issues(self, service):
+        issue = next(service.issues())
 
         expected = {
             'annotations': [],
@@ -239,21 +236,21 @@ class TestJiraIssue(ServiceIssueTest):
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_get_due(self):
-        issue = self.service.get_issue_for_record(
+    def test_get_due(self, service):
+        issue = service.get_issue_for_record(
             self.arbitrary_record_with_due,
-            extra={'sprint_field_names': self.service.sprint_field_names},
+            extra={'sprint_field_names': service.sprint_field_names},
         )
 
         assert issue.get_due() == datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc)
 
-    def test_get_due_sprint_dict_missing_end_date(self):
+    def test_get_due_sprint_dict_missing_end_date(self, service):
         record = self.arbitrary_record.copy()
         record['fields'] = self.arbitrary_record['fields'].copy()
         record['fields']['Sprint'] = [{'id': 1, 'state': 'active', 'name': 'Sprint 1'}]
 
-        issue = self.service.get_issue_for_record(
-            record, extra={'sprint_field_names': self.service.sprint_field_names}
+        issue = service.get_issue_for_record(
+            record, extra={'sprint_field_names': service.sprint_field_names}
         )
 
         assert issue.get_due() is None

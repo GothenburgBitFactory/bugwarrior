@@ -1,11 +1,13 @@
 from datetime import datetime, timezone
 
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.pivotaltracker import PivotalTrackerService
 
-from .base import ConfigTest, ServiceIssueTest
+from ..base import validate
+from .base import get_mock_service
 
 PROJECT = {
     'account_id': 100,
@@ -155,38 +157,38 @@ EXTRA = {
 }
 
 
-class TestPivotalTrackerServiceConfig(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.config = {
+class TestPivotalTrackerServiceConfig:
+    @pytest.fixture
+    def config(self):
+        return {
             'general': {'targets': ['pivotal']},
             'pivotal': {'service': 'pivotaltracker'},
         }
 
-    def test_validate_config(self):
-        self.config['pivotal'].update(
+    def test_validate_config(self, config):
+        config['pivotal'].update(
             {'account_ids': '12345', 'user_id': '12345', 'token': '12345'}
         )
 
-        self.validate()
+        validate(config)
 
-    def test_validate_config_no_account_ids(self):
-        self.config['pivotal'].update({'token': '123', 'user_id': '12345'})
+    def test_validate_config_no_account_ids(self, config, assert_validation_error):
+        config['pivotal'].update({'token': '123', 'user_id': '12345'})
 
-        self.assertValidationError('[pivotal]\naccount_ids  <- Field required')
+        assert_validation_error(config, '[pivotal]\naccount_ids  <- Field required')
 
-    def test_validate_config_no_user_id(self):
-        self.config['pivotal'].update({'account_ids': '12345', 'token': '123'})
+    def test_validate_config_no_user_id(self, config, assert_validation_error):
+        config['pivotal'].update({'account_ids': '12345', 'token': '123'})
 
-        self.assertValidationError('[pivotal]\nuser_id  <- Field required')
+        assert_validation_error(config, '[pivotal]\nuser_id  <- Field required')
 
-    def test_validate_config_token(self):
-        self.config['pivotal'].update({'account_ids': '12345', 'user_id': '12345'})
+    def test_validate_config_token(self, config, assert_validation_error):
+        config['pivotal'].update({'account_ids': '12345', 'user_id': '12345'})
 
-        self.assertValidationError('[pivotal]\ntoken  <- Field required')
+        assert_validation_error(config, '[pivotal]\ntoken  <- Field required')
 
-    def test_validate_config_invalid_endpoint(self):
-        self.config['pivotal'].update(
+    def test_validate_config_invalid_endpoint(self, config, assert_validation_error):
+        config['pivotal'].update(
             {
                 'account_ids': '12345',
                 'token': '123',
@@ -195,12 +197,12 @@ class TestPivotalTrackerServiceConfig(ConfigTest):
             }
         )
 
-        self.assertValidationError(
-            "[pivotal]\nversion = v1  <- Input should be 'v5' or 'edge'"
+        assert_validation_error(
+            config, "[pivotal]\nversion = v1  <- Input should be 'v5' or 'edge'"
         )
 
 
-class TestPivotalTrackerIssue(ServiceIssueTest):
+class TestPivotalTrackerIssue:
     SERVICE_CONFIG = {
         'service': 'pivotaltracker',
         'token': '123456',
@@ -210,37 +212,42 @@ class TestPivotalTrackerIssue(ServiceIssueTest):
         'import_blockers': True,
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(PivotalTrackerService)
-        responses.add(
-            responses.GET,
-            'https://www.pivotaltracker.com/services/v5/projects?account_ids=100',
-            json=[PROJECT],
-        )
-        responses.add(
-            responses.GET,
-            'https://www.pivotaltracker.com/services/v5/projects/99/search?query=mywork:106',
-            json=QUERY,
-        )
-        responses.add(
-            responses.GET,
-            'https://www.pivotaltracker.com/services/v5/projects/99/stories/561/tasks',
-            json=TASKS,
-        )
-        responses.add(
-            responses.GET,
-            'https://www.pivotaltracker.com/services/v5/projects/99/stories/561/blockers',
-            json=BLOCKERS,
-        )
-        responses.add(
-            responses.GET,
-            'https://www.pivotaltracker.com/services/v5/projects/99/memberships',
-            json=USER,
-        )
+    @pytest.fixture
+    def service(self):
+        return get_mock_service(PivotalTrackerService, self.SERVICE_CONFIG)
 
-    def test_to_taskwarrior(self):
-        story = self.service.get_issue_for_record(STORY, EXTRA)
+    @pytest.fixture(autouse=True)
+    def mock_api(self):
+        with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
+            rsps.add(
+                responses.GET,
+                'https://www.pivotaltracker.com/services/v5/projects?account_ids=100',
+                json=[PROJECT],
+            )
+            rsps.add(
+                responses.GET,
+                'https://www.pivotaltracker.com/services/v5/projects/99/search?query=mywork:106',
+                json=QUERY,
+            )
+            rsps.add(
+                responses.GET,
+                'https://www.pivotaltracker.com/services/v5/projects/99/stories/561/tasks',
+                json=TASKS,
+            )
+            rsps.add(
+                responses.GET,
+                'https://www.pivotaltracker.com/services/v5/projects/99/stories/561/blockers',
+                json=BLOCKERS,
+            )
+            rsps.add(
+                responses.GET,
+                'https://www.pivotaltracker.com/services/v5/projects/99/memberships',
+                json=USER,
+            )
+            yield rsps
+
+    def test_to_taskwarrior(self, service):
+        story = service.get_issue_for_record(STORY, EXTRA)
 
         expected_output = {
             'annotations': [
@@ -296,9 +303,8 @@ class TestPivotalTrackerIssue(ServiceIssueTest):
         actual_output = story.to_taskwarrior()
         assert actual_output == expected_output
 
-    @responses.activate
-    def test_issues(self):
-        story = next(self.service.issues())
+    def test_issues(self, service):
+        story = next(service.issues())
         story_date = datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc)
         expected = {
             'annotations': [

@@ -1,44 +1,30 @@
-from datetime import date, datetime, timedelta, timezone
-
 import pytest
 
 from bugwarrior.services.phab import PhabricatorService
 
-from .base import ServiceIssueTest
+from .base import get_mock_service
 
 
-class TestPhabricatorIssue(ServiceIssueTest):
+class TestPhabricatorIssue:
     SERVICE_CONFIG = {
         'service': 'phabricator',
         'host': 'https://phabricator.example.com',
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(PhabricatorService)
-        self.arbitrary_created = (
-            datetime.now(timezone.utc) - timedelta(hours=1)
-        ).replace(microsecond=0)
-        self.arbitrary_updated = datetime.now(timezone.utc).replace(microsecond=0)
-        self.arbitrary_duedate = datetime.combine(
-            date.today(), datetime.min.time(), tzinfo=timezone.utc
-        )
-        self.arbitrary_issue = {
-            "id": 42,
-            "uri": "https://phabricator.example.com/arbitrary_username/project/issues/3",
-            "title": "A phine phabricator issue",
-        }
-        self.arbitrary_extra = {
-            'type': 'issue',
-            'project': 'PHROJECT',
-            'annotations': [],
-        }
+    arbitrary_issue = {
+        "id": 42,
+        "uri": "https://phabricator.example.com/arbitrary_username/project/issues/3",
+        "title": "A phine phabricator issue",
+    }
+    arbitrary_extra = {'type': 'issue', 'project': 'PHROJECT', 'annotations': []}
 
-    def test_to_taskwarrior(self):
-        self.service.import_labels_as_tags = True
-        issue = self.service.get_issue_for_record(
-            self.arbitrary_issue, self.arbitrary_extra
-        )
+    @pytest.fixture
+    def service(self):
+        return get_mock_service(PhabricatorService, self.SERVICE_CONFIG)
+
+    def test_to_taskwarrior(self, service):
+        service.import_labels_as_tags = True
+        issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
 
         expected_output = {
             issue.URL: self.arbitrary_issue['uri'],

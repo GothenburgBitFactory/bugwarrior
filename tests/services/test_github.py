@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta, timezone
 
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.github import GithubClient, GithubConfig, GithubService
 
-from .base import ConfigTest, ServiceIssueTest, ServiceTest
+from ..base import validate
+from .base import get_mock_service
 
 ARBITRARY_CREATED = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(
     microsecond=0
@@ -40,7 +42,7 @@ ARBITRARY_EXTRA = {
 IGNORABLE = {'user': {'login': 'cibot'}, 'body': 'Ignore this comment.'}
 
 
-class TestGithubIssue(ServiceIssueTest):
+class TestGithubIssue:
     SERVICE_CONFIG = {
         'service': 'github',
         'login': 'arbitrary_login',
@@ -50,7 +52,7 @@ class TestGithubIssue(ServiceIssueTest):
     }
 
     def test_draft(self):
-        service = self.get_mock_service(GithubService)
+        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
         draft = dict(ARBITRARY_ISSUE)
         draft['draft'] = True
         issue = service.get_issue_for_record(draft, ARBITRARY_EXTRA)
@@ -82,8 +84,10 @@ class TestGithubIssue(ServiceIssueTest):
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     def test_to_taskwarrior(self):
-        service = self.get_mock_service(
-            GithubService, config_overrides={'import_labels_as_tags': True}
+        service = get_mock_service(
+            GithubService,
+            self.SERVICE_CONFIG,
+            config_overrides={'import_labels_as_tags': True},
         )
         issue = service.get_issue_for_record(ARBITRARY_ISSUE, ARBITRARY_EXTRA)
 
@@ -142,7 +146,7 @@ class TestGithubIssue(ServiceIssueTest):
             ],
         )  # second comment should be ignored and still pass
 
-        service = self.get_mock_service(GithubService)
+        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
         issue = next(service.issues())
 
         expected = {
@@ -172,7 +176,7 @@ class TestGithubIssue(ServiceIssueTest):
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
 
-class TestGithubIssueQuery(ServiceIssueTest):
+class TestGithubIssueQuery:
     SERVICE_CONFIG = {
         'service': 'github',
         'login': 'arbitrary_login',
@@ -183,15 +187,15 @@ class TestGithubIssueQuery(ServiceIssueTest):
         'include_user_issues': 'False',
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(GithubService)
+    @pytest.fixture
+    def service(self):
+        return get_mock_service(GithubService, self.SERVICE_CONFIG)
 
     def test_to_taskwarrior(self):
         pass
 
     @responses.activate
-    def test_issues(self):
+    def test_issues(self, service):
         responses.get(
             'https://api.github.com/search/issues?q=is%3Aopen+reviewer%3Aoctocat&per_page=100',
             json={'items': [ARBITRARY_ISSUE]},
@@ -202,7 +206,7 @@ class TestGithubIssueQuery(ServiceIssueTest):
             json=[{'user': {'login': 'arbitrary_login'}, 'body': 'Arbitrary comment.'}],
         )
 
-        issue = list(self.service.issues())[0]
+        issue = list(service.issues())[0]
 
         expected = {
             'annotations': ['@arbitrary_login - Arbitrary comment.'],
@@ -231,7 +235,7 @@ class TestGithubIssueQuery(ServiceIssueTest):
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
 
-class TestGithubService(ServiceTest):
+class TestGithubService:
     SERVICE_CONFIG = {
         'service': 'github',
         'login': 'tintin',
@@ -240,9 +244,10 @@ class TestGithubService(ServiceTest):
     }
 
     def test_token_authorization_header(self):
-        service = self.get_mock_service(GithubService)
-        service = self.get_mock_service(
+        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
+        service = get_mock_service(
             GithubService,
+            self.SERVICE_CONFIG,
             config_overrides={'token': '@oracle:eval:echo 1234567890ABCDEF'},
         )
         assert (
@@ -251,13 +256,15 @@ class TestGithubService(ServiceTest):
 
     def test_default_host(self):
         """Check that if host is not set, we default to github.com"""
-        service = self.get_mock_service(GithubService)
+        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
         assert "github.com" == service.config.host
 
     def test_overwrite_host(self):
         """Check that if host is set, we use its value as host"""
-        service = self.get_mock_service(
-            GithubService, config_overrides={'host': 'github.example.com'}
+        service = get_mock_service(
+            GithubService,
+            self.SERVICE_CONFIG,
+            config_overrides={'host': 'github.example.com'},
         )
         assert "github.example.com" == service.config.host
 
@@ -291,70 +298,74 @@ class TestGithubService(ServiceTest):
         assert "foo/bar" == repository
 
     def test_body_no_limit(self):
-        service = self.get_mock_service(GithubService)
+        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
         issue = dict(body="A very short issue body.  Fixes #42.")
         assert issue["body"] == service.body(issue)
 
     def test_body_newline_style(self):
-        service = self.get_mock_service(GithubService)
+        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
         issue = dict(body="An\r\nIssue\r\nWith\r\nNewlines")
         assert "An\nIssue\nWith\nNewlines" == service.body(issue)
 
     def test_body_length_limit(self):
-        service = self.get_mock_service(
-            GithubService, config_overrides={'body_length': 5}
+        service = get_mock_service(
+            GithubService, self.SERVICE_CONFIG, config_overrides={'body_length': 5}
         )
         issue = dict(body="A very short issue body.  Fixes #42.")
         assert issue["body"][:5] == service.body(issue)
 
 
-class TestGithubValidation(ConfigTest):
+class TestGithubValidation:
     SERVICE_CONFIG = {'service': 'github', 'login': 'tintin', 'token': 't0ps3cr3t'}
 
-    def setUp(self):
-        super().setUp()
-        self.config = {
+    @pytest.fixture
+    def config(self):
+        return {
             'general': {'targets': ['myservice']},
             'myservice': {**self.SERVICE_CONFIG, 'username': 'milou'},
         }
 
-    def test_require_username_or_query(self):
-        self.config['myservice']['include_user_repos'] = 'false'
-        self.config['myservice'].pop('username')
-        self.assertValidationError('section requires one of')
+    def test_require_username_or_query(self, config, assert_validation_error):
+        config['myservice']['include_user_repos'] = 'false'
+        config['myservice'].pop('username')
+        assert_validation_error(config, 'section requires one of')
 
-    def test_require_username_or_query_with_query(self):
-        self.config['myservice']['include_user_repos'] = 'false'
-        self.config['myservice'].pop('username')
-        self.config['myservice']['query'] = 'is:open reviewer:octocat'
-        self.validate()
+    def test_require_username_or_query_with_query(self, config):
+        config['myservice']['include_user_repos'] = 'false'
+        config['myservice'].pop('username')
+        config['myservice']['query'] = 'is:open reviewer:octocat'
+        validate(config)
 
-    def test_require_username_if_include_user_repos(self):
-        self.config['myservice'].pop('username')
-        self.config['myservice']['query'] = 'is:open'
-        self.assertValidationError('username required when include_user_repos is True')
+    def test_require_username_if_include_user_repos(
+        self, config, assert_validation_error
+    ):
+        config['myservice'].pop('username')
+        config['myservice']['query'] = 'is:open'
+        assert_validation_error(
+            config, 'username required when include_user_repos is True'
+        )
 
-    def test_require_username_if_include_user_repos_disabled(self):
-        self.config['myservice'].pop('username')
-        self.config['myservice']['query'] = 'is:open'
-        self.config['myservice']['include_user_repos'] = 'false'
-        self.validate()
+    def test_require_username_if_include_user_repos_disabled(self, config):
+        config['myservice'].pop('username')
+        config['myservice']['query'] = 'is:open'
+        config['myservice']['include_user_repos'] = 'false'
+        validate(config)
 
-    def test_issue_urls_consistent_with_host(self):
-        self.config['myservice']['issue_urls'] = (
+    def test_issue_urls_consistent_with_host(self, config, assert_validation_error):
+        config['myservice']['issue_urls'] = (
             'https://github.example.com/foo/bar/issues/1'
         )
-        self.assertValidationError('inconsistent with host')
+        assert_validation_error(config, 'inconsistent with host')
 
-    def test_issue_urls_invalid_path(self):
-        self.config['myservice']['issue_urls'] = 'https://github.com/foo/bar/invalid/1'
-        self.assertValidationError('is not a valid issue path')
+    def test_issue_urls_invalid_path(self, config, assert_validation_error):
+        config['myservice']['issue_urls'] = 'https://github.com/foo/bar/invalid/1'
+        assert_validation_error(config, 'is not a valid issue path')
 
-    def test_issue_urls_valid(self):
-        self.config['myservice']['issue_urls'] = (
+    def test_issue_urls_valid(self, config):
+        config['myservice']['issue_urls'] = (
             'https://github.com/foo/bar/issues/1, https://github.com/foo/bar/pull/2'
         )
-        self.validate()
+        validate(config)
 
 
 class TestGithubClient:

@@ -1,14 +1,15 @@
 from dateutil.parser import parse as parse_date
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor, get_service_instances
 from bugwarrior.config.schema import MainSectionConfig
 from bugwarrior.services.trello import TrelloConfig, TrelloIssue
 
-from .base import ConfigTest
+from ..base import validate
 
 
-class TestTrelloIssue(ConfigTest):
+class TestTrelloIssue:
     JSON = {
         "due": "2018-12-02T12:59:00.000Z",
         "id": "542bbb6583d705eb05bbe491",
@@ -21,8 +22,8 @@ class TestTrelloIssue(ConfigTest):
         "desc": "some description",
     }
 
-    def setUp(self):
-        super().setUp()
+    @pytest.fixture
+    def issue(self):
         config = TrelloConfig(
             service='trello',
             api_key='abc123',
@@ -36,22 +37,22 @@ class TestTrelloIssue(ConfigTest):
             targets=[], inline_links=True, description_length=31
         )
         extra = {'boardname': 'Hyperspatial express route', 'listname': 'Something'}
-        self.issue = TrelloIssue(self.JSON, config, main_config, extra)
+        return TrelloIssue(self.JSON, config, main_config, extra)
 
-    def test_default_description(self):
+    def test_default_description(self, issue):
         """Test the generated description"""
         expected_desc = (
             "(bw)#42 - So long, and thanks for all the .. https://trello.com/c/AAaaBBbb"
         )
-        assert expected_desc == self.issue.get_default_description()
+        assert expected_desc == issue.get_default_description()
 
-    def test_to_taskwarrior__project(self):
+    def test_to_taskwarrior__project(self, issue):
         """By default, the project is the board name"""
         expected_project = "Hyperspatial express route"
-        assert expected_project == self.issue.to_taskwarrior().get('project', None)
+        assert expected_project == issue.to_taskwarrior().get('project', None)
 
 
-class TestTrelloService(ConfigTest):
+class TestTrelloService:
     BOARD = {'id': 'B04RD', 'name': 'My Board'}
     CARD1 = {
         'id': 'C4RD',
@@ -80,47 +81,51 @@ class TestTrelloService(ConfigTest):
         "memberCreator": {"username": "mario"},
     }
 
-    def setUp(self):
-        super().setUp()
-        self.config = {
+    @pytest.fixture
+    def config(self):
+        return {
             'general': {'targets': ['mytrello']},
             'mytrello': {'service': 'trello', 'api_key': 'XXXX', 'token': 'YYYY'},
         }
-        responses.add(
-            responses.GET,
-            'https://api.trello.com/1/lists/L15T/cards/open',
-            json=[self.CARD1, self.CARD2, self.CARD3],
-        )
-        responses.add(
-            responses.GET,
-            'https://api.trello.com/1/boards/B04RD/lists/open',
-            json=[self.LIST1, self.LIST2],
-        )
-        responses.add(
-            responses.GET,
-            'https://api.trello.com/1/boards/F00',
-            json={'id': 'F00', 'name': 'Foo Board'},
-        )
-        responses.add(
-            responses.GET,
-            'https://api.trello.com/1/boards/B4R',
-            json={'id': 'B4R', 'name': 'Bar Board'},
-        )
-        responses.add(
-            responses.GET,
-            'https://api.trello.com/1/members/me/boards',
-            json=[self.BOARD],
-        )
-        responses.add(
-            responses.GET,
-            'https://api.trello.com/1/cards/C4RD/actions',
-            json=[self.COMMENT1, self.COMMENT2],
-        )
 
-    @responses.activate
-    def test_get_boards_config(self):
-        self.config['mytrello']['include_boards'] = 'F00, B4R'
-        conf = self.validate()
+    @pytest.fixture(autouse=True)
+    def mock_api(self):
+        with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
+            rsps.add(
+                responses.GET,
+                'https://api.trello.com/1/lists/L15T/cards/open',
+                json=[self.CARD1, self.CARD2, self.CARD3],
+            )
+            rsps.add(
+                responses.GET,
+                'https://api.trello.com/1/boards/B04RD/lists/open',
+                json=[self.LIST1, self.LIST2],
+            )
+            rsps.add(
+                responses.GET,
+                'https://api.trello.com/1/boards/F00',
+                json={'id': 'F00', 'name': 'Foo Board'},
+            )
+            rsps.add(
+                responses.GET,
+                'https://api.trello.com/1/boards/B4R',
+                json={'id': 'B4R', 'name': 'Bar Board'},
+            )
+            rsps.add(
+                responses.GET,
+                'https://api.trello.com/1/members/me/boards',
+                json=[self.BOARD],
+            )
+            rsps.add(
+                responses.GET,
+                'https://api.trello.com/1/cards/C4RD/actions',
+                json=[self.COMMENT1, self.COMMENT2],
+            )
+            yield rsps
+
+    def test_get_boards_config(self, config):
+        config['mytrello']['include_boards'] = 'F00, B4R'
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         boards = service.get_boards()
         assert list(boards) == [
@@ -128,79 +133,69 @@ class TestTrelloService(ConfigTest):
             {'id': 'B4R', 'name': 'Bar Board'},
         ]
 
-    @responses.activate
-    def test_get_boards_api(self):
-        conf = self.validate()
+    def test_get_boards_api(self, config):
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         boards = service.get_boards()
         assert list(boards) == [self.BOARD]
 
-    @responses.activate
-    def test_get_lists(self):
-        conf = self.validate()
+    def test_get_lists(self, config):
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         lists = service.get_lists('B04RD')
         assert list(lists) == [self.LIST1, self.LIST2]
 
-    @responses.activate
-    def test_get_lists_include(self):
-        self.config['mytrello']['include_lists'] = 'List 1'
-        conf = self.validate()
+    def test_get_lists_include(self, config):
+        config['mytrello']['include_lists'] = 'List 1'
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         lists = service.get_lists('B04RD')
         assert list(lists) == [self.LIST1]
 
-    @responses.activate
-    def test_get_lists_exclude(self):
-        self.config['mytrello']['exclude_lists'] = 'List 1'
-        conf = self.validate()
+    def test_get_lists_exclude(self, config):
+        config['mytrello']['exclude_lists'] = 'List 1'
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         lists = service.get_lists('B04RD')
         assert list(lists) == [self.LIST2]
 
-    @responses.activate
-    def test_get_cards(self):
-        conf = self.validate()
+    def test_get_cards(self, config):
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         cards = service.get_cards('L15T')
         assert list(cards) == [self.CARD1, self.CARD2, self.CARD3]
 
-    @responses.activate
-    def test_get_cards_assigned(self):
-        self.config['mytrello']['only_if_assigned'] = 'tintin'
-        conf = self.validate()
+    def test_get_cards_assigned(self, config):
+        config['mytrello']['only_if_assigned'] = 'tintin'
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         cards = service.get_cards('L15T')
         assert list(cards) == [self.CARD1]
 
-    @responses.activate
-    def test_get_cards_assigned_unassigned(self):
-        self.config['mytrello'].update(
+    def test_get_cards_assigned_unassigned(self, config):
+        config['mytrello'].update(
             {'only_if_assigned': 'tintin', 'also_unassigned': 'true'}
         )
-        conf = self.validate()
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         cards = service.get_cards('L15T')
         assert list(cards) == [self.CARD1, self.CARD3]
 
-    @responses.activate
-    def test_get_comments(self):
-        conf = self.validate()
+    def test_get_comments(self, config):
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         comments = service.get_comments('C4RD')
         assert list(comments) == [self.COMMENT1, self.COMMENT2]
 
-    @responses.activate
-    def test_annotations(self):
-        conf = self.validate()
+    def test_annotations(self, config):
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         annotations = service.annotations(self.CARD1)
         assert list(annotations) == ["@luidgi - Preums", "@mario - Deuz"]
 
-    @responses.activate
-    def test_annotations_with_link(self):
-        self.config['general']['annotation_links'] = 'true'
-        conf = self.validate()
+    def test_annotations_with_link(self, config):
+        config['general']['annotation_links'] = 'true'
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         annotations = service.annotations(self.CARD1)
         assert list(annotations) == [
@@ -209,12 +204,11 @@ class TestTrelloService(ConfigTest):
             "@mario - Deuz",
         ]
 
-    @responses.activate
-    def test_issues(self):
-        self.config['mytrello'].update(
+    def test_issues(self, config):
+        config['mytrello'].update(
             {'include_lists': 'List 1', 'only_if_assigned': 'tintin'}
         )
-        conf = self.validate()
+        conf = validate(config)
         service = get_service_instances(conf)[0]
         issues = service.issues()
         expected = {
@@ -237,23 +231,21 @@ class TestTrelloService(ConfigTest):
         actual = TaskConstructor(next(issues)).get_taskwarrior_record()
         assert expected == actual
 
-    maxDiff = None
+    def test_validate_config(self, config):
+        validate(config)
 
-    def test_validate_config(self):
-        self.validate()
+    def test_valid_config_no_access_token(self, config, assert_validation_error):
+        del config['mytrello']['token']
 
-    def test_valid_config_no_access_token(self):
-        del self.config['mytrello']['token']
+        assert_validation_error(config, '[mytrello]\ntoken  <- Field required')
 
-        self.assertValidationError('[mytrello]\ntoken  <- Field required')
+    def test_valid_config_no_api_key(self, config, assert_validation_error):
+        del config['mytrello']['api_key']
 
-    def test_valid_config_no_api_key(self):
-        del self.config['mytrello']['api_key']
+        assert_validation_error(config, '[mytrello]\napi_key  <- Field required')
 
-        self.assertValidationError('[mytrello]\napi_key  <- Field required')
-
-    def test_keyring_service(self):
+    def test_keyring_service(self, config):
         """Checks that the keyring service name"""
-        conf = self.validate()
+        conf = validate(config)
         keyring_service = conf.service_configs[0].keyring_service
         assert "trello://XXXX@trello.com" == keyring_service
