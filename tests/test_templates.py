@@ -1,14 +1,12 @@
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.config.schema import MainSectionConfig
 
-from .base import ConfigTest, DumbConfig, DumbIssue
+from .base import DumbConfig, DumbIssue
 
 
-class TestTemplates(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.arbitrary_default_description = 'Construct Library on Terminus'
-        self.arbitrary_issue = {'project': 'end_of_empire', 'priority': 'H'}
+class TestTemplates:
+    arbitrary_default_description = 'Construct Library on Terminus'
+    arbitrary_issue = {'project': 'end_of_empire', 'priority': 'H'}
 
     def get_issue(self, templates=None, issue=None, description=None, add_tags=None):
         templates = {} if templates is None else templates
