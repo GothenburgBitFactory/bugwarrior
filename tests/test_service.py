@@ -7,27 +7,14 @@ import unittest.mock
 import pytest
 
 from bugwarrior import services
-from bugwarrior.config import ServiceConfig, schema
+from bugwarrior.config import ServiceConfig
 
-from .base import DumbConfig, DumbService
+from .base import DumbService, make_issue, make_service
 
 LONG_MESSAGE = """\
 Some message that is over 100 characters. This message is so long it's
 going to fill up your floppy disk taskwarrior backup. Actually it's not
 that long.""".replace('\n', ' ')
-
-
-def make_service(general_overrides=None, config_overrides=None):
-    main_config = schema.MainSectionConfig(
-        targets=['test'], **(general_overrides or {})
-    )
-    service_config = DumbConfig(target='test', **(config_overrides or {}))
-    return DumbService(service_config, main_config)
-
-
-def make_issue(general_overrides=None, config_overrides=None):
-    service = make_service(general_overrides, config_overrides)
-    return service.get_issue_for_record({})
 
 
 def check_architecture(klass: abc.ABCMeta):

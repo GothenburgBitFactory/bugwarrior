@@ -1,28 +1,21 @@
 from bugwarrior.collect import TaskConstructor
-from bugwarrior.config.schema import MainSectionConfig
 
-from .base import DumbConfig, DumbIssue
+from .base import make_issue
 
 
 class TestTemplates:
     arbitrary_default_description = 'Construct Library on Terminus'
     arbitrary_issue = {'project': 'end_of_empire', 'priority': 'H'}
 
-    def get_issue(self, templates=None, issue=None, description=None, add_tags=None):
+    def get_issue(self, templates=None, add_tags=None):
         templates = {} if templates is None else templates
-        template_kwargs = {f'{key}_template': value for key, value in templates.items()}
-        config = DumbConfig(
-            target='dummy', add_tags=add_tags if add_tags else [], **template_kwargs
-        )
-        main_config = MainSectionConfig(targets=[])
+        overrides = {f'{key}_template': value for key, value in templates.items()}
+        if add_tags:
+            overrides['add_tags'] = add_tags
 
-        issue = DumbIssue({}, config, main_config, {})
-        issue.to_taskwarrior = lambda: (
-            self.arbitrary_issue if description is None else description
-        )
-        issue.get_default_description = lambda: (
-            self.arbitrary_default_description if description is None else description
-        )
+        issue = make_issue(config_overrides=overrides)
+        issue.to_taskwarrior = lambda: self.arbitrary_issue
+        issue.get_default_description = lambda: self.arbitrary_default_description
         return issue
 
     def test_default_taskwarrior_record(self):

@@ -3,7 +3,7 @@ import typing
 import unittest.mock
 
 from bugwarrior import config, services
-from bugwarrior.config import validation
+from bugwarrior.config import schema, validation
 from bugwarrior.config.load import format_config
 
 
@@ -51,6 +51,19 @@ class DumbService(services.Service):
 
     def issues(self):
         raise NotImplementedError
+
+
+def make_service(general_overrides=None, config_overrides=None):
+    main_config = schema.MainSectionConfig(
+        targets=['test'], **(general_overrides or {})
+    )
+    service_config = DumbConfig(target='test', **(config_overrides or {}))
+    return DumbService(service_config, main_config)
+
+
+def make_issue(general_overrides=None, config_overrides=None):
+    service = make_service(general_overrides, config_overrides)
+    return service.get_issue_for_record({})
 
 
 #: Modules that import get_service by name and must be patched together so the
