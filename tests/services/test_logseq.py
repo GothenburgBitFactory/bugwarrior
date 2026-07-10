@@ -182,8 +182,7 @@ class TestLogseqIssue:
         expected = {
             "annotations": [],
             "description": f"(bw)#{self.test_record['id']}"
-            + " - Do something http://example.com/page#NotATag `#code`"
-            + " #【Test tag one】 #【TestTagTwo】 #TestTagThree"
+            + " - Do something http://example.com/pag"
             + " .. "
             + self.test_extra["baseURI"]
             + self.test_record["uuid"],

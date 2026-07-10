@@ -312,7 +312,7 @@ class TestPivotalTrackerIssue:
                 '@task - status: False - Port 90',
             ],
             'description': (
-                '(bw)Story#561 - Tractor beam loses power intermittently .. '
+                '(bw)Story#561 - Tractor beam loses power intermitte .. '
                 'http://localhost/story/show/561'
             ),
             'pivotalclosed': story_date,

@@ -9,7 +9,8 @@ import pytest
 from bugwarrior import services
 from bugwarrior.config import ServiceConfig
 
-from .base import DumbService, make_issue, make_service
+from .base import DumbService, make_issue
+from .services.base import get_mock_service
 
 LONG_MESSAGE = """\
 Some message that is over 100 characters. This message is so long it's
@@ -41,7 +42,7 @@ class TestService:
         check_architecture(services.Service)
 
     def test_build_annotations_default(self):
-        service = make_service()
+        service = get_mock_service(DumbService)
 
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com'
@@ -51,7 +52,9 @@ class TestService:
         ]
 
     def test_build_annotations_limited(self):
-        service = make_service(general_overrides={'annotation_length': '20'})
+        service = get_mock_service(
+            DumbService, general_overrides={'annotation_length': '20'}
+        )
 
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com'
@@ -59,7 +62,9 @@ class TestService:
         assert annotations == ['@some_author - Some message that is...']
 
     def test_build_annotations_limitless(self):
-        service = make_service(general_overrides={'annotation_length': None})
+        service = get_mock_service(
+            DumbService, general_overrides={'annotation_length': None}
+        )
 
         annotations = service.build_annotations(
             (('some_author', LONG_MESSAGE),), 'example.com'
@@ -71,7 +76,7 @@ class TestService:
             DumbService, 'API_VERSION', new=services.LATEST_API_VERSION + 1
         ):
             with pytest.raises(ValueError, match="Incompatible Service"):
-                make_service()
+                get_mock_service(DumbService)
 
     def test_api_latest_version(self):
         basedir = pathlib.Path(__file__).parent.parent

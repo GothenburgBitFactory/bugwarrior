@@ -77,8 +77,7 @@ class TestBTSService:
             'btsurl': 'https://bugs.debian.org/810629',
             'btssource': '',
             'description': (
-                '(bw)Is#810629 - ITP: bugwarrior -- Pull tickets from github, '
-                'bitbucket, bugzilla, jira, trac, and others into taskwa .. '
+                '(bw)Is#810629 - ITP: bugwarrior -- Pull tickets fro .. '
                 'https://bugs.debian.org/810629'
             ),
             'priority': 'L',
