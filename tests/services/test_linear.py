@@ -8,7 +8,6 @@ from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.linear import LinearService
 
 from ..base import validate
-from .base import get_mock_service
 
 RESPONSE = json.loads(
     """
@@ -81,6 +80,8 @@ RESPONSE = json.loads(
 )
 
 
+SERVICE_CLASS = LinearService
+
 SERVICE_CONFIG = {
     "service": "linear",
     "api_token": "abc123",
@@ -139,10 +140,6 @@ class TestLinearConfig:
 
 
 class TestLinearIssue:
-    @pytest.fixture
-    def service(self):
-        return get_mock_service(LinearService, SERVICE_CONFIG)
-
     @pytest.fixture(autouse=True)
     def mock_api(self):
         with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
@@ -264,8 +261,7 @@ class TestLinearIssue:
         issue = service.get_issue_for_record(record, {})
         assert issue.to_taskwarrior()["priority"] == "M"
 
-    @responses.activate
-    def test_issues_paginates(self, service):
+    def test_issues_paginates(self, service, mock_api):
         """Drains every page when Linear signals hasNextPage."""
         page_one = {
             "data": {
@@ -283,16 +279,18 @@ class TestLinearIssue:
                 }
             }
         }
-        responses.add(responses.POST, "https://api.linear.app/graphql", json=page_one)
-        responses.add(responses.POST, "https://api.linear.app/graphql", json=page_two)
+        # Replace the default single-page registration from mock_api.
+        mock_api.reset()
+        mock_api.add(responses.POST, "https://api.linear.app/graphql", json=page_one)
+        mock_api.add(responses.POST, "https://api.linear.app/graphql", json=page_two)
 
         identifiers = [issue.record["identifier"] for issue in service.issues()]
         assert identifiers == ["DUS-5", "DUS-1"]
 
         # Two HTTP calls were made, and the second one carried the cursor
         # returned by the first.
-        assert len(responses.calls) == 2
-        first_body = json.loads(responses.calls[0].request.body)
-        second_body = json.loads(responses.calls[1].request.body)
+        assert len(mock_api.calls) == 2
+        first_body = json.loads(mock_api.calls[0].request.body)
+        second_body = json.loads(mock_api.calls[1].request.body)
         assert first_body["variables"]["after"] is None
         assert second_body["variables"]["after"] == "cursor-page-2"
