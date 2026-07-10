@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -18,14 +17,16 @@ SERVICE_CONFIG = {
 }
 
 
+CREATED = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(1)
+UPDATED = datetime.now(timezone.utc).replace(microsecond=0)
+
+
 @pytest.fixture
-def data():
-    created = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(1)
-    updated = datetime.now(timezone.utc).replace(microsecond=0)
-    record = {
+def record():
+    return {
         "assigned_to": {"id": 35546, "name": "Adam Coddington"},
         "author": {"id": 35546, "name": "Adam Coddington"},
-        "created_on": created.isoformat(),
+        "created_on": CREATED.isoformat(),
         "due_on": "2016-12-30T16:40:29Z",
         "description": "This is a test issue.",
         "done_ratio": 0,
@@ -35,34 +36,33 @@ def data():
         "status": {"id": 1, "name": "New"},
         "subject": "Biscuits",
         "tracker": {"id": 4, "name": "Task"},
-        "updated_on": updated.isoformat(),
+        "updated_on": UPDATED.isoformat(),
     }
-    return SimpleNamespace(created=created, updated=updated, record=record)
 
 
 class TestRedmineIssue:
-    def test_to_taskwarrior(self, service, data):
+    def test_to_taskwarrior(self, service, record):
         arbitrary_url = 'http://lkjlj.com'
 
-        issue = service.get_issue_for_record(data.record)
+        issue = service.get_issue_for_record(record)
 
         expected_output = {
             'annotations': [],
             'project': issue.get_project_name(),
             'priority': 'H',
             issue.DUEDATE: None,
-            issue.ASSIGNED_TO: data.record['assigned_to']['name'],
-            issue.AUTHOR: data.record['author']['name'],
+            issue.ASSIGNED_TO: record['assigned_to']['name'],
+            issue.AUTHOR: record['author']['name'],
             issue.CATEGORY: None,
-            issue.DESCRIPTION: data.record['description'],
+            issue.DESCRIPTION: record['description'],
             issue.ESTIMATED_HOURS: None,
             issue.STATUS: 'New',
             issue.URL: arbitrary_url,
-            issue.SUBJECT: data.record['subject'],
+            issue.SUBJECT: record['subject'],
             issue.TRACKER: 'Task',
-            issue.CREATED_ON: data.created,
-            issue.UPDATED_ON: data.updated,
-            issue.ID: data.record['id'],
+            issue.CREATED_ON: CREATED,
+            issue.UPDATED_ON: UPDATED,
+            issue.ID: record['id'],
             issue.PROJECT_NAME: 'Boiled Cabbage - Yum',
             issue.SPENT_HOURS: None,
             issue.START_DATE: None,
@@ -77,9 +77,9 @@ class TestRedmineIssue:
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues(self, service, data):
+    def test_issues(self, service, record):
         responses.get(
-            'https://something/issues.json?limit=100', json={'issues': [data.record]}
+            'https://something/issues.json?limit=100', json={'issues': [record]}
         )
 
         issue = next(service.issues())
@@ -97,13 +97,13 @@ class TestRedmineIssue:
             'redmineassignedto': 'Adam Coddington',
             'redmineauthor': 'Adam Coddington',
             issue.CATEGORY: None,
-            issue.DESCRIPTION: data.record['description'],
+            issue.DESCRIPTION: record['description'],
             issue.ESTIMATED_HOURS: None,
             issue.STATUS: 'New',
             'redminesubject': 'Biscuits',
             'redminetracker': 'Task',
-            issue.CREATED_ON: data.created,
-            issue.UPDATED_ON: data.updated,
+            issue.CREATED_ON: CREATED,
+            issue.UPDATED_ON: UPDATED,
             'redmineurl': 'https://something/issues/363901',
             'tags': [],
         }

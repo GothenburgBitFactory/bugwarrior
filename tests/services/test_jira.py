@@ -1,6 +1,5 @@
 from collections import namedtuple
 from datetime import datetime, timezone
-from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -24,35 +23,39 @@ SERVICE_CONFIG = {
 }
 
 
-@pytest.fixture
-def data():
-    estimation = 3600
-    arbitrary_id = '10'
-    arbitrary_subtask_ids = ['11', '12']
-    arbitrary_parent_id = '13'
-    arbitrary_namedfield_valueinside = 77
-    project = 'DONUT'
-    summary = 'lkjaldsfjaldf'
+ESTIMATION = 3600
+ARBITRARY_ID = '10'
+ARBITRARY_SUBTASK_IDS = ['11', '12']
+ARBITRARY_PARENT_ID = '13'
+ARBITRARY_NAMEDFIELD_VALUEINSIDE = 77
+PROJECT = 'DONUT'
+SUMMARY = 'lkjaldsfjaldf'
 
-    record = {
+
+@pytest.fixture
+def record():
+    return {
         'fields': {
             'priority': 'Blocker',
-            'summary': summary,
-            'timeestimate': estimation,
+            'summary': SUMMARY,
+            'timeestimate': ESTIMATION,
             'created': '2016-06-06T06:07:08.123-0700',
             'fixVersions': [{'name': '1.2.3'}],
             'issuetype': {'name': 'Epic'},
             'status': {'name': 'Open'},
             'subtasks': [
-                {'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids
+                {'key': 'DONUT-%s' % subtask} for subtask in ARBITRARY_SUBTASK_IDS
             ],
-            'parent': {'key': f'DONUT-{arbitrary_parent_id}'},
+            'parent': {'key': f'DONUT-{ARBITRARY_PARENT_ID}'},
             'customfield_10000': 'foo',
-            'namedfield': {'valueinside': arbitrary_namedfield_valueinside},
+            'namedfield': {'valueinside': ARBITRARY_NAMEDFIELD_VALUEINSIDE},
         },
-        'key': '%s-%s' % (project, arbitrary_id),
+        'key': '%s-%s' % (PROJECT, ARBITRARY_ID),
     }
 
+
+@pytest.fixture
+def record_with_due(record):
     record_with_due = record.copy()
     record_with_due['fields'] = record_with_due['fields'].copy()
     record_with_due['fields']['Sprint'] = [
@@ -60,14 +63,7 @@ def data():
                     state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4\
                     55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]'
     ]
-
-    return SimpleNamespace(
-        estimation=estimation,
-        project=project,
-        summary=summary,
-        record=record,
-        record_with_due=record_with_due,
-    )
+    return record_with_due
 
 
 class FakeJiraClient:
@@ -121,10 +117,10 @@ class TestJiraService:
 
 class TestJiraIssue:
     @pytest.fixture
-    def service(self, data, make_service):
+    def service(self, record, make_service):
         with mock.patch('jira.client.JIRA._get_json'):
             service = make_service()
-        service.jira = FakeJiraClient(data.record)
+        service.jira = FakeJiraClient(record)
         service.sprint_field_names = ['Sprint']
         return service
 
@@ -133,7 +129,7 @@ class TestJiraIssue:
             ['jiraextra1:customfield_10000', 'jiraextra2:namedfield.valueinside']
         )
 
-    def test_to_taskwarrior(self, service, data):
+    def test_to_taskwarrior(self, service, record):
         url = 'http://one'
         extra = {
             'annotations': ['an annotation'],
@@ -141,11 +137,11 @@ class TestJiraIssue:
             'sprint_field_names': [],
         }
 
-        issue = service.get_issue_for_record(data.record, extra)
+        issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
-            'project': data.project,
-            'priority': (issue.PRIORITY_MAP[data.record['fields']['priority']]),
+            'project': PROJECT,
+            'priority': (issue.PRIORITY_MAP[record['fields']['priority']]),
             'annotations': extra['annotations'],
             'due': None,
             'tags': [],
@@ -158,10 +154,10 @@ class TestJiraIssue:
             'jiraextra1': 'foo',
             'jiraextra2': 77,
             issue.URL: url,
-            issue.FOREIGN_ID: data.record['key'],
-            issue.SUMMARY: data.summary,
+            issue.FOREIGN_ID: record['key'],
+            issue.SUMMARY: SUMMARY,
             issue.DESCRIPTION: 'issue body',
-            issue.ESTIMATE: data.estimation / 60 / 60,
+            issue.ESTIMATE: ESTIMATION / 60 / 60,
         }
 
         def get_url(*args):
@@ -172,9 +168,9 @@ class TestJiraIssue:
 
         assert actual_output == expected_output
 
-    def test_to_taskwarrior_sprint_with_goal(self, service, data):
-        record_with_goal = data.record.copy()
-        record_with_goal['fields'] = data.record_with_due['fields'].copy()
+    def test_to_taskwarrior_sprint_with_goal(self, service, record, record_with_due):
+        record_with_goal = record.copy()
+        record_with_goal['fields'] = record_with_due['fields'].copy()
         record_with_goal['fields']['Sprint'] = [
             'com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
             state=ACTIVE,name=Sprint 1,goal=Do foo, bar, baz,startDate=2016-09-06T16:08:07.4\
@@ -189,7 +185,7 @@ class TestJiraIssue:
         issue = service.get_issue_for_record(record_with_goal, extra)
 
         expected_output = {
-            'project': data.project,
+            'project': PROJECT,
             'priority': (issue.PRIORITY_MAP[record_with_goal['fields']['priority']]),
             'annotations': extra['annotations'],
             'due': datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc),
@@ -204,9 +200,9 @@ class TestJiraIssue:
             'jiraextra2': 77,
             issue.URL: url,
             issue.FOREIGN_ID: record_with_goal['key'],
-            issue.SUMMARY: data.summary,
+            issue.SUMMARY: SUMMARY,
             issue.DESCRIPTION: None,
-            issue.ESTIMATE: data.estimation / 60 / 60,
+            issue.ESTIMATE: ESTIMATION / 60 / 60,
         }
 
         def get_url(*args):
@@ -246,21 +242,22 @@ class TestJiraIssue:
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_get_due(self, service, data):
+    def test_get_due(self, service, record_with_due):
         issue = service.get_issue_for_record(
-            data.record_with_due,
-            extra={'sprint_field_names': service.sprint_field_names},
+            record_with_due, extra={'sprint_field_names': service.sprint_field_names}
         )
 
         assert issue.get_due() == datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc)
 
-    def test_get_due_sprint_dict_missing_end_date(self, service, data):
-        record = data.record.copy()
-        record['fields'] = data.record['fields'].copy()
-        record['fields']['Sprint'] = [{'id': 1, 'state': 'active', 'name': 'Sprint 1'}]
+    def test_get_due_sprint_dict_missing_end_date(self, service, record):
+        sprint_record = record.copy()
+        sprint_record['fields'] = record['fields'].copy()
+        sprint_record['fields']['Sprint'] = [
+            {'id': 1, 'state': 'active', 'name': 'Sprint 1'}
+        ]
 
         issue = service.get_issue_for_record(
-            record, extra={'sprint_field_names': service.sprint_field_names}
+            sprint_record, extra={'sprint_field_names': service.sprint_field_names}
         )
 
         assert issue.get_due() is None

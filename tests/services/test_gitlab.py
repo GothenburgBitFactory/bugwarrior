@@ -1,5 +1,4 @@
 from datetime import date, datetime, timedelta, timezone
-from types import SimpleNamespace
 
 import pytest
 import responses
@@ -9,13 +8,14 @@ from bugwarrior.services.gitlab import GitlabClient, GitlabService
 
 from ..base import get_validated_service, validate
 
+CREATED = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(microsecond=0)
+UPDATED = datetime.now(timezone.utc).replace(microsecond=0)
+DUEDATE = datetime.combine(date.today(), datetime.min.time(), tzinfo=timezone.utc)
+
 
 @pytest.fixture
-def data():
-    created = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(microsecond=0)
-    updated = datetime.now(timezone.utc).replace(microsecond=0)
-    duedate = datetime.combine(date.today(), datetime.min.time(), tzinfo=timezone.utc)
-    issue = {
+def issue():
+    return {
         "id": 42,
         "iid": 3,
         "project_id": 8,
@@ -26,7 +26,7 @@ def data():
             "id": 1,
             "title": "v1.0",
             "description": "",
-            "due_date": duedate.date().isoformat(),
+            "due_date": DUEDATE.date().isoformat(),
             "state": "closed",
             "updated_at": "2012-07-04T13:42:48Z",
             "created_at": "2012-07-04T13:42:48Z",
@@ -58,12 +58,16 @@ def data():
             "created_at": "2012-05-23T08:00:58Z",
         },
         "state": "opened",
-        "updated_at": updated.isoformat(),
-        "created_at": created.isoformat(),
+        "updated_at": UPDATED.isoformat(),
+        "created_at": CREATED.isoformat(),
         "weight": 3,
         "work_in_progress": True,
     }
-    extra = {
+
+
+@pytest.fixture
+def extra():
+    return {
         'issue_url': 'https://my-git.org/arbitrary_username/project/issues/3',
         'project': 'project',
         'namespace': 'arbitrary_namespace',
@@ -71,7 +75,11 @@ def data():
         'annotations': [],
         'description': '',
     }
-    todo = {
+
+
+@pytest.fixture
+def todo():
+    return {
         "id": 42,
         "project": {
             "id": 2,
@@ -101,7 +109,7 @@ def data():
                 "id": 1,
                 "title": "v1.0",
                 "description": "",
-                "due_date": duedate.date().isoformat(),
+                "due_date": DUEDATE.date().isoformat(),
                 "state": "closed",
                 "updated_at": "2012-07-04T13:42:48Z",
                 "created_at": "2012-07-04T13:42:48Z",
@@ -123,25 +131,33 @@ def data():
                 "created_at": "2012-05-23T08:00:58Z",
             },
             "state": "opened",
-            "updated_at": updated.isoformat(),
-            "created_at": created.isoformat(),
+            "updated_at": UPDATED.isoformat(),
+            "created_at": CREATED.isoformat(),
             "weight": 3,
             "work_in_progress": True,
         },
         "target_url": "https://my-git.org/arbitrary_username/project/issues/3",
         "body": "Add user settings",
         "state": "pending",
-        "created_at": created.isoformat(),
-        "updated_at": updated.isoformat(),
+        "created_at": CREATED.isoformat(),
+        "updated_at": UPDATED.isoformat(),
     }
-    todo_extra = {
+
+
+@pytest.fixture
+def todo_extra():
+    return {
         'issue_url': 'https://my-git.org/arbitrary_username/project/issues/3',
         'project': 'project',
         'namespace': 'arbitrary_namespace',
         'type': 'todo',
         'annotations': [],
     }
-    mr = {
+
+
+@pytest.fixture
+def mr():
+    return {
         "id": 42,
         "iid": 3,
         "project_id": 8,
@@ -152,7 +168,7 @@ def data():
             "id": 1,
             "title": "v1.0",
             "description": "",
-            "due_date": duedate.date().isoformat(),
+            "due_date": DUEDATE.date().isoformat(),
             "state": "closed",
             "updated_at": "2012-07-04T13:42:48Z",
             "created_at": "2012-07-04T13:42:48Z",
@@ -174,12 +190,16 @@ def data():
             "created_at": "2012-05-23T08:00:58Z",
         },
         "state": "opened",
-        "updated_at": updated.isoformat(),
-        "created_at": created.isoformat(),
+        "updated_at": UPDATED.isoformat(),
+        "created_at": CREATED.isoformat(),
         "weight": 3,
         "work_in_progress": True,
     }
-    mr_extra = {
+
+
+@pytest.fixture
+def mr_extra():
+    return {
         'issue_url': 'https://my-git.org/arbitrary_username/project/merge_requests/3',
         'project': 'project',
         'namespace': 'arbitrary_namespace',
@@ -187,14 +207,18 @@ def data():
         'annotations': [],
         "description": "",
     }
-    project = {
+
+
+@pytest.fixture
+def project():
+    return {
         "id": 8,
         "description": "This is the description of an arbitrary project",
         "name": "Arbitrary Project",
         "name_with_namespace": "Arbitrary Namespace / Arbitrary Project",
         "path": "arbitrary_project",
         "path_with_namespace": "arbitrary_namespace/arbitrary_project",
-        "created_at": created.isoformat(),
+        "created_at": CREATED.isoformat(),
         "default_branch": "main",
         "tag_list": [],
         "topics": [],
@@ -205,7 +229,7 @@ def data():
         "avatar_url": None,
         "forks_count": 7,
         "star_count": 11,
-        "last_activity_at": updated.isoformat(),
+        "last_activity_at": UPDATED.isoformat(),
         "namespace": {
             "id": 2,
             "name": "Arbitrary Namespace",
@@ -290,18 +314,6 @@ def data():
         "keep_latest_artifact": False,
         "permissions": {"project_access": None, "group_access": None},
     }
-    return SimpleNamespace(
-        created=created,
-        updated=updated,
-        duedate=duedate,
-        issue=issue,
-        extra=extra,
-        todo=todo,
-        todo_extra=todo_extra,
-        mr=mr,
-        mr_extra=mr_extra,
-        project=project,
-    )
 
 
 SERVICE_CLASS = GitlabService
@@ -369,21 +381,21 @@ class TestGitlabClient:
         assert expected_base_url == http_client._base_url()
 
     @responses.activate
-    def test_get_repo(self, client, data):
-        responses.get('https://my-git.org/api/v4/projects/8', json=data.project)
+    def test_get_repo(self, client, project):
+        responses.get('https://my-git.org/api/v4/projects/8', json=project)
         result = client.get_repo_cached(repo_id=8)
-        assert result == data.project
+        assert result == project
 
     @responses.activate
-    def test_get_repos(self, client, data):
+    def test_get_repos(self, client, project):
         responses.get(
             'https://my-git.org/api/v4/projects?simple=True&archived=False&page=1&per_page=100',
-            json=[data.project],
+            json=[project],
         )
         responses.get(
             'https://my-git.org/api/v4/projects'
             + '?simple=True&archived=False&membership=True&page=1&per_page=100',
-            json=[data.project],
+            json=[project],
         )
         responses.get(
             'https://my-git.org/api/v4/projects'
@@ -393,18 +405,16 @@ class TestGitlabClient:
         responses.get(
             'https://my-git.org/api/v4/projects/'
             + 'arbitrary_namespace%2Farbitrary_project?simple=true',
-            json=data.project,
+            json=project,
         )
-        responses.get(
-            'https://my-git.org/api/v4/projects/8?simple=true', json=data.project
-        )
+        responses.get('https://my-git.org/api/v4/projects/8?simple=true', json=project)
         responses.get(
             'https://my-git.org/api/v4/projects/non_existing?simple=true', json=[]
         )
         responses.get(
             'https://my-git.org/api/v4/projects'
             + '?simple=True&membership=True&owned=False&page=1&per_page=100',
-            json=[data.project],
+            json=[project],
         )
         responses.get(
             'https://my-git.org/api/v4/projects'
@@ -415,12 +425,12 @@ class TestGitlabClient:
         result = client.get_repos(
             include_repos=[], only_membership=False, only_owned=False
         )
-        assert result == [data.project]
+        assert result == [project]
 
         result = client.get_repos(
             include_repos=[], only_membership=True, only_owned=False
         )
-        assert result == [data.project]
+        assert result == [project]
 
         result = client.get_repos(
             include_repos=[], only_membership=True, only_owned=True
@@ -432,12 +442,12 @@ class TestGitlabClient:
             only_membership=False,
             only_owned=False,
         )
-        assert result == [data.project]
+        assert result == [project]
 
         result = client.get_repos(
             include_repos=['id:8'], only_membership=False, only_owned=False
         )
-        assert result == [data.project]
+        assert result == [project]
 
         # A repo that cannot be fetched is skipped rather than included.
         result = client.get_repos(
@@ -446,55 +456,53 @@ class TestGitlabClient:
         assert result == []
 
     @responses.activate
-    def test_get_notes(self, client, data):
+    def test_get_notes(self, client, issue):
         responses.get(
             'https://my-git.org/api/v4/projects/8/issues/3/notes?page=1&per_page=100',
             json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
         )
         expected = [{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}]
-        result = client.get_notes(data.issue['project_id'], 'issues', data.issue['iid'])
+        result = client.get_notes(issue['project_id'], 'issues', issue['iid'])
         assert result == expected
 
     @responses.activate
-    def test_get_repo_issues(self, client, data):
+    def test_get_repo_issues(self, client, issue):
         responses.get(
             'https://my-git.org/api/v4/projects/8/issues?state=opened&page=1&per_page=100',
-            json=[data.issue],
+            json=[issue],
         )
-        assert client.get_repo_issues(data.issue['project_id']) == {
-            data.issue['id']: (data.issue['project_id'], data.issue)
+        assert client.get_repo_issues(issue['project_id']) == {
+            issue['id']: (issue['project_id'], issue)
         }
 
     @responses.activate
-    def test_get_repo_merge_requests(self, client, data):
+    def test_get_repo_merge_requests(self, client, issue, mr):
         responses.get(
             'https://my-git.org/api/v4/projects/8/merge_requests?state=opened&page=1&per_page=100',
-            json=[data.mr],
+            json=[mr],
         )
-        assert client.get_repo_merge_requests(data.issue['project_id']) == {
-            data.mr['id']: (data.issue['project_id'], data.mr)
+        assert client.get_repo_merge_requests(issue['project_id']) == {
+            mr['id']: (issue['project_id'], mr)
         }
 
     @responses.activate
-    def test_get_issues_from_query(self, client, data):
+    def test_get_issues_from_query(self, client, issue):
         responses.get(
             'https://my-git.org/api/v4/'
             + 'issues?assignee_id=2&state=opened&scope=all&page=1&per_page=100',
-            json=[data.issue],
+            json=[issue],
         )
         assert client.get_issues_from_query(
             'issues?assignee_id=2&state=opened&scope=all'
-        ) == {data.issue['id']: (data.issue['project_id'], data.issue)}
+        ) == {issue['id']: (issue['project_id'], issue)}
 
     @responses.activate
-    def test_get_todos(self, client, data):
+    def test_get_todos(self, client, todo):
         responses.get(
             'https://my-git.org/api/v4/todos?state=pending&page=1&per_page=100',
-            json=[data.todo],
+            json=[todo],
         )
-        assert client.get_todos('todos?state=pending') == [
-            (data.todo['project'], data.todo)
-        ]
+        assert client.get_todos('todos?state=pending') == [(todo['project'], todo)]
 
 
 class TestGitlabService:
@@ -590,11 +598,11 @@ class TestGitlabService:
         repo = {'path_with_namespace': 'foobar/baz', 'id': 1234}
         assert self.get_service(config).filter_repos(repo)
 
-    def test_include_only_if_assigned(self, config, data):
+    def test_include_only_if_assigned(self, config, issue):
         config['myservice']['only_if_assigned'] = 'jack_smith'
-        assert self.get_service(config).include((1, data.issue))
+        assert self.get_service(config).include((1, issue))
         config['myservice']['only_if_assigned'] = 'smack_jith'
-        assert not self.get_service(config).include((1, data.issue))
+        assert not self.get_service(config).include((1, issue))
 
     def test_default_priorities(self, config):
         config['myservice'].update(
@@ -646,96 +654,96 @@ class TestGitlabService:
 
 
 class TestGitlabIssue:
-    def test_to_taskwarrior(self, service, data):
-        issue = service.get_issue_for_record(data.issue, data.extra)
+    def test_to_taskwarrior(self, service, issue, extra):
+        gitlab_issue = service.get_issue_for_record(issue, extra)
 
         expected_output = {
-            'project': data.extra['project'],
+            'project': extra['project'],
             'priority': service.config.default_priority,
             'annotations': [],
             'tags': [],
-            'due': data.duedate.replace(microsecond=0),
-            'entry': data.created.replace(microsecond=0),
-            issue.URL: data.extra['issue_url'],
-            issue.REPO: 'project',
-            issue.STATE: data.issue['state'],
-            issue.TYPE: data.extra['type'],
-            issue.TITLE: data.issue['title'],
-            issue.NUMBER: str(data.issue['iid']),
-            issue.UPDATED_AT: data.updated.replace(microsecond=0),
-            issue.CREATED_AT: data.created.replace(microsecond=0),
-            issue.DUEDATE: data.duedate,
-            issue.DESCRIPTION: data.issue['description'],
-            issue.MILESTONE: data.issue['milestone']['title'],
-            issue.UPVOTES: 0,
-            issue.DOWNVOTES: 0,
-            issue.WORK_IN_PROGRESS: 1,
-            issue.AUTHOR: 'john_smith',
-            issue.ASSIGNEE: 'jack_smith',
-            issue.NAMESPACE: 'arbitrary_namespace',
-            issue.WEIGHT: 3,
+            'due': DUEDATE.replace(microsecond=0),
+            'entry': CREATED.replace(microsecond=0),
+            gitlab_issue.URL: extra['issue_url'],
+            gitlab_issue.REPO: 'project',
+            gitlab_issue.STATE: issue['state'],
+            gitlab_issue.TYPE: extra['type'],
+            gitlab_issue.TITLE: issue['title'],
+            gitlab_issue.NUMBER: str(issue['iid']),
+            gitlab_issue.UPDATED_AT: UPDATED.replace(microsecond=0),
+            gitlab_issue.CREATED_AT: CREATED.replace(microsecond=0),
+            gitlab_issue.DUEDATE: DUEDATE,
+            gitlab_issue.DESCRIPTION: issue['description'],
+            gitlab_issue.MILESTONE: issue['milestone']['title'],
+            gitlab_issue.UPVOTES: 0,
+            gitlab_issue.DOWNVOTES: 0,
+            gitlab_issue.WORK_IN_PROGRESS: 1,
+            gitlab_issue.AUTHOR: 'john_smith',
+            gitlab_issue.ASSIGNEE: 'jack_smith',
+            gitlab_issue.NAMESPACE: 'arbitrary_namespace',
+            gitlab_issue.WEIGHT: 3,
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = gitlab_issue.to_taskwarrior()
 
         assert actual_output == expected_output
 
-    def test_custom_issue_priority(self, data, make_service):
+    def test_custom_issue_priority(self, issue, extra, make_service):
         overrides = {'default_issue_priority': 'L'}
         service = make_service(**overrides)
-        issue = service.get_issue_for_record(data.issue, data.extra)
+        gitlab_issue = service.get_issue_for_record(issue, extra)
         expected_output = {
-            'project': data.extra['project'],
+            'project': extra['project'],
             'priority': 'L',
             'annotations': [],
             'tags': [],
-            'due': data.duedate.replace(microsecond=0),
-            'entry': data.created.replace(microsecond=0),
-            issue.URL: data.extra['issue_url'],
-            issue.REPO: 'project',
-            issue.STATE: data.issue['state'],
-            issue.TYPE: data.extra['type'],
-            issue.TITLE: data.issue['title'],
-            issue.NUMBER: str(data.issue['iid']),
-            issue.UPDATED_AT: data.updated.replace(microsecond=0),
-            issue.CREATED_AT: data.created.replace(microsecond=0),
-            issue.DUEDATE: data.duedate,
-            issue.DESCRIPTION: data.issue['description'],
-            issue.MILESTONE: data.issue['milestone']['title'],
-            issue.UPVOTES: 0,
-            issue.DOWNVOTES: 0,
-            issue.WORK_IN_PROGRESS: 1,
-            issue.AUTHOR: 'john_smith',
-            issue.ASSIGNEE: 'jack_smith',
-            issue.NAMESPACE: 'arbitrary_namespace',
-            issue.WEIGHT: 3,
+            'due': DUEDATE.replace(microsecond=0),
+            'entry': CREATED.replace(microsecond=0),
+            gitlab_issue.URL: extra['issue_url'],
+            gitlab_issue.REPO: 'project',
+            gitlab_issue.STATE: issue['state'],
+            gitlab_issue.TYPE: extra['type'],
+            gitlab_issue.TITLE: issue['title'],
+            gitlab_issue.NUMBER: str(issue['iid']),
+            gitlab_issue.UPDATED_AT: UPDATED.replace(microsecond=0),
+            gitlab_issue.CREATED_AT: CREATED.replace(microsecond=0),
+            gitlab_issue.DUEDATE: DUEDATE,
+            gitlab_issue.DESCRIPTION: issue['description'],
+            gitlab_issue.MILESTONE: issue['milestone']['title'],
+            gitlab_issue.UPVOTES: 0,
+            gitlab_issue.DOWNVOTES: 0,
+            gitlab_issue.WORK_IN_PROGRESS: 1,
+            gitlab_issue.AUTHOR: 'john_smith',
+            gitlab_issue.ASSIGNEE: 'jack_smith',
+            gitlab_issue.NAMESPACE: 'arbitrary_namespace',
+            gitlab_issue.WEIGHT: 3,
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = gitlab_issue.to_taskwarrior()
 
         assert actual_output == expected_output
 
-    def test_custom_todo_priority(self, data, make_service):
+    def test_custom_todo_priority(self, todo, todo_extra, make_service):
         overrides = {'default_todo_priority': 'H'}
         service = make_service(**overrides)
         service.import_labels_as_tags = True
-        issue = service.get_issue_for_record(data.todo, data.todo_extra)
+        issue = service.get_issue_for_record(todo, todo_extra)
         expected_output = {
-            'project': data.todo_extra['project'],
+            'project': todo_extra['project'],
             'priority': overrides['default_todo_priority'],
             'annotations': [],
             'tags': [],
             'due': None,  # currently not parsed for ToDos
-            'entry': data.created.replace(microsecond=0),
-            issue.URL: data.todo_extra['issue_url'],
+            'entry': CREATED.replace(microsecond=0),
+            issue.URL: todo_extra['issue_url'],
             issue.REPO: 'project',
-            issue.STATE: data.todo['state'],
-            issue.TYPE: data.todo_extra['type'],
+            issue.STATE: todo['state'],
+            issue.TYPE: todo_extra['type'],
             issue.TITLE: 'Todo from %s for %s'
-            % (data.todo['author']['name'], data.todo['project']['path']),
-            issue.NUMBER: str(data.todo['id']),
-            issue.UPDATED_AT: data.updated.replace(microsecond=0),
-            issue.CREATED_AT: data.created.replace(microsecond=0),
+            % (todo['author']['name'], todo['project']['path']),
+            issue.NUMBER: str(todo['id']),
+            issue.UPDATED_AT: UPDATED.replace(microsecond=0),
+            issue.CREATED_AT: CREATED.replace(microsecond=0),
             issue.DUEDATE: None,  # Currently not parsed for ToDos
-            issue.DESCRIPTION: data.todo['body'],
+            issue.DESCRIPTION: todo['body'],
             issue.MILESTONE: None,
             issue.UPVOTES: 0,
             issue.DOWNVOTES: 0,
@@ -749,81 +757,81 @@ class TestGitlabIssue:
 
         assert actual_output == expected_output
 
-    def test_custom_mr_priority(self, data, make_service):
+    def test_custom_mr_priority(self, issue, mr, mr_extra, make_service):
         overrides = {'default_mr_priority': '', 'import_labels_as_tags': True}
         service = make_service(**overrides)
-        issue = service.get_issue_for_record(data.mr, data.mr_extra)
+        gitlab_issue = service.get_issue_for_record(mr, mr_extra)
         expected_output = {
-            'project': data.mr_extra['project'],
+            'project': mr_extra['project'],
             'priority': overrides['default_mr_priority'],
             'annotations': [],
             'tags': ['feature'],
-            'due': data.duedate.replace(microsecond=0),
-            'entry': data.created.replace(microsecond=0),
-            issue.URL: data.mr_extra['issue_url'],
-            issue.REPO: 'project',
-            issue.STATE: data.mr['state'],
-            issue.TYPE: data.mr_extra['type'],
-            issue.TITLE: data.mr['title'],
-            issue.NUMBER: str(data.mr['iid']),
-            issue.UPDATED_AT: data.updated.replace(microsecond=0),
-            issue.CREATED_AT: data.created.replace(microsecond=0),
-            issue.DUEDATE: data.duedate,
-            issue.DESCRIPTION: data.mr['description'],
-            issue.MILESTONE: data.issue['milestone']['title'],
-            issue.UPVOTES: 0,
-            issue.DOWNVOTES: 0,
-            issue.WORK_IN_PROGRESS: 1,
-            issue.AUTHOR: 'john_smith',
-            issue.ASSIGNEE: 'jack_smith',
-            issue.NAMESPACE: 'arbitrary_namespace',
-            issue.WEIGHT: 3,
+            'due': DUEDATE.replace(microsecond=0),
+            'entry': CREATED.replace(microsecond=0),
+            gitlab_issue.URL: mr_extra['issue_url'],
+            gitlab_issue.REPO: 'project',
+            gitlab_issue.STATE: mr['state'],
+            gitlab_issue.TYPE: mr_extra['type'],
+            gitlab_issue.TITLE: mr['title'],
+            gitlab_issue.NUMBER: str(mr['iid']),
+            gitlab_issue.UPDATED_AT: UPDATED.replace(microsecond=0),
+            gitlab_issue.CREATED_AT: CREATED.replace(microsecond=0),
+            gitlab_issue.DUEDATE: DUEDATE,
+            gitlab_issue.DESCRIPTION: mr['description'],
+            gitlab_issue.MILESTONE: issue['milestone']['title'],
+            gitlab_issue.UPVOTES: 0,
+            gitlab_issue.DOWNVOTES: 0,
+            gitlab_issue.WORK_IN_PROGRESS: 1,
+            gitlab_issue.AUTHOR: 'john_smith',
+            gitlab_issue.ASSIGNEE: 'jack_smith',
+            gitlab_issue.NAMESPACE: 'arbitrary_namespace',
+            gitlab_issue.WEIGHT: 3,
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = gitlab_issue.to_taskwarrior()
 
         assert actual_output == expected_output
 
-    def test_work_in_progress(self, service, data):
-        data.issue['work_in_progress'] = False
-        issue = service.get_issue_for_record(data.issue, data.extra)
+    def test_work_in_progress(self, service, issue, extra):
+        issue['work_in_progress'] = False
+        gitlab_issue = service.get_issue_for_record(issue, extra)
 
         expected_output = {
-            'project': data.extra['project'],
+            'project': extra['project'],
             'priority': service.config.default_priority,
             'annotations': [],
             'tags': [],
-            'due': data.duedate.replace(microsecond=0),
-            'entry': data.created.replace(microsecond=0),
-            issue.URL: data.extra['issue_url'],
-            issue.REPO: 'project',
-            issue.STATE: data.issue['state'],
-            issue.TYPE: data.extra['type'],
-            issue.TITLE: data.issue['title'],
-            issue.NUMBER: str(data.issue['iid']),
-            issue.UPDATED_AT: data.updated.replace(microsecond=0),
-            issue.CREATED_AT: data.created.replace(microsecond=0),
-            issue.DUEDATE: data.duedate,
-            issue.DESCRIPTION: data.issue['description'],
-            issue.MILESTONE: data.issue['milestone']['title'],
-            issue.UPVOTES: 0,
-            issue.DOWNVOTES: 0,
-            issue.WORK_IN_PROGRESS: 0,
-            issue.AUTHOR: 'john_smith',
-            issue.ASSIGNEE: 'jack_smith',
-            issue.NAMESPACE: 'arbitrary_namespace',
-            issue.WEIGHT: 3,
+            'due': DUEDATE.replace(microsecond=0),
+            'entry': CREATED.replace(microsecond=0),
+            gitlab_issue.URL: extra['issue_url'],
+            gitlab_issue.REPO: 'project',
+            gitlab_issue.STATE: issue['state'],
+            gitlab_issue.TYPE: extra['type'],
+            gitlab_issue.TITLE: issue['title'],
+            gitlab_issue.NUMBER: str(issue['iid']),
+            gitlab_issue.UPDATED_AT: UPDATED.replace(microsecond=0),
+            gitlab_issue.CREATED_AT: CREATED.replace(microsecond=0),
+            gitlab_issue.DUEDATE: DUEDATE,
+            gitlab_issue.DESCRIPTION: issue['description'],
+            gitlab_issue.MILESTONE: issue['milestone']['title'],
+            gitlab_issue.UPVOTES: 0,
+            gitlab_issue.DOWNVOTES: 0,
+            gitlab_issue.WORK_IN_PROGRESS: 0,
+            gitlab_issue.AUTHOR: 'john_smith',
+            gitlab_issue.ASSIGNEE: 'jack_smith',
+            gitlab_issue.NAMESPACE: 'arbitrary_namespace',
+            gitlab_issue.WEIGHT: 3,
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = gitlab_issue.to_taskwarrior()
 
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues_from_query(self, data, make_service):
+    def test_issues_from_query(self, issue, make_service):
         overrides = {'issue_query': 'issues?state=opened'}
         service = make_service(**overrides)
         responses.get(
             'https://my-git.org/api/v4/issues?state=opened&per_page=100&page=1',
-            json=[data.issue],
+            json=[issue],
         )
         responses.get(
             'https://my-git.org/api/v4/projects/8',
@@ -839,15 +847,15 @@ class TestGitlabIssue:
             'https://my-git.org/api/v4/projects/8/issues/3/notes?page=1&per_page=100',
             json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
         )
-        issue = next(service.issues())
+        gitlab_issue = next(service.issues())
         expected = {
             'annotations': ['@john_smith - Some comment.'],
             'description': '(bw)Is#3 - Add user settings .. example.com/issues/3',
-            'due': data.duedate,
-            'entry': data.created,
+            'due': DUEDATE,
+            'entry': CREATED,
             'gitlabassignee': 'jack_smith',
             'gitlabauthor': 'john_smith',
-            'gitlabcreatedon': data.created,
+            'gitlabcreatedon': CREATED,
             'gitlabdescription': '',
             'gitlabdownvotes': 0,
             'gitlabmilestone': 'v1.0',
@@ -857,8 +865,8 @@ class TestGitlabIssue:
             'gitlabstate': 'opened',
             'gitlabtitle': 'Add user settings',
             'gitlabtype': 'issue',
-            'gitlabupdatedat': data.updated,
-            'gitlabduedate': data.duedate,
+            'gitlabupdatedat': UPDATED,
+            'gitlabduedate': DUEDATE,
             'gitlabupvotes': 0,
             'gitlaburl': 'example.com/issues/3',
             'gitlabwip': 1,
@@ -867,10 +875,10 @@ class TestGitlabIssue:
             'project': 'arbitrary_username/project',
             'tags': [],
         }
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert TaskConstructor(gitlab_issue).get_taskwarrior_record() == expected
 
     @responses.activate
-    def test_mrs_from_query(self, data, make_service):
+    def test_mrs_from_query(self, mr, make_service):
         overrides = {
             'include_issues': 'false',
             'include_todos': 'false',
@@ -880,7 +888,7 @@ class TestGitlabIssue:
         service = make_service(**overrides)
         responses.get(
             'https://my-git.org/api/v4/merge_requests?state=opened&per_page=100&page=1',
-            json=[data.mr],
+            json=[mr],
         )
         responses.get(
             'https://my-git.org/api/v4/projects/8',
@@ -897,15 +905,15 @@ class TestGitlabIssue:
             + 'merge_requests/3/notes?page=1&per_page=100',
             json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
         )
-        mr = next(service.issues())
+        gitlab_mr = next(service.issues())
         expected = {
             'annotations': ['@john_smith - Some comment.'],
             'description': '(bw)MR#3 - Add user settings .. example.com/merge_requests/3',
-            'due': data.duedate,
-            'entry': data.created,
+            'due': DUEDATE,
+            'entry': CREATED,
             'gitlabassignee': 'jack_smith',
             'gitlabauthor': 'john_smith',
-            'gitlabcreatedon': data.created,
+            'gitlabcreatedon': CREATED,
             'gitlabdescription': '',
             'gitlabdownvotes': 0,
             'gitlabmilestone': 'v1.0',
@@ -915,8 +923,8 @@ class TestGitlabIssue:
             'gitlabstate': 'opened',
             'gitlabtitle': 'Add user settings',
             'gitlabtype': 'merge_request',
-            'gitlabupdatedat': data.updated,
-            'gitlabduedate': data.duedate,
+            'gitlabupdatedat': UPDATED,
+            'gitlabduedate': DUEDATE,
             'gitlabupvotes': 0,
             'gitlaburl': 'example.com/merge_requests/3',
             'gitlabwip': 1,
@@ -925,10 +933,10 @@ class TestGitlabIssue:
             'project': 'arbitrary_username/project',
             'tags': [],
         }
-        assert TaskConstructor(mr).get_taskwarrior_record() == expected
+        assert TaskConstructor(gitlab_mr).get_taskwarrior_record() == expected
 
     @responses.activate
-    def test_todos_from_query(self, data, make_service):
+    def test_todos_from_query(self, todo, make_service):
         overrides = {
             'include_issues': 'false',
             'include_merge_requests': 'false',
@@ -938,7 +946,7 @@ class TestGitlabIssue:
         service = make_service(**overrides)
         responses.get(
             'https://my-git.org/api/v4/todos?state=pending&per_page=100&page=1',
-            json=[data.todo],
+            json=[todo],
         )
         responses.get(
             'https://my-git.org/api/v4/projects/2',
@@ -960,16 +968,16 @@ class TestGitlabIssue:
                 'path_with_namespace': 'arbitrary_namespace/project',
             },
         )
-        todo = next(service.issues())
+        gitlab_todo = next(service.issues())
         expected = {
             'annotations': [],
             'description': '(bw)# - Todo from John Smith for project .. '
             'https://my-git.org/arbitrary_username/project/issues/3',
             'due': None,
-            'entry': data.created,
+            'entry': CREATED,
             'gitlabassignee': None,
             'gitlabauthor': 'john_smith',
-            'gitlabcreatedon': data.created,
+            'gitlabcreatedon': CREATED,
             'gitlabdescription': 'Add user settings',
             'gitlabdownvotes': 0,
             'gitlabmilestone': None,
@@ -979,7 +987,7 @@ class TestGitlabIssue:
             'gitlabstate': 'pending',
             'gitlabtitle': 'Todo from John Smith for project',
             'gitlabtype': 'todo',
-            'gitlabupdatedat': data.updated,
+            'gitlabupdatedat': UPDATED,
             'gitlabduedate': None,
             'gitlabupvotes': 0,
             'gitlaburl': 'https://my-git.org/arbitrary_username/project/issues/3',
@@ -989,7 +997,7 @@ class TestGitlabIssue:
             'project': 'project',
             'tags': [],
         }
-        assert TaskConstructor(todo).get_taskwarrior_record() == expected
+        assert TaskConstructor(gitlab_todo).get_taskwarrior_record() == expected
 
         overrides = {
             'include_issues': 'false',
@@ -999,11 +1007,11 @@ class TestGitlabIssue:
             'include_all_todos': 'false',
         }
         service = make_service(**overrides)
-        todo = next(service.issues())
-        assert TaskConstructor(todo).get_taskwarrior_record() == expected
+        gitlab_todo = next(service.issues())
+        assert TaskConstructor(gitlab_todo).get_taskwarrior_record() == expected
 
     @responses.activate
-    def test_issues(self, service, data):
+    def test_issues(self, service, issue):
         responses.get(
             'https://my-git.org/api/v4/projects?simple=True&archived=False&per_page=100&page=1',
             json=[
@@ -1019,7 +1027,7 @@ class TestGitlabIssue:
 
         responses.get(
             'https://my-git.org/api/v4/projects/8/issues?state=opened&per_page=100&page=1',
-            json=[data.issue],
+            json=[issue],
         )
 
         responses.get(
@@ -1027,16 +1035,16 @@ class TestGitlabIssue:
             json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
         )
 
-        issue = next(service.issues())
+        gitlab_issue = next(service.issues())
 
         expected = {
             'annotations': ['@john_smith - Some comment.'],
             'description': '(bw)Is#3 - Add user settings .. example.com/issues/3',
-            'due': data.duedate,
-            'entry': data.created,
+            'due': DUEDATE,
+            'entry': CREATED,
             'gitlabassignee': 'jack_smith',
             'gitlabauthor': 'john_smith',
-            'gitlabcreatedon': data.created,
+            'gitlabcreatedon': CREATED,
             'gitlabdescription': '',
             'gitlabdownvotes': 0,
             'gitlabmilestone': 'v1.0',
@@ -1046,8 +1054,8 @@ class TestGitlabIssue:
             'gitlabstate': 'opened',
             'gitlabtitle': 'Add user settings',
             'gitlabtype': 'issue',
-            'gitlabupdatedat': data.updated,
-            'gitlabduedate': data.duedate,
+            'gitlabupdatedat': UPDATED,
+            'gitlabduedate': DUEDATE,
             'gitlabupvotes': 0,
             'gitlaburl': 'example.com/issues/3',
             'gitlabwip': 1,
@@ -1057,7 +1065,7 @@ class TestGitlabIssue:
             'tags': [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert TaskConstructor(gitlab_issue).get_taskwarrior_record() == expected
 
     @responses.activate
     def test_only_if_assigned_user_lookup(self, make_service):
@@ -1080,7 +1088,7 @@ class TestGitlabIssue:
         # Should not raise an error
         service = make_service(**overrides)
 
-        # Verify service was created successfully
+        # Verify service was CREATED successfully
         assert service is not None
 
     @responses.activate

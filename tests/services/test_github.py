@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-from types import SimpleNamespace
 
 import pytest
 import responses
@@ -21,12 +20,14 @@ SERVICE_CONFIG = {
 }
 
 
+CREATED = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(microsecond=0)
+CLOSED = (datetime.now(timezone.utc) - timedelta(minutes=30)).replace(microsecond=0)
+UPDATED = datetime.now(timezone.utc).replace(microsecond=0)
+
+
 @pytest.fixture
-def data():
-    created = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(microsecond=0)
-    closed = (datetime.now(timezone.utc) - timedelta(minutes=30)).replace(microsecond=0)
-    updated = datetime.now(timezone.utc).replace(microsecond=0)
-    record = {
+def record():
+    return {
         'title': 'Hallo',
         'html_url': 'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
         'url': 'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/1',
@@ -35,39 +36,40 @@ def data():
         'user': {'login': 'arbitrary_login'},
         'milestone': {'title': 'alpha'},
         'labels': [{'name': 'bugfix'}],
-        'created_at': created.isoformat(),
-        'closed_at': closed.isoformat(),
-        'updated_at': updated.isoformat(),
+        'created_at': CREATED.isoformat(),
+        'closed_at': CLOSED.isoformat(),
+        'updated_at': UPDATED.isoformat(),
         'repo': 'arbitrary_username/arbitrary_repo',
-        'state': 'closed',
+        'state': 'CLOSED',
         'draft': False,
     }
-    extra = {
+
+
+@pytest.fixture
+def extra():
+    return {
         'project': 'one',
         'type': 'issue',
         'annotations': [],
         'body': 'Something',
         'namespace': 'arbitrary_username',
     }
-    return SimpleNamespace(
-        created=created, closed=closed, updated=updated, record=record, extra=extra
-    )
 
 
 class TestGithubIssue:
-    def test_draft(self, service, data):
-        draft = dict(data.record)
+    def test_draft(self, service, record, extra):
+        draft = dict(record)
         draft['draft'] = True
-        issue = service.get_issue_for_record(draft, data.extra)
+        issue = service.get_issue_for_record(draft, extra)
 
         expected = {
             'annotations': [],
             'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',  # noqa: E501
-            'entry': data.created,
-            'end': data.closed,
+            'entry': CREATED,
+            'end': CLOSED,
             'githubbody': draft['body'],
-            'githubcreatedon': data.created,
-            'githubclosedon': data.closed,
+            'githubcreatedon': CREATED,
+            'githubclosedon': CLOSED,
             'githubdraft': int(draft['draft']),
             'githubmilestone': draft['milestone']['title'],
             'githubnamespace': draft['repo'].split('/')[0],
@@ -75,49 +77,49 @@ class TestGithubIssue:
             'githubrepo': draft['repo'],
             'githubtitle': draft['title'],
             'githubtype': 'issue',
-            'githubupdatedat': data.updated,
+            'githubupdatedat': UPDATED,
             'githuburl': draft['html_url'],
             'githubuser': draft['user']['login'],
             'githubstate': draft['state'],
             'priority': 'M',
-            'project': data.extra['project'],
+            'project': extra['project'],
             'tags': [],
         }
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_to_taskwarrior(self, make_service, data):
+    def test_to_taskwarrior(self, make_service, record, extra):
         service = make_service(import_labels_as_tags=True)
-        issue = service.get_issue_for_record(data.record, data.extra)
+        issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
-            'project': data.extra['project'],
+            'project': extra['project'],
             'priority': service.config.default_priority,
             'annotations': [],
             'tags': ['bugfix'],
-            'entry': data.created,
-            'end': data.closed,
-            issue.URL: data.record['html_url'],
-            issue.REPO: data.record['repo'],
-            issue.DRAFT: data.record['draft'],
-            issue.TYPE: data.extra['type'],
-            issue.TITLE: data.record['title'],
-            issue.NUMBER: data.record['number'],
-            issue.UPDATED_AT: data.updated,
-            issue.CREATED_AT: data.created,
-            issue.CLOSED_AT: data.closed,
-            issue.BODY: data.extra['body'],
-            issue.MILESTONE: data.record['milestone']['title'],
-            issue.USER: data.record['user']['login'],
+            'entry': CREATED,
+            'end': CLOSED,
+            issue.URL: record['html_url'],
+            issue.REPO: record['repo'],
+            issue.DRAFT: record['draft'],
+            issue.TYPE: extra['type'],
+            issue.TITLE: record['title'],
+            issue.NUMBER: record['number'],
+            issue.UPDATED_AT: UPDATED,
+            issue.CREATED_AT: CREATED,
+            issue.CLOSED_AT: CLOSED,
+            issue.BODY: extra['body'],
+            issue.MILESTONE: record['milestone']['title'],
+            issue.USER: record['user']['login'],
             issue.NAMESPACE: 'arbitrary_username',
-            issue.STATE: 'closed',
+            issue.STATE: 'CLOSED',
         }
         actual_output = issue.to_taskwarrior()
 
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues(self, make_service, data):
+    def test_issues(self, make_service, record):
         responses.get(
             'https://api.github.com/user/repos?per_page=100',
             json=[{'name': 'some_repo', 'owner': {'login': 'some_username'}}],
@@ -130,10 +132,10 @@ class TestGithubIssue:
 
         responses.get(
             'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues?per_page=100',
-            json=[data.record],
+            json=[record],
         )
 
-        responses.get('https://api.github.com/issues?per_page=100', json=[data.record])
+        responses.get('https://api.github.com/issues?per_page=100', json=[record])
 
         responses.get(
             'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',  # noqa: E501
@@ -149,11 +151,11 @@ class TestGithubIssue:
         expected = {
             'annotations': ['@arbitrary_login - Arbitrary comment.'],
             'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',  # noqa: E501
-            'entry': data.created,
-            'end': data.closed,
+            'entry': CREATED,
+            'end': CLOSED,
             'githubbody': 'Something',
-            'githubcreatedon': data.created,
-            'githubclosedon': data.closed,
+            'githubcreatedon': CREATED,
+            'githubclosedon': CLOSED,
             'githubdraft': 0,
             'githubmilestone': 'alpha',
             'githubnamespace': 'arbitrary_username',
@@ -161,10 +163,10 @@ class TestGithubIssue:
             'githubrepo': 'arbitrary_username/arbitrary_repo',
             'githubtitle': 'Hallo',
             'githubtype': 'issue',
-            'githubupdatedat': data.updated,
+            'githubupdatedat': UPDATED,
             'githuburl': 'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'githubuser': 'arbitrary_login',
-            'githubstate': 'closed',
+            'githubstate': 'CLOSED',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': [],
@@ -186,10 +188,10 @@ class TestGithubIssueQuery:
         pass
 
     @responses.activate
-    def test_issues(self, service, data):
+    def test_issues(self, service, record):
         responses.get(
             'https://api.github.com/search/issues?q=is%3Aopen+reviewer%3Aoctocat&per_page=100',
-            json={'items': [data.record]},
+            json={'items': [record]},
         )
 
         responses.get(
@@ -202,11 +204,11 @@ class TestGithubIssueQuery:
         expected = {
             'annotations': ['@arbitrary_login - Arbitrary comment.'],
             'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',  # noqa: E501
-            'entry': data.created,
-            'end': data.closed,
+            'entry': CREATED,
+            'end': CLOSED,
             'githubbody': 'Something',
-            'githubcreatedon': data.created,
-            'githubclosedon': data.closed,
+            'githubcreatedon': CREATED,
+            'githubclosedon': CLOSED,
             'githubdraft': 0,
             'githubmilestone': 'alpha',
             'githubnamespace': 'arbitrary_username',
@@ -214,10 +216,10 @@ class TestGithubIssueQuery:
             'githubrepo': 'arbitrary_username/arbitrary_repo',
             'githubtitle': 'Hallo',
             'githubtype': 'issue',
-            'githubupdatedat': data.updated,
+            'githubupdatedat': UPDATED,
             'githuburl': 'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'githubuser': 'arbitrary_login',
-            'githubstate': 'closed',
+            'githubstate': 'CLOSED',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': [],
