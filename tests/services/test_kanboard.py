@@ -17,35 +17,38 @@ SERVICE_CONFIG = {
 }
 
 
-class TestKanboardServiceConfig:
+class TestKanboardConfig:
     @pytest.fixture
     def config(self):
-        return {"general": {"targets": ["kb"]}, "kb": {"service": "kanboard"}}
+        return {
+            "general": {"targets": ["myservice"]},
+            "myservice": {"service": "kanboard"},
+        }
 
     def test_validate_config_required_fields(self, config):
-        config["kb"].update(
+        config["myservice"].update(
             {"url": "http://example.com/", "username": "myuser", "password": "mypass"}
         )
 
         validate(config)
 
     def test_validate_config_no_url(self, config, assert_validation_error):
-        config["kb"].update({"username": "myuser", "password": "mypass"})
+        config["myservice"].update({"username": "myuser", "password": "mypass"})
 
-        assert_validation_error(config, '[kb]\nurl  <- Field required')
+        assert_validation_error(config, '[myservice]\nurl  <- Field required')
 
     def test_validate_config_no_username(self, config, assert_validation_error):
-        config["kb"].update({"url": "http://one.com/", "password": "mypass"})
+        config["myservice"].update({"url": "http://one.com/", "password": "mypass"})
 
-        assert_validation_error(config, '[kb]\nusername  <- Field required')
+        assert_validation_error(config, '[myservice]\nusername  <- Field required')
 
     def test_validate_config_no_password(self, config, assert_validation_error):
-        config["kb"].update({"url": "http://one.com/", "username": "myuser"})
+        config["myservice"].update({"url": "http://one.com/", "username": "myuser"})
 
-        assert_validation_error(config, '[kb]\npassword  <- Field required')
+        assert_validation_error(config, '[myservice]\npassword  <- Field required')
 
     def test_keyring_service(self, config):
-        config["kb"].update(
+        config["myservice"].update(
             {"url": "http://example.com/", "username": "myuser", "password": "mypass"}
         )
         service_config = validate(config).service_configs[0]

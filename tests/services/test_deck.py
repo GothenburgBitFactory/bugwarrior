@@ -72,16 +72,16 @@ SERVICE_CONFIG = {
 }
 
 
-class TestNextcloudDeckIssue:
+class TestDeckIssue:
     @pytest.fixture
     def config(self):
         return {
             'general': {
-                'targets': ['deck'],
+                'targets': ['myservice'],
                 # would otherwise cut the title short
                 'description_length': '45',
             },
-            'deck': {**SERVICE_CONFIG},
+            'myservice': {**SERVICE_CONFIG},
         }
 
     def make_service(self, config, record):
@@ -167,7 +167,7 @@ class TestNextcloudDeckIssue:
         # Regression test: the old get_owner did `issue[issue.ASSIGNEE]`, treating
         # the NextcloudDeckIssue as a dict. Issue has no __getitem__, so this raised
         # TypeError whenever only_if_assigned was configured.
-        config['deck']['only_if_assigned'] = 'rainbow'
+        config['myservice']['only_if_assigned'] = 'rainbow'
         service = self.make_service(config, record)
         issue = service.get_issue_for_record(
             record,
@@ -180,13 +180,13 @@ class TestNextcloudDeckIssue:
         assert service.get_owner(issue) == 'rainbow'
 
     def test_filter_boards_include(self, config, record):
-        config['deck']['include_board_ids'] = '5'
+        config['myservice']['include_board_ids'] = '5'
         service = self.make_service(config, record)
         assert service.filter_boards({'title': 'testboard', 'id': 5})
         assert not service.filter_boards({'title': 'testboard', 'id': 6})
 
     def test_filter_boards_exclude(self, config, record):
-        config['deck']['exclude_board_ids'] = '5'
+        config['myservice']['exclude_board_ids'] = '5'
         service = self.make_service(config, record)
         assert not service.filter_boards({'title': 'testboard', 'id': 5})
         assert service.filter_boards({'title': 'testboard', 'id': 6})

@@ -86,8 +86,8 @@ class TestJiraService:
     @pytest.fixture
     def config(self):
         return {
-            'general': {'targets': ['myjira']},
-            'myjira': {
+            'general': {'targets': ['myservice']},
+            'myservice': {
                 'service': 'jira',
                 'base_uri': 'https://example.com',
                 'username': 'milou',
@@ -101,7 +101,7 @@ class TestJiraService:
 
     def test_body_length_no_limit(self, config):
         description = "A very short issue body.  Fixes #828."
-        config['myjira']['body_length'] = '5'
+        config['myservice']['body_length'] = '5'
         formatted = format_config(config)
         conf = validation.validate_config(formatted, 'general', 'configpath')
         service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)

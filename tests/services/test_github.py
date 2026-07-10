@@ -306,7 +306,7 @@ class TestGithubService:
         assert issue["body"][:5] == service.body(issue)
 
 
-class TestGithubValidation:
+class TestGithubConfig:
     @pytest.fixture
     def config(self):
         return {'general': {'targets': ['myservice']}, 'myservice': {**SERVICE_CONFIG}}

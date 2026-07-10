@@ -167,38 +167,38 @@ SERVICE_CONFIG = {
 }
 
 
-class TestPivotalTrackerServiceConfig:
+class TestPivotalTrackerConfig:
     @pytest.fixture
     def config(self):
         return {
-            'general': {'targets': ['pivotal']},
-            'pivotal': {'service': 'pivotaltracker'},
+            'general': {'targets': ['myservice']},
+            'myservice': {'service': 'pivotaltracker'},
         }
 
     def test_validate_config(self, config):
-        config['pivotal'].update(
+        config['myservice'].update(
             {'account_ids': '12345', 'user_id': '12345', 'token': '12345'}
         )
 
         validate(config)
 
     def test_validate_config_no_account_ids(self, config, assert_validation_error):
-        config['pivotal'].update({'token': '123', 'user_id': '12345'})
+        config['myservice'].update({'token': '123', 'user_id': '12345'})
 
-        assert_validation_error(config, '[pivotal]\naccount_ids  <- Field required')
+        assert_validation_error(config, '[myservice]\naccount_ids  <- Field required')
 
     def test_validate_config_no_user_id(self, config, assert_validation_error):
-        config['pivotal'].update({'account_ids': '12345', 'token': '123'})
+        config['myservice'].update({'account_ids': '12345', 'token': '123'})
 
-        assert_validation_error(config, '[pivotal]\nuser_id  <- Field required')
+        assert_validation_error(config, '[myservice]\nuser_id  <- Field required')
 
     def test_validate_config_token(self, config, assert_validation_error):
-        config['pivotal'].update({'account_ids': '12345', 'user_id': '12345'})
+        config['myservice'].update({'account_ids': '12345', 'user_id': '12345'})
 
-        assert_validation_error(config, '[pivotal]\ntoken  <- Field required')
+        assert_validation_error(config, '[myservice]\ntoken  <- Field required')
 
     def test_validate_config_invalid_endpoint(self, config, assert_validation_error):
-        config['pivotal'].update(
+        config['myservice'].update(
             {
                 'account_ids': '12345',
                 'token': '123',
@@ -208,7 +208,7 @@ class TestPivotalTrackerServiceConfig:
         )
 
         assert_validation_error(
-            config, "[pivotal]\nversion = v1  <- Input should be 'v5' or 'edge'"
+            config, "[myservice]\nversion = v1  <- Input should be 'v5' or 'edge'"
         )
 
 

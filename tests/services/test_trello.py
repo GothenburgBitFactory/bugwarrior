@@ -106,7 +106,7 @@ def comments():
 class TestTrelloService:
     @pytest.fixture
     def config(self):
-        return {'general': {'targets': ['mytrello']}, 'mytrello': {**SERVICE_CONFIG}}
+        return {'general': {'targets': ['myservice']}, 'myservice': {**SERVICE_CONFIG}}
 
     @pytest.fixture(autouse=True)
     def mock_api(self, board, cards, lists, comments):
@@ -144,7 +144,7 @@ class TestTrelloService:
             yield rsps
 
     def test_get_boards_config(self, config):
-        config['mytrello']['include_boards'] = 'F00, B4R'
+        config['myservice']['include_boards'] = 'F00, B4R'
         service = get_validated_service(config)
         boards = service.get_boards()
         assert list(boards) == [
@@ -162,12 +162,12 @@ class TestTrelloService:
         assert list(service.get_lists('B04RD')) == lists
 
     def test_get_lists_include(self, config, lists):
-        config['mytrello']['include_lists'] = 'List 1'
+        config['myservice']['include_lists'] = 'List 1'
         service = get_validated_service(config)
         assert list(service.get_lists('B04RD')) == [lists[0]]
 
     def test_get_lists_exclude(self, config, lists):
-        config['mytrello']['exclude_lists'] = 'List 1'
+        config['myservice']['exclude_lists'] = 'List 1'
         service = get_validated_service(config)
         assert list(service.get_lists('B04RD')) == [lists[1]]
 
@@ -176,12 +176,12 @@ class TestTrelloService:
         assert list(service.get_cards('L15T')) == cards
 
     def test_get_cards_assigned(self, config, cards):
-        config['mytrello']['only_if_assigned'] = 'tintin'
+        config['myservice']['only_if_assigned'] = 'tintin'
         service = get_validated_service(config)
         assert list(service.get_cards('L15T')) == [cards[0]]
 
     def test_get_cards_assigned_unassigned(self, config, cards):
-        config['mytrello'].update(
+        config['myservice'].update(
             {'only_if_assigned': 'tintin', 'also_unassigned': 'true'}
         )
         service = get_validated_service(config)
@@ -207,7 +207,7 @@ class TestTrelloService:
         ]
 
     def test_issues(self, config):
-        config['mytrello'].update(
+        config['myservice'].update(
             {'include_lists': 'List 1', 'only_if_assigned': 'tintin'}
         )
         service = get_validated_service(config)
@@ -236,14 +236,14 @@ class TestTrelloService:
         validate(config)
 
     def test_valid_config_no_access_token(self, config, assert_validation_error):
-        del config['mytrello']['token']
+        del config['myservice']['token']
 
-        assert_validation_error(config, '[mytrello]\ntoken  <- Field required')
+        assert_validation_error(config, '[myservice]\ntoken  <- Field required')
 
     def test_valid_config_no_api_key(self, config, assert_validation_error):
-        del config['mytrello']['api_key']
+        del config['myservice']['api_key']
 
-        assert_validation_error(config, '[mytrello]\napi_key  <- Field required')
+        assert_validation_error(config, '[myservice]\napi_key  <- Field required')
 
     def test_keyring_service(self, config):
         """Checks that the keyring service name"""

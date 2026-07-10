@@ -129,9 +129,7 @@ class TestGmailIssue:
         }
         mock_api().users().threads().get().execute.return_value = record
         monkeypatch.setattr(gmail.GmailService, 'build_api', mock_api)
-        return get_mock_service(
-            gmail.GmailService, SERVICE_CONFIG, section='test_section'
-        )
+        return get_mock_service(gmail.GmailService, SERVICE_CONFIG)
 
     def test_config_paths(self, service):
         credentials_path = (

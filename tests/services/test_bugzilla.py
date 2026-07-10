@@ -29,13 +29,16 @@ class FakeBugzillaLib:
         ]
 
 
-class TestBugzillaServiceConfig:
+class TestBugzillaConfig:
     @pytest.fixture
     def config(self):
-        return {'general': {'targets': ['mybz']}, 'mybz': {'service': 'bugzilla'}}
+        return {
+            'general': {'targets': ['myservice']},
+            'myservice': {'service': 'bugzilla'},
+        }
 
     def test_validate_config_username_password(self, config):
-        config['mybz'].update(
+        config['myservice'].update(
             {'base_uri': 'https://one.com/', 'username': 'me', 'password': 'mypas'}
         )
 
@@ -43,7 +46,7 @@ class TestBugzillaServiceConfig:
         validate(config)
 
     def test_validate_config_api_key(self, config):
-        config['mybz'].update(
+        config['myservice'].update(
             {'base_uri': 'https://one.com/', 'username': 'me', 'api_key': '123'}
         )
 
@@ -51,12 +54,12 @@ class TestBugzillaServiceConfig:
         validate(config)
 
     def test_validate_config_api_key_no_username(self, config, assert_validation_error):
-        config['mybz'].update({'base_uri': 'https://one.com/', 'api_key': '123'})
+        config['myservice'].update({'base_uri': 'https://one.com/', 'api_key': '123'})
 
-        assert_validation_error(config, '[mybz]\nusername  <- Field required')
+        assert_validation_error(config, '[myservice]\nusername  <- Field required')
 
     def test_validate_warns_when_scheme_missing_in_uri(self, config, caplog):
-        config['mybz'].update(
+        config['myservice'].update(
             {'base_uri': 'one.com/', 'username': 'me', 'password': 'mypas'}
         )
 

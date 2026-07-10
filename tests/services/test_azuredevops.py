@@ -117,16 +117,16 @@ def record():
     }
 
 
-class TestAzureDevopsServiceConfig:
+class TestAzureDevopsConfig:
     @pytest.fixture
     def config(self):
         return {
-            "general": {"targets": ["test_ado"]},
-            "test_ado": {"service": "azuredevops"},
+            "general": {"targets": ["myservice"]},
+            "myservice": {"service": "azuredevops"},
         }
 
     def test_validate_config_required_fields(self, config):
-        config["test_ado"].update(
+        config["myservice"].update(
             {
                 "organization": "test_organization",
                 "project": "test_project",
@@ -136,21 +136,21 @@ class TestAzureDevopsServiceConfig:
         validate(config)
 
     def test_validate_config_no_organization(self, config, assert_validation_error):
-        config["test_ado"].update({"project": "test_project", "PAT": "myPAT"})
+        config["myservice"].update({"project": "test_project", "PAT": "myPAT"})
 
-        assert_validation_error(config, '[test_ado]\norganization  <- Field required')
+        assert_validation_error(config, '[myservice]\norganization  <- Field required')
 
     def test_validate_config_no_project(self, config, assert_validation_error):
-        config["test_ado"].update({"organization": "http://one.com/", "PAT": "myPAT"})
+        config["myservice"].update({"organization": "http://one.com/", "PAT": "myPAT"})
 
-        assert_validation_error(config, '[test_ado]\nproject  <- Field required')
+        assert_validation_error(config, '[myservice]\nproject  <- Field required')
 
     def test_validate_config_no_PAT(self, config, assert_validation_error):
-        config["test_ado"].update(
+        config["myservice"].update(
             {"organization": "http://one.com/", "project": "test_project"}
         )
 
-        assert_validation_error(config, '[test_ado]\nPAT  <- Field required')
+        assert_validation_error(config, '[myservice]\nPAT  <- Field required')
 
 
 class TestAzureDevopsService:

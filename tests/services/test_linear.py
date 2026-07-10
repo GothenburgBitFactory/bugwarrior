@@ -88,33 +88,36 @@ SERVICE_CONFIG = {
 }
 
 
-class TestLinearServiceConfig:
+class TestLinearConfig:
     @pytest.fixture
     def config(self):
-        return {"general": {"targets": ["linear"]}, "linear": {"service": "linear"}}
+        return {
+            "general": {"targets": ["myservice"]},
+            "myservice": {"service": "linear"},
+        }
 
     def test_validate_config(self, config):
-        config["linear"].update(
+        config["myservice"].update(
             {"only_if_assigned": "foo@bar.com", "api_token": "abc123"}
         )
 
         validate(config)
 
     def test_validate_config_no_api_token(self, config, assert_validation_error):
-        config["linear"].update({"only_if_assigned": "foo@bar.com"})
+        config["myservice"].update({"only_if_assigned": "foo@bar.com"})
 
-        assert_validation_error(config, "[linear]\napi_token  <- Field required")
+        assert_validation_error(config, "[myservice]\napi_token  <- Field required")
 
     def test_statuses_and_status_types_incompatible(
         self, config, assert_validation_error
     ):
-        config["linear"].update(
+        config["myservice"].update(
             {"api_token": "abc123", "statuses": "Done, Todo", "status_types": "started"}
         )
         assert_validation_error(config, "statuses and status_types are incompatible")
 
     def test_status_types_defaults_when_neither_set(self, config):
-        config["linear"].update({"api_token": "abc123"})
+        config["myservice"].update({"api_token": "abc123"})
         conf = validate(config)
         assert conf.service_configs[0].status_types == [
             "backlog",
@@ -123,13 +126,13 @@ class TestLinearServiceConfig:
         ]
 
     def test_statuses_only(self, config):
-        config["linear"].update({"api_token": "abc123", "statuses": "Done, Todo"})
+        config["myservice"].update({"api_token": "abc123", "statuses": "Done, Todo"})
         conf = validate(config)
         assert conf.service_configs[0].statuses == ["Done", "Todo"]
         assert conf.service_configs[0].status_types is None
 
     def test_status_types_only(self, config):
-        config["linear"].update({"api_token": "abc123", "status_types": "started"})
+        config["myservice"].update({"api_token": "abc123", "status_types": "started"})
         conf = validate(config)
         assert conf.service_configs[0].status_types == ["started"]
         assert conf.service_configs[0].statuses == []
