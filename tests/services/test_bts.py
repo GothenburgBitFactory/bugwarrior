@@ -7,6 +7,8 @@ from bugwarrior.services import bts
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {'service': 'bts', 'email': 'irl@debian.org', 'packages': 'bugwarrior'}
+
 
 class FakeBTSBug:
     bug_num = 810629
@@ -32,15 +34,9 @@ class FakeBTSLib:
 
 
 class TestBTSService:
-    SERVICE_CONFIG = {
-        'service': 'bts',
-        'email': 'irl@debian.org',
-        'packages': 'bugwarrior',
-    }
-
     @pytest.fixture
     def service(self):
-        return get_mock_service(bts.BTSService, self.SERVICE_CONFIG)
+        return get_mock_service(bts.BTSService, SERVICE_CONFIG)
 
     def test_to_taskwarrior(self, service):
         issue = service.get_issue_for_record(service._record_for_bug(FakeBTSBug))

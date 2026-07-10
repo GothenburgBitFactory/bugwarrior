@@ -4,13 +4,10 @@ from bugwarrior.services.phab import PhabricatorService
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {'service': 'phabricator', 'host': 'https://phabricator.example.com'}
+
 
 class TestPhabricatorIssue:
-    SERVICE_CONFIG = {
-        'service': 'phabricator',
-        'host': 'https://phabricator.example.com',
-    }
-
     arbitrary_issue = {
         "id": 42,
         "uri": "https://phabricator.example.com/arbitrary_username/project/issues/3",
@@ -20,7 +17,7 @@ class TestPhabricatorIssue:
 
     @pytest.fixture
     def service(self):
-        return get_mock_service(PhabricatorService, self.SERVICE_CONFIG)
+        return get_mock_service(PhabricatorService, SERVICE_CONFIG)
 
     def test_to_taskwarrior(self, service):
         service.import_labels_as_tags = True

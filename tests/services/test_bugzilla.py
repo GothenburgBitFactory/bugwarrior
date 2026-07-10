@@ -10,6 +10,13 @@ from bugwarrior.services.bz import BugzillaService
 from ..base import validate
 from .base import get_mock_service
 
+SERVICE_CONFIG = {
+    'service': 'bugzilla',
+    'base_uri': 'https://one.com/',
+    'username': 'hello',
+    'password': 'there',
+}
+
 
 class FakeBugzillaLib:
     def __init__(self, records):
@@ -62,13 +69,6 @@ class TestBugzillaServiceConfig:
 
 
 class TestBugzillaService:
-    SERVICE_CONFIG = {
-        'service': 'bugzilla',
-        'base_uri': 'https://one.com/',
-        'username': 'hello',
-        'password': 'there',
-    }
-
     arbitrary_record = {
         'product': 'Product',
         'component': 'Something',
@@ -86,9 +86,7 @@ class TestBugzillaService:
 
     def make_service(self, **overrides):
         with mock.patch('bugzilla.Bugzilla'):
-            service = get_mock_service(
-                BugzillaService, {**self.SERVICE_CONFIG, **overrides}
-            )
+            service = get_mock_service(BugzillaService, {**SERVICE_CONFIG, **overrides})
         service.bz = FakeBugzillaLib([self.arbitrary_record])
         service._get_assigned_date = lambda issues: self.arbitrary_datetime.isoformat()
         return service

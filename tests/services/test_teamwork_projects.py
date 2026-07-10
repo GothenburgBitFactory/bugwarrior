@@ -8,14 +8,14 @@ from bugwarrior.services.teamwork_projects import TeamworkService
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {
+    'service': 'teamwork_projects',
+    'host': 'https://test.teamwork_projects.com',
+    'token': 'arbitrary_token',
+}
+
 
 class TestTeamworkIssue:
-    SERVICE_CONFIG = {
-        'service': 'teamwork_projects',
-        'host': 'https://test.teamwork_projects.com',
-        'token': 'arbitrary_token',
-    }
-
     arbitrary_issue = {
         "todo-items": [
             {
@@ -84,7 +84,7 @@ class TestTeamworkIssue:
                     'account': {'userId': 5, 'firstname': 'Greg', 'lastname': 'McCoy'}
                 },
             )
-            return get_mock_service(TeamworkService, self.SERVICE_CONFIG)
+            return get_mock_service(TeamworkService, SERVICE_CONFIG)
 
     @responses.activate
     def test_to_taskwarrior(self, service):

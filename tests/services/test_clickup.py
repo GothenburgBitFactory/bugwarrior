@@ -3,10 +3,10 @@ from datetime import datetime, timezone
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor, get_service_instances
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.clickup import ClickupClient, ClickupService
 
-from ..base import validate
+from ..base import get_validated_service, validate
 from .base import get_mock_service
 
 
@@ -113,6 +113,9 @@ def task_page(task):
     return get
 
 
+SERVICE_CONFIG = {'service': 'clickup', 'team_id': 1234, 'token': 'arbitrary_token'}
+
+
 class TestClickupClient:
     def test_init(self):
         http_client = ClickupClient('12345')
@@ -141,33 +144,23 @@ class TestClickupService:
     def config(self):
         return {
             'general': {'targets': ['myservice']},
-            'myservice': {
-                'service': 'clickup',
-                'token': 'XXXXXX',
-                'also_unassigned': 'true',
-                'team_id': 1234,
-            },
+            'myservice': {**SERVICE_CONFIG, 'also_unassigned': 'true'},
         }
-
-    def get_service(self, config):
-        conf = validate(config)
-        service = get_service_instances(conf)[0]
-        return service
 
     def test_keyring_service(self, config):
         conf = validate(config).service_configs[0]
         assert conf.keyring_service == 'clickup://'
 
     def test_is_assigned(self, config, task):
-        assert self.get_service(config).is_assigned(task)
+        assert get_validated_service(config).is_assigned(task)
 
         config["myservice"]["only_if_assigned"] = "Pedro Manobrista"
 
-        assert self.get_service(config).is_assigned(task)
+        assert get_validated_service(config).is_assigned(task)
 
         config["myservice"]["also_unassigned"] = False
 
-        assert not self.get_service(config).is_assigned(task)
+        assert not get_validated_service(config).is_assigned(task)
 
         task["assignees"] = [
             {
@@ -179,15 +172,13 @@ class TestClickupService:
                 "profilePicture": None,
             }
         ]
-        assert self.get_service(config).is_assigned(task)
+        assert get_validated_service(config).is_assigned(task)
 
 
 class TestClickupIssue:
-    SERVICE_CONFIG = {'service': 'clickup', 'team_id': 1234, 'token': 'arbitrary_token'}
-
     @pytest.fixture
     def service(self):
-        return get_mock_service(ClickupService, self.SERVICE_CONFIG)
+        return get_mock_service(ClickupService, SERVICE_CONFIG)
 
     def test_to_taskwarrior(self, service, task):
         issue = service.get_issue_for_record(task)

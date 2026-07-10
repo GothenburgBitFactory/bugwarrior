@@ -6,13 +6,10 @@ from bugwarrior.services.taiga import TaigaService
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {'service': 'taiga', 'base_uri': 'https://one', 'auth_token': 'two'}
+
 
 class TestTaigaIssue:
-    SERVICE_CONFIG = {
-        'service': 'taiga',
-        'base_uri': 'https://one',
-        'auth_token': 'two',
-    }
     record = {
         'id': 400,
         'project': 4,
@@ -24,7 +21,7 @@ class TestTaigaIssue:
 
     @pytest.fixture
     def service(self):
-        return get_mock_service(TaigaService, self.SERVICE_CONFIG)
+        return get_mock_service(TaigaService, SERVICE_CONFIG)
 
     def test_to_taskwarrior(self, service):
         extra = {

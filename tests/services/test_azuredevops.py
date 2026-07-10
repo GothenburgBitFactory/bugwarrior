@@ -107,6 +107,14 @@ TEST_ISSUE = {
 }
 
 
+SERVICE_CONFIG = {
+    "service": "azuredevops",
+    "organization": "test_organization",
+    "project": "test_project",
+    "PAT": "myPAT",
+}
+
+
 class TestAzureDevopsServiceConfig:
     @pytest.fixture
     def config(self):
@@ -144,21 +152,12 @@ class TestAzureDevopsServiceConfig:
 
 
 class TestAzureDevopsService:
-    SERVICE_CONFIG = {
-        "service": "azuredevops",
-        "organization": "test_organization",
-        "project": "test_project",
-        "PAT": "myPAT",
-    }
-
     @pytest.fixture
     def service(self):
         return self.get_service()
 
     def get_service(self, **overrides):
-        service = get_mock_service(
-            AzureDevopsService, {**self.SERVICE_CONFIG, **overrides}
-        )
+        service = get_mock_service(AzureDevopsService, {**SERVICE_CONFIG, **overrides})
         service.client = mock.MagicMock()
         service.client.get_parent_name.return_value = None
         service.client.get_work_items_from_query.return_value = [1]

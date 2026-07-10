@@ -29,12 +29,13 @@ def bug():
     }
 
 
-class TestGitBugIssue:
-    SERVICE_CONFIG = {'service': 'gitbug', 'path': '/dev/null'}
+SERVICE_CONFIG = {'service': 'gitbug', 'path': '/dev/null'}
 
+
+class TestGitBugIssue:
     @pytest.fixture
     def service(self, bug):
-        service = get_mock_service(GitBugService, self.SERVICE_CONFIG)
+        service = get_mock_service(GitBugService, SERVICE_CONFIG)
         service.client = mock.MagicMock(spec=GitBugClient)
         service.client.get_issues = mock.MagicMock(return_value=[bug])
         return service

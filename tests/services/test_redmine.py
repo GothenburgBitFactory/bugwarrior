@@ -9,14 +9,15 @@ from bugwarrior.services.redmine import RedMineService
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {
+    'service': 'redmine',
+    'url': 'https://something',
+    'key': 'something_else',
+    'issue_limit': '100',
+}
+
 
 class TestRedmineIssue:
-    SERVICE_CONFIG = {
-        'service': 'redmine',
-        'url': 'https://something',
-        'key': 'something_else',
-        'issue_limit': '100',
-    }
     arbitrary_created = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(1)
     arbitrary_updated = datetime.now(timezone.utc).replace(microsecond=0)
     arbitrary_issue = {
@@ -37,7 +38,7 @@ class TestRedmineIssue:
 
     @pytest.fixture
     def service(self):
-        return get_mock_service(RedMineService, self.SERVICE_CONFIG)
+        return get_mock_service(RedMineService, SERVICE_CONFIG)
 
     def test_to_taskwarrior(self, service):
         arbitrary_url = 'http://lkjlj.com'

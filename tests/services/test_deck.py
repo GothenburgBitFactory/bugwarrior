@@ -3,10 +3,10 @@ from unittest import mock
 
 import pytest
 
-from bugwarrior.collect import TaskConstructor, get_service_instances
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.deck import NextcloudDeckClient
 
-from ..base import validate
+from ..base import get_validated_service
 
 
 @pytest.fixture
@@ -63,15 +63,16 @@ def card():
     }
 
 
-class TestNextcloudDeckIssue:
-    SERVICE_CONFIG = {
-        'service': 'deck',
-        'base_uri': 'http://localhost:8080',
-        'username': 'testuser',
-        'password': 'testpassword',
-        'import_labels_as_tags': True,
-    }
+SERVICE_CONFIG = {
+    'service': 'deck',
+    'base_uri': 'http://localhost:8080',
+    'username': 'testuser',
+    'password': 'testpassword',
+    'import_labels_as_tags': True,
+}
 
+
+class TestNextcloudDeckIssue:
     @pytest.fixture
     def config(self):
         return {
@@ -80,18 +81,11 @@ class TestNextcloudDeckIssue:
                 # would otherwise cut the title short
                 'description_length': '45',
             },
-            'deck': {
-                'service': 'deck',
-                'base_uri': 'http://localhost:8080',
-                'username': 'testuser',
-                'password': 'testpassword',
-                'import_labels_as_tags': 'true',
-            },
+            'deck': {**SERVICE_CONFIG},
         }
 
     def make_service(self, config, card):
-        conf = validate(config)
-        service = get_service_instances(conf)[0]
+        service = get_validated_service(config)
         service.client = mock.MagicMock(spec=NextcloudDeckClient)
         service.client.get_boards = mock.MagicMock(
             return_value=[{'id': 5, 'title': 'testboard'}]

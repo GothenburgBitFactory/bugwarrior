@@ -42,17 +42,17 @@ ARBITRARY_EXTRA = {
 IGNORABLE = {'user': {'login': 'cibot'}, 'body': 'Ignore this comment.'}
 
 
-class TestGithubIssue:
-    SERVICE_CONFIG = {
-        'service': 'github',
-        'login': 'arbitrary_login',
-        'token': 'arbitrary_token',
-        'username': 'arbitrary_username',
-        'ignore_user_comments': [IGNORABLE['user']['login']],
-    }
+SERVICE_CONFIG = {
+    'service': 'github',
+    'login': 'arbitrary_login',
+    'token': 'arbitrary_token',
+    'username': 'arbitrary_username',
+}
 
+
+class TestGithubIssue:
     def test_draft(self):
-        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
+        service = get_mock_service(GithubService, SERVICE_CONFIG)
         draft = dict(ARBITRARY_ISSUE)
         draft['draft'] = True
         issue = service.get_issue_for_record(draft, ARBITRARY_EXTRA)
@@ -85,7 +85,7 @@ class TestGithubIssue:
 
     def test_to_taskwarrior(self):
         service = get_mock_service(
-            GithubService, {**self.SERVICE_CONFIG, 'import_labels_as_tags': True}
+            GithubService, {**SERVICE_CONFIG, 'import_labels_as_tags': True}
         )
         issue = service.get_issue_for_record(ARBITRARY_ISSUE, ARBITRARY_EXTRA)
 
@@ -144,7 +144,10 @@ class TestGithubIssue:
             ],
         )  # second comment should be ignored and still pass
 
-        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
+        service = get_mock_service(
+            GithubService,
+            {**SERVICE_CONFIG, 'ignore_user_comments': [IGNORABLE['user']['login']]},
+        )
         issue = next(service.issues())
 
         expected = {
@@ -174,20 +177,18 @@ class TestGithubIssue:
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
 
-class TestGithubIssueQuery:
-    SERVICE_CONFIG = {
-        'service': 'github',
-        'login': 'arbitrary_login',
-        'token': 'arbitrary_token',
-        'username': 'arbitrary_username',
-        'query': 'is:open reviewer:octocat',
-        'include_user_repos': 'False',
-        'include_user_issues': 'False',
-    }
+QUERY_SERVICE_CONFIG = {
+    **SERVICE_CONFIG,
+    'query': 'is:open reviewer:octocat',
+    'include_user_repos': 'False',
+    'include_user_issues': 'False',
+}
 
+
+class TestGithubIssueQuery:
     @pytest.fixture
     def service(self):
-        return get_mock_service(GithubService, self.SERVICE_CONFIG)
+        return get_mock_service(GithubService, QUERY_SERVICE_CONFIG)
 
     def test_to_taskwarrior(self):
         pass
@@ -234,18 +235,11 @@ class TestGithubIssueQuery:
 
 
 class TestGithubService:
-    SERVICE_CONFIG = {
-        'service': 'github',
-        'login': 'tintin',
-        'username': 'milou',
-        'token': 't0ps3cr3t',
-    }
-
     def test_token_authorization_header(self):
-        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
+        service = get_mock_service(GithubService, SERVICE_CONFIG)
         service = get_mock_service(
             GithubService,
-            {**self.SERVICE_CONFIG, 'token': '@oracle:eval:echo 1234567890ABCDEF'},
+            {**SERVICE_CONFIG, 'token': '@oracle:eval:echo 1234567890ABCDEF'},
         )
         assert (
             service.client.session.headers['Authorization'] == "token 1234567890ABCDEF"
@@ -253,29 +247,34 @@ class TestGithubService:
 
     def test_default_host(self):
         """Check that if host is not set, we default to github.com"""
-        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
+        service = get_mock_service(GithubService, SERVICE_CONFIG)
         assert "github.com" == service.config.host
 
     def test_overwrite_host(self):
         """Check that if host is set, we use its value as host"""
         service = get_mock_service(
-            GithubService, {**self.SERVICE_CONFIG, 'host': 'github.example.com'}
+            GithubService, {**SERVICE_CONFIG, 'host': 'github.example.com'}
         )
         assert "github.example.com" == service.config.host
 
     def test_keyring_service(self):
         """Checks that the keyring service name"""
-        service_config = GithubConfig(**self.SERVICE_CONFIG, target="myservice")
+        service_config = GithubConfig(**SERVICE_CONFIG, target="myservice")
         keyring_service = service_config.keyring_service
-        assert "github://tintin@github.com/milou" == keyring_service
+        assert (
+            "github://arbitrary_login@github.com/arbitrary_username" == keyring_service
+        )
 
     def test_keyring_service_host(self):
         """Checks that the keyring key depends on the github host."""
         service_config = GithubConfig(
-            **{'host': 'github.example.com'}, **self.SERVICE_CONFIG, target="myservice"
+            **{'host': 'github.example.com'}, **SERVICE_CONFIG, target="myservice"
         )
         keyring_service = service_config.keyring_service
-        assert "github://tintin@github.example.com/milou" == keyring_service
+        assert (
+            "github://arbitrary_login@github.example.com/arbitrary_username"
+            == keyring_service
+        )
 
     def test_get_repository_from_issue_url__issue(self):
         issue = dict(repos_url="https://github.com/foo/bar")
@@ -293,32 +292,25 @@ class TestGithubService:
         assert "foo/bar" == repository
 
     def test_body_no_limit(self):
-        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
+        service = get_mock_service(GithubService, SERVICE_CONFIG)
         issue = dict(body="A very short issue body.  Fixes #42.")
         assert issue["body"] == service.body(issue)
 
     def test_body_newline_style(self):
-        service = get_mock_service(GithubService, self.SERVICE_CONFIG)
+        service = get_mock_service(GithubService, SERVICE_CONFIG)
         issue = dict(body="An\r\nIssue\r\nWith\r\nNewlines")
         assert "An\nIssue\nWith\nNewlines" == service.body(issue)
 
     def test_body_length_limit(self):
-        service = get_mock_service(
-            GithubService, {**self.SERVICE_CONFIG, 'body_length': 5}
-        )
+        service = get_mock_service(GithubService, {**SERVICE_CONFIG, 'body_length': 5})
         issue = dict(body="A very short issue body.  Fixes #42.")
         assert issue["body"][:5] == service.body(issue)
 
 
 class TestGithubValidation:
-    SERVICE_CONFIG = {'service': 'github', 'login': 'tintin', 'token': 't0ps3cr3t'}
-
     @pytest.fixture
     def config(self):
-        return {
-            'general': {'targets': ['myservice']},
-            'myservice': {**self.SERVICE_CONFIG, 'username': 'milou'},
-        }
+        return {'general': {'targets': ['myservice']}, 'myservice': {**SERVICE_CONFIG}}
 
     def test_require_username_or_query(self, config, assert_validation_error):
         config['myservice']['include_user_repos'] = 'false'

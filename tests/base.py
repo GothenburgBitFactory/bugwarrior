@@ -3,6 +3,7 @@ import typing
 import unittest.mock
 
 from bugwarrior import config, services
+from bugwarrior.collect import get_service_instances
 from bugwarrior.config import validation
 from bugwarrior.config.load import format_config
 
@@ -105,3 +106,7 @@ def register_services(mapping=None):
 def validate(config) -> validation.Config:
     formatted_config = format_config(config)
     return validation.validate_config(formatted_config, 'general', 'configpath')
+
+
+def get_validated_service(config):
+    return get_service_instances(validate(config))[0]

@@ -81,6 +81,13 @@ RESPONSE = json.loads(
 )
 
 
+SERVICE_CONFIG = {
+    "service": "linear",
+    "api_token": "abc123",
+    "import_labels_as_tags": True,
+}
+
+
 class TestLinearServiceConfig:
     @pytest.fixture
     def config(self):
@@ -129,15 +136,9 @@ class TestLinearServiceConfig:
 
 
 class TestLinearIssue:
-    SERVICE_CONFIG = {
-        "service": "linear",
-        "api_token": "abc123",
-        "import_labels_as_tags": True,
-    }
-
     @pytest.fixture
     def service(self):
-        return get_mock_service(LinearService, self.SERVICE_CONFIG)
+        return get_mock_service(LinearService, SERVICE_CONFIG)
 
     @pytest.fixture(autouse=True)
     def mock_api(self):

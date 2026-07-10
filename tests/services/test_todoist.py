@@ -18,10 +18,10 @@ from bugwarrior.services.todoist import TodoistClient, TodoistService
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {"service": "todoist", "token": "TESTTOKEN"}
+
 
 class TestTodoistIssue:
-    SERVICE_CONFIG = {"service": "todoist", "token": "TESTTOKEN"}
-
     # Base test record
     test_record = TodoistClient.task_to_dict(
         Task(
@@ -94,7 +94,7 @@ class TestTodoistIssue:
 
     @pytest.fixture
     def service(self):
-        service = get_mock_service(TodoistService, self.SERVICE_CONFIG)
+        service = get_mock_service(TodoistService, SERVICE_CONFIG)
         service.client = mock.MagicMock(spec=TodoistClient)
         return service
 
@@ -130,7 +130,7 @@ class TestTodoistIssue:
     def test_to_taskwarrior_with_labels(self):
         # Test lables when `import_labels_as_tags` is enabled
         overrides = {"import_labels_as_tags": "True"}
-        service = get_mock_service(TodoistService, {**self.SERVICE_CONFIG, **overrides})
+        service = get_mock_service(TodoistService, {**SERVICE_CONFIG, **overrides})
         issue = service.get_issue_for_record(self.test_record, self.test_extra)
         actual = issue.to_taskwarrior()
         assert actual.get("tags") == ["TESTLABEL"]

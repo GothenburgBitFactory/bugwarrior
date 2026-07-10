@@ -4,10 +4,10 @@ from types import SimpleNamespace
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor, get_service_instances
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gitlab import GitlabClient, GitlabService
 
-from ..base import validate
+from ..base import get_validated_service, validate
 from .base import get_mock_service
 
 
@@ -309,6 +309,14 @@ def data():
     )
 
 
+SERVICE_CONFIG = {
+    'service': 'gitlab',
+    'host': 'my-git.org',
+    'login': 'arbitrary_login',
+    'token': 'arbitrary_token',
+}
+
+
 class TestGitlabClient:
     @pytest.fixture
     def client(self):
@@ -524,8 +532,7 @@ class TestGitlabService:
         }
 
     def get_service(self, config):
-        conf = validate(config)
-        service = get_service_instances(conf)[0]
+        service = get_validated_service(config)
         service.gitlab_client.repo_cache = {
             1: {'id': 1, 'path_with_namespace': 'arbitrary_namespace/arbitrary_project'}
         }
@@ -658,16 +665,9 @@ class TestGitlabService:
 
 
 class TestGitlabIssue:
-    SERVICE_CONFIG = {
-        'service': 'gitlab',
-        'host': 'my-git.org',
-        'login': 'arbitrary_login',
-        'token': 'arbitrary_token',
-    }
-
     @pytest.fixture
     def service(self):
-        return get_mock_service(GitlabService, self.SERVICE_CONFIG)
+        return get_mock_service(GitlabService, SERVICE_CONFIG)
 
     def test_to_taskwarrior(self, service, data):
         issue = service.get_issue_for_record(data.arbitrary_issue, data.arbitrary_extra)
@@ -704,7 +704,7 @@ class TestGitlabIssue:
 
     def test_custom_issue_priority(self, data):
         overrides = {'default_issue_priority': 'L'}
-        service = get_mock_service(GitlabService, {**self.SERVICE_CONFIG, **overrides})
+        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         issue = service.get_issue_for_record(data.arbitrary_issue, data.arbitrary_extra)
         expected_output = {
             'project': data.arbitrary_extra['project'],
@@ -738,7 +738,7 @@ class TestGitlabIssue:
 
     def test_custom_todo_priority(self, data):
         overrides = {'default_todo_priority': 'H'}
-        service = get_mock_service(GitlabService, {**self.SERVICE_CONFIG, **overrides})
+        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         service.import_labels_as_tags = True
         issue = service.get_issue_for_record(
             data.arbitrary_todo, data.arbitrary_todo_extra
@@ -779,7 +779,7 @@ class TestGitlabIssue:
 
     def test_custom_mr_priority(self, data):
         overrides = {'default_mr_priority': '', 'import_labels_as_tags': True}
-        service = get_mock_service(GitlabService, {**self.SERVICE_CONFIG, **overrides})
+        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         issue = service.get_issue_for_record(data.arbitrary_mr, data.arbitrary_mr_extra)
         expected_output = {
             'project': data.arbitrary_mr_extra['project'],
@@ -848,7 +848,7 @@ class TestGitlabIssue:
     @responses.activate
     def test_issues_from_query(self, data):
         overrides = {'issue_query': 'issues?state=opened'}
-        service = get_mock_service(GitlabService, {**self.SERVICE_CONFIG, **overrides})
+        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         responses.get(
             'https://my-git.org/api/v4/issues?state=opened&per_page=100&page=1',
             json=[data.arbitrary_issue],
@@ -905,7 +905,7 @@ class TestGitlabIssue:
             'include_merge_requests': 'true',
             'merge_request_query': 'merge_requests?state=opened',
         }
-        service = get_mock_service(GitlabService, {**self.SERVICE_CONFIG, **overrides})
+        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         responses.get(
             'https://my-git.org/api/v4/merge_requests?state=opened&per_page=100&page=1',
             json=[data.arbitrary_mr],
@@ -963,7 +963,7 @@ class TestGitlabIssue:
             'include_todos': 'true',
             'todo_query': 'todos?state=pending',
         }
-        service = get_mock_service(GitlabService, {**self.SERVICE_CONFIG, **overrides})
+        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         responses.get(
             'https://my-git.org/api/v4/todos?state=pending&per_page=100&page=1',
             json=[data.arbitrary_todo],
@@ -1026,7 +1026,7 @@ class TestGitlabIssue:
             'include_repos': 'arbitrary_namespace/project',
             'include_all_todos': 'false',
         }
-        service = get_mock_service(GitlabService, {**self.SERVICE_CONFIG, **overrides})
+        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         todo = next(service.issues())
         assert TaskConstructor(todo).get_taskwarrior_record() == expected
 
@@ -1106,7 +1106,7 @@ class TestGitlabIssue:
         overrides = {'only_if_assigned': 'jack_smith'}
 
         # Should not raise an error
-        service = get_mock_service(GitlabService, {**self.SERVICE_CONFIG, **overrides})
+        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
 
         # Verify service was created successfully
         assert service is not None
@@ -1123,7 +1123,7 @@ class TestGitlabIssue:
 
         # Should exit with 1
         with pytest.raises(SystemExit) as cm:
-            get_mock_service(GitlabService, {**self.SERVICE_CONFIG, **overrides})
+            get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         assert cm.value.code == 1
 
     @responses.activate
@@ -1152,5 +1152,5 @@ class TestGitlabIssue:
 
         # Should exit with 1
         with pytest.raises(SystemExit) as cm:
-            get_mock_service(GitlabService, {**self.SERVICE_CONFIG, **overrides})
+            get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         assert cm.value.code == 1

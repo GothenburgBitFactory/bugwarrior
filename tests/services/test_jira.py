@@ -11,6 +11,17 @@ from bugwarrior.services.jira import JiraExtraFields, JiraService
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {
+    'service': 'jira',
+    'username': 'one',
+    'base_uri': 'https://two.org',
+    'password': 'three',
+    'extra_fields': [
+        'jiraextra1:customfield_10000',
+        'jiraextra2:namedfield.valueinside',
+    ],
+}
+
 
 class FakeJiraClient:
     def __init__(self, arbitrary_record):
@@ -62,17 +73,6 @@ class TestJiraService:
 
 
 class TestJiraIssue:
-    SERVICE_CONFIG = {
-        'service': 'jira',
-        'username': 'one',
-        'base_uri': 'https://two.org',
-        'password': 'three',
-        'extra_fields': [
-            'jiraextra1:customfield_10000',
-            'jiraextra2:namedfield.valueinside',
-        ],
-    }
-
     arbitrary_estimation = 3600
     arbitrary_id = '10'
     arbitrary_subtask_ids = ['11', '12']
@@ -111,7 +111,7 @@ class TestJiraIssue:
     @pytest.fixture
     def service(self):
         with mock.patch('jira.client.JIRA._get_json'):
-            service = get_mock_service(JiraService, self.SERVICE_CONFIG)
+            service = get_mock_service(JiraService, SERVICE_CONFIG)
         service.jira = FakeJiraClient(self.arbitrary_record)
         service.sprint_field_names = ['Sprint']
         return service

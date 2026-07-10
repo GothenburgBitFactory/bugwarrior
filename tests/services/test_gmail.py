@@ -8,10 +8,10 @@ from unittest.mock import patch
 from google.oauth2.credentials import Credentials
 import pytest
 
-from bugwarrior.collect import TaskConstructor, get_service_instances
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import gmail
 
-from ..base import validate
+from ..base import get_validated_service
 from .base import get_mock_service
 
 TEST_CREDENTIAL = {
@@ -21,6 +21,13 @@ TEST_CREDENTIAL = {
     "client_id": "example.apps.googleusercontent.com",
     "client_secret": "itsasecrettoeveryone",
     "scopes": ["https://www.googleapis.com/auth/gmail.readonly"],
+}
+
+
+SERVICE_CONFIG = {
+    'service': 'gmail',
+    'add_tags': 'added',
+    'login_name': 'test@example.com',
 }
 
 
@@ -36,8 +43,7 @@ class TestGmailService:
     def service(self, config, monkeypatch):
         monkeypatch.setattr(gmail.GmailService, 'build_api', mock.Mock())
 
-        conf = validate(config)
-        return get_service_instances(conf)[0]
+        return get_validated_service(config)
 
     def test_get_credentials_exists_and_valid(self, service):
         expected = Credentials(**copy(TEST_CREDENTIAL))
@@ -107,12 +113,6 @@ TEST_LABELS = [
 
 
 class TestGmailIssue:
-    SERVICE_CONFIG = {
-        'service': 'gmail',
-        'add_tags': 'added',
-        'login_name': 'test@example.com',
-    }
-
     @pytest.fixture
     def service(self, monkeypatch):
         mock_api = mock.Mock()
@@ -125,7 +125,7 @@ class TestGmailIssue:
         mock_api().users().threads().get().execute.return_value = TEST_THREAD
         monkeypatch.setattr(gmail.GmailService, 'build_api', mock_api)
         return get_mock_service(
-            gmail.GmailService, self.SERVICE_CONFIG, section='test_section'
+            gmail.GmailService, SERVICE_CONFIG, section='test_section'
         )
 
     def test_config_paths(self, service):

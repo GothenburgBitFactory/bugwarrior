@@ -5,6 +5,13 @@ from bugwarrior.services.trac import TracService
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {
+    'service': 'trac',
+    'base_uri': 'ljlkajsdfl.com',
+    'username': 'something',
+    'password': 'somepwd',
+}
+
 
 class FakeTracTicket:
     @staticmethod
@@ -31,12 +38,6 @@ class FakeTracLib:
 
 
 class TestTracIssue:
-    SERVICE_CONFIG = {
-        'service': 'trac',
-        'base_uri': 'ljlkajsdfl.com',
-        'username': 'something',
-        'password': 'somepwd',
-    }
     arbitrary_issue = {
         'url': 'http://some/url.com/',
         'summary': 'Some Summary',
@@ -47,7 +48,7 @@ class TestTracIssue:
 
     @pytest.fixture
     def service(self):
-        service = get_mock_service(TracService, self.SERVICE_CONFIG)
+        service = get_mock_service(TracService, SERVICE_CONFIG)
         service.trac = FakeTracLib(self.arbitrary_issue)
         return service
 

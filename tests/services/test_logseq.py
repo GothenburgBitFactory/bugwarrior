@@ -9,15 +9,15 @@ from bugwarrior.services.logseq import LogseqClient, LogseqIssue, LogseqService
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {
+    "service": "logseq",
+    "host": "localhost",
+    "port": 12315,
+    "token": "TESTTOKEN",
+}
+
 
 class TestLogseqIssue:
-    SERVICE_CONFIG = {
-        "service": "logseq",
-        "host": "localhost",
-        "port": 12315,
-        "token": "TESTTOKEN",
-    }
-
     test_record = {
         "properties": {
             "id": "67dae9ea-8e4d-4ad1-91dc-72aacc72a802",
@@ -79,7 +79,7 @@ class TestLogseqIssue:
 
     @pytest.fixture
     def service(self):
-        service = get_mock_service(LogseqService, self.SERVICE_CONFIG)
+        service = get_mock_service(LogseqService, SERVICE_CONFIG)
         service.client = mock.MagicMock(spec=LogseqClient)
         return service
 
@@ -112,7 +112,7 @@ class TestLogseqIssue:
 
     def test_to_taskwarrior_with_tags(self):
         overrides = {"import_labels_as_tags": "True"}
-        service = get_mock_service(LogseqService, {**self.SERVICE_CONFIG, **overrides})
+        service = get_mock_service(LogseqService, {**SERVICE_CONFIG, **overrides})
         issue = service.get_issue_for_record(self.test_record, self.test_extra)
 
         actual = issue.to_taskwarrior()

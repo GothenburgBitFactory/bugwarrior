@@ -157,6 +157,16 @@ EXTRA = {
 }
 
 
+SERVICE_CONFIG = {
+    'service': 'pivotaltracker',
+    'token': '123456',
+    'user_id': 106,
+    'account_ids': '100',
+    'import_labels_as_tags': True,
+    'import_blockers': True,
+}
+
+
 class TestPivotalTrackerServiceConfig:
     @pytest.fixture
     def config(self):
@@ -203,18 +213,9 @@ class TestPivotalTrackerServiceConfig:
 
 
 class TestPivotalTrackerIssue:
-    SERVICE_CONFIG = {
-        'service': 'pivotaltracker',
-        'token': '123456',
-        'user_id': 106,
-        'account_ids': '100',
-        'import_labels_as_tags': True,
-        'import_blockers': True,
-    }
-
     @pytest.fixture
     def service(self):
-        return get_mock_service(PivotalTrackerService, self.SERVICE_CONFIG)
+        return get_mock_service(PivotalTrackerService, SERVICE_CONFIG)
 
     @pytest.fixture(autouse=True)
     def mock_api(self):

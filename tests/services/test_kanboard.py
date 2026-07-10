@@ -9,6 +9,13 @@ from bugwarrior.services.kanboard import KanboardService
 from ..base import validate
 from .base import get_mock_service
 
+SERVICE_CONFIG = {
+    "service": "kanboard",
+    "url": "http://example.com",
+    "username": "myuser",
+    "password": "mypass",
+}
+
 
 class TestKanboardServiceConfig:
     @pytest.fixture
@@ -46,17 +53,10 @@ class TestKanboardServiceConfig:
 
 
 class TestKanboardService:
-    SERVICE_CONFIG = {
-        "service": "kanboard",
-        "url": "http://example.com",
-        "username": "myuser",
-        "password": "mypass",
-    }
-
     @pytest.fixture
     def service(self):
         with mock.patch("bugwarrior.services.kanboard.Client"):
-            service = get_mock_service(KanboardService, self.SERVICE_CONFIG)
+            service = get_mock_service(KanboardService, SERVICE_CONFIG)
         service.client = mock.MagicMock()
         return service
 

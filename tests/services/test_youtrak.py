@@ -7,6 +7,14 @@ from bugwarrior.services.youtrack import YoutrackService
 from ..base import validate
 from .base import get_mock_service
 
+SERVICE_CONFIG = {
+    'service': 'youtrack',
+    'host': 'youtrack.example.com',
+    'login': 'arbitrary_login',
+    'token': 'arbitrary_token',
+    'anonymous': True,
+}
+
 
 class TestYoutrackService:
     @pytest.fixture
@@ -25,14 +33,6 @@ class TestYoutrackService:
 
 
 class TestYoutrackIssue:
-    SERVICE_CONFIG = {
-        'service': 'youtrack',
-        'host': 'youtrack.example.com',
-        'login': 'arbitrary_login',
-        'token': 'arbitrary_token',
-        'anonymous': True,
-    }
-
     arbitrary_issue = {
         "id": "2-1",
         "$type": "Issue",
@@ -48,16 +48,12 @@ class TestYoutrackIssue:
 
     @pytest.fixture
     def service(self):
-        return get_mock_service(YoutrackService, self.SERVICE_CONFIG)
+        return get_mock_service(YoutrackService, SERVICE_CONFIG)
 
     def test_get_tags_from_labels_uses_legacy_tag_options(self, caplog):
         service = get_mock_service(
             YoutrackService,
-            {
-                **self.SERVICE_CONFIG,
-                'import_tags': True,
-                'tag_template': 'yt_{{tag|lower}}',
-            },
+            {**SERVICE_CONFIG, 'import_tags': True, 'tag_template': 'yt_{{tag|lower}}'},
         )
         issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
 
@@ -75,11 +71,7 @@ class TestYoutrackIssue:
     def test_refine_record_does_not_apply_legacy_tag_template_as_field_template(self):
         service = get_mock_service(
             YoutrackService,
-            {
-                **self.SERVICE_CONFIG,
-                'import_tags': True,
-                'tag_template': 'yt_{{tag|lower}}',
-            },
+            {**SERVICE_CONFIG, 'import_tags': True, 'tag_template': 'yt_{{tag|lower}}'},
         )
         issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
 

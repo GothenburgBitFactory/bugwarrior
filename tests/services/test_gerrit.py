@@ -8,16 +8,16 @@ from bugwarrior.services.gerrit import GerritService
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {
+    'service': 'gerrit',
+    'base_uri': 'https://one.com',
+    'username': 'two',
+    'password': 'three',
+    'ignore_user_comments': ['CI Bot'],
+}
+
 
 class TestGerritIssue:
-    SERVICE_CONFIG = {
-        'service': 'gerrit',
-        'base_uri': 'https://one.com',
-        'username': 'two',
-        'password': 'three',
-        'ignore_user_comments': ['CI Bot'],
-    }
-
     record = {
         'project': 'nova',
         '_number': 1,
@@ -55,10 +55,10 @@ class TestGerritIssue:
         with responses.mock:
             responses.add(
                 responses.HEAD,
-                self.SERVICE_CONFIG['base_uri'] + '/a/',
+                SERVICE_CONFIG['base_uri'] + '/a/',
                 headers={'www-authenticate': 'digest'},
             )
-            return get_mock_service(GerritService, self.SERVICE_CONFIG)
+            return get_mock_service(GerritService, SERVICE_CONFIG)
 
     def test_to_taskwarrior(self, service):
         issue = service.get_issue_for_record(self.record, self.extra)

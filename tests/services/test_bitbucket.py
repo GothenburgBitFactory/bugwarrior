@@ -6,15 +6,15 @@ from bugwarrior.services.bitbucket import BitbucketService
 
 from .base import get_mock_service
 
+SERVICE_CONFIG = {
+    'service': 'bitbucket',
+    'username': 'somename',
+    'key': 'something',
+    'secret': 'something else',
+}
+
 
 class TestBitbucketIssue:
-    SERVICE_CONFIG = {
-        'service': 'bitbucket',
-        'username': 'somename',
-        'key': 'something',
-        'secret': 'something else',
-    }
-
     @pytest.fixture
     def service(self):
         with responses.mock:
@@ -22,7 +22,7 @@ class TestBitbucketIssue:
                 'https://bitbucket.org/site/oauth2/access_token',
                 json={'access_token': 'sometoken', 'refresh_token': 'anothertoken'},
             )
-            return get_mock_service(BitbucketService, self.SERVICE_CONFIG)
+            return get_mock_service(BitbucketService, SERVICE_CONFIG)
 
     def test_to_taskwarrior(self, service):
         arbitrary_issue = {'priority': 'trivial', 'id': '100', 'title': 'Some Title'}
