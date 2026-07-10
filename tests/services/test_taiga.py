@@ -9,8 +9,9 @@ from .base import get_mock_service
 SERVICE_CONFIG = {'service': 'taiga', 'base_uri': 'https://one', 'auth_token': 'two'}
 
 
-class TestTaigaIssue:
-    record = {
+@pytest.fixture
+def record():
+    return {
         'id': 400,
         'project': 4,
         'ref': 40,
@@ -19,11 +20,13 @@ class TestTaigaIssue:
         'due_date': '2026-05-18',
     }
 
+
+class TestTaigaIssue:
     @pytest.fixture
     def service(self):
         return get_mock_service(TaigaService, SERVICE_CONFIG)
 
-    def test_to_taskwarrior(self, service):
+    def test_to_taskwarrior(self, service, record):
         extra = {
             'project': 'awesome',
             'annotations': [
@@ -32,7 +35,7 @@ class TestTaigaIssue:
             'url': 'this is a url',
         }
 
-        issue = service.get_issue_for_record(self.record, extra)
+        issue = service.get_issue_for_record(record, extra)
         actual = issue.to_taskwarrior()
         expected = {
             'annotations': [],
@@ -48,7 +51,7 @@ class TestTaigaIssue:
         assert actual == expected
 
     @responses.activate
-    def test_issues(self, service):
+    def test_issues(self, service, record):
         userid = 1
 
         responses.get('https://one/api/v1/users/me', json={'id': userid})
@@ -57,16 +60,16 @@ class TestTaigaIssue:
             'https://one/api/v1/userstories?status__is_closed=false&assigned_to={}'.format(
                 userid
             ),
-            json=[self.record],
+            json=[record],
         )
 
         responses.get(
-            'https://one/api/v1/projects/{}'.format(self.record['project']),
+            'https://one/api/v1/projects/{}'.format(record['project']),
             json={'slug': 'something'},
         )
 
         responses.get(
-            'https://one/api/v1/history/userstory/{}'.format(self.record['id']),
+            'https://one/api/v1/history/userstory/{}'.format(record['id']),
             json=[{'user': {'username': 'you'}, 'comment': 'Blah blah blah!'}],
         )
 

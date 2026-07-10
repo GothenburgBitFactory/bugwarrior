@@ -15,8 +15,9 @@ SERVICE_CONFIG = {
 }
 
 
-class TestTeamworkIssue:
-    arbitrary_issue = {
+@pytest.fixture
+def record():
+    return {
         "todo-items": [
             {
                 "id": 5,
@@ -48,11 +49,19 @@ class TestTeamworkIssue:
             }
         ]
     }
-    arbitrary_extra = {
+
+
+@pytest.fixture
+def extra():
+    return {
         "host": "https://test.teamwork_projects.com",
         "annotations": [("Greg McCoy", "Test comment"), ("Bob Test", "testing")],
     }
-    arbitrary_comments = {
+
+
+@pytest.fixture
+def comments():
+    return {
         "comments": [
             {
                 "project-id": "999",
@@ -73,6 +82,8 @@ class TestTeamworkIssue:
         ]
     }
 
+
+class TestTeamworkIssue:
     @pytest.fixture
     def service(self):
         # The HTTP mock must be active while the service is constructed since
@@ -87,11 +98,9 @@ class TestTeamworkIssue:
             return get_mock_service(TeamworkService, SERVICE_CONFIG)
 
     @responses.activate
-    def test_to_taskwarrior(self, service):
-        issue = service.get_issue_for_record(
-            self.arbitrary_issue["todo-items"][0], self.arbitrary_extra
-        )
-        data = self.arbitrary_issue["todo-items"][0]
+    def test_to_taskwarrior(self, service, record, extra):
+        issue = service.get_issue_for_record(record["todo-items"][0], extra)
+        data = record["todo-items"][0]
         expected_data = {
             'project': data["project-name"],
             'priority': "H",
@@ -111,16 +120,13 @@ class TestTeamworkIssue:
         assert actual_output == expected_data
 
     @responses.activate
-    def test_issues(self, service):
+    def test_issues(self, service, record, comments):
         responses.get(
-            'https://test.teamwork_projects.com/tasks/5/comments.json',
-            json=self.arbitrary_comments,
+            'https://test.teamwork_projects.com/tasks/5/comments.json', json=comments
         )
-        responses.get(
-            'https://test.teamwork_projects.com/tasks.json', json=self.arbitrary_issue
-        )
+        responses.get('https://test.teamwork_projects.com/tasks.json', json=record)
         issue = next(service.issues())
-        data = self.arbitrary_issue["todo-items"][0]
+        data = record["todo-items"][0]
         expected_data = {
             'project': data["project-name"],
             'priority': "H",

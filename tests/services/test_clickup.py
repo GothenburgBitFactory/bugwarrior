@@ -11,7 +11,7 @@ from .base import get_mock_service
 
 
 @pytest.fixture
-def task():
+def record():
     return {
         "id": "86adrdd2j",
         "custom_id": None,
@@ -104,11 +104,11 @@ def task():
 
 
 @pytest.fixture
-def task_page(task):
+def task_page(record):
     """Return a one-task API response page, the last one for page_number > 0."""
 
     def get(page_number):
-        return {"tasks": [task], "last_page": page_number > 0}
+        return {"tasks": [record], "last_page": page_number > 0}
 
     return get
 
@@ -125,7 +125,7 @@ class TestClickupClient:
         )
 
     @responses.activate
-    def test_get_repo(self, task, task_page):
+    def test_get_repo(self, record, task_page):
         client = ClickupClient('XXXXXX')
         responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0",
@@ -136,7 +136,7 @@ class TestClickupClient:
             json=task_page(1),
         )
         result = [item for item in client.get_tasks_for_team(team_id=1234)]
-        assert result == [task, task]
+        assert result == [record, record]
 
 
 class TestClickupService:
@@ -151,18 +151,18 @@ class TestClickupService:
         conf = validate(config).service_configs[0]
         assert conf.keyring_service == 'clickup://'
 
-    def test_is_assigned(self, config, task):
-        assert get_validated_service(config).is_assigned(task)
+    def test_is_assigned(self, config, record):
+        assert get_validated_service(config).is_assigned(record)
 
         config["myservice"]["only_if_assigned"] = "Pedro Manobrista"
 
-        assert get_validated_service(config).is_assigned(task)
+        assert get_validated_service(config).is_assigned(record)
 
         config["myservice"]["also_unassigned"] = False
 
-        assert not get_validated_service(config).is_assigned(task)
+        assert not get_validated_service(config).is_assigned(record)
 
-        task["assignees"] = [
+        record["assignees"] = [
             {
                 "id": 2606423512,
                 "username": "Pedro Manobrista",
@@ -172,7 +172,7 @@ class TestClickupService:
                 "profilePicture": None,
             }
         ]
-        assert get_validated_service(config).is_assigned(task)
+        assert get_validated_service(config).is_assigned(record)
 
 
 class TestClickupIssue:
@@ -180,36 +180,36 @@ class TestClickupIssue:
     def service(self):
         return get_mock_service(ClickupService, SERVICE_CONFIG)
 
-    def test_to_taskwarrior(self, service, task):
-        issue = service.get_issue_for_record(task)
+    def test_to_taskwarrior(self, service, record):
+        issue = service.get_issue_for_record(record)
 
         expected_output = {
             "project": None,
             "priority": 'M',
             "due": None,
             "entry": datetime.fromtimestamp(
-                int(task["date_created"]) // 1e3, tz=timezone.utc
+                int(record["date_created"]) // 1e3, tz=timezone.utc
             ),
-            issue.ID: task["id"],
-            issue.DESCRIPTION: task["description"],
-            issue.STATUS: task["status"]["status"],
+            issue.ID: record["id"],
+            issue.DESCRIPTION: record["description"],
+            issue.STATUS: record["status"]["status"],
             issue.UPDATED_AT: datetime.fromtimestamp(
-                int(task["date_updated"]) // 1e3, tz=timezone.utc
+                int(record["date_updated"]) // 1e3, tz=timezone.utc
             ),
-            issue.CREATOR: task["creator"]["username"],
-            issue.URL: task["url"],
-            issue.LIST_NAME: task["list"]["name"],
-            issue.PROJECT: task["project"]["id"],
-            issue.FOLDER: task["folder"]["id"],
-            issue.SPACE: task["space"]["id"],
-            issue.NAME: task["name"],
+            issue.CREATOR: record["creator"]["username"],
+            issue.URL: record["url"],
+            issue.LIST_NAME: record["list"]["name"],
+            issue.PROJECT: record["project"]["id"],
+            issue.FOLDER: record["folder"]["id"],
+            issue.SPACE: record["space"]["id"],
+            issue.NAME: record["name"],
         }
         actual_output = issue.to_taskwarrior()
 
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues(self, service, task, task_page):
+    def test_issues(self, service, record, task_page):
         responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0",
             json=task_page(1),
@@ -223,22 +223,22 @@ class TestClickupIssue:
             "due": None,
             "tags": [],
             "entry": datetime.fromtimestamp(
-                int(task["date_created"]) // 1e3, tz=timezone.utc
+                int(record["date_created"]) // 1e3, tz=timezone.utc
             ),
             "description": "(bw)Is# - My task .. https://app.clickup.com/t/86adrdd2j",
-            issue.ID: task["id"],
-            issue.DESCRIPTION: task["description"],
-            issue.STATUS: task["status"]["status"],
+            issue.ID: record["id"],
+            issue.DESCRIPTION: record["description"],
+            issue.STATUS: record["status"]["status"],
             issue.UPDATED_AT: datetime.fromtimestamp(
-                int(task["date_updated"]) // 1e3, tz=timezone.utc
+                int(record["date_updated"]) // 1e3, tz=timezone.utc
             ),
-            issue.CREATOR: task["creator"]["username"],
-            issue.URL: task["url"],
-            issue.LIST_NAME: task["list"]["name"],
-            issue.PROJECT: task["project"]["id"],
-            issue.FOLDER: task["folder"]["id"],
-            issue.SPACE: task["space"]["id"],
-            issue.NAME: task["name"],
+            issue.CREATOR: record["creator"]["username"],
+            issue.URL: record["url"],
+            issue.LIST_NAME: record["list"]["name"],
+            issue.PROJECT: record["project"]["id"],
+            issue.FOLDER: record["folder"]["id"],
+            issue.SPACE: record["space"]["id"],
+            issue.NAME: record["name"],
         }
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected_output

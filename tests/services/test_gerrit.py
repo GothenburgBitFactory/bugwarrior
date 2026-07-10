@@ -17,8 +17,9 @@ SERVICE_CONFIG = {
 }
 
 
-class TestGerritIssue:
-    record = {
+@pytest.fixture
+def record():
+    return {
         'project': 'nova',
         '_number': 1,
         'branch': 'master',
@@ -40,13 +41,18 @@ class TestGerritIssue:
         ],
     }
 
-    extra = {
+
+@pytest.fixture
+def extra():
+    return {
         'annotations': [
             # TODO - test annotations?
         ],
         'url': 'https://one.com/#/c/1/',
     }
 
+
+class TestGerritIssue:
     @pytest.fixture
     def service(self):
         # GerritService.__init__ sends a HEAD request to detect the server's
@@ -60,8 +66,8 @@ class TestGerritIssue:
             )
             return get_mock_service(GerritService, SERVICE_CONFIG)
 
-    def test_to_taskwarrior(self, service):
-        issue = service.get_issue_for_record(self.record, self.extra)
+    def test_to_taskwarrior(self, service, record, extra):
+        issue = service.get_issue_for_record(record, extra)
         actual = issue.to_taskwarrior()
         expected = {
             'annotations': [],
@@ -79,10 +85,10 @@ class TestGerritIssue:
 
         assert actual == expected
 
-    def test_work_in_progress(self, service):
-        wip_record = dict(self.record)  # make a copy of the dict
+    def test_work_in_progress(self, service, record, extra):
+        wip_record = dict(record)  # make a copy of the dict
         wip_record['work_in_progress'] = True
-        issue = service.get_issue_for_record(wip_record, self.extra)
+        issue = service.get_issue_for_record(wip_record, extra)
 
         expected = {
             'annotations': [],
@@ -102,11 +108,11 @@ class TestGerritIssue:
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     @responses.activate
-    def test_issues(self, service):
+    def test_issues(self, service, record):
         responses.get(
             'https://one.com/a/changes/?q=is:open+is:reviewer&o=MESSAGES&o=DETAILED_ACCOUNTS',
             # The response has some ")]}'" garbage prefixed.
-            body=")]}'" + json.dumps([self.record]),
+            body=")]}'" + json.dumps([record]),
         )
 
         issue = next(service.issues())

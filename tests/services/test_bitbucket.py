@@ -14,6 +14,20 @@ SERVICE_CONFIG = {
 }
 
 
+@pytest.fixture
+def record():
+    return {'priority': 'trivial', 'id': '100', 'title': 'Some Title'}
+
+
+@pytest.fixture
+def extra():
+    return {
+        'url': 'http://hello-there.com/',
+        'project': 'Something',
+        'annotations': ['One'],
+    }
+
+
 class TestBitbucketIssue:
     @pytest.fixture
     def service(self):
@@ -24,23 +38,16 @@ class TestBitbucketIssue:
             )
             return get_mock_service(BitbucketService, SERVICE_CONFIG)
 
-    def test_to_taskwarrior(self, service):
-        arbitrary_issue = {'priority': 'trivial', 'id': '100', 'title': 'Some Title'}
-        arbitrary_extra = {
-            'url': 'http://hello-there.com/',
-            'project': 'Something',
-            'annotations': ['One'],
-        }
-
-        issue = service.get_issue_for_record(arbitrary_issue, arbitrary_extra)
+    def test_to_taskwarrior(self, service, record, extra):
+        issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
-            'project': arbitrary_extra['project'],
-            'priority': issue.PRIORITY_MAP[arbitrary_issue['priority']],
-            'annotations': arbitrary_extra['annotations'],
-            issue.URL: arbitrary_extra['url'],
-            issue.FOREIGN_ID: arbitrary_issue['id'],
-            issue.TITLE: arbitrary_issue['title'],
+            'project': extra['project'],
+            'priority': issue.PRIORITY_MAP[record['priority']],
+            'annotations': extra['annotations'],
+            issue.URL: extra['url'],
+            issue.FOREIGN_ID: record['id'],
+            issue.TITLE: record['title'],
         }
         actual_output = issue.to_taskwarrior()
 

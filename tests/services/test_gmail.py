@@ -1,4 +1,3 @@
-from copy import copy
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import pickle
@@ -14,14 +13,17 @@ from bugwarrior.services import gmail
 from ..base import get_validated_service
 from .base import get_mock_service
 
-TEST_CREDENTIAL = {
-    "token": "itsatokeneveryone",
-    "refresh_token": "itsarefreshtokeneveryone",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "client_id": "example.apps.googleusercontent.com",
-    "client_secret": "itsasecrettoeveryone",
-    "scopes": ["https://www.googleapis.com/auth/gmail.readonly"],
-}
+
+@pytest.fixture
+def credential():
+    return {
+        "token": "itsatokeneveryone",
+        "refresh_token": "itsarefreshtokeneveryone",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "client_id": "example.apps.googleusercontent.com",
+        "client_secret": "itsasecrettoeveryone",
+        "scopes": ["https://www.googleapis.com/auth/gmail.readonly"],
+    }
 
 
 SERVICE_CONFIG = {
@@ -45,16 +47,16 @@ class TestGmailService:
 
         return get_validated_service(config)
 
-    def test_get_credentials_exists_and_valid(self, service):
-        expected = Credentials(**copy(TEST_CREDENTIAL))
+    def test_get_credentials_exists_and_valid(self, service, credential):
+        expected = Credentials(**credential)
         assert expected.valid is True
         with open(service.credentials_path, "wb") as token:
             pickle.dump(expected, token)
 
         assert service.get_credentials().to_json() == expected.to_json()
 
-    def test_get_credentials_with_refresh(self, service):
-        expired_credential = Credentials(**copy(TEST_CREDENTIAL))
+    def test_get_credentials_with_refresh(self, service, credential):
+        expired_credential = Credentials(**credential)
         expired_credential.expiry = datetime.now(timezone.utc).replace(tzinfo=None)
         assert expired_credential.valid is False
         with open(service.credentials_path, "wb") as token:
@@ -79,50 +81,53 @@ class TestGmailService:
         assert refreshed_credential.valid is True
 
 
-TEST_THREAD = {
-    "messages": [
-        {
-            "payload": {
-                "headers": [
-                    {"name": "From", "value": "Foo Bar <foobar@example.com>"},
-                    {"name": "Subject", "value": "Regarding Bugwarrior"},
-                    {"name": "To", "value": "ct@example.com"},
-                    {
-                        "name": "Message-ID",
-                        "value": "<CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com>",  # noqa: E501
-                    },
-                ],
-                "parts": [{}],
-            },
-            "snippet": "Bugwarrior is great",
-            "internalDate": 1546722467000,
-            "threadId": "1234",
-            "labelIds": ["IMPORTANT", "Label_1", "Label_43", "CATEGORY_PERSONAL"],
-            "id": "9999",
-        }
-    ],
-    "id": "1234",
-}
+@pytest.fixture
+def record():
+    return {
+        "messages": [
+            {
+                "payload": {
+                    "headers": [
+                        {"name": "From", "value": "Foo Bar <foobar@example.com>"},
+                        {"name": "Subject", "value": "Regarding Bugwarrior"},
+                        {"name": "To", "value": "ct@example.com"},
+                        {
+                            "name": "Message-ID",
+                            "value": "<CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com>",  # noqa: E501
+                        },
+                    ],
+                    "parts": [{}],
+                },
+                "snippet": "Bugwarrior is great",
+                "internalDate": 1546722467000,
+                "threadId": "1234",
+                "labelIds": ["IMPORTANT", "Label_1", "Label_43", "CATEGORY_PERSONAL"],
+                "id": "9999",
+            }
+        ],
+        "id": "1234",
+    }
 
-TEST_LABELS = [
-    {"id": "IMPORTANT", "name": "IMPORTANT"},
-    {"id": "CATEGORY_PERSONAL", "name": "CATEGORY_PERSONAL"},
-    {"id": "Label_1", "name": "sticky"},
-    {"id": "Label_43", "name": "postit"},
-]
+
+@pytest.fixture
+def labels():
+    return [
+        {"id": "IMPORTANT", "name": "IMPORTANT"},
+        {"id": "CATEGORY_PERSONAL", "name": "CATEGORY_PERSONAL"},
+        {"id": "Label_1", "name": "sticky"},
+        {"id": "Label_43", "name": "postit"},
+    ]
 
 
 class TestGmailIssue:
     @pytest.fixture
-    def service(self, monkeypatch):
+    def service(self, record, labels, monkeypatch):
         mock_api = mock.Mock()
-        mock_api().users().labels().list().execute.return_value = {
-            'labels': TEST_LABELS
-        }
+        mock_api().users().labels().list().execute.return_value = {'labels': labels}
         mock_api().users().threads().list().execute.return_value = {
-            'threads': [{'id': TEST_THREAD['id']}]
+            'threads': [{'id': record['id']}]
         }
-        mock_api().users().threads().get().execute.return_value = TEST_THREAD
+        mock_api().users().threads().get().execute.return_value = record
         monkeypatch.setattr(gmail.GmailService, 'build_api', mock_api)
         return get_mock_service(
             gmail.GmailService, SERVICE_CONFIG, section='test_section'
@@ -135,10 +140,9 @@ class TestGmailIssue:
         )
         assert Path(service.credentials_path) == credentials_path
 
-    def test_to_taskwarrior(self, service):
-        thread = TEST_THREAD
+    def test_to_taskwarrior(self, service, record):
         issue = service.get_issue_for_record(
-            thread, gmail.thread_extras(thread, service.get_labels())
+            record, gmail.thread_extras(record, service.get_labels())
         )
         expected = {
             'annotations': [],

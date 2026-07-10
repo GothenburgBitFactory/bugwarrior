@@ -16,6 +16,26 @@ SERVICE_CONFIG = {
 }
 
 
+@pytest.fixture
+def record():
+    return {
+        "id": "2-1",
+        "$type": "Issue",
+        "numberInProject": 1,
+        "summary": "Hello World",
+        "project": {"shortName": "TEST", "$type": "Project"},
+        "tags": [
+            {"$type": "IssueTag", "name": "bug"},
+            {"$type": "IssueTag", "name": "New Feature"},
+        ],
+    }
+
+
+@pytest.fixture
+def extra():
+    return {}
+
+
 class TestYoutrackService:
     @pytest.fixture
     def config(self):
@@ -33,29 +53,16 @@ class TestYoutrackService:
 
 
 class TestYoutrackIssue:
-    arbitrary_issue = {
-        "id": "2-1",
-        "$type": "Issue",
-        "numberInProject": 1,
-        "summary": "Hello World",
-        "project": {"shortName": "TEST", "$type": "Project"},
-        "tags": [
-            {"$type": "IssueTag", "name": "bug"},
-            {"$type": "IssueTag", "name": "New Feature"},
-        ],
-    }
-    arbitrary_extra = {}
-
     @pytest.fixture
     def service(self):
         return get_mock_service(YoutrackService, SERVICE_CONFIG)
 
-    def test_get_tags_from_labels_uses_legacy_tag_options(self, caplog):
+    def test_get_tags_from_labels_uses_legacy_tag_options(self, caplog, record, extra):
         service = get_mock_service(
             YoutrackService,
             {**SERVICE_CONFIG, 'import_tags': True, 'tag_template': 'yt_{{tag|lower}}'},
         )
-        issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
+        issue = service.get_issue_for_record(record, extra)
 
         assert service.config.label_template == 'yt_{{label|lower}}'
         assert issue.get_tags() == ['yt_bug', 'yt_new_feature']
@@ -68,12 +75,14 @@ class TestYoutrackIssue:
             in caplog.text
         )
 
-    def test_refine_record_does_not_apply_legacy_tag_template_as_field_template(self):
+    def test_refine_record_does_not_apply_legacy_tag_template_as_field_template(
+        self, record, extra
+    ):
         service = get_mock_service(
             YoutrackService,
             {**SERVICE_CONFIG, 'import_tags': True, 'tag_template': 'yt_{{tag|lower}}'},
         )
-        issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
+        issue = service.get_issue_for_record(record, extra)
 
         assert service.config.templates == {}
         assert TaskConstructor(issue).get_taskwarrior_record()['tags'] == [
@@ -81,9 +90,9 @@ class TestYoutrackIssue:
             'yt_new_feature',
         ]
 
-    def test_to_taskwarrior(self, service):
+    def test_to_taskwarrior(self, service, record, extra):
         service.import_tags = True
-        issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
+        issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
             'project': 'TEST',
@@ -100,10 +109,10 @@ class TestYoutrackIssue:
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues(self, service):
+    def test_issues(self, service, record):
         responses.get(
             'https://youtrack.example.com:443/api/issues?query=for%3Ame+%23Unresolved&max=100&fields=id,summary,project(shortName),numberInProject,tags(name)',  # noqa: E501
-            json=[self.arbitrary_issue],
+            json=[record],
         )
 
         issue = next(service.issues())

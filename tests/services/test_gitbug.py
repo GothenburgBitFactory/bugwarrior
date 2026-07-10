@@ -10,7 +10,7 @@ from .base import get_mock_service
 
 
 @pytest.fixture
-def bug():
+def record():
     return {
         'author': {'name': 'ryneeverett'},
         'comments': {
@@ -34,14 +34,14 @@ SERVICE_CONFIG = {'service': 'gitbug', 'path': '/dev/null'}
 
 class TestGitBugIssue:
     @pytest.fixture
-    def service(self, bug):
+    def service(self, record):
         service = get_mock_service(GitBugService, SERVICE_CONFIG)
         service.client = mock.MagicMock(spec=GitBugClient)
-        service.client.get_issues = mock.MagicMock(return_value=[bug])
+        service.client.get_issues = mock.MagicMock(return_value=[record])
         return service
 
-    def test_to_taskwarrior(self, service, bug):
-        issue = service.get_issue_for_record(bug, {})
+    def test_to_taskwarrior(self, service, record):
+        issue = service.get_issue_for_record(record, {})
 
         expected = {
             'annotations': [],

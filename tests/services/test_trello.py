@@ -11,8 +11,9 @@ from ..base import get_validated_service, validate
 SERVICE_CONFIG = {'service': 'trello', 'api_key': 'XXXX', 'token': 'YYYY'}
 
 
-class TestTrelloIssue:
-    JSON = {
+@pytest.fixture
+def record():
+    return {
         "due": "2018-12-02T12:59:00.000Z",
         "id": "542bbb6583d705eb05bbe491",
         "idShort": 42,
@@ -24,8 +25,10 @@ class TestTrelloIssue:
         "desc": "some description",
     }
 
+
+class TestTrelloIssue:
     @pytest.fixture
-    def issue(self):
+    def issue(self, record):
         config = TrelloConfig(
             service='trello',
             api_key='abc123',
@@ -39,7 +42,7 @@ class TestTrelloIssue:
             targets=[], inline_links=True, description_length=31
         )
         extra = {'boardname': 'Hyperspatial express route', 'listname': 'Something'}
-        return TrelloIssue(self.JSON, config, main_config, extra)
+        return TrelloIssue(record, config, main_config, extra)
 
     def test_default_description(self, issue):
         """Test the generated description"""
@@ -54,51 +57,69 @@ class TestTrelloIssue:
         assert expected_project == issue.to_taskwarrior().get('project', None)
 
 
-class TestTrelloService:
-    BOARD = {'id': 'B04RD', 'name': 'My Board'}
-    CARD1 = {
-        'id': 'C4RD',
-        'name': 'Card 1',
-        'members': [{'username': 'tintin'}],
-        'due': '2018-12-02T12:59:00.000Z',
-        'idShort': 1,
-        'shortLink': 'abcd',
-        'shortUrl': 'https://trello.com/c/AAaaBBbb',
-        'labels': [{'name': 'foo'}, {'name': 'bar'}],
-        'desc': 'some description',
-        'url': 'https://trello.com/c/AAaBBbb/42-so-long',
-    }
-    CARD2 = {'id': 'kard', 'name': 'Card 2', 'members': [{'username': 'mario'}]}
-    CARD3 = {'id': 'K4rD', 'name': 'Card 3', 'members': []}
-    LIST1 = {'id': 'L15T', 'name': 'List 1'}
-    LIST2 = {'id': 'ZZZZ', 'name': 'List 2'}
-    COMMENT1 = {
-        "type": "commentCard",
-        "data": {"text": "Preums"},
-        "memberCreator": {"username": "luidgi"},
-    }
-    COMMENT2 = {
-        "type": "commentCard",
-        "data": {"text": "Deuz"},
-        "memberCreator": {"username": "mario"},
-    }
+@pytest.fixture
+def board():
+    return {'id': 'B04RD', 'name': 'My Board'}
 
+
+@pytest.fixture
+def cards():
+    return [
+        {
+            'id': 'C4RD',
+            'name': 'Card 1',
+            'members': [{'username': 'tintin'}],
+            'due': '2018-12-02T12:59:00.000Z',
+            'idShort': 1,
+            'shortLink': 'abcd',
+            'shortUrl': 'https://trello.com/c/AAaaBBbb',
+            'labels': [{'name': 'foo'}, {'name': 'bar'}],
+            'desc': 'some description',
+            'url': 'https://trello.com/c/AAaBBbb/42-so-long',
+        },
+        {'id': 'kard', 'name': 'Card 2', 'members': [{'username': 'mario'}]},
+        {'id': 'K4rD', 'name': 'Card 3', 'members': []},
+    ]
+
+
+@pytest.fixture
+def lists():
+    return [{'id': 'L15T', 'name': 'List 1'}, {'id': 'ZZZZ', 'name': 'List 2'}]
+
+
+@pytest.fixture
+def comments():
+    return [
+        {
+            "type": "commentCard",
+            "data": {"text": "Preums"},
+            "memberCreator": {"username": "luidgi"},
+        },
+        {
+            "type": "commentCard",
+            "data": {"text": "Deuz"},
+            "memberCreator": {"username": "mario"},
+        },
+    ]
+
+
+class TestTrelloService:
     @pytest.fixture
     def config(self):
         return {'general': {'targets': ['mytrello']}, 'mytrello': {**SERVICE_CONFIG}}
 
     @pytest.fixture(autouse=True)
-    def mock_api(self):
+    def mock_api(self, board, cards, lists, comments):
         with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
             rsps.add(
                 responses.GET,
                 'https://api.trello.com/1/lists/L15T/cards/open',
-                json=[self.CARD1, self.CARD2, self.CARD3],
+                json=cards,
             )
             rsps.add(
                 responses.GET,
                 'https://api.trello.com/1/boards/B04RD/lists/open',
-                json=[self.LIST1, self.LIST2],
+                json=lists,
             )
             rsps.add(
                 responses.GET,
@@ -113,12 +134,12 @@ class TestTrelloService:
             rsps.add(
                 responses.GET,
                 'https://api.trello.com/1/members/me/boards',
-                json=[self.BOARD],
+                json=[board],
             )
             rsps.add(
                 responses.GET,
                 'https://api.trello.com/1/cards/C4RD/actions',
-                json=[self.COMMENT1, self.COMMENT2],
+                json=comments,
             )
             yield rsps
 
@@ -131,61 +152,54 @@ class TestTrelloService:
             {'id': 'B4R', 'name': 'Bar Board'},
         ]
 
-    def test_get_boards_api(self, config):
+    def test_get_boards_api(self, config, board):
         service = get_validated_service(config)
         boards = service.get_boards()
-        assert list(boards) == [self.BOARD]
+        assert list(boards) == [board]
 
-    def test_get_lists(self, config):
+    def test_get_lists(self, config, lists):
         service = get_validated_service(config)
-        lists = service.get_lists('B04RD')
-        assert list(lists) == [self.LIST1, self.LIST2]
+        assert list(service.get_lists('B04RD')) == lists
 
-    def test_get_lists_include(self, config):
+    def test_get_lists_include(self, config, lists):
         config['mytrello']['include_lists'] = 'List 1'
         service = get_validated_service(config)
-        lists = service.get_lists('B04RD')
-        assert list(lists) == [self.LIST1]
+        assert list(service.get_lists('B04RD')) == [lists[0]]
 
-    def test_get_lists_exclude(self, config):
+    def test_get_lists_exclude(self, config, lists):
         config['mytrello']['exclude_lists'] = 'List 1'
         service = get_validated_service(config)
-        lists = service.get_lists('B04RD')
-        assert list(lists) == [self.LIST2]
+        assert list(service.get_lists('B04RD')) == [lists[1]]
 
-    def test_get_cards(self, config):
+    def test_get_cards(self, config, cards):
         service = get_validated_service(config)
-        cards = service.get_cards('L15T')
-        assert list(cards) == [self.CARD1, self.CARD2, self.CARD3]
+        assert list(service.get_cards('L15T')) == cards
 
-    def test_get_cards_assigned(self, config):
+    def test_get_cards_assigned(self, config, cards):
         config['mytrello']['only_if_assigned'] = 'tintin'
         service = get_validated_service(config)
-        cards = service.get_cards('L15T')
-        assert list(cards) == [self.CARD1]
+        assert list(service.get_cards('L15T')) == [cards[0]]
 
-    def test_get_cards_assigned_unassigned(self, config):
+    def test_get_cards_assigned_unassigned(self, config, cards):
         config['mytrello'].update(
             {'only_if_assigned': 'tintin', 'also_unassigned': 'true'}
         )
         service = get_validated_service(config)
-        cards = service.get_cards('L15T')
-        assert list(cards) == [self.CARD1, self.CARD3]
+        assert list(service.get_cards('L15T')) == [cards[0], cards[2]]
 
-    def test_get_comments(self, config):
+    def test_get_comments(self, config, comments):
         service = get_validated_service(config)
-        comments = service.get_comments('C4RD')
-        assert list(comments) == [self.COMMENT1, self.COMMENT2]
+        assert list(service.get_comments('C4RD')) == comments
 
-    def test_annotations(self, config):
+    def test_annotations(self, config, cards):
         service = get_validated_service(config)
-        annotations = service.annotations(self.CARD1)
+        annotations = service.annotations(cards[0])
         assert list(annotations) == ["@luidgi - Preums", "@mario - Deuz"]
 
-    def test_annotations_with_link(self, config):
+    def test_annotations_with_link(self, config, cards):
         config['general']['annotation_links'] = 'true'
         service = get_validated_service(config)
-        annotations = service.annotations(self.CARD1)
+        annotations = service.annotations(cards[0])
         assert list(annotations) == [
             "https://trello.com/c/AAaaBBbb",
             "@luidgi - Preums",

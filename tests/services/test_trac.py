@@ -13,6 +13,22 @@ SERVICE_CONFIG = {
 }
 
 
+@pytest.fixture
+def record():
+    return {
+        'url': 'http://some/url.com/',
+        'summary': 'Some Summary',
+        'number': 204,
+        'priority': 'critical',
+        'component': 'testcomponent',
+    }
+
+
+@pytest.fixture
+def extra():
+    return {'annotations': ['alpha', 'beta'], 'project': 'some project'}
+
+
 class FakeTracTicket:
     @staticmethod
     def changeLog(issuenumber):
@@ -38,33 +54,23 @@ class FakeTracLib:
 
 
 class TestTracIssue:
-    arbitrary_issue = {
-        'url': 'http://some/url.com/',
-        'summary': 'Some Summary',
-        'number': 204,
-        'priority': 'critical',
-        'component': 'testcomponent',
-    }
-
     @pytest.fixture
-    def service(self):
+    def service(self, record):
         service = get_mock_service(TracService, SERVICE_CONFIG)
-        service.trac = FakeTracLib(self.arbitrary_issue)
+        service.trac = FakeTracLib(record)
         return service
 
-    def test_to_taskwarrior(self, service):
-        arbitrary_extra = {'annotations': ['alpha', 'beta'], 'project': 'some project'}
-
-        issue = service.get_issue_for_record(self.arbitrary_issue, arbitrary_extra)
+    def test_to_taskwarrior(self, service, record, extra):
+        issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
-            'project': arbitrary_extra['project'],
-            'priority': issue.PRIORITY_MAP[self.arbitrary_issue['priority']],
-            'annotations': arbitrary_extra['annotations'],
-            issue.URL: self.arbitrary_issue['url'],
-            issue.SUMMARY: self.arbitrary_issue['summary'],
-            issue.NUMBER: self.arbitrary_issue['number'],
-            issue.COMPONENT: self.arbitrary_issue['component'],
+            'project': extra['project'],
+            'priority': issue.PRIORITY_MAP[record['priority']],
+            'annotations': extra['annotations'],
+            issue.URL: record['url'],
+            issue.SUMMARY: record['summary'],
+            issue.NUMBER: record['number'],
+            issue.COMPONENT: record['component'],
         }
         actual_output = issue.to_taskwarrior()
 

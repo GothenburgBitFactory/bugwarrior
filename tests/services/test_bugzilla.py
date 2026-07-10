@@ -68,8 +68,9 @@ class TestBugzillaServiceConfig:
         )
 
 
-class TestBugzillaService:
-    arbitrary_record = {
+@pytest.fixture
+def record():
+    return {
         'product': 'Product',
         'component': 'Something',
         'priority': 'urgent',
@@ -80,39 +81,46 @@ class TestBugzillaService:
         'assigned_to': None,
     }
 
-    arbitrary_datetime = datetime.datetime.now(tz=datetime.timezone.utc).replace(
-        microsecond=0
-    )
 
-    def make_service(self, **overrides):
+ASSIGNED_DATE = datetime.datetime.now(tz=datetime.timezone.utc).replace(microsecond=0)
+
+
+@pytest.fixture
+def make_service(record):
+    def make(**overrides):
         with mock.patch('bugzilla.Bugzilla'):
             service = get_mock_service(BugzillaService, {**SERVICE_CONFIG, **overrides})
-        service.bz = FakeBugzillaLib([self.arbitrary_record])
-        service._get_assigned_date = lambda issues: self.arbitrary_datetime.isoformat()
+        service.bz = FakeBugzillaLib([record])
+        service._get_assigned_date = lambda issues: ASSIGNED_DATE.isoformat()
         return service
 
-    @pytest.fixture
-    def service(self):
-        return self.make_service()
+    return make
 
-    def test_api_key_supplied(self):
-        self.make_service(base_uri='https://one.com/', username='me', api_key='123')
 
-    def test_to_taskwarrior(self, service):
+@pytest.fixture
+def service(make_service):
+    return make_service()
+
+
+class TestBugzillaService:
+    def test_api_key_supplied(self, make_service):
+        make_service(base_uri='https://one.com/', username='me', api_key='123')
+
+    def test_to_taskwarrior(self, service, record):
         arbitrary_extra = {'url': 'http://path/to/issue/', 'annotations': ['Two']}
 
-        issue = service.get_issue_for_record(self.arbitrary_record, arbitrary_extra)
+        issue = service.get_issue_for_record(record, arbitrary_extra)
 
         expected_output = {
-            'project': self.arbitrary_record['component'],
-            'priority': issue.PRIORITY_MAP[self.arbitrary_record['priority']],
+            'project': record['component'],
+            'priority': issue.PRIORITY_MAP[record['priority']],
             'annotations': arbitrary_extra['annotations'],
-            issue.STATUS: self.arbitrary_record['status'],
+            issue.STATUS: record['status'],
             issue.URL: arbitrary_extra['url'],
-            issue.SUMMARY: self.arbitrary_record['summary'],
-            issue.BUG_ID: self.arbitrary_record['id'],
-            issue.PRODUCT: self.arbitrary_record['product'],
-            issue.COMPONENT: self.arbitrary_record['component'],
+            issue.SUMMARY: record['summary'],
+            issue.BUG_ID: record['id'],
+            issue.PRODUCT: record['product'],
+            issue.COMPONENT: record['component'],
         }
         actual_output = issue.to_taskwarrior()
 
@@ -140,8 +148,8 @@ class TestBugzillaService:
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_only_if_assigned(self):
-        service = self.make_service(only_if_assigned='hello')
+    def test_only_if_assigned(self, make_service):
+        service = make_service(only_if_assigned='hello')
 
         assigned_records = [
             {
@@ -171,7 +179,7 @@ class TestBugzillaService:
 
         expected = {
             'annotations': [],
-            'bugzillaassignedon': self.arbitrary_datetime,
+            'bugzillaassignedon': ASSIGNED_DATE,
             'bugzillabugid': 1234568,
             'bugzillastatus': 'ASSIGNED',
             'bugzillasummary': 'This is the issue summary',
@@ -193,8 +201,8 @@ class TestBugzillaService:
         with pytest.raises(StopIteration):
             next(issues)
 
-    def test_also_unassigned(self):
-        service = self.make_service(only_if_assigned='hello', also_unassigned=True)
+    def test_also_unassigned(self, make_service):
+        service = make_service(only_if_assigned='hello', also_unassigned=True)
 
         assigned_records = [
             {

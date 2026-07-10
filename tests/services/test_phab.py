@@ -7,26 +7,33 @@ from .base import get_mock_service
 SERVICE_CONFIG = {'service': 'phabricator', 'host': 'https://phabricator.example.com'}
 
 
-class TestPhabricatorIssue:
-    arbitrary_issue = {
-        "id": 42,
-        "uri": "https://phabricator.example.com/arbitrary_username/project/issues/3",
-        "title": "A phine phabricator issue",
+@pytest.fixture
+def record():
+    return {
+        'id': 42,
+        'uri': 'https://phabricator.example.com/arbitrary_username/project/issues/3',
+        'title': 'A phine phabricator issue',
     }
-    arbitrary_extra = {'type': 'issue', 'project': 'PHROJECT', 'annotations': []}
 
+
+@pytest.fixture
+def extra():
+    return {'type': 'issue', 'project': 'PHROJECT', 'annotations': []}
+
+
+class TestPhabricatorIssue:
     @pytest.fixture
     def service(self):
         return get_mock_service(PhabricatorService, SERVICE_CONFIG)
 
-    def test_to_taskwarrior(self, service):
+    def test_to_taskwarrior(self, service, record, extra):
         service.import_labels_as_tags = True
-        issue = service.get_issue_for_record(self.arbitrary_issue, self.arbitrary_extra)
+        issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
-            issue.URL: self.arbitrary_issue['uri'],
-            issue.TYPE: self.arbitrary_extra['type'],
-            issue.TITLE: self.arbitrary_issue['title'],
+            issue.URL: record['uri'],
+            issue.TYPE: extra['type'],
+            issue.TITLE: record['title'],
             issue.OBJECT_NAME: '3',
             'project': 'PHROJECT',
             'priority': 'M',

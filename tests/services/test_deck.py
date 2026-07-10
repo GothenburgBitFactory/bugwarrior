@@ -10,7 +10,7 @@ from ..base import get_validated_service
 
 
 @pytest.fixture
-def card():
+def record():
     return {
         "title": "check that nextcloud deck integration works",
         "description": "some additional description",
@@ -84,14 +84,14 @@ class TestNextcloudDeckIssue:
             'deck': {**SERVICE_CONFIG},
         }
 
-    def make_service(self, config, card):
+    def make_service(self, config, record):
         service = get_validated_service(config)
         service.client = mock.MagicMock(spec=NextcloudDeckClient)
         service.client.get_boards = mock.MagicMock(
             return_value=[{'id': 5, 'title': 'testboard'}]
         )
         service.client.get_stacks = mock.MagicMock(
-            return_value=[{'id': 13, 'title': 'teststack', 'cards': [card]}]
+            return_value=[{'id': 13, 'title': 'teststack', 'cards': [record]}]
         )
         service.client.get_comments = mock.MagicMock(
             return_value={
@@ -103,12 +103,12 @@ class TestNextcloudDeckIssue:
         return service
 
     @pytest.fixture
-    def service(self, config, card):
-        return self.make_service(config, card)
+    def service(self, config, record):
+        return self.make_service(config, record)
 
-    def test_to_taskwarrior(self, service, card):
+    def test_to_taskwarrior(self, service, record):
         issue = service.get_issue_for_record(
-            card,
+            record,
             {
                 'board': {'title': 'testboard', 'id': 5},
                 'stack': {'title': 'teststack', 'id': 13},
@@ -163,14 +163,14 @@ class TestNextcloudDeckIssue:
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_get_owner(self, config, card):
+    def test_get_owner(self, config, record):
         # Regression test: the old get_owner did `issue[issue.ASSIGNEE]`, treating
         # the NextcloudDeckIssue as a dict. Issue has no __getitem__, so this raised
         # TypeError whenever only_if_assigned was configured.
         config['deck']['only_if_assigned'] = 'rainbow'
-        service = self.make_service(config, card)
+        service = self.make_service(config, record)
         issue = service.get_issue_for_record(
-            card,
+            record,
             {
                 'board': {'title': 'testboard', 'id': 5},
                 'stack': {'title': 'teststack', 'id': 13},
@@ -179,14 +179,14 @@ class TestNextcloudDeckIssue:
         )
         assert service.get_owner(issue) == 'rainbow'
 
-    def test_filter_boards_include(self, config, card):
+    def test_filter_boards_include(self, config, record):
         config['deck']['include_board_ids'] = '5'
-        service = self.make_service(config, card)
+        service = self.make_service(config, record)
         assert service.filter_boards({'title': 'testboard', 'id': 5})
         assert not service.filter_boards({'title': 'testboard', 'id': 6})
 
-    def test_filter_boards_exclude(self, config, card):
+    def test_filter_boards_exclude(self, config, record):
         config['deck']['exclude_board_ids'] = '5'
-        service = self.make_service(config, card)
+        service = self.make_service(config, record)
         assert not service.filter_boards({'title': 'testboard', 'id': 5})
         assert service.filter_boards({'title': 'testboard', 'id': 6})

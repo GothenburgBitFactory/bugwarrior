@@ -1,5 +1,6 @@
 from collections import namedtuple
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -23,13 +24,59 @@ SERVICE_CONFIG = {
 }
 
 
+@pytest.fixture
+def data():
+    estimation = 3600
+    arbitrary_id = '10'
+    arbitrary_subtask_ids = ['11', '12']
+    arbitrary_parent_id = '13'
+    arbitrary_namedfield_valueinside = 77
+    project = 'DONUT'
+    summary = 'lkjaldsfjaldf'
+
+    record = {
+        'fields': {
+            'priority': 'Blocker',
+            'summary': summary,
+            'timeestimate': estimation,
+            'created': '2016-06-06T06:07:08.123-0700',
+            'fixVersions': [{'name': '1.2.3'}],
+            'issuetype': {'name': 'Epic'},
+            'status': {'name': 'Open'},
+            'subtasks': [
+                {'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids
+            ],
+            'parent': {'key': f'DONUT-{arbitrary_parent_id}'},
+            'customfield_10000': 'foo',
+            'namedfield': {'valueinside': arbitrary_namedfield_valueinside},
+        },
+        'key': '%s-%s' % (project, arbitrary_id),
+    }
+
+    record_with_due = record.copy()
+    record_with_due['fields'] = record_with_due['fields'].copy()
+    record_with_due['fields']['Sprint'] = [
+        'com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
+                    state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4\
+                    55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]'
+    ]
+
+    return SimpleNamespace(
+        estimation=estimation,
+        project=project,
+        summary=summary,
+        record=record,
+        record_with_due=record_with_due,
+    )
+
+
 class FakeJiraClient:
-    def __init__(self, arbitrary_record):
-        self.arbitrary_record = arbitrary_record
+    def __init__(self, record):
+        self.record = record
 
     def search_issues(self, *args, **kwargs):
         Case = namedtuple('Case', ['raw', 'key'])
-        return [Case(self.arbitrary_record, self.arbitrary_record['key'])]
+        return [Case(self.record, self.record['key'])]
 
     def comments(self, *args, **kwargs):
         return None
@@ -73,46 +120,11 @@ class TestJiraService:
 
 
 class TestJiraIssue:
-    arbitrary_estimation = 3600
-    arbitrary_id = '10'
-    arbitrary_subtask_ids = ['11', '12']
-    arbitrary_parent_id = '13'
-    arbitrary_namedfield_valueinside = 77
-    arbitrary_project = 'DONUT'
-    arbitrary_summary = 'lkjaldsfjaldf'
-
-    arbitrary_record = {
-        'fields': {
-            'priority': 'Blocker',
-            'summary': arbitrary_summary,
-            'timeestimate': arbitrary_estimation,
-            'created': '2016-06-06T06:07:08.123-0700',
-            'fixVersions': [{'name': '1.2.3'}],
-            'issuetype': {'name': 'Epic'},
-            'status': {'name': 'Open'},
-            'subtasks': [
-                {'key': 'DONUT-%s' % subtask} for subtask in arbitrary_subtask_ids
-            ],
-            'parent': {'key': f'DONUT-{arbitrary_parent_id}'},
-            'customfield_10000': 'foo',
-            'namedfield': {'valueinside': arbitrary_namedfield_valueinside},
-        },
-        'key': '%s-%s' % (arbitrary_project, arbitrary_id),
-    }
-
-    arbitrary_record_with_due = arbitrary_record.copy()
-    arbitrary_record_with_due['fields'] = arbitrary_record_with_due['fields'].copy()
-    arbitrary_record_with_due['fields']['Sprint'] = [
-        'com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
-                    state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4\
-                    55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]'
-    ]
-
     @pytest.fixture
-    def service(self):
+    def service(self, data):
         with mock.patch('jira.client.JIRA._get_json'):
             service = get_mock_service(JiraService, SERVICE_CONFIG)
-        service.jira = FakeJiraClient(self.arbitrary_record)
+        service.jira = FakeJiraClient(data.record)
         service.sprint_field_names = ['Sprint']
         return service
 
@@ -121,22 +133,20 @@ class TestJiraIssue:
             ['jiraextra1:customfield_10000', 'jiraextra2:namedfield.valueinside']
         )
 
-    def test_to_taskwarrior(self, service):
-        arbitrary_url = 'http://one'
-        arbitrary_extra = {
+    def test_to_taskwarrior(self, service, data):
+        url = 'http://one'
+        extra = {
             'annotations': ['an annotation'],
             'body': 'issue body',
             'sprint_field_names': [],
         }
 
-        issue = service.get_issue_for_record(self.arbitrary_record, arbitrary_extra)
+        issue = service.get_issue_for_record(data.record, extra)
 
         expected_output = {
-            'project': self.arbitrary_project,
-            'priority': (
-                issue.PRIORITY_MAP[self.arbitrary_record['fields']['priority']]
-            ),
-            'annotations': arbitrary_extra['annotations'],
+            'project': data.project,
+            'priority': (issue.PRIORITY_MAP[data.record['fields']['priority']]),
+            'annotations': extra['annotations'],
             'due': None,
             'tags': [],
             'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=timezone.utc),
@@ -147,41 +157,41 @@ class TestJiraIssue:
             'jiraparent': 'DONUT-13',
             'jiraextra1': 'foo',
             'jiraextra2': 77,
-            issue.URL: arbitrary_url,
-            issue.FOREIGN_ID: self.arbitrary_record['key'],
-            issue.SUMMARY: self.arbitrary_summary,
+            issue.URL: url,
+            issue.FOREIGN_ID: data.record['key'],
+            issue.SUMMARY: data.summary,
             issue.DESCRIPTION: 'issue body',
-            issue.ESTIMATE: self.arbitrary_estimation / 60 / 60,
+            issue.ESTIMATE: data.estimation / 60 / 60,
         }
 
         def get_url(*args):
-            return arbitrary_url
+            return url
 
         with mock.patch.object(issue, 'get_url', side_effect=get_url):
             actual_output = issue.to_taskwarrior()
 
         assert actual_output == expected_output
 
-    def test_to_taskwarrior_sprint_with_goal(self, service):
-        record_with_goal = self.arbitrary_record.copy()
-        record_with_goal['fields'] = self.arbitrary_record_with_due['fields'].copy()
+    def test_to_taskwarrior_sprint_with_goal(self, service, data):
+        record_with_goal = data.record.copy()
+        record_with_goal['fields'] = data.record_with_due['fields'].copy()
         record_with_goal['fields']['Sprint'] = [
             'com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
             state=ACTIVE,name=Sprint 1,goal=Do foo, bar, baz,startDate=2016-09-06T16:08:07.4\
             55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]'
         ]
-        arbitrary_url = 'http://one'
-        arbitrary_extra = {
+        url = 'http://one'
+        extra = {
             'annotations': ['an annotation'],
             'sprint_field_names': service.sprint_field_names,
         }
 
-        issue = service.get_issue_for_record(record_with_goal, arbitrary_extra)
+        issue = service.get_issue_for_record(record_with_goal, extra)
 
         expected_output = {
-            'project': self.arbitrary_project,
+            'project': data.project,
             'priority': (issue.PRIORITY_MAP[record_with_goal['fields']['priority']]),
-            'annotations': arbitrary_extra['annotations'],
+            'annotations': extra['annotations'],
             'due': datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc),
             'tags': [],
             'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=timezone.utc),
@@ -192,15 +202,15 @@ class TestJiraIssue:
             'jiraparent': 'DONUT-13',
             'jiraextra1': 'foo',
             'jiraextra2': 77,
-            issue.URL: arbitrary_url,
+            issue.URL: url,
             issue.FOREIGN_ID: record_with_goal['key'],
-            issue.SUMMARY: self.arbitrary_summary,
+            issue.SUMMARY: data.summary,
             issue.DESCRIPTION: None,
-            issue.ESTIMATE: self.arbitrary_estimation / 60 / 60,
+            issue.ESTIMATE: data.estimation / 60 / 60,
         }
 
         def get_url(*args):
-            return arbitrary_url
+            return url
 
         with mock.patch.object(issue, 'get_url', side_effect=get_url):
             actual_output = issue.to_taskwarrior()
@@ -236,17 +246,17 @@ class TestJiraIssue:
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_get_due(self, service):
+    def test_get_due(self, service, data):
         issue = service.get_issue_for_record(
-            self.arbitrary_record_with_due,
+            data.record_with_due,
             extra={'sprint_field_names': service.sprint_field_names},
         )
 
         assert issue.get_due() == datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc)
 
-    def test_get_due_sprint_dict_missing_end_date(self, service):
-        record = self.arbitrary_record.copy()
-        record['fields'] = self.arbitrary_record['fields'].copy()
+    def test_get_due_sprint_dict_missing_end_date(self, service, data):
+        record = data.record.copy()
+        record['fields'] = data.record['fields'].copy()
         record['fields']['Sprint'] = [{'id': 1, 'state': 'active', 'name': 'Sprint 1'}]
 
         issue = service.get_issue_for_record(

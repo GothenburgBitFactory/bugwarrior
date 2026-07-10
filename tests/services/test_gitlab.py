@@ -13,14 +13,10 @@ from .base import get_mock_service
 
 @pytest.fixture
 def data():
-    arbitrary_created = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(
-        microsecond=0
-    )
-    arbitrary_updated = datetime.now(timezone.utc).replace(microsecond=0)
-    arbitrary_duedate = datetime.combine(
-        date.today(), datetime.min.time(), tzinfo=timezone.utc
-    )
-    arbitrary_issue = {
+    created = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(microsecond=0)
+    updated = datetime.now(timezone.utc).replace(microsecond=0)
+    duedate = datetime.combine(date.today(), datetime.min.time(), tzinfo=timezone.utc)
+    issue = {
         "id": 42,
         "iid": 3,
         "project_id": 8,
@@ -31,7 +27,7 @@ def data():
             "id": 1,
             "title": "v1.0",
             "description": "",
-            "due_date": arbitrary_duedate.date().isoformat(),
+            "due_date": duedate.date().isoformat(),
             "state": "closed",
             "updated_at": "2012-07-04T13:42:48Z",
             "created_at": "2012-07-04T13:42:48Z",
@@ -63,12 +59,12 @@ def data():
             "created_at": "2012-05-23T08:00:58Z",
         },
         "state": "opened",
-        "updated_at": arbitrary_updated.isoformat(),
-        "created_at": arbitrary_created.isoformat(),
+        "updated_at": updated.isoformat(),
+        "created_at": created.isoformat(),
         "weight": 3,
         "work_in_progress": True,
     }
-    arbitrary_extra = {
+    extra = {
         'issue_url': 'https://my-git.org/arbitrary_username/project/issues/3',
         'project': 'project',
         'namespace': 'arbitrary_namespace',
@@ -76,7 +72,7 @@ def data():
         'annotations': [],
         'description': '',
     }
-    arbitrary_todo = {
+    todo = {
         "id": 42,
         "project": {
             "id": 2,
@@ -106,7 +102,7 @@ def data():
                 "id": 1,
                 "title": "v1.0",
                 "description": "",
-                "due_date": arbitrary_duedate.date().isoformat(),
+                "due_date": duedate.date().isoformat(),
                 "state": "closed",
                 "updated_at": "2012-07-04T13:42:48Z",
                 "created_at": "2012-07-04T13:42:48Z",
@@ -128,25 +124,25 @@ def data():
                 "created_at": "2012-05-23T08:00:58Z",
             },
             "state": "opened",
-            "updated_at": arbitrary_updated.isoformat(),
-            "created_at": arbitrary_created.isoformat(),
+            "updated_at": updated.isoformat(),
+            "created_at": created.isoformat(),
             "weight": 3,
             "work_in_progress": True,
         },
         "target_url": "https://my-git.org/arbitrary_username/project/issues/3",
         "body": "Add user settings",
         "state": "pending",
-        "created_at": arbitrary_created.isoformat(),
-        "updated_at": arbitrary_updated.isoformat(),
+        "created_at": created.isoformat(),
+        "updated_at": updated.isoformat(),
     }
-    arbitrary_todo_extra = {
+    todo_extra = {
         'issue_url': 'https://my-git.org/arbitrary_username/project/issues/3',
         'project': 'project',
         'namespace': 'arbitrary_namespace',
         'type': 'todo',
         'annotations': [],
     }
-    arbitrary_mr = {
+    mr = {
         "id": 42,
         "iid": 3,
         "project_id": 8,
@@ -157,7 +153,7 @@ def data():
             "id": 1,
             "title": "v1.0",
             "description": "",
-            "due_date": arbitrary_duedate.date().isoformat(),
+            "due_date": duedate.date().isoformat(),
             "state": "closed",
             "updated_at": "2012-07-04T13:42:48Z",
             "created_at": "2012-07-04T13:42:48Z",
@@ -179,12 +175,12 @@ def data():
             "created_at": "2012-05-23T08:00:58Z",
         },
         "state": "opened",
-        "updated_at": arbitrary_updated.isoformat(),
-        "created_at": arbitrary_created.isoformat(),
+        "updated_at": updated.isoformat(),
+        "created_at": created.isoformat(),
         "weight": 3,
         "work_in_progress": True,
     }
-    arbitrary_mr_extra = {
+    mr_extra = {
         'issue_url': 'https://my-git.org/arbitrary_username/project/merge_requests/3',
         'project': 'project',
         'namespace': 'arbitrary_namespace',
@@ -192,14 +188,14 @@ def data():
         'annotations': [],
         "description": "",
     }
-    arbitrary_project = {
+    project = {
         "id": 8,
         "description": "This is the description of an arbitrary project",
         "name": "Arbitrary Project",
         "name_with_namespace": "Arbitrary Namespace / Arbitrary Project",
         "path": "arbitrary_project",
         "path_with_namespace": "arbitrary_namespace/arbitrary_project",
-        "created_at": arbitrary_created.isoformat(),
+        "created_at": created.isoformat(),
         "default_branch": "main",
         "tag_list": [],
         "topics": [],
@@ -210,7 +206,7 @@ def data():
         "avatar_url": None,
         "forks_count": 7,
         "star_count": 11,
-        "last_activity_at": arbitrary_updated.isoformat(),
+        "last_activity_at": updated.isoformat(),
         "namespace": {
             "id": 2,
             "name": "Arbitrary Namespace",
@@ -296,16 +292,16 @@ def data():
         "permissions": {"project_access": None, "group_access": None},
     }
     return SimpleNamespace(
-        arbitrary_created=arbitrary_created,
-        arbitrary_updated=arbitrary_updated,
-        arbitrary_duedate=arbitrary_duedate,
-        arbitrary_issue=arbitrary_issue,
-        arbitrary_extra=arbitrary_extra,
-        arbitrary_todo=arbitrary_todo,
-        arbitrary_todo_extra=arbitrary_todo_extra,
-        arbitrary_mr=arbitrary_mr,
-        arbitrary_mr_extra=arbitrary_mr_extra,
-        arbitrary_project=arbitrary_project,
+        created=created,
+        updated=updated,
+        duedate=duedate,
+        issue=issue,
+        extra=extra,
+        todo=todo,
+        todo_extra=todo_extra,
+        mr=mr,
+        mr_extra=mr_extra,
+        project=project,
     )
 
 
@@ -373,22 +369,20 @@ class TestGitlabClient:
 
     @responses.activate
     def test_get_repo(self, client, data):
-        responses.get(
-            'https://my-git.org/api/v4/projects/8', json=data.arbitrary_project
-        )
+        responses.get('https://my-git.org/api/v4/projects/8', json=data.project)
         result = client.get_repo_cached(repo_id=8)
-        assert result == data.arbitrary_project
+        assert result == data.project
 
     @responses.activate
     def test_get_repos(self, client, data):
         responses.get(
             'https://my-git.org/api/v4/projects?simple=True&archived=False&page=1&per_page=100',
-            json=[data.arbitrary_project],
+            json=[data.project],
         )
         responses.get(
             'https://my-git.org/api/v4/projects'
             + '?simple=True&archived=False&membership=True&page=1&per_page=100',
-            json=[data.arbitrary_project],
+            json=[data.project],
         )
         responses.get(
             'https://my-git.org/api/v4/projects'
@@ -398,11 +392,10 @@ class TestGitlabClient:
         responses.get(
             'https://my-git.org/api/v4/projects/'
             + 'arbitrary_namespace%2Farbitrary_project?simple=true',
-            json=data.arbitrary_project,
+            json=data.project,
         )
         responses.get(
-            'https://my-git.org/api/v4/projects/8?simple=true',
-            json=data.arbitrary_project,
+            'https://my-git.org/api/v4/projects/8?simple=true', json=data.project
         )
         responses.get(
             'https://my-git.org/api/v4/projects/non_existing?simple=true', json=[]
@@ -410,7 +403,7 @@ class TestGitlabClient:
         responses.get(
             'https://my-git.org/api/v4/projects'
             + '?simple=True&membership=True&owned=False&page=1&per_page=100',
-            json=[data.arbitrary_project],
+            json=[data.project],
         )
         responses.get(
             'https://my-git.org/api/v4/projects'
@@ -421,12 +414,12 @@ class TestGitlabClient:
         result = client.get_repos(
             include_repos=[], only_membership=False, only_owned=False
         )
-        assert result == [data.arbitrary_project]
+        assert result == [data.project]
 
         result = client.get_repos(
             include_repos=[], only_membership=True, only_owned=False
         )
-        assert result == [data.arbitrary_project]
+        assert result == [data.project]
 
         result = client.get_repos(
             include_repos=[], only_membership=True, only_owned=True
@@ -438,12 +431,12 @@ class TestGitlabClient:
             only_membership=False,
             only_owned=False,
         )
-        assert result == [data.arbitrary_project]
+        assert result == [data.project]
 
         result = client.get_repos(
             include_repos=['id:8'], only_membership=False, only_owned=False
         )
-        assert result == [data.arbitrary_project]
+        assert result == [data.project]
 
         # A repo that cannot be fetched is skipped rather than included.
         result = client.get_repos(
@@ -458,35 +451,27 @@ class TestGitlabClient:
             json=[{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}],
         )
         expected = [{'author': {'username': 'john_smith'}, 'body': 'Some comment.'}]
-        result = client.get_notes(
-            data.arbitrary_issue['project_id'], 'issues', data.arbitrary_issue['iid']
-        )
+        result = client.get_notes(data.issue['project_id'], 'issues', data.issue['iid'])
         assert result == expected
 
     @responses.activate
     def test_get_repo_issues(self, client, data):
         responses.get(
             'https://my-git.org/api/v4/projects/8/issues?state=opened&page=1&per_page=100',
-            json=[data.arbitrary_issue],
+            json=[data.issue],
         )
-        assert client.get_repo_issues(data.arbitrary_issue['project_id']) == {
-            data.arbitrary_issue['id']: (
-                data.arbitrary_issue['project_id'],
-                data.arbitrary_issue,
-            )
+        assert client.get_repo_issues(data.issue['project_id']) == {
+            data.issue['id']: (data.issue['project_id'], data.issue)
         }
 
     @responses.activate
     def test_get_repo_merge_requests(self, client, data):
         responses.get(
             'https://my-git.org/api/v4/projects/8/merge_requests?state=opened&page=1&per_page=100',
-            json=[data.arbitrary_mr],
+            json=[data.mr],
         )
-        assert client.get_repo_merge_requests(data.arbitrary_issue['project_id']) == {
-            data.arbitrary_mr['id']: (
-                data.arbitrary_issue['project_id'],
-                data.arbitrary_mr,
-            )
+        assert client.get_repo_merge_requests(data.issue['project_id']) == {
+            data.mr['id']: (data.issue['project_id'], data.mr)
         }
 
     @responses.activate
@@ -494,25 +479,20 @@ class TestGitlabClient:
         responses.get(
             'https://my-git.org/api/v4/'
             + 'issues?assignee_id=2&state=opened&scope=all&page=1&per_page=100',
-            json=[data.arbitrary_issue],
+            json=[data.issue],
         )
         assert client.get_issues_from_query(
             'issues?assignee_id=2&state=opened&scope=all'
-        ) == {
-            data.arbitrary_issue['id']: (
-                data.arbitrary_issue['project_id'],
-                data.arbitrary_issue,
-            )
-        }
+        ) == {data.issue['id']: (data.issue['project_id'], data.issue)}
 
     @responses.activate
     def test_get_todos(self, client, data):
         responses.get(
             'https://my-git.org/api/v4/todos?state=pending&page=1&per_page=100',
-            json=[data.arbitrary_todo],
+            json=[data.todo],
         )
         assert client.get_todos('todos?state=pending') == [
-            (data.arbitrary_todo['project'], data.arbitrary_todo)
+            (data.todo['project'], data.todo)
         ]
 
 
@@ -611,9 +591,9 @@ class TestGitlabService:
 
     def test_include_only_if_assigned(self, config, data):
         config['myservice']['only_if_assigned'] = 'jack_smith'
-        assert self.get_service(config).include((1, data.arbitrary_issue))
+        assert self.get_service(config).include((1, data.issue))
         config['myservice']['only_if_assigned'] = 'smack_jith'
-        assert not self.get_service(config).include((1, data.arbitrary_issue))
+        assert not self.get_service(config).include((1, data.issue))
 
     def test_default_priorities(self, config):
         config['myservice'].update(
@@ -670,26 +650,26 @@ class TestGitlabIssue:
         return get_mock_service(GitlabService, SERVICE_CONFIG)
 
     def test_to_taskwarrior(self, service, data):
-        issue = service.get_issue_for_record(data.arbitrary_issue, data.arbitrary_extra)
+        issue = service.get_issue_for_record(data.issue, data.extra)
 
         expected_output = {
-            'project': data.arbitrary_extra['project'],
+            'project': data.extra['project'],
             'priority': service.config.default_priority,
             'annotations': [],
             'tags': [],
-            'due': data.arbitrary_duedate.replace(microsecond=0),
-            'entry': data.arbitrary_created.replace(microsecond=0),
-            issue.URL: data.arbitrary_extra['issue_url'],
+            'due': data.duedate.replace(microsecond=0),
+            'entry': data.created.replace(microsecond=0),
+            issue.URL: data.extra['issue_url'],
             issue.REPO: 'project',
-            issue.STATE: data.arbitrary_issue['state'],
-            issue.TYPE: data.arbitrary_extra['type'],
-            issue.TITLE: data.arbitrary_issue['title'],
-            issue.NUMBER: str(data.arbitrary_issue['iid']),
-            issue.UPDATED_AT: data.arbitrary_updated.replace(microsecond=0),
-            issue.CREATED_AT: data.arbitrary_created.replace(microsecond=0),
-            issue.DUEDATE: data.arbitrary_duedate,
-            issue.DESCRIPTION: data.arbitrary_issue['description'],
-            issue.MILESTONE: data.arbitrary_issue['milestone']['title'],
+            issue.STATE: data.issue['state'],
+            issue.TYPE: data.extra['type'],
+            issue.TITLE: data.issue['title'],
+            issue.NUMBER: str(data.issue['iid']),
+            issue.UPDATED_AT: data.updated.replace(microsecond=0),
+            issue.CREATED_AT: data.created.replace(microsecond=0),
+            issue.DUEDATE: data.duedate,
+            issue.DESCRIPTION: data.issue['description'],
+            issue.MILESTONE: data.issue['milestone']['title'],
             issue.UPVOTES: 0,
             issue.DOWNVOTES: 0,
             issue.WORK_IN_PROGRESS: 1,
@@ -705,25 +685,25 @@ class TestGitlabIssue:
     def test_custom_issue_priority(self, data):
         overrides = {'default_issue_priority': 'L'}
         service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
-        issue = service.get_issue_for_record(data.arbitrary_issue, data.arbitrary_extra)
+        issue = service.get_issue_for_record(data.issue, data.extra)
         expected_output = {
-            'project': data.arbitrary_extra['project'],
+            'project': data.extra['project'],
             'priority': 'L',
             'annotations': [],
             'tags': [],
-            'due': data.arbitrary_duedate.replace(microsecond=0),
-            'entry': data.arbitrary_created.replace(microsecond=0),
-            issue.URL: data.arbitrary_extra['issue_url'],
+            'due': data.duedate.replace(microsecond=0),
+            'entry': data.created.replace(microsecond=0),
+            issue.URL: data.extra['issue_url'],
             issue.REPO: 'project',
-            issue.STATE: data.arbitrary_issue['state'],
-            issue.TYPE: data.arbitrary_extra['type'],
-            issue.TITLE: data.arbitrary_issue['title'],
-            issue.NUMBER: str(data.arbitrary_issue['iid']),
-            issue.UPDATED_AT: data.arbitrary_updated.replace(microsecond=0),
-            issue.CREATED_AT: data.arbitrary_created.replace(microsecond=0),
-            issue.DUEDATE: data.arbitrary_duedate,
-            issue.DESCRIPTION: data.arbitrary_issue['description'],
-            issue.MILESTONE: data.arbitrary_issue['milestone']['title'],
+            issue.STATE: data.issue['state'],
+            issue.TYPE: data.extra['type'],
+            issue.TITLE: data.issue['title'],
+            issue.NUMBER: str(data.issue['iid']),
+            issue.UPDATED_AT: data.updated.replace(microsecond=0),
+            issue.CREATED_AT: data.created.replace(microsecond=0),
+            issue.DUEDATE: data.duedate,
+            issue.DESCRIPTION: data.issue['description'],
+            issue.MILESTONE: data.issue['milestone']['title'],
             issue.UPVOTES: 0,
             issue.DOWNVOTES: 0,
             issue.WORK_IN_PROGRESS: 1,
@@ -740,30 +720,25 @@ class TestGitlabIssue:
         overrides = {'default_todo_priority': 'H'}
         service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         service.import_labels_as_tags = True
-        issue = service.get_issue_for_record(
-            data.arbitrary_todo, data.arbitrary_todo_extra
-        )
+        issue = service.get_issue_for_record(data.todo, data.todo_extra)
         expected_output = {
-            'project': data.arbitrary_todo_extra['project'],
+            'project': data.todo_extra['project'],
             'priority': overrides['default_todo_priority'],
             'annotations': [],
             'tags': [],
             'due': None,  # currently not parsed for ToDos
-            'entry': data.arbitrary_created.replace(microsecond=0),
-            issue.URL: data.arbitrary_todo_extra['issue_url'],
+            'entry': data.created.replace(microsecond=0),
+            issue.URL: data.todo_extra['issue_url'],
             issue.REPO: 'project',
-            issue.STATE: data.arbitrary_todo['state'],
-            issue.TYPE: data.arbitrary_todo_extra['type'],
+            issue.STATE: data.todo['state'],
+            issue.TYPE: data.todo_extra['type'],
             issue.TITLE: 'Todo from %s for %s'
-            % (
-                data.arbitrary_todo['author']['name'],
-                data.arbitrary_todo['project']['path'],
-            ),
-            issue.NUMBER: str(data.arbitrary_todo['id']),
-            issue.UPDATED_AT: data.arbitrary_updated.replace(microsecond=0),
-            issue.CREATED_AT: data.arbitrary_created.replace(microsecond=0),
+            % (data.todo['author']['name'], data.todo['project']['path']),
+            issue.NUMBER: str(data.todo['id']),
+            issue.UPDATED_AT: data.updated.replace(microsecond=0),
+            issue.CREATED_AT: data.created.replace(microsecond=0),
             issue.DUEDATE: None,  # Currently not parsed for ToDos
-            issue.DESCRIPTION: data.arbitrary_todo['body'],
+            issue.DESCRIPTION: data.todo['body'],
             issue.MILESTONE: None,
             issue.UPVOTES: 0,
             issue.DOWNVOTES: 0,
@@ -780,25 +755,25 @@ class TestGitlabIssue:
     def test_custom_mr_priority(self, data):
         overrides = {'default_mr_priority': '', 'import_labels_as_tags': True}
         service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
-        issue = service.get_issue_for_record(data.arbitrary_mr, data.arbitrary_mr_extra)
+        issue = service.get_issue_for_record(data.mr, data.mr_extra)
         expected_output = {
-            'project': data.arbitrary_mr_extra['project'],
+            'project': data.mr_extra['project'],
             'priority': overrides['default_mr_priority'],
             'annotations': [],
             'tags': ['feature'],
-            'due': data.arbitrary_duedate.replace(microsecond=0),
-            'entry': data.arbitrary_created.replace(microsecond=0),
-            issue.URL: data.arbitrary_mr_extra['issue_url'],
+            'due': data.duedate.replace(microsecond=0),
+            'entry': data.created.replace(microsecond=0),
+            issue.URL: data.mr_extra['issue_url'],
             issue.REPO: 'project',
-            issue.STATE: data.arbitrary_mr['state'],
-            issue.TYPE: data.arbitrary_mr_extra['type'],
-            issue.TITLE: data.arbitrary_mr['title'],
-            issue.NUMBER: str(data.arbitrary_mr['iid']),
-            issue.UPDATED_AT: data.arbitrary_updated.replace(microsecond=0),
-            issue.CREATED_AT: data.arbitrary_created.replace(microsecond=0),
-            issue.DUEDATE: data.arbitrary_duedate,
-            issue.DESCRIPTION: data.arbitrary_mr['description'],
-            issue.MILESTONE: data.arbitrary_issue['milestone']['title'],
+            issue.STATE: data.mr['state'],
+            issue.TYPE: data.mr_extra['type'],
+            issue.TITLE: data.mr['title'],
+            issue.NUMBER: str(data.mr['iid']),
+            issue.UPDATED_AT: data.updated.replace(microsecond=0),
+            issue.CREATED_AT: data.created.replace(microsecond=0),
+            issue.DUEDATE: data.duedate,
+            issue.DESCRIPTION: data.mr['description'],
+            issue.MILESTONE: data.issue['milestone']['title'],
             issue.UPVOTES: 0,
             issue.DOWNVOTES: 0,
             issue.WORK_IN_PROGRESS: 1,
@@ -812,27 +787,27 @@ class TestGitlabIssue:
         assert actual_output == expected_output
 
     def test_work_in_progress(self, service, data):
-        data.arbitrary_issue['work_in_progress'] = False
-        issue = service.get_issue_for_record(data.arbitrary_issue, data.arbitrary_extra)
+        data.issue['work_in_progress'] = False
+        issue = service.get_issue_for_record(data.issue, data.extra)
 
         expected_output = {
-            'project': data.arbitrary_extra['project'],
+            'project': data.extra['project'],
             'priority': service.config.default_priority,
             'annotations': [],
             'tags': [],
-            'due': data.arbitrary_duedate.replace(microsecond=0),
-            'entry': data.arbitrary_created.replace(microsecond=0),
-            issue.URL: data.arbitrary_extra['issue_url'],
+            'due': data.duedate.replace(microsecond=0),
+            'entry': data.created.replace(microsecond=0),
+            issue.URL: data.extra['issue_url'],
             issue.REPO: 'project',
-            issue.STATE: data.arbitrary_issue['state'],
-            issue.TYPE: data.arbitrary_extra['type'],
-            issue.TITLE: data.arbitrary_issue['title'],
-            issue.NUMBER: str(data.arbitrary_issue['iid']),
-            issue.UPDATED_AT: data.arbitrary_updated.replace(microsecond=0),
-            issue.CREATED_AT: data.arbitrary_created.replace(microsecond=0),
-            issue.DUEDATE: data.arbitrary_duedate,
-            issue.DESCRIPTION: data.arbitrary_issue['description'],
-            issue.MILESTONE: data.arbitrary_issue['milestone']['title'],
+            issue.STATE: data.issue['state'],
+            issue.TYPE: data.extra['type'],
+            issue.TITLE: data.issue['title'],
+            issue.NUMBER: str(data.issue['iid']),
+            issue.UPDATED_AT: data.updated.replace(microsecond=0),
+            issue.CREATED_AT: data.created.replace(microsecond=0),
+            issue.DUEDATE: data.duedate,
+            issue.DESCRIPTION: data.issue['description'],
+            issue.MILESTONE: data.issue['milestone']['title'],
             issue.UPVOTES: 0,
             issue.DOWNVOTES: 0,
             issue.WORK_IN_PROGRESS: 0,
@@ -851,7 +826,7 @@ class TestGitlabIssue:
         service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         responses.get(
             'https://my-git.org/api/v4/issues?state=opened&per_page=100&page=1',
-            json=[data.arbitrary_issue],
+            json=[data.issue],
         )
         responses.get(
             'https://my-git.org/api/v4/projects/8',
@@ -871,11 +846,11 @@ class TestGitlabIssue:
         expected = {
             'annotations': ['@john_smith - Some comment.'],
             'description': '(bw)Is#3 - Add user settings .. example.com/issues/3',
-            'due': data.arbitrary_duedate,
-            'entry': data.arbitrary_created,
+            'due': data.duedate,
+            'entry': data.created,
             'gitlabassignee': 'jack_smith',
             'gitlabauthor': 'john_smith',
-            'gitlabcreatedon': data.arbitrary_created,
+            'gitlabcreatedon': data.created,
             'gitlabdescription': '',
             'gitlabdownvotes': 0,
             'gitlabmilestone': 'v1.0',
@@ -885,8 +860,8 @@ class TestGitlabIssue:
             'gitlabstate': 'opened',
             'gitlabtitle': 'Add user settings',
             'gitlabtype': 'issue',
-            'gitlabupdatedat': data.arbitrary_updated,
-            'gitlabduedate': data.arbitrary_duedate,
+            'gitlabupdatedat': data.updated,
+            'gitlabduedate': data.duedate,
             'gitlabupvotes': 0,
             'gitlaburl': 'example.com/issues/3',
             'gitlabwip': 1,
@@ -908,7 +883,7 @@ class TestGitlabIssue:
         service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         responses.get(
             'https://my-git.org/api/v4/merge_requests?state=opened&per_page=100&page=1',
-            json=[data.arbitrary_mr],
+            json=[data.mr],
         )
         responses.get(
             'https://my-git.org/api/v4/projects/8',
@@ -929,11 +904,11 @@ class TestGitlabIssue:
         expected = {
             'annotations': ['@john_smith - Some comment.'],
             'description': '(bw)MR#3 - Add user settings .. example.com/merge_requests/3',
-            'due': data.arbitrary_duedate,
-            'entry': data.arbitrary_created,
+            'due': data.duedate,
+            'entry': data.created,
             'gitlabassignee': 'jack_smith',
             'gitlabauthor': 'john_smith',
-            'gitlabcreatedon': data.arbitrary_created,
+            'gitlabcreatedon': data.created,
             'gitlabdescription': '',
             'gitlabdownvotes': 0,
             'gitlabmilestone': 'v1.0',
@@ -943,8 +918,8 @@ class TestGitlabIssue:
             'gitlabstate': 'opened',
             'gitlabtitle': 'Add user settings',
             'gitlabtype': 'merge_request',
-            'gitlabupdatedat': data.arbitrary_updated,
-            'gitlabduedate': data.arbitrary_duedate,
+            'gitlabupdatedat': data.updated,
+            'gitlabduedate': data.duedate,
             'gitlabupvotes': 0,
             'gitlaburl': 'example.com/merge_requests/3',
             'gitlabwip': 1,
@@ -966,7 +941,7 @@ class TestGitlabIssue:
         service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
         responses.get(
             'https://my-git.org/api/v4/todos?state=pending&per_page=100&page=1',
-            json=[data.arbitrary_todo],
+            json=[data.todo],
         )
         responses.get(
             'https://my-git.org/api/v4/projects/2',
@@ -994,10 +969,10 @@ class TestGitlabIssue:
             'description': '(bw)# - Todo from John Smith for project .. '
             'https://my-git.org/arbitrary_username/project/issues/3',
             'due': None,
-            'entry': data.arbitrary_created,
+            'entry': data.created,
             'gitlabassignee': None,
             'gitlabauthor': 'john_smith',
-            'gitlabcreatedon': data.arbitrary_created,
+            'gitlabcreatedon': data.created,
             'gitlabdescription': 'Add user settings',
             'gitlabdownvotes': 0,
             'gitlabmilestone': None,
@@ -1007,7 +982,7 @@ class TestGitlabIssue:
             'gitlabstate': 'pending',
             'gitlabtitle': 'Todo from John Smith for project',
             'gitlabtype': 'todo',
-            'gitlabupdatedat': data.arbitrary_updated,
+            'gitlabupdatedat': data.updated,
             'gitlabduedate': None,
             'gitlabupvotes': 0,
             'gitlaburl': 'https://my-git.org/arbitrary_username/project/issues/3',
@@ -1047,7 +1022,7 @@ class TestGitlabIssue:
 
         responses.get(
             'https://my-git.org/api/v4/projects/8/issues?state=opened&per_page=100&page=1',
-            json=[data.arbitrary_issue],
+            json=[data.issue],
         )
 
         responses.get(
@@ -1060,11 +1035,11 @@ class TestGitlabIssue:
         expected = {
             'annotations': ['@john_smith - Some comment.'],
             'description': '(bw)Is#3 - Add user settings .. example.com/issues/3',
-            'due': data.arbitrary_duedate,
-            'entry': data.arbitrary_created,
+            'due': data.duedate,
+            'entry': data.created,
             'gitlabassignee': 'jack_smith',
             'gitlabauthor': 'john_smith',
-            'gitlabcreatedon': data.arbitrary_created,
+            'gitlabcreatedon': data.created,
             'gitlabdescription': '',
             'gitlabdownvotes': 0,
             'gitlabmilestone': 'v1.0',
@@ -1074,8 +1049,8 @@ class TestGitlabIssue:
             'gitlabstate': 'opened',
             'gitlabtitle': 'Add user settings',
             'gitlabtype': 'issue',
-            'gitlabupdatedat': data.arbitrary_updated,
-            'gitlabduedate': data.arbitrary_duedate,
+            'gitlabupdatedat': data.updated,
+            'gitlabduedate': data.duedate,
             'gitlabupvotes': 0,
             'gitlaburl': 'example.com/issues/3',
             'gitlabwip': 1,
