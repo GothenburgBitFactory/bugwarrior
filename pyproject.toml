@@ -120,8 +120,9 @@ max-line-length = 100
 testpaths = ["tests"]
 filterwarnings = [
     "error",
-    # taskw still uses deprecated distutils version classes.
-    "ignore::DeprecationWarning:taskw",
+    # taskw still uses deprecated distutils version classes; show the warning
+    # without failing the suite.
+    "default::DeprecationWarning:taskw",
 ]
 
 [tool.setuptools.packages.find]
