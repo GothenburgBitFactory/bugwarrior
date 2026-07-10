@@ -3,7 +3,7 @@ import pytest
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.trac import TracService
 
-from .base import get_mock_service
+SERVICE_CLASS = TracService
 
 SERVICE_CONFIG = {
     'service': 'trac',
@@ -55,8 +55,8 @@ class FakeTracLib:
 
 class TestTracIssue:
     @pytest.fixture
-    def service(self, record):
-        service = get_mock_service(TracService, SERVICE_CONFIG)
+    def service(self, record, make_service):
+        service = make_service()
         service.trac = FakeTracLib(record)
         return service
 

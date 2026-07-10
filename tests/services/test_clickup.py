@@ -7,7 +7,6 @@ from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.clickup import ClickupClient, ClickupService
 
 from ..base import get_validated_service, validate
-from .base import get_mock_service
 
 
 @pytest.fixture
@@ -113,6 +112,8 @@ def task_page(record):
     return get
 
 
+SERVICE_CLASS = ClickupService
+
 SERVICE_CONFIG = {'service': 'clickup', 'team_id': 1234, 'token': 'arbitrary_token'}
 
 
@@ -176,10 +177,6 @@ class TestClickupService:
 
 
 class TestClickupIssue:
-    @pytest.fixture
-    def service(self):
-        return get_mock_service(ClickupService, SERVICE_CONFIG)
-
     def test_to_taskwarrior(self, service, record):
         issue = service.get_issue_for_record(record)
 

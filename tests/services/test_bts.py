@@ -1,11 +1,9 @@
 from unittest import mock
 
-import pytest
-
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import bts
 
-from .base import get_mock_service
+SERVICE_CLASS = bts.BTSService
 
 SERVICE_CONFIG = {'service': 'bts', 'email': 'irl@debian.org', 'packages': 'bugwarrior'}
 
@@ -34,10 +32,6 @@ class FakeBTSLib:
 
 
 class TestBTSService:
-    @pytest.fixture
-    def service(self):
-        return get_mock_service(bts.BTSService, SERVICE_CONFIG)
-
     def test_to_taskwarrior(self, service):
         issue = service.get_issue_for_record(service._record_for_bug(FakeBTSBug))
 

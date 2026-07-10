@@ -11,7 +11,6 @@ from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import gmail
 
 from ..base import get_validated_service
-from .base import get_mock_service
 
 
 @pytest.fixture
@@ -25,6 +24,8 @@ def credential():
         "scopes": ["https://www.googleapis.com/auth/gmail.readonly"],
     }
 
+
+SERVICE_CLASS = gmail.GmailService
 
 SERVICE_CONFIG = {
     'service': 'gmail',
@@ -121,7 +122,7 @@ def labels():
 
 class TestGmailIssue:
     @pytest.fixture
-    def service(self, record, labels, monkeypatch):
+    def service(self, record, labels, make_service, monkeypatch):
         mock_api = mock.Mock()
         mock_api().users().labels().list().execute.return_value = {'labels': labels}
         mock_api().users().threads().list().execute.return_value = {
@@ -129,7 +130,7 @@ class TestGmailIssue:
         }
         mock_api().users().threads().get().execute.return_value = record
         monkeypatch.setattr(gmail.GmailService, 'build_api', mock_api)
-        return get_mock_service(gmail.GmailService, SERVICE_CONFIG)
+        return make_service()
 
     def test_config_paths(self, service):
         credentials_path = (

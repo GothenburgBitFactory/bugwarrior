@@ -2,7 +2,7 @@ import pytest
 
 from bugwarrior.services.phab import PhabricatorService
 
-from .base import get_mock_service
+SERVICE_CLASS = PhabricatorService
 
 SERVICE_CONFIG = {'service': 'phabricator', 'host': 'https://phabricator.example.com'}
 
@@ -22,10 +22,6 @@ def extra():
 
 
 class TestPhabricatorIssue:
-    @pytest.fixture
-    def service(self):
-        return get_mock_service(PhabricatorService, SERVICE_CONFIG)
-
     def test_to_taskwarrior(self, service, record, extra):
         service.import_labels_as_tags = True
         issue = service.get_issue_for_record(record, extra)

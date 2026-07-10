@@ -8,9 +8,10 @@ from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.github import GithubClient, GithubConfig, GithubService
 
 from ..base import validate
-from .base import get_mock_service
 
 IGNORABLE = {'user': {'login': 'cibot'}, 'body': 'Ignore this comment.'}
+
+SERVICE_CLASS = GithubService
 
 SERVICE_CONFIG = {
     'service': 'github',
@@ -51,19 +52,6 @@ def data():
     return SimpleNamespace(
         created=created, closed=closed, updated=updated, record=record, extra=extra
     )
-
-
-@pytest.fixture
-def make_service():
-    def make(**overrides):
-        return get_mock_service(GithubService, {**SERVICE_CONFIG, **overrides})
-
-    return make
-
-
-@pytest.fixture
-def service(make_service):
-    return make_service()
 
 
 class TestGithubIssue:
@@ -185,18 +173,14 @@ class TestGithubIssue:
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
 
-QUERY_SERVICE_CONFIG = {
-    **SERVICE_CONFIG,
-    'query': 'is:open reviewer:octocat',
-    'include_user_repos': 'False',
-    'include_user_issues': 'False',
-}
-
-
 class TestGithubIssueQuery:
     @pytest.fixture
-    def service(self):
-        return get_mock_service(GithubService, QUERY_SERVICE_CONFIG)
+    def service(self, make_service):
+        return make_service(
+            query='is:open reviewer:octocat',
+            include_user_repos='False',
+            include_user_issues='False',
+        )
 
     def test_to_taskwarrior(self):
         pass

@@ -7,7 +7,6 @@ from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.pivotaltracker import PivotalTrackerService
 
 from ..base import validate
-from .base import get_mock_service
 
 PROJECT = {
     'account_id': 100,
@@ -157,6 +156,8 @@ EXTRA = {
 }
 
 
+SERVICE_CLASS = PivotalTrackerService
+
 SERVICE_CONFIG = {
     'service': 'pivotaltracker',
     'token': '123456',
@@ -213,10 +214,6 @@ class TestPivotalTrackerConfig:
 
 
 class TestPivotalTrackerIssue:
-    @pytest.fixture
-    def service(self):
-        return get_mock_service(PivotalTrackerService, SERVICE_CONFIG)
-
     @pytest.fixture(autouse=True)
     def mock_api(self):
         with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:

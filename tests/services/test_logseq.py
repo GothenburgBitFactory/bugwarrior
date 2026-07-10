@@ -6,7 +6,7 @@ import pytest
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.logseq import LogseqClient, LogseqIssue, LogseqService
 
-from .base import get_mock_service
+SERVICE_CLASS = LogseqService
 
 SERVICE_CONFIG = {
     "service": "logseq",
@@ -86,8 +86,8 @@ def page():
 
 class TestLogseqIssue:
     @pytest.fixture
-    def service(self):
-        service = get_mock_service(LogseqService, SERVICE_CONFIG)
+    def service(self, make_service):
+        service = make_service()
         service.client = mock.MagicMock(spec=LogseqClient)
         return service
 
@@ -118,9 +118,9 @@ class TestLogseqIssue:
 
         assert actual == expected
 
-    def test_to_taskwarrior_with_tags(self, record, extra):
+    def test_to_taskwarrior_with_tags(self, make_service, record, extra):
         overrides = {"import_labels_as_tags": "True"}
-        service = get_mock_service(LogseqService, {**SERVICE_CONFIG, **overrides})
+        service = make_service(**overrides)
         issue = service.get_issue_for_record(record, extra)
 
         actual = issue.to_taskwarrior()

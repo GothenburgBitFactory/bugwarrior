@@ -4,7 +4,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.taiga import TaigaService
 
-from .base import get_mock_service
+SERVICE_CLASS = TaigaService
 
 SERVICE_CONFIG = {'service': 'taiga', 'base_uri': 'https://one', 'auth_token': 'two'}
 
@@ -22,10 +22,6 @@ def record():
 
 
 class TestTaigaIssue:
-    @pytest.fixture
-    def service(self):
-        return get_mock_service(TaigaService, SERVICE_CONFIG)
-
     def test_to_taskwarrior(self, service, record):
         extra = {
             'project': 'awesome',

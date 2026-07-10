@@ -7,7 +7,8 @@ from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.kanboard import KanboardService
 
 from ..base import validate
-from .base import get_mock_service
+
+SERVICE_CLASS = KanboardService
 
 SERVICE_CONFIG = {
     "service": "kanboard",
@@ -57,9 +58,9 @@ class TestKanboardConfig:
 
 class TestKanboardService:
     @pytest.fixture
-    def service(self):
+    def service(self, make_service):
         with mock.patch("bugwarrior.services.kanboard.Client"):
-            service = get_mock_service(KanboardService, SERVICE_CONFIG)
+            service = make_service()
         service.client = mock.MagicMock()
         return service
 

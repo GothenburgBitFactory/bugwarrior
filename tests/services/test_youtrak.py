@@ -5,7 +5,8 @@ from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.youtrack import YoutrackService
 
 from ..base import validate
-from .base import get_mock_service
+
+SERVICE_CLASS = YoutrackService
 
 SERVICE_CONFIG = {
     'service': 'youtrack',
@@ -50,19 +51,6 @@ class TestYoutrackService:
         assert (
             service_config.keyring_service == 'youtrack://foobar@youtrack.example.com'
         )
-
-
-@pytest.fixture
-def make_service():
-    def make(**overrides):
-        return get_mock_service(YoutrackService, {**SERVICE_CONFIG, **overrides})
-
-    return make
-
-
-@pytest.fixture
-def service(make_service):
-    return make_service()
 
 
 class TestYoutrackIssue:

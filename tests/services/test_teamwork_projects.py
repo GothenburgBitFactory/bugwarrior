@@ -6,7 +6,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.teamwork_projects import TeamworkService
 
-from .base import get_mock_service
+SERVICE_CLASS = TeamworkService
 
 SERVICE_CONFIG = {
     'service': 'teamwork_projects',
@@ -85,7 +85,7 @@ def comments():
 
 class TestTeamworkIssue:
     @pytest.fixture
-    def service(self):
+    def service(self, make_service):
         # The HTTP mock must be active while the service is constructed since
         # construction hits the authentication endpoint.
         with responses.mock:
@@ -95,7 +95,7 @@ class TestTeamworkIssue:
                     'account': {'userId': 5, 'firstname': 'Greg', 'lastname': 'McCoy'}
                 },
             )
-            return get_mock_service(TeamworkService, SERVICE_CONFIG)
+            return make_service()
 
     @responses.activate
     def test_to_taskwarrior(self, service, record, extra):

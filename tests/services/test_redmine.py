@@ -8,7 +8,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.redmine import RedMineService
 
-from .base import get_mock_service
+SERVICE_CLASS = RedMineService
 
 SERVICE_CONFIG = {
     'service': 'redmine',
@@ -41,10 +41,6 @@ def data():
 
 
 class TestRedmineIssue:
-    @pytest.fixture
-    def service(self):
-        return get_mock_service(RedMineService, SERVICE_CONFIG)
-
     def test_to_taskwarrior(self, service, data):
         arbitrary_url = 'http://lkjlj.com'
 

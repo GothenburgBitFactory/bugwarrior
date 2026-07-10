@@ -4,7 +4,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bitbucket import BitbucketService
 
-from .base import get_mock_service
+SERVICE_CLASS = BitbucketService
 
 SERVICE_CONFIG = {
     'service': 'bitbucket',
@@ -30,13 +30,13 @@ def extra():
 
 class TestBitbucketIssue:
     @pytest.fixture
-    def service(self):
+    def service(self, make_service):
         with responses.mock:
             responses.post(
                 'https://bitbucket.org/site/oauth2/access_token',
                 json={'access_token': 'sometoken', 'refresh_token': 'anothertoken'},
             )
-            return get_mock_service(BitbucketService, SERVICE_CONFIG)
+            return make_service()
 
     def test_to_taskwarrior(self, service, record, extra):
         issue = service.get_issue_for_record(record, extra)

@@ -10,7 +10,7 @@ from bugwarrior.config import validation
 from bugwarrior.config.load import format_config
 from bugwarrior.services.jira import JiraExtraFields, JiraService
 
-from .base import get_mock_service
+SERVICE_CLASS = JiraService
 
 SERVICE_CONFIG = {
     'service': 'jira',
@@ -121,9 +121,9 @@ class TestJiraService:
 
 class TestJiraIssue:
     @pytest.fixture
-    def service(self, data):
+    def service(self, data, make_service):
         with mock.patch('jira.client.JIRA._get_json'):
-            service = get_mock_service(JiraService, SERVICE_CONFIG)
+            service = make_service()
         service.jira = FakeJiraClient(data.record)
         service.sprint_field_names = ['Sprint']
         return service

@@ -15,7 +15,7 @@ from todoist_api_python.models import (
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.todoist import TodoistClient, TodoistService
 
-from .base import get_mock_service
+SERVICE_CLASS = TodoistService
 
 SERVICE_CONFIG = {"service": "todoist", "token": "TESTTOKEN"}
 
@@ -107,8 +107,8 @@ def users():
 
 class TestTodoistIssue:
     @pytest.fixture
-    def service(self):
-        service = get_mock_service(TodoistService, SERVICE_CONFIG)
+    def service(self, make_service):
+        service = make_service()
         service.client = mock.MagicMock(spec=TodoistClient)
         return service
 
@@ -141,10 +141,10 @@ class TestTodoistIssue:
 
         assert actual == expected
 
-    def test_to_taskwarrior_with_labels(self, record, extra):
+    def test_to_taskwarrior_with_labels(self, make_service, record, extra):
         # Test lables when `import_labels_as_tags` is enabled
         overrides = {"import_labels_as_tags": "True"}
-        service = get_mock_service(TodoistService, {**SERVICE_CONFIG, **overrides})
+        service = make_service(**overrides)
         issue = service.get_issue_for_record(record, extra)
         actual = issue.to_taskwarrior()
         assert actual.get("tags") == ["TESTLABEL"]

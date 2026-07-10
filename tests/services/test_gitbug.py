@@ -6,8 +6,6 @@ import pytest
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gitbug import GitBugClient, GitBugConfig, GitBugService
 
-from .base import get_mock_service
-
 
 @pytest.fixture
 def record():
@@ -29,13 +27,15 @@ def record():
     }
 
 
+SERVICE_CLASS = GitBugService
+
 SERVICE_CONFIG = {'service': 'gitbug', 'path': '/dev/null'}
 
 
 class TestGitBugIssue:
     @pytest.fixture
-    def service(self, record):
-        service = get_mock_service(GitBugService, SERVICE_CONFIG)
+    def service(self, record, make_service):
+        service = make_service()
         service.client = mock.MagicMock(spec=GitBugClient)
         service.client.get_issues = mock.MagicMock(return_value=[record])
         return service

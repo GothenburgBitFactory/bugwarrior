@@ -6,7 +6,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.pagure import PagureService
 
-from .base import get_mock_service
+SERVICE_CLASS = PagureService
 
 SERVICE_CONFIG = {'service': 'pagure', 'base_url': 'https://pagure.io', 'repo': 'repo'}
 
@@ -27,19 +27,6 @@ def record():
 @pytest.fixture
 def extra():
     return {'type': 'issue', 'project': 'repo', 'annotations': []}
-
-
-@pytest.fixture
-def make_service():
-    def make(**overrides):
-        return get_mock_service(PagureService, {**SERVICE_CONFIG, **overrides})
-
-    return make
-
-
-@pytest.fixture
-def service(make_service):
-    return make_service()
 
 
 class TestPagureIssue:

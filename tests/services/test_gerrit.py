@@ -6,7 +6,7 @@ import responses
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gerrit import GerritService
 
-from .base import get_mock_service
+SERVICE_CLASS = GerritService
 
 SERVICE_CONFIG = {
     'service': 'gerrit',
@@ -54,7 +54,7 @@ def extra():
 
 class TestGerritIssue:
     @pytest.fixture
-    def service(self):
+    def service(self, make_service):
         # GerritService.__init__ sends a HEAD request to detect the server's
         # authentication method, so the responses mock must already be active
         # when the service is constructed, not just during the test.
@@ -64,7 +64,7 @@ class TestGerritIssue:
                 SERVICE_CONFIG['base_uri'] + '/a/',
                 headers={'www-authenticate': 'digest'},
             )
-            return get_mock_service(GerritService, SERVICE_CONFIG)
+            return make_service()
 
     def test_to_taskwarrior(self, service, record, extra):
         issue = service.get_issue_for_record(record, extra)

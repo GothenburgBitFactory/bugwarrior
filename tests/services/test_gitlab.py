@@ -8,7 +8,6 @@ from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gitlab import GitlabClient, GitlabService
 
 from ..base import get_validated_service, validate
-from .base import get_mock_service
 
 
 @pytest.fixture
@@ -304,6 +303,8 @@ def data():
         project=project,
     )
 
+
+SERVICE_CLASS = GitlabService
 
 SERVICE_CONFIG = {
     'service': 'gitlab',
@@ -642,19 +643,6 @@ class TestGitlabService:
             "explicitly. In a future release, this will be an error."
             in caplog.records[0].message
         )
-
-
-@pytest.fixture
-def make_service():
-    def make(**overrides):
-        return get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
-
-    return make
-
-
-@pytest.fixture
-def service(make_service):
-    return make_service()
 
 
 class TestGitlabIssue:
