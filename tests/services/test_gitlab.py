@@ -644,11 +644,20 @@ class TestGitlabService:
         )
 
 
-class TestGitlabIssue:
-    @pytest.fixture
-    def service(self):
-        return get_mock_service(GitlabService, SERVICE_CONFIG)
+@pytest.fixture
+def make_service():
+    def make(**overrides):
+        return get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
 
+    return make
+
+
+@pytest.fixture
+def service(make_service):
+    return make_service()
+
+
+class TestGitlabIssue:
     def test_to_taskwarrior(self, service, data):
         issue = service.get_issue_for_record(data.issue, data.extra)
 
@@ -682,9 +691,9 @@ class TestGitlabIssue:
 
         assert actual_output == expected_output
 
-    def test_custom_issue_priority(self, data):
+    def test_custom_issue_priority(self, data, make_service):
         overrides = {'default_issue_priority': 'L'}
-        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
+        service = make_service(**overrides)
         issue = service.get_issue_for_record(data.issue, data.extra)
         expected_output = {
             'project': data.extra['project'],
@@ -716,9 +725,9 @@ class TestGitlabIssue:
 
         assert actual_output == expected_output
 
-    def test_custom_todo_priority(self, data):
+    def test_custom_todo_priority(self, data, make_service):
         overrides = {'default_todo_priority': 'H'}
-        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
+        service = make_service(**overrides)
         service.import_labels_as_tags = True
         issue = service.get_issue_for_record(data.todo, data.todo_extra)
         expected_output = {
@@ -752,9 +761,9 @@ class TestGitlabIssue:
 
         assert actual_output == expected_output
 
-    def test_custom_mr_priority(self, data):
+    def test_custom_mr_priority(self, data, make_service):
         overrides = {'default_mr_priority': '', 'import_labels_as_tags': True}
-        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
+        service = make_service(**overrides)
         issue = service.get_issue_for_record(data.mr, data.mr_extra)
         expected_output = {
             'project': data.mr_extra['project'],
@@ -821,9 +830,9 @@ class TestGitlabIssue:
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues_from_query(self, data):
+    def test_issues_from_query(self, data, make_service):
         overrides = {'issue_query': 'issues?state=opened'}
-        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
+        service = make_service(**overrides)
         responses.get(
             'https://my-git.org/api/v4/issues?state=opened&per_page=100&page=1',
             json=[data.issue],
@@ -873,14 +882,14 @@ class TestGitlabIssue:
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     @responses.activate
-    def test_mrs_from_query(self, data):
+    def test_mrs_from_query(self, data, make_service):
         overrides = {
             'include_issues': 'false',
             'include_todos': 'false',
             'include_merge_requests': 'true',
             'merge_request_query': 'merge_requests?state=opened',
         }
-        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
+        service = make_service(**overrides)
         responses.get(
             'https://my-git.org/api/v4/merge_requests?state=opened&per_page=100&page=1',
             json=[data.mr],
@@ -931,14 +940,14 @@ class TestGitlabIssue:
         assert TaskConstructor(mr).get_taskwarrior_record() == expected
 
     @responses.activate
-    def test_todos_from_query(self, data):
+    def test_todos_from_query(self, data, make_service):
         overrides = {
             'include_issues': 'false',
             'include_merge_requests': 'false',
             'include_todos': 'true',
             'todo_query': 'todos?state=pending',
         }
-        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
+        service = make_service(**overrides)
         responses.get(
             'https://my-git.org/api/v4/todos?state=pending&per_page=100&page=1',
             json=[data.todo],
@@ -1001,7 +1010,7 @@ class TestGitlabIssue:
             'include_repos': 'arbitrary_namespace/project',
             'include_all_todos': 'false',
         }
-        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
+        service = make_service(**overrides)
         todo = next(service.issues())
         assert TaskConstructor(todo).get_taskwarrior_record() == expected
 
@@ -1063,7 +1072,7 @@ class TestGitlabIssue:
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     @responses.activate
-    def test_only_if_assigned_user_lookup(self):
+    def test_only_if_assigned_user_lookup(self, make_service):
         """Test that only_if_assigned correctly looks up the user and uses first match"""
         # Mock the user lookup API call - WITH username in query string
         responses.get(
@@ -1081,13 +1090,13 @@ class TestGitlabIssue:
         overrides = {'only_if_assigned': 'jack_smith'}
 
         # Should not raise an error
-        service = get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
+        service = make_service(**overrides)
 
         # Verify service was created successfully
         assert service is not None
 
     @responses.activate
-    def test_only_if_assigned_user_not_found(self):
+    def test_only_if_assigned_user_not_found(self, make_service):
         """Test that empty user list causes SystemExit"""
         # Mock empty user lookup response
         responses.get(
@@ -1098,11 +1107,11 @@ class TestGitlabIssue:
 
         # Should exit with 1
         with pytest.raises(SystemExit) as cm:
-            get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
+            make_service(**overrides)
         assert cm.value.code == 1
 
     @responses.activate
-    def test_only_if_assigned_multiple_users(self):
+    def test_only_if_assigned_multiple_users(self, make_service):
         """Test that multiple users found causes SystemExit"""
         # Mock multiple users with similar names
         responses.get(
@@ -1127,5 +1136,5 @@ class TestGitlabIssue:
 
         # Should exit with 1
         with pytest.raises(SystemExit) as cm:
-            get_mock_service(GitlabService, {**SERVICE_CONFIG, **overrides})
+            make_service(**overrides)
         assert cm.value.code == 1

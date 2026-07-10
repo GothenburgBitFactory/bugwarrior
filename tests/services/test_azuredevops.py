@@ -155,16 +155,22 @@ class TestAzureDevopsServiceConfig:
 
 class TestAzureDevopsService:
     @pytest.fixture
-    def service(self, record):
-        return self.get_service(record)
+    def make_service(self, record):
+        def make(**overrides):
+            service = get_mock_service(
+                AzureDevopsService, {**SERVICE_CONFIG, **overrides}
+            )
+            service.client = mock.MagicMock()
+            service.client.get_parent_name.return_value = None
+            service.client.get_work_items_from_query.return_value = [1]
+            service.client.get_work_item.return_value = record
+            return service
 
-    def get_service(self, record, **overrides):
-        service = get_mock_service(AzureDevopsService, {**SERVICE_CONFIG, **overrides})
-        service.client = mock.MagicMock()
-        service.client.get_parent_name.return_value = None
-        service.client.get_work_items_from_query.return_value = [1]
-        service.client.get_work_item.return_value = record
-        return service
+        return make
+
+    @pytest.fixture
+    def service(self, make_service):
+        return make_service()
 
     def test_to_taskwarrior(self, service, record):
         issue = service.get_issue_for_record(record)
@@ -220,7 +226,7 @@ class TestAzureDevopsService:
         issue = next(service.issues())
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_issues_wiql_filter(self, record):
+    def test_issues_wiql_filter(self, make_service):
         expected = {
             "project": None,
             "priority": "M",
@@ -241,6 +247,6 @@ class TestAzureDevopsService:
             "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',  # noqa: E501
             "tags": [],
         }
-        service = self.get_service(record, wiql_filter='something')
+        service = make_service(wiql_filter='something')
         issue = next(service.issues())
         assert TaskConstructor(issue).get_taskwarrior_record() == expected

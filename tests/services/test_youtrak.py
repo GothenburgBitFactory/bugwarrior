@@ -52,16 +52,24 @@ class TestYoutrackService:
         )
 
 
-class TestYoutrackIssue:
-    @pytest.fixture
-    def service(self):
-        return get_mock_service(YoutrackService, SERVICE_CONFIG)
+@pytest.fixture
+def make_service():
+    def make(**overrides):
+        return get_mock_service(YoutrackService, {**SERVICE_CONFIG, **overrides})
 
-    def test_get_tags_from_labels_uses_legacy_tag_options(self, caplog, record, extra):
-        service = get_mock_service(
-            YoutrackService,
-            {**SERVICE_CONFIG, 'import_tags': True, 'tag_template': 'yt_{{tag|lower}}'},
-        )
+    return make
+
+
+@pytest.fixture
+def service(make_service):
+    return make_service()
+
+
+class TestYoutrackIssue:
+    def test_get_tags_from_labels_uses_legacy_tag_options(
+        self, caplog, make_service, record, extra
+    ):
+        service = make_service(import_tags=True, tag_template='yt_{{tag|lower}}')
         issue = service.get_issue_for_record(record, extra)
 
         assert service.config.label_template == 'yt_{{label|lower}}'
@@ -76,12 +84,9 @@ class TestYoutrackIssue:
         )
 
     def test_refine_record_does_not_apply_legacy_tag_template_as_field_template(
-        self, record, extra
+        self, make_service, record, extra
     ):
-        service = get_mock_service(
-            YoutrackService,
-            {**SERVICE_CONFIG, 'import_tags': True, 'tag_template': 'yt_{{tag|lower}}'},
-        )
+        service = make_service(import_tags=True, tag_template='yt_{{tag|lower}}')
         issue = service.get_issue_for_record(record, extra)
 
         assert service.config.templates == {}

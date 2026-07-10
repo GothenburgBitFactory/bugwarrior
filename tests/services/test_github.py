@@ -53,9 +53,21 @@ def data():
     )
 
 
+@pytest.fixture
+def make_service():
+    def make(**overrides):
+        return get_mock_service(GithubService, {**SERVICE_CONFIG, **overrides})
+
+    return make
+
+
+@pytest.fixture
+def service(make_service):
+    return make_service()
+
+
 class TestGithubIssue:
-    def test_draft(self, data):
-        service = get_mock_service(GithubService, SERVICE_CONFIG)
+    def test_draft(self, service, data):
         draft = dict(data.record)
         draft['draft'] = True
         issue = service.get_issue_for_record(draft, data.extra)
@@ -86,10 +98,8 @@ class TestGithubIssue:
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_to_taskwarrior(self, data):
-        service = get_mock_service(
-            GithubService, {**SERVICE_CONFIG, 'import_labels_as_tags': True}
-        )
+    def test_to_taskwarrior(self, make_service, data):
+        service = make_service(import_labels_as_tags=True)
         issue = service.get_issue_for_record(data.record, data.extra)
 
         expected_output = {
@@ -119,7 +129,7 @@ class TestGithubIssue:
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues(self, data):
+    def test_issues(self, make_service, data):
         responses.get(
             'https://api.github.com/user/repos?per_page=100',
             json=[{'name': 'some_repo', 'owner': {'login': 'some_username'}}],
@@ -145,10 +155,7 @@ class TestGithubIssue:
             ],
         )  # second comment should be ignored and still pass
 
-        service = get_mock_service(
-            GithubService,
-            {**SERVICE_CONFIG, 'ignore_user_comments': [IGNORABLE['user']['login']]},
-        )
+        service = make_service(ignore_user_comments=[IGNORABLE['user']['login']])
         issue = next(service.issues())
 
         expected = {
@@ -236,26 +243,19 @@ class TestGithubIssueQuery:
 
 
 class TestGithubService:
-    def test_token_authorization_header(self):
-        service = get_mock_service(GithubService, SERVICE_CONFIG)
-        service = get_mock_service(
-            GithubService,
-            {**SERVICE_CONFIG, 'token': '@oracle:eval:echo 1234567890ABCDEF'},
-        )
+    def test_token_authorization_header(self, make_service):
+        service = make_service(token='@oracle:eval:echo 1234567890ABCDEF')
         assert (
             service.client.session.headers['Authorization'] == "token 1234567890ABCDEF"
         )
 
-    def test_default_host(self):
+    def test_default_host(self, service):
         """Check that if host is not set, we default to github.com"""
-        service = get_mock_service(GithubService, SERVICE_CONFIG)
         assert "github.com" == service.config.host
 
-    def test_overwrite_host(self):
+    def test_overwrite_host(self, make_service):
         """Check that if host is set, we use its value as host"""
-        service = get_mock_service(
-            GithubService, {**SERVICE_CONFIG, 'host': 'github.example.com'}
-        )
+        service = make_service(host='github.example.com')
         assert "github.example.com" == service.config.host
 
     def test_keyring_service(self):
@@ -292,18 +292,16 @@ class TestGithubService:
         repository = GithubService.get_repository_from_issue(issue)
         assert "foo/bar" == repository
 
-    def test_body_no_limit(self):
-        service = get_mock_service(GithubService, SERVICE_CONFIG)
+    def test_body_no_limit(self, service):
         issue = dict(body="A very short issue body.  Fixes #42.")
         assert issue["body"] == service.body(issue)
 
-    def test_body_newline_style(self):
-        service = get_mock_service(GithubService, SERVICE_CONFIG)
+    def test_body_newline_style(self, service):
         issue = dict(body="An\r\nIssue\r\nWith\r\nNewlines")
         assert "An\nIssue\nWith\nNewlines" == service.body(issue)
 
-    def test_body_length_limit(self):
-        service = get_mock_service(GithubService, {**SERVICE_CONFIG, 'body_length': 5})
+    def test_body_length_limit(self, make_service):
+        service = make_service(body_length=5)
         issue = dict(body="A very short issue body.  Fixes #42.")
         assert issue["body"][:5] == service.body(issue)
 
