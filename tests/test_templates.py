@@ -1,81 +1,83 @@
+import pytest
+
 from bugwarrior.collect import TaskConstructor
 
 from .base import make_issue
 
+DEFAULT_DESCRIPTION = 'Construct Library on Terminus'
 
-class TestTemplates:
-    arbitrary_default_description = 'Construct Library on Terminus'
-    arbitrary_issue = {'project': 'end_of_empire', 'priority': 'H'}
 
-    def get_issue(self, templates=None, add_tags=None):
+@pytest.fixture
+def record():
+    return {'project': 'end_of_empire', 'priority': 'H'}
+
+
+@pytest.fixture
+def get_issue(record):
+    def get(templates=None, add_tags=None):
         templates = {} if templates is None else templates
         overrides = {f'{key}_template': value for key, value in templates.items()}
         if add_tags:
             overrides['add_tags'] = add_tags
 
         issue = make_issue(config_overrides=overrides)
-        issue.to_taskwarrior = lambda: self.arbitrary_issue
-        issue.get_default_description = lambda: self.arbitrary_default_description
+        issue.to_taskwarrior = lambda: record
+        issue.get_default_description = lambda: DEFAULT_DESCRIPTION
         return issue
 
-    def test_default_taskwarrior_record(self):
-        issue = self.get_issue({})
+    return get
 
-        record = TaskConstructor(issue).get_taskwarrior_record()
-        expected_record = self.arbitrary_issue.copy()
-        expected_record.update(
-            {'description': self.arbitrary_default_description, 'tags': []}
-        )
 
-        assert record == expected_record
+class TestTemplates:
+    def test_default_taskwarrior_record(self, get_issue, record):
+        issue = get_issue({})
 
-    def test_override_description(self):
+        actual = TaskConstructor(issue).get_taskwarrior_record()
+        expected_record = record.copy()
+        expected_record.update({'description': DEFAULT_DESCRIPTION, 'tags': []})
+
+        assert actual == expected_record
+
+    def test_override_description(self, get_issue, record):
         description_template = "{{ priority }} - {{ description }}"
 
-        issue = self.get_issue({'description': description_template})
+        issue = get_issue({'description': description_template})
 
-        record = TaskConstructor(issue).get_taskwarrior_record()
-        expected_record = self.arbitrary_issue.copy()
+        actual = TaskConstructor(issue).get_taskwarrior_record()
+        expected_record = record.copy()
         expected_record.update(
             {
-                'description': '%s - %s'
-                % (
-                    self.arbitrary_issue['priority'],
-                    self.arbitrary_default_description,
-                ),
+                'description': '%s - %s' % (record['priority'], DEFAULT_DESCRIPTION),
                 'tags': [],
             }
         )
 
-        assert record == expected_record
+        assert actual == expected_record
 
-    def test_override_project(self):
+    def test_override_project(self, get_issue, record):
         project_template = "wat_{{ project|upper }}"
 
-        issue = self.get_issue({'project': project_template})
+        issue = get_issue({'project': project_template})
 
-        record = TaskConstructor(issue).get_taskwarrior_record()
-        expected_record = self.arbitrary_issue.copy()
+        actual = TaskConstructor(issue).get_taskwarrior_record()
+        expected_record = record.copy()
         expected_record.update(
             {
-                'description': self.arbitrary_default_description,
-                'project': 'wat_%s' % self.arbitrary_issue['project'].upper(),
+                'description': DEFAULT_DESCRIPTION,
+                'project': 'wat_%s' % record['project'].upper(),
                 'tags': [],
             }
         )
 
-        assert record == expected_record
+        assert actual == expected_record
 
-    def test_tag_templates(self):
-        issue = self.get_issue(add_tags=['one', '{{ project }}'])
+    def test_tag_templates(self, get_issue, record):
+        issue = get_issue(add_tags=['one', '{{ project }}'])
 
-        record = TaskConstructor(issue).get_taskwarrior_record()
-        expected_record = self.arbitrary_issue.copy()
+        actual = TaskConstructor(issue).get_taskwarrior_record()
+        expected_record = record.copy()
         expected_record.update(
-            {
-                'description': self.arbitrary_default_description,
-                'tags': ['one', self.arbitrary_issue['project']],
-            }
+            {'description': DEFAULT_DESCRIPTION, 'tags': ['one', record['project']]}
         )
 
-        assert record == expected_record
+        assert actual == expected_record
