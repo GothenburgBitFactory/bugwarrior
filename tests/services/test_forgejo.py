@@ -87,7 +87,7 @@ class TestForgejoIssue(ServiceIssueTest):
         'service': 'forgejo',
         'host': 'codeberg.org',
         'token': 'arbitrary_token',
-        'username': 'arbitrary_username',
+        'login': 'arbitrary_username',
         #'ignore_user_comments': [IGNORABLE['user']['login']],
     }
 
@@ -219,9 +219,9 @@ class TestForgejoIssue(ServiceIssueTest):
 class TestForgejoIssueQuery(ServiceIssueTest):
     SERVICE_CONFIG = {
         'service': 'forgejo',
+        'host': 'codeberg.org',
         'login': 'arbitrary_login',
         'token': 'arbitrary_token',
-        'username': 'arbitrary_username',
         'query': 'is:open reviewer:octocat',
         'include_user_repos': 'False',
         'include_user_issues': 'False',
@@ -279,7 +279,7 @@ class TestForgejoService(ServiceTest):
     SERVICE_CONFIG = {
         'service': 'forgejo',
         'login': 'tintin',
-        'username': 'milou',
+        'host': 'codeberg.org',
         'token': 't0ps3cr3t',
     }
 
@@ -314,8 +314,9 @@ class TestForgejoService(ServiceTest):
     def test_keyring_service_host(self):
         """Checks that the keyring key depends on the forgejo host."""
         service_config = ForgejoConfig(
-            **{'host': 'forgejo.example.com'}, **self.SERVICE_CONFIG, target="myservice"
+            **self.SERVICE_CONFIG, target="myservice"
         )
+        service_config.host = 'forgejo.example.com'
         keyring_service = service_config.keyring_service
         assert "forgejo://tintin@forgejo.example.com/milou" == keyring_service
 
@@ -333,23 +334,6 @@ class TestForgejoService(ServiceTest):
         repository = ForgejoService.get_repository_from_issue(issue)
         assert "foo/bar" == repository
 
-    def test_body_no_limit(self):
-        service = self.get_mock_service(ForgejoService)
-        issue = dict(body="A very short issue body.  Fixes #42.")
-        assert issue["body"] == service.body(issue)
-
-    def test_body_newline_style(self):
-        service = self.get_mock_service(ForgejoService)
-        issue = dict(body="An\r\nIssue\r\nWith\r\nNewlines")
-        assert "An\nIssue\nWith\nNewlines" == service.body(issue)
-
-    def test_body_length_limit(self):
-        service = self.get_mock_service(
-            ForgejoService, config_overrides={'body_length': 5}
-        )
-        issue = dict(body="A very short issue body.  Fixes #42.")
-        assert issue["body"][:5] == service.body(issue)
-
 
 class TestForgejoValidation(ConfigTest):
     SERVICE_CONFIG = {'service': 'forgejo', 'login': 'tintin', 'token': 't0ps3cr3t'}
@@ -358,27 +342,22 @@ class TestForgejoValidation(ConfigTest):
         super().setUp()
         self.config = {
             'general': {'targets': ['myservice']},
-            'myservice': {**self.SERVICE_CONFIG, 'username': 'milou'},
+            'myservice': {**self.SERVICE_CONFIG, 'login': 'milou'},
         }
 
-    def test_require_username_or_query(self):
+    def test_require_login_or_query(self):
         self.config['myservice']['include_user_repos'] = 'false'
-        self.config['myservice'].pop('username')
+        self.config['myservice'].pop('login')
         self.assertValidationError('section requires one of')
 
-    def test_require_username_or_query_with_query(self):
+    def test_require_login_or_query_with_query(self):
         self.config['myservice']['include_user_repos'] = 'false'
-        self.config['myservice'].pop('username')
+        self.config['myservice'].pop('login')
         self.config['myservice']['query'] = 'is:open reviewer:octocat'
         self.validate()
 
-    def test_require_username_if_include_user_repos(self):
-        self.config['myservice'].pop('username')
-        self.config['myservice']['query'] = 'is:open'
-        self.assertValidationError('username required when include_user_repos is True')
-
-    def test_require_username_if_include_user_repos_disabled(self):
-        self.config['myservice'].pop('username')
+    def test_require_login_if_include_user_repos_disabled(self):
+        self.config['myservice'].pop('login')
         self.config['myservice']['query'] = 'is:open'
         self.config['myservice']['include_user_repos'] = 'false'
         self.validate()

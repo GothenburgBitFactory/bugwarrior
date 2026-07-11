@@ -155,7 +155,7 @@ class ForgejoConfig(config.ServiceConfig):
     # Forgejo supports Basic, Bearer, and Token auth
     # For now, we support only Token auth
     token: str
-    username: str
+    login: str
 
     # optional
     include_assigned_issues: bool = False
@@ -429,44 +429,15 @@ class ForgejoService(Service):
             logging.critical("ERROR! No token was provided in config!")
             sys.exit(1)
 
-        token = self.get_secret("token", self.config.username)
+        token = self.get_secret("token", self.config.login)
 
         # TODO: document these with docstrings
         self.client = ForgejoClient(host=self.config.host, token=token)
 
-        # TODO: why is this necessary?
-        self.host = self.config.host
-
-        self.exclude_repos = self.config.exclude_repos
-
-        self.include_repos = self.config.include_repos
-
-        self.username = self.config.username
-
-        self.filter_pull_requests = self.config.filter_pull_requests
-
-        self.exclude_pull_requests = self.config.exclude_pull_requests
-
-        self.involved_issues = self.config.involved_issues
-
-        self.project_owner_prefix = self.config.project_owner_prefix
-
-        self.include_assigned_issues = self.config.include_assigned_issues
-
-        self.include_created_issues = self.config.include_created_issues
-
-        self.include_review_requested_issues = (
-            self.config.include_review_requested_issues
-        )
-
-        self.import_labels_as_tags = self.config.import_labels_as_tags
-
-        self.label_template = self.config.label_template
-
         self.query = self.config.get(
             'query',
-            default='involves:{user} state:open'.format(user=self.username)
-            if self.involved_issues
+            default='involves:{user} state:open'.format(user=self.config.login)
+            if self.config.involved_issues
             else '',
             to_type=str,
         )
@@ -474,7 +445,7 @@ class ForgejoService(Service):
     @staticmethod
     def get_keyring_service(service_config: ForgejoConfig) -> str:
         # TODO grok this
-        username = service_config.username
+        username = service_config.login
         host = service_config.host
         return 'forgejo://{username}@{host}/{username}'.format(
             username=username, host=host
@@ -482,8 +453,8 @@ class ForgejoService(Service):
 
     def get_service_metadata(self) -> dict[str, Any]:
         return {
-            'import_labels_as_tags': self.import_labels_as_tags,
-            'label_template': self.label_template,
+            'import_labels_as_tags': self.config.import_labels_as_tags,
+            'label_template': self.config.label_template,
         }
 
     def get_owned_repo_issues(self, tag: str) -> dict[str, tuple[str, ForgejoIssueReal]]:
@@ -555,18 +526,18 @@ class ForgejoService(Service):
         return self.filter_repo_name(repo.full_name)
 
     def filter_repos(self, repo: ForgejoRepository) -> bool:
-        if repo.owner != self.username:
+        if repo.owner != self.config.login:
             return False
 
         return self.filter_repo_name(repo.full_name)
 
     def filter_repo_name(self, full_name: str) -> bool:
-        if self.exclude_repos:
-            if full_name in self.exclude_repos:
+        if self.config.exclude_repos:
+            if full_name in self.config.exclude_repos:
                 return False
 
-        if self.include_repos:
-            if full_name in self.include_repos:
+        if self.config.include_repos:
+            if full_name in self.config.include_repos:
                 return True
             else:
                 return False
@@ -575,9 +546,9 @@ class ForgejoService(Service):
 
     def include(self, issue: tuple[str, ForgejoIssueReal]) -> bool:
         if issue[1].pull_request is not None:
-            if self.exclude_pull_requests:
+            if self.config.exclude_pull_requests:
                 return False
-            if not self.filter_pull_requests:
+            if not self.config.filter_pull_requests:
                 return True
         return super(ForgejoService, self).include(issue)
 
@@ -590,15 +561,15 @@ class ForgejoService(Service):
             # Only query for all repos if an explicit
             # include_repos list is not specified.
             if self.config.include_repos:
-                repos: list[str] = self.include_repos
+                repos: list[str] = self.config.include_repos
             else:
-                all_repos = self.client.get_repos(self.username)
+                all_repos = self.client.get_repos(self.config.login)
                 repos = filter(self.filter_repos, all_repos)
                 repos = [repo.name for repo in repos]
 
             for repo in repos:
                 log.info('Found repo: {}'.format(repo))
-                issues.update(self.get_owned_repo_issues(self.username + '/' + repo))
+                issues.update(self.get_owned_repo_issues(self.config.login + '/' + repo))
 
             '''
             A variable used to represent the attachable HTTP query that can be attached to the /repos/issues/search API end.
@@ -611,9 +582,9 @@ class ForgejoService(Service):
                 log.info("assigned was true")
                 issues.update(
                     filter(
-                        self.filter_issues,
+                        self.config.filter_issues,
                         self.get_special_issues(
-                            self.username, httpQuery + "assigned=true&"
+                            self.config.login, httpQuery + "assigned=true&"
                         ).items(),
                     )
                 )
@@ -621,9 +592,9 @@ class ForgejoService(Service):
                 log.info("created was true")
                 issues.update(
                     filter(
-                        self.filter_issues,
+                        self.config.filter_issues,
                         self.get_special_issues(
-                            self.username, httpQuery + "created=true&"
+                            self.config.login, httpQuery + "created=true&"
                         ).items(),
                     )
                 )
@@ -631,9 +602,9 @@ class ForgejoService(Service):
                 log.info("mentioned was true")
                 issues.update(
                     filter(
-                        self.filter_issues,
+                        self.config.filter_issues,
                         self.get_special_issues(
-                            self.username, httpQuery + "mentioned=true&"
+                            self.config.login, httpQuery + "mentioned=true&"
                         ).items(),
                     )
                 )
@@ -641,9 +612,9 @@ class ForgejoService(Service):
                 log.info("review request was true")
                 issues.update(
                     filter(
-                        self.filter_issues,
+                        self.config.filter_issues,
                         self.get_special_issues(
-                            self.username, httpQuery + "review_requested=true&"
+                            self.config.login, httpQuery + "review_requested=true&"
                         ).items(),
                     )
                 )
@@ -655,18 +626,18 @@ class ForgejoService(Service):
         for tag, issue in issues:
             # Stuff this value into the upstream dict for:
             # https://forgejo.com/ralphbean/bugwarrior/issues/159
-            projectName = issue['repository']["name"]
+            projectName = issue.repository.name
 
-            issue_obj = self.get_issue_for_record(issue)
-            if self.project_owner_prefix:
-                projectName = issue['repository']["owner"] + '.' + projectName
+            issue_obj = self.get_issue_for_record(issue.model_dump())
+            if self.config.project_owner_prefix:
+                projectName = issue.repository.owner + '.' + projectName
             extra = {
                 'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',
                 'annotations': [
-                    "#" + locale_str(issue['number']) + " - " + issue['title']
+                    "#" + locale_str(issue.number) + " - " + issue.title
                 ],
-                'namespace': self.username,
+                'namespace': self.config.login,
             }
             issue_obj.extra.update(extra)
             yield issue_obj
