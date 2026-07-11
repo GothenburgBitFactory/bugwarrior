@@ -1,42 +1,163 @@
-# /home/joybuke/Documents/ComputerScience/Projects/Personal/bugwarrior/bugwarrior/services coding: utf-8
-# gitea.py
-"""Bugwarrior service support class for Gitea
+"""Bugwarrior service support class for Forgejo
 
 Available classes:
-- GiteaClient(Service): Constructs Gitea API strings
-- GiteaIssue(Issue): TaskWarrior Interface
-- GiteaService(Issue): Engine for firing off requests
+- ForgejoClient(Service): Constructs Forgejo API strings
+- ForgejoIssue(Issue): TaskWarrior Interface
+- ForgejoService(Issue): Engine for firing off requests
 
 Todo:
-    * Add token support
-    * Flesh out more features offered by gitea api
+    * Add Basic and Bearer auth support
+    * Flesh out more features offered by forgejo api
+    * Use get_processed_url
 """
-
 from builtins import filter
+from enum import StrEnum
+from locale import str as locale_str
 import logging
-import pathlib
 import re
 import sys
-from urllib.parse import urlparse
-from urllib.parse import quote_plus
+from typing import Any, Optional, Type, Generator
 
+from pydantic import BaseModel
 import requests
-from six.moves.urllib.parse import quote_plus
+from requests.compat import str
 import typing_extensions
-from jinja2 import Template
 
 from bugwarrior import config
-from bugwarrior.services import Issue, Service, Client
+from bugwarrior.services import Client, Issue, Service
 
 log = logging.getLogger(__name__)  # pylint: disable-msg=C0103
 
+# $ curl https://forgejo.example.org/api/v1/settings/api
+# {
+#   "max_response_items": 50,
+#   "default_paging_num": 30,
+#   "default_git_trees_per_page": 1000,
+#   "default_max_blob_size": 10485760
+# }
+
+
+class ForgejoUser(BaseModel):
+    id: int
+    # username
+    login: str
+
+
+class ForgejoRepository(BaseModel):
+    # The fields here are not complete and only represent those useful to bugwarrior
+    has_issues: bool
+    has_pull_requests: bool
+    has_projects: bool
+    id: int
+    name: str
+    full_name: str
+    open_issues_count: int
+    open_pr_counter: int
+    owner: ForgejoUser
+    private: bool
+    topics: list[str]
+
+
+class ForgejoLabel(BaseModel):
+    id: int
+    name: str
+
+
+class ForgejoPullRequestMeta(BaseModel):
+    draft: bool
+    merged: bool
+    # datetime
+    merged_at: Optional[str] = None
+
+
+class ForgejoRepositoryMeta(BaseModel):
+    full_name: str
+    id: int
+    name: str
+    owner: str
+
+
+class ForgejoIssueState(StrEnum):
+    All = "all"
+    Closed = "closed"
+    Open = "open"
+
+
+class ForgejoIssueReal(BaseModel):
+    assignee: Optional[ForgejoUser]
+    assignees: Optional[list[ForgejoUser]]
+    body: str
+    closed_at: str  # datetime
+    created_at: str  # datetime
+    due_date: str  # datetime
+    id: int
+    labels: list[ForgejoLabel]
+    # milestone: forgejomilestone
+    number: int
+    original_author: str
+    pull_request: Optional[ForgejoPullRequestMeta]
+    repository: ForgejoRepositoryMeta
+    state: ForgejoIssueState
+    title: str
+    updated_at: str  # datetime
+    url: str
+    html_url: str
+    user: ForgejoUser
+
+
+class ForgejoPrBranchInfo(BaseModel):
+    label: str
+    ref: str
+    repo: ForgejoRepository
+    repo_id: int
+    sha: str
+
+
+class ForgejoComment(BaseModel):
+    id: int
+    body: str
+    created_at: str
+    html_url: str
+    issue_url: str
+    pull_request_url: str
+    updated_at: str
+    user: ForgejoUser
+
+
+class ForgejoPullRequest(BaseModel):
+    id: int
+    url: str
+    number: int
+    user: ForgejoUser
+    title: str
+    body: str
+    labels: list[ForgejoLabel]
+    assignee: Optional[ForgejoUser]
+    assignees: Optional[list[ForgejoUser]]
+    requested_reviewers: list[ForgejoUser]
+    requested_reviewers_teams: list[ForgejoUser]
+    state: ForgejoIssueState
+    draft: bool
+    comments: int
+    review_comments: int
+    html_url: str
+    mergeable: bool
+    merged: bool
+    merged_at: str
+    base: ForgejoPrBranchInfo
+
 
 # TODO: Document this with docstrings
-class GiteaConfig(config.ServiceConfig):
-    service: typing_extensions.Literal['gitea']
-    host = "gitea.com"
+class ForgejoConfig(config.ServiceConfig):
+    # strictly required
+    service: typing_extensions.Literal['forgejo']
+    host: str
+    # Forgejo supports Basic, Bearer, and Token auth
+    # For now, we support only Token auth
     token: str
     username: str
+
+    # optional
     include_assigned_issues: bool = False
     include_created_issues: bool = False
     include_mentioned_issues: bool = False
@@ -44,34 +165,35 @@ class GiteaConfig(config.ServiceConfig):
     import_labels_as_tags: bool = True
     involved_issues: bool = False
     project_owner_prefix: bool = False
-    include_repos: config.ConfigList = config.ConfigList([])
-    exclude_repos: config.ConfigList = config.ConfigList([])
-    label_template = str = '{{label}}'
+    include_repos: config.ConfigList = []
+    exclude_repos: config.ConfigList = []
+    label_template: str = '{{label}}'
     filter_pull_requests: bool = False
     exclude_pull_requests: bool = False
+
     """
     The maximum number of issues the API may get from the host
     """
     issue_limit: int = 100
 
-    def get(self, key, default=None, to_type=None):
+    def get(self, key: str, default: Any = None, to_type: Optional[Type] = None) -> Any:
         try:
             value = self.config_parser.get(self.service_target, self._get_key(key))
             if to_type:
                 return to_type(value)
             return value
-        except:
+        except Exception:
             return default
 
 
-class GiteaClient(Client):
-    """Builds Gitea API strings
+class ForgejoClient(Client):
+    """Builds Forgejo API strings
     Args:
-        host (str): remote gitea server
+        host (str): remote forgejo server
         auth (dict): authentication credentials
 
     Attributes:
-        host (str): remote gitea server
+        host (str): remote forgejo server
         auth (dict): authentication credentials
         session (requests.Session): requests persist settings
 
@@ -84,39 +206,42 @@ class GiteaClient(Client):
     - get_pulls:
     """
 
-    def __init__(self, host, auth):
+    def __init__(self, host: str, token: str) -> None:
         self.host = host
-        self.auth = auth
+        self.token = token
         self.session = requests.Session()
-        if 'token' in self.auth:
-            authorization = 'token ' + self.auth['token']
+        if self.token is not None:
+            authorization = 'token ' + self.token
             self.session.headers['Authorization'] = authorization
 
-    def _api_url(self, path, **context):
+    def _api_url(self, path: str, **context: Any) -> str:
         """Build the full url to the API endpoint"""
-        baseurl = 'https://{host}/api/v1'.format(host=self.host)
+        baseurl: str = 'https://{host}/api/v1'.format(host=self.host)
+        print(baseurl)
+        print(path.format(**context))
         return baseurl + path.format(**context)
 
-    # TODO Modify these for gitea support
-    def get_repos(self, username):
+    # TODO Modify these for forgejo support
+    def get_repos(self, username: str) -> list[ForgejoRepository]:
         # user_repos = self._getter(self._api_url("/user/repos?per_page=100"))
-        public_repos = self._getter(
-            self._api_url('/users/{username}/repos', username=username)
+        public_repos = self._get_all_paginated(
+            self._api_url('/users/{username}/repos', username=username),
+            ForgejoRepository,
         )
         return public_repos
 
-    def get_query(self, query):
+    def get_query(self, query: str) -> list[ForgejoIssueReal]:
         """Run a generic issue/PR query"""
         url = self._api_url('/search/issues?q={query}&per_page=100', query=query)
-        return self._getter(url, subkey='items')
+        return self._get_all_paginated(url, ForgejoIssueReal, subkey='items')
 
-    def get_issues(self, username, repo):
+    def get_issues(self, username: str, repo: str) -> list[ForgejoIssueReal]:
         url = self._api_url(
             '/repos/{username}/{repo}/issues?per_page=100', username=username, repo=repo
         )
-        return self._getter(url)
+        return self._get_all_paginated(url, ForgejoIssueReal)
 
-    def get_special_issues(self, username, query: str):
+    def get_special_issues(self, username: str, query: str) -> list[ForgejoIssueReal]:
         """Returns all issues assigned to authenticated user given a specific query.
 
         This will return all issues this authenticated user has access to and then
@@ -126,30 +251,28 @@ class GiteaClient(Client):
         url = self._api_url(
             '/repos/issues/search?{query}', username=username, query=query
         )
-        return self._getter(url)
+        return self._get_all_paginated(url, ForgejoIssueReal)
 
-    # TODO close to gitea format: /comments/{id}
-    def get_comments(self, username, repo, number):
+    # TODO close to forgejo format: /comments/{id}
+    def get_comments(self, username: str, repo: str, number: int) -> list[ForgejoComment]:
         url = self._api_url(
             '/repos/{username}/{repo}/issues/{number}/comments?per_page=100',
             username=username,
             repo=repo,
             number=number,
         )
-        return self._getter(url)
+        return self._get_all_paginated(url, ForgejoComment)
 
-    def get_pulls(self, username, repo):
+    def get_pulls(self, username: str, repo: str) -> list[ForgejoPullRequest]:
         url = self._api_url(
             '/repos/{username}/{repo}/pulls?per_page=100', username=username, repo=repo
         )
-        return self._getter(url)
+        return self._get_all_paginated(url, ForgejoPullRequest)
 
-    def _getter(self, url, subkey=None):
+    def _get_all_paginated(self, url: str, type: Type, subkey: Optional[str] = None) -> list[Any]:
         """Pagination utility.  Obnoxious."""
 
         kwargs = {}
-        if 'basic' in self.auth:
-            kwargs['auth'] = self.auth['basic']
 
         results = []
         link = dict(next=url)
@@ -158,11 +281,11 @@ class GiteaClient(Client):
             response = self.session.get(link['next'], **kwargs)
 
             # Warn about the mis-leading 404 error code.  See:
-            # https://gitea.com/ralphbean/bugwarrior/issues/374
-            # TODO this is a copy paste from github.py, see what gitea produces
-            if response.status_code == 404 and 'token' in self.auth:
+            # https://forgejo.com/ralphbean/bugwarrior/issues/374
+            # TODO this is a copy paste from github.py, see what forgejo produces
+            if response.status_code == 404 and self.token is not None:
                 log.warning(
-                    'A \'404\' from gitea may indicate an auth '
+                    'A \'404\' from forgejo may indicate an auth '
                     'failure. Make sure both that your token is correct '
                     'and that it has \'public_repo\' and not \'public '
                     'access\' rights.'
@@ -173,7 +296,7 @@ class GiteaClient(Client):
             if subkey is not None:
                 json_res = json_res[subkey]
 
-            results += json_res
+            results += map(lambda x: type(**x), json_res)
 
             link = self._link_field_to_dict(response.headers.get('link', None))
 
@@ -181,8 +304,8 @@ class GiteaClient(Client):
 
     # TODO: just copied from github.py
     @staticmethod
-    def _link_field_to_dict(field):
-        """Utility for ripping apart gitea's Link header field.
+    def _link_field_to_dict(field: Optional[str]) -> dict[str, str]:
+        """Utility for ripping apart forgejo's Link header field.
         It's kind of ugly.
         """
 
@@ -197,43 +320,45 @@ class GiteaClient(Client):
         )
 
 
-class GiteaIssue(Issue):
-    TITLE = 'giteatitle'
-    BODY = 'giteabody'
-    CREATED_AT = 'giteacreatedon'
-    UPDATED_AT = 'giteaupdatedat'
-    CLOSED_AT = 'giteaclosedon'
-    MILESTONE = 'giteamilestone'
-    URL = 'giteaurl'
-    REPO = 'gitearepo'
-    TYPE = 'giteatype'
-    NUMBER = 'giteanumber'
-    USER = 'giteauser'
-    NAMESPACE = 'giteanamespace'
-    STATE = 'giteastate'
+class ForgejoIssue(Issue):
+    TITLE = 'forgejotitle'
+    BODY = 'forgejobody'
+    DRAFT = 'forgejodraft'
+    CREATED_AT = 'forgejocreatedon'
+    UPDATED_AT = 'forgejoupdatedat'
+    CLOSED_AT = 'forgejoclosedon'
+    MILESTONE = 'forgejomilestone'
+    URL = 'forgejourl'
+    REPO = 'forgejorepo'
+    TYPE = 'forgejotype'
+    NUMBER = 'forgejonumber'
+    USER = 'forgejouser'
+    NAMESPACE = 'forgejonamespace'
+    STATE = 'forgejostate'
 
-    UDAS = {
-        TITLE: {'type': 'string', 'label': 'Gitea Title'},
-        BODY: {'type': 'string', 'label': 'Gitea Body'},
-        CREATED_AT: {'type': 'date', 'label': 'Gitea Created'},
-        UPDATED_AT: {'type': 'date', 'label': 'Gitea Updated'},
-        CLOSED_AT: {'type': 'date', 'label': 'Gitea Closed'},
-        MILESTONE: {'type': 'string', 'label': 'Gitea Milestone'},
-        REPO: {'type': 'string', 'label': 'Gitea Repo Slug'},
-        URL: {'type': 'string', 'label': 'Gitea URL'},
-        TYPE: {'type': 'string', 'label': 'Gitea Type'},
-        NUMBER: {'type': 'numeric', 'label': 'Gitea Issue/PR #'},
-        USER: {'type': 'string', 'label': 'Gitea User'},
-        NAMESPACE: {'type': 'string', 'label': 'Gitea Namespace'},
-        STATE: {'type': 'string', 'label': 'Gitea State'},
-    }
     UNIQUE_KEY = (URL, TYPE)
+    UDAS = {
+        TITLE: {'type': 'string', 'label': 'Forgejo Title'},
+        BODY: {'type': 'string', 'label': 'Forgejo Body'},
+        DRAFT: {'type': 'numeric', 'label': 'Forgejo Draft'},
+        CREATED_AT: {'type': 'date', 'label': 'Forgejo Created'},
+        UPDATED_AT: {'type': 'date', 'label': 'Forgejo Updated'},
+        CLOSED_AT: {'type': 'date', 'label': 'Forgejo Closed'},
+        MILESTONE: {'type': 'string', 'label': 'Forgejo Milestone'},
+        REPO: {'type': 'string', 'label': 'Forgejo Repo Slug'},
+        URL: {'type': 'string', 'label': 'Forgejo URL'},
+        TYPE: {'type': 'string', 'label': 'Forgejo Type'},
+        NUMBER: {'type': 'numeric', 'label': 'Forgejo Issue/PR #'},
+        USER: {'type': 'string', 'label': 'Forgejo User'},
+        NAMESPACE: {'type': 'string', 'label': 'Forgejo Namespace'},
+        STATE: {'type': 'string', 'label': 'Forgejo State'},
+    }
 
     @staticmethod
-    def _normalize_label_to_tag(label):
+    def _normalize_label_to_tag(label: str) -> str:
         return re.sub(r'[^a-zA-Z0-9]', '_', label)
 
-    def get_tags(self):
+    def get_tags(self) -> list[str]:
         labels = [label['name'] for label in self.record.get('labels', [])]
         return self.get_tags_from_labels(labels)
 
@@ -260,8 +385,9 @@ class GiteaIssue(Issue):
             'tags': self.get_tags(),
             'entry': created,
             'end': closed,
-            self.URL: self.record['url'],
-            self.REPO: self.record['repository'],
+            self.DRAFT: self.record.get('draft', 0),
+            self.URL: self.record['html_url'],
+            self.REPO: self.record['repository']['full_name'],
             self.TYPE: self.extra['type'],
             self.USER: self.record['user']['login'],
             self.TITLE: self.record['title'],
@@ -271,41 +397,44 @@ class GiteaIssue(Issue):
             self.CREATED_AT: created,
             self.UPDATED_AT: updated,
             self.CLOSED_AT: closed,
-            self.NAMESPACE: self.extra['namespace'],
+            self.NAMESPACE: self.record['repository'][
+                'owner'
+            ],  # self.extra['namespace'],
             self.STATE: self.record.get('state', ''),
         }
 
-    def get_default_description(self):
+    def get_default_description(self) -> str:
         log.info('In get_default_description')
         return self.build_default_description(
             title=self.record['title'],
-            url=self.record['url'],
+            url=self.record['html_url'],
             number=self.record['number'],
             cls=self.extra['type'],
         )
 
 
-class GiteaService(Service):
-    ISSUE_CLASS = GiteaIssue
-    CONFIG_SCHEMA = GiteaConfig
-    CONFIG_PREFIX = 'gitea'
+class ForgejoService(Service):
+    ISSUE_CLASS = ForgejoIssue
+    CONFIG_SCHEMA = ForgejoConfig
+    CONFIG_PREFIX = 'forgejo'
+    API_VERSION = 1
 
-    def __init__(self, *args, **kw):
-        super(GiteaService, self).__init__(*args, **kw)
+    def __init__(self, *args: Any, **kw: Any) -> None:
+        super(ForgejoService, self).__init__(*args, **kw)
 
-        auth = {}
+        print(self.config.token)
         token = self.config.token
-        if hasattr(self.config, 'token'):
-            token = self.get_password('token', login=self.config.username)
-            auth['token'] = token
-        else:
-            # Probably should be called by validate_config, but I don't care to fix that.
+        if token is None:
+            # Probably should be called by validate_config
             logging.critical("ERROR! No token was provided in config!")
             sys.exit(1)
 
-        # TODO: document these with docstrings
-        self.client = GiteaClient(host=self.config.host, auth=auth)
+        token = self.get_secret("token", self.config.username)
 
+        # TODO: document these with docstrings
+        self.client = ForgejoClient(host=self.config.host, token=token)
+
+        # TODO: why is this necessary?
         self.host = self.config.host
 
         self.exclude_repos = self.config.exclude_repos
@@ -343,33 +472,33 @@ class GiteaService(Service):
         )
 
     @staticmethod
-    def get_keyring_service(service_config):
+    def get_keyring_service(service_config: ForgejoConfig) -> str:
         # TODO grok this
         username = service_config.username
         host = service_config.host
-        return 'gitea://{username}@{host}/{username}'.format(
+        return 'forgejo://{username}@{host}/{username}'.format(
             username=username, host=host
         )
 
-    def get_service_metadata(self):
+    def get_service_metadata(self) -> dict[str, Any]:
         return {
             'import_labels_as_tags': self.import_labels_as_tags,
             'label_template': self.label_template,
         }
 
-    def get_owned_repo_issues(self, tag):
+    def get_owned_repo_issues(self, tag: str) -> dict[str, tuple[str, ForgejoIssueReal]]:
         """Grab all the issues"""
         issues = {}
         for issue in self.client.get_issues(*tag.split('/')):
-            issues[issue['url']] = (tag, issue)
+            issues[issue.url] = (tag, issue)
         return issues
 
-    def get_query(self, query):
-        """Grab all issues matching a gitea query"""
+    def get_query(self, query: str) -> dict[str, tuple[str, ForgejoIssueReal]]:
+        """Grab all issues matching a forgejo query"""
         log.info('In get_query')
         issues = {}
         for issue in self.client.get_query(query):
-            url = issue['url']
+            url = issue.url
             try:
                 repo = self.get_repository_from_issue(issue)
             except ValueError as e:
@@ -378,85 +507,81 @@ class GiteaService(Service):
                 issues[url] = (repo, issue)
         return issues
 
-    def get_special_issues(self, username, query):
+    def get_special_issues(self, username: str, query: str) -> dict[str, tuple[str, ForgejoIssueReal]]:
         issues = {}
-        for issue in self.client.get_special_issues(self.username, query):
+        for issue in self.client.get_special_issues(username, query):
             repos = self.get_repository_from_issue(issue)
-            issues[issue['url']] = (repos, issue)
+            issues[issue.url] = (repos, issue)
         return issues
 
     @classmethod
-    def get_repository_from_issue(cls, issue):
-        if 'repository' in issue:
-            url = issueloc = issue["html_url"]
-        else:
-            raise ValueError('Issue has no repository url' + str(issue))
+    def get_repository_from_issue(cls, issue: ForgejoIssueReal | ForgejoPullRequest) -> str:
+        # TODO: this strips the last two segments from
+        # https://codeberg.org/user/repo/issues/1 into
+        # https://codeberg.org/user/repo
+        #
+        # We could also do something like `https://{host}/{issue.repository.full_name}`
+        # but we don't necessarily know the scheme to use.
+        return issue.html_url.rsplit("/", 2)[0]
 
-        # Literal cargo-cult crap, idk if this should be kept
-        tag = re.match('.*/([^/]*/[^/]*)$', url)
-        if tag is None:
-            raise ValueError('Unrecognized URL: {}.'.format(url))
-
-        return url.rsplit("/", 2)[0]
-
-    def _comments(self, tag, number):
+    def _comments(self, tag: str, number: int) -> list[ForgejoComment]:
         user, repo = tag.split('/')
         return self.client.get_comments(user, repo, number)
 
-    def annotations(self, tag, issue, issue_obj):
+    def annotations(self, full_name: str, issue: ForgejoIssueReal) -> list[str]:
         log.info('in Annotations')
         # log.info(repr(issue))
-        log.info('body: {}'.format(issue['body']))
-        url = issue['url']
+        log.info('body: {}'.format(issue.body))
+        url = issue.html_url
         annotations = []
-        if self.annotation_comments:
-            comments = self._comments(tag, issue['body'])
-            # log.info(" got comments for %s", issue['url'])
-            annotations = ((c['user']['login'], c['body']) for c in comments)
+        if self.config.annotation_comments:
+            comments = self._comments(full_name, issue.number)
+            # log.info(" got comments for %s", issue.url)
+            annotations = ((c.user.login, c.body) for c in comments)
         annotations_result = self.build_annotations(annotations, url)
         log.info('annotations: {}'.format(annotations_result))
         return annotations_result
 
-    def _reqs(self, tag):
+    def _reqs(self, full_name: str) -> list[tuple[str, ForgejoPullRequest]]:
         """Grab all the pull requests"""
-        return [(tag, i) for i in self.client.get_pulls(*tag.split('/'))]
+        return [(full_name, i) for i in self.client.get_pulls(*full_name.split('/'))]
 
-    def get_owner(self, issue):
-        if issue[1]['assignee']:
-            return issue[1]['assignee']['login']
+    def get_owner(self, issue: tuple[str, ForgejoIssueReal]) -> str:
+        if issue[1].assignee:
+            return issue[1].assignee.login
+        return issue[1].user.login
 
-    def filter_issues(self, issue):
-        repo, _ = issue
-        return self.filter_repo_name(repo.split('/')[-3])
+    def filter_issues(self, repo: ForgejoRepositoryMeta) -> bool:
+        return self.filter_repo_name(repo.full_name)
 
-    def filter_repos(self, repo):
-        if repo['owner']['login'] != self.username:
+    def filter_repos(self, repo: ForgejoRepository) -> bool:
+        if repo.owner != self.username:
             return False
 
-        return self.filter_repo_name(repo['name'])
+        return self.filter_repo_name(repo.full_name)
 
-    def filter_repo_name(self, name):
+    def filter_repo_name(self, full_name: str) -> bool:
         if self.exclude_repos:
-            if name in self.exclude_repos:
+            if full_name in self.exclude_repos:
                 return False
 
         if self.include_repos:
-            if name in self.include_repos:
+            if full_name in self.include_repos:
                 return True
             else:
                 return False
 
         return True
 
-    def include(self, issue):
-        if 'pull_request' in issue[1]:
+    def include(self, issue: tuple[str, ForgejoIssueReal]) -> bool:
+        if issue[1].pull_request is not None:
             if self.exclude_pull_requests:
                 return False
             if not self.filter_pull_requests:
                 return True
-        return super(GiteaService, self).include(issue)
+        return super(ForgejoService, self).include(issue)
 
-    def issues(self):
+    def issues(self) -> Generator[ForgejoIssue]:
         issues = {}
         if self.query:
             issues.update(self.get_query(self.query))
@@ -464,12 +589,12 @@ class GiteaService(Service):
         if self.config.get('include_user_repos', True, bool):
             # Only query for all repos if an explicit
             # include_repos list is not specified.
-            if self.include_repos:
-                repos = self.include_repos
+            if self.config.include_repos:
+                repos: list[str] = self.include_repos
             else:
                 all_repos = self.client.get_repos(self.username)
                 repos = filter(self.filter_repos, all_repos)
-                repos = [repo['name'] for repo in repos]
+                repos = [repo.name for repo in repos]
 
             for repo in repos:
                 log.info('Found repo: {}'.format(repo))
@@ -480,7 +605,7 @@ class GiteaService(Service):
 
             if httpQuery is set to "review_requested=True?mentioned=True" for example, then the /repos/issues/search API end will be told to search for all issues where a review is requested AND where the user is mentioned.
             '''
-            httpQuery = "limit=" + str(self.config.issue_limit) + "&"
+            httpQuery = "limit=" + locale_str(self.config.issue_limit) + "&"
 
             if self.config.get('include_assigned_issues', True, bool):
                 log.info("assigned was true")
@@ -529,7 +654,7 @@ class GiteaService(Service):
 
         for tag, issue in issues:
             # Stuff this value into the upstream dict for:
-            # https://gitea.com/ralphbean/bugwarrior/issues/159
+            # https://forgejo.com/ralphbean/bugwarrior/issues/159
             projectName = issue['repository']["name"]
 
             issue_obj = self.get_issue_for_record(issue)
@@ -538,7 +663,9 @@ class GiteaService(Service):
             extra = {
                 'project': projectName,
                 'type': 'pull_request' if 'pull_request' in issue else 'issue',
-                'annotations': ["#" + str(issue['number']) + " - " + issue['title']],
+                'annotations': [
+                    "#" + locale_str(issue['number']) + " - " + issue['title']
+                ],
                 'namespace': self.username,
             }
             issue_obj.extra.update(extra)
