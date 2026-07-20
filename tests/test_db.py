@@ -1,6 +1,7 @@
 import copy
 from types import SimpleNamespace
 
+import pytest
 import taskw.task
 
 from bugwarrior import db
@@ -8,7 +9,7 @@ from bugwarrior.collect import CollectedIssue
 from bugwarrior.config import schema
 from bugwarrior.config.validation import Config
 
-from .base import ConfigTest, DumbConfig, register_services
+from .base import DumbConfig, register_services
 
 
 class TestMergeAnnotations:
@@ -60,21 +61,28 @@ class TestMergeTags:
         assert db.merge_tags(main_conf, {}, {'tags': ['new']}) == ['new']
 
 
-class TestSynchronize(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.enterContext(register_services())
-        self.bwconfig = Config(
+class TestSynchronize:
+    @pytest.fixture(autouse=True)
+    def registered_services(self):
+        with register_services():
+            yield
+
+    @pytest.fixture
+    def bwconfig(self, config_environment):
+        return Config(
             service_configs=[DumbConfig(target='my_service')],
             main=schema.MainSectionConfig(
                 targets=['my_service'],
-                taskrc=self.taskrc,
+                taskrc=config_environment.taskrc,
                 static_fields=['project', 'priority'],
             ),
         )
-        self.tw = taskw.TaskWarrior(self.taskrc)
 
-    def synchronize(self, issues_data):
+    @pytest.fixture
+    def tw(self, config_environment):
+        return taskw.TaskWarrior(config_environment.taskrc)
+
+    def synchronize(self, bwconfig, issues_data):
 
         issue_generator = [
             CollectedIssue(
@@ -84,7 +92,7 @@ class TestSynchronize(ConfigTest):
             )
             for issue_data in issues_data
         ]
-        db.synchronize(iter(issue_generator), self.bwconfig)
+        db.synchronize(iter(issue_generator), bwconfig)
 
     def remove_non_deterministic_keys(self, tasks):
         for status in ['pending', 'completed']:
@@ -96,13 +104,13 @@ class TestSynchronize(ConfigTest):
 
         return tasks
 
-    def get_tasks(self):
+    def get_tasks(self, tw):
 
-        return self.remove_non_deterministic_keys(self.tw.load_tasks())
+        return self.remove_non_deterministic_keys(tw.load_tasks())
 
-    def test_synchronize(self):
+    def test_synchronize(self, bwconfig, tw):
 
-        assert self.tw.load_tasks() == {'completed': [], 'pending': []}
+        assert tw.load_tasks() == {'completed': [], 'pending': []}
 
         issue = {
             'description': 'Blah blah blah. ☃',
@@ -121,9 +129,9 @@ class TestSynchronize(ConfigTest):
             # These should be de-duplicated in db.synchronize before
             # writing out to taskwarrior.
             # https://github.com/ralphbean/bugwarrior/issues/601
-            self.synchronize([issue, duplicate_issue])
+            self.synchronize(bwconfig, [issue, duplicate_issue])
 
-            assert self.get_tasks() == {
+            assert self.get_tasks(tw) == {
                 'completed': [],
                 'pending': [
                     {
@@ -145,9 +153,9 @@ class TestSynchronize(ConfigTest):
 
         # Change static field
         issue['project'] = 'other_project'
-        self.synchronize([issue])
+        self.synchronize(bwconfig, [issue])
 
-        assert self.get_tasks() == {
+        assert self.get_tasks(tw) == {
             'completed': [],
             'pending': [
                 {
@@ -165,9 +173,9 @@ class TestSynchronize(ConfigTest):
         }
 
         # TEST CLOSED ISSUE.
-        self.synchronize([])
+        self.synchronize(bwconfig, [])
 
-        completed_tasks = self.tw.load_tasks()
+        completed_tasks = tw.load_tasks()
 
         tasks = self.remove_non_deterministic_keys(copy.deepcopy(completed_tasks))
         del tasks['completed'][0]['end']
@@ -189,9 +197,9 @@ class TestSynchronize(ConfigTest):
         }
 
         # TEST REOPENED ISSUE
-        self.synchronize([issue])
+        self.synchronize(bwconfig, [issue])
 
-        tasks = self.tw.load_tasks()
+        tasks = tw.load_tasks()
         assert completed_tasks['completed'][0]['uuid'] == tasks['pending'][0]['uuid']
 
         tasks = self.remove_non_deterministic_keys(tasks)
@@ -213,13 +221,13 @@ class TestSynchronize(ConfigTest):
         }
 
 
-class TestUDAs(ConfigTest):
-    def test_udas(self):
+class TestUDAs:
+    def test_udas(self, config_environment):
         with register_services():
             conf = Config(
                 service_configs=[DumbConfig(target='my_service')],
                 main=schema.MainSectionConfig(
-                    targets=['my_service'], taskrc=self.taskrc
+                    targets=['my_service'], taskrc=config_environment.taskrc
                 ),
             )
             udas = sorted(db.get_defined_udas_as_strings(conf))

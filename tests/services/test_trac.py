@@ -1,7 +1,32 @@
+import pytest
+
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.trac import TracService
 
-from .base import ServiceIssueTest
+SERVICE_CLASS = TracService
+
+SERVICE_CONFIG = {
+    'service': 'trac',
+    'base_uri': 'ljlkajsdfl.com',
+    'username': 'something',
+    'password': 'somepwd',
+}
+
+
+@pytest.fixture
+def record():
+    return {
+        'url': 'http://some/url.com/',
+        'summary': 'Some Summary',
+        'number': 204,
+        'priority': 'critical',
+        'component': 'testcomponent',
+    }
+
+
+@pytest.fixture
+def extra():
+    return {'annotations': ['alpha', 'beta'], 'project': 'some project'}
 
 
 class FakeTracTicket:
@@ -28,50 +53,31 @@ class FakeTracLib:
         return (1, None, None, self.record)
 
 
-class TestTracIssue(ServiceIssueTest):
-    SERVICE_CONFIG = {
-        'service': 'trac',
-        'base_uri': 'ljlkajsdfl.com',
-        'username': 'something',
-        'password': 'somepwd',
-    }
-    arbitrary_issue = {
-        'url': 'http://some/url.com/',
-        'summary': 'Some Summary',
-        'number': 204,
-        'priority': 'critical',
-        'component': 'testcomponent',
-    }
-
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(TracService)
-
-    def get_mock_service(self, *args, **kwargs):
-        service = super().get_mock_service(*args, **kwargs)
-        service.trac = FakeTracLib(self.arbitrary_issue)
+class TestTracIssue:
+    @pytest.fixture
+    def service(self, record, make_service):
+        service = make_service()
+        service.trac = FakeTracLib(record)
         return service
 
-    def test_to_taskwarrior(self):
-        arbitrary_extra = {'annotations': ['alpha', 'beta'], 'project': 'some project'}
-
-        issue = self.service.get_issue_for_record(self.arbitrary_issue, arbitrary_extra)
+    def test_to_taskwarrior(self, service, record, extra):
+        issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
-            'project': arbitrary_extra['project'],
-            'priority': issue.PRIORITY_MAP[self.arbitrary_issue['priority']],
-            'annotations': arbitrary_extra['annotations'],
-            issue.URL: self.arbitrary_issue['url'],
-            issue.SUMMARY: self.arbitrary_issue['summary'],
-            issue.NUMBER: self.arbitrary_issue['number'],
-            issue.COMPONENT: self.arbitrary_issue['component'],
+            'project': extra['project'],
+            'priority': issue.PRIORITY_MAP[record['priority']],
+            'annotations': extra['annotations'],
+            issue.URL: record['url'],
+            issue.SUMMARY: record['summary'],
+            issue.NUMBER: record['number'],
+            issue.COMPONENT: record['component'],
         }
         actual_output = issue.to_taskwarrior()
 
         assert actual_output == expected_output
 
-    def test_issues(self):
-        issue = next(self.service.issues())
+    def test_issues(self, service):
+        issue = next(service.issues())
 
         expected = {
             'annotations': [],

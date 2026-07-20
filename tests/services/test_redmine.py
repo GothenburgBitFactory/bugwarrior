@@ -1,27 +1,32 @@
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.redmine import RedMineService
 
-from .base import ServiceIssueTest
+SERVICE_CLASS = RedMineService
+
+SERVICE_CONFIG = {
+    'service': 'redmine',
+    'url': 'https://something',
+    'key': 'something_else',
+    'issue_limit': '100',
+}
 
 
-class TestRedmineIssue(ServiceIssueTest):
-    SERVICE_CONFIG = {
-        'service': 'redmine',
-        'url': 'https://something',
-        'key': 'something_else',
-        'issue_limit': '100',
-    }
-    arbitrary_created = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(1)
-    arbitrary_updated = datetime.now(timezone.utc).replace(microsecond=0)
-    arbitrary_issue = {
+CREATED = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(1)
+UPDATED = datetime.now(timezone.utc).replace(microsecond=0)
+
+
+@pytest.fixture
+def record():
+    return {
         "assigned_to": {"id": 35546, "name": "Adam Coddington"},
         "author": {"id": 35546, "name": "Adam Coddington"},
-        "created_on": arbitrary_created.isoformat(),
+        "created_on": CREATED.isoformat(),
         "due_on": "2016-12-30T16:40:29Z",
         "description": "This is a test issue.",
         "done_ratio": 0,
@@ -31,35 +36,33 @@ class TestRedmineIssue(ServiceIssueTest):
         "status": {"id": 1, "name": "New"},
         "subject": "Biscuits",
         "tracker": {"id": 4, "name": "Task"},
-        "updated_on": arbitrary_updated.isoformat(),
+        "updated_on": UPDATED.isoformat(),
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(RedMineService)
 
-    def test_to_taskwarrior(self):
+class TestRedmineIssue:
+    def test_to_taskwarrior(self, service, record):
         arbitrary_url = 'http://lkjlj.com'
 
-        issue = self.service.get_issue_for_record(self.arbitrary_issue)
+        issue = service.get_issue_for_record(record)
 
         expected_output = {
             'annotations': [],
             'project': issue.get_project_name(),
             'priority': 'H',
             issue.DUEDATE: None,
-            issue.ASSIGNED_TO: self.arbitrary_issue['assigned_to']['name'],
-            issue.AUTHOR: self.arbitrary_issue['author']['name'],
+            issue.ASSIGNED_TO: record['assigned_to']['name'],
+            issue.AUTHOR: record['author']['name'],
             issue.CATEGORY: None,
-            issue.DESCRIPTION: self.arbitrary_issue['description'],
+            issue.DESCRIPTION: record['description'],
             issue.ESTIMATED_HOURS: None,
             issue.STATUS: 'New',
             issue.URL: arbitrary_url,
-            issue.SUBJECT: self.arbitrary_issue['subject'],
+            issue.SUBJECT: record['subject'],
             issue.TRACKER: 'Task',
-            issue.CREATED_ON: self.arbitrary_created,
-            issue.UPDATED_ON: self.arbitrary_updated,
-            issue.ID: self.arbitrary_issue['id'],
+            issue.CREATED_ON: CREATED,
+            issue.UPDATED_ON: UPDATED,
+            issue.ID: record['id'],
             issue.PROJECT_NAME: 'Boiled Cabbage - Yum',
             issue.SPENT_HOURS: None,
             issue.START_DATE: None,
@@ -74,13 +77,12 @@ class TestRedmineIssue(ServiceIssueTest):
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues(self):
+    def test_issues(self, service, record):
         responses.get(
-            'https://something/issues.json?limit=100',
-            json={'issues': [self.arbitrary_issue]},
+            'https://something/issues.json?limit=100', json={'issues': [record]}
         )
 
-        issue = next(self.service.issues())
+        issue = next(service.issues())
 
         expected = {
             'annotations': [],
@@ -95,13 +97,13 @@ class TestRedmineIssue(ServiceIssueTest):
             'redmineassignedto': 'Adam Coddington',
             'redmineauthor': 'Adam Coddington',
             issue.CATEGORY: None,
-            issue.DESCRIPTION: self.arbitrary_issue['description'],
+            issue.DESCRIPTION: record['description'],
             issue.ESTIMATED_HOURS: None,
             issue.STATUS: 'New',
             'redminesubject': 'Biscuits',
             'redminetracker': 'Task',
-            issue.CREATED_ON: self.arbitrary_created,
-            issue.UPDATED_ON: self.arbitrary_updated,
+            issue.CREATED_ON: CREATED,
+            issue.UPDATED_ON: UPDATED,
             'redmineurl': 'https://something/issues/363901',
             'tags': [],
         }

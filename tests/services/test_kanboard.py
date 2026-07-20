@@ -1,88 +1,92 @@
 from datetime import datetime, timezone
 from unittest import mock
 
+import pytest
+
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.kanboard import KanboardService
 
-from .base import ConfigTest, ServiceIssueTest
+from ..base import validate
+
+SERVICE_CLASS = KanboardService
+
+SERVICE_CONFIG = {
+    "service": "kanboard",
+    "url": "http://example.com",
+    "username": "myuser",
+    "password": "mypass",
+}
 
 
-class TestKanboardServiceConfig(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.config = {"general": {"targets": ["kb"]}, "kb": {"service": "kanboard"}}
+class TestKanboardConfig:
+    @pytest.fixture
+    def config(self):
+        return {
+            "general": {"targets": ["myservice"]},
+            "myservice": {"service": "kanboard"},
+        }
 
-    def test_validate_config_required_fields(self):
-        self.config["kb"].update(
+    def test_validate_config_required_fields(self, config):
+        config["myservice"].update(
             {"url": "http://example.com/", "username": "myuser", "password": "mypass"}
         )
 
-        self.validate()
+        validate(config)
 
-    def test_validate_config_no_url(self):
-        self.config["kb"].update({"username": "myuser", "password": "mypass"})
+    def test_validate_config_no_url(self, config, assert_validation_error):
+        config["myservice"].update({"username": "myuser", "password": "mypass"})
 
-        self.assertValidationError('[kb]\nurl  <- Field required')
+        assert_validation_error(config, '[myservice]\nurl  <- Field required')
 
-    def test_validate_config_no_username(self):
-        self.config["kb"].update({"url": "http://one.com/", "password": "mypass"})
+    def test_validate_config_no_username(self, config, assert_validation_error):
+        config["myservice"].update({"url": "http://one.com/", "password": "mypass"})
 
-        self.assertValidationError('[kb]\nusername  <- Field required')
+        assert_validation_error(config, '[myservice]\nusername  <- Field required')
 
-    def test_validate_config_no_password(self):
-        self.config["kb"].update({"url": "http://one.com/", "username": "myuser"})
+    def test_validate_config_no_password(self, config, assert_validation_error):
+        config["myservice"].update({"url": "http://one.com/", "username": "myuser"})
 
-        self.assertValidationError('[kb]\npassword  <- Field required')
+        assert_validation_error(config, '[myservice]\npassword  <- Field required')
 
-    def test_keyring_service(self):
-        self.config["kb"].update(
+    def test_keyring_service(self, config):
+        config["myservice"].update(
             {"url": "http://example.com/", "username": "myuser", "password": "mypass"}
         )
-        service_config = self.validate().service_configs[0]
+        service_config = validate(config).service_configs[0]
         assert service_config.keyring_service == "kanboard://myuser@example.com"
 
 
-class TestKanboardService(ServiceIssueTest):
-    SERVICE_CONFIG = {
-        "service": "kanboard",
-        "url": "http://example.com",
-        "username": "myuser",
-        "password": "mypass",
-    }
-
-    def setUp(self):
-        super().setUp()
-        with mock.patch("kanboard.Client"):
-            self.service = self.get_mock_service(KanboardService)
-
-    def get_mock_service(self, *args, **kwargs):
-        service = super().get_mock_service(*args, **kwargs)
+class TestKanboardService:
+    @pytest.fixture
+    def service(self, make_service):
+        with mock.patch("bugwarrior.services.kanboard.Client"):
+            service = make_service()
         service.client = mock.MagicMock()
         return service
 
-    def test_annotations_zero_comments(self):
+    def test_annotations_zero_comments(self, service):
         task = {"id": 1, "nb_comments": 0}
         url = "ignore"
 
-        annotations = self.service.annotations(task, url)
+        annotations = service.annotations(task, url)
 
         assert annotations == []
-        self.service.client.get_all_comments.assert_not_called()
+        service.client.get_all_comments.assert_not_called()
 
-    def test_annotations_some_comments(self):
+    def test_annotations_some_comments(self, service):
         task = {"id": 1, "nb_comments": 2}
         url = "ignore"
 
-        self.service.client.get_all_comments.return_value = [
+        service.client.get_all_comments.return_value = [
             {"name": "a", "comment": "c1"},
             {"name": "b", "comment": "c2"},
         ]
-        annotations = self.service.annotations(task, url)
+        annotations = service.annotations(task, url)
 
         assert annotations == ["@a - c1", "@b - c2"]
-        self.service.client.get_all_comments.assert_called_once_with(task_id=1)
+        service.client.get_all_comments.assert_called_once_with(task_id=1)
 
-    def test_to_taskwarrior(self):
+    def test_to_taskwarrior(self, service):
         record = {
             "project_id": "2",
             "project_name": "myproject",
@@ -100,7 +104,7 @@ class TestKanboardService(ServiceIssueTest):
             "tags": ["tag"],
         }
 
-        issue = self.service.get_issue_for_record(record, extra)
+        issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
             "project": record["project_name"],
@@ -120,10 +124,10 @@ class TestKanboardService(ServiceIssueTest):
 
         assert actual_output == expected_output
 
-    def test_issues(self):
+    def test_issues(self, service):
         # Setup the fake client
-        self.service.client.get_my_projects_list.return_value = {"1": "project"}
-        self.service.client.search_tasks.return_value = [
+        service.client.get_my_projects_list.return_value = {"1": "project"}
+        service.client.search_tasks.return_value = [
             {
                 "nb_comments": "0",
                 "nb_files": "0",
@@ -147,7 +151,7 @@ class TestKanboardService(ServiceIssueTest):
                 "creator_id": "0",
             }
         ]
-        self.service.client.get_task.return_value = {
+        service.client.get_task.return_value = {
             "id": "3",
             "title": "Task #3",
             "description": "",
@@ -175,17 +179,17 @@ class TestKanboardService(ServiceIssueTest):
             "recurrence_basedate": "0",
             "url": "http://example.com?task_id=3&project_id=1",
         }
-        self.service.client.get_task_tags.return_value = {"1": "tag1", "2": "tag2"}
+        service.client.get_task_tags.return_value = {"1": "tag1", "2": "tag2"}
 
-        issue = next(self.service.issues())
+        issue = next(service.issues())
 
         # Check calls on the client
-        self.service.client.get_my_projects_list.assert_called_once_with()
-        self.service.client.search_tasks.assert_called_once_with(
-            project_id="1", query=self.service.query
+        service.client.get_my_projects_list.assert_called_once_with()
+        service.client.search_tasks.assert_called_once_with(
+            project_id="1", query=service.query
         )
-        self.service.client.get_task.assert_called_once_with(task_id="3")
-        self.service.client.get_task_tags.assert_called_once_with(task_id="3")
+        service.client.get_task.assert_called_once_with(task_id="3")
+        service.client.get_task_tags.assert_called_once_with(task_id="3")
 
         expected = {
             "description": "(bw)Is#3 - T3 .. http://example.com?task_id=3&project_id=1",

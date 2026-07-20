@@ -50,15 +50,19 @@ def get_config_path() -> str:
 
 
 def format_config(config: dict) -> dict[str, Any]:
+    config = config.copy()
+    formatted: dict[str, Any] = {}
+    if "flavor" in config:
+        formatted["flavor"] = {**config.pop("flavor")}
     if "general" in config:
-        config.setdefault("flavor", {})["general"] = config.pop("general")
-
-    config["services"] = [
-        {**config.pop(section), "target": section}
-        for section in list(config)
-        if section not in {"hooks", "notifications", "flavor"}
+        formatted.setdefault("flavor", {})["general"] = config.pop("general")
+    for key in ("hooks", "notifications"):
+        if key in config:
+            formatted[key] = config.pop(key)
+    formatted["services"] = [
+        {**config.pop(section), "target": section} for section in list(config)
     ]
-    return config
+    return formatted
 
 
 def parse_toml_file(configpath: str) -> dict[str, Any]:

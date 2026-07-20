@@ -43,7 +43,7 @@ targets = ["gitlab_config", "jira_project", "my_github"]
 # Use hooks to run commands prior to importing from `bugwarrior pull`.
 # `bugwarrior pull` will run the commands in the order that they are specified
 # below.
-# 
+#
 # pre_import: The pre_import hook is invoked after all issues have been pulled
 # from remote sources, but before they are synced to the TW db. If your
 # pre_import script has a non-zero exit code, the `bugwarrior pull` command will
@@ -54,10 +54,10 @@ pre_import = ["/home/someuser/backup.sh", "/home/someuser/sometask.sh"]
 # This section is for configuring notifications when `bugwarrior pull` runs,
 # and when issues are created, updated, or deleted by `bugwarrior pull`.
 # Three backends are currently supported:
-# 
+#
 # - applescript        macOS      no external dependencies
 # - gobject            Linux      python gobject must be installed
-# 
+#
 
 [notifications]
 notifications = true
@@ -84,7 +84,7 @@ exclude_repos = ["project_bar", "project_baz"]
 include_repos = ["project_foo", "project_foz"]
 # Note that login and username can be different:  I can login as me, but
 # scrape issues from an organization's repos.
-# 
+#
 # - 'github.login' is the username you ask bugwarrior to
 # login as.  Set it to your account.
 # - 'github.username' is the github entity you want to pull

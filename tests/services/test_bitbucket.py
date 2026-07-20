@@ -1,53 +1,60 @@
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bitbucket import BitbucketService
 
-from .base import ServiceIssueTest
+SERVICE_CLASS = BitbucketService
+
+SERVICE_CONFIG = {
+    'service': 'bitbucket',
+    'username': 'somename',
+    'key': 'something',
+    'secret': 'something else',
+}
 
 
-class TestBitbucketIssue(ServiceIssueTest):
-    SERVICE_CONFIG = {
-        'service': 'bitbucket',
-        'username': 'somename',
-        'key': 'something',
-        'secret': 'something else',
+@pytest.fixture
+def record():
+    return {'priority': 'trivial', 'id': '100', 'title': 'Some Title'}
+
+
+@pytest.fixture
+def extra():
+    return {
+        'url': 'http://hello-there.com/',
+        'project': 'Something',
+        'annotations': ['One'],
     }
 
-    @responses.activate
-    def setUp(self):
-        super().setUp()
 
-        responses.post(
-            'https://bitbucket.org/site/oauth2/access_token',
-            json={'access_token': 'sometoken', 'refresh_token': 'anothertoken'},
-        )
-        self.service = self.get_mock_service(BitbucketService)
+class TestBitbucketIssue:
+    @pytest.fixture
+    def service(self, make_service):
+        with responses.mock:
+            responses.post(
+                'https://bitbucket.org/site/oauth2/access_token',
+                json={'access_token': 'sometoken', 'refresh_token': 'anothertoken'},
+            )
+            return make_service()
 
-    def test_to_taskwarrior(self):
-        arbitrary_issue = {'priority': 'trivial', 'id': '100', 'title': 'Some Title'}
-        arbitrary_extra = {
-            'url': 'http://hello-there.com/',
-            'project': 'Something',
-            'annotations': ['One'],
-        }
-
-        issue = self.service.get_issue_for_record(arbitrary_issue, arbitrary_extra)
+    def test_to_taskwarrior(self, service, record, extra):
+        issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
-            'project': arbitrary_extra['project'],
-            'priority': issue.PRIORITY_MAP[arbitrary_issue['priority']],
-            'annotations': arbitrary_extra['annotations'],
-            issue.URL: arbitrary_extra['url'],
-            issue.FOREIGN_ID: arbitrary_issue['id'],
-            issue.TITLE: arbitrary_issue['title'],
+            'project': extra['project'],
+            'priority': issue.PRIORITY_MAP[record['priority']],
+            'annotations': extra['annotations'],
+            issue.URL: extra['url'],
+            issue.FOREIGN_ID: record['id'],
+            issue.TITLE: record['title'],
         }
         actual_output = issue.to_taskwarrior()
 
         assert actual_output == expected_output
 
     @responses.activate
-    def test_issues(self):
+    def test_issues(self, service):
         responses.get(
             'https://api.bitbucket.org/2.0/repositories/somename/',
             json={'values': [{'full_name': 'somename/somerepo', 'has_issues': True}]},
@@ -93,7 +100,7 @@ class TestBitbucketIssue(ServiceIssueTest):
             },
         )
 
-        issue, pr = (i for i in self.service.issues())
+        issue, pr = (i for i in service.issues())
 
         expected_issue = {
             'annotations': ['@nobody - Some comment.'],
@@ -121,16 +128,16 @@ class TestBitbucketIssue(ServiceIssueTest):
 
         assert TaskConstructor(pr).get_taskwarrior_record() == expected_pr
 
-    def test_get_owner(self):
+    def test_get_owner(self, service):
         issue = {'title': 'Foobar', 'assignee': {'username': 'tintin'}}
-        assert self.service.get_owner(('foo', issue)) == 'tintin'
+        assert service.get_owner(('foo', issue)) == 'tintin'
 
-    def test_get_owner_none(self):
+    def test_get_owner_none(self, service):
         issue = {'title': 'Foobar', 'assignee': None}
-        assert self.service.get_owner(('foo', issue)) is None
+        assert service.get_owner(('foo', issue)) is None
 
     @responses.activate
-    def test_fetch_issues_pagination(self):
+    def test_fetch_issues_pagination(self, service):
         responses.get(
             'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/',
             json={
@@ -158,7 +165,7 @@ class TestBitbucketIssue(ServiceIssueTest):
                 ]
             },
         )
-        issues = list(self.service.fetch_issues('somename/somerepo'))
+        issues = list(service.fetch_issues('somename/somerepo'))
         expected = [
             (
                 'somename/somerepo',

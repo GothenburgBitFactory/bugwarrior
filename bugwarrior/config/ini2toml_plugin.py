@@ -1,3 +1,4 @@
+import functools
 import importlib
 import inspect
 import logging
@@ -53,10 +54,18 @@ def get_field_type(attrs: dict) -> typing.Optional[str]:
     return None
 
 
+@functools.cache
+def _schema_properties(schema: type[pydantic.BaseModel]) -> dict:
+    # model_json_schema() rebuilds the schema from scratch on every call, and
+    # this is invoked once per config example in the docs build (~150+
+    # times), so cache it per schema class.
+    return schema.model_json_schema()['properties']
+
+
 def convert_section(
     section: IntermediateRepr, schema: type[pydantic.BaseModel]
 ) -> None:
-    for prop, attrs in schema.model_json_schema()['properties'].items():
+    for prop, attrs in _schema_properties(schema).items():
         field_type = get_field_type(attrs)
         if field_type == 'boolean':
             to_bool(section, prop)
@@ -64,6 +73,20 @@ def convert_section(
             to_int(section, prop)
         elif field_type == 'array':
             to_list(section, prop)
+
+
+@functools.cache
+def _service_schema(service: str) -> type[ServiceConfig]:
+    # Resolving a service's config class scans the module with
+    # inspect.getmembers() on every call, and this is invoked once per
+    # config example in the docs build (~150+ times), so cache it per
+    # service name.
+    module_name = {'bugzilla': 'bz', 'phabricator': 'phab'}.get(service, service)
+    service_module = importlib.import_module(f'bugwarrior.services.{module_name}')
+    for _, obj in inspect.getmembers(service_module, predicate=inspect.isclass):
+        if issubclass(obj, ServiceConfig):
+            return obj
+    raise ValueError(f"ServiceConfig class not found in {service} module.")
 
 
 def process_values(doc: IntermediateRepr) -> IntermediateRepr:
@@ -96,22 +119,7 @@ def process_values(doc: IntermediateRepr) -> IntermediateRepr:
                         section.rename(key, newkey)
 
                 # Get Config
-                module_name = {'bugzilla': 'bz', 'phabricator': 'phab'}.get(
-                    service, service
-                )
-                service_module = importlib.import_module(
-                    f'bugwarrior.services.{module_name}'
-                )
-                for name, obj in inspect.getmembers(
-                    service_module, predicate=inspect.isclass
-                ):
-                    if issubclass(obj, ServiceConfig):
-                        schema = obj
-                        break
-                else:
-                    raise ValueError(
-                        f"ServiceConfig class not found in {service} module."
-                    )
+                schema = _service_schema(service)
 
                 # Convert Types
                 convert_section(section, schema)

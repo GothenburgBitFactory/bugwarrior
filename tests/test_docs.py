@@ -13,7 +13,7 @@ import pytest
 DOCS_PATH = pathlib.Path(__file__).parent / '../bugwarrior/docs'
 
 try:
-    socket.create_connection(('1.1.1.1', 80))
+    socket.create_connection(('1.1.1.1', 80)).close()
     INTERNET = True
 except OSError:
     INTERNET = False
@@ -32,7 +32,7 @@ class TestReadme:
             readme = f.read()
 
         readme_document = docutils.core.publish_doctree(readme)
-        service_list_search = readme_document.traverse(condition=is_services)
+        service_list_search = list(readme_document.findall(condition=is_services))
         assert len(service_list_search) == 1
         service_list_element = service_list_search.pop()
         readme_listed_services = set(
@@ -52,16 +52,39 @@ class TestReadme:
         assert documented_services == readme_listed_services
 
 
+@pytest.fixture(scope='module')
+def doctreedir(tmp_path_factory):
+    # Shared across the html and man builds below so the (expensive) parsing
+    # of the doc sources into doctrees only happens once.
+    return str(tmp_path_factory.mktemp('doctrees'))
+
+
 class TestDocs:
     @pytest.mark.skipif(not INTERNET, reason='no internet')
-    def test_docs_build_without_warning(self):
+    def test_docs_build_without_warning(self, doctreedir):
+        # The dummy builder resolves all cross-references (so still catches
+        # broken refs/links like the html builder would) but writes no
+        # output, skipping HTML rendering and search-index generation, which
+        # this test never inspects anyway.
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
-                ['sphinx-build', '-n', '-W', '-v', str(DOCS_PATH), buildDir], check=True
+                [
+                    'sphinx-build',
+                    '-b',
+                    'dummy',
+                    '-n',
+                    '-W',
+                    '-v',
+                    '-d',
+                    doctreedir,
+                    str(DOCS_PATH),
+                    buildDir,
+                ],
+                check=True,
             )
 
     @pytest.mark.skipif(not INTERNET, reason='no internet')
-    def test_manpage_build_without_warning(self):
+    def test_manpage_build_without_warning(self, doctreedir):
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
                 [
@@ -71,6 +94,8 @@ class TestDocs:
                     '-n',
                     '-W',
                     '-v',
+                    '-d',
+                    doctreedir,
                     str(DOCS_PATH),
                     buildDir,
                 ],

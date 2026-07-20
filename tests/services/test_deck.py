@@ -1,16 +1,17 @@
-import dataclasses
 from datetime import datetime, timezone
 from unittest import mock
 
-from bugwarrior.collect import TaskConstructor, get_service_instances
+import pytest
+
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.deck import NextcloudDeckClient
 
-from .base import ServiceIssueTest
+from ..base import get_validated_service
 
 
-@dataclasses.dataclass
-class TestData:
-    arbitrary_card = {
+@pytest.fixture
+def record():
+    return {
         "title": "check that nextcloud deck integration works",
         "description": "some additional description",
         "stackId": 13,
@@ -62,59 +63,56 @@ class TestData:
     }
 
 
-class TestNextcloudDeckIssue(ServiceIssueTest):
-    SERVICE_CONFIG = {
-        'service': 'deck',
-        'base_uri': 'http://localhost:8080',
-        'username': 'testuser',
-        'password': 'testpassword',
-        'import_labels_as_tags': True,
-    }
+SERVICE_CONFIG = {
+    'service': 'deck',
+    'base_uri': 'http://localhost:8080',
+    'username': 'testuser',
+    'password': 'testpassword',
+    'import_labels_as_tags': True,
+}
 
-    def setUp(self):
-        super().setUp()
-        self.config = {
+
+class TestDeckIssue:
+    @pytest.fixture
+    def config(self):
+        return {
             'general': {
-                'targets': ['deck'],
+                'targets': ['myservice'],
                 # would otherwise cut the title short
                 'description_length': '45',
             },
-            'deck': {
-                'service': 'deck',
-                'base_uri': 'http://localhost:8080',
-                'username': 'testuser',
-                'password': 'testpassword',
-                'import_labels_as_tags': 'true',
-            },
+            'myservice': {**SERVICE_CONFIG},
         }
 
-        self.data = TestData()
-
-    @property
-    def service(self):
-        conf = self.validate()
-        service = get_service_instances(conf)[0]
-        service.client = mock.MagicMock(spec=NextcloudDeckClient)
-        service.client.get_boards = mock.MagicMock(
-            return_value=[{'id': 5, 'title': 'testboard'}]
-        )
-        service.client.get_stacks = mock.MagicMock(
-            return_value=[
-                {'id': 13, 'title': 'teststack', 'cards': [self.data.arbitrary_card]}
-            ]
-        )
-        service.client.get_comments = mock.MagicMock(
-            return_value={
-                'ocs': {
-                    'data': [{'actorDisplayName': 'Lena', 'message': 'testcomment'}]
+    @pytest.fixture
+    def make_service(self, record):
+        def make(config):
+            service = get_validated_service(config)
+            service.client = mock.MagicMock(spec=NextcloudDeckClient)
+            service.client.get_boards = mock.MagicMock(
+                return_value=[{'id': 5, 'title': 'testboard'}]
+            )
+            service.client.get_stacks = mock.MagicMock(
+                return_value=[{'id': 13, 'title': 'teststack', 'cards': [record]}]
+            )
+            service.client.get_comments = mock.MagicMock(
+                return_value={
+                    'ocs': {
+                        'data': [{'actorDisplayName': 'Lena', 'message': 'testcomment'}]
+                    }
                 }
-            }
-        )
-        return service
+            )
+            return service
 
-    def test_to_taskwarrior(self):
-        issue = self.service.get_issue_for_record(
-            self.data.arbitrary_card,
+        return make
+
+    @pytest.fixture
+    def service(self, config, make_service):
+        return make_service(config)
+
+    def test_to_taskwarrior(self, service, record):
+        issue = service.get_issue_for_record(
+            record,
             {
                 'board': {'title': 'testboard', 'id': 5},
                 'stack': {'title': 'teststack', 'id': 13},
@@ -144,8 +142,8 @@ class TestNextcloudDeckIssue(ServiceIssueTest):
 
         assert actual == expected
 
-    def test_issues(self):
-        issue = next(self.service.issues())
+    def test_issues(self, service):
+        issue = next(service.issues())
 
         expected = {
             'annotations': ['@Lena - testcomment'],
@@ -169,27 +167,30 @@ class TestNextcloudDeckIssue(ServiceIssueTest):
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_get_owner(self):
+    def test_get_owner(self, config, record, make_service):
         # Regression test: the old get_owner did `issue[issue.ASSIGNEE]`, treating
         # the NextcloudDeckIssue as a dict. Issue has no __getitem__, so this raised
         # TypeError whenever only_if_assigned was configured.
-        self.config['deck']['only_if_assigned'] = 'rainbow'
-        issue = self.service.get_issue_for_record(
-            self.data.arbitrary_card,
+        config['myservice']['only_if_assigned'] = 'rainbow'
+        service = make_service(config)
+        issue = service.get_issue_for_record(
+            record,
             {
                 'board': {'title': 'testboard', 'id': 5},
                 'stack': {'title': 'teststack', 'id': 13},
                 'annotations': [],
             },
         )
-        assert self.service.get_owner(issue) == 'rainbow'
+        assert service.get_owner(issue) == 'rainbow'
 
-    def test_filter_boards_include(self):
-        self.config['deck']['include_board_ids'] = '5'
-        assert self.service.filter_boards({'title': 'testboard', 'id': 5})
-        assert not self.service.filter_boards({'title': 'testboard', 'id': 6})
+    def test_filter_boards_include(self, config, make_service):
+        config['myservice']['include_board_ids'] = '5'
+        service = make_service(config)
+        assert service.filter_boards({'title': 'testboard', 'id': 5})
+        assert not service.filter_boards({'title': 'testboard', 'id': 6})
 
-    def test_filter_boards_exclude(self):
-        self.config['deck']['exclude_board_ids'] = '5'
-        assert not self.service.filter_boards({'title': 'testboard', 'id': 5})
-        assert self.service.filter_boards({'title': 'testboard', 'id': 6})
+    def test_filter_boards_exclude(self, config, make_service):
+        config['myservice']['exclude_board_ids'] = '5'
+        service = make_service(config)
+        assert not service.filter_boards({'title': 'testboard', 'id': 5})
+        assert service.filter_boards({'title': 'testboard', 'id': 6})

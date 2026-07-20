@@ -1,7 +1,7 @@
-import copy
 from datetime import datetime
 from unittest import mock
 
+import pytest
 from todoist_api_python.models import (
     Collaborator,
     Deadline,
@@ -15,14 +15,14 @@ from todoist_api_python.models import (
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.todoist import TodoistClient, TodoistService
 
-from .base import ServiceIssueTest
+SERVICE_CLASS = TodoistService
+
+SERVICE_CONFIG = {"service": "todoist", "token": "TESTTOKEN"}
 
 
-class TestTodoistIssue(ServiceIssueTest):
-    SERVICE_CONFIG = {"service": "todoist", "token": "TESTTOKEN"}
-
-    # Base test record
-    test_record = TodoistClient.task_to_dict(
+@pytest.fixture
+def record():
+    return TodoistClient.task_to_dict(
         Task(
             id="1111111111111111",
             content="TESTTASK",
@@ -51,7 +51,10 @@ class TestTodoistIssue(ServiceIssueTest):
         )
     )
 
-    test_extra = {
+
+@pytest.fixture
+def extra():
+    return {
         "project": "TESTPROJECT",
         "section": "TESTSECTION",
         "assignee": "TESTUSER1 <testuser1@example.com>",
@@ -59,7 +62,10 @@ class TestTodoistIssue(ServiceIssueTest):
         "duration": "15 minute",
     }
 
-    test_project = Project(
+
+@pytest.fixture
+def project():
+    return Project(
         id="2222222222222222",
         name="TESTPROJECT",
         description="TESTPROJECTDESCRIPTION",
@@ -75,7 +81,10 @@ class TestTodoistIssue(ServiceIssueTest):
         updated_at=datetime(year=2025, month=7, day=2, hour=8, minute=0, second=0),
     )
 
-    test_section = Section(
+
+@pytest.fixture
+def section():
+    return Section(
         id="4444444444444444",
         name="TESTSECTION",
         project_id="2222222222222222",
@@ -83,22 +92,28 @@ class TestTodoistIssue(ServiceIssueTest):
         order=1,
     )
 
-    test_user1 = Collaborator(
-        id="5555555555555555", name="TESTUSER1", email="testuser1@example.com"
-    )
 
-    test_user2 = Collaborator(
-        id="6666666666666666", name="TESTUSER2", email="testuser2@example.com"
-    )
+@pytest.fixture
+def users():
+    return [
+        Collaborator(
+            id="5555555555555555", name="TESTUSER1", email="testuser1@example.com"
+        ),
+        Collaborator(
+            id="6666666666666666", name="TESTUSER2", email="testuser2@example.com"
+        ),
+    ]
 
-    def setUp(self):
-        super().setUp()
 
-        self.service = self.get_mock_service(TodoistService)
-        self.service.client = mock.MagicMock(spec=TodoistClient)
+class TestTodoistIssue:
+    @pytest.fixture
+    def service(self, make_service):
+        service = make_service()
+        service.client = mock.MagicMock(spec=TodoistClient)
+        return service
 
-    def test_to_taskwarrior(self):
-        issue = self.service.get_issue_for_record(self.test_record, self.test_extra)
+    def test_to_taskwarrior(self, service, record, extra):
+        issue = service.get_issue_for_record(record, extra)
 
         expected = {
             "annotations": [],
@@ -126,28 +141,25 @@ class TestTodoistIssue(ServiceIssueTest):
 
         assert actual == expected
 
-    def test_to_taskwarrior_with_labels(self):
+    def test_to_taskwarrior_with_labels(self, make_service, record, extra):
         # Test lables when `import_labels_as_tags` is enabled
         overrides = {"import_labels_as_tags": "True"}
-        service = self.get_mock_service(TodoistService, config_overrides=overrides)
-        issue = service.get_issue_for_record(self.test_record, self.test_extra)
+        service = make_service(**overrides)
+        issue = service.get_issue_for_record(record, extra)
         actual = issue.to_taskwarrior()
         assert actual.get("tags") == ["TESTLABEL"]
 
-    def test_to_taskwarrior_task_with_low_priority(self):
+    def test_to_taskwarrior_task_with_low_priority(self, service, record, extra):
         # Test with priority set to lowest (1 in the API, which is P4 on the Todoist UI)
-        test_record = copy.copy(self.test_record)
-        test_record["priority"] = 1
-        issue = self.service.get_issue_for_record(test_record, self.test_extra)
+        record["priority"] = 1
+        issue = service.get_issue_for_record(record, extra)
         actual = issue.to_taskwarrior()
         assert actual.get("priority") is None
 
-    def test_to_taskwarrior_subtask(self):
+    def test_to_taskwarrior_subtask(self, service, record, extra):
         # subtasks have a parent id
-        test_record = copy.copy(self.test_record)
-        test_extras = copy.copy(self.test_extra)
-        test_record["parent_id"] = "1212121212121212"
-        issue = self.service.get_issue_for_record(test_record, test_extras)
+        record["parent_id"] = "1212121212121212"
+        issue = service.get_issue_for_record(record, extra)
         actual = issue.to_taskwarrior()
         assert actual.get("todoistparentid") == "1212121212121212"
         assert (
@@ -156,12 +168,12 @@ class TestTodoistIssue(ServiceIssueTest):
             " https://app.todoist.com/app/task/testtask-1111111111111111"
         )
 
-    def test_issues(self):
-        self.service.client.get_projects.return_value = [self.test_project]
-        self.service.client.get_sections.return_value = [self.test_section]
-        self.service.client.get_users.return_value = [self.test_user1, self.test_user2]
-        self.service.client.get_issues.return_value = [self.test_record]
-        issue = next(self.service.issues())
+    def test_issues(self, service, record, project, section, users):
+        service.client.get_projects.return_value = [project]
+        service.client.get_sections.return_value = [section]
+        service.client.get_users.return_value = users
+        service.client.get_issues.return_value = [record]
+        issue = next(service.issues())
 
         expected = {
             "annotations": [],

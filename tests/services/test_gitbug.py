@@ -1,16 +1,15 @@
-import dataclasses
 from datetime import datetime, timedelta, timezone
 from unittest import mock
+
+import pytest
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gitbug import GitBugClient, GitBugConfig, GitBugService
 
-from .base import ConfigTest, ServiceIssueTest
 
-
-@dataclasses.dataclass
-class TestData:
-    arbitrary_bug = {
+@pytest.fixture
+def record():
+    return {
         'author': {'name': 'ryneeverett'},
         'comments': {
             'nodes': [
@@ -28,22 +27,21 @@ class TestData:
     }
 
 
-class TestGitBugIssue(ServiceIssueTest):
-    SERVICE_CONFIG = {'service': 'gitbug', 'path': '/dev/null'}
+SERVICE_CLASS = GitBugService
 
-    def setUp(self):
-        super().setUp()
+SERVICE_CONFIG = {'service': 'gitbug', 'path': '/dev/null'}
 
-        self.data = TestData()
 
-        self.service = self.get_mock_service(GitBugService)
-        self.service.client = mock.MagicMock(spec=GitBugClient)
-        self.service.client.get_issues = mock.MagicMock(
-            return_value=[self.data.arbitrary_bug]
-        )
+class TestGitBugIssue:
+    @pytest.fixture
+    def service(self, record, make_service):
+        service = make_service()
+        service.client = mock.MagicMock(spec=GitBugClient)
+        service.client.get_issues = mock.MagicMock(return_value=[record])
+        return service
 
-    def test_to_taskwarrior(self):
-        issue = self.service.get_issue_for_record(self.data.arbitrary_bug, {})
+    def test_to_taskwarrior(self, service, record):
+        issue = service.get_issue_for_record(record, {})
 
         expected = {
             'annotations': [],
@@ -62,8 +60,8 @@ class TestGitBugIssue(ServiceIssueTest):
 
         assert actual == expected
 
-    def test_issues(self):
-        issue = next(self.service.issues())
+    def test_issues(self, service):
+        issue = next(service.issues())
 
         expected = {
             'annotations': [],
@@ -83,13 +81,11 @@ class TestGitBugIssue(ServiceIssueTest):
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
 
-class TestGitBugConfig(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.config = GitBugConfig(
-            service="gitbug", path="~/custom-gitbug-repo", target="mygitbug"
-        )
-
-    def test_home_path_expansion(self):
-        expected = self.tempdir + "/custom-gitbug-repo"
-        assert str(self.config.path) == expected
+def test_home_path_expansion(tmp_path):
+    # The path field is an ExpandedPath, so a configured tilde expands to the
+    # user's home, which the autouse config_environment fixture points at
+    # tmp_path.
+    config = GitBugConfig(
+        service="gitbug", path="~/custom-gitbug-repo", target="mygitbug"
+    )
+    assert config.path == tmp_path / "custom-gitbug-repo"

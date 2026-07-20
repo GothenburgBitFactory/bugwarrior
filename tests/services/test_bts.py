@@ -3,7 +3,9 @@ from unittest import mock
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import bts
 
-from .base import ServiceIssueTest
+SERVICE_CLASS = bts.BTSService
+
+SERVICE_CONFIG = {'service': 'bts', 'email': 'irl@debian.org', 'packages': 'bugwarrior'}
 
 
 class FakeBTSBug:
@@ -29,21 +31,9 @@ class FakeBTSLib:
             return [FakeBTSBug]
 
 
-class TestBTSService(ServiceIssueTest):
-    SERVICE_CONFIG = {
-        'service': 'bts',
-        'email': 'irl@debian.org',
-        'packages': 'bugwarrior',
-    }
-
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(bts.BTSService)
-
-    def test_to_taskwarrior(self):
-        issue = self.service.get_issue_for_record(
-            self.service._record_for_bug(FakeBTSBug)
-        )
+class TestBTSService:
+    def test_to_taskwarrior(self, service):
+        issue = service.get_issue_for_record(service._record_for_bug(FakeBTSBug))
 
         expected_output = {
             'priority': issue.PRIORITY_MAP[FakeBTSBug.severity],
@@ -60,9 +50,9 @@ class TestBTSService(ServiceIssueTest):
 
         assert actual_output == expected_output
 
-    def test_issues(self):
+    def test_issues(self, service):
         with mock.patch('bugwarrior.services.bts.debianbts', FakeBTSLib()):
-            issue = next(self.service.issues())
+            issue = next(service.issues())
 
         expected = {
             'annotations': [],
@@ -77,8 +67,7 @@ class TestBTSService(ServiceIssueTest):
             'btsurl': 'https://bugs.debian.org/810629',
             'btssource': '',
             'description': (
-                '(bw)Is#810629 - ITP: bugwarrior -- Pull tickets from github, '
-                'bitbucket, bugzilla, jira, trac, and others into taskwa .. '
+                '(bw)Is#810629 - ITP: bugwarrior -- Pull tickets fro .. '
                 'https://bugs.debian.org/810629'
             ),
             'priority': 'L',

@@ -7,7 +7,15 @@ import pytest
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bz import BugzillaService
 
-from .base import ConfigTest, ServiceIssueTest
+from ..base import validate
+from .base import get_mock_service
+
+SERVICE_CONFIG = {
+    'service': 'bugzilla',
+    'base_uri': 'https://one.com/',
+    'username': 'hello',
+    'password': 'there',
+}
 
 
 class FakeBugzillaLib:
@@ -21,58 +29,51 @@ class FakeBugzillaLib:
         ]
 
 
-class TestBugzillaServiceConfig(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.config = {
-            'general': {'targets': ['mybz']},
-            'mybz': {'service': 'bugzilla'},
+class TestBugzillaConfig:
+    @pytest.fixture
+    def config(self):
+        return {
+            'general': {'targets': ['myservice']},
+            'myservice': {'service': 'bugzilla'},
         }
 
-    def test_validate_config_username_password(self):
-        self.config['mybz'].update(
+    def test_validate_config_username_password(self, config):
+        config['myservice'].update(
             {'base_uri': 'https://one.com/', 'username': 'me', 'password': 'mypas'}
         )
 
         # no error expected
-        self.validate()
+        validate(config)
 
-    def test_validate_config_api_key(self):
-        self.config['mybz'].update(
+    def test_validate_config_api_key(self, config):
+        config['myservice'].update(
             {'base_uri': 'https://one.com/', 'username': 'me', 'api_key': '123'}
         )
 
         # no error expected
-        self.validate()
+        validate(config)
 
-    def test_validate_config_api_key_no_username(self):
-        self.config['mybz'].update({'base_uri': 'https://one.com/', 'api_key': '123'})
+    def test_validate_config_api_key_no_username(self, config, assert_validation_error):
+        config['myservice'].update({'base_uri': 'https://one.com/', 'api_key': '123'})
 
-        self.assertValidationError('[mybz]\nusername  <- Field required')
+        assert_validation_error(config, '[myservice]\nusername  <- Field required')
 
-    def test_validate_warns_when_scheme_missing_in_uri(self):
-        self.config['mybz'].update(
+    def test_validate_warns_when_scheme_missing_in_uri(self, config, caplog):
+        config['myservice'].update(
             {'base_uri': 'one.com/', 'username': 'me', 'password': 'mypas'}
         )
 
-        self.validate()
+        validate(config)
 
-        assert len(self.caplog.records) == 1
+        assert len(caplog.records) == 1
         assert (
-            'bugzilla.base_uri should include the scheme'
-            in self.caplog.records[0].message
+            'bugzilla.base_uri should include the scheme' in caplog.records[0].message
         )
 
 
-class TestBugzillaService(ServiceIssueTest):
-    SERVICE_CONFIG = {
-        'service': 'bugzilla',
-        'base_uri': 'https://one.com/',
-        'username': 'hello',
-        'password': 'there',
-    }
-
-    arbitrary_record = {
+@pytest.fixture
+def record():
+    return {
         'product': 'Product',
         'component': 'Something',
         'priority': 'urgent',
@@ -83,56 +84,53 @@ class TestBugzillaService(ServiceIssueTest):
         'assigned_to': None,
     }
 
-    arbitrary_datetime = datetime.datetime.now(tz=datetime.timezone.utc).replace(
-        microsecond=0
-    )
 
-    def setUp(self):
-        super().setUp()
+ASSIGNED_DATE = datetime.datetime.now(tz=datetime.timezone.utc).replace(microsecond=0)
+
+
+@pytest.fixture
+def make_service(record):
+    def make(**overrides):
         with mock.patch('bugzilla.Bugzilla'):
-            self.service = self.get_mock_service(BugzillaService)
-
-    def get_mock_service(self, *args, **kwargs):
-        service = super().get_mock_service(*args, **kwargs)
-        service.bz = FakeBugzillaLib([self.arbitrary_record])
-        service._get_assigned_date = lambda issues: self.arbitrary_datetime.isoformat()
+            service = get_mock_service(BugzillaService, {**SERVICE_CONFIG, **overrides})
+        service.bz = FakeBugzillaLib([record])
+        service._get_assigned_date = lambda issues: ASSIGNED_DATE.isoformat()
         return service
 
-    def test_api_key_supplied(self):
-        with mock.patch('bugzilla.Bugzilla'):
-            self.service = self.get_mock_service(
-                BugzillaService,
-                config_overrides={
-                    'base_uri': 'https://one.com/',
-                    'username': 'me',
-                    'api_key': '123',
-                },
-            )
+    return make
 
-    def test_to_taskwarrior(self):
+
+@pytest.fixture
+def service(make_service):
+    return make_service()
+
+
+class TestBugzillaService:
+    def test_api_key_supplied(self, make_service):
+        make_service(base_uri='https://one.com/', username='me', api_key='123')
+
+    def test_to_taskwarrior(self, service, record):
         arbitrary_extra = {'url': 'http://path/to/issue/', 'annotations': ['Two']}
 
-        issue = self.service.get_issue_for_record(
-            self.arbitrary_record, arbitrary_extra
-        )
+        issue = service.get_issue_for_record(record, arbitrary_extra)
 
         expected_output = {
-            'project': self.arbitrary_record['component'],
-            'priority': issue.PRIORITY_MAP[self.arbitrary_record['priority']],
+            'project': record['component'],
+            'priority': issue.PRIORITY_MAP[record['priority']],
             'annotations': arbitrary_extra['annotations'],
-            issue.STATUS: self.arbitrary_record['status'],
+            issue.STATUS: record['status'],
             issue.URL: arbitrary_extra['url'],
-            issue.SUMMARY: self.arbitrary_record['summary'],
-            issue.BUG_ID: self.arbitrary_record['id'],
-            issue.PRODUCT: self.arbitrary_record['product'],
-            issue.COMPONENT: self.arbitrary_record['component'],
+            issue.SUMMARY: record['summary'],
+            issue.BUG_ID: record['id'],
+            issue.PRODUCT: record['product'],
+            issue.COMPONENT: record['component'],
         }
         actual_output = issue.to_taskwarrior()
 
         assert actual_output == expected_output
 
-    def test_issues(self):
-        issue = next(self.service.issues())
+    def test_issues(self, service):
+        issue = next(service.issues())
 
         expected = {
             'annotations': [],
@@ -153,11 +151,8 @@ class TestBugzillaService(ServiceIssueTest):
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
-    def test_only_if_assigned(self):
-        with mock.patch('bugzilla.Bugzilla'):
-            self.service = self.get_mock_service(
-                BugzillaService, config_overrides={'only_if_assigned': 'hello'}
-            )
+    def test_only_if_assigned(self, make_service):
+        service = make_service(only_if_assigned='hello')
 
         assigned_records = [
             {
@@ -181,13 +176,13 @@ class TestBugzillaService(ServiceIssueTest):
                 'assigned_to': 'somebodyelse',
             },
         ]
-        self.service.bz.records.extend(assigned_records)
+        service.bz.records.extend(assigned_records)
 
-        issues = self.service.issues()
+        issues = service.issues()
 
         expected = {
             'annotations': [],
-            'bugzillaassignedon': self.arbitrary_datetime,
+            'bugzillaassignedon': ASSIGNED_DATE,
             'bugzillabugid': 1234568,
             'bugzillastatus': 'ASSIGNED',
             'bugzillasummary': 'This is the issue summary',
@@ -209,12 +204,8 @@ class TestBugzillaService(ServiceIssueTest):
         with pytest.raises(StopIteration):
             next(issues)
 
-    def test_also_unassigned(self):
-        with mock.patch('bugzilla.Bugzilla'):
-            self.service = self.get_mock_service(
-                BugzillaService,
-                config_overrides={'only_if_assigned': 'hello', 'also_unassigned': True},
-            )
+    def test_also_unassigned(self, make_service):
+        service = make_service(only_if_assigned='hello', also_unassigned=True)
 
         assigned_records = [
             {
@@ -238,9 +229,9 @@ class TestBugzillaService(ServiceIssueTest):
                 'assigned_to': 'somebodyelse',
             },
         ]
-        self.service.bz.records.extend(assigned_records)
+        service.bz.records.extend(assigned_records)
 
-        issues = self.service.issues()
+        issues = service.issues()
 
         assert TaskConstructor(next(issues)).get_taskwarrior_record()[
             'bugzillabugid'

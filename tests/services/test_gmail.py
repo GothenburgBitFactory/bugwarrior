@@ -1,57 +1,66 @@
-from copy import copy
 from datetime import datetime, timedelta, timezone
-import os.path
+from pathlib import Path
 import pickle
 from unittest import mock
 from unittest.mock import patch
 
 from google.oauth2.credentials import Credentials
+import pytest
 
-from bugwarrior.collect import TaskConstructor, get_service_instances
+from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import gmail
 
-from .base import ConfigTest, ServiceIssueTest
+from ..base import get_validated_service
 
-TEST_CREDENTIAL = {
-    "token": "itsatokeneveryone",
-    "refresh_token": "itsarefreshtokeneveryone",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "client_id": "example.apps.googleusercontent.com",
-    "client_secret": "itsasecrettoeveryone",
-    "scopes": ["https://www.googleapis.com/auth/gmail.readonly"],
+
+@pytest.fixture
+def credential():
+    return {
+        "token": "itsatokeneveryone",
+        "refresh_token": "itsarefreshtokeneveryone",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "client_id": "example.apps.googleusercontent.com",
+        "client_secret": "itsasecrettoeveryone",
+        "scopes": ["https://www.googleapis.com/auth/gmail.readonly"],
+    }
+
+
+SERVICE_CLASS = gmail.GmailService
+
+SERVICE_CONFIG = {
+    'service': 'gmail',
+    'add_tags': 'added',
+    'login_name': 'test@example.com',
 }
 
 
-class TestGmailService(ConfigTest):
-    def setUp(self):
-        super().setUp()
-        self.config = {
+class TestGmailService:
+    @pytest.fixture
+    def config(self):
+        return {
             'general': {'targets': ['myservice']},
             'myservice': {'service': 'gmail'},
         }
 
-        mock_data = mock.Mock()
-        mock_data.path = self.tempdir
+    @pytest.fixture
+    def service(self, config, monkeypatch):
+        monkeypatch.setattr(gmail.GmailService, 'build_api', mock.Mock())
 
-        mock_api = mock.Mock()
-        gmail.GmailService.build_api = mock_api
+        return get_validated_service(config)
 
-        conf = self.validate()
-        self.service = get_service_instances(conf)[0]
-
-    def test_get_credentials_exists_and_valid(self):
-        expected = Credentials(**copy(TEST_CREDENTIAL))
+    def test_get_credentials_exists_and_valid(self, service, credential):
+        expected = Credentials(**credential)
         assert expected.valid is True
-        with open(self.service.credentials_path, "wb") as token:
+        with open(service.credentials_path, "wb") as token:
             pickle.dump(expected, token)
 
-        assert self.service.get_credentials().to_json() == expected.to_json()
+        assert service.get_credentials().to_json() == expected.to_json()
 
-    def test_get_credentials_with_refresh(self):
-        expired_credential = Credentials(**copy(TEST_CREDENTIAL))
+    def test_get_credentials_with_refresh(self, service, credential):
+        expired_credential = Credentials(**credential)
         expired_credential.expiry = datetime.now(timezone.utc).replace(tzinfo=None)
         assert expired_credential.valid is False
-        with open(self.service.credentials_path, "wb") as token:
+        with open(service.credentials_path, "wb") as token:
             pickle.dump(expired_credential, token)
 
         with patch("google.oauth2.reauth.refresh_grant") as mock_refresh_grant:
@@ -69,75 +78,70 @@ class TestGmailService(ConfigTest):
                 grant_response,
                 rapt_token,
             )
-            refreshed_credential = self.service.get_credentials()
+            refreshed_credential = service.get_credentials()
         assert refreshed_credential.valid is True
 
 
-TEST_THREAD = {
-    "messages": [
-        {
-            "payload": {
-                "headers": [
-                    {"name": "From", "value": "Foo Bar <foobar@example.com>"},
-                    {"name": "Subject", "value": "Regarding Bugwarrior"},
-                    {"name": "To", "value": "ct@example.com"},
-                    {
-                        "name": "Message-ID",
-                        "value": "<CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com>",  # noqa: E501
-                    },
-                ],
-                "parts": [{}],
-            },
-            "snippet": "Bugwarrior is great",
-            "internalDate": 1546722467000,
-            "threadId": "1234",
-            "labelIds": ["IMPORTANT", "Label_1", "Label_43", "CATEGORY_PERSONAL"],
-            "id": "9999",
-        }
-    ],
-    "id": "1234",
-}
-
-TEST_LABELS = [
-    {"id": "IMPORTANT", "name": "IMPORTANT"},
-    {"id": "CATEGORY_PERSONAL", "name": "CATEGORY_PERSONAL"},
-    {"id": "Label_1", "name": "sticky"},
-    {"id": "Label_43", "name": "postit"},
-]
-
-
-class TestGmailIssue(ServiceIssueTest):
-    SERVICE_CONFIG = {
-        'service': 'gmail',
-        'add_tags': 'added',
-        'login_name': 'test@example.com',
+@pytest.fixture
+def record():
+    return {
+        "messages": [
+            {
+                "payload": {
+                    "headers": [
+                        {"name": "From", "value": "Foo Bar <foobar@example.com>"},
+                        {"name": "Subject", "value": "Regarding Bugwarrior"},
+                        {"name": "To", "value": "ct@example.com"},
+                        {
+                            "name": "Message-ID",
+                            "value": "<CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com>",  # noqa: E501
+                        },
+                    ],
+                    "parts": [{}],
+                },
+                "snippet": "Bugwarrior is great",
+                "internalDate": 1546722467000,
+                "threadId": "1234",
+                "labelIds": ["IMPORTANT", "Label_1", "Label_43", "CATEGORY_PERSONAL"],
+                "id": "9999",
+            }
+        ],
+        "id": "1234",
     }
 
-    def setUp(self):
-        super().setUp()
 
+@pytest.fixture
+def labels():
+    return [
+        {"id": "IMPORTANT", "name": "IMPORTANT"},
+        {"id": "CATEGORY_PERSONAL", "name": "CATEGORY_PERSONAL"},
+        {"id": "Label_1", "name": "sticky"},
+        {"id": "Label_43", "name": "postit"},
+    ]
+
+
+class TestGmailIssue:
+    @pytest.fixture
+    def service(self, record, labels, make_service, monkeypatch):
         mock_api = mock.Mock()
-        mock_api().users().labels().list().execute.return_value = {
-            'labels': TEST_LABELS
-        }
+        mock_api().users().labels().list().execute.return_value = {'labels': labels}
         mock_api().users().threads().list().execute.return_value = {
-            'threads': [{'id': TEST_THREAD['id']}]
+            'threads': [{'id': record['id']}]
         }
-        mock_api().users().threads().get().execute.return_value = TEST_THREAD
-        gmail.GmailService.build_api = mock_api
-        self.service = self.get_mock_service(gmail.GmailService, section='test_section')
+        mock_api().users().threads().get().execute.return_value = record
+        monkeypatch.setattr(gmail.GmailService, 'build_api', mock_api)
+        return make_service()
 
-    def test_config_paths(self):
-        credentials_path = os.path.join(
-            self.service.main_config.data.path,
-            'gmail_credentials_test_example_com.pickle',
+    def test_config_paths(self, service):
+        credentials_path = (
+            Path(service.main_config.data.path)
+            / 'gmail_credentials_test_example_com.pickle'
         )
-        assert self.service.credentials_path == credentials_path
+        assert Path(service.credentials_path) == credentials_path
 
-    def test_to_taskwarrior(self):
-        thread = TEST_THREAD
-        issue = self.service.get_issue_for_record(
-            thread, gmail.thread_extras(thread, self.service.get_labels())
+    def test_to_taskwarrior(self, service, record):
+        issue = service.get_issue_for_record(
+            record, gmail.thread_extras(record, service.get_labels())
         )
         expected = {
             'annotations': [],
@@ -159,8 +163,8 @@ class TestGmailIssue(ServiceIssueTest):
 
         assert taskwarrior == expected
 
-    def test_issues(self):
-        issue = next(self.service.issues())
+    def test_issues(self, service):
+        issue = next(service.issues())
         expected = {
             'annotations': ['@Foo Bar - Regarding Bugwarrior'],
             'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=timezone.utc),

@@ -1,23 +1,25 @@
 import json
 
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gerrit import GerritService
 
-from .base import ServiceIssueTest
+SERVICE_CLASS = GerritService
+
+SERVICE_CONFIG = {
+    'service': 'gerrit',
+    'base_uri': 'https://one.com',
+    'username': 'two',
+    'password': 'three',
+    'ignore_user_comments': ['CI Bot'],
+}
 
 
-class TestGerritIssue(ServiceIssueTest):
-    SERVICE_CONFIG = {
-        'service': 'gerrit',
-        'base_uri': 'https://one.com',
-        'username': 'two',
-        'password': 'three',
-        'ignore_user_comments': ['CI Bot'],
-    }
-
-    record = {
+@pytest.fixture
+def record():
+    return {
         'project': 'nova',
         '_number': 1,
         'branch': 'master',
@@ -39,26 +41,33 @@ class TestGerritIssue(ServiceIssueTest):
         ],
     }
 
-    extra = {
+
+@pytest.fixture
+def extra():
+    return {
         'annotations': [
             # TODO - test annotations?
         ],
         'url': 'https://one.com/#/c/1/',
     }
 
-    def setUp(self):
-        super().setUp()
 
-        responses.add(
-            responses.HEAD,
-            self.SERVICE_CONFIG['base_uri'] + '/a/',
-            headers={'www-authenticate': 'digest'},
-        )
+class TestGerritIssue:
+    @pytest.fixture
+    def service(self, make_service):
+        # GerritService.__init__ sends a HEAD request to detect the server's
+        # authentication method, so the responses mock must already be active
+        # when the service is constructed, not just during the test.
         with responses.mock:
-            self.service = self.get_mock_service(GerritService)
+            responses.add(
+                responses.HEAD,
+                SERVICE_CONFIG['base_uri'] + '/a/',
+                headers={'www-authenticate': 'digest'},
+            )
+            return make_service()
 
-    def test_to_taskwarrior(self):
-        issue = self.service.get_issue_for_record(self.record, self.extra)
+    def test_to_taskwarrior(self, service, record, extra):
+        issue = service.get_issue_for_record(record, extra)
         actual = issue.to_taskwarrior()
         expected = {
             'annotations': [],
@@ -76,10 +85,9 @@ class TestGerritIssue(ServiceIssueTest):
 
         assert actual == expected
 
-    def test_work_in_progress(self):
-        wip_record = dict(self.record)  # make a copy of the dict
-        wip_record['work_in_progress'] = True
-        issue = self.service.get_issue_for_record(wip_record, self.extra)
+    def test_work_in_progress(self, service, record, extra):
+        record['work_in_progress'] = True
+        issue = service.get_issue_for_record(record, extra)
 
         expected = {
             'annotations': [],
@@ -99,14 +107,14 @@ class TestGerritIssue(ServiceIssueTest):
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
     @responses.activate
-    def test_issues(self):
+    def test_issues(self, service, record):
         responses.get(
             'https://one.com/a/changes/?q=is:open+is:reviewer&o=MESSAGES&o=DETAILED_ACCOUNTS',
             # The response has some ")]}'" garbage prefixed.
-            body=")]}'" + json.dumps([self.record]),
+            body=")]}'" + json.dumps([record]),
         )
 
-        issue = next(self.service.issues())
+        issue = next(service.issues())
 
         expected = {
             'annotations': ['@Iam Author - is is a message'],

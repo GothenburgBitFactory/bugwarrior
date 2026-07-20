@@ -1,6 +1,5 @@
 import configparser
 import itertools
-import os
 from pathlib import Path
 import textwrap
 import tomllib
@@ -9,96 +8,90 @@ import pytest
 
 from bugwarrior.config import load
 
-from ..base import ConfigTest
+
+@pytest.fixture
+def create_filepath(tmp_path):
+    """
+    Return a factory creating an empty file in the temporary home directory.
+    """
+
+    def create_filepath(path):
+        fpath = tmp_path / path
+        fpath.parent.mkdir(parents=True, exist_ok=True)
+        fpath.touch()
+        return str(fpath)
+
+    return create_filepath
 
 
-class LoadTest(ConfigTest):
-    def create(self, path):
-        """
-        Create an empty file in the temporary directory, return the full path.
-        """
-        fpath = os.path.join(self.tempdir, path)
-        if not os.path.exists(os.path.dirname(fpath)):
-            os.makedirs(os.path.dirname(fpath))
-        open(fpath, 'a').close()
-        return fpath
+class TestExample:
+    @pytest.mark.parametrize(
+        'rcfile', ['example-bugwarriorrc', 'example-bugwarrior.toml']
+    )
+    def test_example(self, rcfile, monkeypatch):
+        monkeypatch.setenv('BUGWARRIORRC', str(Path(__file__).parent / rcfile))
+        load.load_config('general', False)
 
 
-class ExampleTest(ConfigTest):
-    def setUp(self):
-        self.basedir = Path(__file__).parent
-        super().setUp()
-
-    def test_example(self):
-        for rcfile in ('example-bugwarriorrc', 'example-bugwarrior.toml'):
-            with self.subTest(rcfile=rcfile):
-                os.environ['BUGWARRIORRC'] = str(self.basedir / rcfile)
-                load.load_config('general', False)
+#: Candidate bugwarriorrc locations, ordered by precedence.
+CONFIG_PATHS = [
+    '.config/bugwarrior/bugwarriorrc',
+    '.config/bugwarrior/bugwarrior.toml',
+    '.bugwarriorrc',
+    '.bugwarrior.toml',
+]
 
 
-class TestGetConfigPath(LoadTest):
-    def test_path_precedence(self):
-        # We're going to manually setup and teardown each subTest.
-        self.tearDown()
+class TestGetConfigPath:
+    # https://docs.python.org/3/library/itertools.html#itertools.combinations
+    # > The combination tuples are emitted in lexicographic ordering
+    # > according to the order of the input iterable. So, if the input
+    # > iterable is sorted, the output tuples will be produced in sorted
+    # > order.
+    # So as long as the path list is in the correct order, path1 should have
+    # precedence.
+    @pytest.mark.parametrize(
+        ('path1', 'path2'), list(itertools.combinations(CONFIG_PATHS, 2))
+    )
+    def test_path_precedence(self, path1, path2, create_filepath):
+        config1 = create_filepath(path1)
+        create_filepath(path2)
+        assert load.get_config_path() == config1
 
-        config_paths = [  # ordered by precedence
-            '.config/bugwarrior/bugwarriorrc',
-            '.config/bugwarrior/bugwarrior.toml',
-            '.bugwarriorrc',
-            '.bugwarrior.toml',
-        ]
-
-        # https://docs.python.org/3/library/itertools.html#itertools.combinations
-        # > The combination tuples are emitted in lexicographic ordering
-        # > according to the order of the input iterable. So, if the input
-        # > iterable is sorted, the output tuples will be produced in sorted
-        # > order.
-        # So as long as the path list is in the correct order, path1 should have
-        # precedence.
-        for path1, path2 in itertools.combinations(config_paths, 2):
-            with self.subTest(path1=path1, path2=path2):
-                self.setUp()
-                try:
-                    config1 = self.create(path1)
-                    self.create(path2)
-                    assert load.get_config_path() == config1
-                finally:
-                    self.tearDown()
-
-    def test_legacy(self):
+    def test_legacy(self, create_filepath):
         """
         Falls back on .bugwarriorrc if it exists
         """
-        rc = self.create('.bugwarriorrc')
+        rc = create_filepath('.bugwarriorrc')
         assert load.get_config_path() == rc
 
-    def test_no_file(self):
+    def test_no_file(self, tmp_path):
         """
         If no bugwarriorrc exist anywhere, the path to the prefered one is
         returned.
         """
-        assert load.get_config_path() == os.path.join(
-            self.tempdir, '.config/bugwarrior/bugwarriorrc'
+        assert load.get_config_path() == str(
+            tmp_path / '.config/bugwarrior/bugwarriorrc'
         )
 
-    def test_BUGWARRIORRC(self):
+    def test_BUGWARRIORRC(self, create_filepath, tmp_path, monkeypatch):
         """
         If $BUGWARRIORRC is set, it takes precedence over everything else (even
         if the file doesn't exist).
         """
-        rc = os.path.join(self.tempdir, 'my-bugwarriorc')
-        os.environ['BUGWARRIORRC'] = rc
-        self.create('.bugwarriorrc')
-        self.create('.config/bugwarrior/bugwarriorrc')
+        rc = str(tmp_path / 'my-bugwarriorc')
+        monkeypatch.setenv('BUGWARRIORRC', rc)
+        create_filepath('.bugwarriorrc')
+        create_filepath('.config/bugwarrior/bugwarriorrc')
         assert load.get_config_path() == rc
 
-    def test_BUGWARRIORRC_empty(self):
+    def test_BUGWARRIORRC_empty(self, create_filepath, monkeypatch):
         """
         If $BUGWARRIORRC is set but empty, it is not used and the default file
         is used instead.
         """
-        os.environ['BUGWARRIORRC'] = ''
-        rc = self.create('.config/bugwarrior/bugwarriorrc')
+        monkeypatch.setenv('BUGWARRIORRC', '')
+        rc = create_filepath('.config/bugwarrior/bugwarriorrc')
         assert load.get_config_path() == rc
 
 
@@ -116,13 +109,15 @@ class TestBugwarriorConfigParser:
         assert config.getint('general', 'somenone') is None
 
     def test_getint_valueerror(self, config):
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError, match='general.somechar must be an integer or empty.'
+        ):
             config.getint('general', 'somechar')
 
 
-class TestParseFile(LoadTest):
-    def test_toml(self):
-        config_path = self.create('.bugwarrior.toml')
+class TestParseFile:
+    def test_toml(self, create_filepath):
+        config_path = create_filepath('.bugwarrior.toml')
         with open(config_path, 'w') as fout:
             fout.write(
                 textwrap.dedent("""
@@ -133,8 +128,8 @@ class TestParseFile(LoadTest):
 
         load.parse_file(config_path)
 
-    def test_ini(self):
-        config_path = self.create('.bugwarriorrc')
+    def test_ini(self, create_filepath):
+        config_path = create_filepath('.bugwarriorrc')
         with open(config_path, 'w') as fout:
             fout.write(
                 textwrap.dedent("""
@@ -146,8 +141,8 @@ class TestParseFile(LoadTest):
 
         assert config == {'flavor': {'general': {'foo': 'bar'}}, 'services': []}
 
-    def test_toml_invalid(self):
-        config_path = self.create('.bugwarrior.toml')
+    def test_toml_invalid(self, create_filepath):
+        config_path = create_filepath('.bugwarrior.toml')
         with open(config_path, 'w') as fout:
             fout.write(
                 textwrap.dedent("""
@@ -159,8 +154,8 @@ class TestParseFile(LoadTest):
         with pytest.raises(tomllib.TOMLDecodeError):
             load.parse_file(config_path)
 
-    def test_ini_invalid(self):
-        config_path = self.create('.bugwarriorrc')
+    def test_ini_invalid(self, create_filepath):
+        config_path = create_filepath('.bugwarriorrc')
         with open(config_path, 'w') as fout:
             fout.write(
                 textwrap.dedent("""
@@ -172,8 +167,8 @@ class TestParseFile(LoadTest):
         with pytest.raises(configparser.MissingSectionHeaderError):
             load.parse_file(config_path)
 
-    def test_toml_flavors(self):
-        config_path = self.create('.bugwarrior.toml')
+    def test_toml_flavors(self, create_filepath):
+        config_path = create_filepath('.bugwarrior.toml')
 
         with open(config_path, 'w') as fout:
             fout.write('[flavor.myflavor]\ntargets = ["my_gitlab"]')
@@ -183,8 +178,8 @@ class TestParseFile(LoadTest):
             'services': [],
         }
 
-    def test_ini_flavors(self):
-        config_path = self.create('.bugwarriorrc')
+    def test_ini_flavors(self, create_filepath):
+        config_path = create_filepath('.bugwarriorrc')
         with open(config_path, 'w') as fout:
             fout.write(
                 textwrap.dedent("""
@@ -199,12 +194,12 @@ class TestParseFile(LoadTest):
             'services': [],
         }
 
-    def test_ini_options_renamed(self):
+    def test_ini_options_renamed(self, create_filepath):
         """
         Prefixes are removed and log.* are renamed log_* in main section.
         """
 
-        config_path = self.create('.bugwarriorrc')
+        config_path = create_filepath('.bugwarriorrc')
         with open(config_path, 'w') as fout:
             fout.write(
                 textwrap.dedent("""
@@ -225,8 +220,8 @@ class TestParseFile(LoadTest):
         assert 'log_level' in config['flavor']['general']
         assert 'log.level' not in config['flavor']['general']
 
-    def test_ini_missing_prefix(self):
-        config_path = self.create('.bugwarriorrc')
+    def test_ini_missing_prefix(self, create_filepath):
+        config_path = create_filepath('.bugwarriorrc')
         with open(config_path, 'w') as fout:
             fout.write(
                 textwrap.dedent("""
@@ -241,8 +236,8 @@ class TestParseFile(LoadTest):
         with pytest.raises(SystemExit):
             load.parse_file(config_path)
 
-    def test_ini_wrong_prefix(self):
-        config_path = self.create('.bugwarriorrc')
+    def test_ini_wrong_prefix(self, create_filepath):
+        config_path = create_filepath('.bugwarriorrc')
         with open(config_path, 'w') as fout:
             fout.write(
                 textwrap.dedent("""
@@ -258,13 +253,9 @@ class TestParseFile(LoadTest):
             load.parse_file(config_path)
 
 
-class TestLoadConfig(LoadTest):
-    def setUp(self):
-        self.basedir = Path(__file__).parent
-        super().setUp()
-
-    def test_main_section_does_not_exist(self):
-        config_path = self.create(".bugwarriorrc")
+class TestLoadConfig:
+    def test_main_section_does_not_exist(self, create_filepath, caplog):
+        config_path = create_filepath(".bugwarriorrc")
         with open(config_path, 'w') as fout:
             fout.write(
                 textwrap.dedent("""
@@ -277,5 +268,5 @@ class TestLoadConfig(LoadTest):
         with pytest.raises(SystemExit):
             load.load_config("general", False)
 
-        assert len(self.caplog.records) == 1
-        assert "No section: 'general'" in self.caplog.records[0].message
+        assert len(caplog.records) == 1
+        assert "No section: 'general'" in caplog.records[0].message

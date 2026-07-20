@@ -1,18 +1,17 @@
+import pytest
 import responses
 
 from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.taiga import TaigaService
 
-from .base import ServiceIssueTest
+SERVICE_CLASS = TaigaService
+
+SERVICE_CONFIG = {'service': 'taiga', 'base_uri': 'https://one', 'auth_token': 'two'}
 
 
-class TestTaigaIssue(ServiceIssueTest):
-    SERVICE_CONFIG = {
-        'service': 'taiga',
-        'base_uri': 'https://one',
-        'auth_token': 'two',
-    }
-    record = {
+@pytest.fixture
+def record():
+    return {
         'id': 400,
         'project': 4,
         'ref': 40,
@@ -21,11 +20,9 @@ class TestTaigaIssue(ServiceIssueTest):
         'due_date': '2026-05-18',
     }
 
-    def setUp(self):
-        super().setUp()
-        self.service = self.get_mock_service(TaigaService)
 
-    def test_to_taskwarrior(self):
+class TestTaigaIssue:
+    def test_to_taskwarrior(self, service, record):
         extra = {
             'project': 'awesome',
             'annotations': [
@@ -34,7 +31,7 @@ class TestTaigaIssue(ServiceIssueTest):
             'url': 'this is a url',
         }
 
-        issue = self.service.get_issue_for_record(self.record, extra)
+        issue = service.get_issue_for_record(record, extra)
         actual = issue.to_taskwarrior()
         expected = {
             'annotations': [],
@@ -50,7 +47,7 @@ class TestTaigaIssue(ServiceIssueTest):
         assert actual == expected
 
     @responses.activate
-    def test_issues(self):
+    def test_issues(self, service, record):
         userid = 1
 
         responses.get('https://one/api/v1/users/me', json={'id': userid})
@@ -59,20 +56,20 @@ class TestTaigaIssue(ServiceIssueTest):
             'https://one/api/v1/userstories?status__is_closed=false&assigned_to={}'.format(
                 userid
             ),
-            json=[self.record],
+            json=[record],
         )
 
         responses.get(
-            'https://one/api/v1/projects/{}'.format(self.record['project']),
+            'https://one/api/v1/projects/{}'.format(record['project']),
             json={'slug': 'something'},
         )
 
         responses.get(
-            'https://one/api/v1/history/userstory/{}'.format(self.record['id']),
+            'https://one/api/v1/history/userstory/{}'.format(record['id']),
             json=[{'user': {'username': 'you'}, 'comment': 'Blah blah blah!'}],
         )
 
-        issue = next(self.service.issues())
+        issue = next(service.issues())
 
         expected = {
             'annotations': ['@you - Blah blah blah!'],
