@@ -33,10 +33,9 @@ class TestTemplates:
         issue = get_issue({})
 
         actual = TaskConstructor(issue).get_taskwarrior_record()
-        expected_record = record.copy()
-        expected_record.update({'description': DEFAULT_DESCRIPTION, 'tags': []})
+        record.update({'description': DEFAULT_DESCRIPTION, 'tags': []})
 
-        assert actual == expected_record
+        assert actual == record
 
     def test_override_description(self, get_issue, record):
         description_template = "{{ priority }} - {{ description }}"
@@ -44,15 +43,14 @@ class TestTemplates:
         issue = get_issue({'description': description_template})
 
         actual = TaskConstructor(issue).get_taskwarrior_record()
-        expected_record = record.copy()
-        expected_record.update(
+        record.update(
             {
                 'description': '%s - %s' % (record['priority'], DEFAULT_DESCRIPTION),
                 'tags': [],
             }
         )
 
-        assert actual == expected_record
+        assert actual == record
 
     def test_override_project(self, get_issue, record):
         project_template = "wat_{{ project|upper }}"
@@ -60,8 +58,7 @@ class TestTemplates:
         issue = get_issue({'project': project_template})
 
         actual = TaskConstructor(issue).get_taskwarrior_record()
-        expected_record = record.copy()
-        expected_record.update(
+        record.update(
             {
                 'description': DEFAULT_DESCRIPTION,
                 'project': 'wat_%s' % record['project'].upper(),
@@ -69,15 +66,14 @@ class TestTemplates:
             }
         )
 
-        assert actual == expected_record
+        assert actual == record
 
     def test_tag_templates(self, get_issue, record):
         issue = get_issue(add_tags=['one', '{{ project }}'])
 
         actual = TaskConstructor(issue).get_taskwarrior_record()
-        expected_record = record.copy()
-        expected_record.update(
+        record.update(
             {'description': DEFAULT_DESCRIPTION, 'tags': ['one', record['project']]}
         )
 
-        assert actual == expected_record
+        assert actual == record

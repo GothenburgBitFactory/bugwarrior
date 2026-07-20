@@ -9,8 +9,7 @@ from bugwarrior.config import data, schema
 
 def assert_0600(bw_data):
     permissions = oct(os.stat(bw_data._datafile).st_mode & 0o777)
-    # python2 -> 0600, python3 -> 0o600
-    assert permissions in ['0600', '0o600']
+    assert permissions == '0o600'
 
 
 class TestData:

@@ -40,7 +40,7 @@ def record():
         'closed_at': CLOSED.isoformat(),
         'updated_at': UPDATED.isoformat(),
         'repo': 'arbitrary_username/arbitrary_repo',
-        'state': 'CLOSED',
+        'state': 'closed',
         'draft': False,
     }
 
@@ -58,29 +58,28 @@ def extra():
 
 class TestGithubIssue:
     def test_draft(self, service, record, extra):
-        draft = dict(record)
-        draft['draft'] = True
-        issue = service.get_issue_for_record(draft, extra)
+        record['draft'] = True
+        issue = service.get_issue_for_record(record, extra)
 
         expected = {
             'annotations': [],
             'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',  # noqa: E501
             'entry': CREATED,
             'end': CLOSED,
-            'githubbody': draft['body'],
+            'githubbody': record['body'],
             'githubcreatedon': CREATED,
             'githubclosedon': CLOSED,
-            'githubdraft': int(draft['draft']),
-            'githubmilestone': draft['milestone']['title'],
-            'githubnamespace': draft['repo'].split('/')[0],
-            'githubnumber': draft['number'],
-            'githubrepo': draft['repo'],
-            'githubtitle': draft['title'],
+            'githubdraft': int(record['draft']),
+            'githubmilestone': record['milestone']['title'],
+            'githubnamespace': record['repo'].split('/')[0],
+            'githubnumber': record['number'],
+            'githubrepo': record['repo'],
+            'githubtitle': record['title'],
             'githubtype': 'issue',
             'githubupdatedat': UPDATED,
-            'githuburl': draft['html_url'],
-            'githubuser': draft['user']['login'],
-            'githubstate': draft['state'],
+            'githuburl': record['html_url'],
+            'githubuser': record['user']['login'],
+            'githubstate': record['state'],
             'priority': 'M',
             'project': extra['project'],
             'tags': [],
@@ -112,7 +111,7 @@ class TestGithubIssue:
             issue.MILESTONE: record['milestone']['title'],
             issue.USER: record['user']['login'],
             issue.NAMESPACE: 'arbitrary_username',
-            issue.STATE: 'CLOSED',
+            issue.STATE: 'closed',
         }
         actual_output = issue.to_taskwarrior()
 
@@ -166,7 +165,7 @@ class TestGithubIssue:
             'githubupdatedat': UPDATED,
             'githuburl': 'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'githubuser': 'arbitrary_login',
-            'githubstate': 'CLOSED',
+            'githubstate': 'closed',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': [],
@@ -219,7 +218,7 @@ class TestGithubIssueQuery:
             'githubupdatedat': UPDATED,
             'githuburl': 'https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'githubuser': 'arbitrary_login',
-            'githubstate': 'CLOSED',
+            'githubstate': 'closed',
             'priority': 'M',
             'project': 'arbitrary_repo',
             'tags': [],

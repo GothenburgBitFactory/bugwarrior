@@ -86,9 +86,8 @@ class TestGerritIssue:
         assert actual == expected
 
     def test_work_in_progress(self, service, record, extra):
-        wip_record = dict(record)  # make a copy of the dict
-        wip_record['work_in_progress'] = True
-        issue = service.get_issue_for_record(wip_record, extra)
+        record['work_in_progress'] = True
+        issue = service.get_issue_for_record(record, extra)
 
         expected = {
             'annotations': [],

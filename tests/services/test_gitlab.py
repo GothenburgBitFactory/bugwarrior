@@ -1088,7 +1088,7 @@ class TestGitlabIssue:
         # Should not raise an error
         service = make_service(**overrides)
 
-        # Verify service was CREATED successfully
+        # Verify service was created successfully
         assert service is not None
 
     @responses.activate

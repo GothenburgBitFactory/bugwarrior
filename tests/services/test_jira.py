@@ -56,14 +56,12 @@ def record():
 
 @pytest.fixture
 def record_with_due(record):
-    record_with_due = record.copy()
-    record_with_due['fields'] = record_with_due['fields'].copy()
-    record_with_due['fields']['Sprint'] = [
+    record['fields']['Sprint'] = [
         'com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
                     state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4\
                     55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]'
     ]
-    return record_with_due
+    return record
 
 
 class FakeJiraClient:
@@ -168,10 +166,8 @@ class TestJiraIssue:
 
         assert actual_output == expected_output
 
-    def test_to_taskwarrior_sprint_with_goal(self, service, record, record_with_due):
-        record_with_goal = record.copy()
-        record_with_goal['fields'] = record_with_due['fields'].copy()
-        record_with_goal['fields']['Sprint'] = [
+    def test_to_taskwarrior_sprint_with_goal(self, service, record):
+        record['fields']['Sprint'] = [
             'com.atlassian.greenhopper.service.sprint.Sprint@4c9c41a5[id=2322,rapidViewId=1173,\
             state=ACTIVE,name=Sprint 1,goal=Do foo, bar, baz,startDate=2016-09-06T16:08:07.4\
             55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]'
@@ -182,11 +178,11 @@ class TestJiraIssue:
             'sprint_field_names': service.sprint_field_names,
         }
 
-        issue = service.get_issue_for_record(record_with_goal, extra)
+        issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
             'project': PROJECT,
-            'priority': (issue.PRIORITY_MAP[record_with_goal['fields']['priority']]),
+            'priority': (issue.PRIORITY_MAP[record['fields']['priority']]),
             'annotations': extra['annotations'],
             'due': datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc),
             'tags': [],
@@ -199,7 +195,7 @@ class TestJiraIssue:
             'jiraextra1': 'foo',
             'jiraextra2': 77,
             issue.URL: url,
-            issue.FOREIGN_ID: record_with_goal['key'],
+            issue.FOREIGN_ID: record['key'],
             issue.SUMMARY: SUMMARY,
             issue.DESCRIPTION: None,
             issue.ESTIMATE: ESTIMATION / 60 / 60,
@@ -250,14 +246,10 @@ class TestJiraIssue:
         assert issue.get_due() == datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc)
 
     def test_get_due_sprint_dict_missing_end_date(self, service, record):
-        sprint_record = record.copy()
-        sprint_record['fields'] = record['fields'].copy()
-        sprint_record['fields']['Sprint'] = [
-            {'id': 1, 'state': 'active', 'name': 'Sprint 1'}
-        ]
+        record['fields']['Sprint'] = [{'id': 1, 'state': 'active', 'name': 'Sprint 1'}]
 
         issue = service.get_issue_for_record(
-            sprint_record, extra={'sprint_field_names': service.sprint_field_names}
+            record, extra={'sprint_field_names': service.sprint_field_names}
         )
 
         assert issue.get_due() is None
