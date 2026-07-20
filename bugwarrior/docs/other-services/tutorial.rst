@@ -247,15 +247,13 @@ If you're developing your service in a separate package, it's time to create a `
 If you're developing in the bugwarrior repo, you can simply add your entry to the existing ``[project.entry-points."bugwarrior.service"]`` table.
 
 8. Tests
-----------
+--------
 
 .. note::
 
    The remainder of this tutorial is not geared towards third-party services. While you are free to use bugwarrior's testing infrastructure, no attempt is being made to maintain the stability of these interfaces at this time.
 
-
-
-Create a test file and implement at least the minimal service tests by inheriting from ``ServiceIssueTest``.
+Create a test file. Declare ``SERVICE_CLASS`` and ``SERVICE_CONFIG`` at module level -- these are picked up by the ``service`` and ``make_service`` fixtures shared across all service tests (see ``tests/services/conftest.py``), which build a mock service instance for you. Fake record data belongs in a ``record`` fixture rather than instance state, since a fresh dictionary per test avoids accidental sharing between tests.
 
 .. code:: bash
 
@@ -263,38 +261,57 @@ Create a test file and implement at least the minimal service tests by inheritin
 
 .. code:: python
 
-  class TestGitBugIssue(ServiceIssueTest):
-      SERVICE_CONFIG = {
-          'service': 'gitbug',
-          'path': '/dev/null',
+  from unittest import mock
+
+  import pytest
+
+  from bugwarrior.collect import TaskConstructor
+  from bugwarrior.services.gitbug import GitBugClient, GitBugService
+
+  SERVICE_CLASS = GitBugService
+
+  SERVICE_CONFIG = {
+      'service': 'gitbug',
+      'path': '/dev/null',
+  }
+
+
+  @pytest.fixture
+  def record():
+      return {
+          'id': 'arbitrary_id',
+          'title': 'arbitrary_title',
+          'state': 'open',
+          'author': {'name': 'arbitrary_author'},
+          'labels': [],
+          'createdAt': '2016-06-06T06:07:08.123-0700',
       }
 
-      def setUp(self):
-          super().setUp()
 
-          self.data = TestData()
+  class TestGitBugIssue:
+      @pytest.fixture
+      def service(self, make_service):
+          service = make_service()
+          service.client = mock.MagicMock(spec=GitBugClient)
+          return service
 
-          self.service = self.get_mock_service(GitBugService)
-          self.service.client = mock.MagicMock(spec=GitBugClient)
-          self.service.client.get_issues = mock.MagicMock(
-              return_value=[self.data.arbitrary_bug])
-
-      def test_to_taskwarrior(self):
-          issue = self.service.get_issue_for_record(
-              self.data.arbitrary_bug, {})
+      def test_to_taskwarrior(self, service, record):
+          issue = service.get_issue_for_record(record, {})
 
           expected = { ... }
 
           actual = issue.to_taskwarrior()
 
-          self.assertEqual(actual, expected)
+          assert actual == expected
 
-      def test_issues(self):
-          issue = next(self.service.issues())
+      def test_issues(self, service, record):
+          service.client.get_issues.return_value = [record]
+
+          issue = next(service.issues())
 
           expected = { ... }
 
-          self.assertEqual(TaskConstructor(issue).get_taskwarrior_record(), expected)
+          assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
 9. Documentation
 ------------------
