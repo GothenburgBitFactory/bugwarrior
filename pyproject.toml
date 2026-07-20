@@ -88,6 +88,11 @@ bugwarrior = "bugwarrior.config.ini2toml_plugin:activate"
 
 [tool.uv]
 exclude-newer = "3 days"
+# tomlkit 0.15.1's parser rewrite changed comment-whitespace serialization
+# (undocumented in its changelog): blank comment lines lose a trailing
+# space. tests/config/example-bugwarrior.toml reflects this new output;
+# pin forward so we never silently regress to the old 0.15.0 formatting.
+constraint-dependencies = ["tomlkit>=0.15.1"]
 
 [tool.ruff.format]
 quote-style = "preserve"
