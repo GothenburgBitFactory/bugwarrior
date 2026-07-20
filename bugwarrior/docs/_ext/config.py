@@ -1,7 +1,18 @@
+import functools
+
 from ini2toml.api import Translator
 from sphinx.directives.code import CodeBlock
 from sphinx.util.docutils import SphinxDirective
 from sphinx_inline_tabs._impl import TabDirective
+
+
+@functools.cache
+def _translator() -> Translator:
+    # Translator() discovers its ini/toml plugins via importlib.metadata
+    # entry points on every instantiation, which is expensive. The plugin
+    # set is fixed for the lifetime of the process, so build one and reuse
+    # it across every ``.. config::`` directive instead of once per call.
+    return Translator()
 
 
 class Config(SphinxDirective):
@@ -29,7 +40,7 @@ class Config(SphinxDirective):
                 '[some_section]\nservice = ' + self.options['fragment'] + '\n'
             )
             initext = stub_section + initext
-        tomltext = Translator().translate(initext, 'bugwarriorrc')
+        tomltext = _translator().translate(initext, 'bugwarriorrc')
         if 'fragment' in self.options:  # remove stub
             stub_len = len(stub_section) + 2  # toml adds quotes to strings
             tomltext = tomltext[stub_len:]
