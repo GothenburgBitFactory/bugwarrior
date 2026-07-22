@@ -5,11 +5,13 @@ import re
 import typing
 from typing import Any
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 import requests
 
 from bugwarrior import config
+from bugwarrior.collect import CollectedIssue
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import IssueDatetime, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -38,46 +40,34 @@ class LinearConfig(config.ServiceConfig):
         return values
 
 
+class LinearUdas(Udas):
+    """Service-specific UDAs contributed by Linear."""
+
+    UNIQUE_KEY = ("linearurl",)
+
+    linearurl: str | None = Field(default=None, title="Issue URL")
+    lineartitle: str | None = Field(default=None, title="Issue Title")
+    lineardescription: str | None = Field(default=None, title="Issue Description")
+    linearstatus: str | None = Field(default=None, title="Issue State")
+    linearidentifier: str | None = Field(default=None, title="Linear Identifier")
+    linearteam: str | None = Field(default=None, title="Project ID")
+    linearcreator: str | None = Field(default=None, title="Issue Creator")
+    linearassignee: str | None = Field(default=None, title="Issue Assignee")
+    linearcreated: IssueDatetime = Field(default=None, title="Issue Created")
+    linearupdated: IssueDatetime = Field(default=None, title="Issue Updated")
+    linearclosed: IssueDatetime = Field(default=None, title="Issue Closed")
+
+
+class LinearTask(Task):
+    udas: LinearUdas
+
+
 class LinearIssue(Issue):
-    URL = "linearurl"
-    TITLE = "lineartitle"
-    DESCRIPTION = "lineardescription"
-    STATUS = "linearstatus"
-    IDENTIFIER = "linearidentifier"
-    TEAM = "linearteam"
-    CREATOR = "linearcreator"
-    ASSIGNEE = "linearassignee"
-    CREATED_AT = "linearcreated"
-    UPDATED_AT = "linearupdated"
-    CLOSED_AT = "linearclosed"
-
-    UDAS = {
-        URL: {"type": "string", "label": "Issue URL"},
-        TITLE: {"type": "string", "label": "Issue Title"},
-        DESCRIPTION: {"type": "string", "label": "Issue Description"},
-        STATUS: {"type": "string", "label": "Issue State"},
-        IDENTIFIER: {"type": "string", "label": "Linear Identifier"},
-        TEAM: {"type": "string", "label": "Project ID"},
-        CREATOR: {"type": "string", "label": "Issue Creator"},
-        ASSIGNEE: {"type": "string", "label": "Issue Assignee"},
-        CREATED_AT: {"type": "date", "label": "Issue Created"},
-        UPDATED_AT: {"type": "date", "label": "Issue Updated"},
-        CLOSED_AT: {"type": "date", "label": "Issue Closed"},
-    }
-
-    UNIQUE_KEY = (URL,)
-
     # Linear exposes issue priority as an integer:
     #   0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.
     PRIORITY_MAP: dict[int, config.Priority] = {1: "H", 2: "H", 3: "M", 4: "L"}
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        description = self.record.get("description")
-        created = self.parse_date(self.record.get("createdAt"))
-        modified = self.parse_date(self.record.get("updatedAt"))
-        closed = self.parse_date(self.record.get("completedAt"))
-        due = self.parse_date(self.record.get("dueDate"))
-
+    def to_taskwarrior(self) -> LinearTask:
         # Get a value, defaulting empty results to the given default. Some
         # GraphQL response values, such as for `project`, are either an object
         # or None, rather than being omitted when empty, so this allows chained
@@ -85,8 +75,8 @@ class LinearIssue(Issue):
         def get(v: Any, k: str, default: Any = None) -> Any:
             return v.get(k, default) or default
 
-        return {
-            "project": (
+        return LinearTask(
+            project=(
                 re.sub(
                     r"[^a-zA-Z0-9]",
                     "_",
@@ -94,23 +84,25 @@ class LinearIssue(Issue):
                 ).lower()
                 or None
             ),
-            "priority": self.get_priority(),
-            "due": due,
-            "entry": created,
-            "annotations": get(self.extra, "annotations", []),
-            "tags": self.get_tags(),
-            self.URL: self.record["url"],
-            self.TITLE: get(self.record, "title"),
-            self.DESCRIPTION: description,
-            self.STATUS: get(get(self.record, "state", {}), "name"),
-            self.IDENTIFIER: get(self.record, "identifier"),
-            self.TEAM: get(get(self.record, "team", {}), "name"),
-            self.CREATOR: get(get(self.record, "creator", {}), "email"),
-            self.ASSIGNEE: get(get(self.record, "assignee", {}), "email"),
-            self.CREATED_AT: created,
-            self.UPDATED_AT: modified,
-            self.CLOSED_AT: closed,
-        }
+            priority=self.get_priority(),
+            due=self.record.get("dueDate"),
+            entry=self.record.get("createdAt"),
+            annotations=get(self.extra, "annotations", []),
+            tags=self.get_tags(),
+            udas=LinearUdas(
+                linearurl=self.record["url"],
+                lineartitle=get(self.record, "title"),
+                lineardescription=self.record.get("description"),
+                linearstatus=get(get(self.record, "state", {}), "name"),
+                linearidentifier=get(self.record, "identifier"),
+                linearteam=get(get(self.record, "team", {}), "name"),
+                linearcreator=get(get(self.record, "creator", {}), "email"),
+                linearassignee=get(get(self.record, "assignee", {}), "email"),
+                linearcreated=self.record.get("createdAt"),
+                linearupdated=self.record.get("updatedAt"),
+                linearclosed=self.record.get("completedAt"),
+            ),
+        )
 
     def get_tags(self) -> list[str]:
         labels = [
@@ -127,9 +119,10 @@ class LinearIssue(Issue):
         )
 
 
-class LinearService(Service[LinearIssue]):
+class LinearService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = LinearIssue
+    UDAS_CLASS = LinearUdas
     CONFIG_SCHEMA = LinearConfig
 
     def __init__(
@@ -200,9 +193,9 @@ class LinearService(Service[LinearIssue]):
             }
             """
 
-    def issues(self) -> Iterator[LinearIssue]:
-        for issue in self.get_issues():
-            yield self.get_issue_for_record(issue, {})
+    def issues(self) -> Iterator[CollectedIssue]:
+        for record in self.get_issues():
+            yield self.process_record(record, {})
 
     def get_issues(self) -> Iterator[dict[str, Any]]:
         """

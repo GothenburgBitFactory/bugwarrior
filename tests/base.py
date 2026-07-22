@@ -2,10 +2,13 @@ import contextlib
 import typing
 import unittest.mock
 
+from pydantic import Field
+
 from bugwarrior import config, services
 from bugwarrior.collect import get_service_instances
 from bugwarrior.config import validation
 from bugwarrior.config.load import format_config
+from bugwarrior.task import Task, Udas
 
 from .services.base import get_mock_service
 
@@ -18,16 +21,31 @@ class DumbConfig(config.ServiceConfig):
     label_template: str = "{{label}}"
 
 
-class DumbIssue(services.Issue):
-    URL = "dumburl"
-    TYPE = "dumbtype"
+class DumbUdas(Udas):
+    UNIQUE_KEY = ("dumburl",)
 
-    UDAS = {
-        URL: {"type": "string", "label": "Dumb URL"},
-        TYPE: {"type": "string", "label": "Dumb Type"},
-    }
-    UNIQUE_KEY = (URL,)
+    dumburl: str | None = Field(default=None, title="Dumb URL")
+    dumbtype: str | None = Field(default=None, title="Dumb Type")
+
+
+class DumbTask(Task):
+    udas: DumbUdas
+
+
+class DumbIssue(services.Issue):
     PRIORITY_MAP: dict = {}
+
+    def to_taskwarrior(self):
+        return DumbTask(
+            project=self.extra.get("project"),
+            priority=self.config.default_priority,
+            annotations=self.extra.get("annotations", []),
+            tags=self.get_tags_from_labels(self.record.get("labels", [])),
+            udas=DumbUdas(
+                dumburl=self.record.get("url", ""),
+                dumbtype=self.extra.get("type", "issue"),
+            ),
+        )
 
     def get_default_description(self):
         return self.build_default_description(
@@ -36,20 +54,11 @@ class DumbIssue(services.Issue):
             number=self.record.get("number", ""),
         )
 
-    def to_taskwarrior(self):
-        return {
-            "project": self.extra.get("project"),
-            "priority": self.config.default_priority,
-            "annotations": self.extra.get("annotations", []),
-            "tags": self.get_tags_from_labels(self.record.get("labels", [])),
-            self.URL: self.record.get("url", ""),
-            self.TYPE: self.extra.get("type", "issue"),
-        }
-
 
 class DumbService(services.Service):
     API_VERSION = services.LATEST_API_VERSION
     ISSUE_CLASS = DumbIssue
+    UDAS_CLASS = DumbUdas
     CONFIG_SCHEMA = DumbConfig
 
     def issues(self):

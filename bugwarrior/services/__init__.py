@@ -5,20 +5,21 @@ Service API
 
 import abc
 from collections.abc import Iterable, Iterator
-import datetime
 import logging
 import math
 import os
 import re
-from typing import Any, Generic, Optional, TypeVar
-import zoneinfo
+from typing import TYPE_CHECKING, Any, Optional
 
-from dateutil.parser import parse as parse_date
 import dogpile.cache
 from jinja2 import Template
 import requests
 
+from bugwarrior.collect import CollectedIssue, make_unique_identifier
 from bugwarrior.config import schema, secrets
+
+if TYPE_CHECKING:
+    from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -79,26 +80,6 @@ class Issue(abc.ABC):
     methods are provided by the base class.
     """
 
-    #: Set to a dictionary mapping UDA short names with type and long name.
-    #:
-    #: Example::
-    #:
-    #:     {
-    #:         'project_id': {
-    #:             'type': 'string',
-    #:             'label': 'Project ID',
-    #:         },
-    #:         'ticket_number': {
-    #:             'type': 'number',
-    #:             'label': 'Ticket Number',
-    #:         },
-    #:     }
-    #:
-    #: Note: For best results, dictionary keys should be unique!
-    UDAS: dict
-    #: Should be a tuple of field names (can be UDA names) that are usable for
-    #: uniquely identifying an issue in the foreign system.
-    UNIQUE_KEY: tuple[str, ...]
     #: Should be a dictionary of value-to-level mappings between the foreign
     #: system and the string values 'H', 'M' or 'L'.
     PRIORITY_MAP: dict
@@ -113,16 +94,16 @@ class Issue(abc.ABC):
         #: Data retrieved from the external service.
         self.record = foreign_record
         #: An object whose attributes are this service's configuration values.
-        self.config: schema.ServiceConfig = config
+        self.config = config
         #: An object whose attributes are the
         #: :ref:`common_configuration:Main Section` configuration values.
-        self.main_config: schema.MainSectionConfig = main_config
+        self.main_config = main_config
         #: Data computed by the :class:`Service` class.
         self.extra = extra
 
     @abc.abstractmethod
-    def to_taskwarrior(self) -> dict[str, Any]:
-        """Transform a foreign record into a taskwarrior dictionary."""
+    def to_taskwarrior(self) -> "Task":
+        """Transform a foreign record into a taskwarrior Task."""
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -136,7 +117,6 @@ class Issue(abc.ABC):
 
     def render_tags_from_labels(self, labels: list[str]) -> list[str]:
         """Transform labels into suitable taskwarrior tags using the label template."""
-
         return [
             Template(self.config.label_template).render(
                 {**self.record, "label": re.sub(r'[^a-zA-Z0-9]', '_', label)}
@@ -188,34 +168,6 @@ class Issue(abc.ABC):
             self.record.get('priority'), self.config.default_priority
         )
 
-    def parse_date(
-        self, date: str | None, timezone: str = 'deprecated'
-    ) -> datetime.datetime | None:
-        """Parse a date string into a datetime object.
-
-        If the parsed date does not have a timezone, the UTC timezone is added.
-
-        :param `date`: A time string parseable by `dateutil.parser.parse`
-        """
-        if timezone != 'deprecated':
-            log.warning(
-                "Deprecation Warning: Issue.parse_date's timezone parameter is deprecated and will "
-                "be removed in a future API version."
-            )
-
-        if not date:
-            return None
-
-        _date = parse_date(date)
-        if not _date.tzinfo:
-            _date = _date.replace(
-                tzinfo=datetime.timezone.utc
-                if timezone == 'deprecated'
-                else zoneinfo.ZoneInfo(timezone)
-            )
-
-        return _date.replace(microsecond=0)
-
     def build_default_description(
         self, title: str = '', url: str = '', number: str | int = '', cls: str = "issue"
     ) -> str:
@@ -252,10 +204,7 @@ class Issue(abc.ABC):
         )
 
 
-T_Issue = TypeVar("T_Issue", bound="Issue")
-
-
-class Service(abc.ABC, Generic[T_Issue]):
+class Service(abc.ABC):
     """Base class for fetching issues from the service.
 
     The upper case attributes and abstract methods need to be defined by
@@ -266,7 +215,9 @@ class Service(abc.ABC, Generic[T_Issue]):
     #: Which version of the API does this service implement?
     API_VERSION: float
     #: Which class should this service instantiate for holding these issues?
-    ISSUE_CLASS: type[T_Issue]
+    ISSUE_CLASS: type[Issue]
+    #: Which Udas model declares this service's UDAs and unique key?
+    UDAS_CLASS: type["Udas"]
     #: Which class defines this service's configuration options?
     CONFIG_SCHEMA: type[schema.ServiceConfig]
 
@@ -307,14 +258,13 @@ class Service(abc.ABC, Generic[T_Issue]):
 
     def get_issue_for_record(
         self, record: dict[str, Any], extra: dict[str, Any] | None = None
-    ) -> T_Issue:
+    ) -> Issue:
         """Instantiate and return an issue for the given record.
 
         :param `record`: Foreign record.
         :param `extra`: Computed data which is not directly from the service.
         """
-        extra = extra or {}
-        return self.ISSUE_CLASS(record, self.config, self.main_config, extra=extra)
+        return self.ISSUE_CLASS(record, self.config, self.main_config, extra or {})
 
     def build_annotations(
         self, annotations: Iterable[tuple[str, str]], url: Optional[str] = None
@@ -345,32 +295,48 @@ class Service(abc.ABC, Generic[T_Issue]):
                 final.append('@%s - %s' % (author, message))
         return final
 
+    def _apply_templates(self, task: "Task", extra: dict[str, Any]) -> None:
+        """Render the user's field and tag templates onto a mapped task.
+
+        A field template overwrites whatever the service mapped for that field
+        (including the default description); added tags are appended.
+        """
+        context = {**task.to_taskwarrior_data(), **extra}
+        for field, template in self.config.templates.items():
+            setattr(task, field, Template(template).render(context))
+
+        for tag_template in self.config.add_tags:
+            tag = Template(tag_template).render(context)
+            if tag:
+                task.tags.append(tag)
+
+    def process_record(
+        self, record: dict[str, Any], extra: dict[str, Any] | None = None
+    ) -> CollectedIssue:
+        """Map, refine and package a foreign record for synchronization.
+
+        :param `record`: Foreign record.
+        :param `extra`: Computed data which is not directly from the service.
+        """
+        issue = self.get_issue_for_record(record, extra)
+        task = issue.to_taskwarrior()
+        task.description = issue.get_default_description()
+        self._apply_templates(task, issue.extra)
+        return CollectedIssue(
+            task=task,
+            identifier=make_unique_identifier(
+                self.UDAS_CLASS.get_unique_key(), task.to_taskwarrior_data()
+            ),
+            target=self.config.target,
+        )
+
     @abc.abstractmethod
-    def issues(self) -> Iterator[T_Issue]:
-        """A generator yielding Issue instances representing issues from a remote service.
+    def issues(self) -> Iterator[CollectedIssue]:
+        """Yield collected issues from a remote service.
 
-        Each item in the list should be a dict that looks something like this:
-
-        .. code-block:: python
-
-            {
-                "description": "Some description of the issue",
-                "project": "some_project",
-                "priority": "H",
-                "annotations": [
-                    "This is an annotation",
-                    "This is another annotation",
-                ]
-            }
-
-
-        The description can be 'anything' but must be consistent and unique for
-        issues you're pulling from a remote service.  You can and should use
-        the ``.description(...)`` method to help format your descriptions.
-
-        The project should be a string and may be anything you like.
-
-        The priority should be one of "H", "M", or "L".
+        Fetch foreign records and pass each through :meth:`process_record`
+        (which maps it to a typed Task, refines it, and packages it for
+        synchronization).
         """
         raise NotImplementedError()
 
