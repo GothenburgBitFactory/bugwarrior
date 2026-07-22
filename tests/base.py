@@ -32,34 +32,30 @@ class DumbTask(Task):
     udas: DumbUdas
 
 
-class DumbIssue(services.Issue):
+class DumbService(services.Service):
+    API_VERSION = services.LATEST_API_VERSION
+    UDAS_CLASS = DumbUdas
+    CONFIG_SCHEMA = DumbConfig
     PRIORITY_MAP: dict = {}
 
-    def to_taskwarrior(self):
+    def to_taskwarrior(self, record, extra):
         return DumbTask(
-            project=self.extra.get("project"),
+            project=extra.get("project"),
             priority=self.config.default_priority,
-            annotations=self.extra.get("annotations", []),
-            tags=self.get_tags_from_labels(self.record.get("labels", [])),
+            annotations=extra.get("annotations", []),
+            tags=self.get_tags_from_labels(record, record.get("labels", [])),
             udas=DumbUdas(
-                dumburl=self.record.get("url", ""),
-                dumbtype=self.extra.get("type", "issue"),
+                dumburl=record.get("url", ""),
+                dumbtype=extra.get("type", "issue"),
             ),
         )
 
-    def get_default_description(self):
+    def get_default_description(self, record):
         return self.build_default_description(
-            title=self.record.get("title", ""),
-            url=self.record.get("url", ""),
-            number=self.record.get("number", ""),
+            title=record.get("title", ""),
+            url=record.get("url", ""),
+            number=record.get("number", ""),
         )
-
-
-class DumbService(services.Service):
-    API_VERSION = services.LATEST_API_VERSION
-    ISSUE_CLASS = DumbIssue
-    UDAS_CLASS = DumbUdas
-    CONFIG_SCHEMA = DumbConfig
 
     def issues(self):
         raise NotImplementedError

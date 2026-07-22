@@ -72,42 +72,95 @@ def get_processed_url(main_config: schema.MainSectionConfig, url: str) -> str:
     return url
 
 
-class Issue(abc.ABC):
-    """Base class for translating from foreign records to taskwarrior tasks.
+class Service(abc.ABC):
+    """Base class for fetching issues from the service.
 
     The upper case attributes and abstract methods need to be defined by
     service implementations, while the lower case attributes and concrete
     methods are provided by the base class.
     """
 
+    #: Which version of the API does this service implement?
+    API_VERSION: float
+    #: Which Udas model declares this service's UDAs and unique key?
+    UDAS_CLASS: type["Udas"]
+    #: Which class defines this service's configuration options?
+    CONFIG_SCHEMA: type[schema.ServiceConfig]
     #: Should be a dictionary of value-to-level mappings between the foreign
     #: system and the string values 'H', 'M' or 'L'.
     PRIORITY_MAP: dict
 
     def __init__(
-        self,
-        foreign_record: dict[str, Any],
-        config: schema.ServiceConfig,
-        main_config: schema.MainSectionConfig,
-        extra: dict[str, Any],
+        self, config: schema.ServiceConfig, main_config: schema.MainSectionConfig
     ) -> None:
-        #: Data retrieved from the external service.
-        self.record = foreign_record
+        over_version = math.floor(LATEST_API_VERSION) + 1
+        if self.API_VERSION >= over_version:
+            raise ValueError(
+                f"Incompatible Service: {config.service} implements api "
+                f"version {self.API_VERSION} but this version of bugwarrior "
+                f"only supports versions less than {over_version}."
+            )
+
         #: An object whose attributes are this service's configuration values.
         self.config = config
         #: An object whose attributes are the
         #: :ref:`common_configuration:Main Section` configuration values.
         self.main_config = main_config
-        #: Data computed by the :class:`Service` class.
-        self.extra = extra
+
+        log.info("Working on [%s]", self.config.target)
+
+    def get_secret(self, key: str, login: str = 'nousername') -> str:
+        """Get a secret value, potentially from an :ref:`oracle <Secret Management>`.
+
+        The secret key need not be a *password*, per se.
+
+        :param `key`: Name of the configuration field of the given secret.
+        :param `login`: Username associated with the password in a keyring, if
+            applicable.
+        """
+        password = getattr(self.config, key)
+        if not password or password.startswith("@oracle:"):
+            password = secrets.get_service_password(
+                self.config.keyring_service, login, oracle=password
+            )
+        return password
+
+    def build_annotations(
+        self, annotations: Iterable[tuple[str, str]], url: Optional[str] = None
+    ) -> list[str]:
+        """Format annotations, respecting configuration values.
+
+        :param `annotations`: Comments from service.
+        :param `url`: Url to prepend to the annotations.
+        """
+        final = []
+        if url and self.main_config.annotation_links:
+            final.append(get_processed_url(self.main_config, url))
+        if self.main_config.annotation_comments:
+            for author, message in annotations:
+                message = message.strip()
+                if not message or not author:
+                    continue
+
+                if not self.main_config.annotation_newlines:
+                    message = message.replace('\n', '').replace('\r', '')
+
+                annotation_length = self.main_config.annotation_length
+                if annotation_length:
+                    message = '%s%s' % (
+                        message[:annotation_length],
+                        '...' if len(message) > annotation_length else '',
+                    )
+                final.append('@%s - %s' % (author, message))
+        return final
 
     @abc.abstractmethod
-    def to_taskwarrior(self) -> "Task":
+    def to_taskwarrior(self, record: dict[str, Any], extra: dict[str, Any]) -> "Task":
         """Transform a foreign record into a taskwarrior Task."""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_default_description(self) -> str:
+    def get_default_description(self, record: dict[str, Any]) -> str:
         """Return a default description for this task.
 
         You should probably use :meth:`build_default_description` to achieve
@@ -115,17 +168,20 @@ class Issue(abc.ABC):
         """
         raise NotImplementedError()
 
-    def render_tags_from_labels(self, labels: list[str]) -> list[str]:
+    def render_tags_from_labels(
+        self, record: dict[str, Any], labels: list[str]
+    ) -> list[str]:
         """Transform labels into suitable taskwarrior tags using the label template."""
         return [
             Template(self.config.label_template).render(
-                {**self.record, "label": re.sub(r'[^a-zA-Z0-9]', '_', label)}
+                {**record, "label": re.sub(r'[^a-zA-Z0-9]', '_', label)}
             )
             for label in labels
         ]
 
     def get_tags_from_labels(
         self,
+        record: dict[str, Any],
         labels: list[str],
         toggle_option: str = 'import_labels_as_tags',
         template_option: str = 'label_template',
@@ -148,10 +204,10 @@ class Issue(abc.ABC):
             return []
 
         if not using_deprecated_parameters:
-            return self.render_tags_from_labels(labels)
+            return self.render_tags_from_labels(record, labels)
 
         # deprecated path, to be removed once we remove the deprecated parameters.
-        context = self.record.copy()
+        context = record.copy()
         label_template = Template(getattr(self.config, template_option))
         tags = []
 
@@ -162,10 +218,10 @@ class Issue(abc.ABC):
 
         return tags
 
-    def get_priority(self) -> schema.Priority:
+    def get_priority(self, record: dict[str, Any]) -> schema.Priority:
         """Return the priority of this issue, falling back to ``default_priority`` configuration."""
         return self.PRIORITY_MAP.get(
-            self.record.get('priority'), self.config.default_priority
+            record.get('priority'), self.config.default_priority
         )
 
     def build_default_description(
@@ -203,98 +259,6 @@ class Issue(abc.ABC):
             url,
         )
 
-
-class Service(abc.ABC):
-    """Base class for fetching issues from the service.
-
-    The upper case attributes and abstract methods need to be defined by
-    service implementations, while the lower case attributes and concrete
-    methods are provided by the base class.
-    """
-
-    #: Which version of the API does this service implement?
-    API_VERSION: float
-    #: Which class should this service instantiate for holding these issues?
-    ISSUE_CLASS: type[Issue]
-    #: Which Udas model declares this service's UDAs and unique key?
-    UDAS_CLASS: type["Udas"]
-    #: Which class defines this service's configuration options?
-    CONFIG_SCHEMA: type[schema.ServiceConfig]
-
-    def __init__(
-        self, config: schema.ServiceConfig, main_config: schema.MainSectionConfig
-    ) -> None:
-        over_version = math.floor(LATEST_API_VERSION) + 1
-        if self.API_VERSION >= over_version:
-            raise ValueError(
-                f"Incompatible Service: {config.service} implements api "
-                f"version {self.API_VERSION} but this version of bugwarrior "
-                f"only supports versions less than {over_version}."
-            )
-
-        #: An object whose attributes are this service's configuration values.
-        self.config = config
-        #: An object whose attributes are the
-        #: :ref:`common_configuration:Main Section` configuration values.
-        self.main_config = main_config
-
-        log.info("Working on [%s]", self.config.target)
-
-    def get_secret(self, key: str, login: str = 'nousername') -> str:
-        """Get a secret value, potentially from an :ref:`oracle <Secret Management>`.
-
-        The secret key need not be a *password*, per se.
-
-        :param `key`: Name of the configuration field of the given secret.
-        :param `login`: Username associated with the password in a keyring, if
-            applicable.
-        """
-        password = getattr(self.config, key)
-        if not password or password.startswith("@oracle:"):
-            password = secrets.get_service_password(
-                self.config.keyring_service, login, oracle=password
-            )
-        return password
-
-    def get_issue_for_record(
-        self, record: dict[str, Any], extra: dict[str, Any] | None = None
-    ) -> Issue:
-        """Instantiate and return an issue for the given record.
-
-        :param `record`: Foreign record.
-        :param `extra`: Computed data which is not directly from the service.
-        """
-        return self.ISSUE_CLASS(record, self.config, self.main_config, extra or {})
-
-    def build_annotations(
-        self, annotations: Iterable[tuple[str, str]], url: Optional[str] = None
-    ) -> list[str]:
-        """Format annotations, respecting configuration values.
-
-        :param `annotations`: Comments from service.
-        :param `url`: Url to prepend to the annotations.
-        """
-        final = []
-        if url and self.main_config.annotation_links:
-            final.append(get_processed_url(self.main_config, url))
-        if self.main_config.annotation_comments:
-            for author, message in annotations:
-                message = message.strip()
-                if not message or not author:
-                    continue
-
-                if not self.main_config.annotation_newlines:
-                    message = message.replace('\n', '').replace('\r', '')
-
-                annotation_length = self.main_config.annotation_length
-                if annotation_length:
-                    message = '%s%s' % (
-                        message[:annotation_length],
-                        '...' if len(message) > annotation_length else '',
-                    )
-                final.append('@%s - %s' % (author, message))
-        return final
-
     def _apply_templates(self, task: "Task", extra: dict[str, Any]) -> None:
         """Render the user's field and tag templates onto a mapped task.
 
@@ -318,10 +282,10 @@ class Service(abc.ABC):
         :param `record`: Foreign record.
         :param `extra`: Computed data which is not directly from the service.
         """
-        issue = self.get_issue_for_record(record, extra)
-        task = issue.to_taskwarrior()
-        task.description = issue.get_default_description()
-        self._apply_templates(task, issue.extra)
+        extra = extra or {}
+        task = self.to_taskwarrior(record, extra)
+        task.description = self.get_default_description(record)
+        self._apply_templates(task, extra)
         return CollectedIssue(
             task=task,
             identifier=make_unique_identifier(
@@ -361,4 +325,4 @@ class Client:
 
 
 # NOTE: __all__ determines the stable, public API.
-__all__ = [Client.__name__, Issue.__name__, Service.__name__]
+__all__ = [Client.__name__, Service.__name__]

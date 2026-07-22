@@ -171,8 +171,7 @@ class TestLinearIssue:
             "linearclosed": closed_timestamp,
         }
 
-        issue = service.get_issue_for_record(record, {})
-        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
+        actual_output = service.to_taskwarrior(record, {}).to_taskwarrior_data()
         assert actual_output == expected_output
 
         record = RESPONSE["data"]["issues"]["nodes"][1]
@@ -200,8 +199,7 @@ class TestLinearIssue:
             "linearclosed": None,
         }
 
-        issue = service.get_issue_for_record(record, {})
-        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
+        actual_output = service.to_taskwarrior(record, {}).to_taskwarrior_data()
         assert actual_output == expected_output
 
     def test_issues(self, service):
@@ -246,8 +244,7 @@ class TestLinearIssue:
     )
     def test_priority_mapping(self, service, linear_priority, expected):
         record = {**RESPONSE["data"]["issues"]["nodes"][0], "priority": linear_priority}
-        task_data = service.get_issue_for_record(record, {}).to_taskwarrior().to_taskwarrior_data()
-        assert task_data["priority"] == expected
+        assert service.to_taskwarrior(record, {}).to_taskwarrior_data()["priority"] == expected
 
     def test_priority_missing(self, service):
         # A record without a priority key at all should also fall back to the
@@ -257,8 +254,7 @@ class TestLinearIssue:
             for k, v in RESPONSE["data"]["issues"]["nodes"][0].items()
             if k != "priority"
         }
-        task_data = service.get_issue_for_record(record, {}).to_taskwarrior().to_taskwarrior_data()
-        assert task_data["priority"] == "M"
+        assert service.to_taskwarrior(record, {}).to_taskwarrior_data()["priority"] == "M"
 
     def test_issues_paginates(self, service, mock_api):
         """Drains every page when Linear signals hasNextPage."""

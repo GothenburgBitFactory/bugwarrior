@@ -10,7 +10,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.collect import CollectedIssue
-from bugwarrior.services import Client, Issue, Service
+from bugwarrior.services import Client, Service
 from bugwarrior.task import IssueDatetime, Task, Udas
 
 log = logging.getLogger(__name__)
@@ -62,12 +62,18 @@ class LinearTask(Task):
     udas: LinearUdas
 
 
-class LinearIssue(Issue):
+class LinearService(Service):
+    API_VERSION = 2.0
+    UDAS_CLASS = LinearUdas
+    CONFIG_SCHEMA = LinearConfig
+
     # Linear exposes issue priority as an integer:
     #   0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.
     PRIORITY_MAP: dict[int, config.Priority] = {1: "H", 2: "H", 3: "M", 4: "L"}
 
-    def to_taskwarrior(self) -> LinearTask:
+    def to_taskwarrior(
+        self, record: dict[str, Any], extra: dict[str, Any]
+    ) -> LinearTask:
         # Get a value, defaulting empty results to the given default. Some
         # GraphQL response values, such as for `project`, are either an object
         # or None, rather than being omitted when empty, so this allows chained
@@ -80,50 +86,43 @@ class LinearIssue(Issue):
                 re.sub(
                     r"[^a-zA-Z0-9]",
                     "_",
-                    get(get(self.record, "project", {}), "name", ""),
+                    get(get(record, "project", {}), "name", ""),
                 ).lower()
                 or None
             ),
-            priority=self.get_priority(),
-            due=self.record.get("dueDate"),
-            entry=self.record.get("createdAt"),
-            annotations=get(self.extra, "annotations", []),
-            tags=self.get_tags(),
+            priority=self.get_priority(record),
+            due=record.get("dueDate"),
+            entry=record.get("createdAt"),
+            annotations=get(extra, "annotations", []),
+            tags=self.get_tags(record),
             udas=LinearUdas(
-                linearurl=self.record["url"],
-                lineartitle=get(self.record, "title"),
-                lineardescription=self.record.get("description"),
-                linearstatus=get(get(self.record, "state", {}), "name"),
-                linearidentifier=get(self.record, "identifier"),
-                linearteam=get(get(self.record, "team", {}), "name"),
-                linearcreator=get(get(self.record, "creator", {}), "email"),
-                linearassignee=get(get(self.record, "assignee", {}), "email"),
-                linearcreated=self.record.get("createdAt"),
-                linearupdated=self.record.get("updatedAt"),
-                linearclosed=self.record.get("completedAt"),
+                linearurl=record["url"],
+                lineartitle=get(record, "title"),
+                lineardescription=record.get("description"),
+                linearstatus=get(get(record, "state", {}), "name"),
+                linearidentifier=get(record, "identifier"),
+                linearteam=get(get(record, "team", {}), "name"),
+                linearcreator=get(get(record, "creator", {}), "email"),
+                linearassignee=get(get(record, "assignee", {}), "email"),
+                linearcreated=record.get("createdAt"),
+                linearupdated=record.get("updatedAt"),
+                linearclosed=record.get("completedAt"),
             ),
         )
 
-    def get_tags(self) -> list[str]:
+    def get_tags(self, record: dict[str, Any]) -> list[str]:
         labels = [
-            label["name"] for label in self.record.get("labels", {}).get("nodes", [])
+            label["name"] for label in record.get("labels", {}).get("nodes", [])
         ]
-        return self.get_tags_from_labels(labels)
+        return self.get_tags_from_labels(record, labels)
 
-    def get_default_description(self) -> str:
+    def get_default_description(self, record: dict[str, Any]) -> str:
         return self.build_default_description(
-            title=self.record.get("title", ""),
-            url=self.record.get("url", ""),
-            number=self.record.get("identifier", ""),
+            title=record.get("title", ""),
+            url=record.get("url", ""),
+            number=record.get("identifier", ""),
             cls="task",
         )
-
-
-class LinearService(Service):
-    API_VERSION = 2.0
-    ISSUE_CLASS = LinearIssue
-    UDAS_CLASS = LinearUdas
-    CONFIG_SCHEMA = LinearConfig
 
     def __init__(
         self, config: LinearConfig, main_config: config.MainSectionConfig
