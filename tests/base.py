@@ -43,7 +43,9 @@ class DumbService(services.Service):
             project=extra.get("project"),
             priority=self.config.default_priority,
             annotations=extra.get("annotations", []),
-            tags=self.get_tags_from_labels(record, record.get("labels", [])),
+            tags=services.get_tags_from_labels(
+                self.config, record, record.get("labels", [])
+            ),
             udas=DumbUdas(
                 dumburl=record.get("url", ""),
                 dumbtype=extra.get("type", "issue"),
@@ -51,7 +53,8 @@ class DumbService(services.Service):
         )
 
     def get_default_description(self, record):
-        return self.build_default_description(
+        return services.build_default_description(
+            self.main_config,
             title=record.get("title", ""),
             url=record.get("url", ""),
             number=record.get("number", ""),

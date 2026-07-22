@@ -10,7 +10,13 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.collect import CollectedIssue
-from bugwarrior.services import Client, Service
+from bugwarrior.services import (
+    Client,
+    Service,
+    build_default_description,
+    get_secret,
+    get_tags_from_labels,
+)
 from bugwarrior.task import IssueDatetime, Task, Udas
 
 log = logging.getLogger(__name__)
@@ -114,10 +120,11 @@ class LinearService(Service):
         labels = [
             label["name"] for label in record.get("labels", {}).get("nodes", [])
         ]
-        return self.get_tags_from_labels(record, labels)
+        return get_tags_from_labels(self.config, record, labels)
 
     def get_default_description(self, record: dict[str, Any]) -> str:
-        return self.build_default_description(
+        return build_default_description(
+            self.main_config,
             title=record.get("title", ""),
             url=record.get("url", ""),
             number=record.get("identifier", ""),
@@ -132,7 +139,7 @@ class LinearService(Service):
         self.session = requests.Session()
         self.session.headers.update(
             {
-                "Authorization": self.get_secret("api_token"),
+                "Authorization": get_secret(self.config, "api_token"),
                 "Content-Type": "application/json",
             }
         )
