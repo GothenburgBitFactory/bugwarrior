@@ -118,6 +118,17 @@ class TestLogseqIssue:
 
         assert actual == expected
 
+    def test_to_taskwarrior_float_id(self, service, record, extra):
+        # Logseq may return the block id as a float (7146.0), which would
+        # otherwise be stored as the string "7146.000000" and break the
+        # unique key across syncs.
+        record["id"] = float(record["id"])
+        issue = service.get_issue_for_record(record, extra)
+
+        actual = issue.to_taskwarrior()
+
+        assert str(actual[issue.ID]) == "7146"
+
     def test_to_taskwarrior_with_tags(self, make_service, record, extra):
         overrides = {"import_labels_as_tags": "True"}
         service = make_service(**overrides)
