@@ -304,7 +304,7 @@ class LogseqIssue(Issue):
             "scheduled": scheduled_date,
             "wait": wait_date if self._is_waiting() else None,
             "status": self.STATE_MAP[self.get_logseq_state()],
-            self.ID: self.record["id"],
+            self.ID: int(self.record["id"]),
             self.UUID: self.record["uuid"],
             self.STATE: self.record["marker"],
             self.TITLE: self.get_formatted_title(),
