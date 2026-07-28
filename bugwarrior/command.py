@@ -136,7 +136,7 @@ def pull(
         )
         sys.exit(1)
     except RuntimeError as e:
-        log.exception("Aborted (%s)" % e)
+        log.exception(f"Aborted ({e})")
         sys.exit(1)
 
 
@@ -173,14 +173,14 @@ def list() -> None:
 def clear(target: str, username: str) -> None:
     target_list = lst(targets())
     if target not in target_list:
-        raise ValueError("%s must be one of %r" % (target, target_list))
+        raise ValueError(f"{target} must be one of {target_list!r}")
 
     keyring = get_keyring()
     if keyring.get_password(target, username):
         keyring.delete_password(target, username)
-        print("Password cleared for %s, %s" % (target, username))
+        print(f"Password cleared for {target}, {username}")
     else:
-        print("No password found for %s, %s" % (target, username))
+        print(f"No password found for {target}, {username}")
 
 
 @vault.command()
@@ -193,11 +193,11 @@ def set(target: str, username: str) -> None:
             "You must configure the password to '@oracle:use_keyring' "
             "prior to setting the value."
         )
-        raise ValueError("%s must be one of %r" % (target, target_list))
+        raise ValueError(f"{target} must be one of {target_list!r}")
 
     keyring = get_keyring()
     keyring.set_password(target, username, getpass.getpass())
-    print("Password set for %s, %s" % (target, username))
+    print(f"Password set for {target}, {username}")
 
 
 @cli.command()

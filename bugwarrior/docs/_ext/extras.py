@@ -15,7 +15,7 @@ class Extras(SphinxDirective):
         with open(pathlib.Path(__file__).parent / '../../../pyproject.toml', 'rb') as f:
             pyproject = tomllib.load(f)
         list_node = nodes.bullet_list()
-        for extra in pyproject['project']['optional-dependencies'].keys():
+        for extra in pyproject['project']['optional-dependencies']:
             list_node.append(nodes.list_item('', nodes.paragraph(text=extra)))
         return [list_node]
 

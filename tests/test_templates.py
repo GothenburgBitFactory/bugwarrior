@@ -45,7 +45,9 @@ class TestTemplates:
         actual = TaskConstructor(issue).get_taskwarrior_record()
         record.update(
             {
-                'description': '%s - %s' % (record['priority'], DEFAULT_DESCRIPTION),
+                'description': '{} - {}'.format(
+                    record['priority'], DEFAULT_DESCRIPTION
+                ),
                 'tags': [],
             }
         )
@@ -61,7 +63,7 @@ class TestTemplates:
         record.update(
             {
                 'description': DEFAULT_DESCRIPTION,
-                'project': 'wat_%s' % record['project'].upper(),
+                'project': 'wat_{}'.format(record['project'].upper()),
                 'tags': [],
             }
         )

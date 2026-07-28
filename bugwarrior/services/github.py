@@ -169,7 +169,7 @@ class GithubClient(Client):
     def _getter(self, url: str, subkey: str | None = None) -> list[Any]:
         """Pagination utility.  Obnoxious."""
         results = []
-        link = dict(next=url)
+        link = {'next': url}
 
         while 'next' in link:
             response = self._request(link['next'])
@@ -206,7 +206,7 @@ class GithubClient(Client):
         """
 
         if not field:
-            return dict()
+            return {}
 
         return {
             part.split('; ')[1][5:-1]: part.split('; ')[0][1:-1]
@@ -410,10 +410,7 @@ class GithubService(Service[GithubIssue]):
             return False
 
         if self.config.include_repos:
-            if name in self.config.include_repos:
-                return True
-            else:
-                return False
+            return name in self.config.include_repos
 
         return True
 

@@ -122,8 +122,7 @@ class GmailService(Service[GmailIssue]):
             else self.config.target
         )
         self.credentials_path = os.path.join(
-            self.main_config.data.path,
-            'gmail_credentials_%s.pickle' % (credentials_name,),
+            self.main_config.data.path, f'gmail_credentials_{credentials_name}.pickle'
         )
         self.gmail_api = self.build_api()
 
@@ -265,7 +264,7 @@ def thread_snippet(thread: dict[str, Any]) -> str:
 
 
 def thread_url(thread: dict[str, Any]) -> str:
-    return "https://mail.google.com/mail/u/0/#all/%s" % (thread['id'],)
+    return "https://mail.google.com/mail/u/0/#all/{}".format(thread['id'])
 
 
 def message_header(message: dict[str, Any], header_name: str) -> str | None:

@@ -61,7 +61,7 @@ def send_notification(issue: dict[str, Any], op: str, conf: "Notifications") -> 
         )
         notify_backend = 'gobject'
 
-    message = "%s task: %s" % (op, issue['description'])
+    message = "{} task: {}".format(op, issue['description'])
     metadata = _get_metadata(issue)
     if metadata is not None:
         message += metadata
@@ -84,8 +84,9 @@ def send_notification(issue: dict[str, Any], op: str, conf: "Notifications") -> 
             growl.notify(
                 noteType="New Messages",
                 title="Bugwarrior",
-                description="Finished querying for new issues.\n%s"
-                % issue['description'],
+                description="Finished querying for new issues.\n{}".format(
+                    issue['description']
+                ),
                 sticky=conf.finished_querying_sticky,
                 icon=logo_url,
                 priority=1,
@@ -125,9 +126,11 @@ def send_notification(issue: dict[str, Any], op: str, conf: "Notifications") -> 
         Notify.init("bugwarrior")
 
         if op == 'bw finished':
-            message = "Finished querying for new issues.\n%s" % issue['description']
+            message = "Finished querying for new issues.\n{}".format(
+                issue['description']
+            )
         else:
-            message = "%s task: %s" % (op, issue['description'])
+            message = "{} task: {}".format(op, issue['description'])
             metadata = _get_metadata(issue)
             if metadata is not None:
                 message += metadata

@@ -97,7 +97,7 @@ class TrelloService(Service[TrelloIssue]):
         """
         for board in self.get_boards():
             for lst in self.get_lists(board['id']):
-                listextra = dict(boardname=board['name'], listname=lst['name'])
+                listextra = {'boardname': board['name'], 'listname': lst['name']}
                 for card in self.get_cards(lst['id']):
                     issue = self.get_issue_for_record(card, extra=listextra)
                     issue.extra.update({"annotations": self.annotations(card)})

@@ -44,13 +44,13 @@ def record():
             'issuetype': {'name': 'Epic'},
             'status': {'name': 'Open'},
             'subtasks': [
-                {'key': 'DONUT-%s' % subtask} for subtask in ARBITRARY_SUBTASK_IDS
+                {'key': f'DONUT-{subtask}'} for subtask in ARBITRARY_SUBTASK_IDS
             ],
             'parent': {'key': f'DONUT-{ARBITRARY_PARENT_ID}'},
             'customfield_10000': 'foo',
             'namedfield': {'valueinside': ARBITRARY_NAMEDFIELD_VALUEINSIDE},
         },
-        'key': '%s-%s' % (PROJECT, ARBITRARY_ID),
+        'key': f'{PROJECT}-{ARBITRARY_ID}',
     }
 
 
@@ -100,7 +100,7 @@ class TestJiraService:
         conf = validation.validate_config(formatted, 'general', 'configpath')
         service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)
         issue = mock.Mock()
-        issue.record = dict(fields=dict(description=description))
+        issue.record = {'fields': {'description': description}}
         assert description[:5] == service.body(issue)
 
     def test_body_length_limit(self, config):
@@ -109,7 +109,7 @@ class TestJiraService:
         conf = validation.validate_config(formatted, 'general', 'configpath')
         service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)
         issue = mock.Mock()
-        issue.record = dict(fields=dict(description=description))
+        issue.record = {'fields': {'description': description}}
         assert description == service.body(issue)
 
 

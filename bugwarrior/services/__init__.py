@@ -10,7 +10,7 @@ import logging
 import math
 import os
 import re
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, Self, TypeVar
 import zoneinfo
 
 from dateutil.parser import parse as parse_date
@@ -29,7 +29,7 @@ DOGPILE_CACHE_PATH = os.path.expanduser(
 if not os.path.isdir(os.path.dirname(DOGPILE_CACHE_PATH)):
     os.makedirs(os.path.dirname(DOGPILE_CACHE_PATH))
 CACHE_REGION = dogpile.cache.make_region().configure(
-    "dogpile.cache.dbm", arguments=dict(filename=DOGPILE_CACHE_PATH)
+    "dogpile.cache.dbm", arguments={'filename': DOGPILE_CACHE_PATH}
 )
 
 # MAJOR versions signal a breakage in backwards compatibility between services
@@ -43,7 +43,7 @@ LATEST_API_VERSION = 2.0
 class URLShortener:
     _instance = None
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> "URLShortener":
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         if not cls._instance:
             cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
@@ -53,7 +53,7 @@ class URLShortener:
         if not url:
             return ''
         base = 'https://da.gd/s'
-        return requests.get(base, params=dict(url=url)).text.strip()
+        return requests.get(base, params={'url': url}).text.strip()
 
 
 def get_processed_url(main_config: schema.MainSectionConfig, url: str) -> str:
@@ -243,7 +243,7 @@ class Issue(abc.ABC):
             else ''
         )
         desc_len = self.main_config.description_length
-        return "(bw)%s#%s - %s%s%s" % (
+        return "(bw){}#{} - {}{}{}".format(
             cls_markup.get(cls, cls.title()),
             number,
             title[:desc_len] if desc_len else title,
@@ -338,11 +338,11 @@ class Service(abc.ABC, Generic[T_Issue]):
 
                 annotation_length = self.main_config.annotation_length
                 if annotation_length:
-                    message = '%s%s' % (
+                    message = '{}{}'.format(
                         message[:annotation_length],
                         '...' if len(message) > annotation_length else '',
                     )
-                final.append('@%s - %s' % (author, message))
+                final.append(f'@{author} - {message}')
         return final
 
     @abc.abstractmethod

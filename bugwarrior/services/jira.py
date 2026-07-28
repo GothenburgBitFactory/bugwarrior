@@ -3,6 +3,7 @@ import dataclasses
 import datetime
 from functools import reduce
 import logging
+import operator
 import sys
 import typing
 from typing import Any
@@ -146,7 +147,7 @@ def _parse_sprint_string(sprint: str) -> dict[str, str]:
         55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]
     """
     entries = sprint[sprint.index('[') + 1 : sprint.index(']')].split('=')
-    fields = sum((entry.rsplit(',', 1) for entry in entries), [])
+    fields = reduce(operator.iadd, (entry.rsplit(',', 1) for entry in entries), [])
     return dict(zip(fields[::2], fields[1::2]))
 
 
@@ -256,8 +257,10 @@ class JiraIssue(Issue):
 
     def __get_sprints(self) -> Iterator[dict[str, Any]]:
         fields = self.record.get('fields', {})
-        sprints = sum(
-            (fields.get(key) or [] for key in self.extra['sprint_field_names']), []
+        sprints = reduce(
+            operator.iadd,
+            (fields.get(key) or [] for key in self.extra['sprint_field_names']),
+            [],
         )
         for sprint in sprints:
             if isinstance(sprint, dict):

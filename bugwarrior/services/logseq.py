@@ -2,6 +2,7 @@ from collections.abc import Iterator
 from datetime import datetime
 import logging
 import re
+import sys
 import typing
 from typing import Any
 
@@ -63,7 +64,7 @@ class LogseqClient(Client):
             return self.json_response(response)
         except requests.exceptions.ConnectionError as ce:
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
-            exit(1)
+            sys.exit(1)
 
     def _get_current_graph(self) -> dict[str, Any]:
         try:
@@ -75,7 +76,7 @@ class LogseqClient(Client):
             return self.json_response(response)
         except requests.exceptions.ConnectionError as ce:
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
-            exit(1)
+            sys.exit(1)
 
     def get_graph_name(self) -> str | None:
         graph = self._get_current_graph()
@@ -91,7 +92,7 @@ class LogseqClient(Client):
             return self.json_response(response)
         except requests.exceptions.ConnectionError as ce:
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
-            exit(1)
+            sys.exit(1)
 
     def get_issues(self) -> Any:
         query = f"""
@@ -105,7 +106,7 @@ class LogseqClient(Client):
             log.fatal(
                 "Error querying Logseq: %s using query %s", result["error"], query
             )
-            exit(1)
+            sys.exit(1)
         return result
 
 

@@ -4,7 +4,7 @@ import os
 import signal
 import subprocess
 import sys
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
 import requests
 
@@ -33,7 +33,7 @@ class Webui:
         self.path = path
         self.port = port
 
-    def __enter__(self) -> "Webui":
+    def __enter__(self) -> Self:
         popen_kwargs: dict[str, Any] = {}
         if sys.platform == "win32":
             popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
@@ -83,20 +83,21 @@ class GitBugClient(Client):
 
     def get_issues(self) -> list[dict[str, Any]]:
         return self._query_graphql(
-            '{ repository { allBugs { nodes { %s } } } }'
-            % ' '.join(
-                [
-                    'author { name }',
-                    (
-                        'comments'
-                        + ('(first: 1) ' if not self.annotation_comments else '')
-                        + ' { nodes { author { name } message } }'
-                    ),
-                    'createdAt',
-                    'id',
-                    'labels { name }status',
-                    'title',
-                ]
+            '{{ repository {{ allBugs {{ nodes {{ {} }} }} }} }}'.format(
+                ' '.join(
+                    [
+                        'author { name }',
+                        (
+                            'comments'
+                            + ('(first: 1) ' if not self.annotation_comments else '')
+                            + ' { nodes { author { name } message } }'
+                        ),
+                        'createdAt',
+                        'id',
+                        'labels { name }status',
+                        'title',
+                    ]
+                )
             )
         )['repository']['allBugs']['nodes']
 

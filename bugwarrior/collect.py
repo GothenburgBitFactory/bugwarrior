@@ -169,7 +169,7 @@ class TaskConstructor:
         return context
 
     def refine_record(self, record: dict[str, Any]) -> dict[str, Any]:
-        for field in Task.FIELDS.keys():
+        for field in Task.FIELDS:
             if field in self.issue.config.templates:
                 template = Template(self.issue.config.templates[field])
                 record[field] = template.render(self.get_template_context())

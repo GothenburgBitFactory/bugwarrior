@@ -34,11 +34,11 @@ def get_managed_task_uuids(
     for unique_keys in unique_key_sets:
         tasks = tw.filter_tasks(
             {
-                'and': [('%s.any' % key, None) for key in unique_keys],
+                'and': [(f'{key}.any', None) for key in unique_keys],
                 'or': [('status', 'pending'), ('status', 'waiting')],
             }
         )
-        expected_task_ids = expected_task_ids | set([task['uuid'] for task in tasks])
+        expected_task_ids = expected_task_ids | {task['uuid'] for task in tasks}
 
     return expected_task_ids
 
@@ -79,7 +79,7 @@ def find_taskwarrior_uuid(
 
     """
     if not issue['description']:
-        raise ValueError('Issue %s has no description.' % issue)
+        raise ValueError(f'Issue {issue} has no description.')
 
     possibilities = set()
 
@@ -87,7 +87,7 @@ def find_taskwarrior_uuid(
         if any(key in issue for key in unique_keys):
             results = tw.filter_tasks(
                 {
-                    'and': [("%s.is" % key, issue[key]) for key in unique_keys],
+                    'and': [(f"{key}.is", issue[key]) for key in unique_keys],
                     'or': [
                         ('status', 'pending'),
                         ('status', 'waiting'),
@@ -95,7 +95,7 @@ def find_taskwarrior_uuid(
                     ],
                 }
             )
-            new_possibilities = set([task['uuid'] for task in results])
+            new_possibilities = {task['uuid'] for task in results}
             # Previous versions of bugwarrior did not allow for reopening
             # completed tasks, so there could be multiple completed tasks
             # for the same issue if it was closed and reopened before that.
@@ -107,7 +107,7 @@ def find_taskwarrior_uuid(
                         if r[k] != results[0][k]:
                             break
                 # All results are completed duplicates.
-                new_possibilities = set([new_possibilities.pop()])
+                new_possibilities = {new_possibilities.pop()}
             possibilities = possibilities | new_possibilities
 
     if len(possibilities) == 1:
@@ -115,10 +115,12 @@ def find_taskwarrior_uuid(
 
     if len(possibilities) > 1:
         raise MultipleMatches(
-            "Issue %s matched multiple IDs: %s" % (issue['description'], possibilities)
+            "Issue {} matched multiple IDs: {}".format(
+                issue['description'], possibilities
+            )
         )
 
-    raise NotFound("No issue was found matching %s" % issue)
+    raise NotFound(f"No issue was found matching {issue}")
 
 
 def merge_annotations(local: dict[str, Any], remote: dict[str, Any]) -> list[str]:
@@ -215,12 +217,12 @@ def synchronize(
         # and decode all byte strings from UTF8 off the bat.  If we encounter
         # other encodings in the wild in the future, we can revise the handling
         # here. https://github.com/ralphbean/bugwarrior/issues/350
-        for key in issue.keys():
+        for key in issue:
             if isinstance(issue[key], bytes):
                 try:
                     issue[key] = issue[key].decode('utf-8')
                 except UnicodeDecodeError:
-                    log.warning("Failed to interpret %r as utf-8" % key)
+                    log.warning(f"Failed to interpret {key!r} as utf-8")
 
         service_config = successful_config_map[target]
 
@@ -282,7 +284,7 @@ def synchronize(
             if issue.get('end'):
                 tw.task_done(uuid=new_task['uuid'])
         except TaskwarriorError as e:
-            log.exception("Unable to add task: %s" % e.stderr)
+            log.exception(f"Unable to add task: {e.stderr}")
         else:
             seen_uuids.add(new_task['uuid'])
 
@@ -309,7 +311,7 @@ def synchronize(
             if issue.get('end'):
                 tw.task_done(uuid=updated_task['uuid'])
         except TaskwarriorError as e:
-            log.exception("Unable to modify task: %s" % e.stderr)
+            log.exception(f"Unable to modify task: {e.stderr}")
 
     log.debug(f'Closing tasks for succeeding services: {list(successful_config_map)}.')
     succeeded_service_task_uuids = get_managed_task_uuids(
@@ -337,7 +339,7 @@ def synchronize(
         try:
             tw.task_done(uuid=issue)
         except TaskwarriorError as e:
-            log.exception("Unable to close task: %s" % e.stderr)
+            log.exception(f"Unable to close task: {e.stderr}")
 
     # Send notifications
     if notify:
@@ -348,14 +350,14 @@ def synchronize(
         )
         if not conf.notifications.only_on_new_tasks or updates > 0:
             send_notification(
-                dict(
-                    description="New: %d, Changed: %d, Completed: %d"
+                {
+                    'description': "New: %d, Changed: %d, Completed: %d"
                     % (
                         len(issue_updates['new']),
                         len(issue_updates['changed']),
                         len(issue_updates['closed']),
                     )
-                ),
+                },
                 'bw_finished',
                 conf.notifications,
             )
@@ -416,11 +418,11 @@ def convert_override_args_to_taskrc_settings(
         if isinstance(v, dict):
             args.extend(
                 convert_override_args_to_taskrc_settings(
-                    v, prefix='.'.join([prefix, k]) if prefix else k
+                    v, prefix=f'{prefix}.{k}' if prefix else k
                 )
             )
         else:
             v = str(v)
             left = (prefix + '.' if prefix else '') + k
-            args.append('='.join([left, v]))
+            args.append(f'{left}={v}')
     return args

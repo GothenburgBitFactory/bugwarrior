@@ -198,7 +198,7 @@ class TestGithubIssueQuery:
             json=[{'user': {'login': 'arbitrary_login'}, 'body': 'Arbitrary comment.'}],
         )
 
-        issue = list(service.issues())[0]
+        issue = next(iter(service.issues()))
 
         expected = {
             'annotations': ['@arbitrary_login - Arbitrary comment.'],
@@ -263,31 +263,31 @@ class TestGithubService:
         )
 
     def test_get_repository_from_issue_url__issue(self):
-        issue = dict(repos_url="https://github.com/foo/bar")
+        issue = {'repos_url': "https://github.com/foo/bar"}
         repository = GithubService.get_repository_from_issue(issue)
         assert "foo/bar" == repository
 
     def test_get_repository_from_issue_url__pull_request(self):
-        issue = dict(repos_url="https://github.com/foo/bar")
+        issue = {'repos_url': "https://github.com/foo/bar"}
         repository = GithubService.get_repository_from_issue(issue)
         assert "foo/bar" == repository
 
     def test_get_repository_from_issue__enterprise_github(self):
-        issue = dict(repos_url="https://github.acme.biz/foo/bar")
+        issue = {'repos_url': "https://github.acme.biz/foo/bar"}
         repository = GithubService.get_repository_from_issue(issue)
         assert "foo/bar" == repository
 
     def test_body_no_limit(self, service):
-        issue = dict(body="A very short issue body.  Fixes #42.")
+        issue = {'body': "A very short issue body.  Fixes #42."}
         assert issue["body"] == service.body(issue)
 
     def test_body_newline_style(self, service):
-        issue = dict(body="An\r\nIssue\r\nWith\r\nNewlines")
+        issue = {'body': "An\r\nIssue\r\nWith\r\nNewlines"}
         assert "An\nIssue\nWith\nNewlines" == service.body(issue)
 
     def test_body_length_limit(self, make_service):
         service = make_service(body_length=5)
-        issue = dict(body="A very short issue body.  Fixes #42.")
+        issue = {'body': "A very short issue body.  Fixes #42."}
         assert issue["body"][:5] == service.body(issue)
 
 

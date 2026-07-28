@@ -35,9 +35,9 @@ class TestReadme:
         service_list_search = list(readme_document.findall(condition=is_services))
         assert len(service_list_search) == 1
         service_list_element = service_list_search.pop()
-        readme_listed_services = set(
+        readme_listed_services = {
             list_item.astext() for list_item in service_list_element.children
-        )
+        }
 
         # GET TITLES FROM SERVICE DOCUMENTATION FILES
         documented_services = set()
@@ -103,9 +103,7 @@ class TestDocs:
             )
 
     def test_registered_services_are_documented(self):
-        registered_services = set(
-            e.name for e in entry_points(group='bugwarrior.service')
-        )
+        registered_services = {e.name for e in entry_points(group='bugwarrior.service')}
 
         documented_services = set()
         services_paths = os.listdir(DOCS_PATH / 'services')

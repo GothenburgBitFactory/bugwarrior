@@ -138,7 +138,7 @@ class GerritService(Service[GerritIssue]):
             message = (
                 item['message']
                 .lstrip('Patch Set ')
-                .lstrip("%s:" % item['_revision_number'])
+                .lstrip("{}:".format(item['_revision_number']))
                 .strip()
                 .replace('\n', ' ')
             )

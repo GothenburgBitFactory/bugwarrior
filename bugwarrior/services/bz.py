@@ -176,7 +176,7 @@ class BugzillaService(Service[BugzillaIssue]):
         return True
 
     def annotations(self, tag: str, issue: dict[str, Any]) -> list[str]:
-        base_url = "%s/show_bug.cgi?id=" % self.config.base_uri
+        base_url = f"{self.config.base_uri}/show_bug.cgi?id="
         long_url = base_url + str(issue['id'])
         url = long_url
 
@@ -214,15 +214,15 @@ class BugzillaService(Service[BugzillaIssue]):
             query = self.bz.url_to_query(self.config.query_url)
             query['column_list'] = self.COLUMN_LIST
         else:
-            query = dict(
-                column_list=self.COLUMN_LIST,
-                bug_status=self.config.open_statuses,
-                email1=email,
-                emailreporter1=1,
-                emailassigned_to1=1,
-                emailqa_contact1=1,
-                emailtype1="substring",
-            )
+            query = {
+                'column_list': self.COLUMN_LIST,
+                'bug_status': self.config.open_statuses,
+                'email1': email,
+                'emailreporter1': 1,
+                'emailassigned_to1': 1,
+                'emailqa_contact1': 1,
+                'emailtype1': "substring",
+            }
 
             if not self.config.ignore_cc:
                 query['emailcc1'] = 1
@@ -236,9 +236,10 @@ class BugzillaService(Service[BugzillaIssue]):
 
         if self.config.include_needinfos:
             needinfos = self.bz.query(
-                dict(
-                    column_list=self.COLUMN_LIST, quicksearch='flag:needinfo?%s' % email
-                )
+                {
+                    'column_list': self.COLUMN_LIST,
+                    'quicksearch': f'flag:needinfo?{email}',
+                }
             )
             exists = [b.id for b in bugs]
             for bug in needinfos:
@@ -257,7 +258,7 @@ class BugzillaService(Service[BugzillaIssue]):
         log.debug(" Found %i total.", len(issues))
 
         # Build a url for each issue
-        base_url = "%s/show_bug.cgi?id=" % self.config.base_uri
+        base_url = f"{self.config.base_uri}/show_bug.cgi?id="
         for tag, issue in issues:
             issue_obj = self.get_issue_for_record(issue)
             extra = {

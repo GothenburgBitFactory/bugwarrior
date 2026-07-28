@@ -77,9 +77,11 @@ if __name__ == '__main__':
             for field_name, details in obj.UDAS.items():
                 rows.append(
                     [
-                        '``%s``' % field_name,
+                        f'``{field_name}``',
                         ' '.join(details['label'].split(' ')[1:]),
-                        TYPE_NAME_MAP.get(details['type'], '``%s``' % details['type']),
+                        TYPE_NAME_MAP.get(
+                            details['type'], '``{}``'.format(details['type'])
+                        ),
                     ]
                 )
 

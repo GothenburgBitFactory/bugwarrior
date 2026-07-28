@@ -40,8 +40,7 @@ class ClickupClient(Client):
                 self._get_url_for_tasks(team_id, page), headers=headers
             )
             json = self.json_response(response)
-            for task in json["tasks"]:
-                yield task
+            yield from json["tasks"]
 
             if json["last_page"]:
                 break

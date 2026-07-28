@@ -72,16 +72,13 @@ class TaigaService(Service[TaigaIssue]):
         self.auth_token = self.get_secret('auth_token')
         self.session = requests.session()
         self.session.headers.update(
-            {
-                'Accept': 'application/json',
-                'Authorization': 'Bearer %s' % self.auth_token,
-            }
+            {'Accept': 'application/json', 'Authorization': f'Bearer {self.auth_token}'}
         )
 
     def _issues(
         self, userid: int, task_type: str, task_type_plural: str, task_type_short: str
     ) -> Iterator[TaigaIssue]:
-        log.debug('Getting %s' % task_type_plural)
+        log.debug(f'Getting {task_type_plural}')
 
         response = self.session.get(
             self.config.base_uri + '/api/v1/' + task_type_plural,

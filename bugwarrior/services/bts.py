@@ -161,15 +161,13 @@ class BTSService(Service[BTSIssue]):
         log.debug(" Found %i total.", len(issues))
 
         for pkg in self.config.ignore_pkg:
-            issues = [issue for issue in issues if not issue['package'] == pkg]
+            issues = [issue for issue in issues if issue['package'] != pkg]
 
         for src in self.config.ignore_src:
-            issues = [issue for issue in issues if not issue['source'] == src]
+            issues = [issue for issue in issues if issue['source'] != src]
 
         if self.config.ignore_pending:
-            issues = [
-                issue for issue in issues if not issue['status'] == 'pending-fixed'
-            ]
+            issues = [issue for issue in issues if issue['status'] != 'pending-fixed']
 
         issues = [
             issue

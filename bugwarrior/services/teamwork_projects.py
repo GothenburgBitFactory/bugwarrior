@@ -108,19 +108,17 @@ class TeamworkService(Service[TeamworkIssue]):
         self.name = user["account"]["firstname"] + " " + user["account"]["lastname"]
 
     def get_comments(self, issue: dict[str, Any]) -> list[str]:
-        if self.main_config.annotation_comments:
-            if issue.get("comments-count", 0) > 0:
-                endpoint = f"tasks/{issue['id']}/comments.json"
-                comments = self.client.get(endpoint)
-                comment_list = []
-                for comment in comments["comments"]:
-                    author = "{first} {last}".format(
-                        first=comment["author-firstname"],
-                        last=comment["author-lastname"],
-                    )
-                    text = comment["body"]
-                    comment_list.append((author, text))
-                return self.build_annotations(comment_list, None)
+        if self.main_config.annotation_comments and issue.get("comments-count", 0) > 0:
+            endpoint = f"tasks/{issue['id']}/comments.json"
+            comments = self.client.get(endpoint)
+            comment_list = []
+            for comment in comments["comments"]:
+                author = "{first} {last}".format(
+                    first=comment["author-firstname"], last=comment["author-lastname"]
+                )
+                text = comment["body"]
+                comment_list.append((author, text))
+            return self.build_annotations(comment_list, None)
         return []
 
     def issues(self) -> Iterator[TeamworkIssue]:

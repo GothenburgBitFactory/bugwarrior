@@ -231,8 +231,7 @@ class LinearService(Service[LinearIssue]):
                 raise ValueError("; ".join(messages))
 
             issues = res.get("data", {}).get("issues", {})
-            for node in issues.get("nodes", []):
-                yield node
+            yield from issues.get("nodes", [])
 
             page_info = issues.get("pageInfo", {})
             if not page_info.get("hasNextPage"):

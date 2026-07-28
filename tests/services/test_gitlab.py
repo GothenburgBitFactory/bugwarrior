@@ -626,19 +626,19 @@ class TestGitlabService:
 
     def test_body_zero_limit(self, config):
         config['myservice']['body_length'] = 0
-        issue = dict(description="A very short issue body.  Fixes #42.")
+        issue = {"description": "A very short issue body.  Fixes #42."}
         assert "" == self.get_service(config).description(issue)
 
     def test_body_short_limit(self, config):
         size_limit = 5
         config['myservice']['body_length'] = size_limit
-        issue = dict(description="A very short issue body.  Fixes #42.")
+        issue = {"description": "A very short issue body.  Fixes #42."}
         assert issue["description"][:size_limit] == self.get_service(
             config
         ).description(issue)
 
     def test_body_no_limit(self, config):
-        issue = dict(description="A very short issue body.  Fixes #42.")
+        issue = {"description": "A very short issue body.  Fixes #42."}
         assert issue["description"] == self.get_service(config).description(issue)
 
     def test_undefined_owned_warning(self, config, caplog):
@@ -737,8 +737,9 @@ class TestGitlabIssue:
             issue.REPO: 'project',
             issue.STATE: todo['state'],
             issue.TYPE: todo_extra['type'],
-            issue.TITLE: 'Todo from %s for %s'
-            % (todo['author']['name'], todo['project']['path']),
+            issue.TITLE: 'Todo from {} for {}'.format(
+                todo['author']['name'], todo['project']['path']
+            ),
             issue.NUMBER: str(todo['id']),
             issue.UPDATED_AT: UPDATED.replace(microsecond=0),
             issue.CREATED_AT: CREATED.replace(microsecond=0),

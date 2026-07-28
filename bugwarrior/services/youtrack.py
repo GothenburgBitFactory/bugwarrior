@@ -121,7 +121,7 @@ class YoutrackIssue(Issue):
         return self.record.get('summary')
 
     def get_issue_url(self) -> str:
-        return "%s/issue/%s" % (self.config.base_url, self.get_issue())
+        return f"{self.config.base_url}/issue/{self.get_issue()}"
 
     def get_project(self) -> str | None:
         return self.record.get('project', {}).get('shortName')

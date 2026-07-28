@@ -444,7 +444,7 @@ class GitlabIssue(Issue):
         )
         priority = self.get_priority()
         title = (
-            'Todo from %s for %s' % (author['name'], self.extra['project'])
+            'Todo from {} for {}'.format(author['name'], self.extra['project'])
             if self.extra['type'] == 'todo'
             else self.record['title']
         )
@@ -587,7 +587,7 @@ class GitlabService(Service[GitlabIssue]):
     def include_todo(
         self, repos: list[dict[str, Any]]
     ) -> Callable[[GitlabTodoEntry], bool]:
-        ids = list(r['id'] for r in repos)
+        ids = [r['id'] for r in repos]
 
         def include_todo(item: GitlabTodoEntry) -> bool:
             project, _todo = item
@@ -665,7 +665,7 @@ class GitlabService(Service[GitlabIssue]):
         return issues
 
     def get_all_repos(self) -> list:
-        include_repos = list()
+        include_repos = []
         if not self.config.include_regex:
             include_repos = self.config.include_repos
         all_repos = self.gitlab_client.get_repos(

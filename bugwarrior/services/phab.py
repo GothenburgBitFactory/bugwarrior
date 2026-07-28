@@ -149,7 +149,7 @@ class PhabricatorService(Service[PhabricatorIssue]):
                 tasks = self.api.maniphest.query(status='status-open')
                 tasks = tasks.items()
         except phabricator.APIError as err:
-            log.warning("Could not read tasks from Maniphest: %s" % err)
+            log.warning(f"Could not read tasks from Maniphest: {err}")
             return
 
         log.info("Found %i tasks" % len(tasks))
@@ -197,7 +197,7 @@ class PhabricatorService(Service[PhabricatorIssue]):
         try:
             diffs = self.api.differential.query(status='status-open')
         except phabricator.APIError as err:
-            log.warning("Could not read revisions from Differential: %s" % err)
+            log.warning(f"Could not read revisions from Differential: {err}")
             return
 
         diffs = list(diffs)

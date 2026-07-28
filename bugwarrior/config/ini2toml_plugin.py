@@ -105,7 +105,7 @@ def process_values(doc: IntermediateRepr) -> IntermediateRepr:
                 service = section['service']
 
                 # Validate and strip prefixes.
-                for key in section.keys():
+                for key in section:
                     if isinstance(key, str) and key != 'service':
                         prefix = 'ado' if service == 'azuredevops' else service
                         newkey, subs = re.subn(f'^{prefix}\\.', '', key)
@@ -123,7 +123,7 @@ def process_values(doc: IntermediateRepr) -> IntermediateRepr:
 
                 # Convert Types
                 convert_section(section, schema)
-                if service == 'gitlab' and 'verify_ssl' in section.keys():
+                if service == 'gitlab' and 'verify_ssl' in section:
                     try:
                         to_bool(section, 'verify_ssl')
                     except pydantic.ValidationError:

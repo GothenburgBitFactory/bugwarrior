@@ -258,7 +258,7 @@ class ServiceConfig(_ServiceConfig):
 
         """
         templates = {}
-        for key in taskw.task.Task.FIELDS.keys():
+        for key in taskw.task.Task.FIELDS:
             template = values.get(f'{key}_template')
             if template is not None:
                 templates[key] = template
@@ -290,9 +290,8 @@ class ServiceConfig(_ServiceConfig):
     @field_validator('project_name', mode='after', check_fields=False)
     @classmethod
     def deprecate_project_name(cls, value: str) -> str:
-        if hasattr(cls, '_DEPRECATE_PROJECT_NAME'):
-            if value != '':
-                log.warning('project_name is deprecated in favor of project_template')
+        if hasattr(cls, '_DEPRECATE_PROJECT_NAME') and value != '':
+            log.warning('project_name is deprecated in favor of project_template')
         return value
 
 

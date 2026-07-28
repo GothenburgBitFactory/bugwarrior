@@ -152,13 +152,13 @@ class TracService(Service[TracIssue]):
                 },
             )
             if resp.status_code != 200:
-                raise RuntimeError("Trac responded with %s" % resp)
+                raise RuntimeError(f"Trac responded with {resp}")
             # strip Trac's bogus BOM
             text = resp.text[1:].lstrip('\ufeff')
             tickets = list(csv.DictReader(StringIO.StringIO(text)))
             issues = [(self.config.target, ticket) for ticket in tickets]
             for i in range(len(issues)):
-                issues[i][1]['url'] = "%s/ticket/%s" % (base_url, tickets[i]['id'])
+                issues[i][1]['url'] = "{}/ticket/{}".format(base_url, tickets[i]['id'])
                 issues[i][1]['number'] = int(tickets[i]['id'])
 
         log.debug(" Found %i total.", len(issues))

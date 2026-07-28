@@ -123,7 +123,7 @@ class PagureService(Service[PagureIssue]):
         key3 = key1[:-1]  # Just the singular form of key1
 
         url = self.config.base_url + "/api/0/" + repo + "/" + key1
-        response = self.session.get(url, params=dict(status='Open'))
+        response = self.session.get(url, params={'status': 'Open'})
 
         if not bool(response):
             error = response.json()
@@ -131,12 +131,12 @@ class PagureService(Service[PagureIssue]):
             if code == 'ETRACKERDISABLED':
                 return []
             else:
-                raise OSError('Failed to talk to %r %r' % (url, error))
+                raise OSError(f'Failed to talk to {url!r} {error!r}')
 
         issues = []
         for result in response.json()[key2]:
             idx = str(result['id'])
-            result['html_url'] = "/".join([self.config.base_url, repo, key3, idx])
+            result['html_url'] = f'{self.config.base_url}/{repo}/{key3}/{idx}'
             issues.append((repo, result))
 
         return issues
@@ -169,10 +169,7 @@ class PagureService(Service[PagureIssue]):
             return False
 
         if self.config.include_repos:
-            if repo in self.config.include_repos:
-                return True
-            else:
-                return False
+            return repo in self.config.include_repos
 
         return True
 
@@ -181,7 +178,7 @@ class PagureService(Service[PagureIssue]):
             url = self.config.base_url + "/api/0/projects?tags=" + self.config.tag
             response = self.session.get(url)
             if not bool(response):
-                raise OSError('Failed to talk to %r %r' % (url, response))
+                raise OSError(f'Failed to talk to {url!r} {response!r}')
 
             all_repos = [r['name'] for r in response.json()['projects']]
         else:

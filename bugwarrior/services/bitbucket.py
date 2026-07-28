@@ -1,5 +1,7 @@
 from collections.abc import Iterator
+import functools
 import logging
+import operator
 from typing import Any, Literal
 
 from pydantic import model_validator
@@ -121,15 +123,11 @@ class BitbucketService(Service[BitbucketIssue]):
     def filter_repos(self, repo_tag: str) -> bool:
         repo = repo_tag.split('/').pop()
 
-        if self.config.exclude_repos:
-            if repo in self.config.exclude_repos:
-                return False
+        if self.config.exclude_repos and repo in self.config.exclude_repos:
+            return False
 
         if self.config.include_repos:
-            if repo in self.config.include_repos:
-                return True
-            else:
-                return False
+            return repo in self.config.include_repos
 
         return True
 
@@ -148,11 +146,11 @@ class BitbucketService(Service[BitbucketIssue]):
             next_url = response.get('next', None)
 
     def fetch_issues(self, tag: str) -> list[tuple[str, dict[str, Any]]]:
-        response = self.get_collection('/repositories/%s/issues/' % (tag))
+        response = self.get_collection(f'/repositories/{tag}/issues/')
         return [(tag, issue) for issue in response]
 
     def fetch_pull_requests(self, tag: str) -> list[tuple[str, dict[str, Any]]]:
-        response = self.get_collection('/repositories/%s/pullrequests/' % tag)
+        response = self.get_collection(f'/repositories/{tag}/pullrequests/')
         return [(tag, issue) for issue in response]
 
     def get_annotations(
@@ -199,7 +197,9 @@ class BitbucketService(Service[BitbucketIssue]):
             )
         )
 
-        issues = sum((self.fetch_issues(repo) for repo in repo_tags), [])
+        issues = functools.reduce(
+            operator.iadd, (self.fetch_issues(repo) for repo in repo_tags), []
+        )
         log.debug(" Found %i total.", len(issues))
 
         closed = ['resolved', 'duplicate', 'wontfix', 'invalid', 'closed']
@@ -226,8 +226,10 @@ class BitbucketService(Service[BitbucketIssue]):
             yield issue_obj
 
         if self.config.include_merge_requests:
-            pull_requests = sum(
-                (self.fetch_pull_requests(repo) for repo in repo_tags), []
+            pull_requests = functools.reduce(
+                operator.iadd,
+                (self.fetch_pull_requests(repo) for repo in repo_tags),
+                [],
             )
             log.debug(" Found %i total.", len(pull_requests))
 
