@@ -149,7 +149,6 @@ def vault() -> None:
     can be used to manage your keyring. This feature requires the optional
     keyring library. (pip install "bugwarrior[keyring]")
     """
-    pass
 
 
 def targets() -> Iterator[str]:

@@ -209,7 +209,7 @@ class Issue(abc.ABC):
         _date = parse_date(date)
         if not _date.tzinfo:
             _date = _date.replace(
-                tzinfo=datetime.timezone.utc
+                tzinfo=datetime.UTC
                 if timezone == 'deprecated'
                 else zoneinfo.ZoneInfo(timezone)
             )
@@ -317,7 +317,7 @@ class Service(abc.ABC, Generic[T_Issue]):
         return self.ISSUE_CLASS(record, self.config, self.main_config, extra=extra)
 
     def build_annotations(
-        self, annotations: Iterable[tuple[str, str]], url: Optional[str] = None
+        self, annotations: Iterable[tuple[str, str]], url: str | None = None
     ) -> list[str]:
         """Format annotations, respecting configuration values.
 

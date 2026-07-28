@@ -54,7 +54,7 @@ class BugzillaConfig(config.ServiceConfig):
         'PASSES_QA',
     ]
     include_needinfos: bool = False
-    query_url: typing.Optional[pydantic.AnyUrl] = None
+    query_url: pydantic.AnyUrl | None = None
     force_rest: bool = False
     advanced: bool = False
 
@@ -306,7 +306,7 @@ def _get_bug_attr(bug: Any, attr: str) -> Any:
 
 
 def _ensure_datetime(
-    timestamp: typing.Union[datetime.datetime, str, xmlrpc.client.DateTime],
+    timestamp: datetime.datetime | str | xmlrpc.client.DateTime,
 ) -> datetime.datetime:
     """Convert "timestamp" into native `datetime.datetime` object.
 
@@ -326,8 +326,6 @@ def _ensure_datetime(
         return datetime.datetime.fromisoformat(timestamp)
     elif isinstance(timestamp, xmlrpc.client.DateTime):
         structured = time.mktime(timestamp.timetuple())
-        return datetime.datetime.fromtimestamp(structured, tz=datetime.timezone.utc)
+        return datetime.datetime.fromtimestamp(structured, tz=datetime.UTC)
     else:
-        raise TypeError(
-            "Timestamp conversion from `{0!r}` is not supported.".format(timestamp)
-        )
+        raise TypeError(f"Timestamp conversion from `{timestamp!r}` is not supported.")

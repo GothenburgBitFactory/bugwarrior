@@ -1,8 +1,9 @@
 import base64
+from collections.abc import Iterator
 import logging
 import re
 import sys
-from typing import Annotated, Any, Iterator, Literal
+from typing import Annotated, Any, Literal
 from urllib.parse import quote
 
 from pydantic import BeforeValidator

@@ -441,11 +441,7 @@ class GithubService(Service[GithubIssue]):
         if self.config.query:
             issues.update(self.get_query(self.config.query))
         elif self.config.involved_issues:
-            issues.update(
-                self.get_query(
-                    'involves:{user} state:open'.format(user=self.config.username)
-                )
-            )
+            issues.update(self.get_query(f'involves:{self.config.username} state:open'))
 
         if self.config.include_user_repos:
             # Only query for all repos if an explicit

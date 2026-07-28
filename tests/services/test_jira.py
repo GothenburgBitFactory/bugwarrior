@@ -1,5 +1,5 @@
 from collections import namedtuple
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest import mock
 
 import pytest
@@ -143,7 +143,7 @@ class TestJiraIssue:
             'annotations': extra['annotations'],
             'due': None,
             'tags': [],
-            'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=timezone.utc),
+            'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=UTC),
             'jirafixversion': '1.2.3',
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
@@ -184,9 +184,9 @@ class TestJiraIssue:
             'project': PROJECT,
             'priority': (issue.PRIORITY_MAP[record['fields']['priority']]),
             'annotations': extra['annotations'],
-            'due': datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc),
+            'due': datetime(2016, 9, 23, 16, 8, tzinfo=UTC),
             'tags': [],
-            'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=timezone.utc),
+            'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=UTC),
             'jirafixversion': '1.2.3',
             'jiraissuetype': 'Epic',
             'jirastatus': 'Open',
@@ -218,7 +218,7 @@ class TestJiraIssue:
             'description': (
                 '(bw)Is#10 - lkjaldsfjaldf .. https://two.org/browse/DONUT-10'
             ),
-            'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=timezone.utc),
+            'entry': datetime(2016, 6, 6, 13, 7, 8, tzinfo=UTC),
             'jiradescription': None,
             'jiraestimate': 1,
             'jirafixversion': '1.2.3',
@@ -243,7 +243,7 @@ class TestJiraIssue:
             record_with_due, extra={'sprint_field_names': service.sprint_field_names}
         )
 
-        assert issue.get_due() == datetime(2016, 9, 23, 16, 8, tzinfo=timezone.utc)
+        assert issue.get_due() == datetime(2016, 9, 23, 16, 8, tzinfo=UTC)
 
     def test_get_due_sprint_dict_missing_end_date(self, service, record):
         record['fields']['Sprint'] = [{'id': 1, 'state': 'active', 'name': 'Sprint 1'}]

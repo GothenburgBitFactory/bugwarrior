@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest import mock
 
 import pytest
@@ -22,40 +22,40 @@ def record():
     return {
         "_links": {
             "fields": {
-                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/fields"  # noqa: E501
+                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/fields"
             },
             "html": {
-                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1"  # noqa: E501
+                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1"
             },
             "self": {
-                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1"  # noqa: E501
+                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1"
             },
             "workItemComments": {
-                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/comments"  # noqa: E501
+                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/comments"
             },
             "workItemRevisions": {
-                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/revisions"  # noqa: E501
+                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/revisions"
             },
             "workItemType": {
-                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItemTypes/Impediment"  # noqa: E501
+                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItemTypes/Impediment"
             },
             "workItemUpdates": {
-                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/updates"  # noqa: E501
+                "href": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1/updates"
             },
         },
         "fields": {
             "Microsoft.VSTS.Common.ClosedBy": {
                 "_links": {
                     "avatar": {
-                        "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"  # noqa: E501
+                        "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"
                     }
                 },
                 "descriptor": "msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
                 "displayName": "testuser1",
                 "id": "28ff094b-06b7-6380-98b4-8206587d382b",
-                "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",  # noqa: E501
+                "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
                 "uniqueName": "testuser1@example.com",
-                "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",  # noqa: E501
+                "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",
             },
             "Microsoft.VSTS.Common.ClosedDate": "2020-07-08T19:55:46.113Z",
             "Microsoft.VSTS.Common.Priority": 2,
@@ -64,43 +64,43 @@ def record():
             "System.AssignedTo": {
                 "_links": {
                     "avatar": {
-                        "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"  # noqa: E501
+                        "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"
                     }
                 },
                 "descriptor": "msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
                 "displayName": "testuser1",
                 "id": "28ff094b-06b7-6380-98b4-8206587d382b",
-                "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",  # noqa: E501
+                "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
                 "uniqueName": "testuser1@example.com",
-                "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",  # noqa: E501
+                "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",
             },
             "System.ChangedBy": {
                 "_links": {
                     "avatar": {
-                        "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"  # noqa: E501
+                        "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi"
                     }
                 },
                 "descriptor": "msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
                 "displayName": "testuser1",
                 "id": "28ff094b-06b7-6380-98b4-8206587d382b",
-                "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",  # noqa: E501
+                "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MjhmZjA5NGItMDZiNy03MzgwLTk4YjQtODIwNjU4N2QzODJi",
                 "uniqueName": "testuser1@example.com",
-                "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",  # noqa: E501
+                "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/28ff094b-06b7-6380-98b4-8206587d382b",
             },
             "System.ChangedDate": "2020-07-08T19:55:46.113Z",
             "System.CommentCount": 1,
             "System.CreatedBy": {
                 "_links": {
                     "avatar": {
-                        "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MTU2MzZhMTEtZDA2Ny03ZWE5LTllNzItNWQ5ODhjMTYzMWM0"  # noqa: E501
+                        "href": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MTU2MzZhMTEtZDA2Ny03ZWE5LTllNzItNWQ5ODhjMTYzMWM0"
                     }
                 },
                 "descriptor": "msa.MTU2MzZhMTEtZDA2Ny03ZWE5LTllNzItNWQ5ODhjMTYzMWM0",
                 "displayName": "testuser2",
                 "id": "15636a11-d067-6ea9-9e72-5d988c1631c4",
-                "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MTU2MzZhMTEtZDA2Ny03ZWE5LTllNzItNWQ5ODhjMTYzMWM0",  # noqa: E501
+                "imageUrl": "https://dev.azure.com/test_organization/_apis/GraphProfile/MemberAvatars/msa.MTU2MzZhMTEtZDA2Ny03ZWE5LTllNzItNWQ5ODhjMTYzMWM0",
                 "uniqueName": "testuser2@example.com",
-                "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/15636a11-d067-6ea9-9e72-5d988c1631c4",  # noqa: E501
+                "url": "https://spsprodcus3.vssps.visualstudio.com/Aa98ad20f-7b43-48c2-9693-ba2dd8786d34/_apis/Identities/15636a11-d067-6ea9-9e72-5d988c1631c4",
             },
             "System.CreatedDate": "2020-07-08T17:31:46.493Z",
             "System.Description": "<h1> This Description has some html in it </h1>",
@@ -113,7 +113,7 @@ def record():
         },
         "id": 1,
         "rev": 4,
-        "url": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1",  # noqa: E501
+        "url": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_apis/wit/workItems/1",
     }
 
 
@@ -193,8 +193,8 @@ class TestAzureDevopsService:
             "project": None,
             "annotations": [],
             "adonamespace": "test_organization\\test_project",
-            "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=timezone.utc),
-            "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=timezone.utc),
+            "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=UTC),
+            "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=UTC),
             "adoactivity": "",
             "adoremainingwork": None,
             "adoparent": None,
@@ -207,12 +207,12 @@ class TestAzureDevopsService:
             "project": None,
             "priority": "M",
             "annotations": [],
-            "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=timezone.utc),
-            "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=timezone.utc),
+            "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=UTC),
+            "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=UTC),
             "adotitle": "Example Title",
             "adodescription": " This Description has some html in it ",
             "adoid": 1,
-            "adourl": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",  # noqa: E501
+            "adourl": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",
             "adotype": "Impediment",
             "adostate": "Closed",
             "adoactivity": "",
@@ -220,7 +220,7 @@ class TestAzureDevopsService:
             "adoremainingwork": None,
             "adoparent": None,
             "adonamespace": "test_organization\\test_project",
-            "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',  # noqa: E501
+            "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',
             "tags": [],
         }
         issue = next(service.issues())
@@ -231,12 +231,12 @@ class TestAzureDevopsService:
             "project": None,
             "priority": "M",
             "annotations": [],
-            "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=timezone.utc),
-            "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=timezone.utc),
+            "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=UTC),
+            "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=UTC),
             "adotitle": "Example Title",
             "adodescription": " This Description has some html in it ",
             "adoid": 1,
-            "adourl": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",  # noqa: E501
+            "adourl": "https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",
             "adotype": "Impediment",
             "adostate": "Closed",
             "adoactivity": "",
@@ -244,7 +244,7 @@ class TestAzureDevopsService:
             "adoremainingwork": None,
             "adoparent": None,
             "adonamespace": "test_organization\\test_project",
-            "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',  # noqa: E501
+            "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',
             "tags": [],
         }
         service = make_service(wiql_filter='something')

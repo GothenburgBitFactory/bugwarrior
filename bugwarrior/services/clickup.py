@@ -1,8 +1,8 @@
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 import datetime
 import logging
 import typing
-from typing import Any, Generator, Optional
+from typing import Any
 
 import requests
 
@@ -110,14 +110,12 @@ class ClickupIssue(Issue):
         )
 
     @staticmethod
-    def parse_timestamp(
-        milliseconds_unix: Optional[str],
-    ) -> Optional[datetime.datetime]:
+    def parse_timestamp(milliseconds_unix: str | None) -> datetime.datetime | None:
         if milliseconds_unix is None:
             return None
 
         seconds_unix = float(milliseconds_unix) // 1e3
-        return datetime.datetime.fromtimestamp(seconds_unix, tz=datetime.timezone.utc)
+        return datetime.datetime.fromtimestamp(seconds_unix, tz=datetime.UTC)
 
 
 class ClickupService(Service[ClickupIssue]):

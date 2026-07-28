@@ -46,7 +46,7 @@ class Config(SphinxDirective):
             tomltext = tomltext[stub_len:]
 
         tomllines = tomltext.split('\n')
-        for i in range(0, len(self.content)):  # mutate self.content
+        for i in range(len(self.content)):  # mutate self.content
             # ini2toml removes newlines within sections, so we leave them as is
             if self.content[i] == '' and tomllines[0] != '':
                 continue

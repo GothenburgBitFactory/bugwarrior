@@ -23,10 +23,8 @@ class ValidationConfig(DumbConfig):
 
     _DEPRECATE_FILTER_MERGE_REQUESTS = True
     _DEPRECATE_PROJECT_NAME = True
-    filter_merge_requests: typing.Union[bool, typing.Literal["Undefined"]] = "Undefined"
-    include_merge_requests: typing.Union[bool, typing.Literal["Undefined"]] = (
-        "Undefined"
-    )
+    filter_merge_requests: bool | typing.Literal["Undefined"] = "Undefined"
+    include_merge_requests: bool | typing.Literal["Undefined"] = "Undefined"
     project_name: str = ""
 
     @pydantic.model_validator(mode="after")

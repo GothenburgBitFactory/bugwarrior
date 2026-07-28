@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 import responses
@@ -184,14 +184,12 @@ class TestClickupIssue:
             "project": None,
             "priority": 'M',
             "due": None,
-            "entry": datetime.fromtimestamp(
-                int(record["date_created"]) // 1e3, tz=timezone.utc
-            ),
+            "entry": datetime.fromtimestamp(int(record["date_created"]) // 1e3, tz=UTC),
             issue.ID: record["id"],
             issue.DESCRIPTION: record["description"],
             issue.STATUS: record["status"]["status"],
             issue.UPDATED_AT: datetime.fromtimestamp(
-                int(record["date_updated"]) // 1e3, tz=timezone.utc
+                int(record["date_updated"]) // 1e3, tz=UTC
             ),
             issue.CREATOR: record["creator"]["username"],
             issue.URL: record["url"],
@@ -219,15 +217,13 @@ class TestClickupIssue:
             "priority": 'M',
             "due": None,
             "tags": [],
-            "entry": datetime.fromtimestamp(
-                int(record["date_created"]) // 1e3, tz=timezone.utc
-            ),
+            "entry": datetime.fromtimestamp(int(record["date_created"]) // 1e3, tz=UTC),
             "description": "(bw)Is# - My task .. https://app.clickup.com/t/86adrdd2j",
             issue.ID: record["id"],
             issue.DESCRIPTION: record["description"],
             issue.STATUS: record["status"]["status"],
             issue.UPDATED_AT: datetime.fromtimestamp(
-                int(record["date_updated"]) // 1e3, tz=timezone.utc
+                int(record["date_updated"]) // 1e3, tz=UTC
             ),
             issue.CREATOR: record["creator"]["username"],
             issue.URL: record["url"],

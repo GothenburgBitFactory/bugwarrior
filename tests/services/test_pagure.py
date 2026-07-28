@@ -43,9 +43,7 @@ class TestPagureIssue:
             issue.TYPE: 'issue',
             issue.TITLE: 'Hello World',
             issue.ID: 1,
-            issue.DATE_CREATED: datetime.datetime(
-                1970, 1, 1, tzinfo=datetime.timezone.utc
-            ),
+            issue.DATE_CREATED: datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
         }
         assert issue.to_taskwarrior() == expected
 
@@ -82,9 +80,7 @@ class TestPagureIssue:
             issue.TYPE: 'issue',
             issue.TITLE: 'Hello World',
             issue.ID: 1,
-            issue.DATE_CREATED: datetime.datetime(
-                1970, 1, 1, tzinfo=datetime.timezone.utc
-            ),
+            issue.DATE_CREATED: datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
         }
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 

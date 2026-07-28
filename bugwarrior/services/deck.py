@@ -98,7 +98,7 @@ class NextcloudDeckIssue(Issue):
             'annotations': self.extra['annotations'],
             'tags': self.get_tags(),
             'entry': datetime.datetime.fromtimestamp(
-                self.record['createdAt'], tz=datetime.timezone.utc
+                self.record['createdAt'], tz=datetime.UTC
             ),
             'due': self.parse_date(self.record.get('duedate')),
             self.AUTHOR: self.record['owner']['uid'],
@@ -177,7 +177,7 @@ class NextcloudDeckService(Service[NextcloudDeckIssue]):
             else []
         )
         return self.build_annotations(
-            ((comment['actorDisplayName'], comment['message']) for comment in comments)
+            (comment['actorDisplayName'], comment['message']) for comment in comments
         )
 
     def issues(self) -> Iterator[NextcloudDeckIssue]:

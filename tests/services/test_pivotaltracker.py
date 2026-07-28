@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 import responses
@@ -270,9 +270,9 @@ class TestPivotalTrackerIssue:
                     'updated_at': '2019-05-14T12:00:00Z',
                 },
             ],
-            'pivotalclosed': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
-            'pivotalcreated': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
-            'pivotalupdated': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
+            'pivotalclosed': datetime(2019, 5, 14, 12, 0, tzinfo=UTC),
+            'pivotalcreated': datetime(2019, 5, 14, 12, 0, tzinfo=UTC),
+            'pivotalupdated': datetime(2019, 5, 14, 12, 0, tzinfo=UTC),
             'pivotalurl': 'http://localhost/story/show/561',
             'pivotalblockers': [
                 {
@@ -303,7 +303,7 @@ class TestPivotalTrackerIssue:
 
     def test_issues(self, service):
         story = next(service.issues())
-        story_date = datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc)
+        story_date = datetime(2019, 5, 14, 12, 0, tzinfo=UTC)
         expected = {
             'annotations': [
                 '@task - status: False - Port 0',

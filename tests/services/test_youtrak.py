@@ -104,7 +104,7 @@ class TestYoutrackIssue:
     @responses.activate
     def test_issues(self, service, record):
         responses.get(
-            'https://youtrack.example.com:443/api/issues?query=for%3Ame+%23Unresolved&max=100&fields=id,summary,project(shortName),numberInProject,tags(name)',  # noqa: E501
+            'https://youtrack.example.com:443/api/issues?query=for%3Ame+%23Unresolved&max=100&fields=id,summary,project(shortName),numberInProject,tags(name)',
             json=[record],
         )
 

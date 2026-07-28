@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 import responses
@@ -104,10 +104,10 @@ class TestTeamworkIssue:
         expected_data = {
             'project': data["project-name"],
             'priority': "H",
-            'due': datetime(2019, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
-            'entry': datetime(2018, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
+            'due': datetime(2019, 12, 12, 10, 6, 31, tzinfo=UTC),
+            'entry': datetime(2018, 12, 12, 10, 6, 31, tzinfo=UTC),
             'end': "",
-            'modified': datetime(2019, 1, 16, 11, 0, 44, tzinfo=timezone.utc),
+            'modified': datetime(2019, 1, 16, 11, 0, 44, tzinfo=UTC),
             issue.URL: "https://test.teamwork_projects.com/#/tasks/5",
             issue.TITLE: data["content"],
             issue.DESCRIPTION_LONG: data["description"],
@@ -130,11 +130,11 @@ class TestTeamworkIssue:
         expected_data = {
             'project': data["project-name"],
             'priority': "H",
-            'due': datetime(2019, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
-            'entry': datetime(2018, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
+            'due': datetime(2019, 12, 12, 10, 6, 31, tzinfo=UTC),
+            'entry': datetime(2018, 12, 12, 10, 6, 31, tzinfo=UTC),
             'end': "",
-            'modified': datetime(2019, 1, 16, 11, 0, 44, tzinfo=timezone.utc),
-            'description': '(bw)Is#5 - This is a test issue .. https://test.teamwork_projects.com/#/tasks/5',  # noqa: E501
+            'modified': datetime(2019, 1, 16, 11, 0, 44, tzinfo=UTC),
+            'description': '(bw)Is#5 - This is a test issue .. https://test.teamwork_projects.com/#/tasks/5',
             issue.URL: "https://test.teamwork_projects.com/#/tasks/5",
             issue.TITLE: data["content"],
             issue.DESCRIPTION_LONG: data["description"],

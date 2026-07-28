@@ -20,7 +20,7 @@ class GerritConfig(config.ServiceConfig):
     username: str
     password: str
 
-    ssl_ca_path: typing.Optional[config.ExpandedPath] = None
+    ssl_ca_path: config.ExpandedPath | None = None
     query: str = 'is:open+is:reviewer'
     ignore_user_comments: config.ConfigList = []
 

@@ -233,7 +233,7 @@ class TodoistService(Service[TodoistIssue]):
         }
         user_index = {
             user.id: f"{user.name} <{user.email}>"
-            for project in project_index.keys()
+            for project in project_index
             for user in self.client.get_users(project)
         }
 

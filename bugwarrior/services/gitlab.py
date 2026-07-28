@@ -26,7 +26,7 @@ GitlabTodoEntry = tuple[dict[str, Any] | None, dict[str, Any]]
 
 class GitlabConfig(config.ServiceConfig):
     _DEPRECATE_FILTER_MERGE_REQUESTS = True
-    filter_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = 'Undefined'
+    filter_merge_requests: bool | typing.Literal['Undefined'] = 'Undefined'
 
     service: typing.Literal['gitlab']
     KEYRING_SERVICE = "gitlab://{login}@{host}"
@@ -36,15 +36,13 @@ class GitlabConfig(config.ServiceConfig):
 
     include_repos: config.ConfigList = []
     exclude_repos: config.ConfigList = []
-    include_regex: typing.Optional[typing.Pattern] = None
-    exclude_regex: typing.Optional[typing.Pattern] = None
+    include_regex: typing.Pattern | None = None
+    exclude_regex: typing.Pattern | None = None
     membership: bool = False
-    owned: typing.Optional[bool] = None
+    owned: bool | None = None
     import_labels_as_tags: bool = False
     label_template: str = '{{label}}'
-    include_merge_requests: typing.Union[bool, typing.Literal['Undefined']] = (
-        'Undefined'
-    )
+    include_merge_requests: bool | typing.Literal['Undefined'] = 'Undefined'
     include_issues: bool = True
     include_todos: bool = False
     include_all_todos: bool = True
@@ -53,7 +51,7 @@ class GitlabConfig(config.ServiceConfig):
     default_todo_priority: DefaultPriority = 'unassigned'
     default_mr_priority: DefaultPriority = 'unassigned'
     use_https: bool = True
-    verify_ssl: typing.Union[bool, config.ExpandedPath] = True
+    verify_ssl: bool | config.ExpandedPath = True
     body_length: int = sys.maxsize
     project_owner_prefix: bool = False
     issue_query: str = ''
@@ -262,8 +260,7 @@ class GitlabClient(Client):
         all_repos: list = []
         if include_repos:
             for repo in include_repos:
-                if repo.startswith("id:"):
-                    repo = repo[3:]
+                repo = repo.removeprefix("id:")
                 indiv_tmpl = 'projects/' + quote(repo, '') + '?simple=true'
                 item = self._fetch(indiv_tmpl)
                 if not item:

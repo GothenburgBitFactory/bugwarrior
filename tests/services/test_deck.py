@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest import mock
 
 import pytest
@@ -122,8 +122,8 @@ class TestDeckIssue:
 
         expected = {
             'annotations': ['@Lena - testcomment'],
-            'entry': datetime(2022, 8, 17, 20, 16, 22, tzinfo=timezone.utc),
-            'due': datetime(2022, 11, 20, 23, 0, tzinfo=timezone.utc),
+            'entry': datetime(2022, 8, 17, 20, 16, 22, tzinfo=UTC),
+            'due': datetime(2022, 11, 20, 23, 0, tzinfo=UTC),
             'nextclouddeckassignee': 'rainbow',
             'nextclouddeckauthor': 'unicorn',
             'nextclouddeckboardid': 5,
@@ -147,8 +147,8 @@ class TestDeckIssue:
 
         expected = {
             'annotations': ['@Lena - testcomment'],
-            'entry': datetime(2022, 8, 17, 20, 16, 22, tzinfo=timezone.utc),
-            'due': datetime(2022, 11, 20, 23, 0, tzinfo=timezone.utc),
+            'entry': datetime(2022, 8, 17, 20, 16, 22, tzinfo=UTC),
+            'due': datetime(2022, 11, 20, 23, 0, tzinfo=UTC),
             'description': '(bw)Is# - check that nextcloud deck integration works',
             'nextclouddeckassignee': 'rainbow',
             'nextclouddeckauthor': 'unicorn',

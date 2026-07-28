@@ -58,7 +58,7 @@ class Webui:
 
         return self
 
-    def __exit__(self, *exc: Any) -> Literal[False]:
+    def __exit__(self, *exc: object) -> Literal[False]:
         if self.webui.returncode is None:
             if sys.platform == "win32":
                 os.kill(self.webui.pid, signal.SIGTERM)

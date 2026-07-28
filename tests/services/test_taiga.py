@@ -53,9 +53,7 @@ class TestTaigaIssue:
         responses.get('https://one/api/v1/users/me', json={'id': userid})
 
         responses.get(
-            'https://one/api/v1/userstories?status__is_closed=false&assigned_to={}'.format(
-                userid
-            ),
+            f'https://one/api/v1/userstories?status__is_closed=false&assigned_to={userid}',
             json=[record],
         )
 

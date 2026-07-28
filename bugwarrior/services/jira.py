@@ -86,7 +86,7 @@ class JiraConfig(config.ServiceConfig):
     PAT: str = ''
 
     body_length: int = sys.maxsize
-    extra_fields: typing.Optional[JiraExtraFields] = None
+    extra_fields: JiraExtraFields | None = None
     import_labels_as_tags: bool = False
     import_sprints_as_tags: bool = False
     label_template: str = '{{label}}'
@@ -114,7 +114,6 @@ class JiraConfig(config.ServiceConfig):
 class ObliviousCookieJar(RequestsCookieJar):
     def set_cookie(self, *args: Any, **kwargs: Any) -> None:
         """Simply ignore any request to set a cookie."""
-        pass
 
     def copy(self) -> "ObliviousCookieJar":
         """Make sure to return an instance of the correct class on copying."""
@@ -298,7 +297,7 @@ class JiraIssue(Issue):
         value = self.record['fields'].get('priority')
         try:
             value = value['name']
-        except (TypeError,):
+        except TypeError:
             value = str(value)
         # priority.name format: "1 - Critical"
         map_key = value.strip().split()[-1]
@@ -329,7 +328,7 @@ class JiraIssue(Issue):
     def get_parent(self) -> str | None:
         try:
             parent = self.record['fields']['parent']['key']
-        except (KeyError,):
+        except KeyError:
             return None
 
         return parent

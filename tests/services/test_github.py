@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 import responses
@@ -20,9 +20,9 @@ SERVICE_CONFIG = {
 }
 
 
-CREATED = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(microsecond=0)
-CLOSED = (datetime.now(timezone.utc) - timedelta(minutes=30)).replace(microsecond=0)
-UPDATED = datetime.now(timezone.utc).replace(microsecond=0)
+CREATED = (datetime.now(UTC) - timedelta(hours=1)).replace(microsecond=0)
+CLOSED = (datetime.now(UTC) - timedelta(minutes=30)).replace(microsecond=0)
+UPDATED = datetime.now(UTC).replace(microsecond=0)
 
 
 @pytest.fixture
@@ -63,7 +63,7 @@ class TestGithubIssue:
 
         expected = {
             'annotations': [],
-            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',  # noqa: E501
+            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'entry': CREATED,
             'end': CLOSED,
             'githubbody': record['body'],
@@ -137,7 +137,7 @@ class TestGithubIssue:
         responses.get('https://api.github.com/issues?per_page=100', json=[record])
 
         responses.get(
-            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',  # noqa: E501
+            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',
             json=[
                 {'user': {'login': 'arbitrary_login'}, 'body': 'Arbitrary comment.'},
                 IGNORABLE,
@@ -149,7 +149,7 @@ class TestGithubIssue:
 
         expected = {
             'annotations': ['@arbitrary_login - Arbitrary comment.'],
-            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',  # noqa: E501
+            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'entry': CREATED,
             'end': CLOSED,
             'githubbody': 'Something',
@@ -194,7 +194,7 @@ class TestGithubIssueQuery:
         )
 
         responses.get(
-            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',  # noqa: E501
+            'https://api.github.com/repos/arbitrary_username/arbitrary_repo/issues/10/comments?per_page=100',
             json=[{'user': {'login': 'arbitrary_login'}, 'body': 'Arbitrary comment.'}],
         )
 
@@ -202,7 +202,7 @@ class TestGithubIssueQuery:
 
         expected = {
             'annotations': ['@arbitrary_login - Arbitrary comment.'],
-            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',  # noqa: E501
+            'description': '(bw)Is#10 - Hallo .. https://github.com/arbitrary_username/arbitrary_repo/pull/1',
             'entry': CREATED,
             'end': CLOSED,
             'githubbody': 'Something',
@@ -254,7 +254,7 @@ class TestGithubService:
     def test_keyring_service_host(self):
         """Checks that the keyring key depends on the github host."""
         service_config = GithubConfig(
-            **{'host': 'github.example.com'}, **SERVICE_CONFIG, target="myservice"
+            host='github.example.com', **SERVICE_CONFIG, target="myservice"
         )
         keyring_service = service_config.keyring_service
         assert (

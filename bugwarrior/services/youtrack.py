@@ -27,7 +27,7 @@ class YoutrackConfig(config.ServiceConfig):
     token: str
 
     anonymous: bool = False
-    port: typing.Optional[int] = None
+    port: int | None = None
     use_https: bool = True
     verify_ssl: bool = True
     incloud_instance: bool = False

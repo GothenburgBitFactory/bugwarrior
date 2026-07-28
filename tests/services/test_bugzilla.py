@@ -85,7 +85,7 @@ def record():
     }
 
 
-ASSIGNED_DATE = datetime.datetime.now(tz=datetime.timezone.utc).replace(microsecond=0)
+ASSIGNED_DATE = datetime.datetime.now(tz=datetime.UTC).replace(microsecond=0)
 
 
 @pytest.fixture

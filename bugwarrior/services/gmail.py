@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import email
 import email.utils
 import logging
@@ -99,7 +99,7 @@ class GmailIssue(Issue):
     def get_entry(self) -> datetime:
         # internal_date is in milliseconds, convert to seconds and create UTC datetime
         timestamp_seconds = int(self.extra['internal_date']) / 1000
-        return datetime.fromtimestamp(timestamp_seconds, tz=timezone.utc)
+        return datetime.fromtimestamp(timestamp_seconds, tz=UTC)
 
 
 class GmailService(Service[GmailIssue]):

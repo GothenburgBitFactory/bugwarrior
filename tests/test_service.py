@@ -72,11 +72,13 @@ class TestService:
         assert annotations == [f'@some_author - {LONG_MESSAGE}']
 
     def test_api_incompatibility_error(self):
-        with unittest.mock.patch.object(
-            DumbService, 'API_VERSION', new=services.LATEST_API_VERSION + 1
+        with (
+            unittest.mock.patch.object(
+                DumbService, 'API_VERSION', new=services.LATEST_API_VERSION + 1
+            ),
+            pytest.raises(ValueError, match="Incompatible Service"),
         ):
-            with pytest.raises(ValueError, match="Incompatible Service"):
-                get_mock_service(DumbService)
+            get_mock_service(DumbService)
 
     def test_api_latest_version(self):
         basedir = pathlib.Path(__file__).parent.parent

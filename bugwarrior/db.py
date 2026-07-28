@@ -106,9 +106,8 @@ def find_taskwarrior_uuid(
                     for k in unique_keys:
                         if r[k] != results[0][k]:
                             break
-                else:
-                    # All results are completed duplicates.
-                    new_possibilities = set([new_possibilities.pop()])
+                # All results are completed duplicates.
+                new_possibilities = set([new_possibilities.pop()])
             possibilities = possibilities | new_possibilities
 
     if len(possibilities) == 1:
@@ -280,7 +279,7 @@ def synchronize(
 
         try:
             new_task = tw.task_add(**issue)
-            if 'end' in issue and issue['end']:
+            if issue.get('end'):
                 tw.task_done(uuid=new_task['uuid'])
         except TaskwarriorError as e:
             log.exception("Unable to add task: %s" % e.stderr)
@@ -291,7 +290,7 @@ def synchronize(
     for issue in issue_updates['changed']:
         changes = '; '.join(
             [
-                '{field}: {f} -> {t}'.format(field=field, f=repr(ch[0]), t=repr(ch[1]))
+                f'{field}: {ch[0]!r} -> {ch[1]!r}'
                 for field, ch in issue.get_changes(keep=True).items()
             ]
         )
@@ -307,7 +306,7 @@ def synchronize(
 
         try:
             _, updated_task = tw.task_update(issue)
-            if 'end' in issue and issue['end']:
+            if issue.get('end'):
                 tw.task_done(uuid=updated_task['uuid'])
         except TaskwarriorError as e:
             log.exception("Unable to modify task: %s" % e.stderr)

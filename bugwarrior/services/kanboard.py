@@ -117,7 +117,7 @@ class KanboardIssue(Issue):
     def _convert_timestamp_from_field(self, field: str) -> datetime.datetime | None:
         timestamp = int(self.record.get(field, 0))
         if timestamp:
-            return datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
+            return datetime.datetime.fromtimestamp(timestamp, tz=datetime.UTC)
 
 
 class KanboardService(Service[KanboardIssue]):
@@ -139,7 +139,7 @@ class KanboardService(Service[KanboardIssue]):
     def annotations(self, task: dict[str, Any], url: str) -> list[str]:
         comments = []
         if int(task.get("nb_comments", 0)):
-            comments = self.client.get_all_comments(**{"task_id": task["id"]})
+            comments = self.client.get_all_comments(task_id=task["id"])
         return self.build_annotations(
             ((c["name"], c["comment"]) for c in comments), url
         )

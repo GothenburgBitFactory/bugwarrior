@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 import responses
@@ -8,9 +8,9 @@ from bugwarrior.services.gitlab import GitlabClient, GitlabService
 
 from ..base import get_validated_service, validate
 
-CREATED = (datetime.now(timezone.utc) - timedelta(hours=1)).replace(microsecond=0)
-UPDATED = datetime.now(timezone.utc).replace(microsecond=0)
-DUEDATE = datetime.combine(date.today(), datetime.min.time(), tzinfo=timezone.utc)
+CREATED = (datetime.now(UTC) - timedelta(hours=1)).replace(microsecond=0)
+UPDATED = datetime.now(UTC).replace(microsecond=0)
+DUEDATE = datetime.combine(date.today(), datetime.min.time(), tzinfo=UTC)
 
 
 @pytest.fixture

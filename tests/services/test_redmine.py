@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest import mock
 
 import pytest
@@ -17,8 +17,8 @@ SERVICE_CONFIG = {
 }
 
 
-CREATED = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(1)
-UPDATED = datetime.now(timezone.utc).replace(microsecond=0)
+CREATED = datetime.now(UTC).replace(microsecond=0) - timedelta(1)
+UPDATED = datetime.now(UTC).replace(microsecond=0)
 
 
 @pytest.fixture

@@ -99,7 +99,7 @@ quote-style = "preserve"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "W", "I", "E501", "ANN", "PT"]
+extend-select = ["E4", "E7", "E9", "F", "W", "I", "E501", "ANN", "PT"]
 ignore = ["ANN401"]
 # ANN rules (flake8-annotations) detect untyped code — useful for gradual typing.
 # Enforced in application code under bugwarrior/ (excluding tests/ and bugwarrior/docs/).

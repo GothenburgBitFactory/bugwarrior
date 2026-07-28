@@ -40,7 +40,7 @@ def to_list(section: IntermediateRepr, key: str) -> None:
     to_type(section, key, parse_config_list)
 
 
-def get_field_type(attrs: dict) -> typing.Optional[str]:
+def get_field_type(attrs: dict) -> str | None:
     if 'type' in attrs:
         return attrs['type']
     if 'anyOf' in attrs:

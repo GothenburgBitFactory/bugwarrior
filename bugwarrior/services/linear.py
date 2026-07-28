@@ -21,7 +21,7 @@ class LinearConfig(config.ServiceConfig):
 
     host: config.StrippedTrailingSlashUrl = "https://api.linear.app/graphql"
     statuses: config.ConfigList = []
-    status_types: typing.Optional[config.ConfigList] = None
+    status_types: config.ConfigList | None = None
     import_labels_as_tags: bool = False
     label_template: str = "{{label|replace(' ', '_')}}"
     also_unassigned: config.UnsupportedOption[bool] = False

@@ -1,5 +1,6 @@
+from collections.abc import Iterator
 import logging
-from typing import Any, Iterator, Literal, Union
+from typing import Any, Literal
 
 from pydantic import model_validator
 import requests
@@ -12,7 +13,7 @@ log = logging.getLogger(__name__)
 
 class BitbucketConfig(config.ServiceConfig):
     _DEPRECATE_FILTER_MERGE_REQUESTS = True
-    filter_merge_requests: Union[bool, Literal['Undefined']] = 'Undefined'
+    filter_merge_requests: bool | Literal['Undefined'] = 'Undefined'
 
     service: Literal['bitbucket']
     KEYRING_SERVICE = "bitbucket://{key}/{username}"
@@ -27,7 +28,7 @@ class BitbucketConfig(config.ServiceConfig):
 
     include_repos: config.ConfigList = []
     exclude_repos: config.ConfigList = []
-    include_merge_requests: Union[bool, Literal['Undefined']] = 'Undefined'
+    include_merge_requests: bool | Literal['Undefined'] = 'Undefined'
     project_owner_prefix: bool = False
 
     @model_validator(mode='after')

@@ -31,14 +31,14 @@ def _get_metadata(issue: dict[str, Any]) -> str:
     priority = ''
     metadata = ''
     project = ''
-    if 'project' in issue and issue['project']:
+    if issue.get('project'):
         project = "Project: " + issue['project']
     # if 'due' in issue:
     #     due = "Due: " + datetime.datetime.fromtimestamp(
     #         int(issue['due'])).strftime('%Y-%m-%d')
     if 'tags' in issue:
         tags = "Tags: " + ', '.join(issue['tags'])
-    if 'priority' in issue and issue['priority']:
+    if issue.get('priority'):
         priority = "Priority: " + issue['priority']
     if project != '':
         metadata += "\n" + project
@@ -110,7 +110,7 @@ def send_notification(issue: dict[str, Any], op: str, conf: "Notifications") -> 
             [
                 'osascript',
                 '-e',
-                'display notification "{}" with title "Bugwarrior"'.format(escaped),
+                f'display notification "{escaped}" with title "Bugwarrior"',
             ]
         )
         return

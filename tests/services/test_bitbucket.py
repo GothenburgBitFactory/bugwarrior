@@ -149,7 +149,7 @@ class TestBitbucketIssue:
                         'id': 1,
                     }
                 ],
-                'next': 'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/?page=2',  # noqa: E501
+                'next': 'https://api.bitbucket.org/2.0/repositories/somename/somerepo/issues/?page=2',
             },
         )
         responses.get(

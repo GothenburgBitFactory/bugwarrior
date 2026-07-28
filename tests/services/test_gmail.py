@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import pickle
 from unittest import mock
@@ -58,7 +58,7 @@ class TestGmailService:
 
     def test_get_credentials_with_refresh(self, service, credential):
         expired_credential = Credentials(**credential)
-        expired_credential.expiry = datetime.now(timezone.utc).replace(tzinfo=None)
+        expired_credential.expiry = datetime.now(UTC).replace(tzinfo=None)
         assert expired_credential.valid is False
         with open(service.credentials_path, "wb") as token:
             pickle.dump(expired_credential, token)
@@ -66,9 +66,7 @@ class TestGmailService:
         with patch("google.oauth2.reauth.refresh_grant") as mock_refresh_grant:
             access_token = "newaccesstoken"
             refresh_token = "newrefreshtoken"
-            expiry = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(
-                hours=24
-            )
+            expiry = datetime.now(UTC).replace(tzinfo=None) + timedelta(hours=24)
             grant_response = {"id_token": "idtoken"}
             rapt_token = "reauthprooftoken"
             mock_refresh_grant.return_value = (
@@ -145,7 +143,7 @@ class TestGmailIssue:
         )
         expected = {
             'annotations': [],
-            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=timezone.utc),
+            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=UTC),
             'gmailthreadid': '1234',
             'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',  # noqa: E501
             'gmailsnippet': 'Bugwarrior is great',
@@ -167,12 +165,12 @@ class TestGmailIssue:
         issue = next(service.issues())
         expected = {
             'annotations': ['@Foo Bar - Regarding Bugwarrior'],
-            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=timezone.utc),
+            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=UTC),
             'gmailthreadid': '1234',
             'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',  # noqa: E501
             'gmailsnippet': 'Bugwarrior is great',
             'gmaillastsender': 'Foo Bar',
-            'description': '(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234',  # noqa: E501
+            'description': '(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234',
             'priority': 'M',
             'tags': {'added', 'postit', 'sticky'},
             'gmailsubject': 'Regarding Bugwarrior',

@@ -18,9 +18,9 @@ class PhabricatorConfig(config.ServiceConfig):
 
     user_phids: config.ConfigList = []
     project_phids: config.ConfigList = []
-    host: typing.Optional[pydantic.AnyUrl] = None
-    ignore_cc: typing.Optional[bool] = None
-    ignore_author: typing.Optional[bool] = None
+    host: pydantic.AnyUrl | None = None
+    ignore_cc: bool | None = None
+    ignore_author: bool | None = None
     ignore_owner: bool = False
     ignore_reviewers: bool = False
 

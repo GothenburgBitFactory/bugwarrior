@@ -263,18 +263,14 @@ class LogseqIssue(Issue):
             .strip()
             .split(" ")
         )
-        if len(date_split) == 2:  # <date day>
+        if (
+            len(date_split) == 2
+            or len(date_split) == 3
+            and (date_split[2][0] in ("+", "."))
+        ):  # <date day>
             date = date_split[0]
             date_format = "%Y-%m-%d"
-        elif len(date_split) == 3 and (
-            date_split[2][0] in ("+", ".")
-        ):  # <date day repeat>
-            date = date_split[0]
-            date_format = "%Y-%m-%d"
-        elif len(date_split) == 3:  # <date day time>
-            date = date_split[0] + " " + date_split[2]
-            date_format = "%Y-%m-%d %H:%M"
-        elif len(date_split) == 4:  # <date date time repeat>
+        elif len(date_split) == 3 or len(date_split) == 4:  # <date day time>
             date = date_split[0] + " " + date_split[2]
             date_format = "%Y-%m-%d %H:%M"
         else:

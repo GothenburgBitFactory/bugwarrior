@@ -159,8 +159,8 @@ class MainSectionConfig(BaseConfig):
     annotation_links: bool = False
     annotation_comments: bool = True
     annotation_newlines: bool = False
-    annotation_length: typing.Optional[int] = 45
-    description_length: typing.Optional[int] = 35
+    annotation_length: int | None = 45
+    description_length: int | None = 35
     merge_annotations: bool = True
     merge_tags: bool = True
     replace_tags: bool = False
@@ -170,7 +170,7 @@ class MainSectionConfig(BaseConfig):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "DISABLED"] = (
         "INFO"
     )
-    log_file: typing.Optional[ExpandedPath] = None
+    log_file: ExpandedPath | None = None
 
 
 class Hooks(BaseConfig):
@@ -179,7 +179,7 @@ class Hooks(BaseConfig):
 
 class Notifications(BaseConfig):
     notifications: bool = False
-    backend: typing.Optional[Literal["gobject", "growlnotify", "applescript"]] = None
+    backend: Literal["gobject", "growlnotify", "applescript"] | None = None
     finished_querying_sticky: bool = True
     task_crud_sticky: bool = True
     only_on_new_tasks: bool = False

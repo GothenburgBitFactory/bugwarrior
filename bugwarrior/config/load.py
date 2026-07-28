@@ -141,11 +141,7 @@ class BugwarriorConfigParser(configparser.ConfigParser):
             if self.get(section, option) == '':
                 return None
             else:
-                raise ValueError(
-                    "{section}.{option} must be an integer or empty.".format(
-                        section=section, option=option
-                    )
-                )
+                raise ValueError(f"{section}.{option} must be an integer or empty.")
 
     def optionxform(self, optionstr: str) -> str:
         """Do not lowercase key names."""

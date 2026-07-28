@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import json
 
 import pytest
@@ -150,9 +150,9 @@ class TestLinearIssue:
         issue = RESPONSE["data"]["issues"]["nodes"][0]
         issue = service.get_issue_for_record(issue, {})
 
-        created_timestamp = datetime(2025, 7, 24, 17, 3, 4, 0, tzinfo=timezone.utc)
-        updated_timestamp = datetime(2025, 7, 25, 17, 3, 4, 0, tzinfo=timezone.utc)
-        closed_timestamp = datetime(2025, 7, 26, 17, 3, 4, 0, tzinfo=timezone.utc)
+        created_timestamp = datetime(2025, 7, 24, 17, 3, 4, 0, tzinfo=UTC)
+        updated_timestamp = datetime(2025, 7, 25, 17, 3, 4, 0, tzinfo=UTC)
+        closed_timestamp = datetime(2025, 7, 26, 17, 3, 4, 0, tzinfo=UTC)
         expected_output = {
             "project": "prj",
             "priority": "L",
@@ -179,9 +179,9 @@ class TestLinearIssue:
         issue = RESPONSE["data"]["issues"]["nodes"][1]
         issue = service.get_issue_for_record(issue, {})
 
-        created_timestamp = datetime(2025, 7, 24, 15, 34, 7, 0, tzinfo=timezone.utc)
-        updated_timestamp = datetime(2025, 7, 24, 17, 8, 33, 0, tzinfo=timezone.utc)
-        due_timestamp = datetime(2025, 8, 22, 0, 0, 0, 0, tzinfo=timezone.utc)
+        created_timestamp = datetime(2025, 7, 24, 15, 34, 7, 0, tzinfo=UTC)
+        updated_timestamp = datetime(2025, 7, 24, 17, 8, 33, 0, tzinfo=UTC)
+        due_timestamp = datetime(2025, 8, 22, 0, 0, 0, 0, tzinfo=UTC)
         expected_output = {
             "project": None,
             "priority": "H",
@@ -207,9 +207,9 @@ class TestLinearIssue:
 
     def test_issues(self, service):
         issue = next(service.issues())
-        created_timestamp = datetime(2025, 7, 24, 17, 3, 4, 0, tzinfo=timezone.utc)
-        updated_timestamp = datetime(2025, 7, 25, 17, 3, 4, 0, tzinfo=timezone.utc)
-        closed_timestamp = datetime(2025, 7, 26, 17, 3, 4, 0, tzinfo=timezone.utc)
+        created_timestamp = datetime(2025, 7, 24, 17, 3, 4, 0, tzinfo=UTC)
+        updated_timestamp = datetime(2025, 7, 25, 17, 3, 4, 0, tzinfo=UTC)
+        closed_timestamp = datetime(2025, 7, 26, 17, 3, 4, 0, tzinfo=UTC)
         expected = {
             "annotations": [],
             "description": "(bw)#DUS-5 - DO STUFF .. "
