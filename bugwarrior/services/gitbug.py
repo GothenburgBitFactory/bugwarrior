@@ -15,16 +15,16 @@ log = logging.getLogger(__name__)
 
 
 class GitBugConfig(config.ServiceConfig):
-    service: Literal['gitbug']
-    KEYRING_SERVICE = 'gitbug://{path}'
+    service: Literal["gitbug"]
+    KEYRING_SERVICE = "gitbug://{path}"
 
     path: config.ExpandedPath
 
     import_labels_as_tags: bool = False
-    label_template: str = '{{label}}'
+    label_template: str = "{{label}}"
     port: int = 43915
 
-    only_if_assigned: config.UnsupportedOption[str] = ''
+    only_if_assigned: config.UnsupportedOption[str] = ""
     also_unassigned: config.UnsupportedOption[bool] = False
 
 
@@ -40,7 +40,7 @@ class Webui:
         else:
             popen_kwargs["start_new_session"] = True
         self.webui = subprocess.Popen(
-            ['git', 'bug', 'webui', '--no-open', f'--port={self.port}'],
+            ["git", "bug", "webui", "--no-open", f"--port={self.port}"],
             stderr=subprocess.PIPE,
             cwd=self.path,
             text=True,
@@ -77,66 +77,66 @@ class GitBugClient(Client):
     def _query_graphql(self, query: str) -> dict[str, Any]:
         with Webui(self.path, self.port):
             response = requests.post(
-                f'http://127.0.0.1:{self.port}/graphql', json={'query': query}
+                f"http://127.0.0.1:{self.port}/graphql", json={"query": query}
             )
-        return self.json_response(response)['data']
+        return self.json_response(response)["data"]
 
     def get_issues(self) -> list[dict[str, Any]]:
         return self._query_graphql(
-            '{{ repository {{ allBugs {{ nodes {{ {} }} }} }} }}'.format(
-                ' '.join(
+            "{{ repository {{ allBugs {{ nodes {{ {} }} }} }} }}".format(
+                " ".join(
                     [
-                        'author { name }',
+                        "author { name }",
                         (
-                            'comments'
-                            + ('(first: 1) ' if not self.annotation_comments else '')
-                            + ' { nodes { author { name } message } }'
+                            "comments"
+                            + ("(first: 1) " if not self.annotation_comments else "")
+                            + " { nodes { author { name } message } }"
                         ),
-                        'createdAt',
-                        'id',
-                        'labels { name }status',
-                        'title',
+                        "createdAt",
+                        "id",
+                        "labels { name }status",
+                        "title",
                     ]
                 )
             )
-        )['repository']['allBugs']['nodes']
+        )["repository"]["allBugs"]["nodes"]
 
 
 class GitBugIssue(Issue):
-    AUTHOR = 'gitbugauthor'
-    ID = 'gitbugid'
-    STATE = 'gitbugstate'
-    TITLE = 'gitbugtitle'
+    AUTHOR = "gitbugauthor"
+    ID = "gitbugid"
+    STATE = "gitbugstate"
+    TITLE = "gitbugtitle"
 
     UDAS = {
-        AUTHOR: {'type': 'string', 'label': 'Gitbug Issue Author'},
-        ID: {'type': 'string', 'label': 'Gitbug UUID'},
-        STATE: {'type': 'string', 'label': 'Gitbug state'},
-        TITLE: {'type': 'string', 'label': 'Gitbug Title'},
+        AUTHOR: {"type": "string", "label": "Gitbug Issue Author"},
+        ID: {"type": "string", "label": "Gitbug UUID"},
+        STATE: {"type": "string", "label": "Gitbug state"},
+        TITLE: {"type": "string", "label": "Gitbug Title"},
     }
 
     UNIQUE_KEY = (ID,)
 
     def to_taskwarrior(self) -> dict[str, Any]:
         return {
-            'project': self.config.target,
-            'priority': self.config.default_priority,
-            'annotations': self.record.get('annotations', []),
-            'tags': self.get_tags(),
-            'entry': self.parse_date(self.record.get('createdAt')),
-            self.AUTHOR: self.record['author']['name'],
-            self.ID: self.record['id'],
-            self.STATE: self.record['status'],
-            self.TITLE: self.record['title'],
+            "project": self.config.target,
+            "priority": self.config.default_priority,
+            "annotations": self.record.get("annotations", []),
+            "tags": self.get_tags(),
+            "entry": self.parse_date(self.record.get("createdAt")),
+            self.AUTHOR: self.record["author"]["name"],
+            self.ID: self.record["id"],
+            self.STATE: self.record["status"],
+            self.TITLE: self.record["title"],
         }
 
     def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(
-            [label['name'] for label in self.record['labels']]
+            [label["name"] for label in self.record["labels"]]
         )
 
     def get_default_description(self) -> str:
-        return self.build_default_description(title=self.record['title'], cls='bug')
+        return self.build_default_description(title=self.record["title"], cls="bug")
 
 
 class GitBugService(Service[GitBugIssue]):
@@ -157,14 +157,14 @@ class GitBugService(Service[GitBugIssue]):
 
     def issues(self) -> Iterator[GitBugIssue]:
         for issue in self.client.get_issues():
-            comments = issue.pop('comments')
-            issue['description'] = comments['nodes'].pop(0)['message']
+            comments = issue.pop("comments")
+            issue["description"] = comments["nodes"].pop(0)["message"]
 
             if self.main_config.annotation_comments:
                 annotations = (
-                    (comment['author']['name'], comment['message'])
-                    for comment in comments['nodes']
+                    (comment["author"]["name"], comment["message"])
+                    for comment in comments["nodes"]
                 )
-                issue['annotations'] = self.build_annotations(annotations)
+                issue["annotations"] = self.build_annotations(annotations)
 
             yield self.get_issue_for_record(issue)

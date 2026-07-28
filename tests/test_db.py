@@ -14,51 +14,51 @@ from .base import DumbConfig, register_services
 
 class TestMergeAnnotations:
     def test_merges_local_and_remote_annotations(self):
-        local = {'annotations': ['existing']}
-        remote = {'annotations': ['new', 'new']}
+        local = {"annotations": ["existing"]}
+        remote = {"annotations": ["new", "new"]}
 
-        assert db.merge_annotations(local, remote) == ['existing', 'new', 'new']
+        assert db.merge_annotations(local, remote) == ["existing", "new", "new"]
 
     def test_skips_normalized_matches(self):
-        local = {'annotations': ['testing']}
-        remote = {'annotations': ['\n  testing  \n']}
+        local = {"annotations": ["testing"]}
+        remote = {"annotations": ["\n  testing  \n"]}
 
-        assert db.merge_annotations(local, remote) == ['testing']
+        assert db.merge_annotations(local, remote) == ["testing"]
 
     def test_adds_annotation_that_extends_existing_one(self):
-        local = {'annotations': ['testing']}
-        remote = {'annotations': ['testing with more detail']}
+        local = {"annotations": ["testing"]}
+        remote = {"annotations": ["testing with more detail"]}
 
         assert db.merge_annotations(local, remote) == [
-            'testing',
-            'testing with more detail',
+            "testing",
+            "testing with more detail",
         ]
 
     def test_handles_missing_annotations(self):
         assert db.merge_annotations({}, {}) == []
-        assert db.merge_annotations({}, {'annotations': ['new']}) == ['new']
+        assert db.merge_annotations({}, {"annotations": ["new"]}) == ["new"]
 
 
 class TestMergeTags:
     def test_merges_and_sorts_unique_tags(self):
         main_conf = SimpleNamespace(replace_tags=False, static_tags=[])
-        local = {'tags': ['existing', 'shared']}
-        remote = {'tags': ['new', 'shared']}
+        local = {"tags": ["existing", "shared"]}
+        remote = {"tags": ["new", "shared"]}
 
-        assert db.merge_tags(main_conf, local, remote) == ['existing', 'new', 'shared']
+        assert db.merge_tags(main_conf, local, remote) == ["existing", "new", "shared"]
 
     def test_replaces_non_static_local_tags_when_configured(self):
-        main_conf = SimpleNamespace(replace_tags=True, static_tags=['keep'])
-        local = {'tags': ['drop', 'keep']}
-        remote = {'tags': ['new']}
+        main_conf = SimpleNamespace(replace_tags=True, static_tags=["keep"])
+        local = {"tags": ["drop", "keep"]}
+        remote = {"tags": ["new"]}
 
-        assert db.merge_tags(main_conf, local, remote) == ['keep', 'new']
+        assert db.merge_tags(main_conf, local, remote) == ["keep", "new"]
 
     def test_handles_missing_tags(self):
         main_conf = SimpleNamespace(replace_tags=False, static_tags=[])
 
         assert db.merge_tags(main_conf, {}, {}) == []
-        assert db.merge_tags(main_conf, {}, {'tags': ['new']}) == ['new']
+        assert db.merge_tags(main_conf, {}, {"tags": ["new"]}) == ["new"]
 
 
 class TestSynchronize:
@@ -70,11 +70,11 @@ class TestSynchronize:
     @pytest.fixture
     def bwconfig(self, config_environment):
         return Config(
-            service_configs=[DumbConfig(target='my_service')],
+            service_configs=[DumbConfig(target="my_service")],
             main=schema.MainSectionConfig(
-                targets=['my_service'],
+                targets=["my_service"],
                 taskrc=config_environment.taskrc,
-                static_fields=['project', 'priority'],
+                static_fields=["project", "priority"],
             ),
         )
 
@@ -95,12 +95,12 @@ class TestSynchronize:
         db.synchronize(iter(issue_generator), bwconfig)
 
     def remove_non_deterministic_keys(self, tasks):
-        for status in ['pending', 'completed']:
+        for status in ["pending", "completed"]:
             for task in tasks[status]:
-                del task['modified']
-                del task['entry']
-                del task['uuid']
-                task['tags'] = sorted(task['tags'])
+                del task["modified"]
+                del task["entry"]
+                del task["uuid"]
+                task["tags"] = sorted(task["tags"])
 
         return tasks
 
@@ -110,18 +110,18 @@ class TestSynchronize:
 
     def test_synchronize(self, bwconfig, tw):
 
-        assert tw.load_tasks() == {'completed': [], 'pending': []}
+        assert tw.load_tasks() == {"completed": [], "pending": []}
 
         issue = {
-            'description': 'Blah blah blah. ☃',
-            'project': 'sample_project',
-            'dumbtype': 'issue',
-            'dumburl': 'https://example.com',
-            'priority': 'M',
-            'tags': ['foo'],
+            "description": "Blah blah blah. ☃",
+            "project": "sample_project",
+            "dumbtype": "issue",
+            "dumburl": "https://example.com",
+            "priority": "M",
+            "tags": ["foo"],
         }
         duplicate_issue = copy.deepcopy(issue)
-        duplicate_issue['tags'] = ['bar']
+        duplicate_issue["tags"] = ["bar"]
 
         # TEST NEW ISSUE AND EXISTING ISSUE.
         for _ in range(2):
@@ -132,42 +132,42 @@ class TestSynchronize:
             self.synchronize(bwconfig, [issue, duplicate_issue])
 
             assert self.get_tasks(tw) == {
-                'completed': [],
-                'pending': [
+                "completed": [],
+                "pending": [
                     {
-                        'project': 'sample_project',
-                        'priority': 'M',
-                        'status': 'pending',
-                        'description': 'Blah blah blah. ☃',
-                        'dumburl': 'https://example.com',
-                        'dumbtype': 'issue',
-                        'id': 1,
-                        'tags': ['bar', 'foo'],
-                        'urgency': 5.8,
+                        "project": "sample_project",
+                        "priority": "M",
+                        "status": "pending",
+                        "description": "Blah blah blah. ☃",
+                        "dumburl": "https://example.com",
+                        "dumbtype": "issue",
+                        "id": 1,
+                        "tags": ["bar", "foo"],
+                        "urgency": 5.8,
                     }
                 ],
             }
 
         # TEST CHANGED ISSUE.
-        issue['description'] = 'Yada yada yada.'
+        issue["description"] = "Yada yada yada."
 
         # Change static field
-        issue['project'] = 'other_project'
+        issue["project"] = "other_project"
         self.synchronize(bwconfig, [issue])
 
         assert self.get_tasks(tw) == {
-            'completed': [],
-            'pending': [
+            "completed": [],
+            "pending": [
                 {
-                    'priority': 'M',
-                    'project': 'sample_project',
-                    'status': 'pending',
-                    'description': 'Yada yada yada.',
-                    'dumburl': 'https://example.com',
-                    'dumbtype': 'issue',
-                    'id': 1,
-                    'tags': ['bar', 'foo'],
-                    'urgency': 5.8,
+                    "priority": "M",
+                    "project": "sample_project",
+                    "status": "pending",
+                    "description": "Yada yada yada.",
+                    "dumburl": "https://example.com",
+                    "dumbtype": "issue",
+                    "id": 1,
+                    "tags": ["bar", "foo"],
+                    "urgency": 5.8,
                 }
             ],
         }
@@ -178,44 +178,44 @@ class TestSynchronize:
         completed_tasks = tw.load_tasks()
 
         tasks = self.remove_non_deterministic_keys(copy.deepcopy(completed_tasks))
-        del tasks['completed'][0]['end']
+        del tasks["completed"][0]["end"]
         assert tasks == {
-            'completed': [
+            "completed": [
                 {
-                    'project': 'sample_project',
-                    'description': 'Yada yada yada.',
-                    'dumbtype': 'issue',
-                    'dumburl': 'https://example.com',
-                    'id': 0,
-                    'priority': 'M',
-                    'status': 'completed',
-                    'tags': ['bar', 'foo'],
-                    'urgency': 5.8,
+                    "project": "sample_project",
+                    "description": "Yada yada yada.",
+                    "dumbtype": "issue",
+                    "dumburl": "https://example.com",
+                    "id": 0,
+                    "priority": "M",
+                    "status": "completed",
+                    "tags": ["bar", "foo"],
+                    "urgency": 5.8,
                 }
             ],
-            'pending': [],
+            "pending": [],
         }
 
         # TEST REOPENED ISSUE
         self.synchronize(bwconfig, [issue])
 
         tasks = tw.load_tasks()
-        assert completed_tasks['completed'][0]['uuid'] == tasks['pending'][0]['uuid']
+        assert completed_tasks["completed"][0]["uuid"] == tasks["pending"][0]["uuid"]
 
         tasks = self.remove_non_deterministic_keys(tasks)
         assert tasks == {
-            'completed': [],
-            'pending': [
+            "completed": [],
+            "pending": [
                 {
-                    'priority': 'M',
-                    'project': 'sample_project',
-                    'status': 'pending',
-                    'description': 'Yada yada yada.',
-                    'dumburl': 'https://example.com',
-                    'dumbtype': 'issue',
-                    'id': 1,
-                    'tags': ['bar', 'foo'],
-                    'urgency': 5.8,
+                    "priority": "M",
+                    "project": "sample_project",
+                    "status": "pending",
+                    "description": "Yada yada yada.",
+                    "dumburl": "https://example.com",
+                    "dumbtype": "issue",
+                    "id": 1,
+                    "tags": ["bar", "foo"],
+                    "urgency": 5.8,
                 }
             ],
         }
@@ -225,15 +225,15 @@ class TestUDAs:
     def test_udas(self, config_environment):
         with register_services():
             conf = Config(
-                service_configs=[DumbConfig(target='my_service')],
+                service_configs=[DumbConfig(target="my_service")],
                 main=schema.MainSectionConfig(
-                    targets=['my_service'], taskrc=config_environment.taskrc
+                    targets=["my_service"], taskrc=config_environment.taskrc
                 ),
             )
             udas = sorted(db.get_defined_udas_as_strings(conf))
         assert udas == [
-            'uda.dumbtype.label=Dumb Type',
-            'uda.dumbtype.type=string',
-            'uda.dumburl.label=Dumb URL',
-            'uda.dumburl.type=string',
+            "uda.dumbtype.label=Dumb Type",
+            "uda.dumbtype.type=string",
+            "uda.dumburl.label=Dumb URL",
+            "uda.dumburl.type=string",
         ]

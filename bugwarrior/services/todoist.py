@@ -240,7 +240,7 @@ class TodoistService(Service[TodoistIssue]):
                 "assignee": user_index.get(issue["assignee_id"]),
                 "assigner": user_index.get(issue["assigner_id"]),
                 "duration": (
-                    f'{issue["duration"]["amount"]} {issue["duration"]["unit"]}'
+                    f"{issue['duration']['amount']} {issue['duration']['unit']}"
                     if issue["duration"]
                     else None
                 ),

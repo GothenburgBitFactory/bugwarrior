@@ -228,7 +228,7 @@ class TestLinearIssue:
             "linearupdated": updated_timestamp,
             "linearurl": "https://linear.app/dustins-doings/issue/DUS-5/do-stuff",
             "priority": "L",
-            "project": 'prj',
+            "project": "prj",
             "tags": [],
         }
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
@@ -236,7 +236,7 @@ class TestLinearIssue:
     # Linear priority integers must map onto taskwarrior's H/M/L buckets,
     # with "No priority" (0) falling back to the service-wide default.
     @pytest.mark.parametrize(
-        ('linear_priority', 'expected'),
+        ("linear_priority", "expected"),
         [
             (0, "M"),  # No priority -> default_priority (M)
             (1, "H"),  # Urgent

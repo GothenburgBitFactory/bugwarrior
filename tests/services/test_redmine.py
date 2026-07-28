@@ -10,10 +10,10 @@ from bugwarrior.services.redmine import RedMineService
 SERVICE_CLASS = RedMineService
 
 SERVICE_CONFIG = {
-    'service': 'redmine',
-    'url': 'https://something',
-    'key': 'something_else',
-    'issue_limit': '100',
+    "service": "redmine",
+    "url": "https://something",
+    "key": "something_else",
+    "issue_limit": "100",
 }
 
 
@@ -42,28 +42,28 @@ def record():
 
 class TestRedmineIssue:
     def test_to_taskwarrior(self, service, record):
-        arbitrary_url = 'http://lkjlj.com'
+        arbitrary_url = "http://lkjlj.com"
 
         issue = service.get_issue_for_record(record)
 
         expected_output = {
-            'annotations': [],
-            'project': issue.get_project_name(),
-            'priority': 'H',
+            "annotations": [],
+            "project": issue.get_project_name(),
+            "priority": "H",
             issue.DUEDATE: None,
-            issue.ASSIGNED_TO: record['assigned_to']['name'],
-            issue.AUTHOR: record['author']['name'],
+            issue.ASSIGNED_TO: record["assigned_to"]["name"],
+            issue.AUTHOR: record["author"]["name"],
             issue.CATEGORY: None,
-            issue.DESCRIPTION: record['description'],
+            issue.DESCRIPTION: record["description"],
             issue.ESTIMATED_HOURS: None,
-            issue.STATUS: 'New',
+            issue.STATUS: "New",
             issue.URL: arbitrary_url,
-            issue.SUBJECT: record['subject'],
-            issue.TRACKER: 'Task',
+            issue.SUBJECT: record["subject"],
+            issue.TRACKER: "Task",
             issue.CREATED_ON: CREATED,
             issue.UPDATED_ON: UPDATED,
-            issue.ID: record['id'],
-            issue.PROJECT_NAME: 'Boiled Cabbage - Yum',
+            issue.ID: record["id"],
+            issue.PROJECT_NAME: "Boiled Cabbage - Yum",
             issue.SPENT_HOURS: None,
             issue.START_DATE: None,
         }
@@ -71,7 +71,7 @@ class TestRedmineIssue:
         def get_url(*args):
             return arbitrary_url
 
-        with mock.patch.object(issue, 'get_issue_url', side_effect=get_url):
+        with mock.patch.object(issue, "get_issue_url", side_effect=get_url):
             actual_output = issue.to_taskwarrior()
 
         assert actual_output == expected_output
@@ -79,33 +79,33 @@ class TestRedmineIssue:
     @responses.activate
     def test_issues(self, service, record):
         responses.get(
-            'https://something/issues.json?limit=100', json={'issues': [record]}
+            "https://something/issues.json?limit=100", json={"issues": [record]}
         )
 
         issue = next(service.issues())
 
         expected = {
-            'annotations': [],
+            "annotations": [],
             issue.DUEDATE: None,
-            'description': '(bw)Is#363901 - Biscuits .. https://something/issues/363901',
-            'priority': 'H',
-            'project': 'boiledcabbageyum',
-            'redmineid': 363901,
-            'redmineprojectname': 'Boiled Cabbage - Yum',
+            "description": "(bw)Is#363901 - Biscuits .. https://something/issues/363901",
+            "priority": "H",
+            "project": "boiledcabbageyum",
+            "redmineid": 363901,
+            "redmineprojectname": "Boiled Cabbage - Yum",
             issue.SPENT_HOURS: None,
             issue.START_DATE: None,
-            'redmineassignedto': 'Adam Coddington',
-            'redmineauthor': 'Adam Coddington',
+            "redmineassignedto": "Adam Coddington",
+            "redmineauthor": "Adam Coddington",
             issue.CATEGORY: None,
-            issue.DESCRIPTION: record['description'],
+            issue.DESCRIPTION: record["description"],
             issue.ESTIMATED_HOURS: None,
-            issue.STATUS: 'New',
-            'redminesubject': 'Biscuits',
-            'redminetracker': 'Task',
+            issue.STATUS: "New",
+            "redminesubject": "Biscuits",
+            "redminetracker": "Task",
             issue.CREATED_ON: CREATED,
             issue.UPDATED_ON: UPDATED,
-            'redmineurl': 'https://something/issues/363901',
-            'tags': [],
+            "redmineurl": "https://something/issues/363901",
+            "tags": [],
         }
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected

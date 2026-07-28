@@ -10,22 +10,22 @@ from filelock import FileLock
 def get_data_path(taskrc: str | Path) -> str:
     # We cannot use the taskw module here because it doesn't really support
     # the `_` subcommands properly (`rc:` can't be used for them).
-    line_prefix = 'data.location='
+    line_prefix = "data.location="
 
     # Take a copy of the environment and add our taskrc to it.
     env = dict(os.environ)
-    env['TASKRC'] = str(taskrc)
+    env["TASKRC"] = str(taskrc)
 
     with subprocess.Popen(
-        ('task', '_show'), stdout=subprocess.PIPE, env=env
+        ("task", "_show"), stdout=subprocess.PIPE, env=env
     ) as tw_show:
         data_location = subprocess.check_output(
-            ('grep', '-e', '^' + line_prefix), stdin=tw_show.stdout
+            ("grep", "-e", "^" + line_prefix), stdin=tw_show.stdout
         )
-    data_path = data_location[len(line_prefix) :].rstrip().decode('utf-8')
+    data_path = data_location[len(line_prefix) :].rstrip().decode("utf-8")
 
     if not data_path:
-        raise OSError('Unable to determine the data location.')
+        raise OSError("Unable to determine the data location.")
 
     return os.path.normpath(os.path.expanduser(data_path))
 
@@ -39,8 +39,8 @@ class BugwarriorData:
     """
 
     def __init__(self, data_path: str) -> None:
-        self._datafile = os.path.join(data_path, 'bugwarrior.data')
-        self._lockfile = os.path.join(data_path, 'bugwarrior-data.lockfile')
+        self._datafile = os.path.join(data_path, "bugwarrior.data")
+        self._lockfile = os.path.join(data_path, "bugwarrior-data.lockfile")
         #: Taskwarrior's ``data.location`` configuration value. If necessary,
         #: services can manage their own files here.
         self.path = data_path
@@ -70,10 +70,10 @@ class BugwarriorData:
             try:
                 data = self.get_data()
             except OSError:  # File does not exist.
-                with open(self._datafile, 'w') as jsondata:
+                with open(self._datafile, "w") as jsondata:
                     json.dump({key: value}, jsondata)
             else:
-                with open(self._datafile, 'w') as jsondata:
+                with open(self._datafile, "w") as jsondata:
                     data[key] = value
                     json.dump(data, jsondata)
 

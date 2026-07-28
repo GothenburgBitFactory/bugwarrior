@@ -26,7 +26,7 @@ class LinearConfig(config.ServiceConfig):
     label_template: str = "{{label|replace(' ', '_')}}"
     also_unassigned: config.UnsupportedOption[bool] = False
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def statuses_or_status_types(cls, values: Any) -> dict[str, Any]:
         statuses = values.get("statuses")
@@ -226,7 +226,7 @@ class LinearService(Service[LinearIssue]):
 
             if "errors" in res:
                 messages = [
-                    error.get("message", "Unknown error") for error in res['errors']
+                    error.get("message", "Unknown error") for error in res["errors"]
                 ]
                 raise ValueError("; ".join(messages))
 

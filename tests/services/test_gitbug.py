@@ -10,26 +10,26 @@ from bugwarrior.services.gitbug import GitBugClient, GitBugConfig, GitBugService
 @pytest.fixture
 def record():
     return {
-        'author': {'name': 'ryneeverett'},
-        'comments': {
-            'nodes': [
+        "author": {"name": "ryneeverett"},
+        "comments": {
+            "nodes": [
                 {
-                    'author': {'name': 'ryneeverett'},
-                    'message': 'This is the description, albeit a brief one.',
+                    "author": {"name": "ryneeverett"},
+                    "message": "This is the description, albeit a brief one.",
                 }
             ]
         },
-        'createdAt': '2022-05-05T23:06:52-04:00',
-        'id': '032d911695cc68d9881aabc24a6c62853f90f834',
-        'labels': [],
-        'status': 'OPEN',
-        'title': 'Some Issue',
+        "createdAt": "2022-05-05T23:06:52-04:00",
+        "id": "032d911695cc68d9881aabc24a6c62853f90f834",
+        "labels": [],
+        "status": "OPEN",
+        "title": "Some Issue",
     }
 
 
 SERVICE_CLASS = GitBugService
 
-SERVICE_CONFIG = {'service': 'gitbug', 'path': '/dev/null'}
+SERVICE_CONFIG = {"service": "gitbug", "path": "/dev/null"}
 
 
 class TestGitBugIssue:
@@ -44,17 +44,17 @@ class TestGitBugIssue:
         issue = service.get_issue_for_record(record, {})
 
         expected = {
-            'annotations': [],
-            'entry': datetime(
+            "annotations": [],
+            "entry": datetime(
                 2022, 5, 5, 23, 6, 52, tzinfo=timezone(timedelta(seconds=-14400))
             ),
-            'gitbugauthor': 'ryneeverett',
-            'gitbugid': '032d911695cc68d9881aabc24a6c62853f90f834',
-            'gitbugstate': 'OPEN',
-            'gitbugtitle': 'Some Issue',
-            'priority': 'M',
-            'project': 'unspecified',
-            'tags': [],
+            "gitbugauthor": "ryneeverett",
+            "gitbugid": "032d911695cc68d9881aabc24a6c62853f90f834",
+            "gitbugstate": "OPEN",
+            "gitbugtitle": "Some Issue",
+            "priority": "M",
+            "project": "unspecified",
+            "tags": [],
         }
         actual = issue.to_taskwarrior()
 
@@ -64,18 +64,18 @@ class TestGitBugIssue:
         issue = next(service.issues())
 
         expected = {
-            'annotations': [],
-            'description': '(bw)Bug# - Some Issue',
-            'entry': datetime(
+            "annotations": [],
+            "description": "(bw)Bug# - Some Issue",
+            "entry": datetime(
                 2022, 5, 5, 23, 6, 52, tzinfo=timezone(timedelta(seconds=-14400))
             ),
-            'gitbugauthor': 'ryneeverett',
-            'gitbugid': '032d911695cc68d9881aabc24a6c62853f90f834',
-            'gitbugstate': 'OPEN',
-            'gitbugtitle': 'Some Issue',
-            'priority': 'M',
-            'project': 'unspecified',
-            'tags': [],
+            "gitbugauthor": "ryneeverett",
+            "gitbugid": "032d911695cc68d9881aabc24a6c62853f90f834",
+            "gitbugstate": "OPEN",
+            "gitbugtitle": "Some Issue",
+            "priority": "M",
+            "project": "unspecified",
+            "tags": [],
         }
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected

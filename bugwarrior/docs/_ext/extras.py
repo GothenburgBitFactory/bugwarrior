@@ -12,13 +12,13 @@ class Extras(SphinxDirective):
     has_content = False
 
     def run(self) -> list[nodes.Node]:
-        with open(pathlib.Path(__file__).parent / '../../../pyproject.toml', 'rb') as f:
+        with open(pathlib.Path(__file__).parent / "../../../pyproject.toml", "rb") as f:
             pyproject = tomllib.load(f)
         list_node = nodes.bullet_list()
-        for extra in pyproject['project']['optional-dependencies']:
-            list_node.append(nodes.list_item('', nodes.paragraph(text=extra)))
+        for extra in pyproject["project"]["optional-dependencies"]:
+            list_node.append(nodes.list_item("", nodes.paragraph(text=extra)))
         return [list_node]
 
 
 def setup(app):
-    app.add_directive('extras', Extras)
+    app.add_directive("extras", Extras)

@@ -95,7 +95,6 @@ exclude-newer = "3 days"
 constraint-dependencies = ["tomlkit>=0.15.1"]
 
 [tool.ruff.format]
-quote-style = "preserve"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]

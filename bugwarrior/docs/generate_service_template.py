@@ -23,9 +23,9 @@ def make_table(grid):
     for row in grid:
         rst = (
             rst
-            + '| '
-            + '| '.join([normalize_cell(x, cell_width - 1) for x in row])
-            + '|\n'
+            + "| "
+            + "| ".join([normalize_cell(x, cell_width - 1) for x in row])
+            + "|\n"
         )
         rst = rst + table_div(num_cols, cell_width, header_flag)
         header_flag = 0
@@ -34,13 +34,13 @@ def make_table(grid):
 
 def table_div(num_cols, col_width, header_flag):
     if header_flag == 1:
-        return num_cols * ('+' + (col_width) * '=') + '+\n'
+        return num_cols * ("+" + (col_width) * "=") + "+\n"
     else:
-        return num_cols * ('+' + (col_width) * '-') + '+\n'
+        return num_cols * ("+" + (col_width) * "-") + "+\n"
 
 
 def normalize_cell(string, length):
-    return string + ((length - len(string)) * ' ')
+    return string + ((length - len(string)) * " ")
 
 
 def import_by_path(name):
@@ -55,46 +55,46 @@ def row_comparator(left_row, right_row):
     right = right_row[0]
     if left > right:
         return 1
-    elif right > left or left == 'Field Name':
+    elif right > left or left == "Field Name":
         return -1
     return 0
 
 
 TYPE_NAME_MAP = {
-    'date': 'Date & Time',
-    'numeric': 'Numeric',
-    'string': 'Text (string)',
-    'duration': 'Duration',
+    "date": "Date & Time",
+    "numeric": "Numeric",
+    "string": "Text (string)",
+    "duration": "Duration",
 }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     service = sys.argv[1]
-    module = import_by_path(f'bugwarrior.services.{service}')
+    module = import_by_path(f"bugwarrior.services.{service}")
     rows = []
     for name, obj in inspect.getmembers(module):
         if inspect.isclass(obj) and issubclass(obj, Issue):
             for field_name, details in obj.UDAS.items():
                 rows.append(
                     [
-                        f'``{field_name}``',
-                        ' '.join(details['label'].split(' ')[1:]),
+                        f"``{field_name}``",
+                        " ".join(details["label"].split(" ")[1:]),
                         TYPE_NAME_MAP.get(
-                            details['type'], '``{}``'.format(details['type'])
+                            details["type"], "``{}``".format(details["type"])
                         ),
                     ]
                 )
 
     rows = sorted(rows, key=cmp_to_key(row_comparator))
-    rows.insert(0, ['Field Name', 'Description', 'Type'])
+    rows.insert(0, ["Field Name", "Description", "Type"])
 
-    filename = os.path.join(os.path.dirname(__file__), 'service_template.html')
+    filename = os.path.join(os.path.dirname(__file__), "service_template.html")
     with open(filename) as template:
         rendered = Template(template.read()).render(
             {
-                'service_name_humane': service.title(),
-                'service_name': service,
-                'uda_table': make_table(rows),
+                "service_name_humane": service.title(),
+                "service_name": service,
+                "uda_table": make_table(rows),
             }
         )
 

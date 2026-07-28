@@ -36,7 +36,7 @@ class LogseqConfig(config.ServiceConfig):
     char_close_bracket: str = "〉"
     inline_links: bool = True
     import_labels_as_tags: bool = False
-    label_template: str = '{{label}}'
+    label_template: str = "{{label}}"
 
     only_if_assigned: config.UnsupportedOption[str] = ""
     also_unassigned: config.UnsupportedOption[bool] = False
@@ -249,7 +249,7 @@ class LogseqIssue(Issue):
         return annotations, scheduled_date, deadline_date
 
     def get_url(self) -> str:
-        return f'logseq://graph/{self.extra["graph"]}?block-id={self.record["uuid"]}'
+        return f"logseq://graph/{self.extra['graph']}?block-id={self.record['uuid']}"
 
     def get_logseq_state(self) -> str:
         return self.record["marker"]
@@ -329,7 +329,7 @@ class LogseqService(Service[LogseqIssue]):
         self, config: LogseqConfig, main_config: config.MainSectionConfig
     ) -> None:
         super().__init__(config, main_config)
-        self.token = self.get_secret('token')
+        self.token = self.get_secret("token")
         filter = '"' + '" "'.join(self.config.task_state) + '"'
         self.client = LogseqClient(
             host=self.config.host,

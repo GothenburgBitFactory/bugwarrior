@@ -36,17 +36,17 @@ class TestKanboardConfig:
     def test_validate_config_no_url(self, config, assert_validation_error):
         config["myservice"].update({"username": "myuser", "password": "mypass"})
 
-        assert_validation_error(config, '[myservice]\nurl  <- Field required')
+        assert_validation_error(config, "[myservice]\nurl  <- Field required")
 
     def test_validate_config_no_username(self, config, assert_validation_error):
         config["myservice"].update({"url": "http://one.com/", "password": "mypass"})
 
-        assert_validation_error(config, '[myservice]\nusername  <- Field required')
+        assert_validation_error(config, "[myservice]\nusername  <- Field required")
 
     def test_validate_config_no_password(self, config, assert_validation_error):
         config["myservice"].update({"url": "http://one.com/", "username": "myuser"})
 
-        assert_validation_error(config, '[myservice]\npassword  <- Field required')
+        assert_validation_error(config, "[myservice]\npassword  <- Field required")
 
     def test_keyring_service(self, config):
         config["myservice"].update(

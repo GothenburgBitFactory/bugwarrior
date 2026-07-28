@@ -8,7 +8,7 @@ import requests
 if TYPE_CHECKING:
     from bugwarrior.config.schema import Notifications
 
-cache_dir = os.path.expanduser(os.getenv('XDG_CACHE_HOME', "~/.cache") + "/bugwarrior")
+cache_dir = os.path.expanduser(os.getenv("XDG_CACHE_HOME", "~/.cache") + "/bugwarrior")
 logo_path = cache_dir + "/logo.png"
 logo_url = "https://upload.wikimedia.org/wikipedia/en/5/59/Taskwarrior_logo.png"
 
@@ -21,32 +21,32 @@ def _cache_logo() -> None:
         os.makedirs(cache_dir)
 
     response = requests.get(logo_url)
-    with open(logo_path, 'wb') as f:
+    with open(logo_path, "wb") as f:
         f.write(response.content)
 
 
 def _get_metadata(issue: dict[str, Any]) -> str:
-    due = ''
-    tags = ''
-    priority = ''
-    metadata = ''
-    project = ''
-    if issue.get('project'):
-        project = "Project: " + issue['project']
+    due = ""
+    tags = ""
+    priority = ""
+    metadata = ""
+    project = ""
+    if issue.get("project"):
+        project = "Project: " + issue["project"]
     # if 'due' in issue:
     #     due = "Due: " + datetime.datetime.fromtimestamp(
     #         int(issue['due'])).strftime('%Y-%m-%d')
-    if 'tags' in issue:
-        tags = "Tags: " + ', '.join(issue['tags'])
-    if issue.get('priority'):
-        priority = "Priority: " + issue['priority']
-    if project != '':
+    if "tags" in issue:
+        tags = "Tags: " + ", ".join(issue["tags"])
+    if issue.get("priority"):
+        priority = "Priority: " + issue["priority"]
+    if project != "":
         metadata += "\n" + project
-    if priority != '':
+    if priority != "":
         metadata += "\n" + priority
-    if due != '':
+    if due != "":
         metadata += "\n" + due
-    if tags != '':
+    if tags != "":
         metadata += "\n" + tags
     return metadata
 
@@ -54,23 +54,23 @@ def _get_metadata(issue: dict[str, Any]) -> str:
 def send_notification(issue: dict[str, Any], op: str, conf: "Notifications") -> None:
     notify_backend = conf.backend
 
-    if notify_backend == 'pynotify':
+    if notify_backend == "pynotify":
         warnings.warn(
             "pynotify is deprecated.  Use backend=gobject.  "
             "See https://github.com/ralphbean/bugwarrior/issues/336"
         )
-        notify_backend = 'gobject'
+        notify_backend = "gobject"
 
-    message = "{} task: {}".format(op, issue['description'])
+    message = "{} task: {}".format(op, issue["description"])
     metadata = _get_metadata(issue)
     if metadata is not None:
         message += metadata
 
     # Notifications for growlnotify on Mac OS X
-    if notify_backend == 'growlnotify':
+    if notify_backend == "growlnotify":
         warnings.warn(
-            'Deprecation Warning: The growlnotify project is deprecated upstream. We recommend '
-            'using the applescript backend instead.'
+            "Deprecation Warning: The growlnotify project is deprecated upstream. We recommend "
+            "using the applescript backend instead."
         )
         import gntp.notifier  # type: ignore[ty:unresolved-import]  # optional dependency
 
@@ -80,12 +80,12 @@ def send_notification(issue: dict[str, Any], op: str, conf: "Notifications") -> 
             defaultNotifications=["New Messages"],
         )
         growl.register()
-        if op == 'bw_finished':
+        if op == "bw_finished":
             growl.notify(
                 noteType="New Messages",
                 title="Bugwarrior",
                 description="Finished querying for new issues.\n{}".format(
-                    issue['description']
+                    issue["description"]
                 ),
                 sticky=conf.finished_querying_sticky,
                 icon=logo_url,
@@ -101,36 +101,36 @@ def send_notification(issue: dict[str, Any], op: str, conf: "Notifications") -> 
             priority=1,
         )
         return
-    elif notify_backend == 'applescript':
-        description = 'Finished querying for new issues.\n{}'.format(
-            issue['description']
+    elif notify_backend == "applescript":
+        description = "Finished querying for new issues.\n{}".format(
+            issue["description"]
         )
-        notification = description if op == 'bw_finished' else message
+        notification = description if op == "bw_finished" else message
         escaped = notification.replace('"', '\\"')
         subprocess.call(
             [
-                'osascript',
-                '-e',
+                "osascript",
+                "-e",
                 f'display notification "{escaped}" with title "Bugwarrior"',
             ]
         )
         return
-    elif notify_backend == 'gobject':
+    elif notify_backend == "gobject":
         _cache_logo()
 
         import gi  # type: ignore[ty:unresolved-import]  # optional dependency
 
-        gi.require_version('Notify', '0.7')
+        gi.require_version("Notify", "0.7")
         from gi.repository import Notify  # type: ignore[ty:unresolved-import]
 
         Notify.init("bugwarrior")
 
-        if op == 'bw finished':
+        if op == "bw finished":
             message = "Finished querying for new issues.\n{}".format(
-                issue['description']
+                issue["description"]
             )
         else:
-            message = "{} task: {}".format(op, issue['description'])
+            message = "{} task: {}".format(op, issue["description"])
             metadata = _get_metadata(issue)
             if metadata is not None:
                 message += metadata

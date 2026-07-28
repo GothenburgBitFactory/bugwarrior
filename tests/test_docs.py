@@ -10,10 +10,10 @@ import tempfile
 import docutils.core
 import pytest
 
-DOCS_PATH = pathlib.Path(__file__).parent / '../bugwarrior/docs'
+DOCS_PATH = pathlib.Path(__file__).parent / "../bugwarrior/docs"
 
 try:
-    socket.create_connection(('1.1.1.1', 80)).close()
+    socket.create_connection(("1.1.1.1", 80)).close()
     INTERNET = True
 except OSError:
     INTERNET = False
@@ -24,11 +24,11 @@ class TestReadme:
         # GET README LISTED SERVICES
         def is_services(node):
             try:
-                return 'services' in node.attributes['classes']
+                return "services" in node.attributes["classes"]
             except AttributeError:  # not all nodes have attributes
                 return False
 
-        with open('README.rst', 'r') as f:
+        with open("README.rst", "r") as f:
             readme = f.read()
 
         readme_document = docutils.core.publish_doctree(readme)
@@ -41,26 +41,26 @@ class TestReadme:
 
         # GET TITLES FROM SERVICE DOCUMENTATION FILES
         documented_services = set()
-        for service in glob.iglob(str(DOCS_PATH / 'services' / '*.rst')):
-            with open(service, 'r') as f:
+        for service in glob.iglob(str(DOCS_PATH / "services" / "*.rst")):
+            with open(service, "r") as f:
                 firstline = f.readline().strip()
                 # ignore directives or empty lines
-                while firstline.startswith('.. _') or firstline == '':
+                while firstline.startswith(".. _") or firstline == "":
                     firstline = f.readline().strip()
                 documented_services.add(firstline)
 
         assert documented_services == readme_listed_services
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def doctreedir(tmp_path_factory):
     # Shared across the html and man builds below so the (expensive) parsing
     # of the doc sources into doctrees only happens once.
-    return str(tmp_path_factory.mktemp('doctrees'))
+    return str(tmp_path_factory.mktemp("doctrees"))
 
 
 class TestDocs:
-    @pytest.mark.skipif(not INTERNET, reason='no internet')
+    @pytest.mark.skipif(not INTERNET, reason="no internet")
     def test_docs_build_without_warning(self, doctreedir):
         # The dummy builder resolves all cross-references (so still catches
         # broken refs/links like the html builder would) but writes no
@@ -69,13 +69,13 @@ class TestDocs:
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
                 [
-                    'sphinx-build',
-                    '-b',
-                    'dummy',
-                    '-n',
-                    '-W',
-                    '-v',
-                    '-d',
+                    "sphinx-build",
+                    "-b",
+                    "dummy",
+                    "-n",
+                    "-W",
+                    "-v",
+                    "-d",
                     doctreedir,
                     str(DOCS_PATH),
                     buildDir,
@@ -83,18 +83,18 @@ class TestDocs:
                 check=True,
             )
 
-    @pytest.mark.skipif(not INTERNET, reason='no internet')
+    @pytest.mark.skipif(not INTERNET, reason="no internet")
     def test_manpage_build_without_warning(self, doctreedir):
         with tempfile.TemporaryDirectory() as buildDir:
             subprocess.run(
                 [
-                    'sphinx-build',
-                    '-b',
-                    'man',
-                    '-n',
-                    '-W',
-                    '-v',
-                    '-d',
+                    "sphinx-build",
+                    "-b",
+                    "man",
+                    "-n",
+                    "-W",
+                    "-v",
+                    "-d",
                     doctreedir,
                     str(DOCS_PATH),
                     buildDir,
@@ -103,12 +103,12 @@ class TestDocs:
             )
 
     def test_registered_services_are_documented(self):
-        registered_services = {e.name for e in entry_points(group='bugwarrior.service')}
+        registered_services = {e.name for e in entry_points(group="bugwarrior.service")}
 
         documented_services = set()
-        services_paths = os.listdir(DOCS_PATH / 'services')
+        services_paths = os.listdir(DOCS_PATH / "services")
         for p in services_paths:
-            if re.match(r'.*\.rst$', p):
-                documented_services.add(re.sub(r'\.rst$', '', p))
+            if re.match(r".*\.rst$", p):
+                documented_services.add(re.sub(r"\.rst$", "", p))
 
         assert registered_services == documented_services

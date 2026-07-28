@@ -138,19 +138,19 @@ class TestAzureDevopsConfig:
     def test_validate_config_no_organization(self, config, assert_validation_error):
         config["myservice"].update({"project": "test_project", "PAT": "myPAT"})
 
-        assert_validation_error(config, '[myservice]\norganization  <- Field required')
+        assert_validation_error(config, "[myservice]\norganization  <- Field required")
 
     def test_validate_config_no_project(self, config, assert_validation_error):
         config["myservice"].update({"organization": "http://one.com/", "PAT": "myPAT"})
 
-        assert_validation_error(config, '[myservice]\nproject  <- Field required')
+        assert_validation_error(config, "[myservice]\nproject  <- Field required")
 
     def test_validate_config_no_PAT(self, config, assert_validation_error):
         config["myservice"].update(
             {"organization": "http://one.com/", "project": "test_project"}
         )
 
-        assert_validation_error(config, '[myservice]\nPAT  <- Field required')
+        assert_validation_error(config, "[myservice]\nPAT  <- Field required")
 
 
 class TestAzureDevopsService:
@@ -220,7 +220,7 @@ class TestAzureDevopsService:
             "adoremainingwork": None,
             "adoparent": None,
             "adonamespace": "test_organization\\test_project",
-            "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',
+            "description": "(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",
             "tags": [],
         }
         issue = next(service.issues())
@@ -244,9 +244,9 @@ class TestAzureDevopsService:
             "adoremainingwork": None,
             "adoparent": None,
             "adonamespace": "test_organization\\test_project",
-            "description": '(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1',
+            "description": "(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",
             "tags": [],
         }
-        service = make_service(wiql_filter='something')
+        service = make_service(wiql_filter="something")
         issue = next(service.issues())
         assert TaskConstructor(issue).get_taskwarrior_record() == expected

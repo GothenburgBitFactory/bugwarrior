@@ -16,15 +16,15 @@ log = logging.getLogger(__name__)
 
 
 class KanboardConfig(config.ServiceConfig):
-    service: typing.Literal['kanboard']
+    service: typing.Literal["kanboard"]
     KEYRING_SERVICE = "kanboard://{username}@{url_netloc}"
     url: config.StrippedTrailingSlashUrl
     username: str
     password: str
 
-    query: str = ''
+    query: str = ""
 
-    only_if_assigned: config.UnsupportedOption[str] = ''
+    only_if_assigned: config.UnsupportedOption[str] = ""
     also_unassigned: config.UnsupportedOption[bool] = False
 
     @computed_field

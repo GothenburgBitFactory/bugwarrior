@@ -126,7 +126,7 @@ class ClickupService(Service[ClickupIssue]):
         self, config: ClickupConfig, main_config: config.MainSectionConfig
     ) -> None:
         super().__init__(config, main_config)
-        self.client = ClickupClient(token=self.get_secret('token'))
+        self.client = ClickupClient(token=self.get_secret("token"))
 
     def is_assigned(self, issue: dict) -> bool:
         if not self.config.only_if_assigned:
