@@ -117,7 +117,7 @@ class TestGerritIssue:
         issue = next(service.issues())
 
         expected = {
-            'annotations': ['@Iam Author - is is a message'],
+            'annotations': ['@Iam Author - this is a message'],
             'description': '(bw)PR#1 - this is a title .. https://one.com/#/c/1/',
             'gerritid': 1,
             'gerritsummary': 'this is a title',

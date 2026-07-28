@@ -121,7 +121,7 @@ class GerritService(Service[GerritIssue]):
             yield self.get_issue_for_record(change, extra)
 
     def build_url(self, change: dict[str, Any]) -> str:
-        return '%s/#/c/%i/' % (self.config.base_uri, change['_number'])
+        return f"{self.config.base_uri}/#/c/{change['_number']}/"
 
     def annotations(self, change: dict[str, Any]) -> list[str]:
         entries = []
@@ -137,8 +137,8 @@ class GerritService(Service[GerritIssue]):
                 continue
             message = (
                 item['message']
-                .lstrip('Patch Set ')
-                .lstrip("{}:".format(item['_revision_number']))
+                .removeprefix('Patch Set ')
+                .removeprefix("{}:".format(item['_revision_number']))
                 .strip()
                 .replace('\n', ' ')
             )
