@@ -155,7 +155,7 @@ def run_hooks(pre_import: list[str]) -> None:
     for hook in pre_import:
         exit_code = subprocess.call(hook, shell=True)
         if exit_code != 0:
-            msg = 'Non-zero exit code %d on hook %s' % exit_code, hook
+            msg = f'Non-zero exit code {exit_code} on hook {hook}'
             log.error(msg)
             raise RuntimeError(msg)
 
@@ -230,8 +230,8 @@ def synchronize(
             existing_taskwarrior_uuid = find_taskwarrior_uuid(
                 tw, unique_key_sets, issue
             )
-        except MultipleMatches as e:
-            log.exception("Multiple matches: %s", str(e))
+        except MultipleMatches:
+            log.exception("Multiple matches")
         except NotFound:  # Create new task
             issue_updates['new'].append(issue)
         else:  # Update existing task.
@@ -351,11 +351,10 @@ def synchronize(
         if not conf.notifications.only_on_new_tasks or updates > 0:
             send_notification(
                 {
-                    'description': "New: %d, Changed: %d, Completed: %d"
-                    % (
-                        len(issue_updates['new']),
-                        len(issue_updates['changed']),
-                        len(issue_updates['closed']),
+                    'description': (
+                        f"New: {len(issue_updates['new'])}, "
+                        f"Changed: {len(issue_updates['changed'])}, "
+                        f"Completed: {len(issue_updates['closed'])}"
                     )
                 },
                 'bw_finished',

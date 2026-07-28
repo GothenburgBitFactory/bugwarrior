@@ -10,7 +10,7 @@ import logging
 import math
 import os
 import re
-from typing import Any, Generic, Optional, Self, TypeVar
+from typing import Any, Generic, Self, TypeVar
 import zoneinfo
 
 from dateutil.parser import parse as parse_date
@@ -395,4 +395,4 @@ class Client:
 
 
 # NOTE: __all__ determines the stable, public API.
-__all__ = [Client.__name__, Issue.__name__, Service.__name__]
+__all__ = ["Client", "Issue", "Service"]

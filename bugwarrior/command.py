@@ -135,8 +135,8 @@ def pull(
             f'Lock file:{lockfile_path}'
         )
         sys.exit(1)
-    except RuntimeError as e:
-        log.exception(f"Aborted ({e})")
+    except RuntimeError:
+        log.exception("Aborted")
         sys.exit(1)
 
 
@@ -162,7 +162,7 @@ def targets() -> Iterator[str]:
 @vault.command()
 def list() -> None:
     pws = lst(targets())
-    print("%i @oracle:use_keyring passwords in bugwarriorrc" % len(pws))
+    print(f"{len(pws)} @oracle:use_keyring passwords in bugwarriorrc")
     for section in pws:
         print("-", section)
 

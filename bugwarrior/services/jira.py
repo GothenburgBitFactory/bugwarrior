@@ -373,7 +373,7 @@ class JiraService(Service[JiraIssue]):
                 log.warning("No sprint custom field found.  Ignoring sprints.")
                 self.config.import_sprints_as_tags = False
             else:
-                log.info("Found %i distinct sprint fields." % len(field_names))
+                log.info(f"Found {len(field_names)} distinct sprint fields.")
                 self.sprint_field_names = [field['id'] for field in field_names]
 
     def _build_jira_client(self) -> JIRA:

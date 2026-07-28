@@ -189,10 +189,7 @@ class Notifications(BaseConfig):
 _ServiceConfig = pydantic.create_model(  # type: ignore[ty:no-matching-overload]
     "_ServiceConfig",
     __base__=BaseConfig,
-    **{
-        f"{key}_template": (typing.Optional[str], None)
-        for key in taskw.task.Task.FIELDS
-    },
+    **{f"{key}_template": (str | None, None) for key in taskw.task.Task.FIELDS},
 )
 
 

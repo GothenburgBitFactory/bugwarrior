@@ -545,13 +545,14 @@ class GitlabService(Service[GitlabIssue]):
     def filter_repos(self, repo: dict[str, Any]) -> bool:
         if (
             repo['path_with_namespace'] in self.config.exclude_repos
-            or "id:%d" % repo['id'] in self.config.exclude_repos
+            or f"id:{repo['id']}" in self.config.exclude_repos
         ):
             return False
 
-        if self.config.exclude_regex:
-            if self.config.exclude_regex.match(repo['path_with_namespace']):
-                return False
+        if self.config.exclude_regex and self.config.exclude_regex.match(
+            repo['path_with_namespace']
+        ):
+            return False
 
         # fallback if no filter is set
         is_included = True
@@ -559,7 +560,7 @@ class GitlabService(Service[GitlabIssue]):
         if self.config.include_repos:
             if (
                 repo['path_with_namespace'] in self.config.include_repos
-                or "id:%d" % repo['id'] in self.config.include_repos
+                or f"id:{repo['id']}" in self.config.include_repos
             ):
                 return True
             else:
@@ -607,7 +608,7 @@ class GitlabService(Service[GitlabIssue]):
             if self.config.project_owner_prefix:
                 projectName = repo['namespace']['path'] + "." + projectName
             issue_obj = self.get_issue_for_record(issue)
-            issue_url = '%s/%s/%d' % (repo['web_url'], type_plural, issue['iid'])
+            issue_url = f"{repo['web_url']}/{type_plural}/{issue['iid']}"
             extra = {
                 'issue_url': issue_url,
                 'project': repo['path'],

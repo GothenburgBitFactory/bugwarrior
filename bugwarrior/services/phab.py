@@ -152,7 +152,7 @@ class PhabricatorService(Service[PhabricatorIssue]):
             log.warning(f"Could not read tasks from Maniphest: {err}")
             return
 
-        log.info("Found %i tasks" % len(tasks))
+        log.info(f"Found {len(tasks)} tasks")
 
         for phid, task in tasks:
             project = self.config.target  # a sensible default
@@ -202,7 +202,7 @@ class PhabricatorService(Service[PhabricatorIssue]):
 
         diffs = list(diffs)
 
-        log.info("Found %i differentials" % len(diffs))
+        log.info(f"Found {len(diffs)} differentials")
 
         for diff in diffs:
             project = self.config.target  # a sensible default

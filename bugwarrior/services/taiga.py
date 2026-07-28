@@ -116,17 +116,15 @@ class TaigaService(Service[TaigaIssue]):
 
     @cache.cache_on_arguments()
     def get_project(self, project_id: int) -> dict[str, Any]:
-        url = '%s/api/v1/projects/%i' % (self.config.base_uri, project_id)
+        url = f"{self.config.base_uri}/api/v1/projects/{project_id}"
         return Client.json_response(self.session.get(url))
 
     def build_url(
         self, task: dict[str, Any], project: dict[str, Any], task_type: str
     ) -> str:
-        return '%s/project/%s/%s/%i' % (
-            self.config.base_uri,
-            project['slug'],
-            task_type,
-            task['ref'],
+        return (
+            f"{self.config.base_uri}/project/{project['slug']}/{task_type}/"
+            f"{task['ref']}"
         )
 
     def annotations(

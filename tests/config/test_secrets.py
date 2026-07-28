@@ -75,9 +75,11 @@ class TestGetServicePassword:
         """When the keyring is locked and the unlock dialog is dismissed,
         keyring raises KeyringLocked. bugwarrior should exit fatally."""
         mock = self._mock_keyring(locked=True)
-        with patch.object(secrets, "get_keyring", return_value=mock):
-            with pytest.raises(SystemExit):
-                self._call(oracle="@oracle:use_keyring")
+        with (
+            patch.object(secrets, "get_keyring", return_value=mock),
+            pytest.raises(SystemExit),
+        ):
+            self._call(oracle="@oracle:use_keyring")
 
     def test_keyring_empty_interactive_prompts_and_stores(self):
         """When keyring has no password and stdin is a tty, the user is prompted

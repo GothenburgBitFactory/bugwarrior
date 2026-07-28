@@ -139,7 +139,7 @@ class TracService(Service[TracIssue]):
             tickets = list(map(self.trac.get_ticket, tickets))
             issues = [(self.config.target, ticket[3]) for ticket in tickets]
             for i in range(len(issues)):
-                issues[i][1]['url'] = "%s/ticket/%i" % (base_url, tickets[i][0])
+                issues[i][1]['url'] = f"{base_url}/ticket/{tickets[i][0]}"
                 issues[i][1]['number'] = tickets[i][0]
         else:
             resp = requests.get(

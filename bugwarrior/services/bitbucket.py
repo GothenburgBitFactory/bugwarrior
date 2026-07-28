@@ -157,7 +157,7 @@ class BitbucketService(Service[BitbucketIssue]):
         self, tag: str, issue: dict[str, Any], issue_obj: Issue, url: str
     ) -> list[str]:
         response = self.get_collection(
-            '/repositories/%s/pullrequests/%i/comments' % (tag, issue['id'])
+            f"/repositories/{tag}/pullrequests/{issue['id']}/comments"
         )
         return self.build_annotations(
             (

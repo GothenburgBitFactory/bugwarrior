@@ -49,10 +49,8 @@ def _aggregate_issues(service: "Service", queue: multiprocessing.Queue) -> None:
     start = time.time()
     target = service.config.target
     try:
-        issue_count = 0
         for issue in service.issues():
             queue.put(issue)
-            issue_count += 1
     except SystemExit as e:
         log.critical(f"Worker for [{target}] exited: {e}")
         queue.put((SERVICE_FINISHED_ERROR, target))
@@ -63,7 +61,7 @@ def _aggregate_issues(service: "Service", queue: multiprocessing.Queue) -> None:
             # to it, and we need to remove them, as there can be unpickleable
             # methods. There is no one left to call these hooks anyway.
             request.hooks = {}
-        log.exception(f"Worker for [{target}] failed: {e}")
+        log.exception(f"Worker for [{target}] failed")
         queue.put((SERVICE_FINISHED_ERROR, target))
     else:
         log.debug(f"Worker for [{target}] finished ok.")
@@ -83,7 +81,7 @@ def aggregate_issues(
 
     services = get_service_instances(conf)
 
-    log.info("Spawning %i workers." % len(services))
+    log.info(f"Spawning {len(services)} workers.")
 
     if debug:
         for service in services:

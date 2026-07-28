@@ -64,7 +64,7 @@ def yields_none(self):
 
 
 def raises(self):
-    raise Exception('message')
+    raise RuntimeError('message')
 
 
 def fake_service(issues, base=DumbService):
@@ -137,7 +137,7 @@ class TestPull:
 
         assert caplog.records != []
         assert len(caplog.records) == 2
-        assert caplog.records[0].message == "Worker for [my_service] failed: message"
+        assert caplog.records[0].message == "Worker for [my_service] failed"
         assert (
             caplog.records[1].message == "Aborted [my_service] due to critical error."
         )

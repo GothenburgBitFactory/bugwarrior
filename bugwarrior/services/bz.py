@@ -152,7 +152,7 @@ class BugzillaService(Service[BugzillaIssue]):
                     url=self.config.base_uri, api_key=api_key, **force_rest_kwargs
                 )
             except TypeError:
-                raise Exception("Bugzilla API keys require python-bugzilla>=2.1.0")
+                raise RuntimeError("Bugzilla API keys require python-bugzilla>=2.1.0")
         else:
             self.bz = bugzilla.Bugzilla(url=self.config.base_uri, **force_rest_kwargs)
             if self.config.password:
