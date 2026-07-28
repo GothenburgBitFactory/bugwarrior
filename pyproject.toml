@@ -100,7 +100,7 @@ skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
 extend-select = ["E4", "E7", "E9", "F", "W", "I", "E501", "ANN", "PT"]
-ignore = ["ANN401"]
+ignore = ["ANN401", "RUF012", "DTZ"]
 # ANN rules (flake8-annotations) detect untyped code — useful for gradual typing.
 # Enforced in application code under bugwarrior/ (excluding tests/ and bugwarrior/docs/).
 # ANN401 (disallow Any) is too strict for wrappers, *args/**kwargs, and data storage.
