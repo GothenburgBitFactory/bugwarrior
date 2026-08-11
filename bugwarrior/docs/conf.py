@@ -322,4 +322,5 @@ intersphinx_mapping = {
 nitpick_ignore = [
     ('py:class', 'ConfigDict'),
     ('py:class', 'bugwarrior.services.T_Issue'),
+    ('py:class', 'Task'),
 ]

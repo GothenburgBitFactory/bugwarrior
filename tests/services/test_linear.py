@@ -4,7 +4,6 @@ import json
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.linear import LinearService
 
 from ..base import validate
@@ -147,8 +146,7 @@ class TestLinearIssue:
             yield rsps
 
     def test_to_taskwarrior(self, service):
-        issue = RESPONSE["data"]["issues"]["nodes"][0]
-        issue = service.get_issue_for_record(issue, {})
+        record = RESPONSE["data"]["issues"]["nodes"][0]
 
         created_timestamp = datetime(2025, 7, 24, 17, 3, 4, 0, tzinfo=timezone.utc)
         updated_timestamp = datetime(2025, 7, 25, 17, 3, 4, 0, tzinfo=timezone.utc)
@@ -173,11 +171,10 @@ class TestLinearIssue:
             "linearclosed": closed_timestamp,
         }
 
-        actual_output = issue.to_taskwarrior()
+        actual_output = service.to_taskwarrior(record, {}).to_taskwarrior_data()
         assert actual_output == expected_output
 
-        issue = RESPONSE["data"]["issues"]["nodes"][1]
-        issue = service.get_issue_for_record(issue, {})
+        record = RESPONSE["data"]["issues"]["nodes"][1]
 
         created_timestamp = datetime(2025, 7, 24, 15, 34, 7, 0, tzinfo=timezone.utc)
         updated_timestamp = datetime(2025, 7, 24, 17, 8, 33, 0, tzinfo=timezone.utc)
@@ -202,11 +199,11 @@ class TestLinearIssue:
             "linearclosed": None,
         }
 
-        actual_output = issue.to_taskwarrior()
+        actual_output = service.to_taskwarrior(record, {}).to_taskwarrior_data()
         assert actual_output == expected_output
 
     def test_issues(self, service):
-        issue = next(service.issues())
+        collected = next(service.issues())
         created_timestamp = datetime(2025, 7, 24, 17, 3, 4, 0, tzinfo=timezone.utc)
         updated_timestamp = datetime(2025, 7, 25, 17, 3, 4, 0, tzinfo=timezone.utc)
         closed_timestamp = datetime(2025, 7, 26, 17, 3, 4, 0, tzinfo=timezone.utc)
@@ -231,7 +228,7 @@ class TestLinearIssue:
             "project": 'prj',
             "tags": [],
         }
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert collected.task.to_taskwarrior_data() == expected
 
     # Linear priority integers must map onto taskwarrior's H/M/L buckets,
     # with "No priority" (0) falling back to the service-wide default.
@@ -247,8 +244,7 @@ class TestLinearIssue:
     )
     def test_priority_mapping(self, service, linear_priority, expected):
         record = {**RESPONSE["data"]["issues"]["nodes"][0], "priority": linear_priority}
-        issue = service.get_issue_for_record(record, {})
-        assert issue.to_taskwarrior()["priority"] == expected
+        assert service.to_taskwarrior(record, {}).to_taskwarrior_data()["priority"] == expected
 
     def test_priority_missing(self, service):
         # A record without a priority key at all should also fall back to the
@@ -258,8 +254,7 @@ class TestLinearIssue:
             for k, v in RESPONSE["data"]["issues"]["nodes"][0].items()
             if k != "priority"
         }
-        issue = service.get_issue_for_record(record, {})
-        assert issue.to_taskwarrior()["priority"] == "M"
+        assert service.to_taskwarrior(record, {}).to_taskwarrior_data()["priority"] == "M"
 
     def test_issues_paginates(self, service, mock_api):
         """Drains every page when Linear signals hasNextPage."""
@@ -284,7 +279,7 @@ class TestLinearIssue:
         mock_api.add(responses.POST, "https://api.linear.app/graphql", json=page_one)
         mock_api.add(responses.POST, "https://api.linear.app/graphql", json=page_two)
 
-        identifiers = [issue.record["identifier"] for issue in service.issues()]
+        identifiers = [c.task.udas.linearidentifier for c in service.issues()]
         assert identifiers == ["DUS-5", "DUS-1"]
 
         # Two HTTP calls were made, and the second one carried the cursor

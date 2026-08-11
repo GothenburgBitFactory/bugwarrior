@@ -5,11 +5,19 @@ import re
 import typing
 from typing import Any
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 import requests
 
 from bugwarrior import config
-from bugwarrior.services import Client, Issue, Service
+from bugwarrior.collect import CollectedIssue
+from bugwarrior.services import (
+    Client,
+    Service,
+    build_default_description,
+    get_secret,
+    get_tags_from_labels,
+)
+from bugwarrior.task import IssueDatetime, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -38,46 +46,40 @@ class LinearConfig(config.ServiceConfig):
         return values
 
 
-class LinearIssue(Issue):
-    URL = "linearurl"
-    TITLE = "lineartitle"
-    DESCRIPTION = "lineardescription"
-    STATUS = "linearstatus"
-    IDENTIFIER = "linearidentifier"
-    TEAM = "linearteam"
-    CREATOR = "linearcreator"
-    ASSIGNEE = "linearassignee"
-    CREATED_AT = "linearcreated"
-    UPDATED_AT = "linearupdated"
-    CLOSED_AT = "linearclosed"
+class LinearUdas(Udas):
+    """Service-specific UDAs contributed by Linear."""
 
-    UDAS = {
-        URL: {"type": "string", "label": "Issue URL"},
-        TITLE: {"type": "string", "label": "Issue Title"},
-        DESCRIPTION: {"type": "string", "label": "Issue Description"},
-        STATUS: {"type": "string", "label": "Issue State"},
-        IDENTIFIER: {"type": "string", "label": "Linear Identifier"},
-        TEAM: {"type": "string", "label": "Project ID"},
-        CREATOR: {"type": "string", "label": "Issue Creator"},
-        ASSIGNEE: {"type": "string", "label": "Issue Assignee"},
-        CREATED_AT: {"type": "date", "label": "Issue Created"},
-        UPDATED_AT: {"type": "date", "label": "Issue Updated"},
-        CLOSED_AT: {"type": "date", "label": "Issue Closed"},
-    }
+    UNIQUE_KEY = ("linearurl",)
 
-    UNIQUE_KEY = (URL,)
+    linearurl: str | None = Field(default=None, title="Issue URL")
+    lineartitle: str | None = Field(default=None, title="Issue Title")
+    lineardescription: str | None = Field(default=None, title="Issue Description")
+    linearstatus: str | None = Field(default=None, title="Issue State")
+    linearidentifier: str | None = Field(default=None, title="Linear Identifier")
+    linearteam: str | None = Field(default=None, title="Project ID")
+    linearcreator: str | None = Field(default=None, title="Issue Creator")
+    linearassignee: str | None = Field(default=None, title="Issue Assignee")
+    linearcreated: IssueDatetime = Field(default=None, title="Issue Created")
+    linearupdated: IssueDatetime = Field(default=None, title="Issue Updated")
+    linearclosed: IssueDatetime = Field(default=None, title="Issue Closed")
+
+
+class LinearTask(Task):
+    udas: LinearUdas
+
+
+class LinearService(Service):
+    API_VERSION = 2.0
+    UDAS_CLASS = LinearUdas
+    CONFIG_SCHEMA = LinearConfig
 
     # Linear exposes issue priority as an integer:
     #   0 = No priority, 1 = Urgent, 2 = High, 3 = Medium, 4 = Low.
     PRIORITY_MAP: dict[int, config.Priority] = {1: "H", 2: "H", 3: "M", 4: "L"}
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        description = self.record.get("description")
-        created = self.parse_date(self.record.get("createdAt"))
-        modified = self.parse_date(self.record.get("updatedAt"))
-        closed = self.parse_date(self.record.get("completedAt"))
-        due = self.parse_date(self.record.get("dueDate"))
-
+    def to_taskwarrior(
+        self, record: dict[str, Any], extra: dict[str, Any]
+    ) -> LinearTask:
         # Get a value, defaulting empty results to the given default. Some
         # GraphQL response values, such as for `project`, are either an object
         # or None, rather than being omitted when empty, so this allows chained
@@ -85,52 +87,49 @@ class LinearIssue(Issue):
         def get(v: Any, k: str, default: Any = None) -> Any:
             return v.get(k, default) or default
 
-        return {
-            "project": (
+        return LinearTask(
+            project=(
                 re.sub(
                     r"[^a-zA-Z0-9]",
                     "_",
-                    get(get(self.record, "project", {}), "name", ""),
+                    get(get(record, "project", {}), "name", ""),
                 ).lower()
                 or None
             ),
-            "priority": self.get_priority(),
-            "due": due,
-            "entry": created,
-            "annotations": get(self.extra, "annotations", []),
-            "tags": self.get_tags(),
-            self.URL: self.record["url"],
-            self.TITLE: get(self.record, "title"),
-            self.DESCRIPTION: description,
-            self.STATUS: get(get(self.record, "state", {}), "name"),
-            self.IDENTIFIER: get(self.record, "identifier"),
-            self.TEAM: get(get(self.record, "team", {}), "name"),
-            self.CREATOR: get(get(self.record, "creator", {}), "email"),
-            self.ASSIGNEE: get(get(self.record, "assignee", {}), "email"),
-            self.CREATED_AT: created,
-            self.UPDATED_AT: modified,
-            self.CLOSED_AT: closed,
-        }
-
-    def get_tags(self) -> list[str]:
-        labels = [
-            label["name"] for label in self.record.get("labels", {}).get("nodes", [])
-        ]
-        return self.get_tags_from_labels(labels)
-
-    def get_default_description(self) -> str:
-        return self.build_default_description(
-            title=self.record.get("title", ""),
-            url=self.record.get("url", ""),
-            number=self.record.get("identifier", ""),
-            cls="task",
+            priority=self.get_priority(record),
+            due=record.get("dueDate"),
+            entry=record.get("createdAt"),
+            annotations=get(extra, "annotations", []),
+            tags=self.get_tags(record),
+            udas=LinearUdas(
+                linearurl=record["url"],
+                lineartitle=get(record, "title"),
+                lineardescription=record.get("description"),
+                linearstatus=get(get(record, "state", {}), "name"),
+                linearidentifier=get(record, "identifier"),
+                linearteam=get(get(record, "team", {}), "name"),
+                linearcreator=get(get(record, "creator", {}), "email"),
+                linearassignee=get(get(record, "assignee", {}), "email"),
+                linearcreated=record.get("createdAt"),
+                linearupdated=record.get("updatedAt"),
+                linearclosed=record.get("completedAt"),
+            ),
         )
 
+    def get_tags(self, record: dict[str, Any]) -> list[str]:
+        labels = [
+            label["name"] for label in record.get("labels", {}).get("nodes", [])
+        ]
+        return get_tags_from_labels(self.config, record, labels)
 
-class LinearService(Service[LinearIssue]):
-    API_VERSION = 2.0
-    ISSUE_CLASS = LinearIssue
-    CONFIG_SCHEMA = LinearConfig
+    def get_default_description(self, record: dict[str, Any]) -> str:
+        return build_default_description(
+            self.main_config,
+            title=record.get("title", ""),
+            url=record.get("url", ""),
+            number=record.get("identifier", ""),
+            cls="task",
+        )
 
     def __init__(
         self, config: LinearConfig, main_config: config.MainSectionConfig
@@ -140,7 +139,7 @@ class LinearService(Service[LinearIssue]):
         self.session = requests.Session()
         self.session.headers.update(
             {
-                "Authorization": self.get_secret("api_token"),
+                "Authorization": get_secret(self.config, "api_token"),
                 "Content-Type": "application/json",
             }
         )
@@ -200,9 +199,9 @@ class LinearService(Service[LinearIssue]):
             }
             """
 
-    def issues(self) -> Iterator[LinearIssue]:
-        for issue in self.get_issues():
-            yield self.get_issue_for_record(issue, {})
+    def issues(self) -> Iterator[CollectedIssue]:
+        for record in self.get_issues():
+            yield self.process_record(record, {})
 
     def get_issues(self) -> Iterator[dict[str, Any]]:
         """

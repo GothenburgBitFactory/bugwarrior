@@ -5,20 +5,21 @@ Service API
 
 import abc
 from collections.abc import Iterable, Iterator
-import datetime
 import logging
 import math
 import os
 import re
-from typing import Any, Generic, Optional, TypeVar
-import zoneinfo
+from typing import TYPE_CHECKING, Any, Optional
 
-from dateutil.parser import parse as parse_date
 import dogpile.cache
 from jinja2 import Template
 import requests
 
+from bugwarrior.collect import CollectedIssue, make_unique_identifier
 from bugwarrior.config import schema, secrets
+
+if TYPE_CHECKING:
+    from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -71,191 +72,164 @@ def get_processed_url(main_config: schema.MainSectionConfig, url: str) -> str:
     return url
 
 
-class Issue(abc.ABC):
-    """Base class for translating from foreign records to taskwarrior tasks.
+def get_secret(
+    config: schema.ServiceConfig, key: str, login: str = 'nousername'
+) -> str:
+    """Get a secret value, potentially from an :ref:`oracle <Secret Management>`.
 
-    The upper case attributes and abstract methods need to be defined by
-    service implementations, while the lower case attributes and concrete
-    methods are provided by the base class.
+    The secret key need not be a *password*, per se.
+
+    :param `key`: Name of the configuration field of the given secret.
+    :param `login`: Username associated with the password in a keyring, if
+        applicable.
     """
-
-    #: Set to a dictionary mapping UDA short names with type and long name.
-    #:
-    #: Example::
-    #:
-    #:     {
-    #:         'project_id': {
-    #:             'type': 'string',
-    #:             'label': 'Project ID',
-    #:         },
-    #:         'ticket_number': {
-    #:             'type': 'number',
-    #:             'label': 'Ticket Number',
-    #:         },
-    #:     }
-    #:
-    #: Note: For best results, dictionary keys should be unique!
-    UDAS: dict
-    #: Should be a tuple of field names (can be UDA names) that are usable for
-    #: uniquely identifying an issue in the foreign system.
-    UNIQUE_KEY: tuple[str, ...]
-    #: Should be a dictionary of value-to-level mappings between the foreign
-    #: system and the string values 'H', 'M' or 'L'.
-    PRIORITY_MAP: dict
-
-    def __init__(
-        self,
-        foreign_record: dict[str, Any],
-        config: schema.ServiceConfig,
-        main_config: schema.MainSectionConfig,
-        extra: dict[str, Any],
-    ) -> None:
-        #: Data retrieved from the external service.
-        self.record = foreign_record
-        #: An object whose attributes are this service's configuration values.
-        self.config: schema.ServiceConfig = config
-        #: An object whose attributes are the
-        #: :ref:`common_configuration:Main Section` configuration values.
-        self.main_config: schema.MainSectionConfig = main_config
-        #: Data computed by the :class:`Service` class.
-        self.extra = extra
-
-    @abc.abstractmethod
-    def to_taskwarrior(self) -> dict[str, Any]:
-        """Transform a foreign record into a taskwarrior dictionary."""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_default_description(self) -> str:
-        """Return a default description for this task.
-
-        You should probably use :meth:`build_default_description` to achieve
-        this.
-        """
-        raise NotImplementedError()
-
-    def render_tags_from_labels(self, labels: list[str]) -> list[str]:
-        """Transform labels into suitable taskwarrior tags using the label template."""
-
-        return [
-            Template(self.config.label_template).render(
-                {**self.record, "label": re.sub(r'[^a-zA-Z0-9]', '_', label)}
-            )
-            for label in labels
-        ]
-
-    def get_tags_from_labels(
-        self,
-        labels: list[str],
-        toggle_option: str = 'import_labels_as_tags',
-        template_option: str = 'label_template',
-        template_variable: str = 'label',
-    ) -> list[str]:
-        """Transform labels into suitable taskwarrior tags, respecting configuration options."""
-        using_deprecated_parameters = (
-            toggle_option != 'import_labels_as_tags'
-            or template_option != 'label_template'
-            or template_variable != 'label'
+    password = getattr(config, key)
+    if not password or password.startswith("@oracle:"):
+        password = secrets.get_service_password(
+            config.keyring_service, login, oracle=password
         )
-        if using_deprecated_parameters:
-            log.warning(
-                "Deprecation Warning: Issue.get_tags_from_labels's toggle_option, "
-                "template_option, and template_variable parameters are deprecated and "
-                "will be removed in a future API version."
-            )
+    return password
 
-        if not getattr(self.config, toggle_option):
-            return []
 
-        if not using_deprecated_parameters:
-            return self.render_tags_from_labels(labels)
+def build_annotations(
+    main_config: schema.MainSectionConfig,
+    annotations: Iterable[tuple[str, str]],
+    url: Optional[str] = None,
+) -> list[str]:
+    """Format annotations, respecting configuration values.
 
-        # deprecated path, to be removed once we remove the deprecated parameters.
-        context = self.record.copy()
-        label_template = Template(getattr(self.config, template_option))
-        tags = []
+    :param `annotations`: Comments from service.
+    :param `url`: Url to prepend to the annotations.
+    """
+    final = []
+    if url and main_config.annotation_links:
+        final.append(get_processed_url(main_config, url))
+    if main_config.annotation_comments:
+        for author, message in annotations:
+            message = message.strip()
+            if not message or not author:
+                continue
 
-        for label in labels:
-            normalized_label = re.sub(r'[^a-zA-Z0-9]', '_', label)
-            context.update({template_variable: normalized_label})
-            tags.append(label_template.render(context))
+            if not main_config.annotation_newlines:
+                message = message.replace('\n', '').replace('\r', '')
 
-        return tags
+            annotation_length = main_config.annotation_length
+            if annotation_length:
+                message = '%s%s' % (
+                    message[:annotation_length],
+                    '...' if len(message) > annotation_length else '',
+                )
+            final.append('@%s - %s' % (author, message))
+    return final
 
-    def get_priority(self) -> schema.Priority:
-        """Return the priority of this issue, falling back to ``default_priority`` configuration."""
-        return self.PRIORITY_MAP.get(
-            self.record.get('priority'), self.config.default_priority
+
+def render_tags_from_labels(
+    config: schema.ServiceConfig, record: dict[str, Any], labels: list[str]
+) -> list[str]:
+    """Transform labels into suitable taskwarrior tags using the label template."""
+    return [
+        Template(config.label_template).render(
+            {**record, "label": re.sub(r'[^a-zA-Z0-9]', '_', label)}
+        )
+        for label in labels
+    ]
+
+
+def get_tags_from_labels(
+    config: schema.ServiceConfig,
+    record: dict[str, Any],
+    labels: list[str],
+    toggle_option: str = 'import_labels_as_tags',
+    template_option: str = 'label_template',
+    template_variable: str = 'label',
+) -> list[str]:
+    """Transform labels into suitable taskwarrior tags, respecting configuration options."""
+    using_deprecated_parameters = (
+        toggle_option != 'import_labels_as_tags'
+        or template_option != 'label_template'
+        or template_variable != 'label'
+    )
+    if using_deprecated_parameters:
+        log.warning(
+            "Deprecation Warning: Issue.get_tags_from_labels's toggle_option, "
+            "template_option, and template_variable parameters are deprecated and "
+            "will be removed in a future API version."
         )
 
-    def parse_date(
-        self, date: str | None, timezone: str = 'deprecated'
-    ) -> datetime.datetime | None:
-        """Parse a date string into a datetime object.
+    if not getattr(config, toggle_option):
+        return []
 
-        If the parsed date does not have a timezone, the UTC timezone is added.
+    if not using_deprecated_parameters:
+        return render_tags_from_labels(config, record, labels)
 
-        :param `date`: A time string parseable by `dateutil.parser.parse`
-        """
-        if timezone != 'deprecated':
-            log.warning(
-                "Deprecation Warning: Issue.parse_date's timezone parameter is deprecated and will "
-                "be removed in a future API version."
-            )
+    # deprecated path, to be removed once we remove the deprecated parameters.
+    context = record.copy()
+    label_template = Template(getattr(config, template_option))
+    tags = []
 
-        if not date:
-            return None
+    for label in labels:
+        normalized_label = re.sub(r'[^a-zA-Z0-9]', '_', label)
+        context.update({template_variable: normalized_label})
+        tags.append(label_template.render(context))
 
-        _date = parse_date(date)
-        if not _date.tzinfo:
-            _date = _date.replace(
-                tzinfo=datetime.timezone.utc
-                if timezone == 'deprecated'
-                else zoneinfo.ZoneInfo(timezone)
-            )
-
-        return _date.replace(microsecond=0)
-
-    def build_default_description(
-        self, title: str = '', url: str = '', number: str | int = '', cls: str = "issue"
-    ) -> str:
-        """Return a default description, respecting configuration options.
-
-        :param `title`: Short description of the task.
-        :param `url`: URL to the task on the service.
-        :param `number`: Number associated with the task on the service.
-        :param `cls`: The abbreviated type of task this is. Preferred options
-            are ('issue', 'pull_request', 'merge_request', 'todo', 'task',
-            'subtask').
-        """
-        cls_markup = {
-            'issue': 'Is',
-            'pull_request': 'PR',
-            'merge_request': 'MR',
-            'todo': '',
-            'task': '',
-            'subtask': 'Subtask #',
-        }
-        url_separator = ' .. '
-        url = (
-            get_processed_url(self.main_config, url)
-            if self.main_config.inline_links
-            else ''
-        )
-        desc_len = self.main_config.description_length
-        return "(bw)%s#%s - %s%s%s" % (
-            cls_markup.get(cls, cls.title()),
-            number,
-            title[:desc_len] if desc_len else title,
-            url_separator if url else '',
-            url,
-        )
+    return tags
 
 
-T_Issue = TypeVar("T_Issue", bound="Issue")
+def build_default_description(
+    main_config: schema.MainSectionConfig,
+    title: str = '',
+    url: str = '',
+    number: str | int = '',
+    cls: str = "issue",
+) -> str:
+    """Return a default description, respecting configuration options.
+
+    :param `title`: Short description of the task.
+    :param `url`: URL to the task on the service.
+    :param `number`: Number associated with the task on the service.
+    :param `cls`: The abbreviated type of task this is. Preferred options
+        are ('issue', 'pull_request', 'merge_request', 'todo', 'task',
+        'subtask').
+    """
+    cls_markup = {
+        'issue': 'Is',
+        'pull_request': 'PR',
+        'merge_request': 'MR',
+        'todo': '',
+        'task': '',
+        'subtask': 'Subtask #',
+    }
+    url_separator = ' .. '
+    url = get_processed_url(main_config, url) if main_config.inline_links else ''
+    desc_len = main_config.description_length
+    return "(bw)%s#%s - %s%s%s" % (
+        cls_markup.get(cls, cls.title()),
+        number,
+        title[:desc_len] if desc_len else title,
+        url_separator if url else '',
+        url,
+    )
 
 
-class Service(abc.ABC, Generic[T_Issue]):
+def _apply_templates(
+    config: schema.ServiceConfig, task: "Task", extra: dict[str, Any]
+) -> None:
+    """Render the user's field and tag templates onto a mapped task.
+
+    A field template overwrites whatever the service mapped for that field
+    (including the default description); added tags are appended.
+    """
+    context = {**task.to_taskwarrior_data(), **extra}
+    for field, template in config.templates.items():
+        setattr(task, field, Template(template).render(context))
+
+    for tag_template in config.add_tags:
+        tag = Template(tag_template).render(context)
+        if tag:
+            task.tags.append(tag)
+
+
+class Service(abc.ABC):
     """Base class for fetching issues from the service.
 
     The upper case attributes and abstract methods need to be defined by
@@ -265,10 +239,13 @@ class Service(abc.ABC, Generic[T_Issue]):
 
     #: Which version of the API does this service implement?
     API_VERSION: float
-    #: Which class should this service instantiate for holding these issues?
-    ISSUE_CLASS: type[T_Issue]
+    #: Which Udas model declares this service's UDAs and unique key?
+    UDAS_CLASS: type["Udas"]
     #: Which class defines this service's configuration options?
     CONFIG_SCHEMA: type[schema.ServiceConfig]
+    #: Should be a dictionary of value-to-level mappings between the foreign
+    #: system and the string values 'H', 'M' or 'L'.
+    PRIORITY_MAP: dict
 
     def __init__(
         self, config: schema.ServiceConfig, main_config: schema.MainSectionConfig
@@ -289,88 +266,53 @@ class Service(abc.ABC, Generic[T_Issue]):
 
         log.info("Working on [%s]", self.config.target)
 
-    def get_secret(self, key: str, login: str = 'nousername') -> str:
-        """Get a secret value, potentially from an :ref:`oracle <Secret Management>`.
+    @abc.abstractmethod
+    def to_taskwarrior(self, record: dict[str, Any], extra: dict[str, Any]) -> "Task":
+        """Transform a foreign record into a taskwarrior Task."""
+        raise NotImplementedError()
 
-        The secret key need not be a *password*, per se.
+    @abc.abstractmethod
+    def get_default_description(self, record: dict[str, Any]) -> str:
+        """Return a default description for this task.
 
-        :param `key`: Name of the configuration field of the given secret.
-        :param `login`: Username associated with the password in a keyring, if
-            applicable.
+        You should probably use :func:`build_default_description` to achieve
+        this.
         """
-        password = getattr(self.config, key)
-        if not password or password.startswith("@oracle:"):
-            password = secrets.get_service_password(
-                self.config.keyring_service, login, oracle=password
-            )
-        return password
+        raise NotImplementedError()
 
-    def get_issue_for_record(
+    def get_priority(self, record: dict[str, Any]) -> schema.Priority:
+        """Return the priority of this issue, falling back to ``default_priority`` configuration."""
+        return self.PRIORITY_MAP.get(
+            record.get('priority'), self.config.default_priority
+        )
+
+    def process_record(
         self, record: dict[str, Any], extra: dict[str, Any] | None = None
-    ) -> T_Issue:
-        """Instantiate and return an issue for the given record.
+    ) -> CollectedIssue:
+        """Map, refine and package a foreign record for synchronization.
 
         :param `record`: Foreign record.
         :param `extra`: Computed data which is not directly from the service.
         """
         extra = extra or {}
-        return self.ISSUE_CLASS(record, self.config, self.main_config, extra=extra)
-
-    def build_annotations(
-        self, annotations: Iterable[tuple[str, str]], url: Optional[str] = None
-    ) -> list[str]:
-        """Format annotations, respecting configuration values.
-
-        :param `annotations`: Comments from service.
-        :param `url`: Url to prepend to the annotations.
-        """
-        final = []
-        if url and self.main_config.annotation_links:
-            final.append(get_processed_url(self.main_config, url))
-        if self.main_config.annotation_comments:
-            for author, message in annotations:
-                message = message.strip()
-                if not message or not author:
-                    continue
-
-                if not self.main_config.annotation_newlines:
-                    message = message.replace('\n', '').replace('\r', '')
-
-                annotation_length = self.main_config.annotation_length
-                if annotation_length:
-                    message = '%s%s' % (
-                        message[:annotation_length],
-                        '...' if len(message) > annotation_length else '',
-                    )
-                final.append('@%s - %s' % (author, message))
-        return final
+        task = self.to_taskwarrior(record, extra)
+        task.description = self.get_default_description(record)
+        _apply_templates(self.config, task, extra)
+        return CollectedIssue(
+            task=task,
+            identifier=make_unique_identifier(
+                self.UDAS_CLASS.get_unique_key(), task.to_taskwarrior_data()
+            ),
+            target=self.config.target,
+        )
 
     @abc.abstractmethod
-    def issues(self) -> Iterator[T_Issue]:
-        """A generator yielding Issue instances representing issues from a remote service.
+    def issues(self) -> Iterator[CollectedIssue]:
+        """Yield collected issues from a remote service.
 
-        Each item in the list should be a dict that looks something like this:
-
-        .. code-block:: python
-
-            {
-                "description": "Some description of the issue",
-                "project": "some_project",
-                "priority": "H",
-                "annotations": [
-                    "This is an annotation",
-                    "This is another annotation",
-                ]
-            }
-
-
-        The description can be 'anything' but must be consistent and unique for
-        issues you're pulling from a remote service.  You can and should use
-        the ``.description(...)`` method to help format your descriptions.
-
-        The project should be a string and may be anything you like.
-
-        The priority should be one of "H", "M", or "L".
+        Fetch foreign records and pass each through :meth:`process_record`
+        (which maps it to a typed Task, refines it, and packages it for
+        synchronization).
         """
         raise NotImplementedError()
 
@@ -395,4 +337,4 @@ class Client:
 
 
 # NOTE: __all__ determines the stable, public API.
-__all__ = [Client.__name__, Issue.__name__, Service.__name__]
+__all__ = [Client.__name__, Service.__name__]
