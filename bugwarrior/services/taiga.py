@@ -3,10 +3,12 @@ import logging
 import typing
 from typing import Any
 
+from pydantic import Field
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import CACHE_REGION as cache, Client, Issue, Service
+from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -24,29 +26,34 @@ class TaigaConfig(config.ServiceConfig):
     also_unassigned: config.UnsupportedOption[bool] = False
 
 
+class TaigaUdas(Udas):
+    """Service-specific UDAs contributed by Taiga."""
+
+    UNIQUE_KEY = ('taigaurl',)
+
+    taigasummary: str = Field(title='Taiga Summary')
+    taigaurl: str = Field(title='Taiga URL')
+    taigaid: int = Field(title='Taiga Issue ID')
+
+
+class TaigaTask(Task):
+    udas: TaigaUdas
+
+
 class TaigaIssue(Issue):
-    SUMMARY = 'taigasummary'
-    URL = 'taigaurl'
-    FOREIGN_ID = 'taigaid'
-
-    UDAS = {
-        SUMMARY: {'type': 'string', 'label': 'Taiga Summary'},
-        URL: {'type': 'string', 'label': 'Taiga URL'},
-        FOREIGN_ID: {'type': 'numeric', 'label': 'Taiga Issue ID'},
-    }
-    UNIQUE_KEY = (URL,)
-
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            'project': self.extra['project'],
-            'annotations': self.extra['annotations'],
-            self.URL: self.extra['url'],
-            'priority': self.config.default_priority,
-            'tags': self.get_tags(),
-            self.FOREIGN_ID: self.record['ref'],
-            self.SUMMARY: self.record['subject'],
-            'due': self.parse_date(self.record.get('due_date')),
-        }
+    def to_taskwarrior(self) -> TaigaTask:
+        return TaigaTask(
+            project=self.extra['project'],
+            annotations=self.extra['annotations'],
+            priority=self.config.default_priority,
+            tags=self.get_tags(),
+            due=self.record.get('due_date'),
+            udas=TaigaUdas(
+                taigasummary=self.record['subject'],
+                taigaurl=self.extra['url'],
+                taigaid=self.record['ref'],
+            ),
+        )
 
     def get_tags(self) -> list[str]:
         return [x if isinstance(x, str) else x[0] for x in self.record['tags']]
@@ -60,9 +67,10 @@ class TaigaIssue(Issue):
         )
 
 
-class TaigaService(Service[TaigaIssue]):
+class TaigaService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = TaigaIssue
+    TASK_SCHEMA = TaigaTask
     CONFIG_SCHEMA = TaigaConfig
 
     def __init__(
@@ -80,7 +88,7 @@ class TaigaService(Service[TaigaIssue]):
 
     def _issues(
         self, userid: int, task_type: str, task_type_plural: str, task_type_short: str
-    ) -> Iterator[TaigaIssue]:
+    ) -> Iterator[Task]:
         log.debug('Getting %s' % task_type_plural)
 
         response = self.session.get(
@@ -98,9 +106,9 @@ class TaigaService(Service[TaigaIssue]):
                 ),
                 'url': self.build_url(task, project, task_type_short),
             }
-            yield self.get_issue_for_record(task, extra)
+            yield self.process_record(task, extra)
 
-    def issues(self) -> Iterator[TaigaIssue]:
+    def issues(self) -> Iterator[Task]:
         url = self.config.base_uri + '/api/v1/users/me'
         me = self.session.get(url)
         data = me.json()

@@ -4,10 +4,12 @@ import logging
 import typing
 from typing import Any
 
+from pydantic import Field
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -62,60 +64,59 @@ class NextcloudDeckClient(Client):
         return response.json()
 
 
+class NextcloudDeckUdas(Udas):
+    """Service-specific UDAs contributed by Nextcloud Deck."""
+
+    UNIQUE_KEY = ('nextclouddeckboardid', 'nextclouddeckstackid', 'nextclouddeckcardid')
+
+    nextclouddeckauthor: str = Field(title='Nextcloud Deck Issue Author')
+    nextclouddeckboardid: int = Field(title='Nextcloud Deck Board ID')
+    nextclouddeckboardtitle: str = Field(title='Nextcloud Deck Board Title')
+    nextclouddeckstackid: int = Field(title='Nextcloud Deck Stack ID')
+    nextclouddeckstacktitle: str = Field(title='Nextcloud Deck Stack Title')
+    nextclouddeckcardid: int = Field(title='Nextcloud Deck Card ID')
+    nextclouddeckcardtitle: str = Field(title='Nextcloud Deck Card Title')
+    nextclouddeckdescription: str | None = Field(
+        title='Nextcloud Deck Card Description'
+    )
+    nextclouddeckorder: int = Field(title='Nextcloud Deck Order')
+    nextclouddeckassignee: str | None = Field(title='Nextcloud Deck Assignee(s)')
+
+
+class NextcloudDeckTask(Task):
+    udas: NextcloudDeckUdas
+
+
 class NextcloudDeckIssue(Issue):
-    AUTHOR = 'nextclouddeckauthor'
-    BOARD_ID = 'nextclouddeckboardid'
-    BOARD_TITLE = 'nextclouddeckboardtitle'
-    STACK_ID = 'nextclouddeckstackid'
-    STACK_TITLE = 'nextclouddeckstacktitle'
-    CARD_ID = 'nextclouddeckcardid'
-    TITLE = 'nextclouddeckcardtitle'
-    DESCRIPTION = 'nextclouddeckdescription'
-    ORDER = 'nextclouddeckorder'
-    ASSIGNEE = 'nextclouddeckassignee'
-
-    UDAS = {
-        AUTHOR: {'type': 'string', 'label': 'Nextcloud Deck Issue Author'},
-        BOARD_ID: {'type': 'numeric', 'label': 'Nextcloud Deck Board ID'},
-        BOARD_TITLE: {'type': 'string', 'label': 'Nextcloud Deck Board Title'},
-        STACK_ID: {'type': 'numeric', 'label': 'Nextcloud Deck Stack ID'},
-        STACK_TITLE: {'type': 'string', 'label': 'Nextcloud Deck Stack Title'},
-        CARD_ID: {'type': 'numeric', 'label': 'Nextcloud Deck Card ID'},
-        TITLE: {'type': 'string', 'label': 'Nextcloud Deck Card Title'},
-        DESCRIPTION: {'type': 'string', 'label': 'Nextcloud Deck Card Description'},
-        ORDER: {'type': 'numeric', 'label': 'Nextcloud Deck Order'},
-        ASSIGNEE: {'type': 'string', 'label': 'Nextcloud Deck Assignee(s)'},
-    }
-
-    UNIQUE_KEY = (BOARD_ID, STACK_ID, CARD_ID)
-
     PRIORITY_MAP = {}  # FIXME
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            'project': self.extra['board']['title'].lower().replace(' ', '_'),
-            'priority': self.get_priority(),
-            'annotations': self.extra['annotations'],
-            'tags': self.get_tags(),
-            'entry': datetime.datetime.fromtimestamp(
+    def to_taskwarrior(self) -> NextcloudDeckTask:
+        return NextcloudDeckTask(
+            project=self.extra['board']['title'].lower().replace(' ', '_'),
+            priority=self.get_priority(),
+            annotations=self.extra['annotations'],
+            tags=self.get_tags(),
+            entry=datetime.datetime.fromtimestamp(
                 self.record['createdAt'], tz=datetime.timezone.utc
             ),
-            'due': self.parse_date(self.record.get('duedate')),
-            self.AUTHOR: self.record['owner']['uid'],
-            self.BOARD_ID: self.extra['board']['id'],
-            self.BOARD_TITLE: self.extra['board']['title'],
-            self.STACK_ID: self.extra['stack']['id'],
-            self.STACK_TITLE: self.extra['stack']['title'],
-            self.CARD_ID: self.record['id'],
-            self.TITLE: self.record['title'],
-            self.DESCRIPTION: self.record['description'],
-            self.ORDER: self.record['order'],
-            self.ASSIGNEE: (
-                self.record['assignedUsers'][0]['participant']['uid']
-                if self.record['assignedUsers']
-                else None
+            due=self.record.get('duedate'),
+            udas=NextcloudDeckUdas(
+                nextclouddeckauthor=self.record['owner']['uid'],
+                nextclouddeckboardid=self.extra['board']['id'],
+                nextclouddeckboardtitle=self.extra['board']['title'],
+                nextclouddeckstackid=self.extra['stack']['id'],
+                nextclouddeckstacktitle=self.extra['stack']['title'],
+                nextclouddeckcardid=self.record['id'],
+                nextclouddeckcardtitle=self.record['title'],
+                nextclouddeckdescription=self.record['description'],
+                nextclouddeckorder=self.record['order'],
+                nextclouddeckassignee=(
+                    self.record['assignedUsers'][0]['participant']['uid']
+                    if self.record['assignedUsers']
+                    else None
+                ),
             ),
-        }
+        )
 
     def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(
@@ -126,9 +127,10 @@ class NextcloudDeckIssue(Issue):
         return self.build_default_description(title=self.record['title'])
 
 
-class NextcloudDeckService(Service[NextcloudDeckIssue]):
+class NextcloudDeckService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = NextcloudDeckIssue
+    TASK_SCHEMA = NextcloudDeckTask
     CONFIG_SCHEMA = NextcloudDeckConfig
 
     def __init__(
@@ -142,16 +144,15 @@ class NextcloudDeckService(Service[NextcloudDeckIssue]):
             password=self.config.password,
         )
 
-    def get_owner(self, issue: NextcloudDeckIssue) -> str | None:
-        rec = issue.record
-        if rec.get('assignedUsers'):
-            return rec['assignedUsers'][0]['participant']['uid']
+    def get_owner(self, card: dict[str, Any]) -> str | None:
+        if card.get('assignedUsers'):
+            return card['assignedUsers'][0]['participant']['uid']
         return None
 
-    def include(self, issue: NextcloudDeckIssue) -> bool:
-        """Return true if the issue in question should be included"""
+    def include(self, card: dict[str, Any]) -> bool:
+        """Return true if the card in question should be included"""
         if self.config.only_if_assigned:
-            owner = self.get_owner(issue)
+            owner = self.get_owner(card)
             include_owners: list[str | None] = [self.config.only_if_assigned]
 
             if self.config.also_unassigned:
@@ -180,7 +181,7 @@ class NextcloudDeckService(Service[NextcloudDeckIssue]):
             ((comment['actorDisplayName'], comment['message']) for comment in comments)
         )
 
-    def issues(self) -> Iterator[NextcloudDeckIssue]:
+    def issues(self) -> Iterator[Task]:
         for board in self.client.get_boards():
             if self.filter_boards(board):
                 for stack in self.client.get_stacks(board['id']):
@@ -190,6 +191,5 @@ class NextcloudDeckService(Service[NextcloudDeckIssue]):
                             'stack': stack,
                             'annotations': self.annotations(card),
                         }
-                        issue = self.get_issue_for_record(card, extra)
-                        if self.include(issue):
-                            yield issue
+                        if self.include(card):
+                            yield self.process_record(card, extra)

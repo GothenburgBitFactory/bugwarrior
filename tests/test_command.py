@@ -4,10 +4,12 @@ import typing
 from unittest import mock
 
 from click.testing import CliRunner
+from pydantic import Field
 import pytest
 
 from bugwarrior import command
 from bugwarrior.config.load import BugwarriorConfigParser
+from bugwarrior.task import Task, Udas
 
 from .base import DumbConfig, DumbIssue, DumbService, register_services
 
@@ -17,28 +19,43 @@ class SecondaryConfig(DumbConfig):
     KEYRING_SERVICE = 'secondary://'
 
 
+class SecondaryUdas(Udas):
+    """
+    UDAs of a second fake service, with a distinct UNIQUE_KEY.
+
+    A test with two services needs two different unique keys, as real
+    services have. Otherwise the code which closes tasks that are gone from
+    the remote service cannot tell the tasks of one from the other.
+    """
+
+    UNIQUE_KEY = ('secondaryurl',)
+
+    secondaryurl: str = Field(title='Secondary URL')
+    secondarytype: str = Field(title='Secondary Type')
+
+
+class SecondaryTask(Task):
+    udas: SecondaryUdas
+
+
 class SecondaryIssue(DumbIssue):
-    """
-    A second fake issue with a distinct UNIQUE_KEY.
-
-    Multi-service tests need two services whose unique keys differ, mirroring
-    real services (e.g. GitHub vs Bugzilla); otherwise the close-stale-tasks
-    logic cannot tell their tasks apart.
-    """
-
-    URL = 'secondaryurl'
-    TYPE = 'secondarytype'
-
-    UDAS = {
-        URL: {'type': 'string', 'label': 'Secondary URL'},
-        TYPE: {'type': 'string', 'label': 'Secondary Type'},
-    }
-    UNIQUE_KEY = (URL,)
+    def to_taskwarrior(self):
+        return SecondaryTask(
+            project=self.extra.get('project'),
+            priority=self.config.default_priority,
+            annotations=self.extra.get('annotations', []),
+            tags=self.get_tags_from_labels(self.record.get('labels', [])),
+            udas=SecondaryUdas(
+                secondaryurl=self.record.get('url', ''),
+                secondarytype=self.extra.get('type', 'issue'),
+            ),
+        )
 
 
 class SecondaryService(DumbService):
     CONFIG_SCHEMA = SecondaryConfig
     ISSUE_CLASS = SecondaryIssue
+    TASK_SCHEMA = SecondaryTask
 
 
 def yields_one(target_specific_url=False):
@@ -54,7 +71,7 @@ def yields_one(target_specific_url=False):
             record['url'] = f'https://example.com/{self.config.target}'
 
         extra = {'project': 'one', 'type': 'issue', 'annotations': []}
-        yield self.get_issue_for_record(record, extra)
+        yield self.process_record(record, extra)
 
     return issues
 

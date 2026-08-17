@@ -197,29 +197,31 @@ def synchronize(
             continue
 
         # De-duplicate issues coming in
-        if issue.identifier in issue_map:
-            log.debug(f"Merging tags and skipping. Seen {issue.identifier} of {issue}")
+        identifier = issue.task.unique_identifier()
+        if identifier in issue_map:
+            log.debug(f"Merging tags and skipping. Seen {identifier} of {issue}")
             # Merge and deduplicate tags.
-            new_tags = sorted(
-                set(issue_map[issue.identifier].task_data['tags'])
-                | set(issue.task_data['tags'])
+            issue_map[identifier].task.tags = sorted(
+                set(issue_map[identifier].task.tags) | set(issue.task.tags)
             )
-            issue_map[issue.identifier].task_data['tags'] = new_tags
 
         else:
-            issue_map[issue.identifier] = issue
+            issue_map[identifier] = issue
 
     seen_uuids = set()
-    for issue, target, _ in issue_map.values():
+    for collected in issue_map.values():
+        target = collected.target
+
+        task_data = collected.task.to_taskwarrior_data()
         # We received this issue from The Internet, but we're not sure what
         # kind of encoding the service providers may have handed us. Let's try
         # and decode all byte strings from UTF8 off the bat.  If we encounter
         # other encodings in the wild in the future, we can revise the handling
         # here. https://github.com/ralphbean/bugwarrior/issues/350
-        for key in issue.keys():
-            if isinstance(issue[key], bytes):
+        for key in task_data.keys():
+            if isinstance(task_data[key], bytes):
                 try:
-                    issue[key] = issue[key].decode('utf-8')
+                    task_data[key] = task_data[key].decode('utf-8')
                 except UnicodeDecodeError:
                     log.warning("Failed to interpret %r as utf-8" % key)
 
@@ -227,12 +229,12 @@ def synchronize(
 
         try:
             existing_taskwarrior_uuid = find_taskwarrior_uuid(
-                tw, unique_key_sets, issue
+                tw, unique_key_sets, task_data
             )
         except MultipleMatches as e:
             log.exception("Multiple matches: %s", str(e))
         except NotFound:  # Create new task
-            issue_updates['new'].append(issue)
+            issue_updates['new'].append(task_data)
         else:  # Update existing task.
             seen_uuids.add(existing_taskwarrior_uuid)
             _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
@@ -247,20 +249,20 @@ def synchronize(
             for field in itertools.chain(
                 conf.main.static_fields, service_config.static_fields
             ):
-                if field in issue:
-                    del issue[field]
+                if field in task_data:
+                    del task_data[field]
 
             # Merge annotations & tags from online into our task object
             if conf.main.merge_annotations:
-                task["annotations"] = merge_annotations(task, issue)
+                task["annotations"] = merge_annotations(task, task_data)
 
             if conf.main.merge_tags:
-                task["tags"] = merge_tags(conf.main, task, issue)
+                task["tags"] = merge_tags(conf.main, task, task_data)
 
-            issue.pop('annotations', None)
-            issue.pop('tags', None)
+            task_data.pop('annotations', None)
+            task_data.pop('tags', None)
 
-            task.update(issue)
+            task.update(task_data)
 
             if task.get_changes(keep=True):
                 issue_updates['changed'].append(task)
@@ -363,7 +365,7 @@ def synchronize(
 
 
 def build_unique_key_sets(services: Iterable[str]) -> set[tuple[str, ...]]:
-    return {get_service(service).ISSUE_CLASS.UNIQUE_KEY for service in services}
+    return {get_service(service).TASK_SCHEMA.get_unique_key() for service in services}
 
 
 def get_defined_udas_as_strings(conf: "Config") -> Iterator[str]:
@@ -405,7 +407,7 @@ def build_uda_config_overrides(services: Iterable[str]) -> dict[str, Any]:
     """
     targets_udas = {}
     for service in services:
-        targets_udas.update(get_service(service).ISSUE_CLASS.UDAS)
+        targets_udas.update(get_service(service).TASK_SCHEMA.get_udas())
     return {'uda': targets_udas}
 
 

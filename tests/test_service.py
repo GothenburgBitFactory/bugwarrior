@@ -18,23 +18,22 @@ going to fill up your floppy disk taskwarrior backup. Actually it's not
 that long.""".replace('\n', ' ')
 
 
-def check_architecture(klass: abc.ABCMeta):
+def check_architecture(klass: abc.ABCMeta, allowed_references: int = 1):
     """
     Bidirectional communication between the base classes and their children
     has been a source of complication as changes to any part of the
-    circular data flow can create unpredictable side-effects. The concrete
-    methods of the base classes exist as utilities for children to call;
-    they should not call the abstract methods which children implement.
+    circular data flow can create unpredictable side-effects. Data goes one
+    way: Service calls Issue, and Issue never calls Service.
 
-    Here, we cheaply check that the names of the abstract methods only
-    appear once. This should ensure that these methods are declared here
-    but not called.
+    Here, we cheaply count how many times each abstract method is named in
+    the base module. Only the call which maps a record to a task is allowed;
+    any other one means the data could flow both ways again.
     """
     base = Path(services.__file__).read_text()
 
     for method in klass.__abstractmethods__:
         references = re.findall(rf'{method}\(', base)
-        assert len(references) == 1, references
+        assert len(references) == allowed_references, references
 
 
 class TestService:
@@ -104,7 +103,9 @@ class TestService:
 
 class TestIssue:
     def test_architecture(self):
-        check_architecture(services.Issue)
+        # Each abstract method of Issue is declared here and called once, in
+        # Service.process_record, the one place which maps a record to a task.
+        check_architecture(services.Issue, allowed_references=2)
 
     def test_build_default_description_default(self):
         issue = make_issue()

@@ -2,7 +2,6 @@ from dateutil.parser import parse as parse_date
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.config.schema import MainSectionConfig
 from bugwarrior.services.trello import TrelloConfig, TrelloIssue
 
@@ -54,7 +53,9 @@ class TestTrelloIssue:
     def test_to_taskwarrior__project(self, issue):
         """By default, the project is the board name"""
         expected_project = "Hyperspatial express route"
-        assert expected_project == issue.to_taskwarrior().get('project', None)
+        assert expected_project == issue.to_taskwarrior().to_taskwarrior_data().get(
+            'project', None
+        )
 
 
 @pytest.fixture
@@ -229,7 +230,7 @@ class TestTrelloService:
             'annotations': ["@luidgi - Preums", "@mario - Deuz"],
             'tags': [],
         }
-        actual = TaskConstructor(next(issues)).get_taskwarrior_record()
+        actual = next(issues).to_taskwarrior_data()
         assert expected == actual
 
     def test_validate_config(self, config):

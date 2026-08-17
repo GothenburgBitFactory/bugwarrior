@@ -321,5 +321,6 @@ intersphinx_mapping = {
 # Suppress warnings for types that can't be resolved via intersphinx
 nitpick_ignore = [
     ('py:class', 'ConfigDict'),
-    ('py:class', 'bugwarrior.services.T_Issue'),
+    ('py:class', 'Task'),
+    ('py:class', 'bugwarrior.collect.CollectedIssue'),
 ]

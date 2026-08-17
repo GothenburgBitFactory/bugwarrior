@@ -15,6 +15,7 @@ import urllib3
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -85,34 +86,40 @@ class YoutrackConfig(config.ServiceConfig):
         return base_url
 
 
-class YoutrackIssue(Issue):
-    ISSUE = 'youtrackissue'
-    SUMMARY = 'youtracksummary'
-    URL = 'youtrackurl'
-    PROJECT = 'youtrackproject'
-    NUMBER = 'youtracknumber'
+class YoutrackUdas(Udas):
+    """Service-specific UDAs contributed by YouTrack."""
 
-    UDAS = {
-        ISSUE: {'type': 'string', 'label': 'YouTrack Issue'},
-        SUMMARY: {'type': 'string', 'label': 'YouTrack Summary'},
-        URL: {'type': 'string', 'label': 'YouTrack URL'},
-        PROJECT: {'type': 'string', 'label': 'YouTrack Project'},
-        NUMBER: {'type': 'string', 'label': 'YouTrack Project Issue Number'},
-    }
-    UNIQUE_KEY = (URL,)
+    UNIQUE_KEY = ('youtrackurl',)
+
+    youtrackissue: str = Field(title='YouTrack Issue')
+    youtracksummary: str | None = Field(title='YouTrack Summary')
+    youtrackurl: str = Field(title='YouTrack URL')
+    youtrackproject: str | None = Field(title='YouTrack Project')
+    youtracknumber: str | None = Field(title='YouTrack Project Issue Number')
+
+
+class YoutrackTask(Task):
+    udas: YoutrackUdas
+
+
+class YoutrackIssue(Issue):
     PRIORITY_MAP: dict[str, config.Priority] = {}
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            'project': self.get_project(),
-            'priority': self.get_priority(),
-            'tags': self.get_tags(),
-            self.ISSUE: self.get_issue(),
-            self.SUMMARY: self.get_issue_summary(),
-            self.URL: self.get_issue_url(),
-            self.PROJECT: self.get_project(),
-            self.NUMBER: self.get_number_in_project(),
-        }
+    def to_taskwarrior(self) -> YoutrackTask:
+        number = self.get_number_in_project()
+        return YoutrackTask(
+            project=self.get_project(),
+            priority=self.get_priority(),
+            tags=self.get_tags(),
+            udas=YoutrackUdas(
+                youtrackissue=self.get_issue(),
+                youtracksummary=self.get_issue_summary(),
+                youtrackurl=self.get_issue_url(),
+                youtrackproject=self.get_project(),
+                # Declared as a string UDA, though YouTrack reports an integer.
+                youtracknumber=None if number is None else str(number),
+            ),
+        )
 
     def get_issue(self) -> str:
         return (self.get_project() or '') + '-' + str(self.get_number_in_project())
@@ -143,9 +150,10 @@ class YoutrackIssue(Issue):
         )
 
 
-class YoutrackService(Service[YoutrackIssue]):
+class YoutrackService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = YoutrackIssue
+    TASK_SCHEMA = YoutrackTask
     CONFIG_SCHEMA = YoutrackConfig
 
     def __init__(
@@ -164,7 +172,7 @@ class YoutrackService(Service[YoutrackIssue]):
         token = self.get_secret('token', self.config.login)
         self.session.headers['Authorization'] = f'Bearer {token}'
 
-    def issues(self) -> Iterator[YoutrackIssue]:
+    def issues(self) -> Iterator[Task]:
         params = {
             'query': self.config.query,
             'max': self.config.query_limit,
@@ -175,4 +183,4 @@ class YoutrackService(Service[YoutrackIssue]):
         log.debug(" Found %i total.", len(issues))
 
         for issue in issues:
-            yield self.get_issue_for_record(issue)
+            yield self.process_record(issue)

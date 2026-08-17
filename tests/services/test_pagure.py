@@ -3,7 +3,6 @@ import datetime
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.pagure import PagureService
 
 SERVICE_CLASS = PagureService
@@ -38,16 +37,16 @@ class TestPagureIssue:
             'priority': 'M',
             'project': 'repo',
             'tags': [],
-            issue.URL: 'https://pagure.io/repo/issue/1',
-            issue.REPO: 'repo',
-            issue.TYPE: 'issue',
-            issue.TITLE: 'Hello World',
-            issue.ID: 1,
-            issue.DATE_CREATED: datetime.datetime(
+            'pagureurl': 'https://pagure.io/repo/issue/1',
+            'pagurerepo': 'repo',
+            'paguretype': 'issue',
+            'paguretitle': 'Hello World',
+            'pagureid': 1,
+            'paguredatecreated': datetime.datetime(
                 1970, 1, 1, tzinfo=datetime.timezone.utc
             ),
         }
-        assert issue.to_taskwarrior() == expected
+        assert issue.to_taskwarrior().to_taskwarrior_data() == expected
 
     @responses.activate
     def test_issues(self, service):
@@ -69,7 +68,7 @@ class TestPagureIssue:
             'https://pagure.io/api/0/repo/pull-requests', json={'requests': []}
         )
 
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             'annotations': [],
@@ -77,16 +76,16 @@ class TestPagureIssue:
             'priority': 'M',
             'project': 'repo',
             'tags': [],
-            issue.URL: 'https://pagure.io/repo/issue/1',
-            issue.REPO: 'repo',
-            issue.TYPE: 'issue',
-            issue.TITLE: 'Hello World',
-            issue.ID: 1,
-            issue.DATE_CREATED: datetime.datetime(
+            'pagureurl': 'https://pagure.io/repo/issue/1',
+            'pagurerepo': 'repo',
+            'paguretype': 'issue',
+            'paguretitle': 'Hello World',
+            'pagureid': 1,
+            'paguredatecreated': datetime.datetime(
                 1970, 1, 1, tzinfo=datetime.timezone.utc
             ),
         }
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected
 
     def test_get_tags_from_labels_uses_legacy_tag_options(
         self, caplog, make_service, record, extra
@@ -104,10 +103,6 @@ class TestPagureIssue:
         self, make_service, record, extra
     ):
         service = make_service(import_tags=True, tag_template='pg_{{label}}')
-        issue = service.get_issue_for_record(record, extra)
 
-        assert issue.config.templates == {}
-        assert TaskConstructor(issue).get_taskwarrior_record()['tags'] == [
-            'pg_Bug',
-            'pg_Needs_Work',
-        ]
+        assert service.config.templates == {}
+        assert service.process_record(record, extra).tags == ['pg_Bug', 'pg_Needs_Work']

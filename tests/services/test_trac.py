@@ -1,6 +1,5 @@
 import pytest
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.trac import TracService
 
 SERVICE_CLASS = TracService
@@ -67,28 +66,27 @@ class TestTracIssue:
             'project': extra['project'],
             'priority': issue.PRIORITY_MAP[record['priority']],
             'annotations': extra['annotations'],
-            issue.URL: record['url'],
-            issue.SUMMARY: record['summary'],
-            issue.NUMBER: record['number'],
-            issue.COMPONENT: record['component'],
+            'tracurl': record['url'],
+            'tracsummary': record['summary'],
+            'tracnumber': record['number'],
+            'traccomponent': record['component'],
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
     def test_issues(self, service):
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             'annotations': [],
             'description': '(bw)Is#1 - Some Summary .. https://ljlkajsdfl.com/ticket/1',
             'priority': 'H',
             'project': 'unspecified',
-            'tags': [],
             'tracnumber': 1,
             'tracsummary': 'Some Summary',
             'tracurl': 'https://ljlkajsdfl.com/ticket/1',
             'traccomponent': 'testcomponent',
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected

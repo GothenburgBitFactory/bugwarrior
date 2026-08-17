@@ -6,11 +6,12 @@ import typing
 from typing import Any
 import urllib.parse
 
-from pydantic import ValidationInfo, field_validator, model_validator
+from pydantic import Field, ValidationInfo, field_validator, model_validator
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import IssueDatetime, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -214,71 +215,57 @@ class GithubClient(Client):
         }
 
 
+class GithubUdas(Udas):
+    """Service-specific UDAs contributed by Github."""
+
+    UNIQUE_KEY = ('githuburl', 'githubtype')
+
+    githubtitle: str = Field(title='Github Title')
+    githubbody: str | None = Field(title='Github Body')
+    githubcreatedon: IssueDatetime = Field(title='Github Created')
+    githubupdatedat: IssueDatetime = Field(title='Github Updated')
+    githubclosedon: IssueDatetime = Field(title='GitHub Closed')
+    githubmilestone: str | None = Field(title='Github Milestone')
+    githubrepo: str = Field(title='Github Repo Slug')
+    githuburl: str = Field(title='Github URL')
+    githubtype: str = Field(title='Github Type')
+    githubnumber: int = Field(title='Github Issue/PR #')
+    githubuser: str = Field(title='Github User')
+    githubnamespace: str = Field(title='Github Namespace')
+    githubstate: str | None = Field(title='GitHub State')
+    githubdraft: int = Field(title='GitHub Draft')
+
+
+class GithubTask(Task):
+    udas: GithubUdas
+
+
 class GithubIssue(Issue):
-    TITLE = 'githubtitle'
-    BODY = 'githubbody'
-    CREATED_AT = 'githubcreatedon'
-    UPDATED_AT = 'githubupdatedat'
-    CLOSED_AT = 'githubclosedon'
-    MILESTONE = 'githubmilestone'
-    URL = 'githuburl'
-    REPO = 'githubrepo'
-    TYPE = 'githubtype'
-    NUMBER = 'githubnumber'
-    USER = 'githubuser'
-    NAMESPACE = 'githubnamespace'
-    STATE = 'githubstate'
-    DRAFT = 'githubdraft'
-
-    UDAS = {
-        TITLE: {'type': 'string', 'label': 'Github Title'},
-        BODY: {'type': 'string', 'label': 'Github Body'},
-        CREATED_AT: {'type': 'date', 'label': 'Github Created'},
-        UPDATED_AT: {'type': 'date', 'label': 'Github Updated'},
-        CLOSED_AT: {'type': 'date', 'label': 'GitHub Closed'},
-        MILESTONE: {'type': 'string', 'label': 'Github Milestone'},
-        REPO: {'type': 'string', 'label': 'Github Repo Slug'},
-        URL: {'type': 'string', 'label': 'Github URL'},
-        TYPE: {'type': 'string', 'label': 'Github Type'},
-        NUMBER: {'type': 'numeric', 'label': 'Github Issue/PR #'},
-        USER: {'type': 'string', 'label': 'Github User'},
-        NAMESPACE: {'type': 'string', 'label': 'Github Namespace'},
-        STATE: {'type': 'string', 'label': 'GitHub State'},
-        DRAFT: {'type': 'numeric', 'label': 'GitHub Draft'},
-    }
-    UNIQUE_KEY = (URL, TYPE)
-
-    def to_taskwarrior(self) -> dict[str, Any]:
-        milestone = self.record['milestone']
-        if milestone:
-            milestone = milestone['title']
-
-        created = self.parse_date(self.record.get('created_at'))
-        updated = self.parse_date(self.record.get('updated_at'))
-        closed = self.parse_date(self.record.get('closed_at'))
-
-        return {
-            'project': self.extra['project'],
-            'priority': self.config.default_priority,
-            'annotations': self.extra.get('annotations', []),
-            'tags': self.get_tags(),
-            'entry': created,
-            'end': closed,
-            self.URL: self.record['html_url'],
-            self.REPO: self.record['repo'],
-            self.TYPE: self.extra['type'],
-            self.USER: self.record['user']['login'],
-            self.TITLE: self.record['title'],
-            self.BODY: self.extra['body'],
-            self.MILESTONE: milestone,
-            self.NUMBER: self.record['number'],
-            self.CREATED_AT: created,
-            self.UPDATED_AT: updated,
-            self.CLOSED_AT: closed,
-            self.NAMESPACE: self.extra['namespace'],
-            self.STATE: self.record.get('state', ''),
-            self.DRAFT: int(self.record.get('draft', 0)),
-        }
+    def to_taskwarrior(self) -> GithubTask:
+        return GithubTask(
+            project=self.extra['project'],
+            priority=self.config.default_priority,
+            annotations=self.extra.get('annotations', []),
+            tags=self.get_tags(),
+            entry=self.record.get('created_at'),
+            end=self.record.get('closed_at'),
+            udas=GithubUdas(
+                githuburl=self.record['html_url'],
+                githubrepo=self.record['repo'],
+                githubtype=self.extra['type'],
+                githubuser=self.record['user']['login'],
+                githubtitle=self.record['title'],
+                githubbody=self.extra['body'],
+                githubmilestone=(self.record['milestone'] or {}).get('title'),
+                githubnumber=self.record['number'],
+                githubcreatedon=self.record.get('created_at'),
+                githubupdatedat=self.record.get('updated_at'),
+                githubclosedon=self.record.get('closed_at'),
+                githubnamespace=self.extra['namespace'],
+                githubstate=self.record.get('state', ''),
+                githubdraft=self.record.get('draft', 0),
+            ),
+        )
 
     def get_tags(self) -> list[str]:
         labels = [label['name'] for label in self.record.get('labels', [])]
@@ -293,9 +280,10 @@ class GithubIssue(Issue):
         )
 
 
-class GithubService(Service[GithubIssue]):
+class GithubService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = GithubIssue
+    TASK_SCHEMA = GithubTask
     CONFIG_SCHEMA = GithubConfig
 
     def __init__(
@@ -436,7 +424,7 @@ class GithubService(Service[GithubIssue]):
 
         return True
 
-    def issues(self) -> Iterator[GithubIssue]:
+    def issues(self) -> Iterator[Task]:
         issues = {}
         if self.config.query:
             issues.update(self.get_query(self.config.query))
@@ -477,7 +465,6 @@ class GithubService(Service[GithubIssue]):
             # https://github.com/ralphbean/bugwarrior/issues/159
             issue['repo'] = tag
 
-            issue_obj = self.get_issue_for_record(issue)
             tagParts = tag.split('/')
             projectName = tagParts[1]
             if self.config.project_owner_prefix:
@@ -489,5 +476,4 @@ class GithubService(Service[GithubIssue]):
                 'body': self.body(issue),
                 'namespace': self.config.username,
             }
-            issue_obj.extra.update(extra)
-            yield issue_obj
+            yield self.process_record(issue, extra)

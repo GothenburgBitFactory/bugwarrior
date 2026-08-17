@@ -1,10 +1,13 @@
+from datetime import datetime, timezone
+
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.taiga import TaigaService
 
 SERVICE_CLASS = TaigaService
+
+DUE = datetime(2026, 5, 18, tzinfo=timezone.utc)
 
 SERVICE_CONFIG = {'service': 'taiga', 'base_uri': 'https://one', 'auth_token': 'two'}
 
@@ -32,7 +35,7 @@ class TestTaigaIssue:
         }
 
         issue = service.get_issue_for_record(record, extra)
-        actual = issue.to_taskwarrior()
+        actual = issue.to_taskwarrior().to_taskwarrior_data()
         expected = {
             'annotations': [],
             'priority': 'M',
@@ -41,7 +44,7 @@ class TestTaigaIssue:
             'taigaid': 40,
             'taigasummary': 'this is a title',
             'taigaurl': 'this is a url',
-            'due': issue.parse_date('2026-05-18'),
+            'due': DUE,
         }
 
         assert actual == expected
@@ -69,7 +72,7 @@ class TestTaigaIssue:
             json=[{'user': {'username': 'you'}, 'comment': 'Blah blah blah!'}],
         )
 
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             'annotations': ['@you - Blah blah blah!'],
@@ -80,7 +83,7 @@ class TestTaigaIssue:
             'taigaid': 40,
             'taigasummary': 'this is a title',
             'taigaurl': 'https://one/project/something/us/40',
-            'due': issue.parse_date('2026-05-18'),
+            'due': DUE,
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected

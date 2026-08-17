@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.clickup import ClickupClient, ClickupService
 
 from ..base import get_validated_service, validate
@@ -51,7 +50,6 @@ def record():
             }
         ],
         "checklists": [],
-        "tags": [],
         "parent": None,
         "top_level_parent": None,
         "priority": None,
@@ -176,6 +174,22 @@ class TestClickupService:
         assert get_validated_service(config).is_assigned(record)
 
 
+class TestClickupNullableFields:
+    """
+    A field the service leaves empty must not fail the whole target.
+
+    Taskwarrior accepts an empty UDA. An error here would come out of
+    issues() and lose every task of this target, not just this one record.
+    """
+
+    def test_null_description_is_tolerated(self, service, record):
+        record['description'] = None
+
+        data = service.get_issue_for_record(record).to_taskwarrior()
+
+        assert data.to_taskwarrior_data()['clickupdescription'] is None
+
+
 class TestClickupIssue:
     def test_to_taskwarrior(self, service, record):
         issue = service.get_issue_for_record(record)
@@ -187,21 +201,21 @@ class TestClickupIssue:
             "entry": datetime.fromtimestamp(
                 int(record["date_created"]) // 1e3, tz=timezone.utc
             ),
-            issue.ID: record["id"],
-            issue.DESCRIPTION: record["description"],
-            issue.STATUS: record["status"]["status"],
-            issue.UPDATED_AT: datetime.fromtimestamp(
+            "clickupid": record["id"],
+            "clickupdescription": record["description"],
+            "clickupstatus": record["status"]["status"],
+            "clickupupdated": datetime.fromtimestamp(
                 int(record["date_updated"]) // 1e3, tz=timezone.utc
             ),
-            issue.CREATOR: record["creator"]["username"],
-            issue.URL: record["url"],
-            issue.LIST_NAME: record["list"]["name"],
-            issue.PROJECT: record["project"]["id"],
-            issue.FOLDER: record["folder"]["id"],
-            issue.SPACE: record["space"]["id"],
-            issue.NAME: record["name"],
+            "clickupcreator": record["creator"]["username"],
+            "clickupurl": record["url"],
+            "clickuplistname": record["list"]["name"],
+            "clickupproject": record["project"]["id"],
+            "clickupfolder": record["folder"]["id"],
+            "clickupspace": record["space"]["id"],
+            "clickupname": record["name"],
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
@@ -212,30 +226,29 @@ class TestClickupIssue:
             json=task_page(1),
         )
 
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected_output = {
             "project": None,
             "priority": 'M',
             "due": None,
-            "tags": [],
             "entry": datetime.fromtimestamp(
                 int(record["date_created"]) // 1e3, tz=timezone.utc
             ),
             "description": "(bw)Is# - My task .. https://app.clickup.com/t/86adrdd2j",
-            issue.ID: record["id"],
-            issue.DESCRIPTION: record["description"],
-            issue.STATUS: record["status"]["status"],
-            issue.UPDATED_AT: datetime.fromtimestamp(
+            "clickupid": record["id"],
+            "clickupdescription": record["description"],
+            "clickupstatus": record["status"]["status"],
+            "clickupupdated": datetime.fromtimestamp(
                 int(record["date_updated"]) // 1e3, tz=timezone.utc
             ),
-            issue.CREATOR: record["creator"]["username"],
-            issue.URL: record["url"],
-            issue.LIST_NAME: record["list"]["name"],
-            issue.PROJECT: record["project"]["id"],
-            issue.FOLDER: record["folder"]["id"],
-            issue.SPACE: record["space"]["id"],
-            issue.NAME: record["name"],
+            "clickupcreator": record["creator"]["username"],
+            "clickupurl": record["url"],
+            "clickuplistname": record["list"]["name"],
+            "clickupproject": record["project"]["id"],
+            "clickupfolder": record["folder"]["id"],
+            "clickupspace": record["space"]["id"],
+            "clickupname": record["name"],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected_output
+        assert task.to_taskwarrior_data() == expected_output

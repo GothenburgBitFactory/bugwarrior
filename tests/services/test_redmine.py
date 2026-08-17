@@ -4,7 +4,6 @@ from unittest import mock
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.redmine import RedMineService
 
 SERVICE_CLASS = RedMineService
@@ -40,6 +39,42 @@ def record():
     }
 
 
+class TestRedmineHours:
+    """
+    Redmine reports spent and estimated work as a number of hours.
+
+    Those land in duration UDAs, and Taskwarrior is picky about the format it
+    accepts, so a zero is as important to cover as a fraction.
+    See https://github.com/GothenburgBitFactory/bugwarrior/pull/967.
+    """
+
+    @pytest.mark.parametrize(
+        ('hours', 'expected'),
+        [
+            (3.5, 'PT3H30M'),
+            (0.0, 'PT0S'),  # a logged zero is not the same as nothing logged
+            (2, 'PT2H'),  # a whole number of hours arrives as an int
+            (None, None),  # Redmine omits the field or returns null
+        ],
+    )
+    def test_hours_become_durations(self, service, record, hours, expected):
+        record['spent_hours'] = hours
+        record['estimated_hours'] = hours
+
+        task_data = service.get_issue_for_record(record).to_taskwarrior()
+
+        data = task_data.to_taskwarrior_data()
+        assert data['redminespenthours'] == expected
+        assert data['redmineestimatedhours'] == expected
+
+    def test_absent_hours_are_empty(self, service, record):
+        data = service.get_issue_for_record(record).to_taskwarrior()
+
+        task_data = data.to_taskwarrior_data()
+        assert task_data['redminespenthours'] is None
+        assert task_data['redmineestimatedhours'] is None
+
+
 class TestRedmineIssue:
     def test_to_taskwarrior(self, service, record):
         arbitrary_url = 'http://lkjlj.com'
@@ -50,29 +85,29 @@ class TestRedmineIssue:
             'annotations': [],
             'project': issue.get_project_name(),
             'priority': 'H',
-            issue.DUEDATE: None,
-            issue.ASSIGNED_TO: record['assigned_to']['name'],
-            issue.AUTHOR: record['author']['name'],
-            issue.CATEGORY: None,
-            issue.DESCRIPTION: record['description'],
-            issue.ESTIMATED_HOURS: None,
-            issue.STATUS: 'New',
-            issue.URL: arbitrary_url,
-            issue.SUBJECT: record['subject'],
-            issue.TRACKER: 'Task',
-            issue.CREATED_ON: CREATED,
-            issue.UPDATED_ON: UPDATED,
-            issue.ID: record['id'],
-            issue.PROJECT_NAME: 'Boiled Cabbage - Yum',
-            issue.SPENT_HOURS: None,
-            issue.START_DATE: None,
+            'redmineduedate': None,
+            'redmineassignedto': record['assigned_to']['name'],
+            'redmineauthor': record['author']['name'],
+            'redminecategory': None,
+            'redminedescription': record['description'],
+            'redmineestimatedhours': None,
+            'redminestatus': 'New',
+            'redmineurl': arbitrary_url,
+            'redminesubject': record['subject'],
+            'redminetracker': 'Task',
+            'redminecreatedon': CREATED,
+            'redmineupdatedon': UPDATED,
+            'redmineid': record['id'],
+            'redmineprojectname': 'Boiled Cabbage - Yum',
+            'redminespenthours': None,
+            'redminestartdate': None,
         }
 
         def get_url(*args):
             return arbitrary_url
 
         with mock.patch.object(issue, 'get_issue_url', side_effect=get_url):
-            actual_output = issue.to_taskwarrior()
+            actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
@@ -82,30 +117,29 @@ class TestRedmineIssue:
             'https://something/issues.json?limit=100', json={'issues': [record]}
         )
 
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             'annotations': [],
-            issue.DUEDATE: None,
+            'redmineduedate': None,
             'description': '(bw)Is#363901 - Biscuits .. https://something/issues/363901',
             'priority': 'H',
             'project': 'boiledcabbageyum',
             'redmineid': 363901,
             'redmineprojectname': 'Boiled Cabbage - Yum',
-            issue.SPENT_HOURS: None,
-            issue.START_DATE: None,
+            'redminespenthours': None,
+            'redminestartdate': None,
             'redmineassignedto': 'Adam Coddington',
             'redmineauthor': 'Adam Coddington',
-            issue.CATEGORY: None,
-            issue.DESCRIPTION: record['description'],
-            issue.ESTIMATED_HOURS: None,
-            issue.STATUS: 'New',
+            'redminecategory': None,
+            'redminedescription': record['description'],
+            'redmineestimatedhours': None,
+            'redminestatus': 'New',
             'redminesubject': 'Biscuits',
             'redminetracker': 'Task',
-            issue.CREATED_ON: CREATED,
-            issue.UPDATED_ON: UPDATED,
+            'redminecreatedon': CREATED,
+            'redmineupdatedon': UPDATED,
             'redmineurl': 'https://something/issues/363901',
-            'tags': [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected

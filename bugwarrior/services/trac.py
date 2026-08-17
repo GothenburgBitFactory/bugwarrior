@@ -7,10 +7,12 @@ from typing import Any
 import urllib.parse
 
 import offtrac
+from pydantic import Field
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
+from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -26,20 +28,22 @@ class TracConfig(config.ServiceConfig):
     password: str = ''
 
 
+class TracUdas(Udas):
+    """Service-specific UDAs contributed by Trac."""
+
+    UNIQUE_KEY = ('tracurl',)
+
+    tracsummary: str = Field(title='Trac Summary')
+    tracurl: str = Field(title='Trac URL')
+    tracnumber: int = Field(title='Trac Number')
+    traccomponent: str = Field(title='Trac Component')
+
+
+class TracTask(Task):
+    udas: TracUdas
+
+
 class TracIssue(Issue):
-    SUMMARY = 'tracsummary'
-    URL = 'tracurl'
-    NUMBER = 'tracnumber'
-    COMPONENT = 'traccomponent'
-
-    UDAS = {
-        SUMMARY: {'type': 'string', 'label': 'Trac Summary'},
-        URL: {'type': 'string', 'label': 'Trac URL'},
-        NUMBER: {'type': 'numeric', 'label': 'Trac Number'},
-        COMPONENT: {'type': 'string', 'label': 'Trac Component'},
-    }
-    UNIQUE_KEY = (URL,)
-
     PRIORITY_MAP: dict[str, config.Priority] = {
         'trivial': 'L',
         'minor': 'L',
@@ -48,16 +52,18 @@ class TracIssue(Issue):
         'blocker': 'H',
     }
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            'project': self.extra['project'],
-            'priority': self.get_priority(),
-            'annotations': self.extra['annotations'],
-            self.URL: self.record['url'],
-            self.SUMMARY: self.record['summary'],
-            self.NUMBER: self.record['number'],
-            self.COMPONENT: self.record['component'],
-        }
+    def to_taskwarrior(self) -> TracTask:
+        return TracTask(
+            project=self.extra['project'],
+            priority=self.get_priority(),
+            annotations=self.extra['annotations'],
+            udas=TracUdas(
+                tracsummary=self.record['summary'],
+                tracurl=self.record['url'],
+                tracnumber=self.record['number'],
+                traccomponent=self.record['component'],
+            ),
+        )
 
     def get_default_description(self) -> str:
         if 'number' in self.record:
@@ -78,9 +84,10 @@ class TracIssue(Issue):
         )
 
 
-class TracService(Service[TracIssue]):
+class TracService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = TracIssue
+    TASK_SCHEMA = TracTask
     CONFIG_SCHEMA = TracConfig
     trac: offtrac.TracServer | None
 
@@ -132,7 +139,7 @@ class TracService(Service[TracIssue]):
 
         return True
 
-    def issues(self) -> Iterator[TracIssue]:
+    def issues(self) -> Iterator[Task]:
         base_url = "https://" + self.config.base_uri
         if self.trac:
             tickets = self.trac.query_tickets('status!=closed&max=0')
@@ -167,7 +174,5 @@ class TracService(Service[TracIssue]):
         log.debug(" Pruned down to %i", len(issues))
 
         for project, issue in issues:
-            issue_obj = self.get_issue_for_record(issue)
             extra = {'annotations': self.annotations(issue), 'project': project}
-            issue_obj.extra.update(extra)
-            yield issue_obj
+            yield self.process_record(issue, extra)

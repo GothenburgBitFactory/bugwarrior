@@ -5,7 +5,7 @@ import sys
 
 from jinja2 import Template
 
-from bugwarrior.services import Issue
+from bugwarrior.task import Udas
 
 
 def make_table(grid):
@@ -73,8 +73,8 @@ if __name__ == '__main__':
     module = import_by_path(f'bugwarrior.services.{service}')
     rows = []
     for name, obj in inspect.getmembers(module):
-        if inspect.isclass(obj) and issubclass(obj, Issue):
-            for field_name, details in obj.UDAS.items():
+        if inspect.isclass(obj) and issubclass(obj, Udas):
+            for field_name, details in obj.get_udas().items():
                 rows.append(
                     [
                         '``%s``' % field_name,

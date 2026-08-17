@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.teamwork_projects import TeamworkService
 
 SERVICE_CLASS = TeamworkService
@@ -55,7 +54,7 @@ def record():
 def extra():
     return {
         "host": "https://test.teamwork_projects.com",
-        "annotations": [("Greg McCoy", "Test comment"), ("Bob Test", "testing")],
+        "annotations": ["@Greg McCoy - Test comment", "@Bob Test - testing"],
     }
 
 
@@ -106,17 +105,17 @@ class TestTeamworkIssue:
             'priority': "H",
             'due': datetime(2019, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
             'entry': datetime(2018, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
-            'end': "",
+            'end': None,
             'modified': datetime(2019, 1, 16, 11, 0, 44, tzinfo=timezone.utc),
-            issue.URL: "https://test.teamwork_projects.com/#/tasks/5",
-            issue.TITLE: data["content"],
-            issue.DESCRIPTION_LONG: data["description"],
-            issue.PROJECT_ID: int(data["project-id"]),
-            issue.STATUS: "Open",
-            issue.ID: int(data["id"]),
-            "annotations": [('Greg McCoy', 'Test comment'), ('Bob Test', 'testing')],
+            'teamwork_url': "https://test.teamwork_projects.com/#/tasks/5",
+            'teamwork_title': data["content"],
+            'teamwork_description_long': data["description"],
+            'teamwork_project_id': int(data["project-id"]),
+            'teamwork_status': "Open",
+            'teamwork_id': int(data["id"]),
+            "annotations": ["@Greg McCoy - Test comment", "@Bob Test - testing"],
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
         assert actual_output == expected_data
 
     @responses.activate
@@ -125,23 +124,22 @@ class TestTeamworkIssue:
             'https://test.teamwork_projects.com/tasks/5/comments.json', json=comments
         )
         responses.get('https://test.teamwork_projects.com/tasks.json', json=record)
-        issue = next(service.issues())
+        task = next(service.issues())
         data = record["todo-items"][0]
         expected_data = {
             'project': data["project-name"],
             'priority': "H",
             'due': datetime(2019, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
             'entry': datetime(2018, 12, 12, 10, 6, 31, tzinfo=timezone.utc),
-            'end': "",
+            'end': None,
             'modified': datetime(2019, 1, 16, 11, 0, 44, tzinfo=timezone.utc),
             'description': '(bw)Is#5 - This is a test issue .. https://test.teamwork_projects.com/#/tasks/5',  # noqa: E501
-            issue.URL: "https://test.teamwork_projects.com/#/tasks/5",
-            issue.TITLE: data["content"],
-            issue.DESCRIPTION_LONG: data["description"],
-            issue.PROJECT_ID: int(data["project-id"]),
-            issue.STATUS: "Open",
-            issue.ID: int(data["id"]),
+            'teamwork_url': "https://test.teamwork_projects.com/#/tasks/5",
+            'teamwork_title': data["content"],
+            'teamwork_description_long': data["description"],
+            'teamwork_project_id': int(data["project-id"]),
+            'teamwork_status': "Open",
+            'teamwork_id': int(data["id"]),
             "annotations": ['@Demo User - A test comment'],
-            "tags": [],
         }
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected_data
+        assert task.to_taskwarrior_data() == expected_data

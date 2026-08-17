@@ -27,15 +27,15 @@ class TestPhabricatorIssue:
         issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
-            issue.URL: record['uri'],
-            issue.TYPE: extra['type'],
-            issue.TITLE: record['title'],
-            issue.OBJECT_NAME: '3',
+            'phabricatorurl': record['uri'],
+            'phabricatortype': extra['type'],
+            'phabricatortitle': record['title'],
+            'phabricatorid': '3',
             'project': 'PHROJECT',
             'priority': 'M',
             'annotations': [],
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 

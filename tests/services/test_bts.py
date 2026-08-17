@@ -1,6 +1,5 @@
 from unittest import mock
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import bts
 
 SERVICE_CLASS = bts.BTSService
@@ -38,21 +37,21 @@ class TestBTSService:
         expected_output = {
             'priority': issue.PRIORITY_MAP[FakeBTSBug.severity],
             'annotations': [],
-            issue.URL: "https://bugs.debian.org/" + str(FakeBTSBug.bug_num),
-            issue.SUBJECT: FakeBTSBug.subject,
-            issue.NUMBER: FakeBTSBug.bug_num,
-            issue.PACKAGE: FakeBTSBug.package,
-            issue.SOURCE: FakeBTSBug.source,
-            issue.FORWARDED: FakeBTSBug.forwarded,
-            issue.STATUS: FakeBTSBug.pending,
+            'btsurl': "https://bugs.debian.org/" + str(FakeBTSBug.bug_num),
+            'btssubject': FakeBTSBug.subject,
+            'btsnumber': FakeBTSBug.bug_num,
+            'btspackage': FakeBTSBug.package,
+            'btssource': FakeBTSBug.source,
+            'btsforwarded': FakeBTSBug.forwarded,
+            'btsstatus': FakeBTSBug.pending,
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
     def test_issues(self, service):
         with mock.patch('bugwarrior.services.bts.debianbts', FakeBTSLib()):
-            issue = next(service.issues())
+            task = next(service.issues())
 
         expected = {
             'annotations': [],
@@ -72,7 +71,6 @@ class TestBTSService:
             ),
             'priority': 'L',
             'btsstatus': 'pending',
-            'tags': [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected

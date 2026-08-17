@@ -3,7 +3,6 @@ from unittest import mock
 
 import pytest
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gitbug import GitBugClient, GitBugConfig, GitBugService
 
 
@@ -56,12 +55,12 @@ class TestGitBugIssue:
             'project': 'unspecified',
             'tags': [],
         }
-        actual = issue.to_taskwarrior()
+        actual = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual == expected
 
     def test_issues(self, service):
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             'annotations': [],
@@ -78,7 +77,7 @@ class TestGitBugIssue:
             'tags': [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected
 
 
 def test_home_path_expansion(tmp_path):

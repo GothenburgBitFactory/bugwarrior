@@ -61,7 +61,7 @@ To limit the amount of content synchronized into TaskWarrior (which can help to 
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.gerrit.GerritIssue
+.. udas:: bugwarrior.services.gerrit.GerritUdas
 
 The Gerrit service provides a limited set of UDAs.  If you have need for some
 other values not present here, please file a request (there's lots of metadata

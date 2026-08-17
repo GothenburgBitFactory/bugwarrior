@@ -1,7 +1,6 @@
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bitbucket import BitbucketService
 
 SERVICE_CLASS = BitbucketService
@@ -16,7 +15,7 @@ SERVICE_CONFIG = {
 
 @pytest.fixture
 def record():
-    return {'priority': 'trivial', 'id': '100', 'title': 'Some Title'}
+    return {'priority': 'trivial', 'id': 100, 'title': 'Some Title'}
 
 
 @pytest.fixture
@@ -45,11 +44,11 @@ class TestBitbucketIssue:
             'project': extra['project'],
             'priority': issue.PRIORITY_MAP[record['priority']],
             'annotations': extra['annotations'],
-            issue.URL: extra['url'],
-            issue.FOREIGN_ID: record['id'],
-            issue.TITLE: record['title'],
+            'bitbucketurl': extra['url'],
+            'bitbucketid': record['id'],
+            'bitbuckettitle': record['title'],
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
@@ -110,10 +109,9 @@ class TestBitbucketIssue:
             'description': '(bw)Is#1 - Some Bug .. example.com',
             'priority': 'M',
             'project': 'somerepo',
-            'tags': [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected_issue
+        assert issue.to_taskwarrior_data() == expected_issue
 
         expected_pr = {
             'annotations': ['@nobody - Some comment.'],
@@ -123,10 +121,9 @@ class TestBitbucketIssue:
             'description': '(bw)Is#1 - Some Feature .. https://bitbucket.org/',
             'priority': 'M',
             'project': 'somerepo',
-            'tags': [],
         }
 
-        assert TaskConstructor(pr).get_taskwarrior_record() == expected_pr
+        assert pr.to_taskwarrior_data() == expected_pr
 
     def test_get_owner(self, service):
         issue = {'title': 'Foobar', 'assignee': {'username': 'tintin'}}

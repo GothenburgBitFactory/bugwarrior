@@ -4,7 +4,6 @@ from unittest import mock
 
 import pytest
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.bz import BugzillaService
 
 from ..base import validate
@@ -118,19 +117,21 @@ class TestBugzillaService:
             'project': record['component'],
             'priority': issue.PRIORITY_MAP[record['priority']],
             'annotations': arbitrary_extra['annotations'],
-            issue.STATUS: record['status'],
-            issue.URL: arbitrary_extra['url'],
-            issue.SUMMARY: record['summary'],
-            issue.BUG_ID: record['id'],
-            issue.PRODUCT: record['product'],
-            issue.COMPONENT: record['component'],
+            'bugzillastatus': record['status'],
+            'bugzillaurl': arbitrary_extra['url'],
+            'bugzillasummary': record['summary'],
+            'bugzillabugid': record['id'],
+            'bugzillaproduct': record['product'],
+            'bugzillacomponent': record['component'],
+            'bugzillaneedinfo': None,
+            'bugzillaassignedon': None,
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
     def test_issues(self, service):
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             'annotations': [],
@@ -140,16 +141,17 @@ class TestBugzillaService:
             'bugzillaurl': 'https://one.com/show_bug.cgi?id=1234567',
             'bugzillaproduct': 'Product',
             'bugzillacomponent': 'Something',
+            'bugzillaneedinfo': None,
+            'bugzillaassignedon': None,
             'description': (
                 '(bw)Is#1234567 - This is the issue summary .. '
                 'https://one.com/show_bug.cgi?id=1234567'
             ),
             'priority': 'H',
             'project': 'Something',
-            'tags': [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected
 
     def test_only_if_assigned(self, make_service):
         service = make_service(only_if_assigned='hello')
@@ -189,16 +191,16 @@ class TestBugzillaService:
             'bugzillaurl': 'https://one.com/show_bug.cgi?id=1234568',
             'bugzillaproduct': 'Product',
             'bugzillacomponent': 'Something',
+            'bugzillaneedinfo': None,
             'description': (
                 '(bw)Is#1234568 - This is the issue summary .. '
                 'https://one.com/show_bug.cgi?id=1234568'
             ),
             'priority': 'H',
             'project': 'Something',
-            'tags': [],
         }
 
-        assert TaskConstructor(next(issues)).get_taskwarrior_record() == expected
+        assert next(issues).to_taskwarrior_data() == expected
 
         # Only one issue is assigned.
         with pytest.raises(StopIteration):
@@ -233,12 +235,8 @@ class TestBugzillaService:
 
         issues = service.issues()
 
-        assert TaskConstructor(next(issues)).get_taskwarrior_record()[
-            'bugzillabugid'
-        ] in [1234567, 1234568]
-        assert TaskConstructor(next(issues)).get_taskwarrior_record()[
-            'bugzillabugid'
-        ] in [1234567, 1234568]
+        assert next(issues).to_taskwarrior_data()['bugzillabugid'] in [1234567, 1234568]
+        assert next(issues).to_taskwarrior_data()['bugzillabugid'] in [1234567, 1234568]
         # Only two issues are assigned to the user or unassigned.
         with pytest.raises(StopIteration):
             next(issues)

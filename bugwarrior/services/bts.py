@@ -5,12 +5,13 @@ from typing import Any
 
 import debianbts
 import pydantic
-from pydantic import model_validator
+from pydantic import Field, model_validator
 import requests
 
 from bugwarrior import config
 from bugwarrior.config import Priority
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -46,26 +47,25 @@ class BTSConfig(config.ServiceConfig):
         return self
 
 
+class BTSUdas(Udas):
+    """Service-specific UDAs contributed by the Debian BTS."""
+
+    UNIQUE_KEY = ('btsurl',)
+
+    btssubject: str = Field(title='Debian BTS Subject')
+    btsurl: str = Field(title='Debian BTS URL')
+    btsnumber: int = Field(title='Debian BTS Number')
+    btspackage: str = Field(title='Debian BTS Package')
+    btssource: str = Field(title='Debian BTS Source Package')
+    btsforwarded: str = Field(title='Debian BTS Forwarded URL')
+    btsstatus: str = Field(title='Debian BTS Status')
+
+
+class BTSTask(Task):
+    udas: BTSUdas
+
+
 class BTSIssue(Issue):
-    SUBJECT = 'btssubject'
-    URL = 'btsurl'
-    NUMBER = 'btsnumber'
-    PACKAGE = 'btspackage'
-    SOURCE = 'btssource'
-    FORWARDED = 'btsforwarded'
-    STATUS = 'btsstatus'
-
-    UDAS = {
-        SUBJECT: {'type': 'string', 'label': 'Debian BTS Subject'},
-        URL: {'type': 'string', 'label': 'Debian BTS URL'},
-        NUMBER: {'type': 'numeric', 'label': 'Debian BTS Number'},
-        PACKAGE: {'type': 'string', 'label': 'Debian BTS Package'},
-        SOURCE: {'type': 'string', 'label': 'Debian BTS Source Package'},
-        FORWARDED: {'type': 'string', 'label': 'Debian BTS Forwarded URL'},
-        STATUS: {'type': 'string', 'label': 'Debian BTS Status'},
-    }
-    UNIQUE_KEY = (URL,)
-
     PRIORITY_MAP: dict[str, Priority] = {
         'wishlist': 'L',
         'minor': 'L',
@@ -76,18 +76,20 @@ class BTSIssue(Issue):
         'critical': 'H',
     }
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            'priority': self.get_priority(),
-            'annotations': self.extra.get('annotations', []),
-            self.URL: self.record['url'],
-            self.SUBJECT: self.record['subject'],
-            self.NUMBER: self.record['number'],
-            self.PACKAGE: self.record['package'],
-            self.SOURCE: self.record['source'],
-            self.FORWARDED: self.record['forwarded'],
-            self.STATUS: self.record['status'],
-        }
+    def to_taskwarrior(self) -> BTSTask:
+        return BTSTask(
+            priority=self.get_priority(),
+            annotations=self.extra.get('annotations', []),
+            udas=BTSUdas(
+                btssubject=self.record['subject'],
+                btsurl=self.record['url'],
+                btsnumber=self.record['number'],
+                btspackage=self.record['package'],
+                btssource=self.record['source'],
+                btsforwarded=self.record['forwarded'],
+                btsstatus=self.record['status'],
+            ),
+        )
 
     def get_default_description(self) -> str:
         return self.build_default_description(
@@ -103,9 +105,10 @@ class BTSIssue(Issue):
         )
 
 
-class BTSService(Service[BTSIssue]):
+class BTSService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = BTSIssue
+    TASK_SCHEMA = BTSTask
     CONFIG_SCHEMA = BTSConfig
 
     def _record_for_bug(self, bug: debianbts.Bugreport) -> dict[str, Any]:
@@ -130,7 +133,7 @@ class BTSService(Service[BTSIssue]):
     def annotations(self, issue: dict[str, Any]) -> list[str]:
         return self.build_annotations([], issue['url'])
 
-    def issues(self) -> Iterator[BTSIssue]:
+    def issues(self) -> Iterator[Task]:
         # Initialise empty list of bug numbers
         collected_bugs = []
 
@@ -180,7 +183,5 @@ class BTSService(Service[BTSIssue]):
         log.debug(" Pruned down to %i.", len(issues))
 
         for issue in issues:
-            issue_obj = self.get_issue_for_record(issue)
             extra = {'annotations': self.annotations(issue)}
-            issue_obj.extra.update(extra)
-            yield issue_obj
+            yield self.process_record(issue, extra)

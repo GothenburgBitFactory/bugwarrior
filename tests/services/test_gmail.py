@@ -7,7 +7,6 @@ from unittest.mock import patch
 from google.oauth2.credentials import Credentials
 import pytest
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services import gmail
 
 from ..base import get_validated_service
@@ -158,13 +157,13 @@ class TestGmailIssue:
             'gmaillastsenderaddr': 'foobar@example.com',
         }
 
-        taskwarrior = issue.to_taskwarrior()
+        taskwarrior = issue.to_taskwarrior().to_taskwarrior_data()
         taskwarrior['tags'] = set(taskwarrior['tags'])
 
         assert taskwarrior == expected
 
     def test_issues(self, service):
-        issue = next(service.issues())
+        task = next(service.issues())
         expected = {
             'annotations': ['@Foo Bar - Regarding Bugwarrior'],
             'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=timezone.utc),
@@ -181,7 +180,7 @@ class TestGmailIssue:
             'gmaillastsenderaddr': 'foobar@example.com',
         }
 
-        taskwarrior = TaskConstructor(issue).get_taskwarrior_record()
+        taskwarrior = task.to_taskwarrior_data()
         taskwarrior['tags'] = set(taskwarrior['tags'])
 
         assert taskwarrior == expected

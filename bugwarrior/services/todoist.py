@@ -5,11 +5,13 @@ import logging
 import typing
 from typing import Any
 
+from pydantic import Field
 from todoist_api_python.api import TodoistAPI
-from todoist_api_python.models import Task
+from todoist_api_python.models import Task as ApiTask
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import IssueDatetime, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ class TodoistClient(Client):
         self.filter = filter
 
     @classmethod
-    def task_to_dict(cls, task: Task) -> dict[str, Any]:
+    def task_to_dict(cls, task: ApiTask) -> dict[str, Any]:
         record = asdict(task)
         # add data items for additional properties
         record["is_completed"] = task.is_completed
@@ -78,36 +80,30 @@ class TodoistClient(Client):
         return all_comments
 
 
+class TodoistUdas(Udas):
+    """Service-specific UDAs contributed by Todoist."""
+
+    UNIQUE_KEY = ("todoistid",)
+
+    todoistid: str = Field(title="Todoist ID")
+    todoistcontent: str = Field(title="Todoist Content")
+    todoistdescription: str = Field(title="Todoist Description")
+    todoistdue: IssueDatetime = Field(title="Todoist Due Date")
+    todoistdeadline: IssueDatetime = Field(title="Todoist Deadline Date")
+    todoistduration: str | None = Field(title="Todoist Duration")
+    todoistsection: str | None = Field(title="Todoist Section")
+    todoistassignee: str | None = Field(title="Todoist Assignee")
+    todoistassigner: str | None = Field(title="Todoist Assigner")
+    todoisturl: str = Field(title="Todoist URL")
+    todoistparentid: str | None = Field(title="Todoist Parent ID")
+
+
+class TodoistTask(Task):
+    udas: TodoistUdas
+
+
 class TodoistIssue(Issue):
-    ASSIGNEE = "todoistassignee"
-    ASSIGNER = "todoistassigner"
-    CONTENT = "todoistcontent"
-    DESCRIPTION = "todoistdescription"
-    DUE = "todoistdue"
-    DEADLINE = "todoistdeadline"
-    DURATION = "todoistduration"
-    ID = "todoistid"
-    PARENT_ID = "todoistparentid"
-    SECTION = "todoistsection"
-    URL = "todoisturl"
-
     PRIORITY_MAP: dict[int, config.Priority | None] = {4: "H", 3: "M", 2: "L", 1: None}
-
-    UDAS = {
-        ID: {"type": "string", "label": "Todoist ID"},
-        CONTENT: {"type": "string", "label": "Todoist Content"},
-        DESCRIPTION: {"type": "string", "label": "Todoist Description"},
-        DUE: {"type": "date", "label": "Todoist Due Date"},
-        DEADLINE: {"type": "date", "label": "Todoist Deadline Date"},
-        DURATION: {"type": "string", "label": "Todoist Duration"},
-        SECTION: {"type": "string", "label": "Todoist Section"},
-        ASSIGNEE: {"type": "string", "label": "Todoist Assignee"},
-        ASSIGNER: {"type": "string", "label": "Todoist Assigner"},
-        URL: {"type": "string", "label": "Todoist URL"},
-        PARENT_ID: {"type": "string", "label": "Todoist Parent ID"},
-    }
-
-    UNIQUE_KEY = (ID,)
 
     # replace characters that cause escaping issues like [] and "
     # this is a workaround for https://github.com/ralphbean/taskw/issues/172
@@ -118,7 +114,7 @@ class TodoistIssue(Issue):
             .replace("]", self.config.char_close_bracket)
         )
 
-    def to_taskwarrior(self) -> dict[str, Any]:
+    def to_taskwarrior(self) -> TodoistTask:
         default_time = time(0, 0, 0)
         # adjust timezone to use local time for "floating" dates
         if self.record["due"]:
@@ -145,32 +141,33 @@ class TodoistIssue(Issue):
             else None
         )
 
-        task = {
-            "project": self.extra["project"],
-            "priority": self.get_priority(),
-            "annotations": self.extra.get("annotations", []),
-            "tags": (
+        return TodoistTask(
+            project=self.extra["project"],
+            priority=self.get_priority(),
+            annotations=self.extra.get("annotations", []),
+            tags=(
                 self.get_tags_from_labels(self.record["labels"])
                 if self.record["labels"]
                 else []
             ),
-            "scheduled": None,
-            "due": todoist_due,
-            "status": "completed" if self.record["is_completed"] else "pending",
-            "entry": self.record["created_at"],
-            self.ID: self.record["id"],
-            self.CONTENT: self._unescape_content(self.record["content"]),
-            self.DESCRIPTION: self._unescape_content(self.record["description"]),
-            self.DUE: todoist_due,
-            self.DEADLINE: todoist_deadline,
-            self.DURATION: self.extra["duration"],
-            self.ASSIGNEE: self.extra["assignee"],
-            self.ASSIGNER: self.extra["assigner"],
-            self.SECTION: self.extra["section"],
-            self.URL: self.record["url"],
-            self.PARENT_ID: self.record["parent_id"],
-        }
-        return task
+            scheduled=None,
+            due=todoist_due,
+            status="completed" if self.record["is_completed"] else "pending",
+            entry=self.record["created_at"],
+            udas=TodoistUdas(
+                todoistid=self.record["id"],
+                todoistcontent=self._unescape_content(self.record["content"]),
+                todoistdescription=self._unescape_content(self.record["description"]),
+                todoistdue=todoist_due,
+                todoistdeadline=todoist_deadline,
+                todoistduration=self.extra["duration"],
+                todoistassignee=self.extra["assignee"],
+                todoistassigner=self.extra["assigner"],
+                todoistsection=self.extra["section"],
+                todoisturl=self.record["url"],
+                todoistparentid=self.record["parent_id"],
+            ),
+        )
 
     def get_default_description(self) -> str:
         description = self.build_default_description(
@@ -182,9 +179,10 @@ class TodoistIssue(Issue):
         return description
 
 
-class TodoistService(Service[TodoistIssue]):
+class TodoistService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = TodoistIssue
+    TASK_SCHEMA = TodoistTask
     CONFIG_SCHEMA = TodoistConfig
 
     def __init__(
@@ -224,7 +222,7 @@ class TodoistService(Service[TodoistIssue]):
             issue["url"],
         )
 
-    def issues(self) -> Iterator[TodoistIssue]:
+    def issues(self) -> Iterator[Task]:
         project_index = {
             project.id: project.name for project in self.client.get_projects()
         }
@@ -250,4 +248,4 @@ class TodoistService(Service[TodoistIssue]):
                 ),
                 "annotations": self.annotations(user_index, issue),
             }
-            yield self.get_issue_for_record(issue, extra)
+            yield self.process_record(issue, extra)

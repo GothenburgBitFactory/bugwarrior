@@ -9,7 +9,7 @@ from bugwarrior.collect import CollectedIssue
 from bugwarrior.config import schema
 from bugwarrior.config.validation import Config
 
-from .base import DumbConfig, register_services
+from .base import DumbConfig, DumbTask, DumbUdas, register_services
 
 
 class TestMergeAnnotations:
@@ -82,17 +82,12 @@ class TestSynchronize:
     def tw(self, config_environment):
         return taskw.TaskWarrior(config_environment.taskrc)
 
-    def synchronize(self, bwconfig, issues_data):
-
-        issue_generator = [
-            CollectedIssue(
-                task_data=copy.deepcopy(issue_data),
-                target="my_service",
-                identifier="abcd",
-            )
-            for issue_data in issues_data
+    def synchronize(self, bwconfig, tasks):
+        collected = [
+            CollectedIssue(task=task.model_copy(deep=True), target="my_service")
+            for task in tasks
         ]
-        db.synchronize(iter(issue_generator), bwconfig)
+        db.synchronize(iter(collected), bwconfig)
 
     def remove_non_deterministic_keys(self, tasks):
         for status in ['pending', 'completed']:
@@ -112,16 +107,15 @@ class TestSynchronize:
 
         assert tw.load_tasks() == {'completed': [], 'pending': []}
 
-        issue = {
-            'description': 'Blah blah blah. ☃',
-            'project': 'sample_project',
-            'dumbtype': 'issue',
-            'dumburl': 'https://example.com',
-            'priority': 'M',
-            'tags': ['foo'],
-        }
-        duplicate_issue = copy.deepcopy(issue)
-        duplicate_issue['tags'] = ['bar']
+        issue = DumbTask(
+            description='Blah blah blah. ☃',
+            project='sample_project',
+            priority='M',
+            tags=['foo'],
+            udas=DumbUdas(dumburl='https://example.com', dumbtype='issue'),
+        )
+        duplicate_issue = issue.model_copy(deep=True)
+        duplicate_issue.tags = ['bar']
 
         # TEST NEW ISSUE AND EXISTING ISSUE.
         for _ in range(2):
@@ -149,10 +143,10 @@ class TestSynchronize:
             }
 
         # TEST CHANGED ISSUE.
-        issue['description'] = 'Yada yada yada.'
+        issue.description = 'Yada yada yada.'
 
         # Change static field
-        issue['project'] = 'other_project'
+        issue.project = 'other_project'
         self.synchronize(bwconfig, [issue])
 
         assert self.get_tasks(tw) == {

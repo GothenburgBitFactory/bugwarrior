@@ -3,7 +3,6 @@ from datetime import datetime, timedelta, timezone
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.github import GithubClient, GithubConfig, GithubService
 
 from ..base import validate
@@ -59,7 +58,7 @@ def extra():
 class TestGithubIssue:
     def test_draft(self, service, record, extra):
         record['draft'] = True
-        issue = service.get_issue_for_record(record, extra)
+        task = service.process_record(record, extra)
 
         expected = {
             'annotations': [],
@@ -85,7 +84,7 @@ class TestGithubIssue:
             'tags': [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected
 
     def test_to_taskwarrior(self, make_service, record, extra):
         service = make_service(import_labels_as_tags=True)
@@ -98,22 +97,22 @@ class TestGithubIssue:
             'tags': ['bugfix'],
             'entry': CREATED,
             'end': CLOSED,
-            issue.URL: record['html_url'],
-            issue.REPO: record['repo'],
-            issue.DRAFT: record['draft'],
-            issue.TYPE: extra['type'],
-            issue.TITLE: record['title'],
-            issue.NUMBER: record['number'],
-            issue.UPDATED_AT: UPDATED,
-            issue.CREATED_AT: CREATED,
-            issue.CLOSED_AT: CLOSED,
-            issue.BODY: extra['body'],
-            issue.MILESTONE: record['milestone']['title'],
-            issue.USER: record['user']['login'],
-            issue.NAMESPACE: 'arbitrary_username',
-            issue.STATE: 'closed',
+            'githuburl': record['html_url'],
+            'githubrepo': record['repo'],
+            'githubdraft': record['draft'],
+            'githubtype': extra['type'],
+            'githubtitle': record['title'],
+            'githubnumber': record['number'],
+            'githubupdatedat': UPDATED,
+            'githubcreatedon': CREATED,
+            'githubclosedon': CLOSED,
+            'githubbody': extra['body'],
+            'githubmilestone': record['milestone']['title'],
+            'githubuser': record['user']['login'],
+            'githubnamespace': 'arbitrary_username',
+            'githubstate': 'closed',
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
@@ -145,7 +144,7 @@ class TestGithubIssue:
         )  # second comment should be ignored and still pass
 
         service = make_service(ignore_user_comments=[IGNORABLE['user']['login']])
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             'annotations': ['@arbitrary_login - Arbitrary comment.'],
@@ -171,7 +170,7 @@ class TestGithubIssue:
             'tags': [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected
 
 
 class TestGithubIssueQuery:
@@ -198,7 +197,7 @@ class TestGithubIssueQuery:
             json=[{'user': {'login': 'arbitrary_login'}, 'body': 'Arbitrary comment.'}],
         )
 
-        issue = list(service.issues())[0]
+        task = list(service.issues())[0]
 
         expected = {
             'annotations': ['@arbitrary_login - Arbitrary comment.'],
@@ -224,7 +223,7 @@ class TestGithubIssueQuery:
             'tags': [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected
 
 
 class TestGithubService:

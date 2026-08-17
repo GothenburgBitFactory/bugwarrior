@@ -5,11 +5,12 @@ import sys
 from typing import Annotated, Any, Iterator, Literal
 from urllib.parse import quote
 
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, Field
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -105,37 +106,31 @@ class AzureDevopsClient(Client):
             return None
 
 
+class AzureDevopsUdas(Udas):
+    """Service-specific UDAs contributed by Azure Devops."""
+
+    UNIQUE_KEY = ("adourl",)
+
+    adotitle: str = Field(title="Azure Devops Title")
+    adodescription: str | None = Field(title="Azure Devops Description")
+    adoid: int = Field(title="Azure Devops ID number")
+    adourl: str = Field(title="Azure Devops URL")
+    adotype: str = Field(title="Azure Devops Work Item Type")
+    adostate: str = Field(title="Azure Devops Work Item State")
+    adoactivity: str | None = Field(title="Azure Devops Activity")
+    adopriority: int | None = Field(title="Azure Devops Priority")
+    adoremainingwork: float | None = Field(
+        title="Azure Devops Amount of Remaining Work"
+    )
+    adoparent: str | None = Field(title="Azure Devops Parent Work Item Name")
+    adonamespace: str | None = Field(title="Azure Devops Namespace")
+
+
+class AzureDevopsTask(Task):
+    udas: AzureDevopsUdas
+
+
 class AzureDevopsIssue(Issue):
-    TITLE = "adotitle"
-    DESCRIPTION = "adodescription"
-    ID = "adoid"
-    URL = "adourl"
-    TYPE = "adotype"
-    STATE = "adostate"
-    ACTIVITY = "adoactivity"
-    PRIORITY = "adopriority"
-    REMAINING_WORK = "adoremainingwork"
-    PARENT = "adoparent"
-    NAMESPACE = "adonamespace"
-
-    UDAS = {
-        TITLE: {"type": "string", "label": "Azure Devops Title"},
-        DESCRIPTION: {"type": "string", "label": "Azure Devops Description"},
-        ID: {"type": "numeric", "label": "Azure Devops ID number"},
-        URL: {"type": "string", "label": "Azure Devops URL"},
-        TYPE: {"type": "string", "label": "Azure Devops Work Item Type"},
-        STATE: {"type": "string", "label": "Azure Devops Work Item State"},
-        ACTIVITY: {"type": "string", "label": "Azure Devops Activity"},
-        PRIORITY: {"type": "numeric", "label": "Azure Devops Priority"},
-        REMAINING_WORK: {
-            "type": "numeric",
-            "label": "Azure Devops Amount of Remaining Work",
-        },
-        PARENT: {"type": "string", "label": "Azure Devops Parent Work Item Name"},
-        NAMESPACE: {"type": "string", "label": "Azure Devops Namespace"},
-    }
-    UNIQUE_KEY = (URL,)
-
     PRIORITY_MAP: dict[str, config.Priority] = {"1": "H", "2": "M", "3": "L", "4": "L"}
 
     def get_priority(self) -> config.Priority:
@@ -144,35 +139,28 @@ class AzureDevopsIssue(Issue):
         )
         return self.PRIORITY_MAP.get(value, self.config.default_priority)
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            "project": self.extra['project'],
-            "priority": self.get_priority(),
-            "annotations": self.extra.get("annotations", []),
-            "entry": self.parse_date(
-                self.record.get("fields", {}).get("System.CreatedDate")
+    def to_taskwarrior(self) -> AzureDevopsTask:
+        fields = self.record["fields"]
+        return AzureDevopsTask(
+            project=self.extra['project'],
+            priority=self.get_priority(),
+            annotations=self.extra.get("annotations", []),
+            entry=fields.get("System.CreatedDate"),
+            end=fields.get("Microsoft.VSTS.Common.ClosedDate"),
+            udas=AzureDevopsUdas(
+                adotitle=fields["System.Title"],
+                adodescription=format_item(fields.get("System.Description")),
+                adoid=self.record["id"],
+                adourl=self.record["_links"]["html"]["href"],
+                adotype=fields["System.WorkItemType"],
+                adostate=fields["System.State"],
+                adoactivity=fields.get("System.Activity", ""),
+                adopriority=fields.get("Microsoft.VSTS.Common.Priority"),
+                adoremainingwork=fields.get("Microsoft.VSTS.Scheduling.RemainingWork"),
+                adoparent=self.record.get("ParentTitle"),
+                adonamespace=self.extra.get("namespace"),
             ),
-            "end": self.parse_date(
-                self.record.get("fields", {}).get("Microsoft.VSTS.Common.ClosedDate")
-            ),
-            self.TITLE: self.record["fields"]["System.Title"],
-            self.DESCRIPTION: format_item(
-                self.record["fields"].get("System.Description")
-            ),
-            self.ID: self.record["id"],
-            self.URL: self.record["_links"]["html"]["href"],
-            self.TYPE: self.record["fields"]["System.WorkItemType"],
-            self.STATE: self.record["fields"]["System.State"],
-            self.ACTIVITY: self.record["fields"].get("System.Activity", ""),
-            self.PRIORITY: self.record["fields"].get(
-                "Microsoft.VSTS.Common.Priority", self.config.default_priority
-            ),
-            self.REMAINING_WORK: self.record["fields"].get(
-                "Microsoft.VSTS.Scheduling.RemainingWork"
-            ),
-            self.PARENT: self.record.get("ParentTitle"),
-            self.NAMESPACE: self.extra.get("namespace"),
-        }
+        )
 
     def get_default_description(self) -> str:
         return self.build_default_description(
@@ -183,9 +171,10 @@ class AzureDevopsIssue(Issue):
         )
 
 
-class AzureDevopsService(Service[AzureDevopsIssue]):
+class AzureDevopsService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = AzureDevopsIssue
+    TASK_SCHEMA = AzureDevopsTask
     CONFIG_SCHEMA = AzureDevopsConfig
 
     def __init__(
@@ -246,17 +235,15 @@ class AzureDevopsService(Service[AzureDevopsIssue]):
                     annotations.append((name, text))
         return self.build_annotations(annotations, url)
 
-    def issues(self) -> Iterator[AzureDevopsIssue]:
+    def issues(self) -> Iterator[Task]:
         issue_ids = self.get_query()
         for issue_id in issue_ids:
             issue = self.client.get_work_item(issue_id)
             parent_title = self.client.get_parent_name(issue)
             issue["ParentTitle"] = parent_title
-            issue_obj = self.get_issue_for_record(issue)
             extra = {
                 "project": issue["ParentTitle"],
                 "annotations": self.annotations(issue),
                 "namespace": f"{self.config.organization}\\{self.config.project}",
             }
-            issue_obj.extra.update(extra)
-            yield issue_obj
+            yield self.process_record(issue, extra)

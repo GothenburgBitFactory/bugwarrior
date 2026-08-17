@@ -9,6 +9,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
+from bugwarrior.task import IssueDatetime, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -52,44 +53,46 @@ class PagureConfig(config.ServiceConfig):
         return self
 
 
+class PagureUdas(Udas):
+    """Service-specific UDAs contributed by Pagure."""
+
+    UNIQUE_KEY = ('pagureurl', 'paguretype')
+
+    paguretitle: str = Field(title='Pagure Title')
+    paguredatecreated: IssueDatetime = Field(title='Pagure Created')
+    pagurerepo: str = Field(title='Pagure Repo Slug')
+    pagureurl: str = Field(title='Pagure URL')
+    paguretype: str = Field(title='Pagure Type')
+    pagureid: int = Field(title='Pagure Issue/PR #')
+
+
+class PagureTask(Task):
+    udas: PagureUdas
+
+
 class PagureIssue(Issue):
-    TITLE = 'paguretitle'
-    DATE_CREATED = 'paguredatecreated'
-    URL = 'pagureurl'
-    REPO = 'pagurerepo'
-    TYPE = 'paguretype'
-    ID = 'pagureid'
-
-    UDAS = {
-        TITLE: {'type': 'string', 'label': 'Pagure Title'},
-        DATE_CREATED: {'type': 'date', 'label': 'Pagure Created'},
-        REPO: {'type': 'string', 'label': 'Pagure Repo Slug'},
-        URL: {'type': 'string', 'label': 'Pagure URL'},
-        TYPE: {'type': 'string', 'label': 'Pagure Type'},
-        ID: {'type': 'numeric', 'label': 'Pagure Issue/PR #'},
-    }
-    UNIQUE_KEY = (URL, TYPE)
-
-    def to_taskwarrior(self) -> dict[str, Any]:
+    def to_taskwarrior(self) -> PagureTask:
         if self.extra['type'] == 'pull_request':
             priority = 'H'
         else:
             priority = self.config.default_priority
 
-        return {
-            'project': self.extra['project'],
-            'priority': priority,
-            'annotations': self.extra.get('annotations', []),
-            'tags': self.get_tags(),
-            self.URL: self.record['html_url'],
-            self.REPO: self.record['repo'],
-            self.TYPE: self.extra['type'],
-            self.TITLE: self.record['title'],
-            self.ID: self.record['id'],
-            self.DATE_CREATED: datetime.datetime.fromtimestamp(
-                int(self.record['date_created']), datetime.timezone.utc
+        return PagureTask(
+            project=self.extra['project'],
+            priority=priority,
+            annotations=self.extra.get('annotations', []),
+            tags=self.get_tags(),
+            udas=PagureUdas(
+                paguretitle=self.record['title'],
+                paguredatecreated=datetime.datetime.fromtimestamp(
+                    int(self.record['date_created']), datetime.timezone.utc
+                ),
+                pagurerepo=self.record['repo'],
+                pagureurl=self.record['html_url'],
+                paguretype=self.extra['type'],
+                pagureid=self.record['id'],
             ),
-        }
+        )
 
     def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(self.record.get('tags', []))
@@ -103,9 +106,10 @@ class PagureIssue(Issue):
         )
 
 
-class PagureService(Service[PagureIssue]):
+class PagureService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = PagureIssue
+    TASK_SCHEMA = PagureTask
     CONFIG_SCHEMA = PagureConfig
 
     def __init__(
@@ -176,7 +180,7 @@ class PagureService(Service[PagureIssue]):
 
         return True
 
-    def issues(self) -> Iterator[PagureIssue]:
+    def issues(self) -> Iterator[Task]:
         if self.config.tag:
             url = self.config.base_url + "/api/0/projects?tags=" + self.config.tag
             response = self.session.get(url)
@@ -203,11 +207,9 @@ class PagureService(Service[PagureIssue]):
             # https://pagure.com/ralphbean/bugwarrior/issues/159
             issue['repo'] = repo
 
-            issue_obj = self.get_issue_for_record(issue)
             extra = {
                 'project': repo,
                 'type': 'pull_request' if 'branch' in issue else 'issue',
                 'annotations': self.annotations(issue),
             }
-            issue_obj.extra.update(extra)
-            yield issue_obj
+            yield self.process_record(issue, extra)

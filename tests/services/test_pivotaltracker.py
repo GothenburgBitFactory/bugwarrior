@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.pivotaltracker import PivotalTrackerService
 
 from ..base import validate
@@ -147,11 +146,16 @@ QUERY = {
     },
 }
 
+# What the service computes before the issue sees it: usernames and blockers
+# are already joined into strings, and comments into annotation strings.
 EXTRA = {
-    'request_user': ['request_user'],
-    'owned_user': ['owned_user'],
-    'annotations': TASKS,
-    'blockers': BLOCKERS,
+    'request_user': 'starkiller',
+    'owned_user': 'starkiller',
+    'annotations': [
+        '@task - status: False - Port 0',
+        '@task - status: False - Port 90',
+    ],
+    'blockers': 'Description: Set weapons to stun State: False',
     'project_name': PROJECT['name'],
 }
 
@@ -248,57 +252,25 @@ class TestPivotalTrackerIssue:
         story = service.get_issue_for_record(STORY, EXTRA)
 
         expected_output = {
-            'annotations': [
-                {
-                    'complete': False,
-                    'created_at': '2019-05-14T12:00:00Z',
-                    'description': 'Port 0',
-                    'id': 5,
-                    'kind': 'task',
-                    'position': 1,
-                    'story_id': 561,
-                    'updated_at': '2019-05-14T12:00:00Z',
-                },
-                {
-                    'complete': False,
-                    'created_at': '2019-05-14T12:00:00Z',
-                    'description': 'Port 90',
-                    'id': 6,
-                    'kind': 'task',
-                    'position': 2,
-                    'story_id': 561,
-                    'updated_at': '2019-05-14T12:00:00Z',
-                },
-            ],
+            'annotations': EXTRA['annotations'],
             'pivotalclosed': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
             'pivotalcreated': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
             'pivotalupdated': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
             'pivotalurl': 'http://localhost/story/show/561',
-            'pivotalblockers': [
-                {
-                    'created_at': '2019-05-14T12:00:00Z',
-                    'description': 'Set weapons to stun',
-                    'id': 1100,
-                    'kind': 'blocker',
-                    'person_id': 106,
-                    'resolved': False,
-                    'story_id': 561,
-                    'updated_at': '2019-05-14T12:00:00Z',
-                }
-            ],
+            'pivotalblockers': EXTRA['blockers'],
             'pivotaldescription': 'All your base are belong to us',
             'pivotalestimate': 3,
             'pivotalid': 561,
-            'pivotalowners': ['owned_user'],
+            'pivotalowners': 'starkiller',
             'pivotalprojectid': 99,
             'pivotalprojectname': 'Death Star',
-            'pivotalrequesters': ['request_user'],
+            'pivotalrequesters': 'starkiller',
             'pivotalstorytype': 'story',
             'priority': 'M',
             'project': 'death_star',
             'tags': ['look_sir_metal'],
         }
-        actual_output = story.to_taskwarrior()
+        actual_output = story.to_taskwarrior().to_taskwarrior_data()
         assert actual_output == expected_output
 
     def test_issues(self, service):
@@ -330,4 +302,4 @@ class TestPivotalTrackerIssue:
             'project': 'death_star',
             'tags': ['look_sir_metal'],
         }
-        assert TaskConstructor(story).get_taskwarrior_record() == expected
+        assert story.to_taskwarrior_data() == expected

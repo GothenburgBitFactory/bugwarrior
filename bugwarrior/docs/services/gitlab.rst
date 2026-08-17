@@ -311,4 +311,4 @@ To limit the amount of content synchronized into TaskWarrior (which can help to 
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.gitlab.GitlabIssue
+.. udas:: bugwarrior.services.gitlab.GitlabUdas

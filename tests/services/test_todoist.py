@@ -12,7 +12,6 @@ from todoist_api_python.models import (
     Task,
 )
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.todoist import TodoistClient, TodoistService
 
 SERVICE_CLASS = TodoistService
@@ -124,20 +123,20 @@ class TestTodoistIssue:
             "scheduled": None,
             "status": "pending",
             "tags": [],  # by default labels are not mapped to tags
-            issue.ASSIGNEE: "TESTUSER1 <testuser1@example.com>",
-            issue.ASSIGNER: "TESTUSER2 <testuser2@example.com>",
-            issue.CONTENT: "TESTTASK",
-            issue.DESCRIPTION: "TESTTASKDESCRIPTION",
-            issue.DUE: datetime(year=2025, month=7, day=1),
-            issue.DEADLINE: datetime(year=2025, month=7, day=31),
-            issue.DURATION: "15 minute",
-            issue.ID: "1111111111111111",
-            issue.SECTION: "TESTSECTION",
-            issue.URL: "https://app.todoist.com/app/task/testtask-1111111111111111",
-            issue.PARENT_ID: None,
+            "todoistassignee": "TESTUSER1 <testuser1@example.com>",
+            "todoistassigner": "TESTUSER2 <testuser2@example.com>",
+            "todoistcontent": "TESTTASK",
+            "todoistdescription": "TESTTASKDESCRIPTION",
+            "todoistdue": datetime(year=2025, month=7, day=1),
+            "todoistdeadline": datetime(year=2025, month=7, day=31),
+            "todoistduration": "15 minute",
+            "todoistid": "1111111111111111",
+            "todoistsection": "TESTSECTION",
+            "todoisturl": "https://app.todoist.com/app/task/testtask-1111111111111111",
+            "todoistparentid": None,
         }
 
-        actual = issue.to_taskwarrior()
+        actual = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual == expected
 
@@ -146,21 +145,21 @@ class TestTodoistIssue:
         overrides = {"import_labels_as_tags": "True"}
         service = make_service(**overrides)
         issue = service.get_issue_for_record(record, extra)
-        actual = issue.to_taskwarrior()
+        actual = issue.to_taskwarrior().to_taskwarrior_data()
         assert actual.get("tags") == ["TESTLABEL"]
 
     def test_to_taskwarrior_task_with_low_priority(self, service, record, extra):
         # Test with priority set to lowest (1 in the API, which is P4 on the Todoist UI)
         record["priority"] = 1
         issue = service.get_issue_for_record(record, extra)
-        actual = issue.to_taskwarrior()
+        actual = issue.to_taskwarrior().to_taskwarrior_data()
         assert actual.get("priority") is None
 
     def test_to_taskwarrior_subtask(self, service, record, extra):
         # subtasks have a parent id
         record["parent_id"] = "1212121212121212"
         issue = service.get_issue_for_record(record, extra)
-        actual = issue.to_taskwarrior()
+        actual = issue.to_taskwarrior().to_taskwarrior_data()
         assert actual.get("todoistparentid") == "1212121212121212"
         assert (
             issue.get_default_description() == "(bw)Subtask ##1111111111111111"
@@ -173,7 +172,7 @@ class TestTodoistIssue:
         service.client.get_sections.return_value = [section]
         service.client.get_users.return_value = users
         service.client.get_issues.return_value = [record]
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             "annotations": [],
@@ -187,17 +186,17 @@ class TestTodoistIssue:
             "project": "TESTPROJECT",
             "scheduled": None,
             "tags": [],  # by default labels are not maped to tags
-            issue.ASSIGNEE: "TESTUSER1 <testuser1@example.com>",
-            issue.ASSIGNER: "TESTUSER2 <testuser2@example.com>",
-            issue.CONTENT: "TESTTASK",
-            issue.DESCRIPTION: "TESTTASKDESCRIPTION",
-            issue.DUE: datetime(year=2025, month=7, day=1),
-            issue.DEADLINE: datetime(year=2025, month=7, day=31),
-            issue.DURATION: "15 minute",
-            issue.ID: "1111111111111111",
-            issue.SECTION: "TESTSECTION",
-            issue.URL: "https://app.todoist.com/app/task/testtask-1111111111111111",
-            issue.PARENT_ID: None,
+            "todoistassignee": "TESTUSER1 <testuser1@example.com>",
+            "todoistassigner": "TESTUSER2 <testuser2@example.com>",
+            "todoistcontent": "TESTTASK",
+            "todoistdescription": "TESTTASKDESCRIPTION",
+            "todoistdue": datetime(year=2025, month=7, day=1),
+            "todoistdeadline": datetime(year=2025, month=7, day=31),
+            "todoistduration": "15 minute",
+            "todoistid": "1111111111111111",
+            "todoistsection": "TESTSECTION",
+            "todoisturl": "https://app.todoist.com/app/task/testtask-1111111111111111",
+            "todoistparentid": None,
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected

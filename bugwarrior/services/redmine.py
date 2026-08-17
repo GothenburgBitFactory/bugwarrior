@@ -1,14 +1,16 @@
 from collections.abc import Iterator
+import datetime
 import logging
 import re
 import typing
 from typing import Any
 
+from pydantic import Field, field_validator
 import requests
-from taskw import TaskWarriorShellout
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Duration, IssueDatetime, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -77,44 +79,42 @@ class RedMineClient(Client):
         return self.json_response(requests.get(url, **kwargs))
 
 
+class RedMineUdas(Udas):
+    """Service-specific UDAs contributed by Redmine."""
+
+    UNIQUE_KEY = ('redmineid',)
+
+    redmineurl: str = Field(title='Redmine URL')
+    redminesubject: str = Field(title='Redmine Subject')
+    redmineid: int = Field(title='Redmine ID')
+    redminedescription: str | None = Field(title='Redmine Description')
+    redminetracker: str = Field(title='Redmine Tracker')
+    redminestatus: str = Field(title='Redmine Status')
+    redmineauthor: str = Field(title='Redmine Author')
+    redminecategory: str | None = Field(title='Redmine Category')
+    redminestartdate: IssueDatetime = Field(title='Redmine Start Date')
+    redminespenthours: Duration = Field(title='Redmine Spent Hours')
+    redmineestimatedhours: Duration = Field(title='Redmine Estimated Hours')
+    redminecreatedon: IssueDatetime = Field(title='Redmine Created On')
+    redmineupdatedon: IssueDatetime = Field(title='Redmine Updated On')
+    redmineduedate: IssueDatetime = Field(title='Redmine Due Date')
+    redmineassignedto: str | None = Field(title='Redmine Assigned To')
+    redmineprojectname: str = Field(title='Redmine Project')
+
+    @field_validator('redminespenthours', 'redmineestimatedhours', mode='before')
+    @classmethod
+    def hours_to_duration(cls, value: Any) -> Any:
+        """Read Redmine's count of hours as a duration."""
+        if value is None:
+            return None
+        return datetime.timedelta(hours=float(value))
+
+
+class RedMineTask(Task):
+    udas: RedMineUdas
+
+
 class RedMineIssue(Issue):
-    URL = 'redmineurl'
-    SUBJECT = 'redminesubject'
-    ID = 'redmineid'
-    DESCRIPTION = 'redminedescription'
-    TRACKER = 'redminetracker'
-    STATUS = 'redminestatus'
-    AUTHOR = 'redmineauthor'
-    CATEGORY = 'redminecategory'
-    START_DATE = 'redminestartdate'
-    SPENT_HOURS = 'redminespenthours'
-    ESTIMATED_HOURS = 'redmineestimatedhours'
-    CREATED_ON = 'redminecreatedon'
-    UPDATED_ON = 'redmineupdatedon'
-    DUEDATE = 'redmineduedate'
-    ASSIGNED_TO = 'redmineassignedto'
-    PROJECT_NAME = 'redmineprojectname'
-
-    UDAS = {
-        URL: {'type': 'string', 'label': 'Redmine URL'},
-        SUBJECT: {'type': 'string', 'label': 'Redmine Subject'},
-        ID: {'type': 'numeric', 'label': 'Redmine ID'},
-        DESCRIPTION: {'type': 'string', 'label': 'Redmine Description'},
-        TRACKER: {'type': 'string', 'label': 'Redmine Tracker'},
-        STATUS: {'type': 'string', 'label': 'Redmine Status'},
-        AUTHOR: {'type': 'string', 'label': 'Redmine Author'},
-        CATEGORY: {'type': 'string', 'label': 'Redmine Category'},
-        START_DATE: {'type': 'date', 'label': 'Redmine Start Date'},
-        SPENT_HOURS: {'type': 'duration', 'label': 'Redmine Spent Hours'},
-        ESTIMATED_HOURS: {'type': 'duration', 'label': 'Redmine Estimated Hours'},
-        CREATED_ON: {'type': 'date', 'label': 'Redmine Created On'},
-        UPDATED_ON: {'type': 'date', 'label': 'Redmine Updated On'},
-        DUEDATE: {'type': 'date', 'label': 'Redmine Due Date'},
-        ASSIGNED_TO: {'type': 'string', 'label': 'Redmine Assigned To'},
-        PROJECT_NAME: {'type': 'string', 'label': 'Redmine Project'},
-    }
-    UNIQUE_KEY = (ID,)
-
     PRIORITY_MAP: dict[str, config.Priority] = {
         'Low': 'L',
         'Normal': 'M',
@@ -123,56 +123,30 @@ class RedMineIssue(Issue):
         'Immediate': 'H',
     }
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        due_date = self.record.get('due_date')
-        start_date = self.record.get('start_date')
-        updated_on = self.record.get('updated_on')
-        created_on = self.record.get('created_on')
-        spent_hours = self.record.get('spent_hours')
-        estimated_hours = self.record.get('estimated_hours')
-        category = self.record.get('category')
-        assigned_to = self.record.get('assigned_to')
-
-        if due_date:
-            due_date = self.parse_date(due_date)
-        if start_date:
-            start_date = self.parse_date(start_date)
-        if updated_on:
-            updated_on = self.parse_date(updated_on)
-        if created_on:
-            created_on = self.parse_date(created_on)
-        if spent_hours or spent_hours == 0.0:
-            spent_hours = str(spent_hours) + ' hours'
-            spent_hours = self.get_converted_hours(spent_hours)
-        if estimated_hours or estimated_hours == 0.0:
-            estimated_hours = str(estimated_hours) + ' hours'
-            estimated_hours = self.get_converted_hours(estimated_hours)
-        if category:
-            category = category['name']
-        if assigned_to:
-            assigned_to = assigned_to['name']
-
-        return {
-            'project': self.get_project_name(),
-            'annotations': self.extra.get('annotations', []),
-            'priority': self.get_priority(),
-            self.URL: self.get_issue_url(),
-            self.SUBJECT: self.record['subject'],
-            self.ID: self.record['id'],
-            self.DESCRIPTION: self.record.get('description', ''),
-            self.TRACKER: self.record['tracker']['name'],
-            self.STATUS: self.record['status']['name'],
-            self.AUTHOR: self.record['author']['name'],
-            self.PROJECT_NAME: self.record['project']['name'],
-            self.ASSIGNED_TO: assigned_to,
-            self.CATEGORY: category,
-            self.START_DATE: start_date,
-            self.CREATED_ON: created_on,
-            self.UPDATED_ON: updated_on,
-            self.DUEDATE: due_date,
-            self.ESTIMATED_HOURS: estimated_hours,
-            self.SPENT_HOURS: spent_hours,
-        }
+    def to_taskwarrior(self) -> RedMineTask:
+        return RedMineTask(
+            project=self.get_project_name(),
+            annotations=self.extra.get('annotations', []),
+            priority=self.get_priority(),
+            udas=RedMineUdas(
+                redmineurl=self.get_issue_url(),
+                redminesubject=self.record['subject'],
+                redmineid=self.record['id'],
+                redminedescription=self.record.get('description', ''),
+                redminetracker=self.record['tracker']['name'],
+                redminestatus=self.record['status']['name'],
+                redmineauthor=self.record['author']['name'],
+                redmineprojectname=self.record['project']['name'],
+                redmineassignedto=(self.record.get('assigned_to') or {}).get('name'),
+                redminecategory=(self.record.get('category') or {}).get('name'),
+                redminestartdate=self.record.get('start_date'),
+                redminecreatedon=self.record.get('created_on'),
+                redmineupdatedon=self.record.get('updated_on'),
+                redmineduedate=self.record.get('due_date'),
+                redmineestimatedhours=self.record.get('estimated_hours'),
+                redminespenthours=self.record.get('spent_hours'),
+            ),
+        )
 
     def get_priority(self) -> config.Priority:
         return self.PRIORITY_MAP.get(
@@ -181,11 +155,6 @@ class RedMineIssue(Issue):
 
     def get_issue_url(self) -> str:
         return self.config.url + "/issues/" + str(self.record["id"])
-
-    def get_converted_hours(self, estimated_hours: str) -> str:
-        tw = TaskWarriorShellout(config_filename=self.main_config.taskrc)
-        calc = tw._execute('calc', estimated_hours)
-        return calc[0].rstrip()
 
     def get_project_name(self) -> str:
         if self.config.project_name:
@@ -205,9 +174,10 @@ class RedMineIssue(Issue):
         )
 
 
-class RedMineService(Service[RedMineIssue]):
+class RedMineService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = RedMineIssue
+    TASK_SCHEMA = RedMineTask
     CONFIG_SCHEMA = RedMineConfig
 
     def __init__(
@@ -233,10 +203,10 @@ class RedMineService(Service[RedMineIssue]):
             self.config.verify_ssl,
         )
 
-    def issues(self) -> Iterator[RedMineIssue]:
+    def issues(self) -> Iterator[Task]:
         issues = self.client.find_issues(
             self.config.issue_limit, self.config.query, self.config.only_if_assigned
         )
         log.debug(" Found %i total.", len(issues))
         for issue in issues:
-            yield self.get_issue_for_record(issue)
+            yield self.process_record(issue)

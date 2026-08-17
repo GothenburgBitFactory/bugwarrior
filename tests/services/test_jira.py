@@ -4,7 +4,6 @@ from unittest import mock
 
 import pytest
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.config import validation
 from bugwarrior.config.load import format_config
 from bugwarrior.services.jira import JiraExtraFields, JiraService
@@ -99,18 +98,16 @@ class TestJiraService:
         formatted = format_config(config)
         conf = validation.validate_config(formatted, 'general', 'configpath')
         service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)
-        issue = mock.Mock()
-        issue.record = dict(fields=dict(description=description))
-        assert description[:5] == service.body(issue)
+        record = dict(fields=dict(description=description))
+        assert description[:5] == service.body(record)
 
     def test_body_length_limit(self, config):
         description = "A very short issue body.  Fixes #828."
         formatted = format_config(config)
         conf = validation.validate_config(formatted, 'general', 'configpath')
         service = JiraService(conf.service_configs[0], conf.main, _skip_server=True)
-        issue = mock.Mock()
-        issue.record = dict(fields=dict(description=description))
-        assert description == service.body(issue)
+        record = dict(fields=dict(description=description))
+        assert description == service.body(record)
 
 
 class TestJiraIssue:
@@ -149,20 +146,21 @@ class TestJiraIssue:
             'jirastatus': 'Open',
             'jirasubtasks': 'DONUT-11,DONUT-12',
             'jiraparent': 'DONUT-13',
+            'jiracreatedts': None,
             'jiraextra1': 'foo',
             'jiraextra2': 77,
-            issue.URL: url,
-            issue.FOREIGN_ID: record['key'],
-            issue.SUMMARY: SUMMARY,
-            issue.DESCRIPTION: 'issue body',
-            issue.ESTIMATE: ESTIMATION / 60 / 60,
+            'jiraurl': url,
+            'jiraid': record['key'],
+            'jirasummary': SUMMARY,
+            'jiradescription': 'issue body',
+            'jiraestimate': ESTIMATION / 60 / 60,
         }
 
         def get_url(*args):
             return url
 
         with mock.patch.object(issue, 'get_url', side_effect=get_url):
-            actual_output = issue.to_taskwarrior()
+            actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
@@ -192,25 +190,26 @@ class TestJiraIssue:
             'jirastatus': 'Open',
             'jirasubtasks': 'DONUT-11,DONUT-12',
             'jiraparent': 'DONUT-13',
+            'jiracreatedts': None,
             'jiraextra1': 'foo',
             'jiraextra2': 77,
-            issue.URL: url,
-            issue.FOREIGN_ID: record['key'],
-            issue.SUMMARY: SUMMARY,
-            issue.DESCRIPTION: None,
-            issue.ESTIMATE: ESTIMATION / 60 / 60,
+            'jiraurl': url,
+            'jiraid': record['key'],
+            'jirasummary': SUMMARY,
+            'jiradescription': None,
+            'jiraestimate': ESTIMATION / 60 / 60,
         }
 
         def get_url(*args):
             return url
 
         with mock.patch.object(issue, 'get_url', side_effect=get_url):
-            actual_output = issue.to_taskwarrior()
+            actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
     def test_issues(self, service):
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             'annotations': [],
@@ -229,6 +228,7 @@ class TestJiraIssue:
             'jiraurl': 'https://two.org/browse/DONUT-10',
             'jirasubtasks': 'DONUT-11,DONUT-12',
             'jiraparent': 'DONUT-13',
+            'jiracreatedts': None,
             'jiraextra1': 'foo',
             'jiraextra2': 77,
             'priority': 'H',
@@ -236,7 +236,7 @@ class TestJiraIssue:
             'tags': [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected
 
     def test_get_due(self, service, record_with_due):
         issue = service.get_issue_for_record(

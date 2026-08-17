@@ -3,7 +3,6 @@ from unittest import mock
 
 import pytest
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.deck import NextcloudDeckClient
 
 from ..base import get_validated_service
@@ -138,12 +137,12 @@ class TestDeckIssue:
             'project': 'testboard',
             'tags': ['Later'],
         }
-        actual = issue.to_taskwarrior()
+        actual = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual == expected
 
     def test_issues(self, service):
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             'annotations': ['@Lena - testcomment'],
@@ -165,23 +164,12 @@ class TestDeckIssue:
             'tags': ['Later'],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected
 
     def test_get_owner(self, config, record, make_service):
-        # Regression test: the old get_owner did `issue[issue.ASSIGNEE]`, treating
-        # the NextcloudDeckIssue as a dict. Issue has no __getitem__, so this raised
-        # TypeError whenever only_if_assigned was configured.
         config['myservice']['only_if_assigned'] = 'rainbow'
         service = make_service(config)
-        issue = service.get_issue_for_record(
-            record,
-            {
-                'board': {'title': 'testboard', 'id': 5},
-                'stack': {'title': 'teststack', 'id': 13},
-                'annotations': [],
-            },
-        )
-        assert service.get_owner(issue) == 'rainbow'
+        assert service.get_owner(record) == 'rainbow'
 
     def test_filter_boards_include(self, config, make_service):
         config['myservice']['include_board_ids'] = '5'

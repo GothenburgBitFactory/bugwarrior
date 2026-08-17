@@ -1,7 +1,6 @@
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.youtrack import YoutrackService
 
 from ..base import validate
@@ -75,10 +74,9 @@ class TestYoutrackIssue:
         self, make_service, record, extra
     ):
         service = make_service(import_tags=True, tag_template='yt_{{tag|lower}}')
-        issue = service.get_issue_for_record(record, extra)
 
         assert service.config.templates == {}
-        assert TaskConstructor(issue).get_taskwarrior_record()['tags'] == [
+        assert service.process_record(record, extra).tags == [
             'yt_bug',
             'yt_new_feature',
         ]
@@ -91,13 +89,13 @@ class TestYoutrackIssue:
             'project': 'TEST',
             'priority': service.config.default_priority,
             'tags': ['bug', 'new_feature'],
-            issue.ISSUE: 'TEST-1',
-            issue.SUMMARY: 'Hello World',
-            issue.URL: 'https://youtrack.example.com:443/issue/TEST-1',
-            issue.PROJECT: 'TEST',
-            issue.NUMBER: 1,
+            'youtrackissue': 'TEST-1',
+            'youtracksummary': 'Hello World',
+            'youtrackurl': 'https://youtrack.example.com:443/issue/TEST-1',
+            'youtrackproject': 'TEST',
+            'youtracknumber': '1',
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
@@ -108,7 +106,7 @@ class TestYoutrackIssue:
             json=[record],
         )
 
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             'description': '(bw)Is#TEST-1 - Hello World .. https://youtrack.example.com:443/issue/TEST-1',
@@ -119,7 +117,7 @@ class TestYoutrackIssue:
             'youtracksummary': 'Hello World',
             'youtrackurl': 'https://youtrack.example.com:443/issue/TEST-1',
             'youtrackproject': 'TEST',
-            'youtracknumber': 1,
+            'youtracknumber': '1',
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected

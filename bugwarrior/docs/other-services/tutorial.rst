@@ -56,10 +56,12 @@ Fire up your favorite editor and import the base classes and whatever library yo
   import pathlib
   import typing
 
+  from pydantic import Field
   import requests
 
   from bugwarrior import config
   from bugwarrior.services import Service, Issue, Client
+  from bugwarrior.task import Task, Udas
 
   log = logging.getLogger(__name__)
 
@@ -101,7 +103,7 @@ The ``import_labels_as_tags`` and ``port`` attributes create optional configurat
 .. note::
    A common pitfall when writing a new service is to add configuration options for functionality that is already provided by :ref:`field_templates`. This is a powerful feature which makes many configurable features unnecessary.
 
-4. Client
+5. Client
 ---------
 
 Unless you're using a library that closely aligns with the needs of your service class, you'll probably want a client class. The purpose of this class is to abstract away the details of getting the data we need from the API -- authenticating, querying, paging, de-serializing, etc. -- so your service can focus on the business of translating service data into taskwarrior tasks.
@@ -124,41 +126,57 @@ Unless you're using a library that closely aligns with the needs of your service
 
 As you see, our client provides a simple API to execute the same API query we did in step 1. We can come back and add the additional fields bugwarrior will need to fetch later.
 
-5. Issue
---------
+6. Task and UDAs
+----------------
 
-We will now implement an ``Issue`` class, which is essentially a wrapper for each task you're pulling in. This provides a consistent API across services, which enables bugwarrior to synchronize arbitrary tasks without knowing anything about the service they come from.
+Bugwarrior represents a taskwarrior task with the ``Task`` model. The standard taskwarrior fields are declared on it already; a service adds its own UDAs by subclassing ``Udas`` and pointing a ``Task`` subclass at it.
 
 .. code:: python
 
-  class GitbugIssue(Issue):
-      AUTHOR = 'gitbugauthor'
-      ID = 'gitbugid'
-      STATE = 'gitbugstate'
-      TITLE = 'gitbugtitle'
+  class GitBugUdas(Udas):
+      """Service-specific UDAs contributed by git-bug."""
 
-      UDAS = {
-          AUTHOR: {'type': 'string', 'label': 'Gitbug Issue Author'},
-          ID: {'type': 'string', 'label': 'Gitbug UUID'},
-          STATE: {'type': 'string', 'label': 'Gitbug state'},
-          TITLE: {'type': 'string', 'label': 'Gitbug Title'},
-      }
+      UNIQUE_KEY = ('gitbugid',)
 
-      UNIQUE_KEY = (ID,)
+      gitbugauthor: str = Field(title='Gitbug Issue Author')
+      gitbugid: str = Field(title='Gitbug UUID')
+      gitbugstate: str = Field(title='Gitbug state')
+      gitbugtitle: str = Field(title='Gitbug Title')
 
+
+  class GitBugTask(Task):
+      udas: GitBugUdas
+
+Every field of a ``Udas`` subclass is a UDA. Its name is the UDA name, so the author will be assigned to ``gitbugauthor``. The taskwarrior UDA type is derived from the annotation: ``str`` becomes "string", ``int`` and ``float`` become "numeric", ``datetime`` becomes "date" and ``timedelta`` becomes "duration". The label comes from the field's ``title``.
+
+Give your fields no default, so that every UDA has to be mapped in ``to_taskwarrior``. Forget one and you get a validation error rather than a task that is quietly missing a value.
+
+Annotate a field ``str | None`` when the service can genuinely leave it empty, such as a description nobody filled in, and map it to ``None`` in that case. Do not do this for identifiers or URLs: those are always there, and if one is ever missing, an error is what you want.
+
+The ``UNIQUE_KEY`` attribute must be assigned a tuple of field names which are sufficient to identify a task. Keep in mind that these will be used to update tasks when their remote content changes, so the selected fields must be immutable, and must never be nullable.
+
+7. Issue
+--------
+
+We will now implement an ``Issue`` class, which maps a record fetched from the service onto a task. This provides a consistent API across services, which enables bugwarrior to synchronize arbitrary tasks without knowing anything about the service they come from.
+
+.. code:: python
+
+  class GitBugIssue(Issue):
       def to_taskwarrior(self):
-          return {
-              'project': self.extra['project'],
-              'priority': self.config.default_priority,
-              'annotations': self.record.get('annotations', []),
-              'tags': self.get_tags(),
-              'entry': self.parse_date(self.record.get('createdAt')),
-
-              self.AUTHOR: self.record['author']['name'],
-              self.ID: self.record['id'],
-              self.STATE: self.record['state'],
-              self.TITLE: self.record['title'],
-          }
+          return GitBugTask(
+              project=self.extra['project'],
+              priority=self.config.default_priority,
+              annotations=self.record.get('annotations', []),
+              tags=self.get_tags(),
+              entry=self.record.get('createdAt'),
+              udas=GitBugUdas(
+                  gitbugauthor=self.record['author']['name'],
+                  gitbugid=self.record['id'],
+                  gitbugstate=self.record['state'],
+                  gitbugtitle=self.record['title'],
+              ),
+          )
 
       def get_tags(self):
           return self.get_tags_from_labels(
@@ -167,13 +185,9 @@ We will now implement an ``Issue`` class, which is essentially a wrapper for eac
       def get_default_description(self):
           return self.build_default_description(title=self.record['title'], cls='bug')
 
-The first thing you see here is the declaration of which UDAs this service will assign to each task. The first set of class attributes define the UDA names -- e.g. the author will be assigned to ``gitbugauthor`` -- and the ``UDAS`` dictionary provides additional metadata about them.
+There are two abstract methods which must be implemented: ``to_taskwarrior`` and ``get_default_description``.
 
-The ``UNIQUE_KEY`` attribute must be assigned a tuple of UDAs which are sufficient to identify a task. Keep in mind that these will be used to update tasks when their remote content changes, so the selected UDAs must be immutable.
-
-There are two abstract methods which now must be implemented: ``to_taskwarrior`` and ``get_default_description``.
-
-The first must return a dictionary of attributes -- both the standard attributes and UDAs -- pointing to their content in a given issue. This content will largely be found in the ``record`` and ``extra`` attributes, which we will get to later.
+The first must return an instance of your ``Task`` subclass, populated from the record. Date fields accept the service's raw date strings, which are parsed and given a timezone for you. This content will largely be found in the ``record`` and ``extra`` attributes, which we will get to later.
 
 The ``get_default_description`` method must return a string representation of the task using the ``build_default_description`` method, which takes the following keyword arguments, all optional:
 
@@ -182,7 +196,7 @@ The ``get_default_description`` method must return a string representation of th
 - number
 - cls (a categorization of the type of task, defaulting to "issue")
 
-6. Service
+8. Service
 ----------
 
 Now for the main service class which bugwarrior will invoke to fetch issues.
@@ -192,6 +206,7 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
   class GitBugService(Service):
       API_VERSION = 2.0
       ISSUE_CLASS = GitBugIssue
+      TASK_SCHEMA = GitBugTask
       CONFIG_SCHEMA = GitBugConfig
 
       def __init__(self, *args, **kwargs):
@@ -214,13 +229,13 @@ Now for the main service class which bugwarrior will invoke to fetch issues.
                   ) for comment in comments['nodes'])
                   issue['annotations'] = self.build_annotations(annotations)
 
-              yield self.get_issue_for_record(issue)
+              yield self.process_record(issue)
 
-Here we see three required class attributes and one required method.
+Here we see four required class attributes and one required method.
 
-The ``API_VERSION`` is set to the latest, while ``ISSUE_CLASS`` and ``CONFIG_SCHEMA`` point to our previously defined classes.
+The ``API_VERSION`` is set to the latest, while ``ISSUE_CLASS``, ``TASK_SCHEMA`` and ``CONFIG_SCHEMA`` point to our previously defined classes.
 
-The ``issues`` method is a generator which yields individual issue dictionaries.
+The ``issues`` method is a generator which passes each record fetched from the service to ``process_record``, which maps it to a task and applies the user's templates.
 
 .. note::
 
@@ -231,10 +246,10 @@ The ``issues`` method is a generator which yields individual issue dictionaries.
    When relevant and reasonably feasible, all services should implement the :ref:`common_configuration_options`:
 
    - ``only_if_assigned`` and ``also_unassigned``: These options are usually implemented either in the service by filtering retrieved tasks or (ideally) in the client by increasing the specificity of the api query.
-   - ``default_priority``: This is generally implemented by adding an ``ISSUE_MAP`` class attribute to the ``Issue`` class and using the ``get_priority`` method in ``to_taskwarrior``. When the service does not provide a relevant "priority" value, this configuration value can be assigned directly.
+   - ``default_priority``: This is generally implemented by adding a ``PRIORITY_MAP`` class attribute to the ``Issue`` class and using the ``get_priority`` method in ``to_taskwarrior``. When the service does not provide a relevant "priority" value, this configuration value can be assigned directly.
    - ``add_tags``: You need not worry about this one, it is implemented automatically.
 
-7. Service Registration
+9. Service Registration
 -----------------------
 
 If you're developing your service in a separate package, it's time to create a ``pyproject.toml`` if you have not done so already, and register the name of your service with the path to your ``Service`` class.
@@ -246,14 +261,14 @@ If you're developing your service in a separate package, it's time to create a `
 
 If you're developing in the bugwarrior repo, you can simply add your entry to the existing ``[project.entry-points."bugwarrior.service"]`` table.
 
-8. Tests
---------
+10. Tests
+---------
 
 .. note::
 
    The remainder of this tutorial is not geared towards third-party services. While you are free to use bugwarrior's testing infrastructure, no attempt is being made to maintain the stability of these interfaces at this time.
 
-Create a test file. Declare ``SERVICE_CLASS`` and ``SERVICE_CONFIG`` at module level -- these are picked up by the ``service`` and ``make_service`` fixtures shared across all service tests (see ``tests/services/conftest.py``), which build a mock service instance for you. Fake record data belongs in a ``record`` fixture rather than instance state, since a fresh dictionary per test avoids accidental sharing between tests.
+Create a test file. Declare ``SERVICE_CLASS`` and ``SERVICE_CONFIG`` at module level. These are picked up by the ``service`` and ``make_service`` fixtures shared across all service tests (see ``tests/services/conftest.py``), which build a mock service instance for you. Fake record data belongs in a ``record`` fixture rather than instance state, since a fresh dictionary per test avoids accidental sharing between tests.
 
 .. code:: bash
 
@@ -265,7 +280,6 @@ Create a test file. Declare ``SERVICE_CLASS`` and ``SERVICE_CONFIG`` at module l
 
   import pytest
 
-  from bugwarrior.collect import TaskConstructor
   from bugwarrior.services.gitbug import GitBugClient, GitBugService
 
   SERVICE_CLASS = GitBugService
@@ -300,21 +314,21 @@ Create a test file. Declare ``SERVICE_CLASS`` and ``SERVICE_CONFIG`` at module l
 
           expected = { ... }
 
-          actual = issue.to_taskwarrior()
+          actual = issue.to_taskwarrior().to_taskwarrior_data()
 
           assert actual == expected
 
       def test_issues(self, service, record):
           service.client.get_issues.return_value = [record]
 
-          issue = next(service.issues())
+          task = next(service.issues())
 
           expected = { ... }
 
-          assert TaskConstructor(issue).get_taskwarrior_record() == expected
+          assert task.to_taskwarrior_data() == expected
 
-9. Documentation
-------------------
+11. Documentation
+-----------------
 
 Create a documentation file and include the relevant sections.
 
@@ -359,9 +373,9 @@ Copy and complete the following template:
    Provided UDA Fields
    -------------------
 
-   .. udas:: bugwarrior.services.SERVICE_MODULE.ISSUE_CLASS
+   .. udas:: bugwarrior.services.SERVICE_MODULE.UDAS_CLASS
 
-10. README
+12. README
 ----------
 
 Update the list of services in ``README.rst`` with a link to the homepage of your service.

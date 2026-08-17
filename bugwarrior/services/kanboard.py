@@ -7,10 +7,11 @@ from typing import Any
 from urllib.parse import urlparse
 
 from kanboard import Client
-from pydantic import computed_field
+from pydantic import Field, computed_field
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
+from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -33,24 +34,24 @@ class KanboardConfig(config.ServiceConfig):
         return urlparse(self.url).netloc
 
 
+class KanboardUdas(Udas):
+    """Service-specific UDAs contributed by Kanboard."""
+
+    UNIQUE_KEY = ("kanboardtaskid",)
+
+    kanboardtaskid: int = Field(title="Kanboard Task ID")
+    kanboardtasktitle: str = Field(title="Kanboard Task Title")
+    kanboardtaskdescription: str | None = Field(title="Kanboard Task Description")
+    kanboardprojectid: int = Field(title="Kanboard Project ID")
+    kanboardprojectname: str = Field(title="Kanboard Project Name")
+    kanboardurl: str = Field(title="Kanboard URL")
+
+
+class KanboardTask(Task):
+    udas: KanboardUdas
+
+
 class KanboardIssue(Issue):
-    TASK_ID = "kanboardtaskid"
-    TASK_TITLE = "kanboardtasktitle"
-    TASK_DESCRIPTION = "kanboardtaskdescription"
-    PROJECT_ID = "kanboardprojectid"
-    PROJECT_NAME = "kanboardprojectname"
-    URL = "kanboardurl"
-
-    UDAS = {
-        TASK_ID: {"type": "numeric", "label": "Kanboard Task ID"},
-        TASK_TITLE: {"type": "string", "label": "Kanboard Task Title"},
-        TASK_DESCRIPTION: {"type": "string", "label": "Kanboard Task Description"},
-        PROJECT_ID: {"type": "numeric", "label": "Kanboard Project ID"},
-        PROJECT_NAME: {"type": "string", "label": "Kanboard Project Name"},
-        URL: {"type": "string", "label": "Kanboard URL"},
-    }
-    UNIQUE_KEY = (TASK_ID,)
-
     PRIORITY_MAP: dict[str, config.Priority | None] = {
         "0": None,
         "1": "L",
@@ -58,21 +59,23 @@ class KanboardIssue(Issue):
         "3": "H",
     }
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            "project": self.get_project(),
-            "priority": self.get_priority(),
-            "annotations": self.get_annotations(),
-            "tags": self.get_tags(),
-            "due": self.get_due(),
-            "entry": self.get_entry(),
-            self.TASK_ID: self.get_task_id(),
-            self.TASK_TITLE: self.get_task_title(),
-            self.TASK_DESCRIPTION: self.get_task_description(),
-            self.PROJECT_ID: self.get_project_id(),
-            self.PROJECT_NAME: self.get_project_name(),
-            self.URL: self.get_url(),
-        }
+    def to_taskwarrior(self) -> KanboardTask:
+        return KanboardTask(
+            project=self.get_project(),
+            priority=self.get_priority(),
+            annotations=self.get_annotations(),
+            tags=self.get_tags(),
+            due=self.get_due(),
+            entry=self.get_entry(),
+            udas=KanboardUdas(
+                kanboardtaskid=self.get_task_id(),
+                kanboardtasktitle=self.get_task_title(),
+                kanboardtaskdescription=self.get_task_description(),
+                kanboardprojectid=self.get_project_id(),
+                kanboardprojectname=self.get_project_name(),
+                kanboardurl=self.get_url(),
+            ),
+        )
 
     def get_default_description(self) -> str:
         return self.build_default_description(
@@ -120,9 +123,10 @@ class KanboardIssue(Issue):
             return datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
 
 
-class KanboardService(Service[KanboardIssue]):
+class KanboardService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = KanboardIssue
+    TASK_SCHEMA = KanboardTask
     CONFIG_SCHEMA = KanboardConfig
 
     def __init__(
@@ -144,7 +148,7 @@ class KanboardService(Service[KanboardIssue]):
             ((c["name"], c["comment"]) for c in comments), url
         )
 
-    def issues(self) -> Iterator[KanboardIssue]:
+    def issues(self) -> Iterator[Task]:
         # The API provides only a per-project search. Retrieve the list of
         # projects first and query each project in turn.
         projects = self.client.get_my_projects_list()
@@ -175,4 +179,4 @@ class KanboardService(Service[KanboardIssue]):
             # Resolve a task's comments.
             extra["annotations"] = self.annotations(task, extra["url"])
 
-            yield self.get_issue_for_record(task, extra)
+            yield self.process_record(task, extra)

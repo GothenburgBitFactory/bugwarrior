@@ -6,10 +6,12 @@ import subprocess
 import sys
 from typing import Any, Literal
 
+from pydantic import Field
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -101,33 +103,36 @@ class GitBugClient(Client):
         )['repository']['allBugs']['nodes']
 
 
+class GitBugUdas(Udas):
+    """Service-specific UDAs contributed by git-bug."""
+
+    UNIQUE_KEY = ('gitbugid',)
+
+    gitbugauthor: str = Field(title='Gitbug Issue Author')
+    gitbugid: str = Field(title='Gitbug UUID')
+    gitbugstate: str = Field(title='Gitbug state')
+    gitbugtitle: str = Field(title='Gitbug Title')
+
+
+class GitBugTask(Task):
+    udas: GitBugUdas
+
+
 class GitBugIssue(Issue):
-    AUTHOR = 'gitbugauthor'
-    ID = 'gitbugid'
-    STATE = 'gitbugstate'
-    TITLE = 'gitbugtitle'
-
-    UDAS = {
-        AUTHOR: {'type': 'string', 'label': 'Gitbug Issue Author'},
-        ID: {'type': 'string', 'label': 'Gitbug UUID'},
-        STATE: {'type': 'string', 'label': 'Gitbug state'},
-        TITLE: {'type': 'string', 'label': 'Gitbug Title'},
-    }
-
-    UNIQUE_KEY = (ID,)
-
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            'project': self.config.target,
-            'priority': self.config.default_priority,
-            'annotations': self.record.get('annotations', []),
-            'tags': self.get_tags(),
-            'entry': self.parse_date(self.record.get('createdAt')),
-            self.AUTHOR: self.record['author']['name'],
-            self.ID: self.record['id'],
-            self.STATE: self.record['status'],
-            self.TITLE: self.record['title'],
-        }
+    def to_taskwarrior(self) -> GitBugTask:
+        return GitBugTask(
+            project=self.config.target,
+            priority=self.config.default_priority,
+            annotations=self.record.get('annotations', []),
+            tags=self.get_tags(),
+            entry=self.record.get('createdAt'),
+            udas=GitBugUdas(
+                gitbugauthor=self.record['author']['name'],
+                gitbugid=self.record['id'],
+                gitbugstate=self.record['status'],
+                gitbugtitle=self.record['title'],
+            ),
+        )
 
     def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(
@@ -138,9 +143,10 @@ class GitBugIssue(Issue):
         return self.build_default_description(title=self.record['title'], cls='bug')
 
 
-class GitBugService(Service[GitBugIssue]):
+class GitBugService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = GitBugIssue
+    TASK_SCHEMA = GitBugTask
     CONFIG_SCHEMA = GitBugConfig
 
     def __init__(
@@ -154,7 +160,7 @@ class GitBugService(Service[GitBugIssue]):
             annotation_comments=self.main_config.annotation_comments,
         )
 
-    def issues(self) -> Iterator[GitBugIssue]:
+    def issues(self) -> Iterator[Task]:
         for issue in self.client.get_issues():
             comments = issue.pop('comments')
             issue['description'] = comments['nodes'].pop(0)['message']
@@ -166,4 +172,4 @@ class GitBugService(Service[GitBugIssue]):
                 )
                 issue['annotations'] = self.build_annotations(annotations)
 
-            yield self.get_issue_for_record(issue)
+            yield self.process_record(issue)

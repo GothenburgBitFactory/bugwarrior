@@ -47,4 +47,4 @@ configuration options described in :ref:`common_configuration_options`.
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.trac.TracIssue
+.. udas:: bugwarrior.services.trac.TracUdas

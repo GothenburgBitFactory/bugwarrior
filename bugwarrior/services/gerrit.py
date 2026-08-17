@@ -4,11 +4,13 @@ import logging
 import typing
 from typing import Any
 
+from pydantic import Field
 import requests
 import requests.auth
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
+from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -28,40 +30,41 @@ class GerritConfig(config.ServiceConfig):
     also_unassigned: config.UnsupportedOption[bool] = False
 
 
+class GerritUdas(Udas):
+    """Service-specific UDAs contributed by Gerrit."""
+
+    UNIQUE_KEY = ('gerriturl',)
+
+    gerritsummary: str = Field(title='Gerrit Summary')
+    gerriturl: str = Field(title='Gerrit URL')
+    gerritid: int = Field(title='Gerrit Change ID')
+    gerritbranch: str = Field(title='Gerrit Branch')
+    gerrittopic: str | None = Field(title='Gerrit Topic')
+    gerritstatus: str | None = Field(title='Gerrit Status')
+    gerritwip: int = Field(title='Gerrit Work in Progress')
+
+
+class GerritTask(Task):
+    udas: GerritUdas
+
+
 class GerritIssue(Issue):
-    SUMMARY = 'gerritsummary'
-    URL = 'gerriturl'
-    FOREIGN_ID = 'gerritid'
-    BRANCH = 'gerritbranch'
-    TOPIC = 'gerrittopic'
-    STATUS = 'gerritstatus'
-    WORK_IN_PROGRESS = 'gerritwip'
-
-    UDAS = {
-        SUMMARY: {'type': 'string', 'label': 'Gerrit Summary'},
-        URL: {'type': 'string', 'label': 'Gerrit URL'},
-        FOREIGN_ID: {'type': 'numeric', 'label': 'Gerrit Change ID'},
-        BRANCH: {'type': 'string', 'label': 'Gerrit Branch'},
-        TOPIC: {'type': 'string', 'label': 'Gerrit Topic'},
-        STATUS: {'type': 'string', 'label': 'Gerrit Status'},
-        WORK_IN_PROGRESS: {'type': 'numeric', 'label': 'Gerrit Work in Progress'},
-    }
-    UNIQUE_KEY = (URL,)
-
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            'project': self.record['project'],
-            'annotations': self.extra['annotations'],
-            self.URL: self.extra['url'],
-            'priority': self.config.default_priority,
-            'tags': [],
-            self.FOREIGN_ID: self.record['_number'],
-            self.SUMMARY: self.record['subject'],
-            self.BRANCH: self.record['branch'],
-            self.TOPIC: self.record.get('topic', 'notopic'),
-            self.STATUS: self.record.get('status', ''),
-            self.WORK_IN_PROGRESS: int(self.record.get('work_in_progress', 0)),
-        }
+    def to_taskwarrior(self) -> GerritTask:
+        return GerritTask(
+            project=self.record['project'],
+            annotations=self.extra['annotations'],
+            priority=self.config.default_priority,
+            tags=[],
+            udas=GerritUdas(
+                gerritsummary=self.record['subject'],
+                gerriturl=self.extra['url'],
+                gerritid=self.record['_number'],
+                gerritbranch=self.record['branch'],
+                gerrittopic=self.record.get('topic', 'notopic'),
+                gerritstatus=self.record.get('status', ''),
+                gerritwip=self.record.get('work_in_progress', 0),
+            ),
+        )
 
     def get_default_description(self) -> str:
         return self.build_default_description(
@@ -72,9 +75,10 @@ class GerritIssue(Issue):
         )
 
 
-class GerritService(Service[GerritIssue]):
+class GerritService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = GerritIssue
+    TASK_SCHEMA = GerritTask
     CONFIG_SCHEMA = GerritConfig
 
     def __init__(
@@ -103,7 +107,7 @@ class GerritService(Service[GerritIssue]):
                 self.config.username, self.password
             )
 
-    def issues(self) -> Iterator[GerritIssue]:
+    def issues(self) -> Iterator[Task]:
         # Construct the whole url by hand here, because otherwise requests will
         # percent-encode the ':' characters, which gerrit doesn't like.
         url = self.config.base_uri + '/a/changes/?q=' + self.query_string
@@ -118,7 +122,7 @@ class GerritService(Service[GerritIssue]):
                 'url': self.build_url(change),
                 'annotations': self.annotations(change),
             }
-            yield self.get_issue_for_record(change, extra)
+            yield self.process_record(change, extra)
 
     def build_url(self, change: dict[str, Any]) -> str:
         return '%s/#/c/%i/' % (self.config.base_uri, change['_number'])

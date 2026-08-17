@@ -3,7 +3,6 @@ from unittest import mock
 
 import pytest
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.kanboard import KanboardService
 
 from ..base import validate
@@ -113,14 +112,14 @@ class TestKanboardService:
             "tags": extra["tags"],
             "due": None,
             "entry": datetime(2015, 6, 13, 20, 30, 46, tzinfo=timezone.utc),
-            issue.TASK_ID: int(record["id"]),
-            issue.TASK_TITLE: record["title"],
-            issue.TASK_DESCRIPTION: record["description"],
-            issue.PROJECT_ID: int(record["project_id"]),
-            issue.PROJECT_NAME: record["project_name"],
-            issue.URL: extra["url"],
+            "kanboardtaskid": int(record["id"]),
+            "kanboardtasktitle": record["title"],
+            "kanboardtaskdescription": record["description"],
+            "kanboardprojectid": int(record["project_id"]),
+            "kanboardprojectname": record["project_name"],
+            "kanboardurl": extra["url"],
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_taskwarrior_data()
 
         assert actual_output == expected_output
 
@@ -181,7 +180,7 @@ class TestKanboardService:
         }
         service.client.get_task_tags.return_value = {"1": "tag1", "2": "tag2"}
 
-        issue = next(service.issues())
+        task = next(service.issues())
 
         # Check calls on the client
         service.client.get_my_projects_list.assert_called_once_with()
@@ -207,4 +206,4 @@ class TestKanboardService:
             "priority": "M",  # default priority
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_taskwarrior_data() == expected

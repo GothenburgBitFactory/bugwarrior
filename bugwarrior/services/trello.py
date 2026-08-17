@@ -10,10 +10,12 @@ from collections.abc import Iterator
 import typing
 from typing import Any
 
+from pydantic import Field
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Task, Udas
 
 
 class TrelloConfig(config.ServiceConfig):
@@ -29,30 +31,27 @@ class TrelloConfig(config.ServiceConfig):
     label_template: str = "{{label|replace(' ', '_')}}"
 
 
+class TrelloUdas(Udas):
+    """Service-specific UDAs contributed by Trello."""
+
+    UNIQUE_KEY = ('trellocardid',)
+
+    trellocard: str = Field(title='Trello card name')
+    trellocardid: str = Field(title='Trello card ID')
+    trellocardidshort: int = Field(title='Trello short card ID')
+    trellodescription: str | None = Field(title='Trello description')
+    trelloboard: str = Field(title='Trello board name')
+    trellolist: str = Field(title='Trello list name')
+    trelloshortlink: str = Field(title='Trello shortlink')
+    trelloshorturl: str = Field(title='Trello short URL')
+    trellourl: str = Field(title='Trello URL')
+
+
+class TrelloTask(Task):
+    udas: TrelloUdas
+
+
 class TrelloIssue(Issue):
-    NAME = 'trellocard'
-    CARDID = 'trellocardid'
-    SHORTCARDID = 'trellocardidshort'
-    DESCRIPTION = 'trellodescription'
-    BOARD = 'trelloboard'
-    LIST = 'trellolist'
-    SHORTLINK = 'trelloshortlink'
-    SHORTURL = 'trelloshorturl'
-    URL = 'trellourl'
-
-    UDAS = {
-        NAME: {'type': 'string', 'label': 'Trello card name'},
-        CARDID: {'type': 'string', 'label': 'Trello card ID'},
-        SHORTCARDID: {'type': 'numeric', 'label': 'Trello short card ID'},
-        DESCRIPTION: {'type': 'string', 'label': 'Trello description'},
-        BOARD: {'type': 'string', 'label': 'Trello board name'},
-        LIST: {'type': 'string', 'label': 'Trello list name'},
-        SHORTLINK: {'type': 'string', 'label': 'Trello shortlink'},
-        SHORTURL: {'type': 'string', 'label': 'Trello short URL'},
-        URL: {'type': 'string', 'label': 'Trello URL'},
-    }
-    UNIQUE_KEY = (CARDID,)
-
     def get_default_description(self) -> str:
         """Return the old-style verbose description from bugwarrior."""
         return self.build_default_description(
@@ -67,41 +66,46 @@ class TrelloIssue(Issue):
             [label['name'] for label in self.record['labels']]
         )
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            'project': self.extra['boardname'],
-            'due': self.parse_date(self.record['due']),
-            'priority': self.config.default_priority,
-            'tags': self.get_tags(),
-            self.NAME: self.record['name'],
-            self.CARDID: self.record['id'],
-            self.SHORTCARDID: self.record['idShort'],
-            self.DESCRIPTION: self.record['desc'],
-            self.BOARD: self.extra['boardname'],
-            self.LIST: self.extra['listname'],
-            self.SHORTLINK: self.record['shortLink'],
-            self.SHORTURL: self.record['shortUrl'],
-            self.URL: self.record['url'],
-            'annotations': self.extra.get('annotations', []),
-        }
+    def to_taskwarrior(self) -> TrelloTask:
+        return TrelloTask(
+            project=self.extra['boardname'],
+            due=self.record['due'],
+            priority=self.config.default_priority,
+            tags=self.get_tags(),
+            annotations=self.extra.get('annotations', []),
+            udas=TrelloUdas(
+                trellocard=self.record['name'],
+                trellocardid=self.record['id'],
+                trellocardidshort=self.record['idShort'],
+                trellodescription=self.record['desc'],
+                trelloboard=self.extra['boardname'],
+                trellolist=self.extra['listname'],
+                trelloshortlink=self.record['shortLink'],
+                trelloshorturl=self.record['shortUrl'],
+                trellourl=self.record['url'],
+            ),
+        )
 
 
-class TrelloService(Service[TrelloIssue]):
+class TrelloService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = TrelloIssue
+    TASK_SCHEMA = TrelloTask
     CONFIG_SCHEMA = TrelloConfig
 
-    def issues(self) -> Iterator[TrelloIssue]:
+    def issues(self) -> Iterator[Task]:
         """
         Returns a list of dicts representing issues from a remote service.
         """
         for board in self.get_boards():
             for lst in self.get_lists(board['id']):
-                listextra = dict(boardname=board['name'], listname=lst['name'])
                 for card in self.get_cards(lst['id']):
-                    issue = self.get_issue_for_record(card, extra=listextra)
-                    issue.extra.update({"annotations": self.annotations(card)})
-                    yield issue
+                    extra = {
+                        'boardname': board['name'],
+                        'listname': lst['name'],
+                        'annotations': self.annotations(card),
+                    }
+                    yield self.process_record(card, extra)
 
     def annotations(self, card_json: dict[str, Any]) -> list[str]:
         """A wrapper around get_comments that build the taskwarrior
