@@ -5,6 +5,8 @@ Highlights
 ==========
 - Deprecation of the --interactive flag. All invocations are now interactive. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1204)
 - Service API 2.0 (with backwards compatiblity for 1.0 services). See https://bugwarrior.readthedocs.io/en/stable/other-services/api.html#changelog. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1209)
+- Services now map a foreign record to a typed Task model rather than a plain dictionary, and declare their UDAs as fields of that model rather than as a separate UDAS dictionary. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1226)
+- A field template which cannot produce a valid value for its field now reports a configuration error naming the template and the field, instead of writing the rendered string to the record. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1226)
 
 Dependency Updates
 ==================
@@ -15,6 +17,15 @@ Dependency Updates
 Service-Specific Changes
 ========================
 - linear: Support for pagination if there are more than 50 issues and mapping of entry, priority, and due fields. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1196, https://github.com/GothenburgBitFactory/bugwarrior/pull/1198, https://github.com/GothenburgBitFactory/bugwarrior/pull/1200)
+- azuredevops: A work item with no priority now leaves ``adopriority`` empty. It was previously filled from ``default_priority``, which wrote "M" or "H" into a UDA declared numeric. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1226)
+- bugzilla: ``bugzillaneedinfo`` and ``bugzillaassignedon`` are now always written to the record. They were previously left out when empty, so a date written on an earlier run stayed there after the flag was gone. It is now cleared. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1226)
+- jira: ``jiracreatedts`` is no longer declared. It has never been populated. The creation timestamp goes to the generic ``entry`` field. To record it in a UDA, use ``extra_fields = jiracreatedts:created`` and declare the UDA in Taskwarrior as you would for any other extra field. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1226)
+- logseq: ``logseqdone`` is no longer declared. It has never been populated. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1226)
+- redmine: spent and estimated hours are converted to a duration directly, instead of running ``task calc`` once per issue. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1226)
+
+Bug Fixes
+=========
+- trello: Fixed annotations leaking between cards in the same list. (https://github.com/GothenburgBitFactory/bugwarrior/pull/1226)
 
 2.1.0
 -----
