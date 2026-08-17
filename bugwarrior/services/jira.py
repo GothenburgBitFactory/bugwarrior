@@ -14,7 +14,7 @@ from requests.cookies import RequestsCookieJar
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
-from bugwarrior.task import IssueDatetime, Task, Udas, coerce_datetime
+from bugwarrior.task import Task, Udas, coerce_datetime
 
 log = logging.getLogger(__name__)
 
@@ -173,10 +173,6 @@ class JiraUdas(Udas):
     jiraid: str = Field(title='Jira Issue ID')
     jiraestimate: float | None = Field(title='Estimate')
     jirafixversion: str | None = Field(title='Fix Version')
-    # Never populated by the service: the creation timestamp goes to the
-    # generic entry field instead. Declared so a user can fill it via
-    # "extra_fields", and defaulted so that doing so is not a collision.
-    jiracreatedts: IssueDatetime = Field(default=None, title='Created At')
     jirastatus: str = Field(title="Jira Status")
     jirasubtasks: str = Field(title="Jira Subtasks")
     jiraparent: str | None = Field(title='Jira Parent')
