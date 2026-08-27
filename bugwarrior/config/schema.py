@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-Priority = Literal['', 'L', 'M', 'H']
+Priority = Literal["", "L", "M", "H"]
 
 
 def validate_url(url: str) -> str:
@@ -159,8 +159,8 @@ class MainSectionConfig(BaseConfig):
     annotation_links: bool = False
     annotation_comments: bool = True
     annotation_newlines: bool = False
-    annotation_length: typing.Optional[int] = 45
-    description_length: typing.Optional[int] = 35
+    annotation_length: int | None = 45
+    description_length: int | None = 35
     merge_annotations: bool = True
     merge_tags: bool = True
     replace_tags: bool = False
@@ -170,7 +170,7 @@ class MainSectionConfig(BaseConfig):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "DISABLED"] = (
         "INFO"
     )
-    log_file: typing.Optional[ExpandedPath] = None
+    log_file: ExpandedPath | None = None
 
 
 class Hooks(BaseConfig):
@@ -179,7 +179,7 @@ class Hooks(BaseConfig):
 
 class Notifications(BaseConfig):
     notifications: bool = False
-    backend: typing.Optional[Literal["gobject", "growlnotify", "applescript"]] = None
+    backend: Literal["gobject", "growlnotify", "applescript"] | None = None
     finished_querying_sticky: bool = True
     task_crud_sticky: bool = True
     only_on_new_tasks: bool = False
@@ -189,10 +189,7 @@ class Notifications(BaseConfig):
 _ServiceConfig = pydantic.create_model(  # type: ignore[ty:no-matching-overload]
     "_ServiceConfig",
     __base__=BaseConfig,
-    **{
-        f"{key}_template": (typing.Optional[str], None)
-        for key in taskw.task.Task.FIELDS
-    },
+    **{f"{key}_template": (str | None, None) for key in taskw.task.Task.FIELDS},
 )
 
 
@@ -258,55 +255,54 @@ class ServiceConfig(_ServiceConfig):
 
         """
         templates = {}
-        for key in taskw.task.Task.FIELDS.keys():
-            template = values.get(f'{key}_template')
+        for key in taskw.task.Task.FIELDS:
+            template = values.get(f"{key}_template")
             if template is not None:
                 templates[key] = template
         values["templates"] = templates
         return values
 
-    @field_validator('include_merge_requests', mode='after', check_fields=False)
+    @field_validator("include_merge_requests", mode="after", check_fields=False)
     @classmethod
     def deprecate_filter_merge_requests(
         cls, value: bool | str, info: ValidationInfo
     ) -> bool | str:
-        if not hasattr(cls, '_DEPRECATE_FILTER_MERGE_REQUESTS'):
+        if not hasattr(cls, "_DEPRECATE_FILTER_MERGE_REQUESTS"):
             return value
 
-        filter_mr = info.data.get('filter_merge_requests', 'Undefined')
-        if filter_mr != 'Undefined':
-            if value != 'Undefined':
+        filter_mr = info.data.get("filter_merge_requests", "Undefined")
+        if filter_mr != "Undefined":
+            if value != "Undefined":
                 raise ValueError(
-                    'filter_merge_requests and include_merge_requests are incompatible.'
+                    "filter_merge_requests and include_merge_requests are incompatible."
                 )
             log.warning(
-                'filter_merge_requests is deprecated in favor of include_merge_requests'
+                "filter_merge_requests is deprecated in favor of include_merge_requests"
             )
             return not filter_mr
-        elif value == 'Undefined':
+        elif value == "Undefined":
             return True
         return value
 
-    @field_validator('project_name', mode='after', check_fields=False)
+    @field_validator("project_name", mode="after", check_fields=False)
     @classmethod
     def deprecate_project_name(cls, value: str) -> str:
-        if hasattr(cls, '_DEPRECATE_PROJECT_NAME'):
-            if value != '':
-                log.warning('project_name is deprecated in favor of project_template')
+        if hasattr(cls, "_DEPRECATE_PROJECT_NAME") and value != "":
+            log.warning("project_name is deprecated in favor of project_template")
         return value
 
 
 @cache
 def get_service(service_name: str) -> type["Service"]:
     try:
-        (service,) = entry_points(group='bugwarrior.service', name=service_name)
+        (service,) = entry_points(group="bugwarrior.service", name=service_name)
     except ValueError as e:
         if service_name in [
-            'activecollab',
-            'activecollab2',
-            'megaplan',
-            'teamlab',
-            'versionone',
+            "activecollab",
+            "activecollab2",
+            "megaplan",
+            "teamlab",
+            "versionone",
         ]:
             log.warning(f"The {service_name} service has been removed.")
         raise ValueError(

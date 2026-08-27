@@ -150,7 +150,10 @@ def get_service_config_union_type(services: list[dict[str, Any]]) -> Any:
         )
         or _MissingServiceDiscriminator
     )
-    return Annotated[Union[service_config_classes], Field(discriminator="service")]
+    # service_config_classes is a runtime tuple; Union[tuple] unpacks it into a
+    # multi-member union. Do not simplify to Union[X] (ruff: noqa: UP007) — that
+    # rewrite assumes a single type argument and breaks the discriminated union.
+    return Annotated[Union[service_config_classes], Field(discriminator="service")]  # noqa: UP007
 
 
 def validate_config(config: dict, main_section: str, config_path: str) -> "Config":

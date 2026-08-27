@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 import responses
@@ -114,12 +114,12 @@ def task_page(record):
 
 SERVICE_CLASS = ClickupService
 
-SERVICE_CONFIG = {'service': 'clickup', 'team_id': 1234, 'token': 'arbitrary_token'}
+SERVICE_CONFIG = {"service": "clickup", "team_id": 1234, "token": "arbitrary_token"}
 
 
 class TestClickupClient:
     def test_init(self):
-        http_client = ClickupClient('12345')
+        http_client = ClickupClient("12345")
         assert (
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0"
             == http_client._get_url_for_tasks(1234, 0)
@@ -127,7 +127,7 @@ class TestClickupClient:
 
     @responses.activate
     def test_get_repo(self, record, task_page):
-        client = ClickupClient('XXXXXX')
+        client = ClickupClient("XXXXXX")
         responses.get(
             "https://api.clickup.com/api/v2/team/1234/task?include_closed=false&page=0",
             json=task_page(0),
@@ -144,13 +144,13 @@ class TestClickupService:
     @pytest.fixture
     def config(self):
         return {
-            'general': {'targets': ['myservice']},
-            'myservice': {**SERVICE_CONFIG, 'also_unassigned': 'true'},
+            "general": {"targets": ["myservice"]},
+            "myservice": {**SERVICE_CONFIG, "also_unassigned": "true"},
         }
 
     def test_keyring_service(self, config):
         conf = validate(config).service_configs[0]
-        assert conf.keyring_service == 'clickup://'
+        assert conf.keyring_service == "clickup://"
 
     def test_is_assigned(self, config, record):
         assert get_validated_service(config).is_assigned(record)
@@ -182,16 +182,14 @@ class TestClickupIssue:
 
         expected_output = {
             "project": None,
-            "priority": 'M',
+            "priority": "M",
             "due": None,
-            "entry": datetime.fromtimestamp(
-                int(record["date_created"]) // 1e3, tz=timezone.utc
-            ),
+            "entry": datetime.fromtimestamp(int(record["date_created"]) // 1e3, tz=UTC),
             issue.ID: record["id"],
             issue.DESCRIPTION: record["description"],
             issue.STATUS: record["status"]["status"],
             issue.UPDATED_AT: datetime.fromtimestamp(
-                int(record["date_updated"]) // 1e3, tz=timezone.utc
+                int(record["date_updated"]) // 1e3, tz=UTC
             ),
             issue.CREATOR: record["creator"]["username"],
             issue.URL: record["url"],
@@ -216,18 +214,16 @@ class TestClickupIssue:
 
         expected_output = {
             "project": None,
-            "priority": 'M',
+            "priority": "M",
             "due": None,
             "tags": [],
-            "entry": datetime.fromtimestamp(
-                int(record["date_created"]) // 1e3, tz=timezone.utc
-            ),
+            "entry": datetime.fromtimestamp(int(record["date_created"]) // 1e3, tz=UTC),
             "description": "(bw)Is# - My task .. https://app.clickup.com/t/86adrdd2j",
             issue.ID: record["id"],
             issue.DESCRIPTION: record["description"],
             issue.STATUS: record["status"]["status"],
             issue.UPDATED_AT: datetime.fromtimestamp(
-                int(record["date_updated"]) // 1e3, tz=timezone.utc
+                int(record["date_updated"]) // 1e3, tz=UTC
             ),
             issue.CREATOR: record["creator"]["username"],
             issue.URL: record["url"],

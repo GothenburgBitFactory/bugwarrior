@@ -19,9 +19,9 @@ def configure_logging(logfile: str | Path | None, loglevel: str) -> None:
     # our dependencies are very very spammy.  Here, we silence most of their
     # noise:
     spammers = [
-        'bugzilla.base',
-        'bugzilla.bug',
-        'requests.packages.urllib3.connectionpool',
+        "bugzilla.base",
+        "bugzilla.bug",
+        "requests.packages.urllib3.connectionpool",
     ]
     for spammer in spammers:
         logging.getLogger(spammer).setLevel(logging.WARNING)
@@ -31,18 +31,18 @@ def get_config_path() -> str:
     """Determine path to config file. See docs/manpage.rst for precedence."""
     if os.environ.get(BUGWARRIORRC):
         return os.environ[BUGWARRIORRC]
-    xdg_config_home = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser(
-        '~/.config'
+    xdg_config_home = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser(
+        "~/.config"
     )
-    xdg_config_dirs = (os.environ.get('XDG_CONFIG_DIRS') or '/etc/xdg').split(':')
+    xdg_config_dirs = (os.environ.get("XDG_CONFIG_DIRS") or "/etc/xdg").split(":")
     paths = [
-        os.path.join(xdg_config_home, 'bugwarrior', 'bugwarriorrc'),
-        os.path.join(xdg_config_home, 'bugwarrior', 'bugwarrior.toml'),
+        os.path.join(xdg_config_home, "bugwarrior", "bugwarriorrc"),
+        os.path.join(xdg_config_home, "bugwarrior", "bugwarrior.toml"),
         os.path.expanduser("~/.bugwarriorrc"),
         os.path.expanduser("~/.bugwarrior.toml"),
     ]
-    paths += [os.path.join(d, 'bugwarrior', 'bugwarriorrc') for d in xdg_config_dirs]
-    paths += [os.path.join(d, 'bugwarrior', 'bugwarrior.toml') for d in xdg_config_dirs]
+    paths += [os.path.join(d, "bugwarrior", "bugwarriorrc") for d in xdg_config_dirs]
+    paths += [os.path.join(d, "bugwarrior", "bugwarrior.toml") for d in xdg_config_dirs]
     for path in paths:
         if os.path.exists(path):
             return path
@@ -66,7 +66,7 @@ def format_config(config: dict) -> dict[str, Any]:
 
 
 def parse_toml_file(configpath: str) -> dict[str, Any]:
-    with open(configpath, 'rb') as file:
+    with open(configpath, "rb") as file:
         return tomllib.load(file)
 
 
@@ -77,23 +77,23 @@ def parse_ini_file(configpath: str) -> dict[str, Any]:
 
     config = {"flavor": {}}
     for section in rawconfig.sections():
-        if section in ['hooks', 'notifications']:
+        if section in ["hooks", "notifications"]:
             config[section] = dict(rawconfig[section])
-        elif section == 'general' or section.startswith('flavor.'):
-            name = section.removeprefix('flavor.')
+        elif section == "general" or section.startswith("flavor."):
+            name = section.removeprefix("flavor.")
             config["flavor"][name] = {
-                key.replace('.', '_'): value
+                key.replace(".", "_"): value
                 for key, value in rawconfig[section].items()
             }
 
         # All other sections are assumed to be services
         else:
-            service = rawconfig[section].pop('service')
-            service_prefix = 'ado' if service == 'azuredevops' else service
-            config[section] = {'service': service}
+            service = rawconfig[section].pop("service")
+            service_prefix = "ado" if service == "azuredevops" else service
+            config[section] = {"service": service}
             for key, value in rawconfig[section].items():
                 try:
-                    prefix, unprefixed_key = key.split('.')
+                    prefix, unprefixed_key = key.split(".")
                 except ValueError:  # missing prefix
                     prefix = None
                     unprefixed_key = key
@@ -109,7 +109,7 @@ def parse_ini_file(configpath: str) -> dict[str, Any]:
 
 
 def parse_file(configpath: str) -> dict[str, Any]:
-    if Path(configpath).suffix == '.toml':
+    if Path(configpath).suffix == ".toml":
         config = parse_toml_file(configpath)
     else:
         config = parse_ini_file(configpath)
@@ -121,7 +121,7 @@ def load_config(main_section: str, quiet: bool) -> Config:
     rawconfig = parse_file(configpath)
     config = validate_config(rawconfig, main_section, configpath)
     configure_logging(
-        config.main.log_file, 'WARNING' if quiet else config.main.log_level
+        config.main.log_file, "WARNING" if quiet else config.main.log_level
     )
     return config
 
@@ -138,14 +138,10 @@ class BugwarriorConfigParser(configparser.ConfigParser):
         try:
             return super().getint(section, option, **kwargs)
         except ValueError:
-            if self.get(section, option) == '':
+            if self.get(section, option) == "":
                 return None
             else:
-                raise ValueError(
-                    "{section}.{option} must be an integer or empty.".format(
-                        section=section, option=option
-                    )
-                )
+                raise ValueError(f"{section}.{option} must be an integer or empty.")
 
     def optionxform(self, optionstr: str) -> str:
         """Do not lowercase key names."""

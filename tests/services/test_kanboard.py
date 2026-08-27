@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest import mock
 
 import pytest
@@ -36,17 +36,17 @@ class TestKanboardConfig:
     def test_validate_config_no_url(self, config, assert_validation_error):
         config["myservice"].update({"username": "myuser", "password": "mypass"})
 
-        assert_validation_error(config, '[myservice]\nurl  <- Field required')
+        assert_validation_error(config, "[myservice]\nurl  <- Field required")
 
     def test_validate_config_no_username(self, config, assert_validation_error):
         config["myservice"].update({"url": "http://one.com/", "password": "mypass"})
 
-        assert_validation_error(config, '[myservice]\nusername  <- Field required')
+        assert_validation_error(config, "[myservice]\nusername  <- Field required")
 
     def test_validate_config_no_password(self, config, assert_validation_error):
         config["myservice"].update({"url": "http://one.com/", "username": "myuser"})
 
-        assert_validation_error(config, '[myservice]\npassword  <- Field required')
+        assert_validation_error(config, "[myservice]\npassword  <- Field required")
 
     def test_keyring_service(self, config):
         config["myservice"].update(
@@ -112,7 +112,7 @@ class TestKanboardService:
             "annotations": extra["annotations"],
             "tags": extra["tags"],
             "due": None,
-            "entry": datetime(2015, 6, 13, 20, 30, 46, tzinfo=timezone.utc),
+            "entry": datetime(2015, 6, 13, 20, 30, 46, tzinfo=UTC),
             issue.TASK_ID: int(record["id"]),
             issue.TASK_TITLE: record["title"],
             issue.TASK_DESCRIPTION: record["description"],
@@ -194,7 +194,7 @@ class TestKanboardService:
         expected = {
             "description": "(bw)Is#3 - T3 .. http://example.com?task_id=3&project_id=1",
             "due": None,
-            "entry": datetime(2016, 4, 22, 22, 46, 4, tzinfo=timezone.utc),
+            "entry": datetime(2016, 4, 22, 22, 46, 4, tzinfo=UTC),
             "annotations": [],
             "project": "project",
             "tags": ["tag1", "tag2"],

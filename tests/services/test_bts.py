@@ -5,7 +5,7 @@ from bugwarrior.services import bts
 
 SERVICE_CLASS = bts.BTSService
 
-SERVICE_CONFIG = {'service': 'bts', 'email': 'irl@debian.org', 'packages': 'bugwarrior'}
+SERVICE_CONFIG = {"service": "bts", "email": "irl@debian.org", "packages": "bugwarrior"}
 
 
 class FakeBTSBug:
@@ -36,8 +36,8 @@ class TestBTSService:
         issue = service.get_issue_for_record(service._record_for_bug(FakeBTSBug))
 
         expected_output = {
-            'priority': issue.PRIORITY_MAP[FakeBTSBug.severity],
-            'annotations': [],
+            "priority": issue.PRIORITY_MAP[FakeBTSBug.severity],
+            "annotations": [],
             issue.URL: "https://bugs.debian.org/" + str(FakeBTSBug.bug_num),
             issue.SUBJECT: FakeBTSBug.subject,
             issue.NUMBER: FakeBTSBug.bug_num,
@@ -51,28 +51,28 @@ class TestBTSService:
         assert actual_output == expected_output
 
     def test_issues(self, service):
-        with mock.patch('bugwarrior.services.bts.debianbts', FakeBTSLib()):
+        with mock.patch("bugwarrior.services.bts.debianbts", FakeBTSLib()):
             issue = next(service.issues())
 
         expected = {
-            'annotations': [],
-            'btsnumber': 810629,
-            'btsforwarded': '',
-            'btspackage': 'wnpp',
-            'btssubject': (
-                'ITP: bugwarrior -- Pull tickets from github, '
-                'bitbucket, bugzilla, jira, trac, and others into '
-                'taskwarrior'
+            "annotations": [],
+            "btsnumber": 810629,
+            "btsforwarded": "",
+            "btspackage": "wnpp",
+            "btssubject": (
+                "ITP: bugwarrior -- Pull tickets from github, "
+                "bitbucket, bugzilla, jira, trac, and others into "
+                "taskwarrior"
             ),
-            'btsurl': 'https://bugs.debian.org/810629',
-            'btssource': '',
-            'description': (
-                '(bw)Is#810629 - ITP: bugwarrior -- Pull tickets fro .. '
-                'https://bugs.debian.org/810629'
+            "btsurl": "https://bugs.debian.org/810629",
+            "btssource": "",
+            "description": (
+                "(bw)Is#810629 - ITP: bugwarrior -- Pull tickets fro .. "
+                "https://bugs.debian.org/810629"
             ),
-            'priority': 'L',
-            'btsstatus': 'pending',
-            'tags': [],
+            "priority": "L",
+            "btsstatus": "pending",
+            "tags": [],
         }
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected

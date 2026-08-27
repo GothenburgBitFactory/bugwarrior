@@ -6,27 +6,27 @@ from bugwarrior.services.trac import TracService
 SERVICE_CLASS = TracService
 
 SERVICE_CONFIG = {
-    'service': 'trac',
-    'base_uri': 'ljlkajsdfl.com',
-    'username': 'something',
-    'password': 'somepwd',
+    "service": "trac",
+    "base_uri": "ljlkajsdfl.com",
+    "username": "something",
+    "password": "somepwd",
 }
 
 
 @pytest.fixture
 def record():
     return {
-        'url': 'http://some/url.com/',
-        'summary': 'Some Summary',
-        'number': 204,
-        'priority': 'critical',
-        'component': 'testcomponent',
+        "url": "http://some/url.com/",
+        "summary": "Some Summary",
+        "number": 204,
+        "priority": "critical",
+        "component": "testcomponent",
     }
 
 
 @pytest.fixture
 def extra():
-    return {'annotations': ['alpha', 'beta'], 'project': 'some project'}
+    return {"annotations": ["alpha", "beta"], "project": "some project"}
 
 
 class FakeTracTicket:
@@ -47,7 +47,7 @@ class FakeTracLib:
 
     @staticmethod
     def query_tickets(query):
-        return ['something']
+        return ["something"]
 
     def get_ticket(self, ticket):
         return (1, None, None, self.record)
@@ -64,13 +64,13 @@ class TestTracIssue:
         issue = service.get_issue_for_record(record, extra)
 
         expected_output = {
-            'project': extra['project'],
-            'priority': issue.PRIORITY_MAP[record['priority']],
-            'annotations': extra['annotations'],
-            issue.URL: record['url'],
-            issue.SUMMARY: record['summary'],
-            issue.NUMBER: record['number'],
-            issue.COMPONENT: record['component'],
+            "project": extra["project"],
+            "priority": issue.PRIORITY_MAP[record["priority"]],
+            "annotations": extra["annotations"],
+            issue.URL: record["url"],
+            issue.SUMMARY: record["summary"],
+            issue.NUMBER: record["number"],
+            issue.COMPONENT: record["component"],
         }
         actual_output = issue.to_taskwarrior()
 
@@ -80,15 +80,15 @@ class TestTracIssue:
         issue = next(service.issues())
 
         expected = {
-            'annotations': [],
-            'description': '(bw)Is#1 - Some Summary .. https://ljlkajsdfl.com/ticket/1',
-            'priority': 'H',
-            'project': 'unspecified',
-            'tags': [],
-            'tracnumber': 1,
-            'tracsummary': 'Some Summary',
-            'tracurl': 'https://ljlkajsdfl.com/ticket/1',
-            'traccomponent': 'testcomponent',
+            "annotations": [],
+            "description": "(bw)Is#1 - Some Summary .. https://ljlkajsdfl.com/ticket/1",
+            "priority": "H",
+            "project": "unspecified",
+            "tags": [],
+            "tracnumber": 1,
+            "tracsummary": "Some Summary",
+            "tracurl": "https://ljlkajsdfl.com/ticket/1",
+            "traccomponent": "testcomponent",
         }
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected

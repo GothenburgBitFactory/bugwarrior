@@ -21,12 +21,12 @@ class LinearConfig(config.ServiceConfig):
 
     host: config.StrippedTrailingSlashUrl = "https://api.linear.app/graphql"
     statuses: config.ConfigList = []
-    status_types: typing.Optional[config.ConfigList] = None
+    status_types: config.ConfigList | None = None
     import_labels_as_tags: bool = False
     label_template: str = "{{label|replace(' ', '_')}}"
     also_unassigned: config.UnsupportedOption[bool] = False
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def statuses_or_status_types(cls, values: Any) -> dict[str, Any]:
         statuses = values.get("statuses")
@@ -226,13 +226,12 @@ class LinearService(Service[LinearIssue]):
 
             if "errors" in res:
                 messages = [
-                    error.get("message", "Unknown error") for error in res['errors']
+                    error.get("message", "Unknown error") for error in res["errors"]
                 ]
                 raise ValueError("; ".join(messages))
 
             issues = res.get("data", {}).get("issues", {})
-            for node in issues.get("nodes", []):
-                yield node
+            yield from issues.get("nodes", [])
 
             page_info = issues.get("pageInfo", {})
             if not page_info.get("hasNextPage"):

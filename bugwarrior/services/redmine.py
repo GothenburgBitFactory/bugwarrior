@@ -15,17 +15,17 @@ log = logging.getLogger(__name__)
 
 class RedMineConfig(config.ServiceConfig):
     _DEPRECATE_PROJECT_NAME = True
-    project_name: str = ''
+    project_name: str = ""
 
-    service: typing.Literal['redmine']
+    service: typing.Literal["redmine"]
     KEYRING_SERVICE = "redmine://{login}@{url}/"
     url: config.StrippedTrailingSlashUrl
     key: str
 
     issue_limit: int = 100
-    query: str = ''
-    login: str = ''
-    password: str = ''
+    query: str = ""
+    login: str = ""
+    password: str = ""
     verify_ssl: bool = True
 
     also_unassigned: config.UnsupportedOption[bool] = False
@@ -59,79 +59,79 @@ class RedMineClient(Client):
             args["limit"] = issue_limit
 
         if only_if_assigned:
-            args["assigned_to_id"] = 'me'
+            args["assigned_to_id"] = "me"
 
         return self.call_api(url, args)["issues"]
 
     def call_api(self, uri: str, params: dict[str, Any]) -> dict[str, Any]:
         url = self.url.rstrip("/") + uri
         kwargs: dict[str, Any] = {
-            'headers': {'X-Redmine-API-Key': self.key},
-            'params': params,
-            'verify': self.verify_ssl,
+            "headers": {"X-Redmine-API-Key": self.key},
+            "params": params,
+            "verify": self.verify_ssl,
         }
 
         if self.auth:
-            kwargs['auth'] = self.auth
+            kwargs["auth"] = self.auth
 
         return self.json_response(requests.get(url, **kwargs))
 
 
 class RedMineIssue(Issue):
-    URL = 'redmineurl'
-    SUBJECT = 'redminesubject'
-    ID = 'redmineid'
-    DESCRIPTION = 'redminedescription'
-    TRACKER = 'redminetracker'
-    STATUS = 'redminestatus'
-    AUTHOR = 'redmineauthor'
-    CATEGORY = 'redminecategory'
-    START_DATE = 'redminestartdate'
-    SPENT_HOURS = 'redminespenthours'
-    ESTIMATED_HOURS = 'redmineestimatedhours'
-    CREATED_ON = 'redminecreatedon'
-    UPDATED_ON = 'redmineupdatedon'
-    DUEDATE = 'redmineduedate'
-    ASSIGNED_TO = 'redmineassignedto'
-    PROJECT_NAME = 'redmineprojectname'
+    URL = "redmineurl"
+    SUBJECT = "redminesubject"
+    ID = "redmineid"
+    DESCRIPTION = "redminedescription"
+    TRACKER = "redminetracker"
+    STATUS = "redminestatus"
+    AUTHOR = "redmineauthor"
+    CATEGORY = "redminecategory"
+    START_DATE = "redminestartdate"
+    SPENT_HOURS = "redminespenthours"
+    ESTIMATED_HOURS = "redmineestimatedhours"
+    CREATED_ON = "redminecreatedon"
+    UPDATED_ON = "redmineupdatedon"
+    DUEDATE = "redmineduedate"
+    ASSIGNED_TO = "redmineassignedto"
+    PROJECT_NAME = "redmineprojectname"
 
     UDAS = {
-        URL: {'type': 'string', 'label': 'Redmine URL'},
-        SUBJECT: {'type': 'string', 'label': 'Redmine Subject'},
-        ID: {'type': 'numeric', 'label': 'Redmine ID'},
-        DESCRIPTION: {'type': 'string', 'label': 'Redmine Description'},
-        TRACKER: {'type': 'string', 'label': 'Redmine Tracker'},
-        STATUS: {'type': 'string', 'label': 'Redmine Status'},
-        AUTHOR: {'type': 'string', 'label': 'Redmine Author'},
-        CATEGORY: {'type': 'string', 'label': 'Redmine Category'},
-        START_DATE: {'type': 'date', 'label': 'Redmine Start Date'},
-        SPENT_HOURS: {'type': 'duration', 'label': 'Redmine Spent Hours'},
-        ESTIMATED_HOURS: {'type': 'duration', 'label': 'Redmine Estimated Hours'},
-        CREATED_ON: {'type': 'date', 'label': 'Redmine Created On'},
-        UPDATED_ON: {'type': 'date', 'label': 'Redmine Updated On'},
-        DUEDATE: {'type': 'date', 'label': 'Redmine Due Date'},
-        ASSIGNED_TO: {'type': 'string', 'label': 'Redmine Assigned To'},
-        PROJECT_NAME: {'type': 'string', 'label': 'Redmine Project'},
+        URL: {"type": "string", "label": "Redmine URL"},
+        SUBJECT: {"type": "string", "label": "Redmine Subject"},
+        ID: {"type": "numeric", "label": "Redmine ID"},
+        DESCRIPTION: {"type": "string", "label": "Redmine Description"},
+        TRACKER: {"type": "string", "label": "Redmine Tracker"},
+        STATUS: {"type": "string", "label": "Redmine Status"},
+        AUTHOR: {"type": "string", "label": "Redmine Author"},
+        CATEGORY: {"type": "string", "label": "Redmine Category"},
+        START_DATE: {"type": "date", "label": "Redmine Start Date"},
+        SPENT_HOURS: {"type": "duration", "label": "Redmine Spent Hours"},
+        ESTIMATED_HOURS: {"type": "duration", "label": "Redmine Estimated Hours"},
+        CREATED_ON: {"type": "date", "label": "Redmine Created On"},
+        UPDATED_ON: {"type": "date", "label": "Redmine Updated On"},
+        DUEDATE: {"type": "date", "label": "Redmine Due Date"},
+        ASSIGNED_TO: {"type": "string", "label": "Redmine Assigned To"},
+        PROJECT_NAME: {"type": "string", "label": "Redmine Project"},
     }
     UNIQUE_KEY = (ID,)
 
     PRIORITY_MAP: dict[str, config.Priority] = {
-        'Low': 'L',
-        'Normal': 'M',
-        'High': 'H',
-        'Urgent': 'H',
-        'Immediate': 'H',
+        "Low": "L",
+        "Normal": "M",
+        "High": "H",
+        "Urgent": "H",
+        "Immediate": "H",
     }
 
     def to_taskwarrior(self) -> dict[str, Any]:
-        due_date = self.record.get('due_date')
-        start_date = self.record.get('start_date')
-        updated_on = self.record.get('updated_on')
-        created_on = self.record.get('created_on')
-        spent_hours = self.record.get('spent_hours')
-        estimated_hours = self.record.get('estimated_hours')
-        category = self.record.get('category')
-        assigned_to = self.record.get('assigned_to')
+        due_date = self.record.get("due_date")
+        start_date = self.record.get("start_date")
+        updated_on = self.record.get("updated_on")
+        created_on = self.record.get("created_on")
+        spent_hours = self.record.get("spent_hours")
+        estimated_hours = self.record.get("estimated_hours")
+        category = self.record.get("category")
+        assigned_to = self.record.get("assigned_to")
 
         if due_date:
             due_date = self.parse_date(due_date)
@@ -142,28 +142,28 @@ class RedMineIssue(Issue):
         if created_on:
             created_on = self.parse_date(created_on)
         if spent_hours or spent_hours == 0.0:
-            spent_hours = str(spent_hours) + ' hours'
+            spent_hours = str(spent_hours) + " hours"
             spent_hours = self.get_converted_hours(spent_hours)
         if estimated_hours or estimated_hours == 0.0:
-            estimated_hours = str(estimated_hours) + ' hours'
+            estimated_hours = str(estimated_hours) + " hours"
             estimated_hours = self.get_converted_hours(estimated_hours)
         if category:
-            category = category['name']
+            category = category["name"]
         if assigned_to:
-            assigned_to = assigned_to['name']
+            assigned_to = assigned_to["name"]
 
         return {
-            'project': self.get_project_name(),
-            'annotations': self.extra.get('annotations', []),
-            'priority': self.get_priority(),
+            "project": self.get_project_name(),
+            "annotations": self.extra.get("annotations", []),
+            "priority": self.get_priority(),
             self.URL: self.get_issue_url(),
-            self.SUBJECT: self.record['subject'],
-            self.ID: self.record['id'],
-            self.DESCRIPTION: self.record.get('description', ''),
-            self.TRACKER: self.record['tracker']['name'],
-            self.STATUS: self.record['status']['name'],
-            self.AUTHOR: self.record['author']['name'],
-            self.PROJECT_NAME: self.record['project']['name'],
+            self.SUBJECT: self.record["subject"],
+            self.ID: self.record["id"],
+            self.DESCRIPTION: self.record.get("description", ""),
+            self.TRACKER: self.record["tracker"]["name"],
+            self.STATUS: self.record["status"]["name"],
+            self.AUTHOR: self.record["author"]["name"],
+            self.PROJECT_NAME: self.record["project"]["name"],
             self.ASSIGNED_TO: assigned_to,
             self.CATEGORY: category,
             self.START_DATE: start_date,
@@ -176,7 +176,7 @@ class RedMineIssue(Issue):
 
     def get_priority(self) -> config.Priority:
         return self.PRIORITY_MAP.get(
-            self.record.get('priority', {}).get('name'), self.config.default_priority
+            self.record.get("priority", {}).get("name"), self.config.default_priority
         )
 
     def get_issue_url(self) -> str:
@@ -184,7 +184,7 @@ class RedMineIssue(Issue):
 
     def get_converted_hours(self, estimated_hours: str) -> str:
         tw = TaskWarriorShellout(config_filename=self.main_config.taskrc)
-        calc = tw._execute('calc', estimated_hours)
+        calc = tw._execute("calc", estimated_hours)
         return calc[0].rstrip()
 
     def get_project_name(self) -> str:
@@ -194,14 +194,14 @@ class RedMineIssue(Issue):
         # instance supports it), but this would require (1) an API call
         # to get the list of projects, and then a look up between the
         # project ID contained in self.record and the list of projects.
-        return re.sub(r'[^a-zA-Z0-9]', '', self.record["project"]["name"]).lower()
+        return re.sub(r"[^a-zA-Z0-9]", "", self.record["project"]["name"]).lower()
 
     def get_default_description(self) -> str:
         return self.build_default_description(
-            title=self.record['subject'],
+            title=self.record["subject"],
             url=self.get_issue_url(),
-            number=self.record['id'],
-            cls='issue',
+            number=self.record["id"],
+            cls="issue",
         )
 
 
@@ -215,10 +215,10 @@ class RedMineService(Service[RedMineIssue]):
     ) -> None:
         super().__init__(config, main_config)
 
-        self.key = self.get_secret('key')
+        self.key = self.get_secret("key")
 
         password = (
-            self.get_secret('password', self.config.login)
+            self.get_secret("password", self.config.login)
             if self.config.login
             else None
         )

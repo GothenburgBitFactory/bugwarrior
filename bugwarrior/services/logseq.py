@@ -2,6 +2,7 @@ from collections.abc import Iterator
 from datetime import datetime
 import logging
 import re
+import sys
 import typing
 from typing import Any
 
@@ -35,7 +36,7 @@ class LogseqConfig(config.ServiceConfig):
     char_close_bracket: str = "〉"
     inline_links: bool = True
     import_labels_as_tags: bool = False
-    label_template: str = '{{label}}'
+    label_template: str = "{{label}}"
 
     only_if_assigned: config.UnsupportedOption[str] = ""
     also_unassigned: config.UnsupportedOption[bool] = False
@@ -63,7 +64,7 @@ class LogseqClient(Client):
             return self.json_response(response)
         except requests.exceptions.ConnectionError as ce:
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
-            exit(1)
+            sys.exit(1)
 
     def _get_current_graph(self) -> dict[str, Any]:
         try:
@@ -75,7 +76,7 @@ class LogseqClient(Client):
             return self.json_response(response)
         except requests.exceptions.ConnectionError as ce:
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
-            exit(1)
+            sys.exit(1)
 
     def get_graph_name(self) -> str | None:
         graph = self._get_current_graph()
@@ -91,7 +92,7 @@ class LogseqClient(Client):
             return self.json_response(response)
         except requests.exceptions.ConnectionError as ce:
             log.fatal("Unable to connect to Logseq HTTP APIs server. %s", ce)
-            exit(1)
+            sys.exit(1)
 
     def get_issues(self) -> Any:
         query = f"""
@@ -105,7 +106,7 @@ class LogseqClient(Client):
             log.fatal(
                 "Error querying Logseq: %s using query %s", result["error"], query
             )
-            exit(1)
+            sys.exit(1)
         return result
 
 
@@ -248,7 +249,7 @@ class LogseqIssue(Issue):
         return annotations, scheduled_date, deadline_date
 
     def get_url(self) -> str:
-        return f'logseq://graph/{self.extra["graph"]}?block-id={self.record["uuid"]}'
+        return f"logseq://graph/{self.extra['graph']}?block-id={self.record['uuid']}"
 
     def get_logseq_state(self) -> str:
         return self.record["marker"]
@@ -263,18 +264,14 @@ class LogseqIssue(Issue):
             .strip()
             .split(" ")
         )
-        if len(date_split) == 2:  # <date day>
+        if (
+            len(date_split) == 2
+            or len(date_split) == 3
+            and (date_split[2][0] in ("+", "."))
+        ):  # <date day>
             date = date_split[0]
             date_format = "%Y-%m-%d"
-        elif len(date_split) == 3 and (
-            date_split[2][0] in ("+", ".")
-        ):  # <date day repeat>
-            date = date_split[0]
-            date_format = "%Y-%m-%d"
-        elif len(date_split) == 3:  # <date day time>
-            date = date_split[0] + " " + date_split[2]
-            date_format = "%Y-%m-%d %H:%M"
-        elif len(date_split) == 4:  # <date date time repeat>
+        elif len(date_split) == 3 or len(date_split) == 4:  # <date day time>
             date = date_split[0] + " " + date_split[2]
             date_format = "%Y-%m-%d %H:%M"
         else:
@@ -332,7 +329,7 @@ class LogseqService(Service[LogseqIssue]):
         self, config: LogseqConfig, main_config: config.MainSectionConfig
     ) -> None:
         super().__init__(config, main_config)
-        self.token = self.get_secret('token')
+        self.token = self.get_secret("token")
         filter = '"' + '" "'.join(self.config.task_state) + '"'
         self.client = LogseqClient(
             host=self.config.host,

@@ -34,11 +34,11 @@ def get_managed_task_uuids(
     for unique_keys in unique_key_sets:
         tasks = tw.filter_tasks(
             {
-                'and': [('%s.any' % key, None) for key in unique_keys],
-                'or': [('status', 'pending'), ('status', 'waiting')],
+                "and": [(f"{key}.any", None) for key in unique_keys],
+                "or": [("status", "pending"), ("status", "waiting")],
             }
         )
-        expected_task_ids = expected_task_ids | set([task['uuid'] for task in tasks])
+        expected_task_ids = expected_task_ids | {task["uuid"] for task in tasks}
 
     return expected_task_ids
 
@@ -78,8 +78,8 @@ def find_taskwarrior_uuid(
     * `bugwarrior.db.NotFound`: if an issue was not found.
 
     """
-    if not issue['description']:
-        raise ValueError('Issue %s has no description.' % issue)
+    if not issue["description"]:
+        raise ValueError(f"Issue {issue} has no description.")
 
     possibilities = set()
 
@@ -87,28 +87,27 @@ def find_taskwarrior_uuid(
         if any(key in issue for key in unique_keys):
             results = tw.filter_tasks(
                 {
-                    'and': [("%s.is" % key, issue[key]) for key in unique_keys],
-                    'or': [
-                        ('status', 'pending'),
-                        ('status', 'waiting'),
-                        ('status', 'completed'),
+                    "and": [(f"{key}.is", issue[key]) for key in unique_keys],
+                    "or": [
+                        ("status", "pending"),
+                        ("status", "waiting"),
+                        ("status", "completed"),
                     ],
                 }
             )
-            new_possibilities = set([task['uuid'] for task in results])
+            new_possibilities = {task["uuid"] for task in results}
             # Previous versions of bugwarrior did not allow for reopening
             # completed tasks, so there could be multiple completed tasks
             # for the same issue if it was closed and reopened before that.
             if len(new_possibilities) > 1 and all(
-                r['status'] == 'completed' for r in results
+                r["status"] == "completed" for r in results
             ):
                 for r in results[1:]:
                     for k in unique_keys:
                         if r[k] != results[0][k]:
                             break
-                else:
-                    # All results are completed duplicates.
-                    new_possibilities = set([new_possibilities.pop()])
+                # All results are completed duplicates.
+                new_possibilities = {new_possibilities.pop()}
             possibilities = possibilities | new_possibilities
 
     if len(possibilities) == 1:
@@ -116,10 +115,12 @@ def find_taskwarrior_uuid(
 
     if len(possibilities) > 1:
         raise MultipleMatches(
-            "Issue %s matched multiple IDs: %s" % (issue['description'], possibilities)
+            "Issue {} matched multiple IDs: {}".format(
+                issue["description"], possibilities
+            )
         )
 
-    raise NotFound("No issue was found matching %s" % issue)
+    raise NotFound(f"No issue was found matching {issue}")
 
 
 def merge_annotations(local: dict[str, Any], remote: dict[str, Any]) -> list[str]:
@@ -128,7 +129,7 @@ def merge_annotations(local: dict[str, Any], remote: dict[str, Any]) -> list[str
     """
 
     def normalize_annotation(annotation: str) -> str:
-        return re.sub(r'[\W_]', '', str(annotation))
+        return re.sub(r"[\W_]", "", str(annotation))
 
     local_annotations = local.get("annotations", [])
     normalized_local = set(map(normalize_annotation, local_annotations))
@@ -154,7 +155,7 @@ def run_hooks(pre_import: list[str]) -> None:
     for hook in pre_import:
         exit_code = subprocess.call(hook, shell=True)
         if exit_code != 0:
-            msg = 'Non-zero exit code %d on hook %s' % exit_code, hook
+            msg = f"Non-zero exit code {exit_code} on hook {hook}"
             log.error(msg)
             raise RuntimeError(msg)
 
@@ -170,9 +171,9 @@ def synchronize(
 
     if uda_list:
         log.info(
-            'Service-defined UDAs exist: you can optionally use the '
-            '`bugwarrior-uda` command to export a list of UDAs you can '
-            'add to your taskrc file.'
+            "Service-defined UDAs exist: you can optionally use the "
+            "`bugwarrior-uda` command to export a list of UDAs you can "
+            "add to your taskrc file."
         )
 
     # Before running CRUD operations, call the pre_import hook(s).
@@ -184,7 +185,7 @@ def synchronize(
         config_filename=conf.main.taskrc, config_overrides=uda_list, marshal=True
     )
 
-    issue_updates = {'new': [], 'existing': [], 'changed': [], 'closed': []}
+    issue_updates = {"new": [], "existing": [], "changed": [], "closed": []}
 
     issue_map = {}  # unique identifier -> issue
     successful_config_map = {
@@ -201,10 +202,10 @@ def synchronize(
             log.debug(f"Merging tags and skipping. Seen {issue.identifier} of {issue}")
             # Merge and deduplicate tags.
             new_tags = sorted(
-                set(issue_map[issue.identifier].task_data['tags'])
-                | set(issue.task_data['tags'])
+                set(issue_map[issue.identifier].task_data["tags"])
+                | set(issue.task_data["tags"])
             )
-            issue_map[issue.identifier].task_data['tags'] = new_tags
+            issue_map[issue.identifier].task_data["tags"] = new_tags
 
         else:
             issue_map[issue.identifier] = issue
@@ -216,12 +217,12 @@ def synchronize(
         # and decode all byte strings from UTF8 off the bat.  If we encounter
         # other encodings in the wild in the future, we can revise the handling
         # here. https://github.com/ralphbean/bugwarrior/issues/350
-        for key in issue.keys():
+        for key in issue:
             if isinstance(issue[key], bytes):
                 try:
-                    issue[key] = issue[key].decode('utf-8')
+                    issue[key] = issue[key].decode("utf-8")
                 except UnicodeDecodeError:
-                    log.warning("Failed to interpret %r as utf-8" % key)
+                    log.warning(f"Failed to interpret {key!r} as utf-8")
 
         service_config = successful_config_map[target]
 
@@ -229,18 +230,18 @@ def synchronize(
             existing_taskwarrior_uuid = find_taskwarrior_uuid(
                 tw, unique_key_sets, issue
             )
-        except MultipleMatches as e:
-            log.exception("Multiple matches: %s", str(e))
+        except MultipleMatches:
+            log.exception("Multiple matches")
         except NotFound:  # Create new task
-            issue_updates['new'].append(issue)
+            issue_updates["new"].append(issue)
         else:  # Update existing task.
             seen_uuids.add(existing_taskwarrior_uuid)
             _, task = tw.get_task(uuid=existing_taskwarrior_uuid)
 
-            if task['status'] == 'completed':
+            if task["status"] == "completed":
                 # Reopen task
-                task['status'] = 'pending'
-                task['end'] = None
+                task["status"] = "pending"
+                task["end"] = None
 
             # Drop static fields from the upstream issue.  We don't want to
             # overwrite local changes to fields we declare static.
@@ -257,48 +258,48 @@ def synchronize(
             if conf.main.merge_tags:
                 task["tags"] = merge_tags(conf.main, task, issue)
 
-            issue.pop('annotations', None)
-            issue.pop('tags', None)
+            issue.pop("annotations", None)
+            issue.pop("tags", None)
 
             task.update(issue)
 
             if task.get_changes(keep=True):
-                issue_updates['changed'].append(task)
+                issue_updates["changed"].append(task)
             else:
-                issue_updates['existing'].append(task)
+                issue_updates["existing"].append(task)
 
-    notreally = ' (not really)' if dry_run else ''
+    notreally = " (not really)" if dry_run else ""
     # Add new issues
-    log.info("Adding %i tasks", len(issue_updates['new']))
-    for issue in issue_updates['new']:
-        log.info("Adding task %s%s", issue['description'], notreally)
+    log.info("Adding %i tasks", len(issue_updates["new"]))
+    for issue in issue_updates["new"]:
+        log.info("Adding task %s%s", issue["description"], notreally)
 
         if dry_run:
             continue
         if notify:
-            send_notification(issue, 'Created', conf.notifications)
+            send_notification(issue, "Created", conf.notifications)
 
         try:
             new_task = tw.task_add(**issue)
-            if 'end' in issue and issue['end']:
-                tw.task_done(uuid=new_task['uuid'])
+            if issue.get("end"):
+                tw.task_done(uuid=new_task["uuid"])
         except TaskwarriorError as e:
-            log.exception("Unable to add task: %s" % e.stderr)
+            log.exception(f"Unable to add task: {e.stderr}")
         else:
-            seen_uuids.add(new_task['uuid'])
+            seen_uuids.add(new_task["uuid"])
 
-    log.info("Updating %i tasks", len(issue_updates['changed']))
-    for issue in issue_updates['changed']:
-        changes = '; '.join(
+    log.info("Updating %i tasks", len(issue_updates["changed"]))
+    for issue in issue_updates["changed"]:
+        changes = "; ".join(
             [
-                '{field}: {f} -> {t}'.format(field=field, f=repr(ch[0]), t=repr(ch[1]))
+                f"{field}: {ch[0]!r} -> {ch[1]!r}"
                 for field, ch in issue.get_changes(keep=True).items()
             ]
         )
         log.info(
             "Updating task %s, %s; %s%s",
-            str(issue['uuid']),
-            issue['description'],
+            str(issue["uuid"]),
+            issue["description"],
             changes,
             notreally,
         )
@@ -307,57 +308,56 @@ def synchronize(
 
         try:
             _, updated_task = tw.task_update(issue)
-            if 'end' in issue and issue['end']:
-                tw.task_done(uuid=updated_task['uuid'])
+            if issue.get("end"):
+                tw.task_done(uuid=updated_task["uuid"])
         except TaskwarriorError as e:
-            log.exception("Unable to modify task: %s" % e.stderr)
+            log.exception(f"Unable to modify task: {e.stderr}")
 
-    log.debug(f'Closing tasks for succeeding services: {list(successful_config_map)}.')
+    log.debug(f"Closing tasks for succeeding services: {list(successful_config_map)}.")
     succeeded_service_task_uuids = get_managed_task_uuids(
         tw,
         build_unique_key_sets(
             service_config.service for service_config in successful_config_map.values()
         ),
     )
-    issue_updates['closed'] = list(succeeded_service_task_uuids - seen_uuids)
-    log.info("Closing %i tasks", len(issue_updates['closed']))
-    for issue in issue_updates['closed']:
+    issue_updates["closed"] = list(succeeded_service_task_uuids - seen_uuids)
+    log.info("Closing %i tasks", len(issue_updates["closed"]))
+    for issue in issue_updates["closed"]:
         _, task_info = tw.get_task(uuid=issue)
         log.info(
             "Completing task %s %s%s",
             issue,
-            task_info.get('description', ''),
+            task_info.get("description", ""),
             notreally,
         )
         if dry_run:
             continue
 
         if notify:
-            send_notification(task_info, 'Completed', conf.notifications)
+            send_notification(task_info, "Completed", conf.notifications)
 
         try:
             tw.task_done(uuid=issue)
         except TaskwarriorError as e:
-            log.exception("Unable to close task: %s" % e.stderr)
+            log.exception(f"Unable to close task: {e.stderr}")
 
     # Send notifications
     if notify:
         updates = (
-            len(issue_updates['new'])
-            + len(issue_updates['changed'])
-            + len(issue_updates['closed'])
+            len(issue_updates["new"])
+            + len(issue_updates["changed"])
+            + len(issue_updates["closed"])
         )
         if not conf.notifications.only_on_new_tasks or updates > 0:
             send_notification(
-                dict(
-                    description="New: %d, Changed: %d, Completed: %d"
-                    % (
-                        len(issue_updates['new']),
-                        len(issue_updates['changed']),
-                        len(issue_updates['closed']),
+                {
+                    "description": (
+                        f"New: {len(issue_updates['new'])}, "
+                        f"Changed: {len(issue_updates['changed'])}, "
+                        f"Completed: {len(issue_updates['closed'])}"
                     )
-                ),
-                'bw_finished',
+                },
+                "bw_finished",
                 conf.notifications,
             )
 
@@ -406,22 +406,22 @@ def build_uda_config_overrides(services: Iterable[str]) -> dict[str, Any]:
     targets_udas = {}
     for service in services:
         targets_udas.update(get_service(service).ISSUE_CLASS.UDAS)
-    return {'uda': targets_udas}
+    return {"uda": targets_udas}
 
 
 def convert_override_args_to_taskrc_settings(
-    config: dict[str, Any], prefix: str = ''
+    config: dict[str, Any], prefix: str = ""
 ) -> list[str]:
     args = []
     for k, v in config.items():
         if isinstance(v, dict):
             args.extend(
                 convert_override_args_to_taskrc_settings(
-                    v, prefix='.'.join([prefix, k]) if prefix else k
+                    v, prefix=f"{prefix}.{k}" if prefix else k
                 )
             )
         else:
             v = str(v)
-            left = (prefix + '.' if prefix else '') + k
-            args.append('='.join([left, v]))
+            left = (prefix + "." if prefix else "") + k
+            args.append(f"{left}={v}")
     return args

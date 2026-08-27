@@ -25,8 +25,8 @@ lst = list
 
 def _get_section_name(flavor: str | None) -> str:
     if flavor:
-        return 'flavor.' + flavor
-    return 'general'
+        return "flavor." + flavor
+    return "general"
 
 
 def _try_load_config(main_section: str, quiet: bool = False) -> "Config":
@@ -53,13 +53,13 @@ def _legacy_cli_deprecation_warning(
     def wrapped_subcommand_callback(
         ctx: click.Context, *args: Any, **kwargs: Any
     ) -> Any:
-        if ctx.find_root().command_path != 'bugwarrior':
+        if ctx.find_root().command_path != "bugwarrior":
             old_command = ctx.command_path
-            new_command = ctx.command_path.replace('-', ' ')
+            new_command = ctx.command_path.replace("-", " ")
             log.warning(
-                f'Deprecation Warning: `{old_command}` is deprecated and will '
-                'be removed in a future version of bugwarrior. Please use '
-                f'`{new_command}` instead.'
+                f"Deprecation Warning: `{old_command}` is deprecated and will "
+                "be removed in a future version of bugwarrior. Please use "
+                f"`{new_command}` instead."
             )
         return ctx.invoke(subcommand_callback, *args, **kwargs)
 
@@ -90,17 +90,17 @@ def cli() -> None:
 
 
 @cli.command()
-@click.option('--dry-run', is_flag=True)
-@click.option('--flavor', default=None, help='The flavor to use')
+@click.option("--dry-run", is_flag=True)
+@click.option("--flavor", default=None, help="The flavor to use")
 @click.option(
-    '--interactive',
+    "--interactive",
     is_flag=True,
-    help='Deprecated. Interactive mode is now detected automatically via isatty().',
+    help="Deprecated. Interactive mode is now detected automatically via isatty().",
 )
 @click.option(
-    '--debug', is_flag=True, help='Do not use multiprocessing (which breaks pdb).'
+    "--debug", is_flag=True, help="Do not use multiprocessing (which breaks pdb)."
 )
-@click.option('--quiet', is_flag=True, help='Set logging level to WARNING.')
+@click.option("--quiet", is_flag=True, help="Set logging level to WARNING.")
 @_legacy_cli_deprecation_warning
 def pull(
     dry_run: bool, flavor: str | None, interactive: bool, debug: bool, quiet: bool
@@ -121,7 +121,7 @@ def pull(
         main_section = _get_section_name(flavor)
         config = _try_load_config(main_section, quiet)
 
-        lockfile_path = os.path.join(config.main.data.path, 'bugwarrior.lockfile')
+        lockfile_path = os.path.join(config.main.data.path, "bugwarrior.lockfile")
         with FileLock(lockfile_path, timeout=10):
             # Get all the issues.  This can take a while.
             issue_generator = aggregate_issues(config, debug)
@@ -130,13 +130,13 @@ def pull(
             synchronize(issue_generator, config, dry_run)
     except Timeout:
         log.critical(
-            'Your taskrc repository is currently locked. '
-            'Wait for any running bugwarrior processes to finish and try again. '
-            f'Lock file:{lockfile_path}'
+            "Your taskrc repository is currently locked. "
+            "Wait for any running bugwarrior processes to finish and try again. "
+            f"Lock file:{lockfile_path}"
         )
         sys.exit(1)
-    except RuntimeError as e:
-        log.exception("Aborted (%s)" % e)
+    except RuntimeError:
+        log.exception("Aborted")
         sys.exit(1)
 
 
@@ -149,44 +149,43 @@ def vault() -> None:
     can be used to manage your keyring. This feature requires the optional
     keyring library. (pip install "bugwarrior[keyring]")
     """
-    pass
 
 
 def targets() -> Iterator[str]:
-    config = _try_load_config('general')
+    config = _try_load_config("general")
     for service_config in config.service_configs:
         for value in dict(service_config).values():
-            if isinstance(value, str) and '@oracle:use_keyring' in value:
+            if isinstance(value, str) and "@oracle:use_keyring" in value:
                 yield service_config.keyring_service
 
 
 @vault.command()
 def list() -> None:
     pws = lst(targets())
-    print("%i @oracle:use_keyring passwords in bugwarriorrc" % len(pws))
+    print(f"{len(pws)} @oracle:use_keyring passwords in bugwarriorrc")
     for section in pws:
         print("-", section)
 
 
 @vault.command()
-@click.argument('target')
-@click.argument('username')
+@click.argument("target")
+@click.argument("username")
 def clear(target: str, username: str) -> None:
     target_list = lst(targets())
     if target not in target_list:
-        raise ValueError("%s must be one of %r" % (target, target_list))
+        raise ValueError(f"{target} must be one of {target_list!r}")
 
     keyring = get_keyring()
     if keyring.get_password(target, username):
         keyring.delete_password(target, username)
-        print("Password cleared for %s, %s" % (target, username))
+        print(f"Password cleared for {target}, {username}")
     else:
-        print("No password found for %s, %s" % (target, username))
+        print(f"No password found for {target}, {username}")
 
 
 @vault.command()
-@click.argument('target')
-@click.argument('username')
+@click.argument("target")
+@click.argument("username")
 def set(target: str, username: str) -> None:
     target_list = lst(targets())
     if target not in target_list:
@@ -194,15 +193,15 @@ def set(target: str, username: str) -> None:
             "You must configure the password to '@oracle:use_keyring' "
             "prior to setting the value."
         )
-        raise ValueError("%s must be one of %r" % (target, target_list))
+        raise ValueError(f"{target} must be one of {target_list!r}")
 
     keyring = get_keyring()
     keyring.set_password(target, username, getpass.getpass())
-    print("Password set for %s, %s" % (target, username))
+    print(f"Password set for {target}, {username}")
 
 
 @cli.command()
-@click.option('--flavor', default=None, help='The flavor to use')
+@click.option("--flavor", default=None, help="The flavor to use")
 @_legacy_cli_deprecation_warning
 def uda(flavor: str | None) -> None:
     """
@@ -236,7 +235,7 @@ def uda(flavor: str | None) -> None:
 
 @cli.command()
 @click.argument(
-    'rcfile', required=False, default=get_config_path(), type=click.Path(exists=True)
+    "rcfile", required=False, default=get_config_path(), type=click.Path(exists=True)
 )
 def ini2toml(rcfile: str) -> None:
     """Convert ini bugwarriorrc to toml and print result to stdout."""
@@ -244,11 +243,11 @@ def ini2toml(rcfile: str) -> None:
         from ini2toml.api import Translator
     except ImportError:
         raise SystemExit(
-            'Install extra dependencies to use this command:\n'
-            '    pip install bugwarrior[ini2toml]'
+            "Install extra dependencies to use this command:\n"
+            "    pip install bugwarrior[ini2toml]"
         )
-    if os.path.splitext(rcfile)[-1] == '.toml':
-        raise SystemExit(f'{rcfile} is already toml!')
-    with open(rcfile, 'r') as f:
+    if os.path.splitext(rcfile)[-1] == ".toml":
+        raise SystemExit(f"{rcfile} is already toml!")
+    with open(rcfile, "r") as f:
         bugwarriorrc = f.read()
-    print(Translator().translate(bugwarriorrc, 'bugwarriorrc'))
+    print(Translator().translate(bugwarriorrc, "bugwarriorrc"))

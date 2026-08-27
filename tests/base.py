@@ -12,7 +12,7 @@ from .services.base import get_mock_service
 
 class DumbConfig(config.ServiceConfig):
     service: typing.Literal["test"] = "test"
-    KEYRING_SERVICE = 'test://'
+    KEYRING_SERVICE = "test://"
 
     import_labels_as_tags: bool = False
     label_template: str = "{{label}}"
@@ -66,11 +66,11 @@ def make_issue(general_overrides=None, config_overrides=None):
 #: Modules that import get_service by name and must be patched together so the
 #: fake service resolves consistently across config loading, collection, and db.
 _GET_SERVICE_MODULES = (
-    'bugwarrior.config.schema',
-    'bugwarrior.config.validation',
-    'bugwarrior.config',
-    'bugwarrior.db',
-    'bugwarrior.collect',
+    "bugwarrior.config.schema",
+    "bugwarrior.config.validation",
+    "bugwarrior.config",
+    "bugwarrior.db",
+    "bugwarrior.collect",
 )
 
 
@@ -84,7 +84,7 @@ def register_services(mapping=None):
     mapping instead of the real entry points. Defaults to mapping the "test"
     service to DumbService.
     """
-    mapping = mapping or {'test': DumbService}
+    mapping = mapping or {"test": DumbService}
 
     def fake_get_service(name):
         try:
@@ -98,14 +98,14 @@ def register_services(mapping=None):
     with contextlib.ExitStack() as stack:
         for module in _GET_SERVICE_MODULES:
             stack.enter_context(
-                unittest.mock.patch(f'{module}.get_service', fake_get_service)
+                unittest.mock.patch(f"{module}.get_service", fake_get_service)
             )
         yield
 
 
 def validate(config) -> validation.Config:
     formatted_config = format_config(config)
-    return validation.validate_config(formatted_config, 'general', 'configpath')
+    return validation.validate_config(formatted_config, "general", "configpath")
 
 
 def get_validated_service(config):

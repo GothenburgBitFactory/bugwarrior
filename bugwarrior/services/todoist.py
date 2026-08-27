@@ -42,24 +42,21 @@ class TodoistClient(Client):
         all_projects = []
         projects_iter = self._api.get_projects()
         for projects in projects_iter:
-            for project in projects:
-                all_projects.append(project)
+            all_projects.extend(projects)
         return all_projects
 
     def get_sections(self) -> list[Any]:
         all_sections = []
         sections_iter = self._api.get_sections()
         for sections in sections_iter:
-            for section in sections:
-                all_sections.append(section)
+            all_sections.extend(sections)
         return all_sections
 
     def get_users(self, project_id: Any) -> list[Any]:
         all_users = []
         users_iter = self._api.get_collaborators(project_id)
         for users in users_iter:
-            for user in users:
-                all_users.append(user)
+            all_users.extend(users)
         return all_users
 
     def get_issues(self) -> Iterator[dict[str, Any]]:
@@ -73,8 +70,7 @@ class TodoistClient(Client):
         all_comments = []
         comments_iter = self._api.get_comments(task_id=task_id)
         for comments in comments_iter:
-            for comment in comments:
-                all_comments.append(comment)
+            all_comments.extend(comments)
         return all_comments
 
 
@@ -233,7 +229,7 @@ class TodoistService(Service[TodoistIssue]):
         }
         user_index = {
             user.id: f"{user.name} <{user.email}>"
-            for project in project_index.keys()
+            for project in project_index
             for user in self.client.get_users(project)
         }
 
@@ -244,7 +240,7 @@ class TodoistService(Service[TodoistIssue]):
                 "assignee": user_index.get(issue["assignee_id"]),
                 "assigner": user_index.get(issue["assigner_id"]),
                 "duration": (
-                    f'{issue["duration"]["amount"]} {issue["duration"]["unit"]}'
+                    f"{issue['duration']['amount']} {issue['duration']['unit']}"
                     if issue["duration"]
                     else None
                 ),

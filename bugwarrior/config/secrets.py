@@ -92,11 +92,9 @@ def oracle_eval(command: str) -> str:
     )
     stdout, stderr = p.communicate()
     if p.returncode == 0:
-        return stdout.split(b'\n', 1)[0].strip().decode('utf-8')
+        return stdout.split(b"\n", 1)[0].strip().decode("utf-8")
     else:
         log.critical(
-            "Error retrieving password: `{command}` returned '{error}'".format(
-                command=command, error=stderr.strip()
-            )
+            f"Error retrieving password: `{command}` returned '{stderr.strip()}'"
         )
         sys.exit(1)

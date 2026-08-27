@@ -3,6 +3,7 @@ import dataclasses
 import datetime
 from functools import reduce
 import logging
+import operator
 import sys
 import typing
 from typing import Any
@@ -20,13 +21,13 @@ log = logging.getLogger(__name__)
 
 class ExtraFieldConfigError(Exception):
     def __init__(self, extra_field_raw: str) -> None:
-        self.message = f'Extra field is improperly defined: {extra_field_raw}'
+        self.message = f"Extra field is improperly defined: {extra_field_raw}"
         super().__init__(self.message)
 
 
 class ExtraFieldNotFoundError(Exception):
     def __init__(self, label: str, query: str) -> None:
-        self.message = f'Extra field {label}:{query} not found among Jira issue fields.'
+        self.message = f"Extra field {label}:{query} not found among Jira issue fields."
         super().__init__(self.message)
 
 
@@ -34,7 +35,7 @@ def parse_jira_extra_fields(extra_fields_raw: Any) -> "list[JiraExtraField] | No
     if extra_fields_raw is None:
         return None
     try:  # ini
-        extra_fields_list = extra_fields_raw.split(',')
+        extra_fields_list = extra_fields_raw.split(",")
     except AttributeError:  # toml
         extra_fields_list = extra_fields_raw
     extra_fields = []
@@ -46,7 +47,7 @@ def parse_jira_extra_fields(extra_fields_raw: Any) -> "list[JiraExtraField] | No
         except (IndexError, ValueError):
             raise ExtraFieldConfigError(extra_field_raw)
 
-        keys = keys.split('.')
+        keys = keys.split(".")
 
         extra_field = JiraExtraField(label, keys)
         extra_fields.append(extra_field)
@@ -66,7 +67,7 @@ class JiraExtraField:
                 lambda val, key: val.get(key) if val else None, self.keys, fields
             )
         except KeyError:
-            raise ExtraFieldNotFoundError(label=self.label, query='.'.join(self.keys))
+            raise ExtraFieldNotFoundError(label=self.label, query=".".join(self.keys))
 
         return value
 
@@ -77,32 +78,32 @@ JiraExtraFields = typing.Annotated[
 
 
 class JiraConfig(config.ServiceConfig):
-    service: typing.Literal['jira']
+    service: typing.Literal["jira"]
     KEYRING_SERVICE = "jira://{username}@{base_uri}"
     base_uri: config.StrippedTrailingSlashUrl
     username: str
 
-    password: str = ''
-    PAT: str = ''
+    password: str = ""
+    PAT: str = ""
 
     body_length: int = sys.maxsize
-    extra_fields: typing.Optional[JiraExtraFields] = None
+    extra_fields: JiraExtraFields | None = None
     import_labels_as_tags: bool = False
     import_sprints_as_tags: bool = False
-    label_template: str = '{{label}}'
-    query: str = ''
+    label_template: str = "{{label}}"
+    query: str = ""
     use_cookies: bool = False
     verify_ssl: bool = True
     version: int = 5
 
-    only_if_assigned: config.UnsupportedOption[str] = ''
+    only_if_assigned: config.UnsupportedOption[str] = ""
     also_unassigned: config.UnsupportedOption[bool] = False
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def require_password_xor_PAT(self) -> "JiraConfig":
         if (self.password and self.PAT) or not (self.password or self.PAT):
             raise ValueError(
-                'section requires one of (not both):\n    password\n    PAT'
+                "section requires one of (not both):\n    password\n    PAT"
             )
         return self
 
@@ -114,7 +115,6 @@ class JiraConfig(config.ServiceConfig):
 class ObliviousCookieJar(RequestsCookieJar):
     def set_cookie(self, *args: Any, **kwargs: Any) -> None:
         """Simply ignore any request to set a cookie."""
-        pass
 
     def copy(self) -> "ObliviousCookieJar":
         """Make sure to return an instance of the correct class on copying."""
@@ -146,64 +146,64 @@ def _parse_sprint_string(sprint: str) -> dict[str, str]:
         ViewId=1173,state=ACTIVE,name=Sprint 1,startDate=2016-09-06T16:08:07.4
         55Z,endDate=2016-09-23T16:08:00.000Z,completeDate=<null>,sequence=2322]
     """
-    entries = sprint[sprint.index('[') + 1 : sprint.index(']')].split('=')
-    fields = sum((entry.rsplit(',', 1) for entry in entries), [])
+    entries = sprint[sprint.index("[") + 1 : sprint.index("]")].split("=")
+    fields = reduce(operator.iadd, (entry.rsplit(",", 1) for entry in entries), [])
     return dict(zip(fields[::2], fields[1::2]))
 
 
 class JiraIssue(Issue):
-    ISSUE_TYPE = 'jiraissuetype'
-    SUMMARY = 'jirasummary'
-    URL = 'jiraurl'
-    FOREIGN_ID = 'jiraid'
-    DESCRIPTION = 'jiradescription'
-    ESTIMATE = 'jiraestimate'
-    FIX_VERSION = 'jirafixversion'
-    CREATED_AT = 'jiracreatedts'
-    STATUS = 'jirastatus'
-    SUBTASKS = 'jirasubtasks'
-    PARENT = 'jiraparent'
+    ISSUE_TYPE = "jiraissuetype"
+    SUMMARY = "jirasummary"
+    URL = "jiraurl"
+    FOREIGN_ID = "jiraid"
+    DESCRIPTION = "jiradescription"
+    ESTIMATE = "jiraestimate"
+    FIX_VERSION = "jirafixversion"
+    CREATED_AT = "jiracreatedts"
+    STATUS = "jirastatus"
+    SUBTASKS = "jirasubtasks"
+    PARENT = "jiraparent"
 
     UDAS = {
-        ISSUE_TYPE: {'type': 'string', 'label': 'Issue Type'},
-        SUMMARY: {'type': 'string', 'label': 'Jira Summary'},
-        URL: {'type': 'string', 'label': 'Jira URL'},
-        DESCRIPTION: {'type': 'string', 'label': 'Jira Description'},
-        FOREIGN_ID: {'type': 'string', 'label': 'Jira Issue ID'},
-        ESTIMATE: {'type': 'numeric', 'label': 'Estimate'},
-        FIX_VERSION: {'type': 'string', 'label': 'Fix Version'},
-        CREATED_AT: {'type': 'date', 'label': 'Created At'},
-        STATUS: {'type': 'string', 'label': "Jira Status"},
-        SUBTASKS: {'type': 'string', 'label': "Jira Subtasks"},
-        PARENT: {'type': 'string', 'label': 'Jira Parent'},
+        ISSUE_TYPE: {"type": "string", "label": "Issue Type"},
+        SUMMARY: {"type": "string", "label": "Jira Summary"},
+        URL: {"type": "string", "label": "Jira URL"},
+        DESCRIPTION: {"type": "string", "label": "Jira Description"},
+        FOREIGN_ID: {"type": "string", "label": "Jira Issue ID"},
+        ESTIMATE: {"type": "numeric", "label": "Estimate"},
+        FIX_VERSION: {"type": "string", "label": "Fix Version"},
+        CREATED_AT: {"type": "date", "label": "Created At"},
+        STATUS: {"type": "string", "label": "Jira Status"},
+        SUBTASKS: {"type": "string", "label": "Jira Subtasks"},
+        PARENT: {"type": "string", "label": "Jira Parent"},
     }
     UNIQUE_KEY = (URL,)
 
     PRIORITY_MAP: dict[str, config.Priority] = {
-        'Highest': 'H',
-        'High': 'H',
-        'Medium': 'M',
-        'Low': 'L',
-        'Lowest': 'L',
-        'Trivial': 'L',
-        'Minor': 'L',
-        'Major': 'M',
-        'Critical': 'H',
-        'Blocker': 'H',
+        "Highest": "H",
+        "High": "H",
+        "Medium": "M",
+        "Low": "L",
+        "Lowest": "L",
+        "Trivial": "L",
+        "Minor": "L",
+        "Major": "M",
+        "Critical": "H",
+        "Blocker": "H",
     }
 
     def to_taskwarrior(self) -> dict[str, Any]:
         fixed_fields = {
-            'project': self.get_project(),
-            'priority': self.get_priority(),
-            'annotations': self.get_annotations(),
-            'tags': self.get_tags(),
-            'due': self.get_due(),
-            'entry': self.get_entry(),
+            "project": self.get_project(),
+            "priority": self.get_priority(),
+            "annotations": self.get_annotations(),
+            "tags": self.get_tags(),
+            "due": self.get_due(),
+            "entry": self.get_entry(),
             self.ISSUE_TYPE: self.get_issue_type(),
             self.URL: self.get_url(),
-            self.FOREIGN_ID: self.record['key'],
-            self.DESCRIPTION: self.extra.get('body'),
+            self.FOREIGN_ID: self.record["key"],
+            self.DESCRIPTION: self.extra.get("body"),
             self.SUMMARY: self.get_summary(),
             self.ESTIMATE: self.get_estimate(),
             self.FIX_VERSION: self.get_fix_version(),
@@ -221,21 +221,21 @@ class JiraIssue(Issue):
             return {}
 
         return {
-            extra_field.label: extra_field.extract_value(self.record['fields'])
+            extra_field.label: extra_field.extract_value(self.record["fields"])
             for extra_field in self.config.extra_fields
         }
 
     def get_entry(self) -> datetime.datetime | None:
-        created_at = self.record['fields']['created']
+        created_at = self.record["fields"]["created"]
         # Convert timestamp to an offset-aware datetime
         date = self.parse_date(created_at)
         return date
 
     def get_tags(self) -> list[str]:
-        labels = self.record.get('fields', {}).get('labels', [])
+        labels = self.record.get("fields", {}).get("labels", [])
         label_tags = self.get_tags_from_labels(labels)
 
-        sprints = [sprint['name'] for sprint in self.__get_sprints()]
+        sprints = [sprint["name"] for sprint in self.__get_sprints()]
         sprint_tags = (
             self.render_tags_from_labels(sprints)
             if self.config.import_sprints_as_tags
@@ -246,19 +246,21 @@ class JiraIssue(Issue):
 
     def get_due(self) -> datetime.datetime | None:
         # If the duedate is explicitly set on the issue, then use that.
-        if self.record['fields'].get('duedate'):
-            return self.parse_date(self.record['fields']['duedate'])
+        if self.record["fields"].get("duedate"):
+            return self.parse_date(self.record["fields"]["duedate"])
         # Otherwise, if the issue is in a sprint, use the end date of that sprint.
         sprints = self.__get_sprints()
-        for sprint in filter(lambda e: e.get('state', '').lower() != 'closed', sprints):
-            endDate = sprint.get('endDate')
-            if endDate != '<null>':
+        for sprint in filter(lambda e: e.get("state", "").lower() != "closed", sprints):
+            endDate = sprint.get("endDate")
+            if endDate != "<null>":
                 return self.parse_date(endDate)
 
     def __get_sprints(self) -> Iterator[dict[str, Any]]:
-        fields = self.record.get('fields', {})
-        sprints = sum(
-            (fields.get(key) or [] for key in self.extra['sprint_field_names']), []
+        fields = self.record.get("fields", {})
+        sprints = reduce(
+            operator.iadd,
+            (fields.get(key) or [] for key in self.extra["sprint_field_names"]),
+            [],
         )
         for sprint in sprints:
             if isinstance(sprint, dict):
@@ -270,35 +272,35 @@ class JiraIssue(Issue):
                 yield _parse_sprint_string(sprint)
 
     def get_annotations(self) -> list[str]:
-        return self.extra.get('annotations', [])
+        return self.extra.get("annotations", [])
 
     def get_project(self) -> str:
-        return self.record['key'].rsplit('-', 1)[0]
+        return self.record["key"].rsplit("-", 1)[0]
 
     def get_number(self) -> str:
-        return self.record['key'].rsplit('-', 1)[1]
+        return self.record["key"].rsplit("-", 1)[1]
 
     def get_url(self) -> str:
-        return self.config.base_uri + '/browse/' + self.record['key']
+        return self.config.base_uri + "/browse/" + self.record["key"]
 
     def get_summary(self) -> str:
         if self.config.version == 4:
-            return self.record['fields']['summary']['value']
-        return self.record['fields']['summary']
+            return self.record["fields"]["summary"]["value"]
+        return self.record["fields"]["summary"]
 
     def get_estimate(self) -> float | None:
         if self.config.version == 4:
-            return self.record['fields']['timeestimate']['value']
+            return self.record["fields"]["timeestimate"]["value"]
         try:
-            return self.record['fields']['timeestimate'] / 60 / 60
+            return self.record["fields"]["timeestimate"] / 60 / 60
         except (TypeError, KeyError):
             return None
 
     def get_priority(self) -> config.Priority:
-        value = self.record['fields'].get('priority')
+        value = self.record["fields"].get("priority")
         try:
-            value = value['name']
-        except (TypeError,):
+            value = value["name"]
+        except TypeError:
             value = str(value)
         # priority.name format: "1 - Critical"
         map_key = value.strip().split()[-1]
@@ -309,33 +311,33 @@ class JiraIssue(Issue):
             title=self.get_summary(),
             url=self.get_url(),
             number=self.get_number(),
-            cls='issue',
+            cls="issue",
         )
 
     def get_fix_version(self) -> str | None:
         try:
-            return self.record['fields'].get('fixVersions', [{}])[0].get('name')
+            return self.record["fields"].get("fixVersions", [{}])[0].get("name")
         except (IndexError, KeyError, AttributeError, TypeError):
             return None
 
     def get_status(self) -> str:
-        return self.record['fields']['status']['name']
+        return self.record["fields"]["status"]["name"]
 
     def get_subtasks(self) -> str:
-        return ','.join(
-            task['key'] for task in self.record['fields'].get('subtasks', [])
+        return ",".join(
+            task["key"] for task in self.record["fields"].get("subtasks", [])
         )
 
     def get_parent(self) -> str | None:
         try:
-            parent = self.record['fields']['parent']['key']
-        except (KeyError,):
+            parent = self.record["fields"]["parent"]["key"]
+        except KeyError:
             return None
 
         return parent
 
     def get_issue_type(self) -> str:
-        return self.record['fields']['issuetype']['name']
+        return self.record["fields"]["issuetype"]["name"]
 
 
 class JiraService(Service[JiraIssue]):
@@ -365,34 +367,34 @@ class JiraService(Service[JiraIssue]):
         self.sprint_field_names = []
         if self.config.import_sprints_as_tags:
             field_names = [
-                field for field in self.jira.fields() if field['name'] == 'Sprint'
+                field for field in self.jira.fields() if field["name"] == "Sprint"
             ]
             if len(field_names) < 1:
                 log.warning("No sprint custom field found.  Ignoring sprints.")
                 self.config.import_sprints_as_tags = False
             else:
-                log.info("Found %i distinct sprint fields." % len(field_names))
-                self.sprint_field_names = [field['id'] for field in field_names]
+                log.info(f"Found {len(field_names)} distinct sprint fields.")
+                self.sprint_field_names = [field["id"] for field in field_names]
 
     def _build_jira_client(self) -> JIRA:
         jira_options = {
-            'server': self.config.base_uri,
-            'rest_api_version': 'latest',
-            'verify': self.config.verify_ssl,
+            "server": self.config.base_uri,
+            "rest_api_version": "latest",
+            "verify": self.config.verify_ssl,
         }
         if self.config.PAT:
-            pat = self.get_secret('PAT', self.config.username)
+            pat = self.get_secret("PAT", self.config.username)
             return JIRA(options=jira_options, token_auth=pat)
 
-        password = self.get_secret('password', self.config.username)
-        if password == '@kerberos':
+        password = self.get_secret("password", self.config.username)
+        if password == "@kerberos":
             return JIRA(options=jira_options, kerberos=True)
         if self.config.use_cookies:
             return JIRA(options=jira_options, auth=(self.config.username, password))
         return JIRA(options=jira_options, basic_auth=(self.config.username, password))
 
     def body(self, issue: JiraIssue) -> str | None:
-        body = issue.record.get('fields', {}).get('description')
+        body = issue.record.get("fields", {}).get("description")
 
         if body:
             body = body[: self.config.body_length]
@@ -414,10 +416,10 @@ class JiraService(Service[JiraIssue]):
 
         for case in cases:
             issue = self.get_issue_for_record(
-                case.raw, extra={'sprint_field_names': self.sprint_field_names}
+                case.raw, extra={"sprint_field_names": self.sprint_field_names}
             )
-            extra: dict[str, Any] = {'body': self.body(issue)}
+            extra: dict[str, Any] = {"body": self.body(issue)}
             if self.config.version > 4:
-                extra['annotations'] = self.annotations(case, issue)
+                extra["annotations"] = self.annotations(case, issue)
             issue.extra.update(extra)
             yield issue

@@ -1,8 +1,8 @@
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 import datetime
 import logging
 import typing
-from typing import Any, Generator, Optional
+from typing import Any
 
 import requests
 
@@ -40,8 +40,7 @@ class ClickupClient(Client):
                 self._get_url_for_tasks(team_id, page), headers=headers
             )
             json = self.json_response(response)
-            for task in json["tasks"]:
-                yield task
+            yield from json["tasks"]
 
             if json["last_page"]:
                 break
@@ -110,14 +109,12 @@ class ClickupIssue(Issue):
         )
 
     @staticmethod
-    def parse_timestamp(
-        milliseconds_unix: Optional[str],
-    ) -> Optional[datetime.datetime]:
+    def parse_timestamp(milliseconds_unix: str | None) -> datetime.datetime | None:
         if milliseconds_unix is None:
             return None
 
         seconds_unix = float(milliseconds_unix) // 1e3
-        return datetime.datetime.fromtimestamp(seconds_unix, tz=datetime.timezone.utc)
+        return datetime.datetime.fromtimestamp(seconds_unix, tz=datetime.UTC)
 
 
 class ClickupService(Service[ClickupIssue]):
@@ -129,7 +126,7 @@ class ClickupService(Service[ClickupIssue]):
         self, config: ClickupConfig, main_config: config.MainSectionConfig
     ) -> None:
         super().__init__(config, main_config)
-        self.client = ClickupClient(token=self.get_secret('token'))
+        self.client = ClickupClient(token=self.get_secret("token"))
 
     def is_assigned(self, issue: dict) -> bool:
         if not self.config.only_if_assigned:

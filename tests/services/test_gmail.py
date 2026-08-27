@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import pickle
 from unittest import mock
@@ -28,9 +28,9 @@ def credential():
 SERVICE_CLASS = gmail.GmailService
 
 SERVICE_CONFIG = {
-    'service': 'gmail',
-    'add_tags': 'added',
-    'login_name': 'test@example.com',
+    "service": "gmail",
+    "add_tags": "added",
+    "login_name": "test@example.com",
 }
 
 
@@ -38,13 +38,13 @@ class TestGmailService:
     @pytest.fixture
     def config(self):
         return {
-            'general': {'targets': ['myservice']},
-            'myservice': {'service': 'gmail'},
+            "general": {"targets": ["myservice"]},
+            "myservice": {"service": "gmail"},
         }
 
     @pytest.fixture
     def service(self, config, monkeypatch):
-        monkeypatch.setattr(gmail.GmailService, 'build_api', mock.Mock())
+        monkeypatch.setattr(gmail.GmailService, "build_api", mock.Mock())
 
         return get_validated_service(config)
 
@@ -58,7 +58,7 @@ class TestGmailService:
 
     def test_get_credentials_with_refresh(self, service, credential):
         expired_credential = Credentials(**credential)
-        expired_credential.expiry = datetime.now(timezone.utc).replace(tzinfo=None)
+        expired_credential.expiry = datetime.now(UTC).replace(tzinfo=None)
         assert expired_credential.valid is False
         with open(service.credentials_path, "wb") as token:
             pickle.dump(expired_credential, token)
@@ -66,9 +66,7 @@ class TestGmailService:
         with patch("google.oauth2.reauth.refresh_grant") as mock_refresh_grant:
             access_token = "newaccesstoken"
             refresh_token = "newrefreshtoken"
-            expiry = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(
-                hours=24
-            )
+            expiry = datetime.now(UTC).replace(tzinfo=None) + timedelta(hours=24)
             grant_response = {"id_token": "idtoken"}
             rapt_token = "reauthprooftoken"
             mock_refresh_grant.return_value = (
@@ -124,18 +122,18 @@ class TestGmailIssue:
     @pytest.fixture
     def service(self, record, labels, make_service, monkeypatch):
         mock_api = mock.Mock()
-        mock_api().users().labels().list().execute.return_value = {'labels': labels}
+        mock_api().users().labels().list().execute.return_value = {"labels": labels}
         mock_api().users().threads().list().execute.return_value = {
-            'threads': [{'id': record['id']}]
+            "threads": [{"id": record["id"]}]
         }
         mock_api().users().threads().get().execute.return_value = record
-        monkeypatch.setattr(gmail.GmailService, 'build_api', mock_api)
+        monkeypatch.setattr(gmail.GmailService, "build_api", mock_api)
         return make_service()
 
     def test_config_paths(self, service):
         credentials_path = (
             Path(service.main_config.data.path)
-            / 'gmail_credentials_test_example_com.pickle'
+            / "gmail_credentials_test_example_com.pickle"
         )
         assert Path(service.credentials_path) == credentials_path
 
@@ -144,66 +142,66 @@ class TestGmailIssue:
             record, gmail.thread_extras(record, service.get_labels())
         )
         expected = {
-            'annotations': [],
-            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=timezone.utc),
-            'gmailthreadid': '1234',
-            'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',  # noqa: E501
-            'gmailsnippet': 'Bugwarrior is great',
-            'gmaillastsender': 'Foo Bar',
-            'tags': {'postit', 'sticky'},
-            'gmailsubject': 'Regarding Bugwarrior',
-            'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
-            'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
-            'priority': 'M',
-            'gmaillastsenderaddr': 'foobar@example.com',
+            "annotations": [],
+            "entry": datetime(2019, 1, 5, 21, 7, 47, tzinfo=UTC),
+            "gmailthreadid": "1234",
+            "gmaillastmessageid": "CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com",  # noqa: E501
+            "gmailsnippet": "Bugwarrior is great",
+            "gmaillastsender": "Foo Bar",
+            "tags": {"postit", "sticky"},
+            "gmailsubject": "Regarding Bugwarrior",
+            "gmailurl": "https://mail.google.com/mail/u/0/#all/1234",
+            "gmaillabels": "CATEGORY_PERSONAL IMPORTANT postit sticky",
+            "priority": "M",
+            "gmaillastsenderaddr": "foobar@example.com",
         }
 
         taskwarrior = issue.to_taskwarrior()
-        taskwarrior['tags'] = set(taskwarrior['tags'])
+        taskwarrior["tags"] = set(taskwarrior["tags"])
 
         assert taskwarrior == expected
 
     def test_issues(self, service):
         issue = next(service.issues())
         expected = {
-            'annotations': ['@Foo Bar - Regarding Bugwarrior'],
-            'entry': datetime(2019, 1, 5, 21, 7, 47, tzinfo=timezone.utc),
-            'gmailthreadid': '1234',
-            'gmaillastmessageid': 'CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com',  # noqa: E501
-            'gmailsnippet': 'Bugwarrior is great',
-            'gmaillastsender': 'Foo Bar',
-            'description': '(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234',  # noqa: E501
-            'priority': 'M',
-            'tags': {'added', 'postit', 'sticky'},
-            'gmailsubject': 'Regarding Bugwarrior',
-            'gmailurl': 'https://mail.google.com/mail/u/0/#all/1234',
-            'gmaillabels': 'CATEGORY_PERSONAL IMPORTANT postit sticky',
-            'gmaillastsenderaddr': 'foobar@example.com',
+            "annotations": ["@Foo Bar - Regarding Bugwarrior"],
+            "entry": datetime(2019, 1, 5, 21, 7, 47, tzinfo=UTC),
+            "gmailthreadid": "1234",
+            "gmaillastmessageid": "CMCRSF+6r=x5JtW4wlRYR5qdfRq+iAtSoec5NqrHvRpvVgHbHdg@mail.gmail.com",  # noqa: E501
+            "gmailsnippet": "Bugwarrior is great",
+            "gmaillastsender": "Foo Bar",
+            "description": "(bw)Is#1234 - Regarding Bugwarrior .. https://mail.google.com/mail/u/0/#all/1234",
+            "priority": "M",
+            "tags": {"added", "postit", "sticky"},
+            "gmailsubject": "Regarding Bugwarrior",
+            "gmailurl": "https://mail.google.com/mail/u/0/#all/1234",
+            "gmaillabels": "CATEGORY_PERSONAL IMPORTANT postit sticky",
+            "gmaillastsenderaddr": "foobar@example.com",
         }
 
         taskwarrior = TaskConstructor(issue).get_taskwarrior_record()
-        taskwarrior['tags'] = set(taskwarrior['tags'])
+        taskwarrior["tags"] = set(taskwarrior["tags"])
 
         assert taskwarrior == expected
 
     def test_last_sender(self):
         test_thread = {
-            'messages': [
+            "messages": [
                 {
-                    'payload': {
-                        'headers': [{'name': 'From', 'value': 'Xyz <xyz@example.com'}]
+                    "payload": {
+                        "headers": [{"name": "From", "value": "Xyz <xyz@example.com"}]
                     }
                 },
                 {
-                    'payload': {
-                        'headers': [
-                            {'name': 'From', 'value': 'Foo Bar <foobar@example.com'}
+                    "payload": {
+                        "headers": [
+                            {"name": "From", "value": "Foo Bar <foobar@example.com"}
                         ]
                     }
                 },
             ]
         }
         assert gmail.thread_last_sender(test_thread) == (
-            'Foo Bar',
-            'foobar@example.com',
+            "Foo Bar",
+            "foobar@example.com",
         )

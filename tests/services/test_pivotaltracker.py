@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 import responses
@@ -9,129 +9,129 @@ from bugwarrior.services.pivotaltracker import PivotalTrackerService
 from ..base import validate
 
 PROJECT = {
-    'account_id': 100,
-    'atom_enabled': True,
-    'automatic_planning': True,
-    'bugs_and_chores_are_estimatable': False,
-    'created_at': '2019-05-14T12:00:05Z',
-    'current_iteration_number': 15,
-    'description': 'Expeditionary Battle Planetoid',
-    'enable_following': True,
-    'enable_incoming_emails': True,
-    'enable_tasks': True,
-    'has_google_domain': False,
-    'id': 99,
-    'initial_velocity': 10,
-    'iteration_length': 1,
-    'kind': 'project',
-    'name': 'Death Star',
-    'number_of_done_iterations_to_show': 4,
-    'point_scale': '0,1,2,3',
-    'point_scale_is_custom': False,
-    'profile_content': """
+    "account_id": 100,
+    "atom_enabled": True,
+    "automatic_planning": True,
+    "bugs_and_chores_are_estimatable": False,
+    "created_at": "2019-05-14T12:00:05Z",
+    "current_iteration_number": 15,
+    "description": "Expeditionary Battle Planetoid",
+    "enable_following": True,
+    "enable_incoming_emails": True,
+    "enable_tasks": True,
+    "has_google_domain": False,
+    "id": 99,
+    "initial_velocity": 10,
+    "iteration_length": 1,
+    "kind": "project",
+    "name": "Death Star",
+    "number_of_done_iterations_to_show": 4,
+    "point_scale": "0,1,2,3",
+    "point_scale_is_custom": False,
+    "profile_content": """
 This is a machine of war such as the universe has never known.
 It's colossal, the size of a class-four moon.
 And it possesses firepower unequaled in the history of warfare.
     """,
-    'project_type': 'private',
-    'public': False,
-    'start_date': '2019-01-28',
-    'start_time': '2019-05-14T12:00:10Z',
-    'time_zone': {
-        'kind': 'time_zone',
-        'olson_name': 'America/Los_Angeles',
-        'offset': '-07:00',
+    "project_type": "private",
+    "public": False,
+    "start_date": "2019-01-28",
+    "start_time": "2019-05-14T12:00:10Z",
+    "time_zone": {
+        "kind": "time_zone",
+        "olson_name": "America/Los_Angeles",
+        "offset": "-07:00",
     },
-    'updated_at': '2019-05-14T12:00:10Z',
-    'velocity_averaged_over': 3,
-    'version': 66,
-    'week_start_day': 'Monday',
+    "updated_at": "2019-05-14T12:00:10Z",
+    "velocity_averaged_over": 3,
+    "version": 66,
+    "week_start_day": "Monday",
 }
 
 STORY = {
-    'project': PROJECT,
-    'kind': 'story',
-    'id': 561,
-    'created_at': '2019-05-14T12:00:00Z',
-    'updated_at': '2019-05-14T12:00:00Z',
-    'accepted_at': '2019-05-14T12:00:00Z',
-    'story_type': 'story',
-    'estimate': 3,
-    'name': 'Tractor beam loses power intermittently',
-    'description': 'All your base are belong to us',
-    'current_state': 'unstarted',
-    'requested_by_id': 106,
-    'url': 'http://localhost/story/show/561',
-    'project_id': 99,
-    'owner_ids': [106],
-    'labels': [
+    "project": PROJECT,
+    "kind": "story",
+    "id": 561,
+    "created_at": "2019-05-14T12:00:00Z",
+    "updated_at": "2019-05-14T12:00:00Z",
+    "accepted_at": "2019-05-14T12:00:00Z",
+    "story_type": "story",
+    "estimate": 3,
+    "name": "Tractor beam loses power intermittently",
+    "description": "All your base are belong to us",
+    "current_state": "unstarted",
+    "requested_by_id": 106,
+    "url": "http://localhost/story/show/561",
+    "project_id": 99,
+    "owner_ids": [106],
+    "labels": [
         {
-            'kind': 'label',
-            'id': 5101,
-            'project_id': 99,
-            'name': 'look sir metal',
-            'created_at': '2019-05-14T12:00:05Z',
-            'updated_at': '2019-05-14T12:00:05Z',
+            "kind": "label",
+            "id": 5101,
+            "project_id": 99,
+            "name": "look sir metal",
+            "created_at": "2019-05-14T12:00:05Z",
+            "updated_at": "2019-05-14T12:00:05Z",
         }
     ],
 }
 
 USER = [
     {
-        'created_at': '2019-05-14T12:00:00Z',
-        'favorite': False,
-        'id': 16200,
-        'kind': 'project_membership',
-        'person': {
-            'kind': 'person',
-            'id': 106,
-            'name': 'Galen Marek',
-            'email': 'marek@sith.mil',
-            'initials': 'GM',
-            'username': 'starkiller',
+        "created_at": "2019-05-14T12:00:00Z",
+        "favorite": False,
+        "id": 16200,
+        "kind": "project_membership",
+        "person": {
+            "kind": "person",
+            "id": 106,
+            "name": "Galen Marek",
+            "email": "marek@sith.mil",
+            "initials": "GM",
+            "username": "starkiller",
         },
-        'project_color': 'b800bb',
-        'project_id': 99,
-        'role': 'member',
-        'updated_at': '2019-05-14T12:00:00Z',
-        'wants_comment_notification_emails': True,
-        'will_receive_mention_notifications_or_emails': True,
+        "project_color": "b800bb",
+        "project_id": 99,
+        "role": "member",
+        "updated_at": "2019-05-14T12:00:00Z",
+        "wants_comment_notification_emails": True,
+        "will_receive_mention_notifications_or_emails": True,
     }
 ]
 
 TASKS = [
     {
-        'kind': 'task',
-        'id': 5,
-        'story_id': 561,
-        'description': 'Port 0',
-        'complete': False,
-        'position': 1,
-        'created_at': '2019-05-14T12:00:00Z',
-        'updated_at': '2019-05-14T12:00:00Z',
+        "kind": "task",
+        "id": 5,
+        "story_id": 561,
+        "description": "Port 0",
+        "complete": False,
+        "position": 1,
+        "created_at": "2019-05-14T12:00:00Z",
+        "updated_at": "2019-05-14T12:00:00Z",
     },
     {
-        'kind': 'task',
-        'id': 6,
-        'story_id': 561,
-        'description': 'Port 90',
-        'complete': False,
-        'position': 2,
-        'created_at': '2019-05-14T12:00:00Z',
-        'updated_at': '2019-05-14T12:00:00Z',
+        "kind": "task",
+        "id": 6,
+        "story_id": 561,
+        "description": "Port 90",
+        "complete": False,
+        "position": 2,
+        "created_at": "2019-05-14T12:00:00Z",
+        "updated_at": "2019-05-14T12:00:00Z",
     },
 ]
 
 BLOCKERS = [
     {
-        'kind': 'blocker',
-        'id': 1100,
-        'story_id': 561,
-        'person_id': 106,
-        'description': 'Set weapons to stun',
-        'resolved': False,
-        'created_at': '2019-05-14T12:00:00Z',
-        'updated_at': '2019-05-14T12:00:00Z',
+        "kind": "blocker",
+        "id": 1100,
+        "story_id": 561,
+        "person_id": 106,
+        "description": "Set weapons to stun",
+        "resolved": False,
+        "created_at": "2019-05-14T12:00:00Z",
+        "updated_at": "2019-05-14T12:00:00Z",
     }
 ]
 
@@ -148,23 +148,23 @@ QUERY = {
 }
 
 EXTRA = {
-    'request_user': ['request_user'],
-    'owned_user': ['owned_user'],
-    'annotations': TASKS,
-    'blockers': BLOCKERS,
-    'project_name': PROJECT['name'],
+    "request_user": ["request_user"],
+    "owned_user": ["owned_user"],
+    "annotations": TASKS,
+    "blockers": BLOCKERS,
+    "project_name": PROJECT["name"],
 }
 
 
 SERVICE_CLASS = PivotalTrackerService
 
 SERVICE_CONFIG = {
-    'service': 'pivotaltracker',
-    'token': '123456',
-    'user_id': 106,
-    'account_ids': '100',
-    'import_labels_as_tags': True,
-    'import_blockers': True,
+    "service": "pivotaltracker",
+    "token": "123456",
+    "user_id": 106,
+    "account_ids": "100",
+    "import_labels_as_tags": True,
+    "import_blockers": True,
 }
 
 
@@ -172,39 +172,39 @@ class TestPivotalTrackerConfig:
     @pytest.fixture
     def config(self):
         return {
-            'general': {'targets': ['myservice']},
-            'myservice': {'service': 'pivotaltracker'},
+            "general": {"targets": ["myservice"]},
+            "myservice": {"service": "pivotaltracker"},
         }
 
     def test_validate_config(self, config):
-        config['myservice'].update(
-            {'account_ids': '12345', 'user_id': '12345', 'token': '12345'}
+        config["myservice"].update(
+            {"account_ids": "12345", "user_id": "12345", "token": "12345"}
         )
 
         validate(config)
 
     def test_validate_config_no_account_ids(self, config, assert_validation_error):
-        config['myservice'].update({'token': '123', 'user_id': '12345'})
+        config["myservice"].update({"token": "123", "user_id": "12345"})
 
-        assert_validation_error(config, '[myservice]\naccount_ids  <- Field required')
+        assert_validation_error(config, "[myservice]\naccount_ids  <- Field required")
 
     def test_validate_config_no_user_id(self, config, assert_validation_error):
-        config['myservice'].update({'account_ids': '12345', 'token': '123'})
+        config["myservice"].update({"account_ids": "12345", "token": "123"})
 
-        assert_validation_error(config, '[myservice]\nuser_id  <- Field required')
+        assert_validation_error(config, "[myservice]\nuser_id  <- Field required")
 
     def test_validate_config_token(self, config, assert_validation_error):
-        config['myservice'].update({'account_ids': '12345', 'user_id': '12345'})
+        config["myservice"].update({"account_ids": "12345", "user_id": "12345"})
 
-        assert_validation_error(config, '[myservice]\ntoken  <- Field required')
+        assert_validation_error(config, "[myservice]\ntoken  <- Field required")
 
     def test_validate_config_invalid_endpoint(self, config, assert_validation_error):
-        config['myservice'].update(
+        config["myservice"].update(
             {
-                'account_ids': '12345',
-                'token': '123',
-                'user_id': '12345',
-                'version': 'v1',
+                "account_ids": "12345",
+                "token": "123",
+                "user_id": "12345",
+                "version": "v1",
             }
         )
 
@@ -219,27 +219,27 @@ class TestPivotalTrackerIssue:
         with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
             rsps.add(
                 responses.GET,
-                'https://www.pivotaltracker.com/services/v5/projects?account_ids=100',
+                "https://www.pivotaltracker.com/services/v5/projects?account_ids=100",
                 json=[PROJECT],
             )
             rsps.add(
                 responses.GET,
-                'https://www.pivotaltracker.com/services/v5/projects/99/search?query=mywork:106',
+                "https://www.pivotaltracker.com/services/v5/projects/99/search?query=mywork:106",
                 json=QUERY,
             )
             rsps.add(
                 responses.GET,
-                'https://www.pivotaltracker.com/services/v5/projects/99/stories/561/tasks',
+                "https://www.pivotaltracker.com/services/v5/projects/99/stories/561/tasks",
                 json=TASKS,
             )
             rsps.add(
                 responses.GET,
-                'https://www.pivotaltracker.com/services/v5/projects/99/stories/561/blockers',
+                "https://www.pivotaltracker.com/services/v5/projects/99/stories/561/blockers",
                 json=BLOCKERS,
             )
             rsps.add(
                 responses.GET,
-                'https://www.pivotaltracker.com/services/v5/projects/99/memberships',
+                "https://www.pivotaltracker.com/services/v5/projects/99/memberships",
                 json=USER,
             )
             yield rsps
@@ -248,86 +248,86 @@ class TestPivotalTrackerIssue:
         story = service.get_issue_for_record(STORY, EXTRA)
 
         expected_output = {
-            'annotations': [
+            "annotations": [
                 {
-                    'complete': False,
-                    'created_at': '2019-05-14T12:00:00Z',
-                    'description': 'Port 0',
-                    'id': 5,
-                    'kind': 'task',
-                    'position': 1,
-                    'story_id': 561,
-                    'updated_at': '2019-05-14T12:00:00Z',
+                    "complete": False,
+                    "created_at": "2019-05-14T12:00:00Z",
+                    "description": "Port 0",
+                    "id": 5,
+                    "kind": "task",
+                    "position": 1,
+                    "story_id": 561,
+                    "updated_at": "2019-05-14T12:00:00Z",
                 },
                 {
-                    'complete': False,
-                    'created_at': '2019-05-14T12:00:00Z',
-                    'description': 'Port 90',
-                    'id': 6,
-                    'kind': 'task',
-                    'position': 2,
-                    'story_id': 561,
-                    'updated_at': '2019-05-14T12:00:00Z',
+                    "complete": False,
+                    "created_at": "2019-05-14T12:00:00Z",
+                    "description": "Port 90",
+                    "id": 6,
+                    "kind": "task",
+                    "position": 2,
+                    "story_id": 561,
+                    "updated_at": "2019-05-14T12:00:00Z",
                 },
             ],
-            'pivotalclosed': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
-            'pivotalcreated': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
-            'pivotalupdated': datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc),
-            'pivotalurl': 'http://localhost/story/show/561',
-            'pivotalblockers': [
+            "pivotalclosed": datetime(2019, 5, 14, 12, 0, tzinfo=UTC),
+            "pivotalcreated": datetime(2019, 5, 14, 12, 0, tzinfo=UTC),
+            "pivotalupdated": datetime(2019, 5, 14, 12, 0, tzinfo=UTC),
+            "pivotalurl": "http://localhost/story/show/561",
+            "pivotalblockers": [
                 {
-                    'created_at': '2019-05-14T12:00:00Z',
-                    'description': 'Set weapons to stun',
-                    'id': 1100,
-                    'kind': 'blocker',
-                    'person_id': 106,
-                    'resolved': False,
-                    'story_id': 561,
-                    'updated_at': '2019-05-14T12:00:00Z',
+                    "created_at": "2019-05-14T12:00:00Z",
+                    "description": "Set weapons to stun",
+                    "id": 1100,
+                    "kind": "blocker",
+                    "person_id": 106,
+                    "resolved": False,
+                    "story_id": 561,
+                    "updated_at": "2019-05-14T12:00:00Z",
                 }
             ],
-            'pivotaldescription': 'All your base are belong to us',
-            'pivotalestimate': 3,
-            'pivotalid': 561,
-            'pivotalowners': ['owned_user'],
-            'pivotalprojectid': 99,
-            'pivotalprojectname': 'Death Star',
-            'pivotalrequesters': ['request_user'],
-            'pivotalstorytype': 'story',
-            'priority': 'M',
-            'project': 'death_star',
-            'tags': ['look_sir_metal'],
+            "pivotaldescription": "All your base are belong to us",
+            "pivotalestimate": 3,
+            "pivotalid": 561,
+            "pivotalowners": ["owned_user"],
+            "pivotalprojectid": 99,
+            "pivotalprojectname": "Death Star",
+            "pivotalrequesters": ["request_user"],
+            "pivotalstorytype": "story",
+            "priority": "M",
+            "project": "death_star",
+            "tags": ["look_sir_metal"],
         }
         actual_output = story.to_taskwarrior()
         assert actual_output == expected_output
 
     def test_issues(self, service):
         story = next(service.issues())
-        story_date = datetime(2019, 5, 14, 12, 0, tzinfo=timezone.utc)
+        story_date = datetime(2019, 5, 14, 12, 0, tzinfo=UTC)
         expected = {
-            'annotations': [
-                '@task - status: False - Port 0',
-                '@task - status: False - Port 90',
+            "annotations": [
+                "@task - status: False - Port 0",
+                "@task - status: False - Port 90",
             ],
-            'description': (
-                '(bw)Story#561 - Tractor beam loses power intermitte .. '
-                'http://localhost/story/show/561'
+            "description": (
+                "(bw)Story#561 - Tractor beam loses power intermitte .. "
+                "http://localhost/story/show/561"
             ),
-            'pivotalclosed': story_date,
-            'pivotalcreated': story_date,
-            'pivotalupdated': story_date,
-            'pivotalurl': 'http://localhost/story/show/561',
-            'pivotalblockers': 'Description: Set weapons to stun State: False',
-            'pivotaldescription': 'All your base are belong to us',
-            'pivotalestimate': 3,
-            'pivotalid': 561,
-            'pivotalowners': 'starkiller',
-            'pivotalprojectid': 99,
-            'pivotalprojectname': 'Death Star',
-            'pivotalrequesters': 'starkiller',
-            'pivotalstorytype': 'story',
-            'priority': 'M',
-            'project': 'death_star',
-            'tags': ['look_sir_metal'],
+            "pivotalclosed": story_date,
+            "pivotalcreated": story_date,
+            "pivotalupdated": story_date,
+            "pivotalurl": "http://localhost/story/show/561",
+            "pivotalblockers": "Description: Set weapons to stun State: False",
+            "pivotaldescription": "All your base are belong to us",
+            "pivotalestimate": 3,
+            "pivotalid": 561,
+            "pivotalowners": "starkiller",
+            "pivotalprojectid": 99,
+            "pivotalprojectname": "Death Star",
+            "pivotalrequesters": "starkiller",
+            "pivotalstorytype": "story",
+            "priority": "M",
+            "project": "death_star",
+            "tags": ["look_sir_metal"],
         }
         assert TaskConstructor(story).get_taskwarrior_record() == expected

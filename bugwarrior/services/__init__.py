@@ -10,7 +10,7 @@ import logging
 import math
 import os
 import re
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, Self, TypeVar
 import zoneinfo
 
 from dateutil.parser import parse as parse_date
@@ -23,13 +23,13 @@ from bugwarrior.config import schema, secrets
 log = logging.getLogger(__name__)
 
 DOGPILE_CACHE_PATH = os.path.expanduser(
-    ''.join([os.getenv('XDG_CACHE_HOME', '~/.cache'), '/dagd-py3.dbm'])
+    "".join([os.getenv("XDG_CACHE_HOME", "~/.cache"), "/dagd-py3.dbm"])
 )
 
 if not os.path.isdir(os.path.dirname(DOGPILE_CACHE_PATH)):
     os.makedirs(os.path.dirname(DOGPILE_CACHE_PATH))
 CACHE_REGION = dogpile.cache.make_region().configure(
-    "dogpile.cache.dbm", arguments=dict(filename=DOGPILE_CACHE_PATH)
+    "dogpile.cache.dbm", arguments={"filename": DOGPILE_CACHE_PATH}
 )
 
 # MAJOR versions signal a breakage in backwards compatibility between services
@@ -43,7 +43,7 @@ LATEST_API_VERSION = 2.0
 class URLShortener:
     _instance = None
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> "URLShortener":
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         if not cls._instance:
             cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
@@ -51,9 +51,9 @@ class URLShortener:
     @CACHE_REGION.cache_on_arguments()
     def shorten(self, url: str) -> str:
         if not url:
-            return ''
-        base = 'https://da.gd/s'
-        return requests.get(base, params=dict(url=url)).text.strip()
+            return ""
+        base = "https://da.gd/s"
+        return requests.get(base, params={"url": url}).text.strip()
 
 
 def get_processed_url(main_config: schema.MainSectionConfig, url: str) -> str:
@@ -139,7 +139,7 @@ class Issue(abc.ABC):
 
         return [
             Template(self.config.label_template).render(
-                {**self.record, "label": re.sub(r'[^a-zA-Z0-9]', '_', label)}
+                {**self.record, "label": re.sub(r"[^a-zA-Z0-9]", "_", label)}
             )
             for label in labels
         ]
@@ -147,15 +147,15 @@ class Issue(abc.ABC):
     def get_tags_from_labels(
         self,
         labels: list[str],
-        toggle_option: str = 'import_labels_as_tags',
-        template_option: str = 'label_template',
-        template_variable: str = 'label',
+        toggle_option: str = "import_labels_as_tags",
+        template_option: str = "label_template",
+        template_variable: str = "label",
     ) -> list[str]:
         """Transform labels into suitable taskwarrior tags, respecting configuration options."""
         using_deprecated_parameters = (
-            toggle_option != 'import_labels_as_tags'
-            or template_option != 'label_template'
-            or template_variable != 'label'
+            toggle_option != "import_labels_as_tags"
+            or template_option != "label_template"
+            or template_variable != "label"
         )
         if using_deprecated_parameters:
             log.warning(
@@ -176,7 +176,7 @@ class Issue(abc.ABC):
         tags = []
 
         for label in labels:
-            normalized_label = re.sub(r'[^a-zA-Z0-9]', '_', label)
+            normalized_label = re.sub(r"[^a-zA-Z0-9]", "_", label)
             context.update({template_variable: normalized_label})
             tags.append(label_template.render(context))
 
@@ -185,11 +185,11 @@ class Issue(abc.ABC):
     def get_priority(self) -> schema.Priority:
         """Return the priority of this issue, falling back to ``default_priority`` configuration."""
         return self.PRIORITY_MAP.get(
-            self.record.get('priority'), self.config.default_priority
+            self.record.get("priority"), self.config.default_priority
         )
 
     def parse_date(
-        self, date: str | None, timezone: str = 'deprecated'
+        self, date: str | None, timezone: str = "deprecated"
     ) -> datetime.datetime | None:
         """Parse a date string into a datetime object.
 
@@ -197,7 +197,7 @@ class Issue(abc.ABC):
 
         :param `date`: A time string parseable by `dateutil.parser.parse`
         """
-        if timezone != 'deprecated':
+        if timezone != "deprecated":
             log.warning(
                 "Deprecation Warning: Issue.parse_date's timezone parameter is deprecated and will "
                 "be removed in a future API version."
@@ -209,15 +209,15 @@ class Issue(abc.ABC):
         _date = parse_date(date)
         if not _date.tzinfo:
             _date = _date.replace(
-                tzinfo=datetime.timezone.utc
-                if timezone == 'deprecated'
+                tzinfo=datetime.UTC
+                if timezone == "deprecated"
                 else zoneinfo.ZoneInfo(timezone)
             )
 
         return _date.replace(microsecond=0)
 
     def build_default_description(
-        self, title: str = '', url: str = '', number: str | int = '', cls: str = "issue"
+        self, title: str = "", url: str = "", number: str | int = "", cls: str = "issue"
     ) -> str:
         """Return a default description, respecting configuration options.
 
@@ -229,25 +229,25 @@ class Issue(abc.ABC):
             'subtask').
         """
         cls_markup = {
-            'issue': 'Is',
-            'pull_request': 'PR',
-            'merge_request': 'MR',
-            'todo': '',
-            'task': '',
-            'subtask': 'Subtask #',
+            "issue": "Is",
+            "pull_request": "PR",
+            "merge_request": "MR",
+            "todo": "",
+            "task": "",
+            "subtask": "Subtask #",
         }
-        url_separator = ' .. '
+        url_separator = " .. "
         url = (
             get_processed_url(self.main_config, url)
             if self.main_config.inline_links
-            else ''
+            else ""
         )
         desc_len = self.main_config.description_length
-        return "(bw)%s#%s - %s%s%s" % (
+        return "(bw){}#{} - {}{}{}".format(
             cls_markup.get(cls, cls.title()),
             number,
             title[:desc_len] if desc_len else title,
-            url_separator if url else '',
+            url_separator if url else "",
             url,
         )
 
@@ -289,7 +289,7 @@ class Service(abc.ABC, Generic[T_Issue]):
 
         log.info("Working on [%s]", self.config.target)
 
-    def get_secret(self, key: str, login: str = 'nousername') -> str:
+    def get_secret(self, key: str, login: str = "nousername") -> str:
         """Get a secret value, potentially from an :ref:`oracle <Secret Management>`.
 
         The secret key need not be a *password*, per se.
@@ -317,7 +317,7 @@ class Service(abc.ABC, Generic[T_Issue]):
         return self.ISSUE_CLASS(record, self.config, self.main_config, extra=extra)
 
     def build_annotations(
-        self, annotations: Iterable[tuple[str, str]], url: Optional[str] = None
+        self, annotations: Iterable[tuple[str, str]], url: str | None = None
     ) -> list[str]:
         """Format annotations, respecting configuration values.
 
@@ -334,15 +334,15 @@ class Service(abc.ABC, Generic[T_Issue]):
                     continue
 
                 if not self.main_config.annotation_newlines:
-                    message = message.replace('\n', '').replace('\r', '')
+                    message = message.replace("\n", "").replace("\r", "")
 
                 annotation_length = self.main_config.annotation_length
                 if annotation_length:
-                    message = '%s%s' % (
+                    message = "{}{}".format(
                         message[:annotation_length],
-                        '...' if len(message) > annotation_length else '',
+                        "..." if len(message) > annotation_length else "",
                     )
-                final.append('@%s - %s' % (author, message))
+                final.append(f"@{author} - {message}")
         return final
 
     @abc.abstractmethod
@@ -395,4 +395,4 @@ class Client:
 
 
 # NOTE: __all__ determines the stable, public API.
-__all__ = [Client.__name__, Issue.__name__, Service.__name__]
+__all__ = ["Client", "Issue", "Service"]

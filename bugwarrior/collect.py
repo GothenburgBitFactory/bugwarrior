@@ -49,21 +49,19 @@ def _aggregate_issues(service: "Service", queue: multiprocessing.Queue) -> None:
     start = time.time()
     target = service.config.target
     try:
-        issue_count = 0
         for issue in service.issues():
             queue.put(issue)
-            issue_count += 1
     except SystemExit as e:
         log.critical(f"Worker for [{target}] exited: {e}")
         queue.put((SERVICE_FINISHED_ERROR, target))
     except BaseException as e:
-        if (request := getattr(e, 'request', None)) is not None:
+        if (request := getattr(e, "request", None)) is not None:
             # Exceptions raised by requests library have the HTTP request
             # object stored as attribute. The request can have hooks attached
             # to it, and we need to remove them, as there can be unpickleable
             # methods. There is no one left to call these hooks anyway.
             request.hooks = {}
-        log.exception(f"Worker for [{target}] failed: {e}")
+        log.exception(f"Worker for [{target}] failed")
         queue.put((SERVICE_FINISHED_ERROR, target))
     else:
         log.debug(f"Worker for [{target}] finished ok.")
@@ -83,7 +81,7 @@ def aggregate_issues(
 
     services = get_service_instances(conf)
 
-    log.info("Spawning %i workers." % len(services))
+    log.info(f"Spawning {len(services)} workers.")
 
     if debug:
         for service in services:
@@ -112,7 +110,7 @@ def aggregate_issues(
                 completion_type, target = issue
                 if completion_type == SERVICE_FINISHED_ERROR:
                     log.error(f"Aborted [{target}] due to critical error.")
-                    yield CollectionErrorData('SERVICE FAILED', target)
+                    yield CollectionErrorData("SERVICE FAILED", target)
                 continue
             raise
 
@@ -147,34 +145,34 @@ class TaskConstructor:
         return added_tags
 
     def get_taskwarrior_record(self, refined: bool = True) -> dict[str, Any]:
-        if not getattr(self, '_taskwarrior_record', None):
+        if not getattr(self, "_taskwarrior_record", None):
             self._taskwarrior_record = self.issue.to_taskwarrior()
         record = copy.deepcopy(self._taskwarrior_record)
         if refined:
             record = self.refine_record(record)
-        if 'tags' not in record:
-            record['tags'] = []
+        if "tags" not in record:
+            record["tags"] = []
         if refined:
-            record['tags'].extend(self.get_added_tags())
+            record["tags"].extend(self.get_added_tags())
 
         # Blank priority should mean *no* priority
-        if record['priority'] == '':
-            record['priority'] = None
+        if record["priority"] == "":
+            record["priority"] = None
         return record
 
     def get_template_context(self) -> dict[str, Any]:
         context = self.get_taskwarrior_record(refined=False).copy()
         context.update(self.issue.extra)
-        context.update({'description': self.issue.get_default_description()})
+        context.update({"description": self.issue.get_default_description()})
         return context
 
     def refine_record(self, record: dict[str, Any]) -> dict[str, Any]:
-        for field in Task.FIELDS.keys():
+        for field in Task.FIELDS:
             if field in self.issue.config.templates:
                 template = Template(self.issue.config.templates[field])
                 record[field] = template.render(self.get_template_context())
-            elif field == 'description':
-                record['description'] = self.issue.get_default_description()
+            elif field == "description":
+                record["description"] = self.issue.get_default_description()
         return record
 
     def get_data_to_sync(self) -> CollectedIssue:

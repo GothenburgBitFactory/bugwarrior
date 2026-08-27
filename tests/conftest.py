@@ -25,16 +25,16 @@ def config_environment(tmp_path, monkeypatch):
     XDG_CONFIG_HOME at the temporary directory. Request this fixture by
     name to access the generated paths.
     """
-    lists_path = tmp_path / 'lists'
+    lists_path = tmp_path / "lists"
     lists_path.mkdir()
-    taskrc = tmp_path / '.taskrc'
-    taskrc.write_text(f'data.location={lists_path}\n')
+    taskrc = tmp_path / ".taskrc"
+    taskrc.write_text(f"data.location={lists_path}\n")
 
-    monkeypatch.setenv('HOME', str(tmp_path))
-    monkeypatch.setenv('XDG_CONFIG_HOME', str(tmp_path / '.config'))
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / ".config"))
     monkeypatch.delenv(config.BUGWARRIORRC, raising=False)
-    monkeypatch.delenv('TASKRC', raising=False)
-    monkeypatch.delenv('XDG_CONFIG_DIRS', raising=False)
+    monkeypatch.delenv("TASKRC", raising=False)
+    monkeypatch.delenv("XDG_CONFIG_DIRS", raising=False)
 
     return ConfigEnvironment(taskrc=taskrc, lists_path=lists_path)
 

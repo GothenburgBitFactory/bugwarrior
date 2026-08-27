@@ -15,7 +15,7 @@ from .services.base import get_mock_service
 LONG_MESSAGE = """\
 Some message that is over 100 characters. This message is so long it's
 going to fill up your floppy disk taskwarrior backup. Actually it's not
-that long.""".replace('\n', ' ')
+that long.""".replace("\n", " ")
 
 
 def check_architecture(klass: abc.ABCMeta):
@@ -33,7 +33,7 @@ def check_architecture(klass: abc.ABCMeta):
     base = Path(services.__file__).read_text()
 
     for method in klass.__abstractmethods__:
-        references = re.findall(rf'{method}\(', base)
+        references = re.findall(rf"{method}\(", base)
         assert len(references) == 1, references
 
 
@@ -45,45 +45,47 @@ class TestService:
         service = get_mock_service(DumbService)
 
         annotations = service.build_annotations(
-            (('some_author', LONG_MESSAGE),), 'example.com'
+            (("some_author", LONG_MESSAGE),), "example.com"
         )
         assert annotations == [
-            '@some_author - Some message that is over 100 characters. Thi...'
+            "@some_author - Some message that is over 100 characters. Thi..."
         ]
 
     def test_build_annotations_limited(self):
         service = get_mock_service(
-            DumbService, general_overrides={'annotation_length': '20'}
+            DumbService, general_overrides={"annotation_length": "20"}
         )
 
         annotations = service.build_annotations(
-            (('some_author', LONG_MESSAGE),), 'example.com'
+            (("some_author", LONG_MESSAGE),), "example.com"
         )
-        assert annotations == ['@some_author - Some message that is...']
+        assert annotations == ["@some_author - Some message that is..."]
 
     def test_build_annotations_limitless(self):
         service = get_mock_service(
-            DumbService, general_overrides={'annotation_length': None}
+            DumbService, general_overrides={"annotation_length": None}
         )
 
         annotations = service.build_annotations(
-            (('some_author', LONG_MESSAGE),), 'example.com'
+            (("some_author", LONG_MESSAGE),), "example.com"
         )
-        assert annotations == [f'@some_author - {LONG_MESSAGE}']
+        assert annotations == [f"@some_author - {LONG_MESSAGE}"]
 
     def test_api_incompatibility_error(self):
-        with unittest.mock.patch.object(
-            DumbService, 'API_VERSION', new=services.LATEST_API_VERSION + 1
+        with (
+            unittest.mock.patch.object(
+                DumbService, "API_VERSION", new=services.LATEST_API_VERSION + 1
+            ),
+            pytest.raises(ValueError, match="Incompatible Service"),
         ):
-            with pytest.raises(ValueError, match="Incompatible Service"):
-                get_mock_service(DumbService)
+            get_mock_service(DumbService)
 
     def test_api_latest_version(self):
         basedir = pathlib.Path(__file__).parent.parent
-        with open(basedir / 'bugwarrior/docs/other-services/api.rst', 'r') as f:
-            header = f.readline().strip('\n')
-            match = re.fullmatch(r'Python API v(?P<version>[0-9]+\.[0-9]+)', header)
-            latest_documented = float(match.groupdict()['version'])
+        with open(basedir / "bugwarrior/docs/other-services/api.rst", "r") as f:
+            header = f.readline().strip("\n")
+            match = re.fullmatch(r"Python API v(?P<version>[0-9]+\.[0-9]+)", header)
+            latest_documented = float(match.groupdict()["version"])
 
         assert latest_documented == services.LATEST_API_VERSION
 
@@ -93,13 +95,13 @@ class TestService:
 
             @staticmethod
             def get_keyring_service(config):
-                return f'legacy://{config.target}'
+                return f"legacy://{config.target}"
 
-        service_config = ServiceConfig(service='legacy', target='legacy-target')
+        service_config = ServiceConfig(service="legacy", target="legacy-target")
         with unittest.mock.patch(
-            'bugwarrior.config.schema.get_service', return_value=LegacyService
+            "bugwarrior.config.schema.get_service", return_value=LegacyService
         ):
-            assert service_config.keyring_service == 'legacy://legacy-target'
+            assert service_config.keyring_service == "legacy://legacy-target"
 
 
 class TestIssue:
@@ -110,21 +112,21 @@ class TestIssue:
         issue = make_issue()
 
         description = issue.build_default_description(LONG_MESSAGE)
-        assert description == '(bw)Is# - Some message that is over 100 chara'
+        assert description == "(bw)Is# - Some message that is over 100 chara"
 
     def test_build_default_description_limited(self):
-        issue = make_issue(general_overrides={'description_length': '20'})
+        issue = make_issue(general_overrides={"description_length": "20"})
 
         description = issue.build_default_description(LONG_MESSAGE)
-        assert description == '(bw)Is# - Some message that is'
+        assert description == "(bw)Is# - Some message that is"
 
     def test_build_default_description_limitless(self):
-        issue = make_issue(general_overrides={'description_length': None})
+        issue = make_issue(general_overrides={"description_length": None})
 
         description = issue.build_default_description(LONG_MESSAGE)
-        assert description == f'(bw)Is# - {LONG_MESSAGE}'
+        assert description == f"(bw)Is# - {LONG_MESSAGE}"
 
     def test_get_tags_from_labels_normalization(self):
-        issue = make_issue(config_overrides={'import_labels_as_tags': True})
+        issue = make_issue(config_overrides={"import_labels_as_tags": True})
 
-        assert issue.get_tags_from_labels(['needs work']) == ['needs_work']
+        assert issue.get_tags_from_labels(["needs work"]) == ["needs_work"]

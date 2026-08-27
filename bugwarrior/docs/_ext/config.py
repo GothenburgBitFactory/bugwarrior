@@ -17,7 +17,7 @@ def _translator() -> Translator:
 
 class Config(SphinxDirective):
     optional_arguments = 1
-    option_spec = {'fragment': str}  # section schema to stub
+    option_spec = {"fragment": str}  # section schema to stub
     has_content = True
 
     def _make_tab(self, lang: str):
@@ -32,32 +32,32 @@ class Config(SphinxDirective):
     def run(self):
         self.assert_has_content()
 
-        ini = self._make_tab('ini')
-        initext = '\n'.join(self.content)
+        ini = self._make_tab("ini")
+        initext = "\n".join(self.content)
 
-        if 'fragment' in self.options:  # add stub
+        if "fragment" in self.options:  # add stub
             stub_section = (
-                '[some_section]\nservice = ' + self.options['fragment'] + '\n'
+                "[some_section]\nservice = " + self.options["fragment"] + "\n"
             )
             initext = stub_section + initext
-        tomltext = _translator().translate(initext, 'bugwarriorrc')
-        if 'fragment' in self.options:  # remove stub
+        tomltext = _translator().translate(initext, "bugwarriorrc")
+        if "fragment" in self.options:  # remove stub
             stub_len = len(stub_section) + 2  # toml adds quotes to strings
             tomltext = tomltext[stub_len:]
 
-        tomllines = tomltext.split('\n')
-        for i in range(0, len(self.content)):  # mutate self.content
+        tomllines = tomltext.split("\n")
+        for i in range(len(self.content)):  # mutate self.content
             # ini2toml removes newlines within sections, so we leave them as is
-            if self.content[i] == '' and tomllines[0] != '':
+            if self.content[i] == "" and tomllines[0] != "":
                 continue
             self.content[i] = tomllines.pop(0)
         if any(tomllines):
-            raise ValueError(f'Unconsumed toml: {tomllines}')
+            raise ValueError(f"Unconsumed toml: {tomllines}")
 
-        toml = self._make_tab('toml')
+        toml = self._make_tab("toml")
 
         return [toml, ini]
 
 
 def setup(app):
-    app.add_directive('config', Config)
+    app.add_directive("config", Config)

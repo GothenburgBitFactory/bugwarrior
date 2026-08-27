@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest import mock
 
 import pytest
@@ -64,11 +64,11 @@ def record():
 
 
 SERVICE_CONFIG = {
-    'service': 'deck',
-    'base_uri': 'http://localhost:8080',
-    'username': 'testuser',
-    'password': 'testpassword',
-    'import_labels_as_tags': True,
+    "service": "deck",
+    "base_uri": "http://localhost:8080",
+    "username": "testuser",
+    "password": "testpassword",
+    "import_labels_as_tags": True,
 }
 
 
@@ -76,12 +76,12 @@ class TestDeckIssue:
     @pytest.fixture
     def config(self):
         return {
-            'general': {
-                'targets': ['myservice'],
+            "general": {
+                "targets": ["myservice"],
                 # would otherwise cut the title short
-                'description_length': '45',
+                "description_length": "45",
             },
-            'myservice': {**SERVICE_CONFIG},
+            "myservice": {**SERVICE_CONFIG},
         }
 
     @pytest.fixture
@@ -90,15 +90,15 @@ class TestDeckIssue:
             service = get_validated_service(config)
             service.client = mock.MagicMock(spec=NextcloudDeckClient)
             service.client.get_boards = mock.MagicMock(
-                return_value=[{'id': 5, 'title': 'testboard'}]
+                return_value=[{"id": 5, "title": "testboard"}]
             )
             service.client.get_stacks = mock.MagicMock(
-                return_value=[{'id': 13, 'title': 'teststack', 'cards': [record]}]
+                return_value=[{"id": 13, "title": "teststack", "cards": [record]}]
             )
             service.client.get_comments = mock.MagicMock(
                 return_value={
-                    'ocs': {
-                        'data': [{'actorDisplayName': 'Lena', 'message': 'testcomment'}]
+                    "ocs": {
+                        "data": [{"actorDisplayName": "Lena", "message": "testcomment"}]
                     }
                 }
             )
@@ -114,29 +114,29 @@ class TestDeckIssue:
         issue = service.get_issue_for_record(
             record,
             {
-                'board': {'title': 'testboard', 'id': 5},
-                'stack': {'title': 'teststack', 'id': 13},
-                'annotations': ['@Lena - testcomment'],
+                "board": {"title": "testboard", "id": 5},
+                "stack": {"title": "teststack", "id": 13},
+                "annotations": ["@Lena - testcomment"],
             },
         )
 
         expected = {
-            'annotations': ['@Lena - testcomment'],
-            'entry': datetime(2022, 8, 17, 20, 16, 22, tzinfo=timezone.utc),
-            'due': datetime(2022, 11, 20, 23, 0, tzinfo=timezone.utc),
-            'nextclouddeckassignee': 'rainbow',
-            'nextclouddeckauthor': 'unicorn',
-            'nextclouddeckboardid': 5,
-            'nextclouddeckboardtitle': 'testboard',
-            'nextclouddeckstackid': 13,
-            'nextclouddeckstacktitle': 'teststack',
-            'nextclouddeckcardid': 11,
-            'nextclouddeckcardtitle': 'check that nextcloud deck integration works',
-            'nextclouddeckdescription': 'some additional description',
-            'nextclouddeckorder': 10,
-            'priority': 'M',
-            'project': 'testboard',
-            'tags': ['Later'],
+            "annotations": ["@Lena - testcomment"],
+            "entry": datetime(2022, 8, 17, 20, 16, 22, tzinfo=UTC),
+            "due": datetime(2022, 11, 20, 23, 0, tzinfo=UTC),
+            "nextclouddeckassignee": "rainbow",
+            "nextclouddeckauthor": "unicorn",
+            "nextclouddeckboardid": 5,
+            "nextclouddeckboardtitle": "testboard",
+            "nextclouddeckstackid": 13,
+            "nextclouddeckstacktitle": "teststack",
+            "nextclouddeckcardid": 11,
+            "nextclouddeckcardtitle": "check that nextcloud deck integration works",
+            "nextclouddeckdescription": "some additional description",
+            "nextclouddeckorder": 10,
+            "priority": "M",
+            "project": "testboard",
+            "tags": ["Later"],
         }
         actual = issue.to_taskwarrior()
 
@@ -146,23 +146,23 @@ class TestDeckIssue:
         issue = next(service.issues())
 
         expected = {
-            'annotations': ['@Lena - testcomment'],
-            'entry': datetime(2022, 8, 17, 20, 16, 22, tzinfo=timezone.utc),
-            'due': datetime(2022, 11, 20, 23, 0, tzinfo=timezone.utc),
-            'description': '(bw)Is# - check that nextcloud deck integration works',
-            'nextclouddeckassignee': 'rainbow',
-            'nextclouddeckauthor': 'unicorn',
-            'nextclouddeckboardid': 5,
-            'nextclouddeckboardtitle': 'testboard',
-            'nextclouddeckstackid': 13,
-            'nextclouddeckstacktitle': 'teststack',
-            'nextclouddeckcardid': 11,
-            'nextclouddeckcardtitle': 'check that nextcloud deck integration works',
-            'nextclouddeckdescription': 'some additional description',
-            'nextclouddeckorder': 10,
-            'priority': 'M',
-            'project': 'testboard',
-            'tags': ['Later'],
+            "annotations": ["@Lena - testcomment"],
+            "entry": datetime(2022, 8, 17, 20, 16, 22, tzinfo=UTC),
+            "due": datetime(2022, 11, 20, 23, 0, tzinfo=UTC),
+            "description": "(bw)Is# - check that nextcloud deck integration works",
+            "nextclouddeckassignee": "rainbow",
+            "nextclouddeckauthor": "unicorn",
+            "nextclouddeckboardid": 5,
+            "nextclouddeckboardtitle": "testboard",
+            "nextclouddeckstackid": 13,
+            "nextclouddeckstacktitle": "teststack",
+            "nextclouddeckcardid": 11,
+            "nextclouddeckcardtitle": "check that nextcloud deck integration works",
+            "nextclouddeckdescription": "some additional description",
+            "nextclouddeckorder": 10,
+            "priority": "M",
+            "project": "testboard",
+            "tags": ["Later"],
         }
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
@@ -171,26 +171,26 @@ class TestDeckIssue:
         # Regression test: the old get_owner did `issue[issue.ASSIGNEE]`, treating
         # the NextcloudDeckIssue as a dict. Issue has no __getitem__, so this raised
         # TypeError whenever only_if_assigned was configured.
-        config['myservice']['only_if_assigned'] = 'rainbow'
+        config["myservice"]["only_if_assigned"] = "rainbow"
         service = make_service(config)
         issue = service.get_issue_for_record(
             record,
             {
-                'board': {'title': 'testboard', 'id': 5},
-                'stack': {'title': 'teststack', 'id': 13},
-                'annotations': [],
+                "board": {"title": "testboard", "id": 5},
+                "stack": {"title": "teststack", "id": 13},
+                "annotations": [],
             },
         )
-        assert service.get_owner(issue) == 'rainbow'
+        assert service.get_owner(issue) == "rainbow"
 
     def test_filter_boards_include(self, config, make_service):
-        config['myservice']['include_board_ids'] = '5'
+        config["myservice"]["include_board_ids"] = "5"
         service = make_service(config)
-        assert service.filter_boards({'title': 'testboard', 'id': 5})
-        assert not service.filter_boards({'title': 'testboard', 'id': 6})
+        assert service.filter_boards({"title": "testboard", "id": 5})
+        assert not service.filter_boards({"title": "testboard", "id": 6})
 
     def test_filter_boards_exclude(self, config, make_service):
-        config['myservice']['exclude_board_ids'] = '5'
+        config["myservice"]["exclude_board_ids"] = "5"
         service = make_service(config)
-        assert not service.filter_boards({'title': 'testboard', 'id': 5})
-        assert service.filter_boards({'title': 'testboard', 'id': 6})
+        assert not service.filter_boards({"title": "testboard", "id": 5})
+        assert service.filter_boards({"title": "testboard", "id": 6})

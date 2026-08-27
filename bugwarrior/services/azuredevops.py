@@ -1,8 +1,9 @@
 import base64
+from collections.abc import Iterator
 import logging
 import re
 import sys
-from typing import Annotated, Any, Iterator, Literal
+from typing import Annotated, Any, Literal
 from urllib.parse import quote
 
 from pydantic import BeforeValidator
@@ -17,14 +18,14 @@ EscapedStr = Annotated[str, BeforeValidator(quote)]
 
 
 class AzureDevopsConfig(config.ServiceConfig):
-    service: Literal['azuredevops']
+    service: Literal["azuredevops"]
     KEYRING_SERVICE = "azuredevops://{organization}@{host}"
     PAT: str
     project: EscapedStr
     organization: EscapedStr
 
-    host: config.NoSchemeUrl = 'dev.azure.com'
-    wiql_filter: str = ''
+    host: config.NoSchemeUrl = "dev.azure.com"
+    wiql_filter: str = ""
 
 
 def striphtml(data: str) -> str:
@@ -78,7 +79,7 @@ class AzureDevopsClient(Client):
             sys.exit(1)
         if (
             resp.status_code == 400
-            and resp.json()['typeKey']
+            and resp.json()["typeKey"]
             == "WorkItemTrackingQueryResultSizeLimitExceededException"
         ):
             log.critical(
@@ -86,7 +87,7 @@ class AzureDevopsClient(Client):
                 "narrow the search by updating the ado.wiql_filter"
             )
             sys.exit(1)
-        return [workitem['id'] for workitem in resp.json()["workItems"]]
+        return [workitem["id"] for workitem in resp.json()["workItems"]]
 
     def get_workitem_comments(
         self, workitem: dict[str, Any]
@@ -146,7 +147,7 @@ class AzureDevopsIssue(Issue):
 
     def to_taskwarrior(self) -> dict[str, Any]:
         return {
-            "project": self.extra['project'],
+            "project": self.extra["project"],
             "priority": self.get_priority(),
             "annotations": self.extra.get("annotations", []),
             "entry": self.parse_date(
@@ -193,7 +194,7 @@ class AzureDevopsService(Service[AzureDevopsIssue]):
     ) -> None:
         super().__init__(config, main_config)
         self.client = AzureDevopsClient(
-            pat=self.get_secret('PAT'),
+            pat=self.get_secret("PAT"),
             project=self.config.project,
             org=self.config.organization,
             host=self.config.host,

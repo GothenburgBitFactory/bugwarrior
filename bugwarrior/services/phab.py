@@ -13,14 +13,14 @@ log = logging.getLogger(__name__)
 
 
 class PhabricatorConfig(config.ServiceConfig):
-    service: typing.Literal['phabricator']
-    KEYRING_SERVICE = 'phabricator://{keyring_host}'
+    service: typing.Literal["phabricator"]
+    KEYRING_SERVICE = "phabricator://{keyring_host}"
 
     user_phids: config.ConfigList = []
     project_phids: config.ConfigList = []
-    host: typing.Optional[pydantic.AnyUrl] = None
-    ignore_cc: typing.Optional[bool] = None
-    ignore_author: typing.Optional[bool] = None
+    host: pydantic.AnyUrl | None = None
+    ignore_cc: bool | None = None
+    ignore_author: bool | None = None
     ignore_owner: bool = False
     ignore_reviewers: bool = False
 
@@ -32,55 +32,55 @@ class PhabricatorConfig(config.ServiceConfig):
     @pydantic.computed_field
     @property
     def keyring_host(self) -> str:
-        return str(self.host) if self.host else ''
+        return str(self.host) if self.host else ""
 
 
 class PhabricatorIssue(Issue):
-    TITLE = 'phabricatortitle'
-    URL = 'phabricatorurl'
-    TYPE = 'phabricatortype'
-    OBJECT_NAME = 'phabricatorid'
+    TITLE = "phabricatortitle"
+    URL = "phabricatorurl"
+    TYPE = "phabricatortype"
+    OBJECT_NAME = "phabricatorid"
 
     UDAS = {
-        TITLE: {'type': 'string', 'label': 'Phabricator Title'},
-        URL: {'type': 'string', 'label': 'Phabricator URL'},
-        TYPE: {'type': 'string', 'label': 'Phabricator Type'},
-        OBJECT_NAME: {'type': 'string', 'label': 'Phabricator Object'},
+        TITLE: {"type": "string", "label": "Phabricator Title"},
+        URL: {"type": "string", "label": "Phabricator URL"},
+        TYPE: {"type": "string", "label": "Phabricator Type"},
+        OBJECT_NAME: {"type": "string", "label": "Phabricator Object"},
     }
     UNIQUE_KEY = (URL,)
 
     PRIORITY_MAP: dict[str, config.Priority | None] = {
-        'Needs Triage': None,
-        'Unbreak Now!': 'H',
-        'High': 'H',
-        'Normal': 'M',
-        'Low': 'L',
-        'Wishlist': 'L',
+        "Needs Triage": None,
+        "Unbreak Now!": "H",
+        "High": "H",
+        "Normal": "M",
+        "Low": "L",
+        "Wishlist": "L",
     }
 
     def to_taskwarrior(self) -> dict[str, Any]:
         return {
-            'project': self.extra['project'],
-            'priority': self.priority,
-            'annotations': self.extra.get('annotations', []),
-            self.URL: self.record['uri'],
-            self.TYPE: self.extra['type'],
-            self.TITLE: self.record['title'],
-            self.OBJECT_NAME: self.record['uri'].split('/')[-1],
+            "project": self.extra["project"],
+            "priority": self.priority,
+            "annotations": self.extra.get("annotations", []),
+            self.URL: self.record["uri"],
+            self.TYPE: self.extra["type"],
+            self.TITLE: self.record["title"],
+            self.OBJECT_NAME: self.record["uri"].split("/")[-1],
         }
 
     def get_default_description(self) -> str:
         return self.build_default_description(
-            title=self.record['title'],
-            url=self.record['uri'],
-            number=self.record['uri'].split('/')[-1],
-            cls=self.extra['type'],
+            title=self.record["title"],
+            url=self.record["uri"],
+            number=self.record["uri"].split("/")[-1],
+            cls=self.extra["type"],
         )
 
     @property
     def priority(self) -> config.Priority:
         return (
-            self.PRIORITY_MAP.get(self.record.get('priority', ''))
+            self.PRIORITY_MAP.get(self.record.get("priority", ""))
             or self.config.default_priority
         )
 
@@ -120,13 +120,13 @@ class PhabricatorService(Service[PhabricatorIssue]):
             if self.config.user_phids or self.config.project_phids:
                 if self.config.user_phids:
                     tasks_owner = self.api.maniphest.query(
-                        status='status-open', ownerPHIDs=self.config.user_phids
+                        status="status-open", ownerPHIDs=self.config.user_phids
                     )
                     tasks_cc = self.api.maniphest.query(
-                        status='status-open', ccPHIDs=self.config.user_phids
+                        status="status-open", ccPHIDs=self.config.user_phids
                     )
                     tasks_author = self.api.maniphest.query(
-                        status='status-open', authorPHIDs=self.config.user_phids
+                        status="status-open", authorPHIDs=self.config.user_phids
                     )
                     tasks = (
                         list(tasks_owner.items())
@@ -142,17 +142,17 @@ class PhabricatorService(Service[PhabricatorIssue]):
                     ]
                 if self.config.project_phids:
                     tasks = self.api.maniphest.query(
-                        status='status-open', projectPHIDs=self.config.project_phids
+                        status="status-open", projectPHIDs=self.config.project_phids
                     )
                     tasks = tasks.items()
             else:
-                tasks = self.api.maniphest.query(status='status-open')
+                tasks = self.api.maniphest.query(status="status-open")
                 tasks = tasks.items()
         except phabricator.APIError as err:
-            log.warning("Could not read tasks from Maniphest: %s" % err)
+            log.warning(f"Could not read tasks from Maniphest: {err}")
             return
 
-        log.info("Found %i tasks" % len(tasks))
+        log.info(f"Found {len(tasks)} tasks")
 
         for phid, task in tasks:
             project = self.config.target  # a sensible default
@@ -167,18 +167,18 @@ class PhabricatorService(Service[PhabricatorIssue]):
                 # are intersecting with self.config.user_phids
                 task_relevant_to = set()
                 if not self.ignore_cc:
-                    task_relevant_to.update(task['ccPHIDs'])
+                    task_relevant_to.update(task["ccPHIDs"])
                 if not self.config.ignore_owner:
-                    task_relevant_to.add(task['ownerPHID'])
+                    task_relevant_to.add(task["ownerPHID"])
                 if not self.ignore_author:
-                    task_relevant_to.add(task['authorPHID'])
+                    task_relevant_to.add(task["authorPHID"])
                 if len(task_relevant_to.intersection(self.config.user_phids)) > 0:
                     this_task_matches = True
 
             if self.config.project_phids:
                 # Checking whether projectPHIDs
                 # is intersecting with self.config.project_phids
-                task_relevant_to = set(task['projectPHIDs'])
+                task_relevant_to = set(task["projectPHIDs"])
                 if len(task_relevant_to.intersection(self.config.project_phids)) > 0:
                     this_task_matches = True
 
@@ -186,8 +186,8 @@ class PhabricatorService(Service[PhabricatorIssue]):
                 continue
 
             extra = {
-                'project': project,
-                'type': 'issue',
+                "project": project,
+                "type": "issue",
                 # 'annotations': self.annotations(phid, issue)
             }
 
@@ -195,14 +195,14 @@ class PhabricatorService(Service[PhabricatorIssue]):
 
     def revisions(self) -> Iterator[PhabricatorIssue]:
         try:
-            diffs = self.api.differential.query(status='status-open')
+            diffs = self.api.differential.query(status="status-open")
         except phabricator.APIError as err:
-            log.warning("Could not read revisions from Differential: %s" % err)
+            log.warning(f"Could not read revisions from Differential: {err}")
             return
 
         diffs = list(diffs)
 
-        log.info("Found %i differentials" % len(diffs))
+        log.info(f"Found {len(diffs)} differentials")
 
         for diff in diffs:
             project = self.config.target  # a sensible default
@@ -217,11 +217,11 @@ class PhabricatorService(Service[PhabricatorIssue]):
                 # are intersecting with self.config.user_phids
                 diff_relevant_to = set()
                 if not self.config.ignore_reviewers:
-                    diff_relevant_to.update(list(diff['reviewers']))
+                    diff_relevant_to.update(list(diff["reviewers"]))
                 if not self.ignore_cc:
-                    diff_relevant_to.update(diff['ccs'])
+                    diff_relevant_to.update(diff["ccs"])
                 if not self.ignore_author:
-                    diff_relevant_to.add(diff['authorPHID'])
+                    diff_relevant_to.add(diff["authorPHID"])
                 if len(diff_relevant_to.intersection(self.config.user_phids)) > 0:
                     this_diff_matches = True
 
@@ -230,11 +230,11 @@ class PhabricatorService(Service[PhabricatorIssue]):
                 # is intersecting with self.config.project_phids
                 phabricator_projects = []
                 try:
-                    phabricator_projects = diff['phabricator:projects']
+                    phabricator_projects = diff["phabricator:projects"]
                 except KeyError:
                     pass
 
-                diff_relevant_to = set(phabricator_projects + [diff['repositoryPHID']])
+                diff_relevant_to = set(phabricator_projects + [diff["repositoryPHID"]])
                 if len(diff_relevant_to.intersection(self.config.project_phids)) > 0:
                     this_diff_matches = True
 
@@ -242,8 +242,8 @@ class PhabricatorService(Service[PhabricatorIssue]):
                 continue
 
             extra = {
-                'project': project,
-                'type': 'pull_request',
+                "project": project,
+                "type": "pull_request",
                 # 'annotations': self.annotations(phid, issue)
             }
             yield self.get_issue_for_record(diff, extra)

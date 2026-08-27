@@ -17,7 +17,7 @@ from bugwarrior.services import Client, Issue, Service
 
 
 class TrelloConfig(config.ServiceConfig):
-    service: typing.Literal['trello']
+    service: typing.Literal["trello"]
     KEYRING_SERVICE = "trello://{api_key}@trello.com"
     api_key: str
     token: str
@@ -30,59 +30,59 @@ class TrelloConfig(config.ServiceConfig):
 
 
 class TrelloIssue(Issue):
-    NAME = 'trellocard'
-    CARDID = 'trellocardid'
-    SHORTCARDID = 'trellocardidshort'
-    DESCRIPTION = 'trellodescription'
-    BOARD = 'trelloboard'
-    LIST = 'trellolist'
-    SHORTLINK = 'trelloshortlink'
-    SHORTURL = 'trelloshorturl'
-    URL = 'trellourl'
+    NAME = "trellocard"
+    CARDID = "trellocardid"
+    SHORTCARDID = "trellocardidshort"
+    DESCRIPTION = "trellodescription"
+    BOARD = "trelloboard"
+    LIST = "trellolist"
+    SHORTLINK = "trelloshortlink"
+    SHORTURL = "trelloshorturl"
+    URL = "trellourl"
 
     UDAS = {
-        NAME: {'type': 'string', 'label': 'Trello card name'},
-        CARDID: {'type': 'string', 'label': 'Trello card ID'},
-        SHORTCARDID: {'type': 'numeric', 'label': 'Trello short card ID'},
-        DESCRIPTION: {'type': 'string', 'label': 'Trello description'},
-        BOARD: {'type': 'string', 'label': 'Trello board name'},
-        LIST: {'type': 'string', 'label': 'Trello list name'},
-        SHORTLINK: {'type': 'string', 'label': 'Trello shortlink'},
-        SHORTURL: {'type': 'string', 'label': 'Trello short URL'},
-        URL: {'type': 'string', 'label': 'Trello URL'},
+        NAME: {"type": "string", "label": "Trello card name"},
+        CARDID: {"type": "string", "label": "Trello card ID"},
+        SHORTCARDID: {"type": "numeric", "label": "Trello short card ID"},
+        DESCRIPTION: {"type": "string", "label": "Trello description"},
+        BOARD: {"type": "string", "label": "Trello board name"},
+        LIST: {"type": "string", "label": "Trello list name"},
+        SHORTLINK: {"type": "string", "label": "Trello shortlink"},
+        SHORTURL: {"type": "string", "label": "Trello short URL"},
+        URL: {"type": "string", "label": "Trello URL"},
     }
     UNIQUE_KEY = (CARDID,)
 
     def get_default_description(self) -> str:
         """Return the old-style verbose description from bugwarrior."""
         return self.build_default_description(
-            title=self.record['name'],
-            url=self.record['shortUrl'],
-            number=self.record['idShort'],
-            cls='task',
+            title=self.record["name"],
+            url=self.record["shortUrl"],
+            number=self.record["idShort"],
+            cls="task",
         )
 
     def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(
-            [label['name'] for label in self.record['labels']]
+            [label["name"] for label in self.record["labels"]]
         )
 
     def to_taskwarrior(self) -> dict[str, Any]:
         return {
-            'project': self.extra['boardname'],
-            'due': self.parse_date(self.record['due']),
-            'priority': self.config.default_priority,
-            'tags': self.get_tags(),
-            self.NAME: self.record['name'],
-            self.CARDID: self.record['id'],
-            self.SHORTCARDID: self.record['idShort'],
-            self.DESCRIPTION: self.record['desc'],
-            self.BOARD: self.extra['boardname'],
-            self.LIST: self.extra['listname'],
-            self.SHORTLINK: self.record['shortLink'],
-            self.SHORTURL: self.record['shortUrl'],
-            self.URL: self.record['url'],
-            'annotations': self.extra.get('annotations', []),
+            "project": self.extra["boardname"],
+            "due": self.parse_date(self.record["due"]),
+            "priority": self.config.default_priority,
+            "tags": self.get_tags(),
+            self.NAME: self.record["name"],
+            self.CARDID: self.record["id"],
+            self.SHORTCARDID: self.record["idShort"],
+            self.DESCRIPTION: self.record["desc"],
+            self.BOARD: self.extra["boardname"],
+            self.LIST: self.extra["listname"],
+            self.SHORTLINK: self.record["shortLink"],
+            self.SHORTURL: self.record["shortUrl"],
+            self.URL: self.record["url"],
+            "annotations": self.extra.get("annotations", []),
         }
 
 
@@ -96,9 +96,9 @@ class TrelloService(Service[TrelloIssue]):
         Returns a list of dicts representing issues from a remote service.
         """
         for board in self.get_boards():
-            for lst in self.get_lists(board['id']):
-                listextra = dict(boardname=board['name'], listname=lst['name'])
-                for card in self.get_cards(lst['id']):
+            for lst in self.get_lists(board["id"]):
+                listextra = {"boardname": board["name"], "listname": lst["name"]}
+                for card in self.get_cards(lst["id"]):
                     issue = self.get_issue_for_record(card, extra=listextra)
                     issue.extra.update({"annotations": self.annotations(card)})
                     yield issue
@@ -106,9 +106,9 @@ class TrelloService(Service[TrelloIssue]):
     def annotations(self, card_json: dict[str, Any]) -> list[str]:
         """A wrapper around get_comments that build the taskwarrior
         annotations."""
-        comments = self.get_comments(card_json['id'])
+        comments = self.get_comments(card_json["id"])
         annotations = self.build_annotations(
-            ((c['memberCreator']['username'], c['data']['text']) for c in comments),
+            ((c["memberCreator"]["username"], c["data"]["text"]) for c in comments),
             card_json["shortUrl"],
         )
         return annotations
@@ -122,10 +122,10 @@ class TrelloService(Service[TrelloIssue]):
         if self.config.include_boards:
             for boardid in self.config.include_boards:
                 # Get the board name
-                yield self.api_request(f"/1/boards/{boardid}", fields='name')
+                yield self.api_request(f"/1/boards/{boardid}", fields="name")
 
         else:
-            boards = self.api_request("/1/members/me/boards", fields='name')
+            boards = self.api_request("/1/members/me/boards", fields="name")
             yield from boards
 
     def get_lists(self, board: str) -> list[dict[str, Any]]:
@@ -134,14 +134,14 @@ class TrelloService(Service[TrelloIssue]):
         This filters the trello lists according to the configuration values of
         trello.include_lists and trello.exclude_lists.
         """
-        lists = self.api_request(f"/1/boards/{board}/lists/open", fields='name')
+        lists = self.api_request(f"/1/boards/{board}/lists/open", fields="name")
 
         if self.config.include_lists:
-            lists = [lst for lst in lists if lst['name'] in self.config.include_lists]
+            lists = [lst for lst in lists if lst["name"] in self.config.include_lists]
 
         if self.config.exclude_lists:
             lists = [
-                lst for lst in lists if lst['name'] not in self.config.exclude_lists
+                lst for lst in lists if lst["name"] not in self.config.exclude_lists
             ]
 
         return lists
@@ -150,13 +150,13 @@ class TrelloService(Service[TrelloIssue]):
         """Returns an iterator for the cards in a given list, filtered
         according to configuration values of trello.only_if_assigned and
         trello.also_unassigned"""
-        params = {'fields': 'name,idShort,shortLink,shortUrl,url,labels,due,desc'}
+        params = {"fields": "name,idShort,shortLink,shortUrl,url,labels,due,desc"}
         if self.config.only_if_assigned:
-            params['members'] = 'true'
-            params['member_fields'] = 'username'
+            params["members"] = "true"
+            params["member_fields"] = "username"
         cards = self.api_request(f"/1/lists/{list_id}/cards/open", **params)
         for card in cards:
-            cardmembers = [m['username'] for m in card.get('members', [])]
+            cardmembers = [m["username"] for m in card.get("members", [])]
             if (
                 not self.config.only_if_assigned
                 or self.config.only_if_assigned in cardmembers
@@ -166,10 +166,10 @@ class TrelloService(Service[TrelloIssue]):
 
     def get_comments(self, card_id: str) -> Iterator[dict[str, Any]]:
         """Returns an iterator for the comments on a certain card."""
-        params = {'filter': 'commentCard', 'memberCreator_fields': 'username'}
+        params = {"filter": "commentCard", "memberCreator_fields": "username"}
         comments = self.api_request(f"/1/cards/{card_id}/actions", **params)
         for comment in comments:
-            assert comment['type'] == 'commentCard'
+            assert comment["type"] == "commentCard"
             yield comment
 
     def api_request(self, url: str, **params: Any) -> Any:
@@ -178,7 +178,7 @@ class TrelloService(Service[TrelloIssue]):
         and host) and a list of argumnets and return a GET request with the
         key and token from the configuration
         """
-        params['key'] = self.config.api_key
-        params['token'] = self.get_secret('token')
+        params["key"] = self.config.api_key
+        params["token"] = self.get_secret("token")
         url = "https://api.trello.com" + url
         return Client.json_response(requests.get(url, params=params))
