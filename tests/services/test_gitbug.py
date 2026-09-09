@@ -80,6 +80,40 @@ class TestGitBugIssue:
 
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
+    def test_issues_skips_closed(self, service, record):
+        closed_record = {**record, "status": "CLOSED"}
+        service.client.get_issues = mock.MagicMock(return_value=[closed_record])
+        issues = list(service.issues())
+
+        assert issues == []
+
+    def test_issues_mixed_open_closed(self, service, record):
+        closed_record = {**record, "status": "CLOSED"}
+        service.client.get_issues = mock.MagicMock(return_value=[closed_record, record])
+        issues = list(service.issues())
+
+        assert len(issues) == 1
+        assert (
+            TaskConstructor(issues[0]).get_taskwarrior_record()["gitbugid"]
+            == record["id"]
+        )
+
+
+class TestGitBugClient:
+    def test_get_issues_queries_open_bugs_only(self):
+        client = GitBugClient(
+            path=SERVICE_CONFIG["path"], port=43915, annotation_comments=False
+        )
+        with mock.patch.object(
+            GitBugClient,
+            "_query_graphql",
+            return_value={"repository": {"allBugs": {"nodes": []}}},
+        ) as query_graphql:
+            assert client.get_issues() == []
+
+        (query,), _ = query_graphql.call_args
+        assert 'allBugs(query: "status:open")' in query
+
 
 def test_home_path_expansion(tmp_path):
     # The path field is an ExpandedPath, so a configured tilde expands to the

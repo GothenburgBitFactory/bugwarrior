@@ -83,7 +83,7 @@ class GitBugClient(Client):
 
     def get_issues(self) -> list[dict[str, Any]]:
         return self._query_graphql(
-            "{{ repository {{ allBugs {{ nodes {{ {} }} }} }} }}".format(
+            '{{ repository {{ allBugs(query: "status:open") {{ nodes {{ {} }} }} }} }}'.format(
                 " ".join(
                     [
                         "author { name }",
@@ -157,6 +157,9 @@ class GitBugService(Service[GitBugIssue]):
 
     def issues(self) -> Iterator[GitBugIssue]:
         for issue in self.client.get_issues():
+            # Guard against closed issues leaking through GraphQL query.
+            if issue.get("status") != "OPEN":
+                continue
             comments = issue.pop("comments")
             issue["description"] = comments["nodes"].pop(0)["message"]
 
