@@ -159,9 +159,9 @@ class Udas(BaseModel):
 class Task(BaseModel):
     """A typed Taskwarrior record.
 
-    The standard Taskwarrior fields are declared here. A service adds its own
-    UDAs by subclassing Task and replacing the "udas" field with its own Udas
-    model.
+    The Taskwarrior fields that services currently set are declared here. A
+    service adds its own UDAs by subclassing Task and replacing the "udas" field
+    with its own Udas model.
     """
 
     model_config = ConfigDict(extra="forbid", validate_assignment=True)
@@ -196,26 +196,16 @@ class Task(BaseModel):
         )
 
     annotations: list[str] = Field(default_factory=list)
-    depends: Depends = None
     description: str | None = None
     due: IssueDatetime = None
     end: IssueDatetime = None
     entry: IssueDatetime = None
-    id: int | float | None = None
-    imask: int | float | None = None
-    mask: str | None = None
     modified: IssueDatetime = None
-    parent: str | None = None
     priority: Priority = None
     project: str | None = None
-    recur: str | datetime.timedelta | None = None
     scheduled: IssueDatetime = None
-    start: IssueDatetime = None
     status: Status = None
     tags: list[str] = Field(default_factory=list)
-    until: IssueDatetime = None
-    urgency: int | float | None = None
-    uuid: str | None = None
     wait: IssueDatetime = None
 
     #: The service's :class:`Udas` subclass.
