@@ -3,6 +3,7 @@ Task API
 --------
 """
 
+import builtins
 import datetime
 import json
 from types import UnionType
@@ -88,13 +89,15 @@ def _uda_type(annotation: Any) -> str:
         non_none = [arg for arg in get_args(annotation) if arg is not type(None)]
         if len(non_none) == 1:
             annotation = non_none[0]
-    if annotation in (datetime.datetime, datetime.date):
-        return "date"
-    if annotation is datetime.timedelta:
-        return "duration"
-    if annotation in (int, float, bool):
-        return "numeric"
-    return "string"
+    match annotation:
+        case datetime.datetime | datetime.date:
+            return "date"
+        case datetime.timedelta:
+            return "duration"
+        case builtins.int | builtins.float | builtins.bool:
+            return "numeric"
+        case _:
+            return "string"
 
 
 class Udas(BaseModel):
