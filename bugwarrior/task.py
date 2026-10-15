@@ -12,11 +12,11 @@ from typing import Annotated, Any, ClassVar, Literal, Union, get_args, get_origi
 from dateutil.parser import parse as parse_date
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, PlainSerializer
 
-from bugwarrior.config.schema import Priority as ConfigPriority, parse_config_list
+from bugwarrior.config.schema import Priority as ConfigPriority
 
 
-def coerce_datetime(value: Any) -> datetime.datetime | None:
-    if not value:
+def coerce_datetime(value: str | datetime.datetime | None) -> datetime.datetime | None:
+    if value is None or value == "":
         return None
     if isinstance(value, datetime.datetime):
         return value.replace(microsecond=0)
@@ -26,24 +26,8 @@ def coerce_datetime(value: Any) -> datetime.datetime | None:
     return parsed.replace(microsecond=0)
 
 
-def _coerce_priority(value: Any) -> Any:
-    if value == "":
-        return None
-    if isinstance(value, str):
-        return value.upper()
-    return value
-
-
-def _coerce_status(value: Any) -> Any:
-    if isinstance(value, str):
-        return value.lower()
-    return value
-
-
-def _coerce_optional_config_list(value: Any) -> Any:
-    if value is None:
-        return None
-    return parse_config_list(value)
+def _coerce_empty_priority(value: object) -> object:
+    return None if value == "" else value
 
 
 def _format_duration(value: datetime.timedelta | None) -> str | None:
@@ -70,12 +54,8 @@ def _format_duration(value: datetime.timedelta | None) -> str | None:
 
 
 IssueDatetime = Annotated[datetime.datetime | None, BeforeValidator(coerce_datetime)]
-Priority = Annotated[ConfigPriority | None, BeforeValidator(_coerce_priority)]
-Status = Annotated[
-    Literal["pending", "completed", "deleted", "waiting", "recurring"] | None,
-    BeforeValidator(_coerce_status),
-]
-Depends = Annotated[list[str] | None, BeforeValidator(_coerce_optional_config_list)]
+Priority = Annotated[ConfigPriority | None, BeforeValidator(_coerce_empty_priority)]
+Status = Literal["pending", "completed", "deleted", "waiting", "recurring"] | None
 Duration = Annotated[datetime.timedelta | None, PlainSerializer(_format_duration)]
 
 

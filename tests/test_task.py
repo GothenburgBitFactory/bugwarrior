@@ -21,13 +21,19 @@ class SampleTask(Task):
 
 
 def test_generic_fields_are_coerced():
-    task = Task(priority="", status="PENDING", due="2026-05-20")
+    task = Task(priority="", status="pending", due="2026-05-20")
 
     data = task.to_task_data()
     assert data["priority"] is None  # blank priority means no priority
     assert data["status"] == "pending"
     assert data["due"].tzinfo is not None  # naive input gets UTC
     assert data["due"].microsecond == 0  # sub-second precision dropped
+
+
+@pytest.mark.parametrize(("field", "value"), [("priority", "m"), ("status", "PENDING")])
+def test_generic_fields_reject_noncanonical_values(field, value):
+    with pytest.raises(ValidationError):
+        Task(**{field: value})
 
 
 def test_unset_generic_fields_are_omitted():
