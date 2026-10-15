@@ -2,6 +2,7 @@
 
 import importlib
 from importlib.metadata import entry_points
+import json
 import pathlib
 import typing
 
@@ -94,3 +95,19 @@ def test_task_schema_matches_the_issue_class(service_name):
         f"{service.__name__}.TASK_SCHEMA is {service.TASK_SCHEMA.__name__}, but "
         f"{service.ISSUE_CLASS.__name__}.to_taskwarrior returns {mapped.__name__}"
     )
+
+
+@pytest.mark.parametrize("service_name", SERVICES)
+def test_task_schema_unique_identifier(service_name):
+    """Ensure every service's unique key can identify a task."""
+    service = get_service(service_name)
+    task_schema = service.TASK_SCHEMA
+    udas_model = task_schema.get_udas_model()
+    unique_key = task_schema.get_unique_key()
+    values = {
+        name: 1 if udas_model.model_fields[name].annotation is int else "value"
+        for name in unique_key
+    }
+    task = task_schema.model_construct(udas=udas_model.model_construct(**values))
+
+    assert task.unique_identifier() == json.dumps(values, sort_keys=True)

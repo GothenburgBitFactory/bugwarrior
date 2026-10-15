@@ -110,12 +110,7 @@ class Udas(BaseModel):
 
     @classmethod
     def __pydantic_init_subclass__(cls, **kwargs: Any) -> None:
-        """Reject a unique key which names something other than a declared UDA.
-
-        Task.unique_identifier is only called during synchronization, so an
-        unchecked unique key raises a KeyError on the user's machine rather
-        than in the service's tests.
-        """
+        """Reject a unique key which names something other than a declared UDA."""
         unique_key = getattr(cls, "UNIQUE_KEY", None)
         if unique_key is None:
             return
