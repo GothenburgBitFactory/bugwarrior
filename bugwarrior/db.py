@@ -407,7 +407,7 @@ def build_uda_config_overrides(services: Iterable[str]) -> dict[str, Any]:
     """
     targets_udas = {}
     for service in services:
-        targets_udas.update(get_service(service).TASK_SCHEMA.get_udas())
+        targets_udas.update(get_service(service).TASK_SCHEMA.serialize())
     return {"uda": targets_udas}
 
 

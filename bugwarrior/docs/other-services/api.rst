@@ -12,7 +12,7 @@ warning, release notes, or semantic version bumping.
 
 .. automodule:: bugwarrior.task
    :members:
-   :exclude-members: __init__,model_config,to_task_data,get_udas,
+   :exclude-members: __init__,model_config,to_task_data,serialize,
                      get_udas_model,get_unique_key,unique_identifier
    :member-order: bysource
 

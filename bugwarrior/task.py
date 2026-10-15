@@ -122,7 +122,7 @@ class Udas(BaseModel):
             )
 
     @classmethod
-    def get_udas(cls) -> dict[str, dict[str, str]]:
+    def serialize(cls) -> dict[str, dict[str, str]]:
         """Return this service's UDA definitions, one per declared field.
 
         The type comes from the field annotation; the label from the field's
@@ -149,8 +149,8 @@ class Task(BaseModel):
         return cls.model_fields["udas"].annotation
 
     @classmethod
-    def get_udas(cls) -> dict[str, dict[str, str]]:
-        return cls.get_udas_model().get_udas()
+    def serialize(cls) -> dict[str, dict[str, str]]:
+        return cls.get_udas_model().serialize()
 
     @classmethod
     def get_unique_key(cls) -> tuple[str, ...]:

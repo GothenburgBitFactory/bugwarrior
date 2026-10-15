@@ -58,8 +58,8 @@ def test_udas_are_flattened_and_always_emitted():
     }
 
 
-def test_get_udas_is_derived_from_the_udas_model():
-    assert SampleUdas.get_udas() == {
+def test_serialize_is_derived_from_the_udas_model():
+    assert SampleUdas.serialize() == {
         "samplenumber": {"type": "numeric", "label": "Sample Number"},
         "sampleurl": {"type": "string", "label": "Sample URL"},
         "samplecreated": {"type": "date", "label": "Sample Created"},
@@ -115,13 +115,13 @@ def test_duration_round_trips_through_taskwarrior(config_environment, spent, exp
 
 
 def test_base_udas_has_no_udas():
-    assert Udas.get_udas() == {}
+    assert Udas.serialize() == {}
 
 
 def test_task_exposes_the_udas_of_its_udas_model():
     assert SampleTask.get_udas_model() is SampleUdas
-    assert SampleTask.get_udas() == SampleUdas.get_udas()
-    assert Task.get_udas() == {}
+    assert SampleTask.serialize() == SampleUdas.serialize()
+    assert Task.serialize() == {}
 
 
 def test_get_unique_key():

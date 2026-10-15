@@ -74,7 +74,7 @@ if __name__ == "__main__":
     rows = []
     for name, obj in inspect.getmembers(module):
         if inspect.isclass(obj) and issubclass(obj, Udas):
-            for field_name, details in obj.get_udas().items():
+            for field_name, details in obj.serialize().items():
                 rows.append(
                     [
                         f"``{field_name}``",

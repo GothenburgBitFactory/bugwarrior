@@ -31,7 +31,7 @@ class UDAs(Directive):
         thead += mkrow("Field Name", "Description", "Type")
         tbody = nodes.tbody()
         tgroup += tbody
-        for uda, uda_attrs in sorted(klass.get_udas().items()):
+        for uda, uda_attrs in sorted(klass.serialize().items()):
             label = uda_attrs["label"]
             type = uda_attrs["type"]
             if type in TYPES:
