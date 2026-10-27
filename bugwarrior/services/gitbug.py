@@ -83,7 +83,7 @@ class GitBugClient(Client):
 
     def get_issues(self) -> list[dict[str, Any]]:
         return self._query_graphql(
-            "{{ repository {{ allBugs {{ nodes {{ {} }} }} }} }}".format(
+            '{{ repository {{ allBugs(query: "status:open") {{ nodes {{ {} }} }} }} }}'.format(
                 " ".join(
                     [
                         "author { name }",
