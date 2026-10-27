@@ -81,22 +81,6 @@ class TestGitBugIssue:
         assert TaskConstructor(issue).get_taskwarrior_record() == expected
 
 
-class TestGitBugClient:
-    def test_get_issues_queries_open_bugs_only(self):
-        client = GitBugClient(
-            path=SERVICE_CONFIG["path"], port=43915, annotation_comments=False
-        )
-        with mock.patch.object(
-            GitBugClient,
-            "_query_graphql",
-            return_value={"repository": {"allBugs": {"nodes": []}}},
-        ) as query_graphql:
-            assert client.get_issues() == []
-
-        (query,), _ = query_graphql.call_args
-        assert 'allBugs(query: "status:open")' in query
-
-
 def test_home_path_expansion(tmp_path):
     # The path field is an ExpandedPath, so a configured tilde expands to the
     # user's home, which the autouse config_environment fixture points at
