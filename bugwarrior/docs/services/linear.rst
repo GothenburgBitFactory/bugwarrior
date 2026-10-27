@@ -71,5 +71,5 @@ Options
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.linear.LinearIssue
+.. udas:: bugwarrior.services.linear.LinearUdas
 

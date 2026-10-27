@@ -68,4 +68,4 @@ By default, this service will spin up a git-bug instance served on port 43915. T
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.gitbug.GitBugIssue
+.. udas:: bugwarrior.services.gitbug.GitBugUdas

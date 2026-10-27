@@ -4,11 +4,12 @@ import logging
 import operator
 from typing import Any, Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -44,18 +45,21 @@ class BitbucketConfig(config.ServiceConfig):
         return self
 
 
+class BitbucketUdas(Udas):
+    """Service-specific UDAs contributed by Bitbucket."""
+
+    UNIQUE_KEY = ("bitbucketurl",)
+
+    bitbuckettitle: str = Field(title="Bitbucket Title")
+    bitbucketurl: str = Field(title="Bitbucket URL")
+    bitbucketid: int = Field(title="Bitbucket Issue ID")
+
+
+class BitbucketTask(Task):
+    udas: BitbucketUdas
+
+
 class BitbucketIssue(Issue):
-    TITLE = "bitbuckettitle"
-    URL = "bitbucketurl"
-    FOREIGN_ID = "bitbucketid"
-
-    UDAS = {
-        TITLE: {"type": "string", "label": "Bitbucket Title"},
-        URL: {"type": "string", "label": "Bitbucket URL"},
-        FOREIGN_ID: {"type": "numeric", "label": "Bitbucket Issue ID"},
-    }
-    UNIQUE_KEY = (URL,)
-
     PRIORITY_MAP = {
         "trivial": "L",
         "minor": "L",
@@ -64,15 +68,17 @@ class BitbucketIssue(Issue):
         "blocker": "H",
     }
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            "project": self.extra["project"],
-            "priority": self.get_priority(),
-            "annotations": self.extra["annotations"],
-            self.URL: self.extra["url"],
-            self.FOREIGN_ID: self.record["id"],
-            self.TITLE: self.record["title"],
-        }
+    def to_taskwarrior(self) -> BitbucketTask:
+        return BitbucketTask(
+            project=self.extra["project"],
+            priority=self.get_priority(),
+            annotations=self.extra["annotations"],
+            udas=BitbucketUdas(
+                bitbuckettitle=self.record["title"],
+                bitbucketurl=self.extra["url"],
+                bitbucketid=self.record["id"],
+            ),
+        )
 
     def get_default_description(self) -> str:
         return self.build_default_description(
@@ -83,9 +89,10 @@ class BitbucketIssue(Issue):
         )
 
 
-class BitbucketService(Service[BitbucketIssue]):
+class BitbucketService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = BitbucketIssue
+    TASK_SCHEMA = BitbucketTask
     CONFIG_SCHEMA = BitbucketConfig
 
     BASE_API2 = "https://api.bitbucket.org/2.0"
@@ -153,9 +160,7 @@ class BitbucketService(Service[BitbucketIssue]):
         response = self.get_collection(f"/repositories/{tag}/pullrequests/")
         return [(tag, issue) for issue in response]
 
-    def get_annotations(
-        self, tag: str, issue: dict[str, Any], issue_obj: Issue, url: str
-    ) -> list[str]:
+    def get_annotations(self, tag: str, issue: dict[str, Any], url: str) -> list[str]:
         response = self.get_collection(
             f"/repositories/{tag}/pullrequests/{issue['id']}/comments"
         )
@@ -187,7 +192,7 @@ class BitbucketService(Service[BitbucketIssue]):
 
         return True
 
-    def issues(self) -> Iterator[BitbucketIssue]:
+    def issues(self) -> Iterator[Task]:
         user = self.config.username
         response = self.get_collection("/repositories/" + user + "/")
         repo_tags = list(
@@ -211,7 +216,6 @@ class BitbucketService(Service[BitbucketIssue]):
         log.debug(" Pruned down to %i", len(issues))
 
         for tag, issue in issues:
-            issue_obj = self.get_issue_for_record(issue)
             tagParts = tag.split("/")
             projectName = tagParts[1]
             if self.config.project_owner_prefix:
@@ -220,10 +224,9 @@ class BitbucketService(Service[BitbucketIssue]):
             extras = {
                 "project": projectName,
                 "url": url,
-                "annotations": self.get_annotations(tag, issue, issue_obj, url),
+                "annotations": self.get_annotations(tag, issue, url),
             }
-            issue_obj.extra.update(extras)
-            yield issue_obj
+            yield self.get_task_for_record(issue, extras)
 
         if self.config.include_merge_requests:
             pull_requests = functools.reduce(
@@ -243,7 +246,6 @@ class BitbucketService(Service[BitbucketIssue]):
             log.debug(" Pruned down to %i", len(pull_requests))
 
             for tag, issue in pull_requests:
-                issue_obj = self.get_issue_for_record(issue)
                 tagParts = tag.split("/")
                 projectName = tagParts[1]
                 if self.config.project_owner_prefix:
@@ -254,7 +256,6 @@ class BitbucketService(Service[BitbucketIssue]):
                 extras = {
                     "project": projectName,
                     "url": url,
-                    "annotations": self.get_annotations(tag, issue, issue_obj, url),
+                    "annotations": self.get_annotations(tag, issue, url),
                 }
-                issue_obj.extra.update(extras)
-                yield issue_obj
+                yield self.get_task_for_record(issue, extras)

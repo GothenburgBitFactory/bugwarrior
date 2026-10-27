@@ -101,4 +101,4 @@ to all fields on the Taskwarrior task if needed.
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.pagure.PagureIssue
+.. udas:: bugwarrior.services.pagure.PagureUdas

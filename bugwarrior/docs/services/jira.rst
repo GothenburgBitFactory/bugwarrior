@@ -189,7 +189,7 @@ Put the PAT in the ``PAT`` field and do not set ``password``.
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.jira.JiraIssue
+.. udas:: bugwarrior.services.jira.JiraUdas
 
 Support for Extra UDA Fields
 +++++++++++++++++++++++++++++

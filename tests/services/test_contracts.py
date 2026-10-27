@@ -1,9 +1,16 @@
-"""Ensure each service's test module exercises the core service methods."""
+"""Ensure each service, and its test module, honors the service API."""
 
 import importlib
+from importlib.metadata import entry_points
+import json
 import pathlib
+import typing
 
 import pytest
+
+from bugwarrior.config import get_service
+
+SERVICES = sorted(ep.name for ep in entry_points(group="bugwarrior.service"))
 
 TEST_MODULES = sorted(
     path.stem
@@ -69,3 +76,38 @@ def test_core_service_methods_are_tested(module_name, required):
     assert any(name.startswith(required) for name in module_test_names(module)), (
         f"{module_name} does not define a {required} test"
     )
+
+
+@pytest.mark.parametrize("service_name", SERVICES)
+def test_task_schema_matches_the_issue_class(service_name):
+    """
+    A service's TASK_SCHEMA must be the Task its ISSUE_CLASS actually returns.
+
+    Nothing else checks this. TASK_SCHEMA is what tells bugwarrior which UDAs
+    to write to the user's taskrc and which fields identify a task, and it is
+    read without going through ISSUE_CLASS. Point it at the Task of another
+    service and you get the wrong UDAs, and tasks stop matching.
+    """
+    service = get_service(service_name)
+    mapped = typing.get_type_hints(service.ISSUE_CLASS.to_taskwarrior)["return"]
+
+    assert service.TASK_SCHEMA is mapped, (
+        f"{service.__name__}.TASK_SCHEMA is {service.TASK_SCHEMA.__name__}, but "
+        f"{service.ISSUE_CLASS.__name__}.to_taskwarrior returns {mapped.__name__}"
+    )
+
+
+@pytest.mark.parametrize("service_name", SERVICES)
+def test_task_schema_unique_identifier(service_name):
+    """Ensure every service's unique key can identify a task."""
+    service = get_service(service_name)
+    task_schema = service.TASK_SCHEMA
+    udas_model = task_schema.get_udas_model()
+    unique_key = task_schema.get_unique_key()
+    values = {
+        name: 1 if udas_model.model_fields[name].annotation is int else "value"
+        for name in unique_key
+    }
+    task = task_schema.model_construct(udas=udas_model.model_construct(**values))
+
+    assert task.unique_identifier() == json.dumps(values, sort_keys=True)

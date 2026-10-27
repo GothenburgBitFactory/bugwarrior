@@ -101,4 +101,4 @@ possible for the user to specify whether they want to pass that argument or not:
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.bz.BugzillaIssue
+.. udas:: bugwarrior.services.bz.BugzillaUdas

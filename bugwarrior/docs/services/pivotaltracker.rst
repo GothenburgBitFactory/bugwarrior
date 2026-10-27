@@ -313,4 +313,4 @@ shown here https://www.pivotaltracker.com/help/api/rest/v5#Blockers.
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.pivotaltracker.PivotalTrackerIssue
+.. udas:: bugwarrior.services.pivotaltracker.PivotalTrackerUdas

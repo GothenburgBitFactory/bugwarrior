@@ -231,4 +231,4 @@ Specific issues can be pulled in using ``issue_urls``:
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.github.GithubIssue
+.. udas:: bugwarrior.services.github.GithubUdas

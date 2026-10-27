@@ -10,6 +10,12 @@ warning, release notes, or semantic version bumping.
    :exclude-members: __init__,model_config
    :member-order: bysource
 
+.. automodule:: bugwarrior.task
+   :members:
+   :exclude-members: __init__,model_config,to_task_data,serialize,
+                     get_udas_model,get_unique_key,unique_identifier
+   :member-order: bysource
+
 .. automodule:: bugwarrior.config
    :members:
    :exclude-members: __init__,compute_templates,model_config
@@ -22,6 +28,22 @@ Changelog
 v2.0
 ~~~~
 
+- Added the ``bugwarrior.task`` module, holding the ``Task`` and ``Udas`` models
+  a service maps its records onto.
+- Changed ``Issue.to_taskwarrior()`` to return a ``Task`` rather than a
+  dictionary.
+- Removed ``Issue.UDAS`` and ``Issue.UNIQUE_KEY``. A service now declares each
+  UDA as a field of a ``Udas`` subclass, whose ``UNIQUE_KEY`` names the UDA
+  fields identifying a task. The UDA type is derived from the field's
+  annotation and its label from the field's title.
+- Added ``Service.TASK_SCHEMA``, naming the ``Task`` subclass a service maps to.
+- Added ``Service.get_task_for_record(record, extra)``, which maps a record to a
+  ``Task`` and applies the user's templates. ``Service.issues()`` now yields
+  those tasks rather than ``Issue`` objects.
+- Removed the type parameter from ``Service``. Subclasses declare
+  ``class MyService(Service)`` rather than ``class MyService(Service[MyIssue])``.
+- Removed ``Issue.parse_date(date)``. A date field accepts the service's raw
+  string and parses it, adding UTC when the string carries no timezone.
 - Removed ``Service.get_keyring_service(config)``. Service configurations should
   define ``KEYRING_SERVICE`` instead.
 - Added ``ServiceConfig.KEYRING_SERVICE`` as a format string for generating the

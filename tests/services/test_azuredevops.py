@@ -3,7 +3,6 @@ from unittest import mock
 
 import pytest
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.azuredevops import AzureDevopsService, striphtml
 
 from ..base import validate
@@ -182,13 +181,13 @@ class TestAzureDevopsService:
         issue.extra.update(extra)
 
         expected = {
-            issue.TITLE: record["fields"]["System.Title"],
-            issue.DESCRIPTION: striphtml(record["fields"]["System.Description"]),
-            issue.ID: record["id"],
-            issue.URL: record["_links"]["html"]["href"],
-            issue.TYPE: record["fields"]["System.WorkItemType"],
-            issue.STATE: record["fields"]["System.State"],
-            issue.PRIORITY: record["fields"]["Microsoft.VSTS.Common.Priority"],
+            "adotitle": record["fields"]["System.Title"],
+            "adodescription": striphtml(record["fields"]["System.Description"]),
+            "adoid": record["id"],
+            "adourl": record["_links"]["html"]["href"],
+            "adotype": record["fields"]["System.WorkItemType"],
+            "adostate": record["fields"]["System.State"],
+            "adopriority": record["fields"]["Microsoft.VSTS.Common.Priority"],
             "priority": "M",
             "project": None,
             "annotations": [],
@@ -199,7 +198,7 @@ class TestAzureDevopsService:
             "adoremainingwork": None,
             "adoparent": None,
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_task_data()
         assert actual_output == expected
 
     def test_issues(self, service):
@@ -207,6 +206,7 @@ class TestAzureDevopsService:
             "project": None,
             "priority": "M",
             "annotations": [],
+            "tags": [],
             "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=UTC),
             "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=UTC),
             "adotitle": "Example Title",
@@ -221,16 +221,16 @@ class TestAzureDevopsService:
             "adoparent": None,
             "adonamespace": "test_organization\\test_project",
             "description": "(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",
-            "tags": [],
         }
-        issue = next(service.issues())
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        task = next(service.issues())
+        assert task.to_task_data() == expected
 
     def test_issues_wiql_filter(self, make_service):
         expected = {
             "project": None,
             "priority": "M",
             "annotations": [],
+            "tags": [],
             "entry": datetime(2020, 7, 8, 17, 31, 46, 0, tzinfo=UTC),
             "end": datetime(2020, 7, 8, 19, 55, 46, 0, tzinfo=UTC),
             "adotitle": "Example Title",
@@ -245,8 +245,7 @@ class TestAzureDevopsService:
             "adoparent": None,
             "adonamespace": "test_organization\\test_project",
             "description": "(bw)Impediment#1 - Example Title .. https://dev.azure.com/test_organization/c2957126-cdef-4f9a-bcc8-09323d1b7095/_workitems/edit/1",
-            "tags": [],
         }
         service = make_service(wiql_filter="something")
-        issue = next(service.issues())
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        task = next(service.issues())
+        assert task.to_task_data() == expected
