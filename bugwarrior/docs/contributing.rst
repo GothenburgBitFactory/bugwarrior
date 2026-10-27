@@ -111,6 +111,30 @@ a new PR using the normal GitHub flow.
 
 We look forward to your contribution!
 
+Adding a new service
+--------------------
+
+When adding a new service, create a file under ``bugwarrior/services`` called
+``service_name.py`` (replacing ``service_name`` with the service name). Add a
+class definition inheriting from ``Service``. For example:
+
+[,python]
+----
+from bugwarrior.services import Service
+class FooService(Service):
+    # See ``Service`` for what needs to be implemented.
+    pass
+----
+
+Then make sure to add your service to the mapping of entrypoints in ``pyproject.toml``:
+
+[,toml]
+---
+# In pyproject.toml
+[project.entry-points."bugwarrior.service"]
+foo = "bugwarrior.services.foo:FooService"
+---
+
 Works in progress
 -----------------
 
