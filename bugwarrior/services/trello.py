@@ -15,7 +15,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import Numeric, String, Task, Udas
 
 
 class TrelloConfig(config.ServiceConfig):
@@ -36,15 +36,15 @@ class TrelloUdas(Udas):
 
     UNIQUE_KEY = ("trellocardid",)
 
-    trellocard: str = Field(title="Trello card name")
-    trellocardid: str = Field(title="Trello card ID")
-    trellocardidshort: int = Field(title="Trello short card ID")
-    trellodescription: str | None = Field(title="Trello description")
-    trelloboard: str = Field(title="Trello board name")
-    trellolist: str = Field(title="Trello list name")
-    trelloshortlink: str = Field(title="Trello shortlink")
-    trelloshorturl: str = Field(title="Trello short URL")
-    trellourl: str = Field(title="Trello URL")
+    trellocard: String = Field(title="Trello card name")
+    trellocardid: String = Field(title="Trello card ID")
+    trellocardidshort: Numeric = Field(title="Trello short card ID")
+    trellodescription: String = Field(title="Trello description")
+    trelloboard: String = Field(title="Trello board name")
+    trellolist: String = Field(title="Trello list name")
+    trelloshortlink: String = Field(title="Trello shortlink")
+    trelloshorturl: String = Field(title="Trello short URL")
+    trellourl: String = Field(title="Trello URL")
 
 
 class TrelloTask(Task):

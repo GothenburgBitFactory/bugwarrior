@@ -11,7 +11,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import IssueDatetime, Task, Udas
+from bugwarrior.task import Date, Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -220,20 +220,20 @@ class GithubUdas(Udas):
 
     UNIQUE_KEY = ("githuburl", "githubtype")
 
-    githubtitle: str = Field(title="Github Title")
-    githubbody: str | None = Field(title="Github Body")
-    githubcreatedon: IssueDatetime = Field(title="Github Created")
-    githubupdatedat: IssueDatetime = Field(title="Github Updated")
-    githubclosedon: IssueDatetime = Field(title="GitHub Closed")
-    githubmilestone: str | None = Field(title="Github Milestone")
-    githubrepo: str = Field(title="Github Repo Slug")
-    githuburl: str = Field(title="Github URL")
-    githubtype: str = Field(title="Github Type")
-    githubnumber: int = Field(title="Github Issue/PR #")
-    githubuser: str = Field(title="Github User")
-    githubnamespace: str = Field(title="Github Namespace")
-    githubstate: str | None = Field(title="GitHub State")
-    githubdraft: int = Field(title="GitHub Draft")
+    githubtitle: String = Field(title="Github Title")
+    githubbody: String = Field(title="Github Body")
+    githubcreatedon: Date = Field(title="Github Created")
+    githubupdatedat: Date = Field(title="Github Updated")
+    githubclosedon: Date = Field(title="GitHub Closed")
+    githubmilestone: String = Field(title="Github Milestone")
+    githubrepo: String = Field(title="Github Repo Slug")
+    githuburl: String = Field(title="Github URL")
+    githubtype: String = Field(title="Github Type")
+    githubnumber: Numeric = Field(title="Github Issue/PR #")
+    githubuser: String = Field(title="Github User")
+    githubnamespace: String = Field(title="Github Namespace")
+    githubstate: String = Field(title="GitHub State")
+    githubdraft: Numeric = Field(title="GitHub Draft")
 
 
 class GithubTask(Task):

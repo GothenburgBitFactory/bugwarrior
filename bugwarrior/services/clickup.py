@@ -8,7 +8,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import IssueDatetime, Task, Udas
+from bugwarrior.task import Date, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -55,17 +55,17 @@ class ClickupUdas(Udas):
 
     UNIQUE_KEY = ("clickupid",)
 
-    clickupid: str = Field(title="Clickup id")
-    clickupdescription: str | None = Field(title="Clickup Description")
-    clickupstatus: str = Field(title="Clickup Status Title")
-    clickupupdated: IssueDatetime = Field(title="Clickup Updated")
-    clickupcreator: str = Field(title="Clickup Creator")
-    clickupurl: str = Field(title="Clickup URL")
-    clickuplistname: str = Field(title="Clickup List name")
-    clickupproject: str = Field(title="Clickup Project id")
-    clickupfolder: str = Field(title="Clickup Folder id")
-    clickupspace: str = Field(title="Clickup Space id")
-    clickupname: str = Field(title="Clickup Title")
+    clickupid: String = Field(title="Clickup id")
+    clickupdescription: String = Field(title="Clickup Description")
+    clickupstatus: String = Field(title="Clickup Status Title")
+    clickupupdated: Date = Field(title="Clickup Updated")
+    clickupcreator: String = Field(title="Clickup Creator")
+    clickupurl: String = Field(title="Clickup URL")
+    clickuplistname: String = Field(title="Clickup List name")
+    clickupproject: String = Field(title="Clickup Project id")
+    clickupfolder: String = Field(title="Clickup Folder id")
+    clickupspace: String = Field(title="Clickup Space id")
+    clickupname: String = Field(title="Clickup Title")
 
 
 class ClickupTask(Task):

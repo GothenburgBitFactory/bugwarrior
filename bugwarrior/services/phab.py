@@ -8,7 +8,7 @@ from pydantic import Field
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -41,10 +41,10 @@ class PhabricatorUdas(Udas):
 
     UNIQUE_KEY = ("phabricatorurl",)
 
-    phabricatortitle: str = Field(title="Phabricator Title")
-    phabricatorurl: str = Field(title="Phabricator URL")
-    phabricatortype: str = Field(title="Phabricator Type")
-    phabricatorid: str = Field(title="Phabricator Object")
+    phabricatortitle: String = Field(title="Phabricator Title")
+    phabricatorurl: String = Field(title="Phabricator URL")
+    phabricatortype: String = Field(title="Phabricator Type")
+    phabricatorid: String = Field(title="Phabricator Object")
 
 
 class PhabricatorTask(Task):

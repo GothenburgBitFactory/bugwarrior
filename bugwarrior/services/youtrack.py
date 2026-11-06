@@ -15,7 +15,7 @@ import urllib3
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -91,11 +91,11 @@ class YoutrackUdas(Udas):
 
     UNIQUE_KEY = ("youtrackurl",)
 
-    youtrackissue: str = Field(title="YouTrack Issue")
-    youtracksummary: str | None = Field(title="YouTrack Summary")
-    youtrackurl: str = Field(title="YouTrack URL")
-    youtrackproject: str | None = Field(title="YouTrack Project")
-    youtracknumber: str | None = Field(title="YouTrack Project Issue Number")
+    youtrackissue: String = Field(title="YouTrack Issue")
+    youtracksummary: String = Field(title="YouTrack Summary")
+    youtrackurl: String = Field(title="YouTrack URL")
+    youtrackproject: String = Field(title="YouTrack Project")
+    youtracknumber: String = Field(title="YouTrack Project Issue Number")
 
 
 class YoutrackTask(Task):

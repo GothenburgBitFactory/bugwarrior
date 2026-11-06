@@ -14,7 +14,7 @@ from pydantic import BeforeValidator, Field
 from bugwarrior import config
 from bugwarrior.config.schema import StrippedTrailingSlashUrl
 from bugwarrior.services import Issue, Service
-from bugwarrior.task import IssueDatetime, Task, Udas
+from bugwarrior.task import Date, Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -65,14 +65,14 @@ class BugzillaUdas(Udas):
 
     UNIQUE_KEY = ("bugzillaurl",)
 
-    bugzillaurl: str = Field(title="Bugzilla URL")
-    bugzillasummary: str = Field(title="Bugzilla Summary")
-    bugzillastatus: str = Field(title="Bugzilla Status")
-    bugzillabugid: int = Field(title="Bugzilla Bug ID")
-    bugzillaneedinfo: IssueDatetime = Field(title="Bugzilla Needinfo")
-    bugzillaproduct: str = Field(title="Bugzilla Product")
-    bugzillacomponent: str = Field(title="Bugzilla Component")
-    bugzillaassignedon: IssueDatetime = Field(title="Bugzilla Assigned On")
+    bugzillaurl: String = Field(title="Bugzilla URL")
+    bugzillasummary: String = Field(title="Bugzilla Summary")
+    bugzillastatus: String = Field(title="Bugzilla Status")
+    bugzillabugid: Numeric = Field(title="Bugzilla Bug ID")
+    bugzillaneedinfo: Date = Field(title="Bugzilla Needinfo")
+    bugzillaproduct: String = Field(title="Bugzilla Product")
+    bugzillacomponent: String = Field(title="Bugzilla Component")
+    bugzillaassignedon: Date = Field(title="Bugzilla Assigned On")
 
 
 class BugzillaTask(Task):

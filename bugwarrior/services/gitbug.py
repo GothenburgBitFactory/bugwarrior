@@ -11,7 +11,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -109,10 +109,10 @@ class GitBugUdas(Udas):
 
     UNIQUE_KEY = ("gitbugid",)
 
-    gitbugauthor: str = Field(title="Gitbug Issue Author")
-    gitbugid: str = Field(title="Gitbug UUID")
-    gitbugstate: str = Field(title="Gitbug state")
-    gitbugtitle: str = Field(title="Gitbug Title")
+    gitbugauthor: String = Field(title="Gitbug Issue Author")
+    gitbugid: String = Field(title="Gitbug UUID")
+    gitbugstate: String = Field(title="Gitbug state")
+    gitbugtitle: String = Field(title="Gitbug Title")
 
 
 class GitBugTask(Task):

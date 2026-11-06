@@ -11,7 +11,7 @@ import requests
 from bugwarrior import config
 from bugwarrior.config import Priority
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -52,13 +52,13 @@ class BTSUdas(Udas):
 
     UNIQUE_KEY = ("btsurl",)
 
-    btssubject: str = Field(title="Debian BTS Subject")
-    btsurl: str = Field(title="Debian BTS URL")
-    btsnumber: int = Field(title="Debian BTS Number")
-    btspackage: str = Field(title="Debian BTS Package")
-    btssource: str = Field(title="Debian BTS Source Package")
-    btsforwarded: str = Field(title="Debian BTS Forwarded URL")
-    btsstatus: str = Field(title="Debian BTS Status")
+    btssubject: String = Field(title="Debian BTS Subject")
+    btsurl: String = Field(title="Debian BTS URL")
+    btsnumber: Numeric = Field(title="Debian BTS Number")
+    btspackage: String = Field(title="Debian BTS Package")
+    btssource: String = Field(title="Debian BTS Source Package")
+    btsforwarded: String = Field(title="Debian BTS Forwarded URL")
+    btsstatus: String = Field(title="Debian BTS Status")
 
 
 class BTSTask(Task):

@@ -11,7 +11,7 @@ from pydantic import Field, computed_field
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -39,12 +39,12 @@ class KanboardUdas(Udas):
 
     UNIQUE_KEY = ("kanboardtaskid",)
 
-    kanboardtaskid: int = Field(title="Kanboard Task ID")
-    kanboardtasktitle: str = Field(title="Kanboard Task Title")
-    kanboardtaskdescription: str | None = Field(title="Kanboard Task Description")
-    kanboardprojectid: int = Field(title="Kanboard Project ID")
-    kanboardprojectname: str = Field(title="Kanboard Project Name")
-    kanboardurl: str = Field(title="Kanboard URL")
+    kanboardtaskid: Numeric = Field(title="Kanboard Task ID")
+    kanboardtasktitle: String = Field(title="Kanboard Task Title")
+    kanboardtaskdescription: String = Field(title="Kanboard Task Description")
+    kanboardprojectid: Numeric = Field(title="Kanboard Project ID")
+    kanboardprojectname: String = Field(title="Kanboard Project Name")
+    kanboardurl: String = Field(title="Kanboard URL")
 
 
 class KanboardTask(Task):

@@ -11,7 +11,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import IssueDatetime, Task, Udas
+from bugwarrior.task import Date, Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -45,19 +45,19 @@ class PivotalTrackerUdas(Udas):
 
     UNIQUE_KEY = ("pivotalurl",)
 
-    pivotalurl: str = Field(title="Story URL")
-    pivotaldescription: str | None = Field(title="Story Description")
-    pivotalstorytype: str = Field(title="Story Type")
-    pivotalprojectid: int = Field(title="Project ID")
-    pivotalprojectname: str = Field(title="Project Name")
-    pivotalid: int = Field(title="Story ID")
-    pivotalowners: str | None = Field(title="Story Owned By")
-    pivotalrequesters: str | None = Field(title="Story Requested By")
-    pivotalestimate: int = Field(title="Story Estimate")
-    pivotalblockers: str | None = Field(title="Story Blockers")
-    pivotalcreated: IssueDatetime = Field(title="Story Created")
-    pivotalupdated: IssueDatetime = Field(title="Story Updated")
-    pivotalclosed: IssueDatetime = Field(title="Story Closed")
+    pivotalurl: String = Field(title="Story URL")
+    pivotaldescription: String = Field(title="Story Description")
+    pivotalstorytype: String = Field(title="Story Type")
+    pivotalprojectid: Numeric = Field(title="Project ID")
+    pivotalprojectname: String = Field(title="Project Name")
+    pivotalid: Numeric = Field(title="Story ID")
+    pivotalowners: String = Field(title="Story Owned By")
+    pivotalrequesters: String = Field(title="Story Requested By")
+    pivotalestimate: Numeric = Field(title="Story Estimate")
+    pivotalblockers: String = Field(title="Story Blockers")
+    pivotalcreated: Date = Field(title="Story Created")
+    pivotalupdated: Date = Field(title="Story Updated")
+    pivotalclosed: Date = Field(title="Story Closed")
 
 
 class PivotalTrackerTask(Task):

@@ -10,7 +10,7 @@ import requests.auth
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -35,13 +35,13 @@ class GerritUdas(Udas):
 
     UNIQUE_KEY = ("gerriturl",)
 
-    gerritsummary: str = Field(title="Gerrit Summary")
-    gerriturl: str = Field(title="Gerrit URL")
-    gerritid: int = Field(title="Gerrit Change ID")
-    gerritbranch: str = Field(title="Gerrit Branch")
-    gerrittopic: str | None = Field(title="Gerrit Topic")
-    gerritstatus: str | None = Field(title="Gerrit Status")
-    gerritwip: int = Field(title="Gerrit Work in Progress")
+    gerritsummary: String = Field(title="Gerrit Summary")
+    gerriturl: String = Field(title="Gerrit URL")
+    gerritid: Numeric = Field(title="Gerrit Change ID")
+    gerritbranch: String = Field(title="Gerrit Branch")
+    gerrittopic: String = Field(title="Gerrit Topic")
+    gerritstatus: String = Field(title="Gerrit Status")
+    gerritwip: Numeric = Field(title="Gerrit Work in Progress")
 
 
 class GerritTask(Task):

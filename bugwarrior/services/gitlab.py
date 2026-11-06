@@ -11,7 +11,7 @@ import urllib3
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import IssueDatetime, Task, Udas
+from bugwarrior.task import Date, Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -373,24 +373,24 @@ class GitlabUdas(Udas):
 
     UNIQUE_KEY = ("gitlabrepo", "gitlabtype", "gitlabnumber")
 
-    gitlabtitle: str = Field(title="Gitlab Title")
-    gitlabdescription: str | None = Field(title="Gitlab Description")
-    gitlabcreatedon: IssueDatetime = Field(title="Gitlab Created")
-    gitlabupdatedat: IssueDatetime = Field(title="Gitlab Updated")
-    gitlabduedate: IssueDatetime = Field(title="Gitlab Due Date")
-    gitlabmilestone: str | None = Field(title="Gitlab Milestone")
-    gitlaburl: str = Field(title="Gitlab URL")
-    gitlabrepo: str = Field(title="Gitlab Repo Slug")
-    gitlabtype: str = Field(title="Gitlab Type")
-    gitlabnumber: str = Field(title="Gitlab Issue/MR #")
-    gitlabstate: str = Field(title="Gitlab Issue/MR State")
-    gitlabupvotes: int = Field(title="Gitlab Upvotes")
-    gitlabdownvotes: int = Field(title="Gitlab Downvotes")
-    gitlabwip: int = Field(title="Gitlab MR Work-In-Progress Flag")
-    gitlabauthor: str | None = Field(title="Gitlab Author")
-    gitlabassignee: str | None = Field(title="Gitlab Assignee")
-    gitlabnamespace: str = Field(title="Gitlab Namespace")
-    gitlabweight: int | None = Field(title="Gitlab Weight")
+    gitlabtitle: String = Field(title="Gitlab Title")
+    gitlabdescription: String = Field(title="Gitlab Description")
+    gitlabcreatedon: Date = Field(title="Gitlab Created")
+    gitlabupdatedat: Date = Field(title="Gitlab Updated")
+    gitlabduedate: Date = Field(title="Gitlab Due Date")
+    gitlabmilestone: String = Field(title="Gitlab Milestone")
+    gitlaburl: String = Field(title="Gitlab URL")
+    gitlabrepo: String = Field(title="Gitlab Repo Slug")
+    gitlabtype: String = Field(title="Gitlab Type")
+    gitlabnumber: String = Field(title="Gitlab Issue/MR #")
+    gitlabstate: String = Field(title="Gitlab Issue/MR State")
+    gitlabupvotes: Numeric = Field(title="Gitlab Upvotes")
+    gitlabdownvotes: Numeric = Field(title="Gitlab Downvotes")
+    gitlabwip: Numeric = Field(title="Gitlab MR Work-In-Progress Flag")
+    gitlabauthor: String = Field(title="Gitlab Author")
+    gitlabassignee: String = Field(title="Gitlab Assignee")
+    gitlabnamespace: String = Field(title="Gitlab Namespace")
+    gitlabweight: Numeric = Field(title="Gitlab Weight")
 
 
 class GitlabTask(Task):

@@ -8,7 +8,7 @@ from bugwarrior import config, services
 from bugwarrior.collect import get_service_instances
 from bugwarrior.config import validation
 from bugwarrior.config.load import format_config
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import String, Task, Udas
 
 from .services.base import get_mock_service
 
@@ -24,8 +24,8 @@ class DumbConfig(config.ServiceConfig):
 class DumbUdas(Udas):
     UNIQUE_KEY = ("dumburl",)
 
-    dumburl: str = Field(title="Dumb URL")
-    dumbtype: str = Field(title="Dumb Type")
+    dumburl: String = Field(title="Dumb URL")
+    dumbtype: String = Field(title="Dumb Type")
 
 
 class DumbTask(Task):

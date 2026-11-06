@@ -11,7 +11,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -112,19 +112,17 @@ class AzureDevopsUdas(Udas):
 
     UNIQUE_KEY = ("adourl",)
 
-    adotitle: str = Field(title="Azure Devops Title")
-    adodescription: str | None = Field(title="Azure Devops Description")
-    adoid: int = Field(title="Azure Devops ID number")
-    adourl: str = Field(title="Azure Devops URL")
-    adotype: str = Field(title="Azure Devops Work Item Type")
-    adostate: str = Field(title="Azure Devops Work Item State")
-    adoactivity: str | None = Field(title="Azure Devops Activity")
-    adopriority: int | None = Field(title="Azure Devops Priority")
-    adoremainingwork: float | None = Field(
-        title="Azure Devops Amount of Remaining Work"
-    )
-    adoparent: str | None = Field(title="Azure Devops Parent Work Item Name")
-    adonamespace: str | None = Field(title="Azure Devops Namespace")
+    adotitle: String = Field(title="Azure Devops Title")
+    adodescription: String = Field(title="Azure Devops Description")
+    adoid: Numeric = Field(title="Azure Devops ID number")
+    adourl: String = Field(title="Azure Devops URL")
+    adotype: String = Field(title="Azure Devops Work Item Type")
+    adostate: String = Field(title="Azure Devops Work Item State")
+    adoactivity: String = Field(title="Azure Devops Activity")
+    adopriority: Numeric = Field(title="Azure Devops Priority")
+    adoremainingwork: Numeric = Field(title="Azure Devops Amount of Remaining Work")
+    adoparent: String = Field(title="Azure Devops Parent Work Item Name")
+    adonamespace: String = Field(title="Azure Devops Namespace")
 
 
 class AzureDevopsTask(Task):

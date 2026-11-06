@@ -4,24 +4,37 @@ from pydantic import Field, ValidationError
 import pytest
 from taskw import TaskWarriorShellout
 
-from bugwarrior.task import Duration, IssueDatetime, Task, Udas
+from bugwarrior.task import Date, Duration, Numeric, String, Task, Udas
 
 
 class SampleUdas(Udas):
     UNIQUE_KEY = ("sampleurl",)
 
-    samplenumber: int | None = Field(default=None, title="Sample Number")
-    sampleurl: str | None = Field(default=None, title="Sample URL")
-    samplecreated: IssueDatetime = Field(default=None, title="Sample Created")
-    samplespent: Duration = Field(default=None, title="Sample Spent")
+    samplenumber: Numeric = Field(title="Sample Number")
+    sampleurl: String = Field(title="Sample URL")
+    samplecreated: Date = Field(title="Sample Created")
+    samplespent: Duration = Field(title="Sample Spent")
 
 
 class SampleTask(Task):
     udas: SampleUdas
 
 
+def sample_udas(**overrides):
+    values = {
+        "samplenumber": None,
+        "sampleurl": "http://example.com",
+        "samplecreated": None,
+        "samplespent": None,
+    }
+    values.update(overrides)
+    return SampleUdas(**values)
+
+
 def test_generic_fields_are_coerced():
-    task = Task(priority="", status="pending", due="2026-05-20")
+    task = SampleTask(
+        udas=sample_udas(), priority="", status="pending", due="2026-05-20"
+    )
 
     data = task.to_task_data()
     assert data["priority"] is None  # blank priority means no priority
@@ -33,20 +46,20 @@ def test_generic_fields_are_coerced():
 @pytest.mark.parametrize(("field", "value"), [("priority", "m"), ("status", "PENDING")])
 def test_generic_fields_reject_noncanonical_values(field, value):
     with pytest.raises(ValidationError):
-        Task(**{field: value})
+        SampleTask(udas=sample_udas(), **{field: value})
 
 
 def test_unset_generic_fields_are_omitted():
-    # Only explicitly set fields are emitted, so legacy sparse records are
-    # preserved.
-    assert Task(project="foundation").to_task_data() == {"project": "foundation"}
+    # Only explicitly set generic fields are emitted, so legacy sparse records
+    # are preserved.
+    data = SampleTask(project="foundation", udas=sample_udas()).to_task_data()
+
+    assert data["project"] == "foundation"
+    assert "description" not in data
 
 
 def test_udas_are_flattened_and_always_emitted():
-    task = SampleTask(
-        project="foundation",
-        udas=SampleUdas(sampleurl="http://example.com", samplenumber=7),
-    )
+    task = SampleTask(project="foundation", udas=sample_udas(samplenumber=7))
 
     assert task.to_task_data() == {
         "project": "foundation",
@@ -67,6 +80,16 @@ def test_serialize_is_derived_from_the_udas_model():
     }
 
 
+def test_udas_rejects_an_unsupported_annotation():
+    with pytest.raises(TypeError, match="unsupported UDA fields: values"):
+
+        class UnsupportedUdas(Udas):
+            UNIQUE_KEY = ("name",)
+
+            name: String = Field(title="Name")
+            values: list[str] | None = Field(title="Values")
+
+
 # Taskwarrior rejects Python's own "3:30:00" rendering of a timedelta, which is
 # how https://github.com/GothenburgBitFactory/bugwarrior/pull/967 arose. It
 # reads ISO 8601 but saves it in days, hours, minutes and seconds, so that is
@@ -85,7 +108,7 @@ DURATIONS = [
 
 @pytest.mark.parametrize(("spent", "expected"), [*DURATIONS, (None, None)])
 def test_duration_is_emitted_as_iso_8601(spent, expected):
-    task = SampleTask(udas=SampleUdas(samplespent=spent))
+    task = SampleTask(udas=sample_udas(samplespent=spent))
 
     assert task.to_task_data()["samplespent"] == expected
 
@@ -98,7 +121,7 @@ def test_duration_round_trips_through_taskwarrior(config_environment, spent, exp
     It accepts several forms but saves only one of them. Write another one
     and the task looks changed on every sync, and is updated again and again.
     """
-    emitted = SampleTask(udas=SampleUdas(samplespent=spent)).to_task_data()[
+    emitted = SampleTask(udas=sample_udas(samplespent=spent)).to_task_data()[
         "samplespent"
     ]
     tw = TaskWarriorShellout(
@@ -128,6 +151,16 @@ def test_get_unique_key():
     assert SampleTask.get_unique_key() == ("sampleurl",)
 
 
+def test_udas_fields_are_required():
+    with pytest.raises(ValidationError):
+        SampleUdas(sampleurl="http://example.com")
+
+
+def test_unique_key_rejects_a_null_value():
+    with pytest.raises(ValidationError, match="cannot be None"):
+        sample_udas(sampleurl=None)
+
+
 def test_unique_key_rejects_a_misspelled_uda():
     with pytest.raises(
         TypeError, match="UNIQUE_KEY names undeclared fields: sampleurl"
@@ -136,7 +169,7 @@ def test_unique_key_rejects_a_misspelled_uda():
         class MisspelledUdas(Udas):
             UNIQUE_KEY = ("sampleurl",)
 
-            sampleurll: str | None = None
+            sampleurll: String = None
 
 
 def test_unique_key_rejects_a_generic_field():
@@ -145,14 +178,11 @@ def test_unique_key_rejects_a_generic_field():
         class GenericKeyUdas(Udas):
             UNIQUE_KEY = ("project",)
 
-            sampleurl: str | None = None
+            sampleurl: String = None
 
 
 def test_unique_identifier_covers_only_the_unique_key():
-    task = SampleTask(
-        project="foundation",
-        udas=SampleUdas(sampleurl="http://example.com", samplenumber=7),
-    )
+    task = SampleTask(project="foundation", udas=sample_udas(samplenumber=7))
 
     # Sorted keys, so the identifier is stable regardless of field order, and
     # limited to the unique key, so unrelated edits do not orphan the task.
@@ -163,15 +193,12 @@ def test_a_schema_without_a_unique_key_is_an_error():
     with pytest.raises(AttributeError):
         Task.get_unique_key()
 
-    with pytest.raises(AttributeError):
-        Task().unique_identifier()
-
 
 def test_unique_identifier_is_not_emitted_to_taskwarrior():
     # It identifies the task for matching; it is not a field of the record.
-    assert "unique_identifier" not in Task().to_task_data()
+    assert "unique_identifier" not in SampleTask(udas=sample_udas()).to_task_data()
 
 
 def test_unknown_field_is_rejected():
     with pytest.raises(ValidationError):
-        SampleTask(udas=SampleUdas(), bogus="nope")
+        SampleTask(udas=sample_udas(), bogus="nope")

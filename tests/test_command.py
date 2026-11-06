@@ -9,7 +9,7 @@ import pytest
 
 from bugwarrior import command
 from bugwarrior.config.load import BugwarriorConfigParser
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import String, Task, Udas
 
 from .base import DumbConfig, DumbIssue, DumbService, register_services
 
@@ -30,8 +30,8 @@ class SecondaryUdas(Udas):
 
     UNIQUE_KEY = ("secondaryurl",)
 
-    secondaryurl: str = Field(title="Secondary URL")
-    secondarytype: str = Field(title="Secondary Type")
+    secondaryurl: String = Field(title="Secondary URL")
+    secondarytype: String = Field(title="Secondary Type")
 
 
 class SecondaryTask(Task):

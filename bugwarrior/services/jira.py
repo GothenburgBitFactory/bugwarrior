@@ -15,7 +15,7 @@ from requests.cookies import RequestsCookieJar
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
-from bugwarrior.task import Task, Udas, coerce_datetime
+from bugwarrior.task import Numeric, String, Task, Udas, coerce_datetime
 
 log = logging.getLogger(__name__)
 
@@ -166,16 +166,16 @@ class JiraUdas(Udas):
 
     UNIQUE_KEY = ("jiraurl",)
 
-    jiraissuetype: str = Field(title="Issue Type")
-    jirasummary: str = Field(title="Jira Summary")
-    jiraurl: str = Field(title="Jira URL")
-    jiradescription: str | None = Field(title="Jira Description")
-    jiraid: str = Field(title="Jira Issue ID")
-    jiraestimate: float | None = Field(title="Estimate")
-    jirafixversion: str | None = Field(title="Fix Version")
-    jirastatus: str = Field(title="Jira Status")
-    jirasubtasks: str = Field(title="Jira Subtasks")
-    jiraparent: str | None = Field(title="Jira Parent")
+    jiraissuetype: String = Field(title="Issue Type")
+    jirasummary: String = Field(title="Jira Summary")
+    jiraurl: String = Field(title="Jira URL")
+    jiradescription: String = Field(title="Jira Description")
+    jiraid: String = Field(title="Jira Issue ID")
+    jiraestimate: Numeric = Field(title="Estimate")
+    jirafixversion: String = Field(title="Fix Version")
+    jirastatus: String = Field(title="Jira Status")
+    jirasubtasks: String = Field(title="Jira Subtasks")
+    jiraparent: String = Field(title="Jira Parent")
 
 
 class JiraTask(Task):

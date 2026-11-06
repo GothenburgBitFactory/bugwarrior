@@ -10,7 +10,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import IssueDatetime, Task, Udas
+from bugwarrior.task import Date, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -44,17 +44,17 @@ class LinearUdas(Udas):
 
     UNIQUE_KEY = ("linearurl",)
 
-    linearurl: str = Field(title="Issue URL")
-    lineartitle: str | None = Field(title="Issue Title")
-    lineardescription: str | None = Field(title="Issue Description")
-    linearstatus: str | None = Field(title="Issue State")
-    linearidentifier: str | None = Field(title="Linear Identifier")
-    linearteam: str | None = Field(title="Project ID")
-    linearcreator: str | None = Field(title="Issue Creator")
-    linearassignee: str | None = Field(title="Issue Assignee")
-    linearcreated: IssueDatetime = Field(title="Issue Created")
-    linearupdated: IssueDatetime = Field(title="Issue Updated")
-    linearclosed: IssueDatetime = Field(title="Issue Closed")
+    linearurl: String = Field(title="Issue URL")
+    lineartitle: String = Field(title="Issue Title")
+    lineardescription: String = Field(title="Issue Description")
+    linearstatus: String = Field(title="Issue State")
+    linearidentifier: String = Field(title="Linear Identifier")
+    linearteam: String = Field(title="Project ID")
+    linearcreator: String = Field(title="Issue Creator")
+    linearassignee: String = Field(title="Issue Assignee")
+    linearcreated: Date = Field(title="Issue Created")
+    linearupdated: Date = Field(title="Issue Updated")
+    linearclosed: Date = Field(title="Issue Closed")
 
 
 class LinearTask(Task):

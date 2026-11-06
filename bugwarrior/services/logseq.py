@@ -11,7 +11,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import IssueDatetime, Status, Task, Udas
+from bugwarrior.task import Date, Status, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -117,14 +117,14 @@ class LogseqUdas(Udas):
 
     UNIQUE_KEY = ("logseqid", "logsequuid")
 
-    logseqid: str = Field(title="Logseq ID")
-    logsequuid: str = Field(title="Logseq UUID")
-    logseqstate: str = Field(title="Logseq State")
-    logseqtitle: str = Field(title="Logseq Title")
-    logsequri: str = Field(title="Logseq URI")
-    logseqscheduled: IssueDatetime = Field(title="Logseq Scheduled")
-    logseqdeadline: IssueDatetime = Field(title="Logseq Deadline")
-    logseqpage: str | None = Field(title="Logseq Page")
+    logseqid: String = Field(title="Logseq ID")
+    logsequuid: String = Field(title="Logseq UUID")
+    logseqstate: String = Field(title="Logseq State")
+    logseqtitle: String = Field(title="Logseq Title")
+    logsequri: String = Field(title="Logseq URI")
+    logseqscheduled: Date = Field(title="Logseq Scheduled")
+    logseqdeadline: Date = Field(title="Logseq Deadline")
+    logseqpage: String = Field(title="Logseq Page")
 
 
 class LogseqTask(Task):

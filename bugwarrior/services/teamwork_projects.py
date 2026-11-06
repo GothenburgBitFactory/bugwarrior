@@ -8,7 +8,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -38,12 +38,12 @@ class TeamworkUdas(Udas):
 
     UNIQUE_KEY = ("teamwork_url",)
 
-    teamwork_url: str = Field(title="Teamwork Url")
-    teamwork_title: str | None = Field(title="Teamwork Title")
-    teamwork_description_long: str | None = Field(title="Teamwork Description Long")
-    teamwork_project_id: int = Field(title="Teamwork Project ID")
-    teamwork_status: str = Field(title="Teamwork Status")
-    teamwork_id: int = Field(title="Teamwork Task ID")
+    teamwork_url: String = Field(title="Teamwork Url")
+    teamwork_title: String = Field(title="Teamwork Title")
+    teamwork_description_long: String = Field(title="Teamwork Description Long")
+    teamwork_project_id: Numeric = Field(title="Teamwork Project ID")
+    teamwork_status: String = Field(title="Teamwork Status")
+    teamwork_id: Numeric = Field(title="Teamwork Task ID")
 
 
 class TeamworkTask(Task):

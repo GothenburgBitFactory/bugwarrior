@@ -9,7 +9,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -69,18 +69,16 @@ class NextcloudDeckUdas(Udas):
 
     UNIQUE_KEY = ("nextclouddeckboardid", "nextclouddeckstackid", "nextclouddeckcardid")
 
-    nextclouddeckauthor: str = Field(title="Nextcloud Deck Issue Author")
-    nextclouddeckboardid: int = Field(title="Nextcloud Deck Board ID")
-    nextclouddeckboardtitle: str = Field(title="Nextcloud Deck Board Title")
-    nextclouddeckstackid: int = Field(title="Nextcloud Deck Stack ID")
-    nextclouddeckstacktitle: str = Field(title="Nextcloud Deck Stack Title")
-    nextclouddeckcardid: int = Field(title="Nextcloud Deck Card ID")
-    nextclouddeckcardtitle: str = Field(title="Nextcloud Deck Card Title")
-    nextclouddeckdescription: str | None = Field(
-        title="Nextcloud Deck Card Description"
-    )
-    nextclouddeckorder: int = Field(title="Nextcloud Deck Order")
-    nextclouddeckassignee: str | None = Field(title="Nextcloud Deck Assignee(s)")
+    nextclouddeckauthor: String = Field(title="Nextcloud Deck Issue Author")
+    nextclouddeckboardid: Numeric = Field(title="Nextcloud Deck Board ID")
+    nextclouddeckboardtitle: String = Field(title="Nextcloud Deck Board Title")
+    nextclouddeckstackid: Numeric = Field(title="Nextcloud Deck Stack ID")
+    nextclouddeckstacktitle: String = Field(title="Nextcloud Deck Stack Title")
+    nextclouddeckcardid: Numeric = Field(title="Nextcloud Deck Card ID")
+    nextclouddeckcardtitle: String = Field(title="Nextcloud Deck Card Title")
+    nextclouddeckdescription: String = Field(title="Nextcloud Deck Card Description")
+    nextclouddeckorder: Numeric = Field(title="Nextcloud Deck Order")
+    nextclouddeckassignee: String = Field(title="Nextcloud Deck Assignee(s)")
 
 
 class NextcloudDeckTask(Task):

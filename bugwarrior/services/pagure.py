@@ -9,7 +9,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
-from bugwarrior.task import IssueDatetime, Task, Udas
+from bugwarrior.task import Date, Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -58,12 +58,12 @@ class PagureUdas(Udas):
 
     UNIQUE_KEY = ("pagureurl", "paguretype")
 
-    paguretitle: str = Field(title="Pagure Title")
-    paguredatecreated: IssueDatetime = Field(title="Pagure Created")
-    pagurerepo: str = Field(title="Pagure Repo Slug")
-    pagureurl: str = Field(title="Pagure URL")
-    paguretype: str = Field(title="Pagure Type")
-    pagureid: int = Field(title="Pagure Issue/PR #")
+    paguretitle: String = Field(title="Pagure Title")
+    paguredatecreated: Date = Field(title="Pagure Created")
+    pagurerepo: String = Field(title="Pagure Repo Slug")
+    pagureurl: String = Field(title="Pagure URL")
+    paguretype: String = Field(title="Pagure Type")
+    pagureid: Numeric = Field(title="Pagure Issue/PR #")
 
 
 class PagureTask(Task):

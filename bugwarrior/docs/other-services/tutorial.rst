@@ -61,7 +61,7 @@ Fire up your favorite editor and import the base classes and whatever library yo
 
   from bugwarrior import config
   from bugwarrior.services import Service, Issue, Client
-  from bugwarrior.task import Task, Udas
+  from bugwarrior.task import Numeric, String, Task, Udas
 
   log = logging.getLogger(__name__)
 
@@ -138,22 +138,20 @@ Bugwarrior represents a taskwarrior task with the ``Task`` model. The standard t
 
       UNIQUE_KEY = ('gitbugid',)
 
-      gitbugauthor: str = Field(title='Gitbug Issue Author')
-      gitbugid: str = Field(title='Gitbug UUID')
-      gitbugstate: str = Field(title='Gitbug state')
-      gitbugtitle: str = Field(title='Gitbug Title')
+      gitbugauthor: String = Field(title='Gitbug Issue Author')
+      gitbugid: String = Field(title='Gitbug UUID')
+      gitbugstate: String = Field(title='Gitbug state')
+      gitbugtitle: String = Field(title='Gitbug Title')
 
 
   class GitBugTask(Task):
       udas: GitBugUdas
 
-Every field of a ``Udas`` subclass is a UDA. Its name is the UDA name, so the author will be assigned to ``gitbugauthor``. The taskwarrior UDA type is derived from the annotation: ``str`` becomes "string", ``int`` and ``float`` become "numeric", ``datetime`` becomes "date" and ``timedelta`` becomes "duration". The label comes from the field's ``title``.
+Every field of a ``Udas`` subclass is a UDA. Its name is the UDA name, so the author will be assigned to ``gitbugauthor``. The taskwarrior UDA type is derived from the annotation: ``String`` becomes "string", ``Numeric`` becomes "numeric", ``Date`` becomes "date" and ``Duration`` becomes "duration". The label comes from the field's ``title``.
 
-Give your fields no default, so that every UDA has to be mapped in ``to_taskwarrior``. Forget one and you get a validation error rather than a task that is quietly missing a value.
+Use ``String``, ``Numeric``, ``Date`` and ``Duration`` for UDA fields. These types allow ``None``. A nullable field remains required unless it has a default. Map missing service values to ``None``. Bugwarrior rejects other UDA types.
 
-Annotate a field ``str | None`` when the service can genuinely leave it empty, such as a description nobody filled in, and map it to ``None`` in that case. Do not do this for identifiers or URLs: those are always there, and if one is ever missing, an error is what you want.
-
-The ``UNIQUE_KEY`` attribute must be assigned a tuple of field names which are sufficient to identify a task. Keep in mind that these will be used to update tasks when their remote content changes, so the selected fields must be immutable, and must never be nullable.
+The ``UNIQUE_KEY`` attribute must be assigned a tuple of field names which are sufficient to identify a task. Bugwarrior rejects a null value for these fields because they identify remote tasks. Keep these fields immutable because bugwarrior uses them to update tasks.
 
 7. Issue
 --------

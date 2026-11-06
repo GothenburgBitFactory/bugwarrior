@@ -10,7 +10,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import Duration, IssueDatetime, Task, Udas
+from bugwarrior.task import Date, Duration, Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -84,22 +84,22 @@ class RedMineUdas(Udas):
 
     UNIQUE_KEY = ("redmineid",)
 
-    redmineurl: str = Field(title="Redmine URL")
-    redminesubject: str = Field(title="Redmine Subject")
-    redmineid: int = Field(title="Redmine ID")
-    redminedescription: str | None = Field(title="Redmine Description")
-    redminetracker: str = Field(title="Redmine Tracker")
-    redminestatus: str = Field(title="Redmine Status")
-    redmineauthor: str = Field(title="Redmine Author")
-    redminecategory: str | None = Field(title="Redmine Category")
-    redminestartdate: IssueDatetime = Field(title="Redmine Start Date")
+    redmineurl: String = Field(title="Redmine URL")
+    redminesubject: String = Field(title="Redmine Subject")
+    redmineid: Numeric = Field(title="Redmine ID")
+    redminedescription: String = Field(title="Redmine Description")
+    redminetracker: String = Field(title="Redmine Tracker")
+    redminestatus: String = Field(title="Redmine Status")
+    redmineauthor: String = Field(title="Redmine Author")
+    redminecategory: String = Field(title="Redmine Category")
+    redminestartdate: Date = Field(title="Redmine Start Date")
     redminespenthours: Duration = Field(title="Redmine Spent Hours")
     redmineestimatedhours: Duration = Field(title="Redmine Estimated Hours")
-    redminecreatedon: IssueDatetime = Field(title="Redmine Created On")
-    redmineupdatedon: IssueDatetime = Field(title="Redmine Updated On")
-    redmineduedate: IssueDatetime = Field(title="Redmine Due Date")
-    redmineassignedto: str | None = Field(title="Redmine Assigned To")
-    redmineprojectname: str = Field(title="Redmine Project")
+    redminecreatedon: Date = Field(title="Redmine Created On")
+    redmineupdatedon: Date = Field(title="Redmine Updated On")
+    redmineduedate: Date = Field(title="Redmine Due Date")
+    redmineassignedto: String = Field(title="Redmine Assigned To")
+    redmineprojectname: String = Field(title="Redmine Project")
 
     @field_validator("redminespenthours", "redmineestimatedhours", mode="before")
     @classmethod

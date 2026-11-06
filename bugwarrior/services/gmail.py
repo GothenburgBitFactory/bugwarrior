@@ -19,7 +19,7 @@ from pydantic import Field
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -42,14 +42,14 @@ class GmailUdas(Udas):
 
     UNIQUE_KEY = ("gmailthreadid",)
 
-    gmailthreadid: str = Field(title="GMail Thread Id")
-    gmailsubject: str = Field(title="GMail Subject")
-    gmailurl: str = Field(title="GMail URL")
-    gmaillastsender: str = Field(title="GMail last sender name")
-    gmaillastsenderaddr: str = Field(title="GMail last sender address")
-    gmaillastmessageid: str | None = Field(title="Last RFC2822 Message-ID")
-    gmailsnippet: str = Field(title="GMail snippet")
-    gmaillabels: str = Field(title="GMail labels")
+    gmailthreadid: String = Field(title="GMail Thread Id")
+    gmailsubject: String = Field(title="GMail Subject")
+    gmailurl: String = Field(title="GMail URL")
+    gmaillastsender: String = Field(title="GMail last sender name")
+    gmaillastsenderaddr: String = Field(title="GMail last sender address")
+    gmaillastmessageid: String = Field(title="Last RFC2822 Message-ID")
+    gmailsnippet: String = Field(title="GMail snippet")
+    gmaillabels: String = Field(title="GMail labels")
 
 
 class GmailTask(Task):

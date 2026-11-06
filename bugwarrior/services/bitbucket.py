@@ -9,7 +9,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -50,9 +50,9 @@ class BitbucketUdas(Udas):
 
     UNIQUE_KEY = ("bitbucketurl",)
 
-    bitbuckettitle: str = Field(title="Bitbucket Title")
-    bitbucketurl: str = Field(title="Bitbucket URL")
-    bitbucketid: int = Field(title="Bitbucket Issue ID")
+    bitbuckettitle: String = Field(title="Bitbucket Title")
+    bitbucketurl: String = Field(title="Bitbucket URL")
+    bitbucketid: Numeric = Field(title="Bitbucket Issue ID")
 
 
 class BitbucketTask(Task):

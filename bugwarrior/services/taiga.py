@@ -8,7 +8,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import CACHE_REGION as cache, Client, Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -31,9 +31,9 @@ class TaigaUdas(Udas):
 
     UNIQUE_KEY = ("taigaurl",)
 
-    taigasummary: str = Field(title="Taiga Summary")
-    taigaurl: str = Field(title="Taiga URL")
-    taigaid: int = Field(title="Taiga Issue ID")
+    taigasummary: String = Field(title="Taiga Summary")
+    taigaurl: String = Field(title="Taiga URL")
+    taigaid: Numeric = Field(title="Taiga Issue ID")
 
 
 class TaigaTask(Task):

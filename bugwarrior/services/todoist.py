@@ -11,7 +11,7 @@ from todoist_api_python.models import Task as ApiTask
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
-from bugwarrior.task import IssueDatetime, Task, Udas
+from bugwarrior.task import Date, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -81,17 +81,17 @@ class TodoistUdas(Udas):
 
     UNIQUE_KEY = ("todoistid",)
 
-    todoistid: str = Field(title="Todoist ID")
-    todoistcontent: str = Field(title="Todoist Content")
-    todoistdescription: str = Field(title="Todoist Description")
-    todoistdue: IssueDatetime = Field(title="Todoist Due Date")
-    todoistdeadline: IssueDatetime = Field(title="Todoist Deadline Date")
-    todoistduration: str | None = Field(title="Todoist Duration")
-    todoistsection: str | None = Field(title="Todoist Section")
-    todoistassignee: str | None = Field(title="Todoist Assignee")
-    todoistassigner: str | None = Field(title="Todoist Assigner")
-    todoisturl: str = Field(title="Todoist URL")
-    todoistparentid: str | None = Field(title="Todoist Parent ID")
+    todoistid: String = Field(title="Todoist ID")
+    todoistcontent: String = Field(title="Todoist Content")
+    todoistdescription: String = Field(title="Todoist Description")
+    todoistdue: Date = Field(title="Todoist Due Date")
+    todoistdeadline: Date = Field(title="Todoist Deadline Date")
+    todoistduration: String = Field(title="Todoist Duration")
+    todoistsection: String = Field(title="Todoist Section")
+    todoistassignee: String = Field(title="Todoist Assignee")
+    todoistassigner: String = Field(title="Todoist Assigner")
+    todoisturl: String = Field(title="Todoist URL")
+    todoistparentid: String = Field(title="Todoist Parent ID")
 
 
 class TodoistTask(Task):

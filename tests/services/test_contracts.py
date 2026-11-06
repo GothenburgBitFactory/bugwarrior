@@ -9,6 +9,7 @@ import typing
 import pytest
 
 from bugwarrior.config import get_service
+from bugwarrior.task import UdaType
 
 SERVICES = sorted(ep.name for ep in entry_points(group="bugwarrior.service"))
 
@@ -105,7 +106,12 @@ def test_task_schema_unique_identifier(service_name):
     udas_model = task_schema.get_udas_model()
     unique_key = task_schema.get_unique_key()
     values = {
-        name: 1 if udas_model.model_fields[name].annotation is int else "value"
+        name: 1
+        if any(
+            isinstance(metadata, UdaType) and metadata.uda_type == "numeric"
+            for metadata in udas_model.model_fields[name].metadata
+        )
+        else "value"
         for name in unique_key
     }
     task = task_schema.model_construct(udas=udas_model.model_construct(**values))

@@ -12,7 +12,7 @@ import requests
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
-from bugwarrior.task import Task, Udas
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -33,10 +33,10 @@ class TracUdas(Udas):
 
     UNIQUE_KEY = ("tracurl",)
 
-    tracsummary: str = Field(title="Trac Summary")
-    tracurl: str = Field(title="Trac URL")
-    tracnumber: int = Field(title="Trac Number")
-    traccomponent: str = Field(title="Trac Component")
+    tracsummary: String = Field(title="Trac Summary")
+    tracurl: String = Field(title="Trac URL")
+    tracnumber: Numeric = Field(title="Trac Number")
+    traccomponent: String = Field(title="Trac Component")
 
 
 class TracTask(Task):
