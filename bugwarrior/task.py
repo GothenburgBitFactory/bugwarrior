@@ -183,13 +183,13 @@ class Task(BaseModel):
         )
 
     annotations: list[str] = Field(default_factory=list)
-    description: str | None = None
+    description: String = None
     due: Date = None
     end: Date = None
     entry: Date = None
     modified: Date = None
     priority: Priority = None
-    project: str | None = None
+    project: String = None
     scheduled: Date = None
     status: Status = None
     tags: list[str] = Field(default_factory=list)
