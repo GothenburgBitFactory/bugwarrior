@@ -234,10 +234,10 @@ class Service(abc.ABC):
             )
 
         #: An object whose attributes are this service's configuration values.
-        self.config = config
+        self.config: schema.ServiceConfig = config
         #: An object whose attributes are the
         #: :ref:`common_configuration:Main Section` configuration values.
-        self.main_config = main_config
+        self.main_config: schema.MainSectionConfig = main_config
 
         log.info("Working on [%s]", self.config.target)
 
@@ -326,8 +326,7 @@ class Service(abc.ABC):
             for tag_template in self.config.add_tags
             if (tag := Template(tag_template).render(context))
         ]
-        # Assign instead of appending: appending to the list does not mark
-        # tags as set.
+        # Assign so model_dump(exclude_unset=True) includes configured tags.
         task.tags = [*task.tags, *added_tags]
 
     def get_task_for_record(
