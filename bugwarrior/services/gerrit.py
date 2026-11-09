@@ -33,15 +33,17 @@ class GerritConfig(config.ServiceConfig):
 class GerritUdas(Udas):
     """Service-specific UDAs contributed by Gerrit."""
 
-    UNIQUE_KEY = ("gerriturl",)
+    UDA_PREFIX = "gerrit"
 
-    gerritsummary: String = Field(title="Gerrit Summary")
-    gerriturl: String = Field(title="Gerrit URL")
-    gerritid: Numeric = Field(title="Gerrit Change ID")
-    gerritbranch: String = Field(title="Gerrit Branch")
-    gerrittopic: String = Field(title="Gerrit Topic")
-    gerritstatus: String = Field(title="Gerrit Status")
-    gerritwip: Numeric = Field(title="Gerrit Work in Progress")
+    UNIQUE_KEY = ("url",)
+
+    summary: String = Field(title="Gerrit Summary")
+    url: String = Field(title="Gerrit URL")
+    id: Numeric = Field(title="Gerrit Change ID")
+    branch: String = Field(title="Gerrit Branch")
+    topic: String = Field(title="Gerrit Topic")
+    status: String = Field(title="Gerrit Status")
+    wip: Numeric = Field(title="Gerrit Work in Progress")
 
 
 class GerritTask(Task):
@@ -56,13 +58,13 @@ class GerritIssue(Issue):
             priority=self.config.default_priority,
             tags=[],
             udas=GerritUdas(
-                gerritsummary=self.record["subject"],
-                gerriturl=self.extra["url"],
-                gerritid=self.record["_number"],
-                gerritbranch=self.record["branch"],
-                gerrittopic=self.record.get("topic", "notopic"),
-                gerritstatus=self.record.get("status", ""),
-                gerritwip=self.record.get("work_in_progress", 0),
+                summary=self.record["subject"],
+                url=self.extra["url"],
+                id=self.record["_number"],
+                branch=self.record["branch"],
+                topic=self.record.get("topic", "notopic"),
+                status=self.record.get("status", ""),
+                wip=self.record.get("work_in_progress", 0),
             ),
         )
 

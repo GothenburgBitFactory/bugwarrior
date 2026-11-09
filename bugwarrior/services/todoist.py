@@ -79,19 +79,21 @@ class TodoistClient(Client):
 class TodoistUdas(Udas):
     """Service-specific UDAs contributed by Todoist."""
 
-    UNIQUE_KEY = ("todoistid",)
+    UDA_PREFIX = "todoist"
 
-    todoistid: String = Field(title="Todoist ID")
-    todoistcontent: String = Field(title="Todoist Content")
-    todoistdescription: String = Field(title="Todoist Description")
-    todoistdue: Date = Field(title="Todoist Due Date")
-    todoistdeadline: Date = Field(title="Todoist Deadline Date")
-    todoistduration: String = Field(title="Todoist Duration")
-    todoistsection: String = Field(title="Todoist Section")
-    todoistassignee: String = Field(title="Todoist Assignee")
-    todoistassigner: String = Field(title="Todoist Assigner")
-    todoisturl: String = Field(title="Todoist URL")
-    todoistparentid: String = Field(title="Todoist Parent ID")
+    UNIQUE_KEY = ("id",)
+
+    id: String = Field(title="Todoist ID")
+    content: String = Field(title="Todoist Content")
+    description: String = Field(title="Todoist Description")
+    due: Date = Field(title="Todoist Due Date")
+    deadline: Date = Field(title="Todoist Deadline Date")
+    duration: String = Field(title="Todoist Duration")
+    section: String = Field(title="Todoist Section")
+    assignee: String = Field(title="Todoist Assignee")
+    assigner: String = Field(title="Todoist Assigner")
+    url: String = Field(title="Todoist URL")
+    parentid: String = Field(title="Todoist Parent ID")
 
 
 class TodoistTask(Task):
@@ -151,17 +153,17 @@ class TodoistIssue(Issue):
             status="completed" if self.record["is_completed"] else "pending",
             entry=self.record["created_at"],
             udas=TodoistUdas(
-                todoistid=self.record["id"],
-                todoistcontent=self._unescape_content(self.record["content"]),
-                todoistdescription=self._unescape_content(self.record["description"]),
-                todoistdue=todoist_due,
-                todoistdeadline=todoist_deadline,
-                todoistduration=self.extra["duration"],
-                todoistassignee=self.extra["assignee"],
-                todoistassigner=self.extra["assigner"],
-                todoistsection=self.extra["section"],
-                todoisturl=self.record["url"],
-                todoistparentid=self.record["parent_id"],
+                id=self.record["id"],
+                content=self._unescape_content(self.record["content"]),
+                description=self._unescape_content(self.record["description"]),
+                due=todoist_due,
+                deadline=todoist_deadline,
+                duration=self.extra["duration"],
+                assignee=self.extra["assignee"],
+                assigner=self.extra["assigner"],
+                section=self.extra["section"],
+                url=self.record["url"],
+                parentid=self.record["parent_id"],
             ),
         )
 

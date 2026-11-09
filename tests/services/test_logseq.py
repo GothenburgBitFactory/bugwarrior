@@ -126,7 +126,7 @@ class TestLogseqIssue:
 
         actual = issue.to_taskwarrior()
 
-        assert actual.udas.logseqid == "7146"
+        assert actual.udas.id == "7146"
 
     def test_to_taskwarrior_with_tags(self, make_service, record, extra):
         overrides = {"import_labels_as_tags": "True"}

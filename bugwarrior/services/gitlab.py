@@ -371,26 +371,28 @@ class GitlabClient(Client):
 class GitlabUdas(Udas):
     """Service-specific UDAs contributed by Gitlab."""
 
-    UNIQUE_KEY = ("gitlabrepo", "gitlabtype", "gitlabnumber")
+    UDA_PREFIX = "gitlab"
 
-    gitlabtitle: String = Field(title="Gitlab Title")
-    gitlabdescription: String = Field(title="Gitlab Description")
-    gitlabcreatedon: Date = Field(title="Gitlab Created")
-    gitlabupdatedat: Date = Field(title="Gitlab Updated")
-    gitlabduedate: Date = Field(title="Gitlab Due Date")
-    gitlabmilestone: String = Field(title="Gitlab Milestone")
-    gitlaburl: String = Field(title="Gitlab URL")
-    gitlabrepo: String = Field(title="Gitlab Repo Slug")
-    gitlabtype: String = Field(title="Gitlab Type")
-    gitlabnumber: String = Field(title="Gitlab Issue/MR #")
-    gitlabstate: String = Field(title="Gitlab Issue/MR State")
-    gitlabupvotes: Numeric = Field(title="Gitlab Upvotes")
-    gitlabdownvotes: Numeric = Field(title="Gitlab Downvotes")
-    gitlabwip: Numeric = Field(title="Gitlab MR Work-In-Progress Flag")
-    gitlabauthor: String = Field(title="Gitlab Author")
-    gitlabassignee: String = Field(title="Gitlab Assignee")
-    gitlabnamespace: String = Field(title="Gitlab Namespace")
-    gitlabweight: Numeric = Field(title="Gitlab Weight")
+    UNIQUE_KEY = ("repo", "type", "number")
+
+    title: String = Field(title="Gitlab Title")
+    description: String = Field(title="Gitlab Description")
+    createdon: Date = Field(title="Gitlab Created")
+    updatedat: Date = Field(title="Gitlab Updated")
+    duedate: Date = Field(title="Gitlab Due Date")
+    milestone: String = Field(title="Gitlab Milestone")
+    url: String = Field(title="Gitlab URL")
+    repo: String = Field(title="Gitlab Repo Slug")
+    type: String = Field(title="Gitlab Type")
+    number: String = Field(title="Gitlab Issue/MR #")
+    state: String = Field(title="Gitlab Issue/MR State")
+    upvotes: Numeric = Field(title="Gitlab Upvotes")
+    downvotes: Numeric = Field(title="Gitlab Downvotes")
+    wip: Numeric = Field(title="Gitlab MR Work-In-Progress Flag")
+    author: String = Field(title="Gitlab Author")
+    assignee: String = Field(title="Gitlab Assignee")
+    namespace: String = Field(title="Gitlab Namespace")
+    weight: Numeric = Field(title="Gitlab Weight")
 
 
 class GitlabTask(Task):
@@ -456,24 +458,24 @@ class GitlabIssue(Issue):
             due=duedate,
             entry=created,
             udas=GitlabUdas(
-                gitlaburl=self.extra["issue_url"],
-                gitlabrepo=self.extra["project"],
-                gitlabtype=self.extra["type"],
-                gitlabtitle=title,
-                gitlabdescription=description,
-                gitlabmilestone=(milestone or {}).get("title"),
-                gitlabnumber=str(number),
-                gitlabcreatedon=created,
-                gitlabupdatedat=updated,
-                gitlabduedate=duedate,
-                gitlabstate=state,
-                gitlabupvotes=upvotes,
-                gitlabdownvotes=downvotes,
-                gitlabwip=work_in_progress,
-                gitlabauthor=(author or {}).get("username"),
-                gitlabassignee=(assignee or {}).get("username"),
-                gitlabnamespace=self.extra["namespace"],
-                gitlabweight=weight,
+                url=self.extra["issue_url"],
+                repo=self.extra["project"],
+                type=self.extra["type"],
+                title=title,
+                description=description,
+                milestone=(milestone or {}).get("title"),
+                number=str(number),
+                createdon=created,
+                updatedat=updated,
+                duedate=duedate,
+                state=state,
+                upvotes=upvotes,
+                downvotes=downvotes,
+                wip=work_in_progress,
+                author=(author or {}).get("username"),
+                assignee=(assignee or {}).get("username"),
+                namespace=self.extra["namespace"],
+                weight=weight,
             ),
         )
 

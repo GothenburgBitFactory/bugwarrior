@@ -287,7 +287,7 @@ class TestLinearIssue:
         mock_api.add(responses.POST, "https://api.linear.app/graphql", json=page_one)
         mock_api.add(responses.POST, "https://api.linear.app/graphql", json=page_two)
 
-        identifiers = [c.udas.linearidentifier for c in service.issues()]
+        identifiers = [c.udas.identifier for c in service.issues()]
         assert identifiers == ["DUS-5", "DUS-1"]
 
         # Two HTTP calls were made, and the second one carried the cursor

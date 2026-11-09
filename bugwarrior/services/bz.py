@@ -63,16 +63,18 @@ class BugzillaConfig(config.ServiceConfig):
 class BugzillaUdas(Udas):
     """Service-specific UDAs contributed by Bugzilla."""
 
-    UNIQUE_KEY = ("bugzillaurl",)
+    UDA_PREFIX = "bugzilla"
 
-    bugzillaurl: String = Field(title="Bugzilla URL")
-    bugzillasummary: String = Field(title="Bugzilla Summary")
-    bugzillastatus: String = Field(title="Bugzilla Status")
-    bugzillabugid: Numeric = Field(title="Bugzilla Bug ID")
-    bugzillaneedinfo: Date = Field(title="Bugzilla Needinfo")
-    bugzillaproduct: String = Field(title="Bugzilla Product")
-    bugzillacomponent: String = Field(title="Bugzilla Component")
-    bugzillaassignedon: Date = Field(title="Bugzilla Assigned On")
+    UNIQUE_KEY = ("url",)
+
+    url: String = Field(title="Bugzilla URL")
+    summary: String = Field(title="Bugzilla Summary")
+    status: String = Field(title="Bugzilla Status")
+    bugid: Numeric = Field(title="Bugzilla Bug ID")
+    needinfo: Date = Field(title="Bugzilla Needinfo")
+    product: String = Field(title="Bugzilla Product")
+    component: String = Field(title="Bugzilla Component")
+    assignedon: Date = Field(title="Bugzilla Assigned On")
 
 
 class BugzillaTask(Task):
@@ -94,14 +96,14 @@ class BugzillaIssue(Issue):
             priority=self.get_priority(),
             annotations=self.extra.get("annotations", []),
             udas=BugzillaUdas(
-                bugzillaurl=self.extra["url"],
-                bugzillasummary=self.record["summary"],
-                bugzillabugid=self.record["id"],
-                bugzillastatus=self.record["status"],
-                bugzillaproduct=self.record["product"],
-                bugzillacomponent=self.record["component"],
-                bugzillaneedinfo=self.extra.get("needinfo_since"),
-                bugzillaassignedon=self.extra.get("assigned_on"),
+                url=self.extra["url"],
+                summary=self.record["summary"],
+                bugid=self.record["id"],
+                status=self.record["status"],
+                product=self.record["product"],
+                component=self.record["component"],
+                needinfo=self.extra.get("needinfo_since"),
+                assignedon=self.extra.get("assigned_on"),
             ),
         )
 

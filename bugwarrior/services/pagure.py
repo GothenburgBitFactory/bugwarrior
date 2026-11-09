@@ -56,14 +56,16 @@ class PagureConfig(config.ServiceConfig):
 class PagureUdas(Udas):
     """Service-specific UDAs contributed by Pagure."""
 
-    UNIQUE_KEY = ("pagureurl", "paguretype")
+    UDA_PREFIX = "pagure"
 
-    paguretitle: String = Field(title="Pagure Title")
-    paguredatecreated: Date = Field(title="Pagure Created")
-    pagurerepo: String = Field(title="Pagure Repo Slug")
-    pagureurl: String = Field(title="Pagure URL")
-    paguretype: String = Field(title="Pagure Type")
-    pagureid: Numeric = Field(title="Pagure Issue/PR #")
+    UNIQUE_KEY = ("url", "type")
+
+    title: String = Field(title="Pagure Title")
+    datecreated: Date = Field(title="Pagure Created")
+    repo: String = Field(title="Pagure Repo Slug")
+    url: String = Field(title="Pagure URL")
+    type: String = Field(title="Pagure Type")
+    id: Numeric = Field(title="Pagure Issue/PR #")
 
 
 class PagureTask(Task):
@@ -83,14 +85,14 @@ class PagureIssue(Issue):
             annotations=self.extra.get("annotations", []),
             tags=self.get_tags(),
             udas=PagureUdas(
-                paguretitle=self.record["title"],
-                paguredatecreated=datetime.datetime.fromtimestamp(
+                title=self.record["title"],
+                datecreated=datetime.datetime.fromtimestamp(
                     int(self.record["date_created"]), datetime.UTC
                 ),
-                pagurerepo=self.record["repo"],
-                pagureurl=self.record["html_url"],
-                paguretype=self.extra["type"],
-                pagureid=self.record["id"],
+                repo=self.record["repo"],
+                url=self.record["html_url"],
+                type=self.extra["type"],
+                id=self.record["id"],
             ),
         )
 

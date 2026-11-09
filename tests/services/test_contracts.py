@@ -104,7 +104,7 @@ def test_task_schema_unique_identifier(service_name):
     service = get_service(service_name)
     task_schema = service.TASK_SCHEMA
     udas_model = task_schema.get_udas_model()
-    unique_key = task_schema.get_unique_key()
+    unique_key = udas_model.UNIQUE_KEY
     values = {
         name: 1
         if any(
@@ -115,5 +115,6 @@ def test_task_schema_unique_identifier(service_name):
         for name in unique_key
     }
     task = task_schema.model_construct(udas=udas_model.model_construct(**values))
+    expected = dict(zip(task_schema.get_unique_key(), values.values()))
 
-    assert task.unique_identifier() == json.dumps(values, sort_keys=True)
+    assert task.unique_identifier() == json.dumps(expected, sort_keys=True)

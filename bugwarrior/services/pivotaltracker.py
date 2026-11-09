@@ -43,21 +43,23 @@ class PivotalTrackerConfig(config.ServiceConfig):
 class PivotalTrackerUdas(Udas):
     """Service-specific UDAs contributed by PivotalTracker."""
 
-    UNIQUE_KEY = ("pivotalurl",)
+    UDA_PREFIX = "pivotal"
 
-    pivotalurl: String = Field(title="Story URL")
-    pivotaldescription: String = Field(title="Story Description")
-    pivotalstorytype: String = Field(title="Story Type")
-    pivotalprojectid: Numeric = Field(title="Project ID")
-    pivotalprojectname: String = Field(title="Project Name")
-    pivotalid: Numeric = Field(title="Story ID")
-    pivotalowners: String = Field(title="Story Owned By")
-    pivotalrequesters: String = Field(title="Story Requested By")
-    pivotalestimate: Numeric = Field(title="Story Estimate")
-    pivotalblockers: String = Field(title="Story Blockers")
-    pivotalcreated: Date = Field(title="Story Created")
-    pivotalupdated: Date = Field(title="Story Updated")
-    pivotalclosed: Date = Field(title="Story Closed")
+    UNIQUE_KEY = ("url",)
+
+    url: String = Field(title="Story URL")
+    description: String = Field(title="Story Description")
+    storytype: String = Field(title="Story Type")
+    projectid: Numeric = Field(title="Project ID")
+    projectname: String = Field(title="Project Name")
+    id: Numeric = Field(title="Story ID")
+    owners: String = Field(title="Story Owned By")
+    requesters: String = Field(title="Story Requested By")
+    estimate: Numeric = Field(title="Story Estimate")
+    blockers: String = Field(title="Story Blockers")
+    created: Date = Field(title="Story Created")
+    updated: Date = Field(title="Story Updated")
+    closed: Date = Field(title="Story Closed")
 
 
 class PivotalTrackerTask(Task):
@@ -72,21 +74,21 @@ class PivotalTrackerIssue(Issue):
             annotations=self.extra.get("annotations", []),
             tags=self.get_tags(),
             udas=PivotalTrackerUdas(
-                pivotalurl=self.record["url"],
-                pivotaldescription=self.record.get("description"),
-                pivotalstorytype=self.record["story_type"],
-                pivotalprojectid=self.record["project_id"],
-                pivotalprojectname=self.extra["project_name"],
-                pivotalid=self.record["id"],
-                pivotalowners=self.extra["owned_user"],
-                pivotalrequesters=self.extra["request_user"],
+                url=self.record["url"],
+                description=self.record.get("description"),
+                storytype=self.record["story_type"],
+                projectid=self.record["project_id"],
+                projectname=self.extra["project_name"],
+                id=self.record["id"],
+                owners=self.extra["owned_user"],
+                requesters=self.extra["request_user"],
                 # int() truncates: a fractional point scale would
                 # otherwise be rejected rather than rounded down.
-                pivotalestimate=int(self.record.get("estimate", 0)),
-                pivotalblockers=self.extra["blockers"],
-                pivotalcreated=self.record.get("created_at"),
-                pivotalupdated=self.record.get("updated_at"),
-                pivotalclosed=self.record.get("accepted_at"),
+                estimate=int(self.record.get("estimate", 0)),
+                blockers=self.extra["blockers"],
+                created=self.record.get("created_at"),
+                updated=self.record.get("updated_at"),
+                closed=self.record.get("accepted_at"),
             ),
         )
 

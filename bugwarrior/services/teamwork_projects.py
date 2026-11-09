@@ -36,14 +36,16 @@ class TeamworkClient(Client):
 class TeamworkUdas(Udas):
     """Service-specific UDAs contributed by Teamwork Projects."""
 
-    UNIQUE_KEY = ("teamwork_url",)
+    UDA_PREFIX = "teamwork_"
 
-    teamwork_url: String = Field(title="Teamwork Url")
-    teamwork_title: String = Field(title="Teamwork Title")
-    teamwork_description_long: String = Field(title="Teamwork Description Long")
-    teamwork_project_id: Numeric = Field(title="Teamwork Project ID")
-    teamwork_status: String = Field(title="Teamwork Status")
-    teamwork_id: Numeric = Field(title="Teamwork Task ID")
+    UNIQUE_KEY = ("url",)
+
+    url: String = Field(title="Teamwork Url")
+    title: String = Field(title="Teamwork Title")
+    description_long: String = Field(title="Teamwork Description Long")
+    project_id: Numeric = Field(title="Teamwork Project ID")
+    status: String = Field(title="Teamwork Status")
+    id: Numeric = Field(title="Teamwork Task ID")
 
 
 class TeamworkTask(Task):
@@ -76,12 +78,12 @@ class TeamworkIssue(Issue):
             modified=modified,
             annotations=self.extra.get("annotations", []),
             udas=TeamworkUdas(
-                teamwork_url=self.get_task_url(),
-                teamwork_title=self.record.get("content", ""),
-                teamwork_description_long=self.record.get("description", ""),
-                teamwork_project_id=self.record["project-id"],
-                teamwork_status="Open" if is_open else "Closed",
-                teamwork_id=self.record["id"],
+                url=self.get_task_url(),
+                title=self.record.get("content", ""),
+                description_long=self.record.get("description", ""),
+                project_id=self.record["project-id"],
+                status="Open" if is_open else "Closed",
+                id=self.record["id"],
             ),
         )
 

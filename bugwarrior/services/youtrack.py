@@ -89,13 +89,15 @@ class YoutrackConfig(config.ServiceConfig):
 class YoutrackUdas(Udas):
     """Service-specific UDAs contributed by YouTrack."""
 
-    UNIQUE_KEY = ("youtrackurl",)
+    UDA_PREFIX = "youtrack"
 
-    youtrackissue: String = Field(title="YouTrack Issue")
-    youtracksummary: String = Field(title="YouTrack Summary")
-    youtrackurl: String = Field(title="YouTrack URL")
-    youtrackproject: String = Field(title="YouTrack Project")
-    youtracknumber: String = Field(title="YouTrack Project Issue Number")
+    UNIQUE_KEY = ("url",)
+
+    issue: String = Field(title="YouTrack Issue")
+    summary: String = Field(title="YouTrack Summary")
+    url: String = Field(title="YouTrack URL")
+    project: String = Field(title="YouTrack Project")
+    number: String = Field(title="YouTrack Project Issue Number")
 
 
 class YoutrackTask(Task):
@@ -112,12 +114,12 @@ class YoutrackIssue(Issue):
             priority=self.get_priority(),
             tags=self.get_tags(),
             udas=YoutrackUdas(
-                youtrackissue=self.get_issue(),
-                youtracksummary=self.get_issue_summary(),
-                youtrackurl=self.get_issue_url(),
-                youtrackproject=self.get_project(),
+                issue=self.get_issue(),
+                summary=self.get_issue_summary(),
+                url=self.get_issue_url(),
+                project=self.get_project(),
                 # Declared as a string UDA, though YouTrack reports an integer.
-                youtracknumber=None if number is None else str(number),
+                number=None if number is None else str(number),
             ),
         )
 

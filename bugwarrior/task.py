@@ -87,11 +87,17 @@ class Udas(BaseModel):
     declare its own UDAs, and the unique key which identifies a task in the
     remote service.
 
+    Field names are local to the service model. UDA_PREFIX adds the service
+    prefix when bugwarrior writes the fields to Taskwarrior.
+
     The field title becomes the UDA label, and the field name becomes the
     label when the field has no title.
     """
 
     model_config = ConfigDict(extra="forbid")
+
+    #: Prefix added to UDA field names when they are sent to Taskwarrior.
+    UDA_PREFIX: ClassVar[str] = ""
 
     #: Names of the UDA fields which identify a task in the remote service.
     #: There is no default on purpose: an empty unique key matches every
@@ -131,6 +137,21 @@ class Udas(BaseModel):
         return self
 
     @classmethod
+    def _taskwarrior_name(cls, name: str) -> str:
+        return f"{cls.UDA_PREFIX}{name}"
+
+    def to_task_data(self) -> dict[str, Any]:
+        """Return this service's UDAs with their Taskwarrior field names."""
+        return {
+            self._taskwarrior_name(name): value
+            for name, value in self.model_dump().items()
+        }
+
+    @classmethod
+    def _taskwarrior_unique_key(cls) -> tuple[str, ...]:
+        return tuple(cls._taskwarrior_name(name) for name in cls.UNIQUE_KEY)
+
+    @classmethod
     def serialize(cls) -> dict[str, dict[str, str]]:
         """Return this service's UDA definitions, one per declared field.
 
@@ -138,7 +159,10 @@ class Udas(BaseModel):
         title, falling back to the field name.
         """
         return {
-            name: {"type": field.metadata[0].uda_type, "label": field.title or name}
+            cls._taskwarrior_name(name): {
+                "type": field.metadata[0].uda_type,
+                "label": field.title or name,
+            }
             for name, field in cls.model_fields.items()
         }
 
@@ -163,7 +187,7 @@ class Task(BaseModel):
 
     @classmethod
     def get_unique_key(cls) -> tuple[str, ...]:
-        return cls.get_udas_model().UNIQUE_KEY
+        return cls.get_udas_model()._taskwarrior_unique_key()
 
     def to_task_data(self) -> dict[str, Any]:
         """Return a flat dictionary suitable for Taskwarrior synchronization.
@@ -173,7 +197,7 @@ class Task(BaseModel):
         model and sit next to the standard fields.
         """
         data = self.model_dump(exclude={"udas"}, exclude_unset=True)
-        data.update(self.udas.model_dump())
+        data.update(self.udas.to_task_data())
         return data
 
     def unique_identifier(self) -> str:

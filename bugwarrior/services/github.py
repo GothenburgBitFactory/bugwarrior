@@ -218,22 +218,24 @@ class GithubClient(Client):
 class GithubUdas(Udas):
     """Service-specific UDAs contributed by Github."""
 
-    UNIQUE_KEY = ("githuburl", "githubtype")
+    UDA_PREFIX = "github"
 
-    githubtitle: String = Field(title="Github Title")
-    githubbody: String = Field(title="Github Body")
-    githubcreatedon: Date = Field(title="Github Created")
-    githubupdatedat: Date = Field(title="Github Updated")
-    githubclosedon: Date = Field(title="GitHub Closed")
-    githubmilestone: String = Field(title="Github Milestone")
-    githubrepo: String = Field(title="Github Repo Slug")
-    githuburl: String = Field(title="Github URL")
-    githubtype: String = Field(title="Github Type")
-    githubnumber: Numeric = Field(title="Github Issue/PR #")
-    githubuser: String = Field(title="Github User")
-    githubnamespace: String = Field(title="Github Namespace")
-    githubstate: String = Field(title="GitHub State")
-    githubdraft: Numeric = Field(title="GitHub Draft")
+    UNIQUE_KEY = ("url", "type")
+
+    title: String = Field(title="Github Title")
+    body: String = Field(title="Github Body")
+    createdon: Date = Field(title="Github Created")
+    updatedat: Date = Field(title="Github Updated")
+    closedon: Date = Field(title="GitHub Closed")
+    milestone: String = Field(title="Github Milestone")
+    repo: String = Field(title="Github Repo Slug")
+    url: String = Field(title="Github URL")
+    type: String = Field(title="Github Type")
+    number: Numeric = Field(title="Github Issue/PR #")
+    user: String = Field(title="Github User")
+    namespace: String = Field(title="Github Namespace")
+    state: String = Field(title="GitHub State")
+    draft: Numeric = Field(title="GitHub Draft")
 
 
 class GithubTask(Task):
@@ -250,20 +252,20 @@ class GithubIssue(Issue):
             entry=self.record.get("created_at"),
             end=self.record.get("closed_at"),
             udas=GithubUdas(
-                githuburl=self.record["html_url"],
-                githubrepo=self.record["repo"],
-                githubtype=self.extra["type"],
-                githubuser=self.record["user"]["login"],
-                githubtitle=self.record["title"],
-                githubbody=self.extra["body"],
-                githubmilestone=(self.record["milestone"] or {}).get("title"),
-                githubnumber=self.record["number"],
-                githubcreatedon=self.record.get("created_at"),
-                githubupdatedat=self.record.get("updated_at"),
-                githubclosedon=self.record.get("closed_at"),
-                githubnamespace=self.extra["namespace"],
-                githubstate=self.record.get("state", ""),
-                githubdraft=self.record.get("draft", 0),
+                url=self.record["html_url"],
+                repo=self.record["repo"],
+                type=self.extra["type"],
+                user=self.record["user"]["login"],
+                title=self.record["title"],
+                body=self.extra["body"],
+                milestone=(self.record["milestone"] or {}).get("title"),
+                number=self.record["number"],
+                createdon=self.record.get("created_at"),
+                updatedat=self.record.get("updated_at"),
+                closedon=self.record.get("closed_at"),
+                namespace=self.extra["namespace"],
+                state=self.record.get("state", ""),
+                draft=self.record.get("draft", 0),
             ),
         )
 

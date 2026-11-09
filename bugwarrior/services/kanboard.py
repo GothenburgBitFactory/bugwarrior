@@ -37,14 +37,16 @@ class KanboardConfig(config.ServiceConfig):
 class KanboardUdas(Udas):
     """Service-specific UDAs contributed by Kanboard."""
 
-    UNIQUE_KEY = ("kanboardtaskid",)
+    UDA_PREFIX = "kanboard"
 
-    kanboardtaskid: Numeric = Field(title="Kanboard Task ID")
-    kanboardtasktitle: String = Field(title="Kanboard Task Title")
-    kanboardtaskdescription: String = Field(title="Kanboard Task Description")
-    kanboardprojectid: Numeric = Field(title="Kanboard Project ID")
-    kanboardprojectname: String = Field(title="Kanboard Project Name")
-    kanboardurl: String = Field(title="Kanboard URL")
+    UNIQUE_KEY = ("taskid",)
+
+    taskid: Numeric = Field(title="Kanboard Task ID")
+    tasktitle: String = Field(title="Kanboard Task Title")
+    taskdescription: String = Field(title="Kanboard Task Description")
+    projectid: Numeric = Field(title="Kanboard Project ID")
+    projectname: String = Field(title="Kanboard Project Name")
+    url: String = Field(title="Kanboard URL")
 
 
 class KanboardTask(Task):
@@ -68,12 +70,12 @@ class KanboardIssue(Issue):
             due=self.get_due(),
             entry=self.get_entry(),
             udas=KanboardUdas(
-                kanboardtaskid=self.get_task_id(),
-                kanboardtasktitle=self.get_task_title(),
-                kanboardtaskdescription=self.get_task_description(),
-                kanboardprojectid=self.get_project_id(),
-                kanboardprojectname=self.get_project_name(),
-                kanboardurl=self.get_url(),
+                taskid=self.get_task_id(),
+                tasktitle=self.get_task_title(),
+                taskdescription=self.get_task_description(),
+                projectid=self.get_project_id(),
+                projectname=self.get_project_name(),
+                url=self.get_url(),
             ),
         )
 

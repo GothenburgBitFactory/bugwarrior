@@ -50,15 +50,17 @@ class BTSConfig(config.ServiceConfig):
 class BTSUdas(Udas):
     """Service-specific UDAs contributed by the Debian BTS."""
 
-    UNIQUE_KEY = ("btsurl",)
+    UDA_PREFIX = "bts"
 
-    btssubject: String = Field(title="Debian BTS Subject")
-    btsurl: String = Field(title="Debian BTS URL")
-    btsnumber: Numeric = Field(title="Debian BTS Number")
-    btspackage: String = Field(title="Debian BTS Package")
-    btssource: String = Field(title="Debian BTS Source Package")
-    btsforwarded: String = Field(title="Debian BTS Forwarded URL")
-    btsstatus: String = Field(title="Debian BTS Status")
+    UNIQUE_KEY = ("url",)
+
+    subject: String = Field(title="Debian BTS Subject")
+    url: String = Field(title="Debian BTS URL")
+    number: Numeric = Field(title="Debian BTS Number")
+    package: String = Field(title="Debian BTS Package")
+    source: String = Field(title="Debian BTS Source Package")
+    forwarded: String = Field(title="Debian BTS Forwarded URL")
+    status: String = Field(title="Debian BTS Status")
 
 
 class BTSTask(Task):
@@ -81,13 +83,13 @@ class BTSIssue(Issue):
             priority=self.get_priority(),
             annotations=self.extra.get("annotations", []),
             udas=BTSUdas(
-                btssubject=self.record["subject"],
-                btsurl=self.record["url"],
-                btsnumber=self.record["number"],
-                btspackage=self.record["package"],
-                btssource=self.record["source"],
-                btsforwarded=self.record["forwarded"],
-                btsstatus=self.record["status"],
+                subject=self.record["subject"],
+                url=self.record["url"],
+                number=self.record["number"],
+                package=self.record["package"],
+                source=self.record["source"],
+                forwarded=self.record["forwarded"],
+                status=self.record["status"],
             ),
         )
 

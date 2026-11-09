@@ -8,12 +8,13 @@ from bugwarrior.task import Date, Duration, Numeric, String, Task, Udas
 
 
 class SampleUdas(Udas):
-    UNIQUE_KEY = ("sampleurl",)
+    UDA_PREFIX = "sample"
+    UNIQUE_KEY = ("url",)
 
-    samplenumber: Numeric = Field(title="Sample Number")
-    sampleurl: String = Field(title="Sample URL")
-    samplecreated: Date = Field(title="Sample Created")
-    samplespent: Duration = Field(title="Sample Spent")
+    number: Numeric = Field(title="Sample Number")
+    url: String = Field(title="Sample URL")
+    created: Date = Field(title="Sample Created")
+    spent: Duration = Field(title="Sample Spent")
 
 
 class SampleTask(Task):
@@ -22,10 +23,10 @@ class SampleTask(Task):
 
 def sample_udas(**overrides):
     values = {
-        "samplenumber": None,
-        "sampleurl": "http://example.com",
-        "samplecreated": None,
-        "samplespent": None,
+        "number": None,
+        "url": "http://example.com",
+        "created": None,
+        "spent": None,
     }
     values.update(overrides)
     return SampleUdas(**values)
@@ -59,7 +60,7 @@ def test_unset_generic_fields_are_omitted():
 
 
 def test_udas_are_flattened_and_always_emitted():
-    task = SampleTask(project="foundation", udas=sample_udas(samplenumber=7))
+    task = SampleTask(project="foundation", udas=sample_udas(number=7))
 
     assert task.to_task_data() == {
         "project": "foundation",
@@ -108,7 +109,7 @@ DURATIONS = [
 
 @pytest.mark.parametrize(("spent", "expected"), [*DURATIONS, (None, None)])
 def test_duration_is_emitted_as_iso_8601(spent, expected):
-    task = SampleTask(udas=sample_udas(samplespent=spent))
+    task = SampleTask(udas=sample_udas(spent=spent))
 
     assert task.to_task_data()["samplespent"] == expected
 
@@ -121,9 +122,7 @@ def test_duration_round_trips_through_taskwarrior(config_environment, spent, exp
     It accepts several forms but saves only one of them. Write another one
     and the task looks changed on every sync, and is updated again and again.
     """
-    emitted = SampleTask(udas=sample_udas(samplespent=spent)).to_task_data()[
-        "samplespent"
-    ]
+    emitted = SampleTask(udas=sample_udas(spent=spent)).to_task_data()["samplespent"]
     tw = TaskWarriorShellout(
         config_filename=str(config_environment.taskrc),
         config_overrides={"uda": {"samplespent": {"type": "duration"}}},
@@ -153,12 +152,12 @@ def test_get_unique_key():
 
 def test_udas_fields_are_required():
     with pytest.raises(ValidationError):
-        SampleUdas(sampleurl="http://example.com")
+        SampleUdas(url="http://example.com")
 
 
 def test_unique_key_rejects_a_null_value():
     with pytest.raises(ValidationError, match="cannot be None"):
-        sample_udas(sampleurl=None)
+        sample_udas(url=None)
 
 
 def test_unique_key_rejects_a_misspelled_uda():
@@ -178,11 +177,11 @@ def test_unique_key_rejects_a_generic_field():
         class GenericKeyUdas(Udas):
             UNIQUE_KEY = ("project",)
 
-            sampleurl: String = None
+            url: String = None
 
 
 def test_unique_identifier_covers_only_the_unique_key():
-    task = SampleTask(project="foundation", udas=sample_udas(samplenumber=7))
+    task = SampleTask(project="foundation", udas=sample_udas(number=7))
 
     # Sorted keys, so the identifier is stable regardless of field order, and
     # limited to the unique key, so unrelated edits do not orphan the task.

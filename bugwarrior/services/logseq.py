@@ -115,16 +115,18 @@ class LogseqClient(Client):
 class LogseqUdas(Udas):
     """Service-specific UDAs contributed by Logseq."""
 
-    UNIQUE_KEY = ("logseqid", "logsequuid")
+    UDA_PREFIX = "logseq"
 
-    logseqid: String = Field(title="Logseq ID")
-    logsequuid: String = Field(title="Logseq UUID")
-    logseqstate: String = Field(title="Logseq State")
-    logseqtitle: String = Field(title="Logseq Title")
-    logsequri: String = Field(title="Logseq URI")
-    logseqscheduled: Date = Field(title="Logseq Scheduled")
-    logseqdeadline: Date = Field(title="Logseq Deadline")
-    logseqpage: String = Field(title="Logseq Page")
+    UNIQUE_KEY = ("id", "uuid")
+
+    id: String = Field(title="Logseq ID")
+    uuid: String = Field(title="Logseq UUID")
+    state: String = Field(title="Logseq State")
+    title: String = Field(title="Logseq Title")
+    uri: String = Field(title="Logseq URI")
+    scheduled: Date = Field(title="Logseq Scheduled")
+    deadline: Date = Field(title="Logseq Deadline")
+    page: String = Field(title="Logseq Page")
 
 
 class LogseqTask(Task):
@@ -301,14 +303,14 @@ class LogseqIssue(Issue):
             udas=LogseqUdas(
                 # Logseq can return the block id as a float (7146.0).
                 # The UDA holds a string, so round-trip through int.
-                logseqid=str(int(self.record["id"])),
-                logsequuid=self.record["uuid"],
-                logseqstate=self.record["marker"],
-                logseqtitle=self.get_formatted_title(),
-                logsequri=self.get_url(),
-                logseqscheduled=scheduled_date,
-                logseqdeadline=deadline_date,
-                logseqpage=self.extra["page_title"],
+                id=str(int(self.record["id"])),
+                uuid=self.record["uuid"],
+                state=self.record["marker"],
+                title=self.get_formatted_title(),
+                uri=self.get_url(),
+                scheduled=scheduled_date,
+                deadline=deadline_date,
+                page=self.extra["page_title"],
             ),
         )
 

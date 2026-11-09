@@ -29,11 +29,13 @@ class TaigaConfig(config.ServiceConfig):
 class TaigaUdas(Udas):
     """Service-specific UDAs contributed by Taiga."""
 
-    UNIQUE_KEY = ("taigaurl",)
+    UDA_PREFIX = "taiga"
 
-    taigasummary: String = Field(title="Taiga Summary")
-    taigaurl: String = Field(title="Taiga URL")
-    taigaid: Numeric = Field(title="Taiga Issue ID")
+    UNIQUE_KEY = ("url",)
+
+    summary: String = Field(title="Taiga Summary")
+    url: String = Field(title="Taiga URL")
+    id: Numeric = Field(title="Taiga Issue ID")
 
 
 class TaigaTask(Task):
@@ -49,9 +51,9 @@ class TaigaIssue(Issue):
             tags=self.get_tags(),
             due=self.record.get("due_date"),
             udas=TaigaUdas(
-                taigasummary=self.record["subject"],
-                taigaurl=self.extra["url"],
-                taigaid=self.record["ref"],
+                summary=self.record["subject"],
+                url=self.extra["url"],
+                id=self.record["ref"],
             ),
         )
 

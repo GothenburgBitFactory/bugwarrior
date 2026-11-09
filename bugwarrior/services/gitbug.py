@@ -107,12 +107,14 @@ class GitBugClient(Client):
 class GitBugUdas(Udas):
     """Service-specific UDAs contributed by git-bug."""
 
-    UNIQUE_KEY = ("gitbugid",)
+    UDA_PREFIX = "gitbug"
 
-    gitbugauthor: String = Field(title="Gitbug Issue Author")
-    gitbugid: String = Field(title="Gitbug UUID")
-    gitbugstate: String = Field(title="Gitbug state")
-    gitbugtitle: String = Field(title="Gitbug Title")
+    UNIQUE_KEY = ("id",)
+
+    author: String = Field(title="Gitbug Issue Author")
+    id: String = Field(title="Gitbug UUID")
+    state: String = Field(title="Gitbug state")
+    title: String = Field(title="Gitbug Title")
 
 
 class GitBugTask(Task):
@@ -128,10 +130,10 @@ class GitBugIssue(Issue):
             tags=self.get_tags(),
             entry=self.record.get("createdAt"),
             udas=GitBugUdas(
-                gitbugauthor=self.record["author"]["name"],
-                gitbugid=self.record["id"],
-                gitbugstate=self.record["status"],
-                gitbugtitle=self.record["title"],
+                author=self.record["author"]["name"],
+                id=self.record["id"],
+                state=self.record["status"],
+                title=self.record["title"],
             ),
         )
 

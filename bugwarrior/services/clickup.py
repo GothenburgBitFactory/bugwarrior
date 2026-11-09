@@ -53,19 +53,21 @@ class ClickupClient(Client):
 class ClickupUdas(Udas):
     """Service-specific UDAs contributed by Clickup."""
 
-    UNIQUE_KEY = ("clickupid",)
+    UDA_PREFIX = "clickup"
 
-    clickupid: String = Field(title="Clickup id")
-    clickupdescription: String = Field(title="Clickup Description")
-    clickupstatus: String = Field(title="Clickup Status Title")
-    clickupupdated: Date = Field(title="Clickup Updated")
-    clickupcreator: String = Field(title="Clickup Creator")
-    clickupurl: String = Field(title="Clickup URL")
-    clickuplistname: String = Field(title="Clickup List name")
-    clickupproject: String = Field(title="Clickup Project id")
-    clickupfolder: String = Field(title="Clickup Folder id")
-    clickupspace: String = Field(title="Clickup Space id")
-    clickupname: String = Field(title="Clickup Title")
+    UNIQUE_KEY = ("id",)
+
+    id: String = Field(title="Clickup id")
+    description: String = Field(title="Clickup Description")
+    status: String = Field(title="Clickup Status Title")
+    updated: Date = Field(title="Clickup Updated")
+    creator: String = Field(title="Clickup Creator")
+    url: String = Field(title="Clickup URL")
+    listname: String = Field(title="Clickup List name")
+    project: String = Field(title="Clickup Project id")
+    folder: String = Field(title="Clickup Folder id")
+    space: String = Field(title="Clickup Space id")
+    name: String = Field(title="Clickup Title")
 
 
 class ClickupTask(Task):
@@ -87,17 +89,17 @@ class ClickupIssue(Issue):
             due=self.parse_timestamp(self.record["due_date"]),
             entry=self.parse_timestamp(self.record["date_created"]),
             udas=ClickupUdas(
-                clickupid=self.record["id"],
-                clickupdescription=self.record["description"],
-                clickupstatus=self.record["status"]["status"],
-                clickupupdated=self.parse_timestamp(self.record["date_updated"]),
-                clickupcreator=self.record["creator"]["username"],
-                clickupurl=self.record["url"],
-                clickuplistname=self.record["list"]["name"],
-                clickupproject=self.record["project"]["id"],
-                clickupfolder=self.record["folder"]["id"],
-                clickupspace=self.record["space"]["id"],
-                clickupname=self.record["name"],
+                id=self.record["id"],
+                description=self.record["description"],
+                status=self.record["status"]["status"],
+                updated=self.parse_timestamp(self.record["date_updated"]),
+                creator=self.record["creator"]["username"],
+                url=self.record["url"],
+                listname=self.record["list"]["name"],
+                project=self.record["project"]["id"],
+                folder=self.record["folder"]["id"],
+                space=self.record["space"]["id"],
+                name=self.record["name"],
             ),
         )
 

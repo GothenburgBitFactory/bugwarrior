@@ -110,19 +110,21 @@ class AzureDevopsClient(Client):
 class AzureDevopsUdas(Udas):
     """Service-specific UDAs contributed by Azure Devops."""
 
-    UNIQUE_KEY = ("adourl",)
+    UDA_PREFIX = "ado"
 
-    adotitle: String = Field(title="Azure Devops Title")
-    adodescription: String = Field(title="Azure Devops Description")
-    adoid: Numeric = Field(title="Azure Devops ID number")
-    adourl: String = Field(title="Azure Devops URL")
-    adotype: String = Field(title="Azure Devops Work Item Type")
-    adostate: String = Field(title="Azure Devops Work Item State")
-    adoactivity: String = Field(title="Azure Devops Activity")
-    adopriority: Numeric = Field(title="Azure Devops Priority")
-    adoremainingwork: Numeric = Field(title="Azure Devops Amount of Remaining Work")
-    adoparent: String = Field(title="Azure Devops Parent Work Item Name")
-    adonamespace: String = Field(title="Azure Devops Namespace")
+    UNIQUE_KEY = ("url",)
+
+    title: String = Field(title="Azure Devops Title")
+    description: String = Field(title="Azure Devops Description")
+    id: Numeric = Field(title="Azure Devops ID number")
+    url: String = Field(title="Azure Devops URL")
+    type: String = Field(title="Azure Devops Work Item Type")
+    state: String = Field(title="Azure Devops Work Item State")
+    activity: String = Field(title="Azure Devops Activity")
+    priority: Numeric = Field(title="Azure Devops Priority")
+    remainingwork: Numeric = Field(title="Azure Devops Amount of Remaining Work")
+    parent: String = Field(title="Azure Devops Parent Work Item Name")
+    namespace: String = Field(title="Azure Devops Namespace")
 
 
 class AzureDevopsTask(Task):
@@ -147,17 +149,17 @@ class AzureDevopsIssue(Issue):
             entry=fields.get("System.CreatedDate"),
             end=fields.get("Microsoft.VSTS.Common.ClosedDate"),
             udas=AzureDevopsUdas(
-                adotitle=fields["System.Title"],
-                adodescription=format_item(fields.get("System.Description")),
-                adoid=self.record["id"],
-                adourl=self.record["_links"]["html"]["href"],
-                adotype=fields["System.WorkItemType"],
-                adostate=fields["System.State"],
-                adoactivity=fields.get("System.Activity", ""),
-                adopriority=fields.get("Microsoft.VSTS.Common.Priority"),
-                adoremainingwork=fields.get("Microsoft.VSTS.Scheduling.RemainingWork"),
-                adoparent=self.record.get("ParentTitle"),
-                adonamespace=self.extra.get("namespace"),
+                title=fields["System.Title"],
+                description=format_item(fields.get("System.Description")),
+                id=self.record["id"],
+                url=self.record["_links"]["html"]["href"],
+                type=fields["System.WorkItemType"],
+                state=fields["System.State"],
+                activity=fields.get("System.Activity", ""),
+                priority=fields.get("Microsoft.VSTS.Common.Priority"),
+                remainingwork=fields.get("Microsoft.VSTS.Scheduling.RemainingWork"),
+                parent=self.record.get("ParentTitle"),
+                namespace=self.extra.get("namespace"),
             ),
         )
 

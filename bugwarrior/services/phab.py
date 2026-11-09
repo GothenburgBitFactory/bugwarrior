@@ -39,12 +39,14 @@ class PhabricatorConfig(config.ServiceConfig):
 class PhabricatorUdas(Udas):
     """Service-specific UDAs contributed by Phabricator."""
 
-    UNIQUE_KEY = ("phabricatorurl",)
+    UDA_PREFIX = "phabricator"
 
-    phabricatortitle: String = Field(title="Phabricator Title")
-    phabricatorurl: String = Field(title="Phabricator URL")
-    phabricatortype: String = Field(title="Phabricator Type")
-    phabricatorid: String = Field(title="Phabricator Object")
+    UNIQUE_KEY = ("url",)
+
+    title: String = Field(title="Phabricator Title")
+    url: String = Field(title="Phabricator URL")
+    type: String = Field(title="Phabricator Type")
+    id: String = Field(title="Phabricator Object")
 
 
 class PhabricatorTask(Task):
@@ -67,10 +69,10 @@ class PhabricatorIssue(Issue):
             priority=self.priority,
             annotations=self.extra.get("annotations", []),
             udas=PhabricatorUdas(
-                phabricatortitle=self.record["title"],
-                phabricatorurl=self.record["uri"],
-                phabricatortype=self.extra["type"],
-                phabricatorid=self.record["uri"].split("/")[-1],
+                title=self.record["title"],
+                url=self.record["uri"],
+                type=self.extra["type"],
+                id=self.record["uri"].split("/")[-1],
             ),
         )
 

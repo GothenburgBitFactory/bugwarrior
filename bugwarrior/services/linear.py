@@ -42,19 +42,21 @@ class LinearConfig(config.ServiceConfig):
 class LinearUdas(Udas):
     """Service-specific UDAs contributed by Linear."""
 
-    UNIQUE_KEY = ("linearurl",)
+    UDA_PREFIX = "linear"
 
-    linearurl: String = Field(title="Issue URL")
-    lineartitle: String = Field(title="Issue Title")
-    lineardescription: String = Field(title="Issue Description")
-    linearstatus: String = Field(title="Issue State")
-    linearidentifier: String = Field(title="Linear Identifier")
-    linearteam: String = Field(title="Project ID")
-    linearcreator: String = Field(title="Issue Creator")
-    linearassignee: String = Field(title="Issue Assignee")
-    linearcreated: Date = Field(title="Issue Created")
-    linearupdated: Date = Field(title="Issue Updated")
-    linearclosed: Date = Field(title="Issue Closed")
+    UNIQUE_KEY = ("url",)
+
+    url: String = Field(title="Issue URL")
+    title: String = Field(title="Issue Title")
+    description: String = Field(title="Issue Description")
+    status: String = Field(title="Issue State")
+    identifier: String = Field(title="Linear Identifier")
+    team: String = Field(title="Project ID")
+    creator: String = Field(title="Issue Creator")
+    assignee: String = Field(title="Issue Assignee")
+    created: Date = Field(title="Issue Created")
+    updated: Date = Field(title="Issue Updated")
+    closed: Date = Field(title="Issue Closed")
 
 
 class LinearTask(Task):
@@ -89,17 +91,17 @@ class LinearIssue(Issue):
             annotations=get(self.extra, "annotations", []),
             tags=self.get_tags(),
             udas=LinearUdas(
-                linearurl=self.record["url"],
-                lineartitle=get(self.record, "title"),
-                lineardescription=self.record.get("description"),
-                linearstatus=get(get(self.record, "state", {}), "name"),
-                linearidentifier=get(self.record, "identifier"),
-                linearteam=get(get(self.record, "team", {}), "name"),
-                linearcreator=get(get(self.record, "creator", {}), "email"),
-                linearassignee=get(get(self.record, "assignee", {}), "email"),
-                linearcreated=self.record.get("createdAt"),
-                linearupdated=self.record.get("updatedAt"),
-                linearclosed=self.record.get("completedAt"),
+                url=self.record["url"],
+                title=get(self.record, "title"),
+                description=self.record.get("description"),
+                status=get(get(self.record, "state", {}), "name"),
+                identifier=get(self.record, "identifier"),
+                team=get(get(self.record, "team", {}), "name"),
+                creator=get(get(self.record, "creator", {}), "email"),
+                assignee=get(get(self.record, "assignee", {}), "email"),
+                created=self.record.get("createdAt"),
+                updated=self.record.get("updatedAt"),
+                closed=self.record.get("completedAt"),
             ),
         )
 

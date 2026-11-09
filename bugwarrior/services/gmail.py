@@ -40,16 +40,18 @@ class GmailConfig(config.ServiceConfig):
 class GmailUdas(Udas):
     """Service-specific UDAs contributed by GMail."""
 
-    UNIQUE_KEY = ("gmailthreadid",)
+    UDA_PREFIX = "gmail"
 
-    gmailthreadid: String = Field(title="GMail Thread Id")
-    gmailsubject: String = Field(title="GMail Subject")
-    gmailurl: String = Field(title="GMail URL")
-    gmaillastsender: String = Field(title="GMail last sender name")
-    gmaillastsenderaddr: String = Field(title="GMail last sender address")
-    gmaillastmessageid: String = Field(title="Last RFC2822 Message-ID")
-    gmailsnippet: String = Field(title="GMail snippet")
-    gmaillabels: String = Field(title="GMail labels")
+    UNIQUE_KEY = ("threadid",)
+
+    threadid: String = Field(title="GMail Thread Id")
+    subject: String = Field(title="GMail Subject")
+    url: String = Field(title="GMail URL")
+    lastsender: String = Field(title="GMail last sender name")
+    lastsenderaddr: String = Field(title="GMail last sender address")
+    lastmessageid: String = Field(title="Last RFC2822 Message-ID")
+    snippet: String = Field(title="GMail snippet")
+    labels: String = Field(title="GMail labels")
 
 
 class GmailTask(Task):
@@ -77,14 +79,14 @@ class GmailIssue(Issue):
             ],
             priority=self.config.default_priority,
             udas=GmailUdas(
-                gmailthreadid=self.record["id"],
-                gmailsubject=self.extra["subject"],
-                gmailurl=self.extra["url"],
-                gmaillastsender=self.extra["last_sender_name"],
-                gmaillastsenderaddr=self.extra["last_sender_address"],
-                gmaillastmessageid=self.extra["last_message_id"],
-                gmailsnippet=self.extra["snippet"],
-                gmaillabels=" ".join(sorted(self.extra["labels"])),
+                threadid=self.record["id"],
+                subject=self.extra["subject"],
+                url=self.extra["url"],
+                lastsender=self.extra["last_sender_name"],
+                lastsenderaddr=self.extra["last_sender_address"],
+                lastmessageid=self.extra["last_message_id"],
+                snippet=self.extra["snippet"],
+                labels=" ".join(sorted(self.extra["labels"])),
             ),
         )
 

@@ -82,26 +82,28 @@ class RedMineClient(Client):
 class RedMineUdas(Udas):
     """Service-specific UDAs contributed by Redmine."""
 
-    UNIQUE_KEY = ("redmineid",)
+    UDA_PREFIX = "redmine"
 
-    redmineurl: String = Field(title="Redmine URL")
-    redminesubject: String = Field(title="Redmine Subject")
-    redmineid: Numeric = Field(title="Redmine ID")
-    redminedescription: String = Field(title="Redmine Description")
-    redminetracker: String = Field(title="Redmine Tracker")
-    redminestatus: String = Field(title="Redmine Status")
-    redmineauthor: String = Field(title="Redmine Author")
-    redminecategory: String = Field(title="Redmine Category")
-    redminestartdate: Date = Field(title="Redmine Start Date")
-    redminespenthours: Duration = Field(title="Redmine Spent Hours")
-    redmineestimatedhours: Duration = Field(title="Redmine Estimated Hours")
-    redminecreatedon: Date = Field(title="Redmine Created On")
-    redmineupdatedon: Date = Field(title="Redmine Updated On")
-    redmineduedate: Date = Field(title="Redmine Due Date")
-    redmineassignedto: String = Field(title="Redmine Assigned To")
-    redmineprojectname: String = Field(title="Redmine Project")
+    UNIQUE_KEY = ("id",)
 
-    @field_validator("redminespenthours", "redmineestimatedhours", mode="before")
+    url: String = Field(title="Redmine URL")
+    subject: String = Field(title="Redmine Subject")
+    id: Numeric = Field(title="Redmine ID")
+    description: String = Field(title="Redmine Description")
+    tracker: String = Field(title="Redmine Tracker")
+    status: String = Field(title="Redmine Status")
+    author: String = Field(title="Redmine Author")
+    category: String = Field(title="Redmine Category")
+    startdate: Date = Field(title="Redmine Start Date")
+    spenthours: Duration = Field(title="Redmine Spent Hours")
+    estimatedhours: Duration = Field(title="Redmine Estimated Hours")
+    createdon: Date = Field(title="Redmine Created On")
+    updatedon: Date = Field(title="Redmine Updated On")
+    duedate: Date = Field(title="Redmine Due Date")
+    assignedto: String = Field(title="Redmine Assigned To")
+    projectname: String = Field(title="Redmine Project")
+
+    @field_validator("spenthours", "estimatedhours", mode="before")
     @classmethod
     def hours_to_duration(cls, value: Any) -> Any:
         """Read Redmine's count of hours as a duration."""
@@ -129,22 +131,22 @@ class RedMineIssue(Issue):
             annotations=self.extra.get("annotations", []),
             priority=self.get_priority(),
             udas=RedMineUdas(
-                redmineurl=self.get_issue_url(),
-                redminesubject=self.record["subject"],
-                redmineid=self.record["id"],
-                redminedescription=self.record.get("description", ""),
-                redminetracker=self.record["tracker"]["name"],
-                redminestatus=self.record["status"]["name"],
-                redmineauthor=self.record["author"]["name"],
-                redmineprojectname=self.record["project"]["name"],
-                redmineassignedto=(self.record.get("assigned_to") or {}).get("name"),
-                redminecategory=(self.record.get("category") or {}).get("name"),
-                redminestartdate=self.record.get("start_date"),
-                redminecreatedon=self.record.get("created_on"),
-                redmineupdatedon=self.record.get("updated_on"),
-                redmineduedate=self.record.get("due_date"),
-                redmineestimatedhours=self.record.get("estimated_hours"),
-                redminespenthours=self.record.get("spent_hours"),
+                url=self.get_issue_url(),
+                subject=self.record["subject"],
+                id=self.record["id"],
+                description=self.record.get("description", ""),
+                tracker=self.record["tracker"]["name"],
+                status=self.record["status"]["name"],
+                author=self.record["author"]["name"],
+                projectname=self.record["project"]["name"],
+                assignedto=(self.record.get("assigned_to") or {}).get("name"),
+                category=(self.record.get("category") or {}).get("name"),
+                startdate=self.record.get("start_date"),
+                createdon=self.record.get("created_on"),
+                updatedon=self.record.get("updated_on"),
+                duedate=self.record.get("due_date"),
+                estimatedhours=self.record.get("estimated_hours"),
+                spenthours=self.record.get("spent_hours"),
             ),
         )
 

@@ -160,22 +160,24 @@ class JiraUdas(Udas):
     here.
     """
 
+    UDA_PREFIX = "jira"
+
     model_config = ConfigDict(extra="allow")
 
     __pydantic_extra__: dict[str, Any] = {}
 
-    UNIQUE_KEY = ("jiraurl",)
+    UNIQUE_KEY = ("url",)
 
-    jiraissuetype: String = Field(title="Issue Type")
-    jirasummary: String = Field(title="Jira Summary")
-    jiraurl: String = Field(title="Jira URL")
-    jiradescription: String = Field(title="Jira Description")
-    jiraid: String = Field(title="Jira Issue ID")
-    jiraestimate: Numeric = Field(title="Estimate")
-    jirafixversion: String = Field(title="Fix Version")
-    jirastatus: String = Field(title="Jira Status")
-    jirasubtasks: String = Field(title="Jira Subtasks")
-    jiraparent: String = Field(title="Jira Parent")
+    issuetype: String = Field(title="Issue Type")
+    summary: String = Field(title="Jira Summary")
+    url: String = Field(title="Jira URL")
+    description: String = Field(title="Jira Description")
+    id: String = Field(title="Jira Issue ID")
+    estimate: Numeric = Field(title="Estimate")
+    fixversion: String = Field(title="Fix Version")
+    status: String = Field(title="Jira Status")
+    subtasks: String = Field(title="Jira Subtasks")
+    parent: String = Field(title="Jira Parent")
 
 
 class JiraTask(Task):
@@ -205,16 +207,16 @@ class JiraIssue(Issue):
             due=self.get_due(),
             entry=self.get_entry(),
             udas=JiraUdas(
-                jiraissuetype=self.get_issue_type(),
-                jiraurl=self.get_url(),
-                jiraid=self.record["key"],
-                jiradescription=self.extra.get("body"),
-                jirasummary=self.get_summary(),
-                jiraestimate=self.get_estimate(),
-                jirafixversion=self.get_fix_version(),
-                jirastatus=self.get_status(),
-                jirasubtasks=self.get_subtasks(),
-                jiraparent=self.get_parent(),
+                issuetype=self.get_issue_type(),
+                url=self.get_url(),
+                id=self.record["key"],
+                description=self.extra.get("body"),
+                summary=self.get_summary(),
+                estimate=self.get_estimate(),
+                fixversion=self.get_fix_version(),
+                status=self.get_status(),
+                subtasks=self.get_subtasks(),
+                parent=self.get_parent(),
                 **self.get_extra_fields(),
             ),
         )
@@ -224,7 +226,9 @@ class JiraIssue(Issue):
             return {}
 
         return {
-            extra_field.label: extra_field.extract_value(self.record["fields"])
+            extra_field.label.removeprefix(
+                JiraUdas.UDA_PREFIX
+            ): extra_field.extract_value(self.record["fields"])
             for extra_field in self.config.extra_fields
         }
 

@@ -67,18 +67,20 @@ class NextcloudDeckClient(Client):
 class NextcloudDeckUdas(Udas):
     """Service-specific UDAs contributed by Nextcloud Deck."""
 
-    UNIQUE_KEY = ("nextclouddeckboardid", "nextclouddeckstackid", "nextclouddeckcardid")
+    UDA_PREFIX = "nextclouddeck"
 
-    nextclouddeckauthor: String = Field(title="Nextcloud Deck Issue Author")
-    nextclouddeckboardid: Numeric = Field(title="Nextcloud Deck Board ID")
-    nextclouddeckboardtitle: String = Field(title="Nextcloud Deck Board Title")
-    nextclouddeckstackid: Numeric = Field(title="Nextcloud Deck Stack ID")
-    nextclouddeckstacktitle: String = Field(title="Nextcloud Deck Stack Title")
-    nextclouddeckcardid: Numeric = Field(title="Nextcloud Deck Card ID")
-    nextclouddeckcardtitle: String = Field(title="Nextcloud Deck Card Title")
-    nextclouddeckdescription: String = Field(title="Nextcloud Deck Card Description")
-    nextclouddeckorder: Numeric = Field(title="Nextcloud Deck Order")
-    nextclouddeckassignee: String = Field(title="Nextcloud Deck Assignee(s)")
+    UNIQUE_KEY = ("boardid", "stackid", "cardid")
+
+    author: String = Field(title="Nextcloud Deck Issue Author")
+    boardid: Numeric = Field(title="Nextcloud Deck Board ID")
+    boardtitle: String = Field(title="Nextcloud Deck Board Title")
+    stackid: Numeric = Field(title="Nextcloud Deck Stack ID")
+    stacktitle: String = Field(title="Nextcloud Deck Stack Title")
+    cardid: Numeric = Field(title="Nextcloud Deck Card ID")
+    cardtitle: String = Field(title="Nextcloud Deck Card Title")
+    description: String = Field(title="Nextcloud Deck Card Description")
+    order: Numeric = Field(title="Nextcloud Deck Order")
+    assignee: String = Field(title="Nextcloud Deck Assignee(s)")
 
 
 class NextcloudDeckTask(Task):
@@ -99,16 +101,16 @@ class NextcloudDeckIssue(Issue):
             ),
             due=self.record.get("duedate"),
             udas=NextcloudDeckUdas(
-                nextclouddeckauthor=self.record["owner"]["uid"],
-                nextclouddeckboardid=self.extra["board"]["id"],
-                nextclouddeckboardtitle=self.extra["board"]["title"],
-                nextclouddeckstackid=self.extra["stack"]["id"],
-                nextclouddeckstacktitle=self.extra["stack"]["title"],
-                nextclouddeckcardid=self.record["id"],
-                nextclouddeckcardtitle=self.record["title"],
-                nextclouddeckdescription=self.record["description"],
-                nextclouddeckorder=self.record["order"],
-                nextclouddeckassignee=(
+                author=self.record["owner"]["uid"],
+                boardid=self.extra["board"]["id"],
+                boardtitle=self.extra["board"]["title"],
+                stackid=self.extra["stack"]["id"],
+                stacktitle=self.extra["stack"]["title"],
+                cardid=self.record["id"],
+                cardtitle=self.record["title"],
+                description=self.record["description"],
+                order=self.record["order"],
+                assignee=(
                     self.record["assignedUsers"][0]["participant"]["uid"]
                     if self.record["assignedUsers"]
                     else None

@@ -31,12 +31,14 @@ class TracConfig(config.ServiceConfig):
 class TracUdas(Udas):
     """Service-specific UDAs contributed by Trac."""
 
-    UNIQUE_KEY = ("tracurl",)
+    UDA_PREFIX = "trac"
 
-    tracsummary: String = Field(title="Trac Summary")
-    tracurl: String = Field(title="Trac URL")
-    tracnumber: Numeric = Field(title="Trac Number")
-    traccomponent: String = Field(title="Trac Component")
+    UNIQUE_KEY = ("url",)
+
+    summary: String = Field(title="Trac Summary")
+    url: String = Field(title="Trac URL")
+    number: Numeric = Field(title="Trac Number")
+    component: String = Field(title="Trac Component")
 
 
 class TracTask(Task):
@@ -58,10 +60,10 @@ class TracIssue(Issue):
             priority=self.get_priority(),
             annotations=self.extra["annotations"],
             udas=TracUdas(
-                tracsummary=self.record["summary"],
-                tracurl=self.record["url"],
-                tracnumber=self.record["number"],
-                traccomponent=self.record["component"],
+                summary=self.record["summary"],
+                url=self.record["url"],
+                number=self.record["number"],
+                component=self.record["component"],
             ),
         )
 

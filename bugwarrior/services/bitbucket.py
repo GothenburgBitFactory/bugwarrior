@@ -48,11 +48,13 @@ class BitbucketConfig(config.ServiceConfig):
 class BitbucketUdas(Udas):
     """Service-specific UDAs contributed by Bitbucket."""
 
-    UNIQUE_KEY = ("bitbucketurl",)
+    UDA_PREFIX = "bitbucket"
 
-    bitbuckettitle: String = Field(title="Bitbucket Title")
-    bitbucketurl: String = Field(title="Bitbucket URL")
-    bitbucketid: Numeric = Field(title="Bitbucket Issue ID")
+    UNIQUE_KEY = ("url",)
+
+    title: String = Field(title="Bitbucket Title")
+    url: String = Field(title="Bitbucket URL")
+    id: Numeric = Field(title="Bitbucket Issue ID")
 
 
 class BitbucketTask(Task):
@@ -74,9 +76,7 @@ class BitbucketIssue(Issue):
             priority=self.get_priority(),
             annotations=self.extra["annotations"],
             udas=BitbucketUdas(
-                bitbuckettitle=self.record["title"],
-                bitbucketurl=self.extra["url"],
-                bitbucketid=self.record["id"],
+                title=self.record["title"], url=self.extra["url"], id=self.record["id"]
             ),
         )
 

@@ -34,17 +34,19 @@ class TrelloConfig(config.ServiceConfig):
 class TrelloUdas(Udas):
     """Service-specific UDAs contributed by Trello."""
 
-    UNIQUE_KEY = ("trellocardid",)
+    UDA_PREFIX = "trello"
 
-    trellocard: String = Field(title="Trello card name")
-    trellocardid: String = Field(title="Trello card ID")
-    trellocardidshort: Numeric = Field(title="Trello short card ID")
-    trellodescription: String = Field(title="Trello description")
-    trelloboard: String = Field(title="Trello board name")
-    trellolist: String = Field(title="Trello list name")
-    trelloshortlink: String = Field(title="Trello shortlink")
-    trelloshorturl: String = Field(title="Trello short URL")
-    trellourl: String = Field(title="Trello URL")
+    UNIQUE_KEY = ("cardid",)
+
+    card: String = Field(title="Trello card name")
+    cardid: String = Field(title="Trello card ID")
+    cardidshort: Numeric = Field(title="Trello short card ID")
+    description: String = Field(title="Trello description")
+    board: String = Field(title="Trello board name")
+    list: String = Field(title="Trello list name")
+    shortlink: String = Field(title="Trello shortlink")
+    shorturl: String = Field(title="Trello short URL")
+    url: String = Field(title="Trello URL")
 
 
 class TrelloTask(Task):
@@ -74,15 +76,15 @@ class TrelloIssue(Issue):
             tags=self.get_tags(),
             annotations=self.extra.get("annotations", []),
             udas=TrelloUdas(
-                trellocard=self.record["name"],
-                trellocardid=self.record["id"],
-                trellocardidshort=self.record["idShort"],
-                trellodescription=self.record["desc"],
-                trelloboard=self.extra["boardname"],
-                trellolist=self.extra["listname"],
-                trelloshortlink=self.record["shortLink"],
-                trelloshorturl=self.record["shortUrl"],
-                trellourl=self.record["url"],
+                card=self.record["name"],
+                cardid=self.record["id"],
+                cardidshort=self.record["idShort"],
+                description=self.record["desc"],
+                board=self.extra["boardname"],
+                list=self.extra["listname"],
+                shortlink=self.record["shortLink"],
+                shorturl=self.record["shortUrl"],
+                url=self.record["url"],
             ),
         )
 

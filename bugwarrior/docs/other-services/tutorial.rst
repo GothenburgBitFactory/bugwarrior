@@ -136,18 +136,19 @@ Bugwarrior represents a taskwarrior task with the ``Task`` model. The standard t
   class GitBugUdas(Udas):
       """Service-specific UDAs contributed by git-bug."""
 
-      UNIQUE_KEY = ('gitbugid',)
+      UDA_PREFIX = 'gitbug'
+      UNIQUE_KEY = ('id',)
 
-      gitbugauthor: String = Field(title='Gitbug Issue Author')
-      gitbugid: String = Field(title='Gitbug UUID')
-      gitbugstate: String = Field(title='Gitbug state')
-      gitbugtitle: String = Field(title='Gitbug Title')
+      author: String = Field(title='Gitbug Issue Author')
+      id: String = Field(title='Gitbug UUID')
+      state: String = Field(title='Gitbug state')
+      title: String = Field(title='Gitbug Title')
 
 
   class GitBugTask(Task):
       udas: GitBugUdas
 
-Every field of a ``Udas`` subclass is a UDA. Its name is the UDA name, so the author will be assigned to ``gitbugauthor``. The taskwarrior UDA type is derived from the annotation: ``String`` becomes "string", ``Numeric`` becomes "numeric", ``Date`` becomes "date" and ``Duration`` becomes "duration". The label comes from the field's ``title``.
+Every field of a ``Udas`` subclass is a UDA. ``UDA_PREFIX`` is added to each field name when bugwarrior writes it to Taskwarrior, so ``author`` becomes ``gitbugauthor``. The taskwarrior UDA type is derived from the annotation: ``String`` becomes "string", ``Numeric`` becomes "numeric", ``Date`` becomes "date" and ``Duration`` becomes "duration". The label comes from the field's ``title``.
 
 Use ``String``, ``Numeric``, ``Date`` and ``Duration`` for UDA fields. These types allow ``None``. A nullable field remains required unless it has a default. Map missing service values to ``None``. Bugwarrior rejects other UDA types.
 
@@ -169,10 +170,10 @@ We will now implement an ``Issue`` class, which maps a record fetched from the s
               tags=self.get_tags(),
               entry=self.record.get('createdAt'),
               udas=GitBugUdas(
-                  gitbugauthor=self.record['author']['name'],
-                  gitbugid=self.record['id'],
-                  gitbugstate=self.record['state'],
-                  gitbugtitle=self.record['title'],
+                  author=self.record['author']['name'],
+                  id=self.record['id'],
+                  state=self.record['state'],
+                  title=self.record['title'],
               ),
           )
 
