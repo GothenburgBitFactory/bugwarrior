@@ -4,23 +4,75 @@ name: bugwarrior
 on: [push, pull_request]
 
 jobs:
+  taskwarrior-build:
+    runs-on: ubuntu-latest
+    # We're currently seeing these complete in 5 minutes.
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        taskwarrior-version: &taskwarrior_versions [2.6.2, 3.5.0]
+    steps:
+      - name: Build Taskwarrior ${{ matrix.taskwarrior-version }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y \
+            build-essential \
+            cmake \
+            libgnutls28-dev \
+            uuid-dev
+          taskwarrior_source="${RUNNER_TEMP}/taskwarrior"
+          git clone --branch v${{ matrix.taskwarrior-version }} --depth 1 \
+            https://github.com/GothenburgBitFactory/taskwarrior.git \
+            "${taskwarrior_source}"
+          cmake -S "${taskwarrior_source}" -B "${taskwarrior_source}/build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/opt/taskwarrior \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+          if [[ "${{ matrix.taskwarrior-version }}" == "2.6.2" ]]; then
+            sed -i '/#include <Pig.h>/a #include <cstdint>' \
+              "${taskwarrior_source}/src/libshared/src/JSON.h"
+          fi
+          cmake --build "${taskwarrior_source}/build" --parallel "$(nproc)"
+          sudo cmake --install "${taskwarrior_source}/build"
+          /opt/taskwarrior/bin/task --version
+          sudo tar -C /opt/taskwarrior -czf \
+            "${RUNNER_TEMP}/taskwarrior-${{ matrix.taskwarrior-version }}.tar.gz" .
+      - name: Upload Taskwarrior ${{ matrix.taskwarrior-version }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: taskwarrior-${{ matrix.taskwarrior-version }}
+          path: ${{ runner.temp }}/taskwarrior-${{ matrix.taskwarrior-version }}.tar.gz
+          retention-days: 7
   bugwarrior-test:
+    needs: taskwarrior-build
     runs-on: ubuntu-latest
     # We're currently seeing these complete in 1 minute.
     timeout-minutes: 5
     strategy:
       matrix:
         python-version: [3.11, 3.12, 3.13, 3.14]
+        taskwarrior-version: *taskwarrior_versions
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v6
+      - name: Download Taskwarrior ${{ matrix.taskwarrior-version }}
+        uses: actions/download-artifact@v8
+        with:
+          name: taskwarrior-${{ matrix.taskwarrior-version }}
+          path: ${{ runner.temp }}/taskwarrior-artifact
+      - name: Install Taskwarrior ${{ matrix.taskwarrior-version }}
+        run: |
+          sudo mkdir -p /opt/taskwarrior
+          sudo tar -xzf \
+            "${RUNNER_TEMP}/taskwarrior-artifact/taskwarrior-${{ matrix.taskwarrior-version }}.tar.gz" \
+            -C /opt/taskwarrior
+          echo "/opt/taskwarrior/bin" >> "${GITHUB_PATH}"
+          /opt/taskwarrior/bin/task --version
       - name: Run tests
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -qq -y taskwarrior
-          task --version
           uv sync --all-extras --group test --python ${{ matrix.python-version }}
           uv run bugwarrior --version
           uv run pytest
@@ -30,9 +82,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
       - name: Run tests
         run: |
           sudo apt-get update -qq
@@ -61,7 +113,7 @@ jobs:
         architecture: [ppc64le]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Run tests on given architecture
         uses: uraimo/run-on-arch-action@v3
         with:
