@@ -178,7 +178,10 @@ def get_service_config_union_type(services: list[dict[str, Any]]) -> Any:
     # service_config_classes is a runtime tuple; Union[tuple] unpacks it into a
     # multi-member union. Do not simplify to Union[X] (ruff: noqa: UP007) — that
     # rewrite assumes a single type argument and breaks the discriminated union.
-    return Annotated[Union[service_config_classes], Field(discriminator="service")]  # noqa: UP007
+    return Annotated[
+        Union[service_config_classes],  # noqa: UP007  # ty: ignore[invalid-type-form]
+        Field(discriminator="service"),
+    ]
 
 
 def validate_config(config: dict, main_section: str, config_path: str) -> "Config":
@@ -206,9 +209,9 @@ def validate_config(config: dict, main_section: str, config_path: str) -> "Confi
     # Validate service configs
     ServiceConfigType = get_service_config_union_type(raw_service_configs)
     try:
-        service_configs = TypeAdapter(list[ServiceConfigType]).validate_python(
-            raw_service_configs
-        )
+        service_configs = TypeAdapter(
+            list[ServiceConfigType]  # ty: ignore[invalid-type-form]
+        ).validate_python(raw_service_configs)
     except ValidationError as error:
         error_messages.extend(
             _format_service_error(err, raw_service_configs) for err in error.errors()

@@ -143,11 +143,14 @@ class PhabricatorService(Service):
                     )
                     # Delete duplicates
                     seen = set()
-                    tasks = [
-                        item
-                        for item in tasks
-                        if str(item[1]) not in seen and not seen.add(str(item[1]))
-                    ]
+                    unique_tasks = []
+                    for item in tasks:
+                        item_id = str(item[1])
+                        if item_id in seen:
+                            continue
+                        seen.add(item_id)
+                        unique_tasks.append(item)
+                    tasks = unique_tasks
                 if self.config.project_phids:
                     tasks = self.api.maniphest.query(
                         status="status-open", projectPHIDs=self.config.project_phids
