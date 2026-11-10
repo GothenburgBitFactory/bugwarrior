@@ -80,7 +80,7 @@ class GithubConfig(config.ServiceConfig):
             parsed_url = urllib.parse.urlparse(url)
             if parsed_url.netloc != host:
                 raise ValueError(f"issue_urls: {url} inconsistent with host {host}")
-            if not re.match(r"^/.*/.*/(issues|pull)/[0-9]*$", parsed_url.path):
+            if not re.match(r"^/.*/.*/(issues|pull)/[0-9]+$", parsed_url.path):
                 raise ValueError(
                     f"issue_urls: {parsed_url.path} is not a valid issue path"
                 )
@@ -337,7 +337,7 @@ class GithubService(Service[GithubIssue]):
         issues = {}
         for url_path in self.config.issue_urls:
             issue = self.client.get_issue_for_url_path(url_path)
-            match = re.search(r"(?<=^/)(.*/.*)(?=/(issues|pull)/[0-9]*$)", url_path)
+            match = re.search(r"(?<=^/)(.*/.*)(?=/(issues|pull)/[0-9]+$)", url_path)
             assert match is not None
             repo = match[0]
             issues[url_path] = (repo, issue)
