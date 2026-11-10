@@ -35,12 +35,12 @@ def get_service_password(service: str, username: str, oracle: str | None = None)
     Retrieve the sensitive password for a service by:
 
       * retrieving password from a secure store (@oracle:use_keyring, default)
-      * asking the password from the user (@oracle:ask_password, interactive)
+      * asking the password from the user (@oracle:ask_password)
       * executing a command and use the output as password
         (@oracle:eval:<command>)
 
     Note that the keyring may or may not be locked
-    which requires that the user provides a password (interactive mode).
+    which requires that the user provides a password.
     Interactive mode is detected automatically via sys.stdin.isatty().
 
     .. seealso::
