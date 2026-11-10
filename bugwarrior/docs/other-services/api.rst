@@ -28,3 +28,4 @@ v2.0
   keyring service identifier from service configuration fields.
 - Added ``Issue.render_tags_from_labels(labels)`` for rendering taskwarrior tags
   from service labels with ``label_template``.
+- Remove ``MainSectionConfig.interactive``. All invocations are now interactive.
