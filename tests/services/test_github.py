@@ -338,6 +338,14 @@ class TestGithubConfig:
         )
         validate(config)
 
+    def test_issue_urls_empty_number(self, config, assert_validation_error):
+        config["myservice"]["issue_urls"] = "https://github.com/foo/bar/issues/"
+        assert_validation_error(config, "is not a valid issue path")
+
+    def test_issue_urls_empty_pull_number(self, config, assert_validation_error):
+        config["myservice"]["issue_urls"] = "https://github.com/foo/bar/pull/"
+        assert_validation_error(config, "is not a valid issue path")
+
 
 class TestGithubClient:
     def test_api_url(self):
