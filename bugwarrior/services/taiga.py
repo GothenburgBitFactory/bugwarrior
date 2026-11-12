@@ -29,8 +29,7 @@ class TaigaConfig(config.ServiceConfig):
 class TaigaUdas(Udas):
     """Service-specific UDAs contributed by Taiga."""
 
-    UDA_PREFIX = "taiga"
-
+    PREFIX = "taiga"
     UNIQUE_KEY = ("url",)
 
     summary: String = Field(title="Taiga Summary")

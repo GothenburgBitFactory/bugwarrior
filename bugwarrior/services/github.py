@@ -218,8 +218,7 @@ class GithubClient(Client):
 class GithubUdas(Udas):
     """Service-specific UDAs contributed by Github."""
 
-    UDA_PREFIX = "github"
-
+    PREFIX = "github"
     UNIQUE_KEY = ("url", "type")
 
     title: String = Field(title="Github Title")

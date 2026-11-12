@@ -56,8 +56,7 @@ class PagureConfig(config.ServiceConfig):
 class PagureUdas(Udas):
     """Service-specific UDAs contributed by Pagure."""
 
-    UDA_PREFIX = "pagure"
-
+    PREFIX = "pagure"
     UNIQUE_KEY = ("url", "type")
 
     title: String = Field(title="Pagure Title")

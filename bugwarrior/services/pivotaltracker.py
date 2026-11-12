@@ -43,8 +43,7 @@ class PivotalTrackerConfig(config.ServiceConfig):
 class PivotalTrackerUdas(Udas):
     """Service-specific UDAs contributed by PivotalTracker."""
 
-    UDA_PREFIX = "pivotal"
-
+    PREFIX = "pivotal"
     UNIQUE_KEY = ("url",)
 
     url: String = Field(title="Story URL")

@@ -371,8 +371,7 @@ class GitlabClient(Client):
 class GitlabUdas(Udas):
     """Service-specific UDAs contributed by Gitlab."""
 
-    UDA_PREFIX = "gitlab"
-
+    PREFIX = "gitlab"
     UNIQUE_KEY = ("repo", "type", "number")
 
     title: String = Field(title="Gitlab Title")

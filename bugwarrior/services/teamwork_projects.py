@@ -36,8 +36,7 @@ class TeamworkClient(Client):
 class TeamworkUdas(Udas):
     """Service-specific UDAs contributed by Teamwork Projects."""
 
-    UDA_PREFIX = "teamwork_"
-
+    PREFIX = "teamwork_"
     UNIQUE_KEY = ("url",)
 
     url: String = Field(title="Teamwork Url")

@@ -112,7 +112,7 @@ class TestSynchronize:
             project="sample_project",
             priority="M",
             tags=["foo"],
-            udas=DumbUdas(dumburl="https://example.com", dumbtype="issue"),
+            udas=DumbUdas(url="https://example.com", type="issue"),
         )
         duplicate_issue = issue.model_copy(deep=True)
         duplicate_issue.tags = ["bar"]

@@ -40,8 +40,7 @@ class GmailConfig(config.ServiceConfig):
 class GmailUdas(Udas):
     """Service-specific UDAs contributed by GMail."""
 
-    UDA_PREFIX = "gmail"
-
+    PREFIX = "gmail"
     UNIQUE_KEY = ("threadid",)
 
     threadid: String = Field(title="GMail Thread Id")

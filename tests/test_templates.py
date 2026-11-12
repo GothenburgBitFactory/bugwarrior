@@ -13,7 +13,7 @@ def task():
     return DumbTask(
         project="end_of_empire",
         priority="H",
-        udas=DumbUdas(dumburl="http://example.com", dumbtype="issue"),
+        udas=DumbUdas(url="http://example.com", type="issue"),
     )
 
 

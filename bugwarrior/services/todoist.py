@@ -79,8 +79,7 @@ class TodoistClient(Client):
 class TodoistUdas(Udas):
     """Service-specific UDAs contributed by Todoist."""
 
-    UDA_PREFIX = "todoist"
-
+    PREFIX = "todoist"
     UNIQUE_KEY = ("id",)
 
     id: String = Field(title="Todoist ID")

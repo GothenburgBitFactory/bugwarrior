@@ -22,10 +22,11 @@ class DumbConfig(config.ServiceConfig):
 
 
 class DumbUdas(Udas):
-    UNIQUE_KEY = ("dumburl",)
+    PREFIX = "dumb"
+    UNIQUE_KEY = ("url",)
 
-    dumburl: String = Field(title="Dumb URL")
-    dumbtype: String = Field(title="Dumb Type")
+    url: String = Field(title="Dumb URL")
+    type: String = Field(title="Dumb Type")
 
 
 class DumbTask(Task):
@@ -42,8 +43,7 @@ class DumbIssue(services.Issue):
             annotations=self.extra.get("annotations", []),
             tags=self.get_tags_from_labels(self.record.get("labels", [])),
             udas=DumbUdas(
-                dumburl=self.record.get("url", ""),
-                dumbtype=self.extra.get("type", "issue"),
+                url=self.record.get("url", ""), type=self.extra.get("type", "issue")
             ),
         )
 

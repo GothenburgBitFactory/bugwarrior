@@ -110,8 +110,7 @@ class AzureDevopsClient(Client):
 class AzureDevopsUdas(Udas):
     """Service-specific UDAs contributed by Azure Devops."""
 
-    UDA_PREFIX = "ado"
-
+    PREFIX = "ado"
     UNIQUE_KEY = ("url",)
 
     title: String = Field(title="Azure Devops Title")

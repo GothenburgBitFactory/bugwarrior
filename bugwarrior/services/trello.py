@@ -34,8 +34,7 @@ class TrelloConfig(config.ServiceConfig):
 class TrelloUdas(Udas):
     """Service-specific UDAs contributed by Trello."""
 
-    UDA_PREFIX = "trello"
-
+    PREFIX = "trello"
     UNIQUE_KEY = ("cardid",)
 
     card: String = Field(title="Trello card name")

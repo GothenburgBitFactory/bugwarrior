@@ -39,8 +39,7 @@ class PhabricatorConfig(config.ServiceConfig):
 class PhabricatorUdas(Udas):
     """Service-specific UDAs contributed by Phabricator."""
 
-    UDA_PREFIX = "phabricator"
-
+    PREFIX = "phabricator"
     UNIQUE_KEY = ("url",)
 
     title: String = Field(title="Phabricator Title")

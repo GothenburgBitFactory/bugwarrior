@@ -67,8 +67,7 @@ class NextcloudDeckClient(Client):
 class NextcloudDeckUdas(Udas):
     """Service-specific UDAs contributed by Nextcloud Deck."""
 
-    UDA_PREFIX = "nextclouddeck"
-
+    PREFIX = "nextclouddeck"
     UNIQUE_KEY = ("boardid", "stackid", "cardid")
 
     author: String = Field(title="Nextcloud Deck Issue Author")

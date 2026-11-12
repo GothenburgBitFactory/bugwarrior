@@ -48,8 +48,7 @@ class BitbucketConfig(config.ServiceConfig):
 class BitbucketUdas(Udas):
     """Service-specific UDAs contributed by Bitbucket."""
 
-    UDA_PREFIX = "bitbucket"
-
+    PREFIX = "bitbucket"
     UNIQUE_KEY = ("url",)
 
     title: String = Field(title="Bitbucket Title")

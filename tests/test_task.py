@@ -8,7 +8,7 @@ from bugwarrior.task import Date, Duration, Numeric, String, Task, Udas
 
 
 class SampleUdas(Udas):
-    UDA_PREFIX = "sample"
+    PREFIX = "sample"
     UNIQUE_KEY = ("url",)
 
     number: Numeric = Field(title="Sample Number")

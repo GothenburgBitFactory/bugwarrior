@@ -53,8 +53,7 @@ class ClickupClient(Client):
 class ClickupUdas(Udas):
     """Service-specific UDAs contributed by Clickup."""
 
-    UDA_PREFIX = "clickup"
-
+    PREFIX = "clickup"
     UNIQUE_KEY = ("id",)
 
     id: String = Field(title="Clickup id")

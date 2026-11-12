@@ -33,8 +33,7 @@ class GerritConfig(config.ServiceConfig):
 class GerritUdas(Udas):
     """Service-specific UDAs contributed by Gerrit."""
 
-    UDA_PREFIX = "gerrit"
-
+    PREFIX = "gerrit"
     UNIQUE_KEY = ("url",)
 
     summary: String = Field(title="Gerrit Summary")

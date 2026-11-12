@@ -63,8 +63,7 @@ class BugzillaConfig(config.ServiceConfig):
 class BugzillaUdas(Udas):
     """Service-specific UDAs contributed by Bugzilla."""
 
-    UDA_PREFIX = "bugzilla"
-
+    PREFIX = "bugzilla"
     UNIQUE_KEY = ("url",)
 
     url: String = Field(title="Bugzilla URL")

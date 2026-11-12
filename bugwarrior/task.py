@@ -87,7 +87,7 @@ class Udas(BaseModel):
     declare its own UDAs, and the unique key which identifies a task in the
     remote service.
 
-    Field names are local to the service model. UDA_PREFIX adds the service
+    Field names are local to the service model. PREFIX adds the service
     prefix when bugwarrior writes the fields to Taskwarrior.
 
     The field title becomes the UDA label, and the field name becomes the
@@ -97,7 +97,7 @@ class Udas(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     #: Prefix added to UDA field names when they are sent to Taskwarrior.
-    UDA_PREFIX: ClassVar[str] = ""
+    PREFIX: ClassVar[str]
 
     #: Names of the UDA fields which identify a task in the remote service.
     #: There is no default on purpose: an empty unique key matches every
@@ -138,7 +138,7 @@ class Udas(BaseModel):
 
     @classmethod
     def _taskwarrior_name(cls, name: str) -> str:
-        return f"{cls.UDA_PREFIX}{name}"
+        return f"{cls.PREFIX}{name}"
 
     def to_task_data(self) -> dict[str, Any]:
         """Return this service's UDAs with their Taskwarrior field names."""

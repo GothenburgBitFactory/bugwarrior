@@ -37,8 +37,7 @@ class KanboardConfig(config.ServiceConfig):
 class KanboardUdas(Udas):
     """Service-specific UDAs contributed by Kanboard."""
 
-    UDA_PREFIX = "kanboard"
-
+    PREFIX = "kanboard"
     UNIQUE_KEY = ("taskid",)
 
     taskid: Numeric = Field(title="Kanboard Task ID")

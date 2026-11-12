@@ -160,7 +160,7 @@ class JiraUdas(Udas):
     here.
     """
 
-    UDA_PREFIX = "jira"
+    PREFIX = "jira"
 
     model_config = ConfigDict(extra="allow")
 
@@ -226,9 +226,9 @@ class JiraIssue(Issue):
             return {}
 
         return {
-            extra_field.label.removeprefix(
-                JiraUdas.UDA_PREFIX
-            ): extra_field.extract_value(self.record["fields"])
+            extra_field.label.removeprefix(JiraUdas.PREFIX): extra_field.extract_value(
+                self.record["fields"]
+            )
             for extra_field in self.config.extra_fields
         }
 

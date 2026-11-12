@@ -42,8 +42,7 @@ class LinearConfig(config.ServiceConfig):
 class LinearUdas(Udas):
     """Service-specific UDAs contributed by Linear."""
 
-    UDA_PREFIX = "linear"
-
+    PREFIX = "linear"
     UNIQUE_KEY = ("url",)
 
     url: String = Field(title="Issue URL")

@@ -31,8 +31,7 @@ class TracConfig(config.ServiceConfig):
 class TracUdas(Udas):
     """Service-specific UDAs contributed by Trac."""
 
-    UDA_PREFIX = "trac"
-
+    PREFIX = "trac"
     UNIQUE_KEY = ("url",)
 
     summary: String = Field(title="Trac Summary")

@@ -115,8 +115,7 @@ class LogseqClient(Client):
 class LogseqUdas(Udas):
     """Service-specific UDAs contributed by Logseq."""
 
-    UDA_PREFIX = "logseq"
-
+    PREFIX = "logseq"
     UNIQUE_KEY = ("id", "uuid")
 
     id: String = Field(title="Logseq ID")

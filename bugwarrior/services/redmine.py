@@ -82,8 +82,7 @@ class RedMineClient(Client):
 class RedMineUdas(Udas):
     """Service-specific UDAs contributed by Redmine."""
 
-    UDA_PREFIX = "redmine"
-
+    PREFIX = "redmine"
     UNIQUE_KEY = ("id",)
 
     url: String = Field(title="Redmine URL")

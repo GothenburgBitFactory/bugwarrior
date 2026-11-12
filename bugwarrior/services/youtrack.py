@@ -89,8 +89,7 @@ class YoutrackConfig(config.ServiceConfig):
 class YoutrackUdas(Udas):
     """Service-specific UDAs contributed by YouTrack."""
 
-    UDA_PREFIX = "youtrack"
-
+    PREFIX = "youtrack"
     UNIQUE_KEY = ("url",)
 
     issue: String = Field(title="YouTrack Issue")

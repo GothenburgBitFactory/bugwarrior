@@ -107,8 +107,7 @@ class GitBugClient(Client):
 class GitBugUdas(Udas):
     """Service-specific UDAs contributed by git-bug."""
 
-    UDA_PREFIX = "gitbug"
-
+    PREFIX = "gitbug"
     UNIQUE_KEY = ("id",)
 
     author: String = Field(title="Gitbug Issue Author")

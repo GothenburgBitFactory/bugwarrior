@@ -50,8 +50,7 @@ class BTSConfig(config.ServiceConfig):
 class BTSUdas(Udas):
     """Service-specific UDAs contributed by the Debian BTS."""
 
-    UDA_PREFIX = "bts"
-
+    PREFIX = "bts"
     UNIQUE_KEY = ("url",)
 
     subject: String = Field(title="Debian BTS Subject")

@@ -28,10 +28,11 @@ class SecondaryUdas(Udas):
     the remote service cannot tell the tasks of one from the other.
     """
 
-    UNIQUE_KEY = ("secondaryurl",)
+    PREFIX = "secondary"
+    UNIQUE_KEY = ("url",)
 
-    secondaryurl: String = Field(title="Secondary URL")
-    secondarytype: String = Field(title="Secondary Type")
+    url: String = Field(title="Secondary URL")
+    type: String = Field(title="Secondary Type")
 
 
 class SecondaryTask(Task):
@@ -46,8 +47,7 @@ class SecondaryIssue(DumbIssue):
             annotations=self.extra.get("annotations", []),
             tags=self.get_tags_from_labels(self.record.get("labels", [])),
             udas=SecondaryUdas(
-                secondaryurl=self.record.get("url", ""),
-                secondarytype=self.extra.get("type", "issue"),
+                url=self.record.get("url", ""), type=self.extra.get("type", "issue")
             ),
         )
 

@@ -88,7 +88,6 @@ bugwarrior = "bugwarrior.config.ini2toml_plugin:activate"
 
 [tool.uv]
 exclude-newer = "3 days"
-exclude-newer-package = { ty = "2026-11-07T00:00:00Z" }
 # tomlkit 0.15.1's parser rewrite changed comment-whitespace serialization
 # (undocumented in its changelog): blank comment lines lose a trailing
 # space. tests/config/example-bugwarrior.toml reflects this new output;
@@ -140,7 +139,7 @@ python-version = "3.13"
 exclude = ["tests/", "bugwarrior/docs/"]
 
 [tool.ty.rules]
-# Pydantic validates narrowed fields when service models inherit shared fields.
+# Pydantic validates narrowed fields when ServiceConfig subclasses mask inherited fields.
 invalid-mutable-override = "ignore"
 invalid-attribute-override = "ignore"
 

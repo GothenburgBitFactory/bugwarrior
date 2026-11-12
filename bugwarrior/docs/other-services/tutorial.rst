@@ -136,7 +136,7 @@ Bugwarrior represents a taskwarrior task with the ``Task`` model. The standard t
   class GitBugUdas(Udas):
       """Service-specific UDAs contributed by git-bug."""
 
-      UDA_PREFIX = 'gitbug'
+      PREFIX = 'gitbug'
       UNIQUE_KEY = ('id',)
 
       author: String = Field(title='Gitbug Issue Author')
@@ -148,7 +148,7 @@ Bugwarrior represents a taskwarrior task with the ``Task`` model. The standard t
   class GitBugTask(Task):
       udas: GitBugUdas
 
-Every field of a ``Udas`` subclass is a UDA. ``UDA_PREFIX`` is added to each field name when bugwarrior writes it to Taskwarrior, so ``author`` becomes ``gitbugauthor``. The taskwarrior UDA type is derived from the annotation: ``String`` becomes "string", ``Numeric`` becomes "numeric", ``Date`` becomes "date" and ``Duration`` becomes "duration". The label comes from the field's ``title``.
+Every field of a ``Udas`` subclass is a UDA. ``PREFIX`` is added to each field name when bugwarrior writes it to Taskwarrior, so ``author`` becomes ``gitbugauthor``. The taskwarrior UDA type is derived from the annotation: ``String`` becomes "string", ``Numeric`` becomes "numeric", ``Date`` becomes "date" and ``Duration`` becomes "duration". The label comes from the field's ``title``.
 
 Use ``String``, ``Numeric``, ``Date`` and ``Duration`` for UDA fields. These types allow ``None``. A nullable field remains required unless it has a default. Map missing service values to ``None``. Bugwarrior rejects other UDA types.
 
