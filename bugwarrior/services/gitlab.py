@@ -5,12 +5,13 @@ import typing
 from typing import Any
 from urllib.parse import quote, urlencode
 
-from pydantic import ValidationInfo, field_validator, model_validator
+from pydantic import Field, ValidationInfo, field_validator, model_validator
 import requests
 import urllib3
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Date, Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -367,51 +368,37 @@ class GitlabClient(Client):
         return todos
 
 
+class GitlabUdas(Udas):
+    """Service-specific UDAs contributed by Gitlab."""
+
+    PREFIX = "gitlab"
+    UNIQUE_KEY = ("repo", "type", "number")
+
+    title: String = Field(title="Gitlab Title")
+    description: String = Field(title="Gitlab Description")
+    createdon: Date = Field(title="Gitlab Created")
+    updatedat: Date = Field(title="Gitlab Updated")
+    duedate: Date = Field(title="Gitlab Due Date")
+    milestone: String = Field(title="Gitlab Milestone")
+    url: String = Field(title="Gitlab URL")
+    repo: String = Field(title="Gitlab Repo Slug")
+    type: String = Field(title="Gitlab Type")
+    number: String = Field(title="Gitlab Issue/MR #")
+    state: String = Field(title="Gitlab Issue/MR State")
+    upvotes: Numeric = Field(title="Gitlab Upvotes")
+    downvotes: Numeric = Field(title="Gitlab Downvotes")
+    wip: Numeric = Field(title="Gitlab MR Work-In-Progress Flag")
+    author: String = Field(title="Gitlab Author")
+    assignee: String = Field(title="Gitlab Assignee")
+    namespace: String = Field(title="Gitlab Namespace")
+    weight: Numeric = Field(title="Gitlab Weight")
+
+
+class GitlabTask(Task):
+    udas: GitlabUdas
+
+
 class GitlabIssue(Issue):
-    TITLE = "gitlabtitle"
-    DESCRIPTION = "gitlabdescription"
-    CREATED_AT = "gitlabcreatedon"
-    UPDATED_AT = "gitlabupdatedat"
-    DUEDATE = "gitlabduedate"
-    MILESTONE = "gitlabmilestone"
-    URL = "gitlaburl"
-    REPO = "gitlabrepo"
-    TYPE = "gitlabtype"
-    NUMBER = "gitlabnumber"
-    STATE = "gitlabstate"
-    UPVOTES = "gitlabupvotes"
-    DOWNVOTES = "gitlabdownvotes"
-    WORK_IN_PROGRESS = "gitlabwip"
-    AUTHOR = "gitlabauthor"
-    ASSIGNEE = "gitlabassignee"
-    NAMESPACE = "gitlabnamespace"
-    WEIGHT = "gitlabweight"
-
-    UDAS = {
-        TITLE: {"type": "string", "label": "Gitlab Title"},
-        DESCRIPTION: {"type": "string", "label": "Gitlab Description"},
-        CREATED_AT: {"type": "date", "label": "Gitlab Created"},
-        UPDATED_AT: {"type": "date", "label": "Gitlab Updated"},
-        DUEDATE: {"type": "date", "label": "Gitlab Due Date"},
-        MILESTONE: {"type": "string", "label": "Gitlab Milestone"},
-        URL: {"type": "string", "label": "Gitlab URL"},
-        REPO: {"type": "string", "label": "Gitlab Repo Slug"},
-        TYPE: {"type": "string", "label": "Gitlab Type"},
-        NUMBER: {"type": "string", "label": "Gitlab Issue/MR #"},
-        STATE: {"type": "string", "label": "Gitlab Issue/MR State"},
-        UPVOTES: {"type": "numeric", "label": "Gitlab Upvotes"},
-        DOWNVOTES: {"type": "numeric", "label": "Gitlab Downvotes"},
-        WORK_IN_PROGRESS: {
-            "type": "numeric",
-            "label": "Gitlab MR Work-In-Progress Flag",
-        },
-        AUTHOR: {"type": "string", "label": "Gitlab Author"},
-        ASSIGNEE: {"type": "string", "label": "Gitlab Assignee"},
-        NAMESPACE: {"type": "string", "label": "Gitlab Namespace"},
-        WEIGHT: {"type": "numeric", "label": "Gitlab Weight"},
-    }
-    UNIQUE_KEY = (REPO, TYPE, NUMBER)
-
     # Override the method from parent class
     def get_priority(self) -> config.Priority:
         default_priority_map = {
@@ -425,7 +412,7 @@ class GitlabIssue(Issue):
 
         return default_priority_map.get(type_str, default_priority)
 
-    def to_taskwarrior(self) -> dict[str, Any]:
+    def to_taskwarrior(self) -> GitlabTask:
         author = self.record["author"]
         milestone = self.record.get("milestone")
         created = self.record["created_at"]
@@ -433,7 +420,7 @@ class GitlabIssue(Issue):
         state = self.record["state"]
         upvotes = self.record.get("upvotes", 0)
         downvotes = self.record.get("downvotes", 0)
-        work_in_progress = int(self.record.get("work_in_progress", 0))
+        work_in_progress = self.record.get("work_in_progress", 0)
         # FIXME: 'assignee' api column is deprecated in favor of 'assignees'
         assignee = self.record.get("assignee")
         duedate = self.record.get("due_date")
@@ -460,47 +447,36 @@ class GitlabIssue(Issue):
             elif milestone:
                 duedate = milestone["due_date"]
 
-        if milestone:
-            milestone = milestone["title"]
-        if created:
-            created = self.parse_date(created)
-        if updated:
-            updated = self.parse_date(updated)
-        if duedate:
-            duedate = self.parse_date(duedate)
-        if author:
-            author = author["username"]
-        if assignee:
-            assignee = assignee["username"]
-
         self.title = title
 
-        return {
-            "project": self.extra["project"],
-            "priority": priority,
-            "annotations": self.extra.get("annotations", []),
-            "tags": self.get_tags(),
-            "due": duedate,
-            "entry": created,
-            self.URL: self.extra["issue_url"],
-            self.REPO: self.extra["project"],
-            self.TYPE: self.extra["type"],
-            self.TITLE: title,
-            self.DESCRIPTION: description,
-            self.MILESTONE: milestone,
-            self.NUMBER: str(number),
-            self.CREATED_AT: created,
-            self.UPDATED_AT: updated,
-            self.DUEDATE: duedate,
-            self.STATE: state,
-            self.UPVOTES: upvotes,
-            self.DOWNVOTES: downvotes,
-            self.WORK_IN_PROGRESS: work_in_progress,
-            self.AUTHOR: author,
-            self.ASSIGNEE: assignee,
-            self.NAMESPACE: self.extra["namespace"],
-            self.WEIGHT: weight,
-        }
+        return GitlabTask(
+            project=self.extra["project"],
+            priority=priority,
+            annotations=self.extra.get("annotations", []),
+            tags=self.get_tags(),
+            due=duedate,
+            entry=created,
+            udas=GitlabUdas(
+                url=self.extra["issue_url"],
+                repo=self.extra["project"],
+                type=self.extra["type"],
+                title=title,
+                description=description,
+                milestone=(milestone or {}).get("title"),
+                number=str(number),
+                createdon=created,
+                updatedat=updated,
+                duedate=duedate,
+                state=state,
+                upvotes=upvotes,
+                downvotes=downvotes,
+                wip=work_in_progress,
+                author=(author or {}).get("username"),
+                assignee=(assignee or {}).get("username"),
+                namespace=self.extra["namespace"],
+                weight=weight,
+            ),
+        )
 
     def get_tags(self) -> list[str]:
         return self.get_tags_from_labels(self.record.get("labels", []))
@@ -514,9 +490,10 @@ class GitlabIssue(Issue):
         )
 
 
-class GitlabService(Service[GitlabIssue]):
+class GitlabService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = GitlabIssue
+    TASK_SCHEMA = GitlabTask
     CONFIG_SCHEMA = GitlabConfig
 
     def __init__(
@@ -598,7 +575,7 @@ class GitlabService(Service[GitlabIssue]):
 
     def _get_issue_objs(
         self, issues: list[GitlabIssueEntry], issue_type: str
-    ) -> Iterator[GitlabIssue]:
+    ) -> Iterator[Task]:
         type_plural = issue_type + "s"
 
         for rid, issue in issues:
@@ -607,7 +584,6 @@ class GitlabService(Service[GitlabIssue]):
             projectName = repo["path"]
             if self.config.project_owner_prefix:
                 projectName = repo["namespace"]["path"] + "." + projectName
-            issue_obj = self.get_issue_for_record(issue)
             issue_url = f"{repo['web_url']}/{type_plural}/{issue['iid']}"
             extra = {
                 "issue_url": issue_url,
@@ -617,14 +593,12 @@ class GitlabService(Service[GitlabIssue]):
                 "annotations": self.annotations(repo, issue_url, type_plural, issue),
                 "description": self.description(issue),
             }
-            issue_obj.extra.update(extra)
-            yield issue_obj
+            yield self.get_task_for_record(issue, extra)
 
-    def _get_todo_objs(self, todos: list[GitlabTodoEntry]) -> Iterator[GitlabIssue]:
+    def _get_todo_objs(self, todos: list[GitlabTodoEntry]) -> Iterator[Task]:
         for project, todo in todos:
             todo["repo"] = project["path"] if project is not None else "the instance"
 
-            todo_obj = self.get_issue_for_record(todo)
             todo_url = todo["target_url"]
             project_name = todo["repo"]
             if self.config.project_owner_prefix and project is not None:
@@ -636,8 +610,7 @@ class GitlabService(Service[GitlabIssue]):
                 "type": "todo",
                 "annotations": [],
             }
-            todo_obj.extra.update(extra)
-            yield todo_obj
+            yield self.get_task_for_record(todo, extra)
 
     def include(self, issue: GitlabIssueEntry) -> bool:
         """Return true if the issue in question should be included"""
@@ -686,7 +659,7 @@ class GitlabService(Service[GitlabIssue]):
 
         return description
 
-    def issues(self) -> Iterator[GitlabIssue]:
+    def issues(self) -> Iterator[Task]:
         # List of repos will only be queried if needed
         repos: list = []
 

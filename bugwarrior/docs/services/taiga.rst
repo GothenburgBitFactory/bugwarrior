@@ -45,7 +45,7 @@ Use the ``label_template`` option to customize the label. For example:
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.taiga.TaigaIssue
+.. udas:: bugwarrior.services.taiga.TaigaUdas
 
 The Taiga service provides a limited set of UDAs.  If you have need for some
 other values not present here, please file a request (there's lots of metadata

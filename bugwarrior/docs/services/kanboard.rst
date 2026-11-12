@@ -49,4 +49,4 @@ configuration option:
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.kanboard.KanboardIssue
+.. udas:: bugwarrior.services.kanboard.KanboardUdas

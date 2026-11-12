@@ -21,4 +21,4 @@ You can also feel free to use any of the configuration options described in :ref
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.teamwork_projects.TeamworkIssue
+.. udas:: bugwarrior.services.teamwork_projects.TeamworkUdas

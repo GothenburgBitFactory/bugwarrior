@@ -1,0 +1,223 @@
+"""
+Task API
+--------
+"""
+
+import datetime
+import json
+from typing import Annotated, Any, ClassVar, Literal, cast
+
+from dateutil.parser import parse as parse_date
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    PlainSerializer,
+    model_validator,
+)
+
+from bugwarrior.config.schema import Priority as ConfigPriority
+
+
+def coerce_datetime(value: str | datetime.datetime | None) -> datetime.datetime | None:
+    if value is None or value == "":
+        return None
+    if isinstance(value, datetime.datetime):
+        return value.replace(microsecond=0)
+    parsed = parse_date(value)
+    if not parsed.tzinfo:
+        parsed = parsed.replace(tzinfo=datetime.UTC)
+    return parsed.replace(microsecond=0)
+
+
+def _coerce_empty_priority(value: object) -> object:
+    return None if value == "" else value
+
+
+def _format_duration(value: datetime.timedelta | None) -> str | None:
+    """Render a duration the way Taskwarrior stores one.
+
+    Taskwarrior rewrites a duration when it saves it: give it "PT12600S" and
+    it stores "PT3H30M". The next sync would then read back a value which does
+    not match what we sent, and update the task again, every time. So write
+    days, hours, minutes and seconds, and leave out the ones which are zero.
+    """
+    if value is None:
+        return None
+    days, seconds = divmod(max(int(value.total_seconds()), 0), 86400)
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+    time = "".join(
+        f"{amount}{unit}"
+        for amount, unit in ((hours, "H"), (minutes, "M"), (seconds, "S"))
+        if amount
+    )
+    if not days and not time:
+        return "PT0S"
+    return "P" + (f"{days}D" if days else "") + (f"T{time}" if time else "")
+
+
+class UdaType:
+    """Attach a Taskwarrior type to a UDA annotation."""
+
+    def __init__(self, uda_type: str) -> None:
+        self.uda_type = uda_type
+
+
+String = Annotated[str | None, UdaType("string")]
+Numeric = Annotated[int | float | bool | None, UdaType("numeric")]
+Date = Annotated[
+    datetime.datetime | datetime.date | None,
+    UdaType("date"),
+    BeforeValidator(coerce_datetime),
+]
+Priority = Annotated[ConfigPriority | None, BeforeValidator(_coerce_empty_priority)]
+Status = Literal["pending", "completed", "deleted", "waiting", "recurring"] | None
+Duration = Annotated[
+    datetime.timedelta | None, UdaType("duration"), PlainSerializer(_format_duration)
+]
+
+
+class Udas(BaseModel):
+    """A service's UDA declarations.
+
+    Every field is a UDA. The base class has no fields: it is what a task
+    without UDAs uses, and the default for Task. A service subclasses it to
+    declare its own UDAs, and the unique key which identifies a task in the
+    remote service.
+
+    Field names are local to the service model. PREFIX adds the service
+    prefix when bugwarrior writes the fields to Taskwarrior.
+
+    The field title becomes the UDA label, and the field name becomes the
+    label when the field has no title.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    #: Prefix added to UDA field names when they are sent to Taskwarrior.
+    PREFIX: ClassVar[str]
+
+    #: Names of the UDA fields which identify a task in the remote service.
+    #: There is no default on purpose: an empty unique key matches every
+    #: pending task in the user's database, so a service which forgets it must
+    #: fail rather than run.
+    UNIQUE_KEY: ClassVar[tuple[str, ...]]
+
+    @classmethod
+    def __pydantic_init_subclass__(cls, **kwargs: Any) -> None:
+        """Reject a unique key which names something other than a declared UDA."""
+        unsupported = [
+            name
+            for name, field in cls.model_fields.items()
+            if not field.metadata or not isinstance(field.metadata[0], UdaType)
+        ]
+        if unsupported:
+            raise TypeError(
+                f"{cls.__name__} has unsupported UDA fields: {', '.join(unsupported)}"
+            )
+
+        unique_key = cls.UNIQUE_KEY
+        if not unique_key:
+            raise TypeError(f"{cls.__name__}.UNIQUE_KEY must not be empty")
+        undeclared = [name for name in unique_key if name not in cls.model_fields]
+        if undeclared:
+            raise TypeError(
+                f"{cls.__name__}.UNIQUE_KEY names undeclared fields: "
+                f"{', '.join(undeclared)}"
+            )
+
+    @model_validator(mode="after")
+    def validate_unique_key(self) -> "Udas":
+        """Reject a null value in a field that identifies a remote task."""
+        for name in self.UNIQUE_KEY:
+            if getattr(self, name) is None:
+                raise ValueError(f"UNIQUE_KEY field {name!r} cannot be None")
+        return self
+
+    @classmethod
+    def _taskwarrior_name(cls, name: str) -> str:
+        return f"{cls.PREFIX}{name}"
+
+    def to_task_data(self) -> dict[str, Any]:
+        """Return this service's UDAs with their Taskwarrior field names."""
+        return {
+            self._taskwarrior_name(name): value
+            for name, value in self.model_dump().items()
+        }
+
+    @classmethod
+    def _taskwarrior_unique_key(cls) -> tuple[str, ...]:
+        return tuple(cls._taskwarrior_name(name) for name in cls.UNIQUE_KEY)
+
+    @classmethod
+    def serialize(cls) -> dict[str, dict[str, str]]:
+        """Return this service's UDA definitions, one per declared field.
+
+        The type comes from the field annotation; the label from the field's
+        title, falling back to the field name.
+        """
+        return {
+            cls._taskwarrior_name(name): {
+                "type": field.metadata[0].uda_type,
+                "label": field.title or name,
+            }
+            for name, field in cls.model_fields.items()
+        }
+
+
+class Task(BaseModel):
+    """A typed Taskwarrior record.
+
+    The Taskwarrior fields that services currently set are declared here. A
+    service adds its own UDAs by subclassing Task and replacing the "udas" field
+    with its own Udas model.
+    """
+
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
+
+    @classmethod
+    def get_udas_model(cls) -> type[Udas]:
+        return cast(type[Udas], cls.model_fields["udas"].annotation)
+
+    @classmethod
+    def serialize(cls) -> dict[str, dict[str, str]]:
+        return cls.get_udas_model().serialize()
+
+    @classmethod
+    def get_unique_key(cls) -> tuple[str, ...]:
+        return cls.get_udas_model()._taskwarrior_unique_key()
+
+    def to_task_data(self) -> dict[str, Any]:
+        """Return a flat dictionary suitable for Taskwarrior synchronization.
+
+        Standard fields are written only when they were set. Every UDA is
+        written. A Taskwarrior record is flat, so the UDAs leave the nested
+        model and sit next to the standard fields.
+        """
+        data = self.model_dump(exclude={"udas"}, exclude_unset=True)
+        data.update(self.udas.to_task_data())
+        return data
+
+    def unique_identifier(self) -> str:
+        data = self.to_task_data()
+        return json.dumps(
+            {key: data[key] for key in self.get_unique_key()}, sort_keys=True
+        )
+
+    annotations: list[str] = Field(default_factory=list)
+    description: String = None
+    due: Date = None
+    end: Date = None
+    entry: Date = None
+    modified: Date = None
+    priority: Priority = None
+    project: String = None
+    scheduled: Date = None
+    status: Status = None
+    tags: list[str] = Field(default_factory=list)
+    wait: Date = None
+
+    #: The service's :class:`Udas` subclass.
+    udas: Udas

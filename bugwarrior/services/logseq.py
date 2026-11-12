@@ -6,10 +6,12 @@ import sys
 import typing
 from typing import Any
 
+from pydantic import Field
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Date, Status, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -110,42 +112,38 @@ class LogseqClient(Client):
         return result
 
 
-class LogseqIssue(Issue):
-    ID = "logseqid"
-    UUID = "logsequuid"
-    STATE = "logseqstate"
-    TITLE = "logseqtitle"
-    DONE = "logseqdone"
-    URI = "logsequri"
-    SCHEDULED = "logseqscheduled"
-    DEADLINE = "logseqdeadline"
-    PAGE = "logseqpage"
+class LogseqUdas(Udas):
+    """Service-specific UDAs contributed by Logseq."""
 
+    PREFIX = "logseq"
+    UNIQUE_KEY = ("id", "uuid")
+
+    id: String = Field(title="Logseq ID")
+    uuid: String = Field(title="Logseq UUID")
+    state: String = Field(title="Logseq State")
+    title: String = Field(title="Logseq Title")
+    uri: String = Field(title="Logseq URI")
+    scheduled: Date = Field(title="Logseq Scheduled")
+    deadline: Date = Field(title="Logseq Deadline")
+    page: String = Field(title="Logseq Page")
+
+
+class LogseqTask(Task):
+    udas: LogseqUdas
+
+
+class LogseqIssue(Issue):
     # Local 2038-01-18, with time 00:00:00.
     # A date far away, with semantically meaningful to GTD users.
     # see https://taskwarrior.org/docs/dates/
     SOMEDAY = datetime(2038, 1, 18)
-
-    UDAS = {
-        ID: {"type": "string", "label": "Logseq ID"},
-        UUID: {"type": "string", "label": "Logseq UUID"},
-        STATE: {"type": "string", "label": "Logseq State"},
-        TITLE: {"type": "string", "label": "Logseq Title"},
-        DONE: {"type": "date", "label": "Logseq Done"},
-        URI: {"type": "string", "label": "Logseq URI"},
-        SCHEDULED: {"type": "date", "label": "Logseq Scheduled"},
-        DEADLINE: {"type": "date", "label": "Logseq Deadline"},
-        PAGE: {"type": "string", "label": "Logseq Page"},
-    }
-
-    UNIQUE_KEY = (ID, UUID)
 
     # map A B C priority to H M L
     PRIORITY_MAP: dict[str, config.Priority] = {"A": "H", "B": "M", "C": "L"}
 
     # `pending` is the defuault state. Taskwarrior will dynamcily change task to `waiting`
     # state if wait date is set to a future date.
-    STATE_MAP: dict[str, str] = {
+    STATE_MAP: dict[str, Status] = {
         "IN-PROGRESS": "pending",
         "DOING": "pending",
         "TODO": "pending",
@@ -287,29 +285,33 @@ class LogseqIssue(Issue):
     def _is_waiting(self) -> bool:
         return self.get_logseq_state() in ["WAIT", "WAITING"]
 
-    def to_taskwarrior(self) -> dict[str, Any]:
+    def to_taskwarrior(self) -> LogseqTask:
         annotations, scheduled_date, deadline_date = self.get_annotations_from_content()
         wait_date = min(
             [d for d in [scheduled_date, deadline_date, self.SOMEDAY] if d is not None]
         )
-        return {
-            "project": self.extra["graph"],
-            "priority": self.get_priority(),
-            "annotations": annotations,
-            "tags": self.get_tags_from_labels(self.get_tags_from_content()),
-            "due": deadline_date,
-            "scheduled": scheduled_date,
-            "wait": wait_date if self._is_waiting() else None,
-            "status": self.STATE_MAP[self.get_logseq_state()],
-            self.ID: int(self.record["id"]),
-            self.UUID: self.record["uuid"],
-            self.STATE: self.record["marker"],
-            self.TITLE: self.get_formatted_title(),
-            self.URI: self.get_url(),
-            self.SCHEDULED: scheduled_date,
-            self.DEADLINE: deadline_date,
-            self.PAGE: self.extra["page_title"],
-        }
+        return LogseqTask(
+            project=self.extra["graph"],
+            priority=self.get_priority(),
+            annotations=annotations,
+            tags=self.get_tags_from_labels(self.get_tags_from_content()),
+            due=deadline_date,
+            scheduled=scheduled_date,
+            wait=wait_date if self._is_waiting() else None,
+            status=self.STATE_MAP[self.get_logseq_state()],
+            udas=LogseqUdas(
+                # Logseq can return the block id as a float (7146.0).
+                # The UDA holds a string, so round-trip through int.
+                id=str(int(self.record["id"])),
+                uuid=self.record["uuid"],
+                state=self.record["marker"],
+                title=self.get_formatted_title(),
+                uri=self.get_url(),
+                scheduled=scheduled_date,
+                deadline=deadline_date,
+                page=self.extra["page_title"],
+            ),
+        )
 
     def get_default_description(self) -> str:
         return self.build_default_description(
@@ -320,9 +322,10 @@ class LogseqIssue(Issue):
         )
 
 
-class LogseqService(Service[LogseqIssue]):
+class LogseqService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = LogseqIssue
+    TASK_SCHEMA = LogseqTask
     CONFIG_SCHEMA = LogseqConfig
 
     def __init__(
@@ -338,7 +341,7 @@ class LogseqService(Service[LogseqIssue]):
             filter=filter,
         )
 
-    def issues(self) -> Iterator[LogseqIssue]:
+    def issues(self) -> Iterator[Task]:
         graph_name = self.client.get_graph_name()
         for issue in self.client.get_issues():
             parent_page = self.client.get_page(issue[0]["parent"]["id"])
@@ -346,4 +349,4 @@ class LogseqService(Service[LogseqIssue]):
                 "graph": graph_name,
                 "page_title": parent_page["originalName"] if parent_page else None,
             }
-            yield self.get_issue_for_record(issue[0], extra)
+            yield self.get_task_for_record(issue[0], extra)

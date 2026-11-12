@@ -1,13 +1,14 @@
 from collections.abc import Iterator
 import logging
 import typing
-from typing import Any
 
 import phabricator
 import pydantic
+from pydantic import Field
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
+from bugwarrior.task import String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -35,20 +36,23 @@ class PhabricatorConfig(config.ServiceConfig):
         return str(self.host) if self.host else ""
 
 
+class PhabricatorUdas(Udas):
+    """Service-specific UDAs contributed by Phabricator."""
+
+    PREFIX = "phabricator"
+    UNIQUE_KEY = ("url",)
+
+    title: String = Field(title="Phabricator Title")
+    url: String = Field(title="Phabricator URL")
+    type: String = Field(title="Phabricator Type")
+    id: String = Field(title="Phabricator Object")
+
+
+class PhabricatorTask(Task):
+    udas: PhabricatorUdas
+
+
 class PhabricatorIssue(Issue):
-    TITLE = "phabricatortitle"
-    URL = "phabricatorurl"
-    TYPE = "phabricatortype"
-    OBJECT_NAME = "phabricatorid"
-
-    UDAS = {
-        TITLE: {"type": "string", "label": "Phabricator Title"},
-        URL: {"type": "string", "label": "Phabricator URL"},
-        TYPE: {"type": "string", "label": "Phabricator Type"},
-        OBJECT_NAME: {"type": "string", "label": "Phabricator Object"},
-    }
-    UNIQUE_KEY = (URL,)
-
     PRIORITY_MAP: dict[str, config.Priority | None] = {
         "Needs Triage": None,
         "Unbreak Now!": "H",
@@ -58,16 +62,18 @@ class PhabricatorIssue(Issue):
         "Wishlist": "L",
     }
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            "project": self.extra["project"],
-            "priority": self.priority,
-            "annotations": self.extra.get("annotations", []),
-            self.URL: self.record["uri"],
-            self.TYPE: self.extra["type"],
-            self.TITLE: self.record["title"],
-            self.OBJECT_NAME: self.record["uri"].split("/")[-1],
-        }
+    def to_taskwarrior(self) -> PhabricatorTask:
+        return PhabricatorTask(
+            project=self.extra["project"],
+            priority=self.priority,
+            annotations=self.extra.get("annotations", []),
+            udas=PhabricatorUdas(
+                title=self.record["title"],
+                url=self.record["uri"],
+                type=self.extra["type"],
+                id=self.record["uri"].split("/")[-1],
+            ),
+        )
 
     def get_default_description(self) -> str:
         return self.build_default_description(
@@ -85,9 +91,10 @@ class PhabricatorIssue(Issue):
         )
 
 
-class PhabricatorService(Service[PhabricatorIssue]):
+class PhabricatorService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = PhabricatorIssue
+    TASK_SCHEMA = PhabricatorTask
     CONFIG_SCHEMA = PhabricatorConfig
 
     def __init__(
@@ -112,7 +119,7 @@ class PhabricatorService(Service[PhabricatorIssue]):
             else self.config.only_if_assigned
         )
 
-    def tasks(self) -> Iterator[PhabricatorIssue]:
+    def tasks(self) -> Iterator[Task]:
         # If self.config.user_phids or self.config.project_phids is set,
         # retrict API calls to user_phids or project_phids to avoid time out
         # with Phabricator installations with huge userbase.
@@ -135,11 +142,14 @@ class PhabricatorService(Service[PhabricatorIssue]):
                     )
                     # Delete duplicates
                     seen = set()
-                    tasks = [
-                        item
-                        for item in tasks
-                        if str(item[1]) not in seen and not seen.add(str(item[1]))
-                    ]
+                    unique_tasks = []
+                    for item in tasks:
+                        item_id = str(item[1])
+                        if item_id in seen:
+                            continue
+                        seen.add(item_id)
+                        unique_tasks.append(item)
+                    tasks = unique_tasks
                 if self.config.project_phids:
                     tasks = self.api.maniphest.query(
                         status="status-open", projectPHIDs=self.config.project_phids
@@ -191,9 +201,9 @@ class PhabricatorService(Service[PhabricatorIssue]):
                 # 'annotations': self.annotations(phid, issue)
             }
 
-            yield self.get_issue_for_record(task, extra)
+            yield self.get_task_for_record(task, extra)
 
-    def revisions(self) -> Iterator[PhabricatorIssue]:
+    def revisions(self) -> Iterator[Task]:
         try:
             diffs = self.api.differential.query(status="status-open")
         except phabricator.APIError as err:
@@ -246,8 +256,8 @@ class PhabricatorService(Service[PhabricatorIssue]):
                 "type": "pull_request",
                 # 'annotations': self.annotations(phid, issue)
             }
-            yield self.get_issue_for_record(diff, extra)
+            yield self.get_task_for_record(diff, extra)
 
-    def issues(self) -> Iterator[PhabricatorIssue]:
+    def issues(self) -> Iterator[Task]:
         yield from self.tasks()
         yield from self.revisions()

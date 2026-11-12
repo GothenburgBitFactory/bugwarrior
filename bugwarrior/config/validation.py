@@ -108,6 +108,31 @@ def _format_extra_section_error(error: ErrorDetails | dict) -> str:
     return _format_field_error(section_name, loc[1], msg, error)
 
 
+class TemplateError(Exception):
+    """A field template rendered a value the taskwarrior field cannot hold."""
+
+
+def raise_template_error(
+    target: str, field: str, template: str, value: str, error: ValidationError
+) -> NoReturn:
+    """Report a field template which cannot produce a value for its field.
+
+    This raises instead of exiting, unlike the checks on the config file.
+    Those run at startup, before any work is done. This one runs during a
+    pull, so bugwarrior skips the target it happened in and goes on with the
+    other targets.
+    """
+    reasons = "; ".join(err["msg"] for err in error.errors())
+    raise TemplateError(
+        _format_field_error(
+            target,
+            f"{field}_template",
+            f"rendered {value!r}, which the {field} field cannot hold: {reasons}",
+            {"type": "value_error", "input": template},
+        )
+    ) from error
+
+
 def raise_validation_error(
     msg: str, config_path: str, error_count: int = 1
 ) -> NoReturn:
@@ -153,7 +178,10 @@ def get_service_config_union_type(services: list[dict[str, Any]]) -> Any:
     # service_config_classes is a runtime tuple; Union[tuple] unpacks it into a
     # multi-member union. Do not simplify to Union[X] (ruff: noqa: UP007) — that
     # rewrite assumes a single type argument and breaks the discriminated union.
-    return Annotated[Union[service_config_classes], Field(discriminator="service")]  # noqa: UP007
+    return Annotated[
+        Union[service_config_classes],  # noqa: UP007  # ty: ignore[invalid-type-form]
+        Field(discriminator="service"),
+    ]
 
 
 def validate_config(config: dict, main_section: str, config_path: str) -> "Config":
@@ -181,9 +209,9 @@ def validate_config(config: dict, main_section: str, config_path: str) -> "Confi
     # Validate service configs
     ServiceConfigType = get_service_config_union_type(raw_service_configs)
     try:
-        service_configs = TypeAdapter(list[ServiceConfigType]).validate_python(
-            raw_service_configs
-        )
+        service_configs = TypeAdapter(
+            list[ServiceConfigType]  # ty: ignore[invalid-type-form]
+        ).validate_python(raw_service_configs)
     except ValidationError as error:
         error_messages.extend(
             _format_service_error(err, raw_service_configs) for err in error.errors()

@@ -69,4 +69,4 @@ configuration option:
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.azuredevops.AzureDevopsIssue
+.. udas:: bugwarrior.services.azuredevops.AzureDevopsUdas

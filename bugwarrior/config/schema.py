@@ -217,12 +217,6 @@ class ServiceConfig(_ServiceConfig):
 
     @property
     def keyring_service(self) -> str:
-
-        service = get_service(self.service)
-        if service.API_VERSION < 2:
-            assert hasattr(service, "get_keyring_service")
-            return service.get_keyring_service(self)  # ty: ignore
-
         return self.KEYRING_SERVICE.format(**self.model_dump())
 
     @model_validator(mode="before")

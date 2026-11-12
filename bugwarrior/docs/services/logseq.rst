@@ -200,4 +200,4 @@ If you get the following error when running bugwarrior:
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.logseq.LogseqIssue
+.. udas:: bugwarrior.services.logseq.LogseqUdas

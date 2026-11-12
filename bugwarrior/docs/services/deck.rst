@@ -87,4 +87,4 @@ You can explicitly exclude or include specific boards:
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.deck.NextcloudDeckIssue
+.. udas:: bugwarrior.services.deck.NextcloudDeckUdas

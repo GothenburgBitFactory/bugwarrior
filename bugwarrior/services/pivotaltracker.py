@@ -6,10 +6,12 @@ import typing
 from typing import Any
 
 from jinja2 import Template
+from pydantic import Field
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Date, Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -38,64 +40,56 @@ class PivotalTrackerConfig(config.ServiceConfig):
     only_if_assigned: bool = True
 
 
+class PivotalTrackerUdas(Udas):
+    """Service-specific UDAs contributed by PivotalTracker."""
+
+    PREFIX = "pivotal"
+    UNIQUE_KEY = ("url",)
+
+    url: String = Field(title="Story URL")
+    description: String = Field(title="Story Description")
+    storytype: String = Field(title="Story Type")
+    projectid: Numeric = Field(title="Project ID")
+    projectname: String = Field(title="Project Name")
+    id: Numeric = Field(title="Story ID")
+    owners: String = Field(title="Story Owned By")
+    requesters: String = Field(title="Story Requested By")
+    estimate: Numeric = Field(title="Story Estimate")
+    blockers: String = Field(title="Story Blockers")
+    created: Date = Field(title="Story Created")
+    updated: Date = Field(title="Story Updated")
+    closed: Date = Field(title="Story Closed")
+
+
+class PivotalTrackerTask(Task):
+    udas: PivotalTrackerUdas
+
+
 class PivotalTrackerIssue(Issue):
-    URL = "pivotalurl"
-    DESCRIPTION = "pivotaldescription"
-    TYPE = "pivotalstorytype"
-    PROJECT_ID = "pivotalprojectid"
-    PROJECT_NAME = "pivotalprojectname"
-    OWNED_BY = "pivotalowners"
-    REQUEST_BY = "pivotalrequesters"
-    FOREIGN_ID = "pivotalid"
-    ESTIMATE = "pivotalestimate"
-    BLOCKERS = "pivotalblockers"
-    CREATED_AT = "pivotalcreated"
-    UPDATED_AT = "pivotalupdated"
-    CLOSED_AT = "pivotalclosed"
-
-    UDAS = {
-        URL: {"type": "string", "label": "Story URL"},
-        DESCRIPTION: {"type": "string", "label": "Story Description"},
-        TYPE: {"type": "string", "label": "Story Type"},
-        PROJECT_ID: {"type": "numeric", "label": "Project ID"},
-        PROJECT_NAME: {"type": "string", "label": "Project Name"},
-        FOREIGN_ID: {"type": "numeric", "label": "Story ID"},
-        OWNED_BY: {"type": "string", "label": "Story Owned By"},
-        REQUEST_BY: {"type": "string", "label": "Story Requested By"},
-        ESTIMATE: {"type": "numeric", "label": "Story Estimate"},
-        BLOCKERS: {"type": "string", "label": "Story Blockers"},
-        CREATED_AT: {"type": "date", "label": "Story Created"},
-        UPDATED_AT: {"type": "date", "label": "Story Updated"},
-        CLOSED_AT: {"type": "date", "label": "Story Closed"},
-    }
-
-    UNIQUE_KEY = (URL,)
-
-    def to_taskwarrior(self) -> dict[str, Any]:
-        description = self.record.get("description")
-        created = self.parse_date(self.record.get("created_at"))
-        modified = self.parse_date(self.record.get("updated_at"))
-        closed = self.parse_date(self.record.get("accepted_at"))
-
-        return {
-            "project": re.sub(r"[^a-zA-Z0-9]", "_", self.extra["project_name"]).lower(),
-            "priority": self.config.default_priority,
-            "annotations": self.extra.get("annotations", []),
-            "tags": self.get_tags(),
-            self.URL: self.record["url"],
-            self.DESCRIPTION: description,
-            self.TYPE: self.record["story_type"],
-            self.PROJECT_ID: int(self.record["project_id"]),
-            self.PROJECT_NAME: self.extra["project_name"],
-            self.FOREIGN_ID: int(self.record["id"]),
-            self.OWNED_BY: self.extra["owned_user"],
-            self.REQUEST_BY: self.extra["request_user"],
-            self.ESTIMATE: int(self.record.get("estimate", 0)),
-            self.BLOCKERS: self.extra["blockers"],
-            self.CREATED_AT: created,
-            self.UPDATED_AT: modified,
-            self.CLOSED_AT: closed,
-        }
+    def to_taskwarrior(self) -> PivotalTrackerTask:
+        return PivotalTrackerTask(
+            project=re.sub(r"[^a-zA-Z0-9]", "_", self.extra["project_name"]).lower(),
+            priority=self.config.default_priority,
+            annotations=self.extra.get("annotations", []),
+            tags=self.get_tags(),
+            udas=PivotalTrackerUdas(
+                url=self.record["url"],
+                description=self.record.get("description"),
+                storytype=self.record["story_type"],
+                projectid=self.record["project_id"],
+                projectname=self.extra["project_name"],
+                id=self.record["id"],
+                owners=self.extra["owned_user"],
+                requesters=self.extra["request_user"],
+                # int() truncates: a fractional point scale would
+                # otherwise be rejected rather than rounded down.
+                estimate=int(self.record.get("estimate", 0)),
+                blockers=self.extra["blockers"],
+                created=self.record.get("created_at"),
+                updated=self.record.get("updated_at"),
+                closed=self.record.get("accepted_at"),
+            ),
+        )
 
     def get_tags(self) -> list[str]:
         labels = [label["name"] for label in self.record.get("labels", [])]
@@ -110,9 +104,10 @@ class PivotalTrackerIssue(Issue):
         )
 
 
-class PivotalTrackerService(Service[PivotalTrackerIssue]):
+class PivotalTrackerService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = PivotalTrackerIssue
+    TASK_SCHEMA = PivotalTrackerTask
     CONFIG_SCHEMA = PivotalTrackerConfig
 
     def __init__(
@@ -167,7 +162,7 @@ class PivotalTrackerService(Service[PivotalTrackerIssue]):
 
         return ", ".join(blockers) or None
 
-    def issues(self) -> Iterator[PivotalTrackerIssue]:
+    def issues(self) -> Iterator[Task]:
         for project in self.get_projects(self.config.account_ids):
             project_id = project.get("id")
             if project_id is None or project_id in self.config.exclude_projects:
@@ -188,7 +183,7 @@ class PivotalTrackerService(Service[PivotalTrackerIssue]):
                     ),
                     "blockers": self.blockers(blockers),
                 }
-                yield self.get_issue_for_record(story, extra)
+                yield self.get_task_for_record(story, extra)
 
     def api_request(self, endpoint: str, params: dict[str, Any] | None = None) -> Any:
         """

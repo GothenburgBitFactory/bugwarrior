@@ -10,11 +10,12 @@ from typing import Any
 
 from jira.client import JIRA as BaseJIRA
 from jira.exceptions import JIRAError
-from pydantic import BeforeValidator, model_validator
+from pydantic import BeforeValidator, ConfigDict, Field, model_validator
 from requests.cookies import RequestsCookieJar
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
+from bugwarrior.task import Numeric, String, Task, Udas, coerce_datetime
 
 log = logging.getLogger(__name__)
 
@@ -151,34 +152,39 @@ def _parse_sprint_string(sprint: str) -> dict[str, str]:
     return dict(zip(fields[::2], fields[1::2]))
 
 
+class JiraUdas(Udas):
+    """Service-specific UDAs contributed by Jira.
+
+    A user can turn any Jira field into a UDA with the "extra_fields" option.
+    Those names are only known when bugwarrior runs, so extra keys are allowed
+    here.
+    """
+
+    PREFIX = "jira"
+
+    model_config = ConfigDict(extra="allow")
+
+    __pydantic_extra__: dict[str, Any] = {}
+
+    UNIQUE_KEY = ("url",)
+
+    issuetype: String = Field(title="Issue Type")
+    summary: String = Field(title="Jira Summary")
+    url: String = Field(title="Jira URL")
+    description: String = Field(title="Jira Description")
+    id: String = Field(title="Jira Issue ID")
+    estimate: Numeric = Field(title="Estimate")
+    fixversion: String = Field(title="Fix Version")
+    status: String = Field(title="Jira Status")
+    subtasks: String = Field(title="Jira Subtasks")
+    parent: String = Field(title="Jira Parent")
+
+
+class JiraTask(Task):
+    udas: JiraUdas
+
+
 class JiraIssue(Issue):
-    ISSUE_TYPE = "jiraissuetype"
-    SUMMARY = "jirasummary"
-    URL = "jiraurl"
-    FOREIGN_ID = "jiraid"
-    DESCRIPTION = "jiradescription"
-    ESTIMATE = "jiraestimate"
-    FIX_VERSION = "jirafixversion"
-    CREATED_AT = "jiracreatedts"
-    STATUS = "jirastatus"
-    SUBTASKS = "jirasubtasks"
-    PARENT = "jiraparent"
-
-    UDAS = {
-        ISSUE_TYPE: {"type": "string", "label": "Issue Type"},
-        SUMMARY: {"type": "string", "label": "Jira Summary"},
-        URL: {"type": "string", "label": "Jira URL"},
-        DESCRIPTION: {"type": "string", "label": "Jira Description"},
-        FOREIGN_ID: {"type": "string", "label": "Jira Issue ID"},
-        ESTIMATE: {"type": "numeric", "label": "Estimate"},
-        FIX_VERSION: {"type": "string", "label": "Fix Version"},
-        CREATED_AT: {"type": "date", "label": "Created At"},
-        STATUS: {"type": "string", "label": "Jira Status"},
-        SUBTASKS: {"type": "string", "label": "Jira Subtasks"},
-        PARENT: {"type": "string", "label": "Jira Parent"},
-    }
-    UNIQUE_KEY = (URL,)
-
     PRIORITY_MAP: dict[str, config.Priority] = {
         "Highest": "H",
         "High": "H",
@@ -192,44 +198,44 @@ class JiraIssue(Issue):
         "Blocker": "H",
     }
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        fixed_fields = {
-            "project": self.get_project(),
-            "priority": self.get_priority(),
-            "annotations": self.get_annotations(),
-            "tags": self.get_tags(),
-            "due": self.get_due(),
-            "entry": self.get_entry(),
-            self.ISSUE_TYPE: self.get_issue_type(),
-            self.URL: self.get_url(),
-            self.FOREIGN_ID: self.record["key"],
-            self.DESCRIPTION: self.extra.get("body"),
-            self.SUMMARY: self.get_summary(),
-            self.ESTIMATE: self.get_estimate(),
-            self.FIX_VERSION: self.get_fix_version(),
-            self.STATUS: self.get_status(),
-            self.SUBTASKS: self.get_subtasks(),
-            self.PARENT: self.get_parent(),
-        }
-
-        extra_fields = self.get_extra_fields()
-
-        return {**fixed_fields, **extra_fields}
+    def to_taskwarrior(self) -> JiraTask:
+        return JiraTask(
+            project=self.get_project(),
+            priority=self.get_priority(),
+            annotations=self.get_annotations(),
+            tags=self.get_tags(),
+            due=self.get_due(),
+            entry=self.get_entry(),
+            udas=JiraUdas(
+                issuetype=self.get_issue_type(),
+                url=self.get_url(),
+                id=self.record["key"],
+                description=self.extra.get("body"),
+                summary=self.get_summary(),
+                estimate=self.get_estimate(),
+                fixversion=self.get_fix_version(),
+                status=self.get_status(),
+                subtasks=self.get_subtasks(),
+                parent=self.get_parent(),
+                **self.get_extra_fields(),
+            ),
+        )
 
     def get_extra_fields(self) -> dict[str, Any]:
         if self.config.extra_fields is None:
             return {}
 
         return {
-            extra_field.label: extra_field.extract_value(self.record["fields"])
+            extra_field.label.removeprefix(JiraUdas.PREFIX): extra_field.extract_value(
+                self.record["fields"]
+            )
             for extra_field in self.config.extra_fields
         }
 
     def get_entry(self) -> datetime.datetime | None:
         created_at = self.record["fields"]["created"]
         # Convert timestamp to an offset-aware datetime
-        date = self.parse_date(created_at)
-        return date
+        return coerce_datetime(created_at)
 
     def get_tags(self) -> list[str]:
         labels = self.record.get("fields", {}).get("labels", [])
@@ -247,13 +253,13 @@ class JiraIssue(Issue):
     def get_due(self) -> datetime.datetime | None:
         # If the duedate is explicitly set on the issue, then use that.
         if self.record["fields"].get("duedate"):
-            return self.parse_date(self.record["fields"]["duedate"])
+            return coerce_datetime(self.record["fields"]["duedate"])
         # Otherwise, if the issue is in a sprint, use the end date of that sprint.
         sprints = self.__get_sprints()
         for sprint in filter(lambda e: e.get("state", "").lower() != "closed", sprints):
             endDate = sprint.get("endDate")
             if endDate != "<null>":
-                return self.parse_date(endDate)
+                return coerce_datetime(endDate)
 
     def __get_sprints(self) -> Iterator[dict[str, Any]]:
         fields = self.record.get("fields", {})
@@ -340,9 +346,10 @@ class JiraIssue(Issue):
         return self.record["fields"]["issuetype"]["name"]
 
 
-class JiraService(Service[JiraIssue]):
+class JiraService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = JiraIssue
+    TASK_SCHEMA = JiraTask
     CONFIG_SCHEMA = JiraConfig
 
     def __init__(
@@ -393,33 +400,32 @@ class JiraService(Service[JiraIssue]):
             return JIRA(options=jira_options, auth=(self.config.username, password))
         return JIRA(options=jira_options, basic_auth=(self.config.username, password))
 
-    def body(self, issue: JiraIssue) -> str | None:
-        body = issue.record.get("fields", {}).get("description")
+    def body(self, record: dict[str, Any]) -> str | None:
+        body = record.get("fields", {}).get("description")
 
         if body:
             body = body[: self.config.body_length]
 
         return body
 
-    def annotations(self, issue: Any, issue_obj: JiraIssue) -> list[str]:
+    def annotations(self, issue: Any, url: str) -> list[str]:
         comments = self.jira.comments(issue.key) or []
         return self.build_annotations(
-            ((comment.author.displayName, comment.body) for comment in comments),
-            issue_obj.get_url(),
+            ((comment.author.displayName, comment.body) for comment in comments), url
         )
 
-    def issues(self) -> Iterator[JiraIssue]:
+    def issues(self) -> Iterator[Task]:
         try:
             cases = self.jira.search_issues(self.query, maxResults=False)
         except JIRAError:  # Jira Cloud
             cases = self.jira.enhanced_search_issues(self.query, maxResults=False)
 
         for case in cases:
-            issue = self.get_issue_for_record(
-                case.raw, extra={"sprint_field_names": self.sprint_field_names}
-            )
-            extra: dict[str, Any] = {"body": self.body(issue)}
+            extra: dict[str, Any] = {
+                "sprint_field_names": self.sprint_field_names,
+                "body": self.body(case.raw),
+            }
             if self.config.version > 4:
-                extra["annotations"] = self.annotations(case, issue)
-            issue.extra.update(extra)
-            yield issue
+                url = self.config.base_uri + "/browse/" + case.raw["key"]
+                extra["annotations"] = self.annotations(case, url)
+            yield self.get_task_for_record(case.raw, extra)
