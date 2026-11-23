@@ -84,16 +84,6 @@ class TestGerritIssue:
 
         assert actual == expected
 
-    # A default in .get() only applies when the key is absent, so a key
-    # present with a null still has to be accepted.
-    @pytest.mark.parametrize("field", ["topic", "status"])
-    def test_null_is_tolerated(self, service, record, extra, field):
-        record[field] = None
-
-        data = service.get_issue_for_record(record, extra).to_taskwarrior()
-
-        assert data.to_task_data()[f"gerrit{field}"] is None
-
     def test_work_in_progress(self, service, record, extra):
         record["work_in_progress"] = True
         task = service.get_task_for_record(record, extra)

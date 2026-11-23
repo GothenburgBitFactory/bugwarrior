@@ -72,6 +72,21 @@ def test_udas_are_flattened_and_always_emitted():
     }
 
 
+def test_a_string_uda_accepts_none():
+    # A service often leaves a field empty. Rejecting the null would fail the
+    # whole target, not only this one record.
+    class NullableUdas(Udas):
+        PREFIX = "nullable"
+        UNIQUE_KEY = ("url",)
+
+        url: String = Field(title="Nullable URL")
+        topic: String = Field(title="Nullable Topic")
+
+    udas = NullableUdas(url="http://example.com", topic=None)
+
+    assert udas.to_task_data()["nullabletopic"] is None
+
+
 def test_serialize_is_derived_from_the_udas_model():
     assert SampleUdas.serialize() == {
         "samplenumber": {"type": "numeric", "label": "Sample Number"},

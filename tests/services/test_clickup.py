@@ -174,22 +174,6 @@ class TestClickupService:
         assert get_validated_service(config).is_assigned(record)
 
 
-class TestClickupNullableFields:
-    """
-    A field the service leaves empty must not fail the whole target.
-
-    Taskwarrior accepts an empty UDA. An error here would come out of
-    issues() and lose every task of this target, not just this one record.
-    """
-
-    def test_null_description_is_tolerated(self, service, record):
-        record["description"] = None
-
-        data = service.get_issue_for_record(record).to_taskwarrior()
-
-        assert data.to_task_data()["clickupdescription"] is None
-
-
 class TestClickupIssue:
     def test_to_taskwarrior(self, service, record):
         issue = service.get_issue_for_record(record)
