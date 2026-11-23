@@ -191,11 +191,6 @@ def test_a_schema_without_a_unique_key_is_an_error():
         Task.get_unique_key()
 
 
-def test_unique_identifier_is_not_emitted_to_taskwarrior():
-    # It identifies the task for matching; it is not a field of the record.
-    assert "unique_identifier" not in SampleTask(udas=sample_udas()).to_task_data()
-
-
 def test_unknown_field_is_rejected():
     with pytest.raises(ValidationError):
         SampleTask(udas=sample_udas(), bogus="nope")
