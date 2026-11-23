@@ -240,7 +240,7 @@ class TestJiraIssue:
             record_with_due, extra={"sprint_field_names": service.sprint_field_names}
         )
 
-        assert issue.get_due() == datetime(2016, 9, 23, 16, 8, tzinfo=UTC)
+        assert issue.to_taskwarrior().due == datetime(2016, 9, 23, 16, 8, tzinfo=UTC)
 
     def test_get_due_sprint_dict_missing_end_date(self, service, record):
         record["fields"]["Sprint"] = [{"id": 1, "state": "active", "name": "Sprint 1"}]

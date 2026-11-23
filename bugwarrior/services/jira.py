@@ -1,6 +1,5 @@
 from collections.abc import Iterator
 import dataclasses
-import datetime
 from functools import reduce
 import logging
 import operator
@@ -15,7 +14,7 @@ from requests.cookies import RequestsCookieJar
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
-from bugwarrior.task import Numeric, String, Task, Udas, coerce_datetime
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -232,10 +231,8 @@ class JiraIssue(Issue):
             for extra_field in self.config.extra_fields
         }
 
-    def get_entry(self) -> datetime.datetime | None:
-        created_at = self.record["fields"]["created"]
-        # Convert timestamp to an offset-aware datetime
-        return coerce_datetime(created_at)
+    def get_entry(self) -> str | None:
+        return self.record["fields"]["created"]
 
     def get_tags(self) -> list[str]:
         labels = self.record.get("fields", {}).get("labels", [])
@@ -250,16 +247,16 @@ class JiraIssue(Issue):
 
         return label_tags + sprint_tags
 
-    def get_due(self) -> datetime.datetime | None:
+    def get_due(self) -> str | None:
         # If the duedate is explicitly set on the issue, then use that.
         if self.record["fields"].get("duedate"):
-            return coerce_datetime(self.record["fields"]["duedate"])
+            return self.record["fields"]["duedate"]
         # Otherwise, if the issue is in a sprint, use the end date of that sprint.
         sprints = self.__get_sprints()
         for sprint in filter(lambda e: e.get("state", "").lower() != "closed", sprints):
             endDate = sprint.get("endDate")
             if endDate != "<null>":
-                return coerce_datetime(endDate)
+                return endDate
 
     def __get_sprints(self) -> Iterator[dict[str, Any]]:
         fields = self.record.get("fields", {})
