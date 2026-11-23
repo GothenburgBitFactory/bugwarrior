@@ -13,7 +13,17 @@ jobs:
       matrix:
         taskwarrior-version: &taskwarrior_versions [2.6.2, 3.5.0]
     steps:
+      - name: Identify runner image
+        id: runner-image
+        run: echo "os=${ImageOS}" >> "${GITHUB_OUTPUT}"
+      - name: Restore cached Taskwarrior ${{ matrix.taskwarrior-version }}
+        id: taskwarrior-cache
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/taskwarrior-${{ matrix.taskwarrior-version }}.tar.gz
+          key: taskwarrior-${{ steps.runner-image.outputs.os }}-${{ runner.arch }}-${{ matrix.taskwarrior-version }}-cache-v1
       - name: Build Taskwarrior ${{ matrix.taskwarrior-version }}
+        if: steps.taskwarrior-cache.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -qq -y \
