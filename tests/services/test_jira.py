@@ -235,6 +235,17 @@ class TestJiraIssue:
 
         assert task.to_task_data() == expected
 
+    def test_extra_field_label_is_not_prefixed(self, make_service, record):
+        # The documentation never required the "jira" prefix on these labels.
+        with mock.patch("jira.client.JIRA._get_json"):
+            service = make_service(extra_fields=["myextra:customfield_10000"])
+        extra = {"annotations": [], "body": "", "sprint_field_names": []}
+
+        data = service.get_task_for_record(record, extra).to_task_data()
+
+        assert data["myextra"] == "foo"
+        assert "jiramyextra" not in data
+
     def test_get_due(self, service, record_with_due):
         issue = service.get_issue_for_record(
             record_with_due, extra={"sprint_field_names": service.sprint_field_names}

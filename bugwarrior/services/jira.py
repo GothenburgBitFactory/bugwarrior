@@ -178,6 +178,19 @@ class JiraUdas(Udas):
     subtasks: String = Field(title="Jira Subtasks")
     parent: String = Field(title="Jira Parent")
 
+    def to_task_data(self) -> dict[str, Any]:
+        """Return the UDAs with their Taskwarrior field names.
+
+        Each "extra_fields" label is already the full UDA name that the user
+        declared in their taskrc, so it is written as is. PREFIX is added only
+        to the fields declared on this class.
+        """
+        extra = self.__pydantic_extra__
+        return {
+            name if name in extra else self._taskwarrior_name(name): value
+            for name, value in self.model_dump().items()
+        }
+
 
 class JiraTask(Task):
     udas: JiraUdas
@@ -225,9 +238,7 @@ class JiraIssue(Issue):
             return {}
 
         return {
-            extra_field.label.removeprefix(JiraUdas.PREFIX): extra_field.extract_value(
-                self.record["fields"]
-            )
+            extra_field.label: extra_field.extract_value(self.record["fields"])
             for extra_field in self.config.extra_fields
         }
 
