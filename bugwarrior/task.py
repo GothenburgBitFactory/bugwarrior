@@ -192,9 +192,9 @@ class Task(BaseModel):
     def to_task_data(self) -> dict[str, Any]:
         """Return a flat dictionary suitable for Taskwarrior synchronization.
 
-        Standard fields are written only when they were set. Every UDA is
+        Core attributes are written only when they were set. Every UDA is
         written. A Taskwarrior record is flat, so the UDAs leave the nested
-        model and sit next to the standard fields.
+        model and sit next to the core attributes.
         """
         data = self.model_dump(exclude={"udas"}, exclude_unset=True)
         data.update(self.udas.to_task_data())

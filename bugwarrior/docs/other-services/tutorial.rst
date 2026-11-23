@@ -129,7 +129,7 @@ As you see, our client provides a simple API to execute the same API query we di
 6. Task and UDAs
 ----------------
 
-Bugwarrior represents a taskwarrior task with the ``Task`` model. The standard taskwarrior fields are declared on it already; a service adds its own UDAs by subclassing ``Udas`` and pointing a ``Task`` subclass at it.
+Bugwarrior represents a taskwarrior task with the ``Task`` model. The taskwarrior core attributes are declared on it already; a service adds its own UDAs by subclassing ``Udas`` and pointing a ``Task`` subclass at it.
 
 .. code:: python
 

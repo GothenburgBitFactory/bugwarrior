@@ -32,7 +32,7 @@ def sample_udas(**overrides):
     return SampleUdas(**values)
 
 
-def test_generic_fields_are_coerced():
+def test_core_attributes_are_coerced():
     task = SampleTask(
         udas=sample_udas(), priority="", status="pending", due="2026-05-20"
     )
@@ -45,13 +45,13 @@ def test_generic_fields_are_coerced():
 
 
 @pytest.mark.parametrize(("field", "value"), [("priority", "m"), ("status", "PENDING")])
-def test_generic_fields_reject_noncanonical_values(field, value):
+def test_core_attributes_reject_noncanonical_values(field, value):
     with pytest.raises(ValidationError):
         SampleTask(udas=sample_udas(), **{field: value})
 
 
-def test_unset_generic_fields_are_omitted():
-    # Only explicitly set generic fields are emitted, so legacy sparse records
+def test_unset_core_attributes_are_omitted():
+    # Only explicitly set core attributes are emitted, so legacy sparse records
     # are preserved.
     data = SampleTask(project="foundation", udas=sample_udas()).to_task_data()
 
@@ -171,10 +171,10 @@ def test_unique_key_rejects_a_misspelled_uda():
             sampleurll: String = None
 
 
-def test_unique_key_rejects_a_generic_field():
+def test_unique_key_rejects_a_core_attribute():
     with pytest.raises(TypeError, match="UNIQUE_KEY names undeclared fields: project"):
 
-        class GenericKeyUdas(Udas):
+        class CoreAttributeKeyUdas(Udas):
             UNIQUE_KEY = ("project",)
 
             url: String = None
