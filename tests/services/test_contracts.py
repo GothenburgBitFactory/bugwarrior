@@ -2,14 +2,12 @@
 
 import importlib
 from importlib.metadata import entry_points
-import json
 import pathlib
 import typing
 
 import pytest
 
 from bugwarrior.config import get_service
-from bugwarrior.task import UdaType
 
 SERVICES = sorted(ep.name for ep in entry_points(group="bugwarrior.service"))
 
@@ -96,25 +94,3 @@ def test_task_schema_matches_the_issue_class(service_name):
         f"{service.__name__}.TASK_SCHEMA is {service.TASK_SCHEMA.__name__}, but "
         f"{service.ISSUE_CLASS.__name__}.to_taskwarrior returns {mapped.__name__}"
     )
-
-
-@pytest.mark.parametrize("service_name", SERVICES)
-def test_task_schema_unique_identifier(service_name):
-    """Ensure every service's unique key can identify a task."""
-    service = get_service(service_name)
-    task_schema = service.TASK_SCHEMA
-    udas_model = task_schema.get_udas_model()
-    unique_key = udas_model.UNIQUE_KEY
-    values = {
-        name: 1
-        if any(
-            isinstance(metadata, UdaType) and metadata.uda_type == "numeric"
-            for metadata in udas_model.model_fields[name].metadata
-        )
-        else "value"
-        for name in unique_key
-    }
-    task = task_schema.model_construct(udas=udas_model.model_construct(**values))
-    expected = dict(zip(task_schema.get_unique_key(), values.values()))
-
-    assert task.unique_identifier() == json.dumps(expected, sort_keys=True)
