@@ -115,7 +115,7 @@ class Udas(BaseModel):
         ]
         if unsupported:
             raise TypeError(
-                f"{cls.__name__} has unsupported UDA fields: {', '.join(unsupported)}"
+                f"{cls.__name__} has unsupported UDA types: {', '.join(unsupported)}"
             )
 
         unique_key = cls.UNIQUE_KEY

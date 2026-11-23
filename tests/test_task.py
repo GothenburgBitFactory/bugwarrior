@@ -82,7 +82,7 @@ def test_serialize_is_derived_from_the_udas_model():
 
 
 def test_udas_rejects_an_unsupported_annotation():
-    with pytest.raises(TypeError, match="unsupported UDA fields: values"):
+    with pytest.raises(TypeError, match="unsupported UDA types: values"):
 
         class UnsupportedUdas(Udas):
             UNIQUE_KEY = ("name",)
