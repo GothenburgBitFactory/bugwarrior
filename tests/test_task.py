@@ -161,14 +161,12 @@ def test_unique_key_rejects_a_null_value():
 
 
 def test_unique_key_rejects_a_misspelled_uda():
-    with pytest.raises(
-        TypeError, match="UNIQUE_KEY names undeclared fields: sampleurl"
-    ):
+    with pytest.raises(TypeError, match="UNIQUE_KEY names undeclared fields: urll"):
 
         class MisspelledUdas(Udas):
-            UNIQUE_KEY = ("sampleurl",)
+            UNIQUE_KEY = ("urll",)
 
-            sampleurll: String = None
+            url: String = None
 
 
 def test_unique_key_rejects_a_core_attribute():
