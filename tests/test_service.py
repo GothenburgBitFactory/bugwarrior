@@ -17,7 +17,9 @@ going to fill up your floppy disk taskwarrior backup. Actually it's not
 that long.""".replace("\n", " ")
 
 
-def check_architecture(klass: abc.ABCMeta, allowed_references: int = 1):
+def check_architecture(
+    klass: abc.ABCMeta, allowed_references: dict[str, int] | None = None
+):
     """
     Bidirectional communication between the base classes and their children
     has been a source of complication as changes to any part of the
@@ -29,10 +31,11 @@ def check_architecture(klass: abc.ABCMeta, allowed_references: int = 1):
     any other one means the data could flow both ways again.
     """
     base = Path(services.__file__).read_text()
+    allowed_references = allowed_references or {}
 
     for method in klass.__abstractmethods__:
         references = re.findall(rf"{method}\(", base)
-        assert len(references) == allowed_references, references
+        assert len(references) == allowed_references.get(method, 1), references
 
 
 class TestService:
@@ -90,10 +93,10 @@ class TestService:
 
 class TestIssue:
     def test_architecture(self):
-        # Each abstract method of Issue is declared here and called once, in
-        # Service.get_task_for_record, the one place which maps a record to a
-        # task.
-        check_architecture(services.Issue, allowed_references=2)
+        check_architecture(
+            services.Issue,
+            allowed_references={"to_taskwarrior": 2, "get_default_description": 2},
+        )
 
     def test_build_default_description_default(self):
         issue = make_issue()
