@@ -117,7 +117,8 @@ class YoutrackIssue(Issue):
                 summary=self.get_issue_summary(),
                 url=self.get_issue_url(),
                 project=self.get_project(),
-                # Declared as a string UDA, though YouTrack reports an integer.
+                # numberInProject is an integer, but this UDA has always been
+                # declared as a string. Changing the type would break user taskrcs.
                 number=None if number is None else str(number),
             ),
         )
