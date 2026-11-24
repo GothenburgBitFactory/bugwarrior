@@ -40,16 +40,7 @@ class SecondaryTask(Task):
 
 
 class SecondaryIssue(DumbIssue):
-    def to_taskwarrior(self):
-        return SecondaryTask(
-            project=self.extra.get("project"),
-            priority=self.config.default_priority,
-            annotations=self.extra.get("annotations", []),
-            tags=self.get_tags_from_labels(self.record.get("labels", [])),
-            udas=SecondaryUdas(
-                url=self.record.get("url", ""), type=self.extra.get("type", "issue")
-            ),
-        )
+    TASK_CLASS = SecondaryTask
 
 
 class SecondaryService(DumbService):

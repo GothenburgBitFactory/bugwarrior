@@ -35,15 +35,21 @@ class DumbTask(Task):
 
 class DumbIssue(services.Issue):
     PRIORITY_MAP: dict = {}
+    #: A subclass sets its own Task class to get its own UDAs.
+    TASK_CLASS: type[Task] = DumbTask
 
     def to_taskwarrior(self):
-        return DumbTask(
+        udas_model = self.TASK_CLASS.get_udas_model()
+        return self.TASK_CLASS(
             project=self.extra.get("project"),
             priority=self.config.default_priority,
             annotations=self.extra.get("annotations", []),
             tags=self.get_tags_from_labels(self.record.get("labels", [])),
-            udas=DumbUdas(
-                url=self.record.get("url", ""), type=self.extra.get("type", "issue")
+            udas=udas_model.model_validate(
+                {
+                    "url": self.record.get("url", ""),
+                    "type": self.extra.get("type", "issue"),
+                }
             ),
         )
 
