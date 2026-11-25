@@ -76,11 +76,11 @@ class TestTemplates:
         self, synchronize, expected
     ):
         """
-        A service may compute its own "description" alongside the record.
+        A service's "extra" data must not hide the default description.
 
-        Gitlab does: it holds the body of the issue or merge request. That
-        must not become what "{{ description }}" means in a user's template,
-        or the same template would mean something else for that one service.
+        Templates can read "extra" keys, and those keys have no prefix, unlike
+        UDAs. So an "extra" key named "description" must not change what
+        "{{ description }}" renders.
         """
         actual = synchronize(
             {"description": "{{ description }}"},
