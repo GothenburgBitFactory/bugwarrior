@@ -79,7 +79,8 @@ jobs:
             "${RUNNER_TEMP}/taskwarrior-artifact/taskwarrior-${{ matrix.taskwarrior-version }}.tar.gz" \
             -C /opt/taskwarrior
           echo "/opt/taskwarrior/bin" >> "${GITHUB_PATH}"
-          task --version
+      - name: Verify Taskwarrior version
+        run: task --version
       - name: Run tests
         run: |
           uv sync --all-extras --group test --python ${{ matrix.python-version }}
