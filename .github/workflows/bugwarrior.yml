@@ -53,7 +53,6 @@ jobs:
         with:
           name: taskwarrior-${{ matrix.taskwarrior-version }}
           path: ${{ runner.temp }}/taskwarrior-${{ matrix.taskwarrior-version }}.tar.gz
-          retention-days: 7
   bugwarrior-test:
     needs: taskwarrior-build
     runs-on: ubuntu-latest
@@ -80,7 +79,7 @@ jobs:
             "${RUNNER_TEMP}/taskwarrior-artifact/taskwarrior-${{ matrix.taskwarrior-version }}.tar.gz" \
             -C /opt/taskwarrior
           echo "/opt/taskwarrior/bin" >> "${GITHUB_PATH}"
-          /opt/taskwarrior/bin/task --version
+          task --version
       - name: Run tests
         run: |
           uv sync --all-extras --group test --python ${{ matrix.python-version }}
