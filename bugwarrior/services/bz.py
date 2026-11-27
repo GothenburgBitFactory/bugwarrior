@@ -9,11 +9,12 @@ import xmlrpc.client
 
 import bugzilla
 import pydantic
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, Field
 
 from bugwarrior import config
 from bugwarrior.config.schema import StrippedTrailingSlashUrl
 from bugwarrior.services import Issue, Service
+from bugwarrior.task import Date, Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -59,28 +60,27 @@ class BugzillaConfig(config.ServiceConfig):
     advanced: bool = False
 
 
+class BugzillaUdas(Udas):
+    """Service-specific UDAs contributed by Bugzilla."""
+
+    PREFIX = "bugzilla"
+    UNIQUE_KEY = ("url",)
+
+    url: String = Field(title="Bugzilla URL")
+    summary: String = Field(title="Bugzilla Summary")
+    status: String = Field(title="Bugzilla Status")
+    bugid: Numeric = Field(title="Bugzilla Bug ID")
+    needinfo: Date = Field(title="Bugzilla Needinfo")
+    product: String = Field(title="Bugzilla Product")
+    component: String = Field(title="Bugzilla Component")
+    assignedon: Date = Field(title="Bugzilla Assigned On")
+
+
+class BugzillaTask(Task):
+    udas: BugzillaUdas
+
+
 class BugzillaIssue(Issue):
-    URL = "bugzillaurl"
-    SUMMARY = "bugzillasummary"
-    BUG_ID = "bugzillabugid"
-    STATUS = "bugzillastatus"
-    NEEDINFO = "bugzillaneedinfo"
-    PRODUCT = "bugzillaproduct"
-    COMPONENT = "bugzillacomponent"
-    ASSIGNED_ON = "bugzillaassignedon"
-
-    UDAS = {
-        URL: {"type": "string", "label": "Bugzilla URL"},
-        SUMMARY: {"type": "string", "label": "Bugzilla Summary"},
-        STATUS: {"type": "string", "label": "Bugzilla Status"},
-        BUG_ID: {"type": "numeric", "label": "Bugzilla Bug ID"},
-        NEEDINFO: {"type": "date", "label": "Bugzilla Needinfo"},
-        PRODUCT: {"type": "string", "label": "Bugzilla Product"},
-        COMPONENT: {"type": "string", "label": "Bugzilla Component"},
-        ASSIGNED_ON: {"type": "date", "label": "Bugzilla Assigned On"},
-    }
-    UNIQUE_KEY = (URL,)
-
     PRIORITY_MAP = {
         "unspecified": "M",
         "low": "L",
@@ -89,25 +89,22 @@ class BugzillaIssue(Issue):
         "urgent": "H",
     }
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        task = {
-            "project": self.record["component"],
-            "priority": self.get_priority(),
-            "annotations": self.extra.get("annotations", []),
-            self.URL: self.extra["url"],
-            self.SUMMARY: self.record["summary"],
-            self.BUG_ID: self.record["id"],
-            self.STATUS: self.record["status"],
-            self.PRODUCT: self.record["product"],
-            self.COMPONENT: self.record["component"],
-        }
-        if self.extra.get("needinfo_since", None) is not None:
-            task[self.NEEDINFO] = self.parse_date(self.extra.get("needinfo_since"))
-
-        if self.extra.get("assigned_on", None) is not None:
-            task[self.ASSIGNED_ON] = self.parse_date(self.extra.get("assigned_on"))
-
-        return task
+    def to_taskwarrior(self) -> BugzillaTask:
+        return BugzillaTask(
+            project=self.record["component"],
+            priority=self.get_priority(),
+            annotations=self.extra.get("annotations", []),
+            udas=BugzillaUdas(
+                url=self.extra["url"],
+                summary=self.record["summary"],
+                bugid=self.record["id"],
+                status=self.record["status"],
+                product=self.record["product"],
+                component=self.record["component"],
+                needinfo=self.extra.get("needinfo_since"),
+                assignedon=self.extra.get("assigned_on"),
+            ),
+        )
 
     def get_default_description(self) -> str:
         return self.build_default_description(
@@ -118,9 +115,10 @@ class BugzillaIssue(Issue):
         )
 
 
-class BugzillaService(Service[BugzillaIssue]):
+class BugzillaService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = BugzillaIssue
+    TASK_SCHEMA = BugzillaTask
     CONFIG_SCHEMA = BugzillaConfig
 
     COLUMN_LIST = [
@@ -206,7 +204,7 @@ class BugzillaService(Service[BugzillaIssue]):
                 url,
             )
 
-    def issues(self) -> Iterator[BugzillaIssue]:
+    def issues(self) -> Iterator[Task]:
         email = self.config.username
         # TODO -- doing something with blockedby would be nice.
 
@@ -260,7 +258,6 @@ class BugzillaService(Service[BugzillaIssue]):
         # Build a url for each issue
         base_url = f"{self.config.base_uri}/show_bug.cgi?id="
         for tag, issue in issues:
-            issue_obj = self.get_issue_for_record(issue)
             extra = {
                 "url": base_url + str(issue["id"]),
                 "annotations": self.annotations(tag, issue),
@@ -285,8 +282,7 @@ class BugzillaService(Service[BugzillaIssue]):
             else:
                 extra["assigned_on"] = None
 
-            issue_obj.extra.update(extra)
-            yield issue_obj
+            yield self.get_task_for_record(issue, extra)
 
     def _get_assigned_date(self, issue: dict[str, Any]) -> str | None:
         bug = self.bz.getbug(issue["id"])

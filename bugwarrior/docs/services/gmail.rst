@@ -68,4 +68,4 @@ token will be stored in your bugwarrior data directory.
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.gmail.GmailIssue
+.. udas:: bugwarrior.services.gmail.GmailUdas

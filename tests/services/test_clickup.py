@@ -3,7 +3,6 @@ from datetime import UTC, datetime
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.clickup import ClickupClient, ClickupService
 
 from ..base import get_validated_service, validate
@@ -51,7 +50,6 @@ def record():
             }
         ],
         "checklists": [],
-        "tags": [],
         "parent": None,
         "top_level_parent": None,
         "priority": None,
@@ -185,21 +183,21 @@ class TestClickupIssue:
             "priority": "M",
             "due": None,
             "entry": datetime.fromtimestamp(int(record["date_created"]) // 1e3, tz=UTC),
-            issue.ID: record["id"],
-            issue.DESCRIPTION: record["description"],
-            issue.STATUS: record["status"]["status"],
-            issue.UPDATED_AT: datetime.fromtimestamp(
+            "clickupid": record["id"],
+            "clickupdescription": record["description"],
+            "clickupstatus": record["status"]["status"],
+            "clickupupdated": datetime.fromtimestamp(
                 int(record["date_updated"]) // 1e3, tz=UTC
             ),
-            issue.CREATOR: record["creator"]["username"],
-            issue.URL: record["url"],
-            issue.LIST_NAME: record["list"]["name"],
-            issue.PROJECT: record["project"]["id"],
-            issue.FOLDER: record["folder"]["id"],
-            issue.SPACE: record["space"]["id"],
-            issue.NAME: record["name"],
+            "clickupcreator": record["creator"]["username"],
+            "clickupurl": record["url"],
+            "clickuplistname": record["list"]["name"],
+            "clickupproject": record["project"]["id"],
+            "clickupfolder": record["folder"]["id"],
+            "clickupspace": record["space"]["id"],
+            "clickupname": record["name"],
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_task_data()
 
         assert actual_output == expected_output
 
@@ -210,28 +208,28 @@ class TestClickupIssue:
             json=task_page(1),
         )
 
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected_output = {
             "project": None,
             "priority": "M",
-            "due": None,
             "tags": [],
+            "due": None,
             "entry": datetime.fromtimestamp(int(record["date_created"]) // 1e3, tz=UTC),
             "description": "(bw)Is# - My task .. https://app.clickup.com/t/86adrdd2j",
-            issue.ID: record["id"],
-            issue.DESCRIPTION: record["description"],
-            issue.STATUS: record["status"]["status"],
-            issue.UPDATED_AT: datetime.fromtimestamp(
+            "clickupid": record["id"],
+            "clickupdescription": record["description"],
+            "clickupstatus": record["status"]["status"],
+            "clickupupdated": datetime.fromtimestamp(
                 int(record["date_updated"]) // 1e3, tz=UTC
             ),
-            issue.CREATOR: record["creator"]["username"],
-            issue.URL: record["url"],
-            issue.LIST_NAME: record["list"]["name"],
-            issue.PROJECT: record["project"]["id"],
-            issue.FOLDER: record["folder"]["id"],
-            issue.SPACE: record["space"]["id"],
-            issue.NAME: record["name"],
+            "clickupcreator": record["creator"]["username"],
+            "clickupurl": record["url"],
+            "clickuplistname": record["list"]["name"],
+            "clickupproject": record["project"]["id"],
+            "clickupfolder": record["folder"]["id"],
+            "clickupspace": record["space"]["id"],
+            "clickupname": record["name"],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected_output
+        assert task.to_task_data() == expected_output

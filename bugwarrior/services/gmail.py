@@ -15,9 +15,11 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 import googleapiclient.discovery
+from pydantic import Field
 
 from bugwarrior import config
 from bugwarrior.services import Issue, Service
+from bugwarrior.task import String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -35,27 +37,27 @@ class GmailConfig(config.ServiceConfig):
     also_unassigned: config.UnsupportedOption[bool] = False
 
 
-class GmailIssue(Issue):
-    THREAD_ID = "gmailthreadid"
-    SUBJECT = "gmailsubject"
-    URL = "gmailurl"
-    LAST_SENDER = "gmaillastsender"
-    LAST_SENDER_ADDR = "gmaillastsenderaddr"
-    LAST_MESSAGE_ID = "gmaillastmessageid"
-    SNIPPET = "gmailsnippet"
-    LABELS = "gmaillabels"
+class GmailUdas(Udas):
+    """Service-specific UDAs contributed by GMail."""
 
-    UNIQUE_KEY = (THREAD_ID,)
-    UDAS = {
-        THREAD_ID: {"type": "string", "label": "GMail Thread Id"},
-        SUBJECT: {"type": "string", "label": "GMail Subject"},
-        URL: {"type": "string", "label": "GMail URL"},
-        LAST_SENDER: {"type": "string", "label": "GMail last sender name"},
-        LAST_SENDER_ADDR: {"type": "string", "label": "GMail last sender address"},
-        LAST_MESSAGE_ID: {"type": "string", "label": "Last RFC2822 Message-ID"},
-        SNIPPET: {"type": "string", "label": "GMail snippet"},
-        LABELS: {"type": "string", "label": "GMail labels"},
-    }
+    PREFIX = "gmail"
+    UNIQUE_KEY = ("threadid",)
+
+    threadid: String = Field(title="GMail Thread Id")
+    subject: String = Field(title="GMail Subject")
+    url: String = Field(title="GMail URL")
+    lastsender: String = Field(title="GMail last sender name")
+    lastsenderaddr: String = Field(title="GMail last sender address")
+    lastmessageid: String = Field(title="Last RFC2822 Message-ID")
+    snippet: String = Field(title="GMail snippet")
+    labels: String = Field(title="GMail labels")
+
+
+class GmailTask(Task):
+    udas: GmailUdas
+
+
+class GmailIssue(Issue):
     EXCLUDE_LABELS = [
         "IMPORTANT",
         "CATEGORY_PERSONAL",
@@ -65,25 +67,27 @@ class GmailIssue(Issue):
         "SENT",
     ]
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        return {
-            "annotations": self.get_annotations(),
-            "entry": self.get_entry(),
-            "tags": [
+    def to_taskwarrior(self) -> GmailTask:
+        return GmailTask(
+            annotations=self.get_annotations(),
+            entry=self.get_entry(),
+            tags=[
                 label
                 for label in self.extra["labels"]
                 if label not in self.EXCLUDE_LABELS
             ],
-            "priority": self.config.default_priority,
-            self.THREAD_ID: self.record["id"],
-            self.SUBJECT: self.extra["subject"],
-            self.URL: self.extra["url"],
-            self.LAST_SENDER: self.extra["last_sender_name"],
-            self.LAST_SENDER_ADDR: self.extra["last_sender_address"],
-            self.LAST_MESSAGE_ID: self.extra["last_message_id"],
-            self.SNIPPET: self.extra["snippet"],
-            self.LABELS: " ".join(sorted(self.extra["labels"])),
-        }
+            priority=self.config.default_priority,
+            udas=GmailUdas(
+                threadid=self.record["id"],
+                subject=self.extra["subject"],
+                url=self.extra["url"],
+                lastsender=self.extra["last_sender_name"],
+                lastsenderaddr=self.extra["last_sender_address"],
+                lastmessageid=self.extra["last_message_id"],
+                snippet=self.extra["snippet"],
+                labels=" ".join(sorted(self.extra["labels"])),
+            ),
+        )
 
     def get_default_description(self) -> str:
         return self.build_default_description(
@@ -102,12 +106,13 @@ class GmailIssue(Issue):
         return datetime.fromtimestamp(timestamp_seconds, tz=UTC)
 
 
-class GmailService(Service[GmailIssue]):
+class GmailService(Service):
     APPLICATION_NAME = "Bugwarrior Gmail Service"
     SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
     API_VERSION = 2.0
     ISSUE_CLASS = GmailIssue
+    TASK_SCHEMA = GmailTask
     CONFIG_SCHEMA = GmailConfig
     AUTHENTICATION_LOCK = multiprocessing.Lock()
 
@@ -204,19 +209,17 @@ class GmailService(Service[GmailIssue]):
 
         return threads
 
-    def annotations(self, issue: GmailIssue) -> list[str]:
-        sender = issue.extra["last_sender_name"]
-        subj = issue.extra["subject"]
-        issue_url = issue.extra["url"]
-        return self.build_annotations([(sender, subj)], issue_url)
+    def annotations(self, extra: dict[str, Any]) -> list[str]:
+        return self.build_annotations(
+            [(extra["last_sender_name"], extra["subject"])], extra["url"]
+        )
 
-    def issues(self) -> Iterator[GmailIssue]:
+    def issues(self) -> Iterator[Task]:
         labels = self.get_labels()
         for thread in self.get_threads():
-            issue = self.get_issue_for_record(thread, thread_extras(thread, labels))
-            extra = {"annotations": self.annotations(issue)}
-            issue.extra.update(extra)
-            yield issue
+            extra = thread_extras(thread, labels)
+            extra["annotations"] = self.annotations(extra)
+            yield self.get_task_for_record(thread, extra)
 
 
 def thread_extras(thread: dict[str, Any], labels: dict[str, str]) -> dict[str, Any]:

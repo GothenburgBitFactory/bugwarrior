@@ -53,4 +53,4 @@ You may find documentation about the redmine issue api
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.redmine.RedMineIssue
+.. udas:: bugwarrior.services.redmine.RedMineUdas

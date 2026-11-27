@@ -138,6 +138,11 @@ python-version = "3.13"
 [tool.ty.src]
 exclude = ["tests/", "bugwarrior/docs/"]
 
+[tool.ty.rules]
+# Pydantic validates narrowed fields when ServiceConfig subclasses mask inherited fields.
+invalid-mutable-override = "ignore"
+invalid-attribute-override = "ignore"
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
@@ -158,5 +163,5 @@ test = [
     "responses",
     # ruff and ty are required by tests/test_general.py
     "ruff",
-    "ty==0.0.51",
+    "ty==0.0.99",
 ]

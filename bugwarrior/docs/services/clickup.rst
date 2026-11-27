@@ -26,4 +26,4 @@ The ``team_id`` is the numeric identification of the team.
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.clickup.ClickupIssue
+.. udas:: bugwarrior.services.clickup.ClickupUdas

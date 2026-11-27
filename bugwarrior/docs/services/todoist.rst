@@ -132,4 +132,4 @@ to all fields on the Taskwarrior task if needed.
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.todoist.TodoistIssue
+.. udas:: bugwarrior.services.todoist.TodoistUdas

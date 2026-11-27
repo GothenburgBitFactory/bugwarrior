@@ -120,4 +120,4 @@ of the following lines to your service configuration:
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.bts.BTSIssue
+.. udas:: bugwarrior.services.bts.BTSUdas

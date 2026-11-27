@@ -3,7 +3,6 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gitlab import GitlabClient, GitlabService
 
 from ..base import get_validated_service, validate
@@ -664,26 +663,26 @@ class TestGitlabIssue:
             "tags": [],
             "due": DUEDATE.replace(microsecond=0),
             "entry": CREATED.replace(microsecond=0),
-            gitlab_issue.URL: extra["issue_url"],
-            gitlab_issue.REPO: "project",
-            gitlab_issue.STATE: issue["state"],
-            gitlab_issue.TYPE: extra["type"],
-            gitlab_issue.TITLE: issue["title"],
-            gitlab_issue.NUMBER: str(issue["iid"]),
-            gitlab_issue.UPDATED_AT: UPDATED.replace(microsecond=0),
-            gitlab_issue.CREATED_AT: CREATED.replace(microsecond=0),
-            gitlab_issue.DUEDATE: DUEDATE,
-            gitlab_issue.DESCRIPTION: issue["description"],
-            gitlab_issue.MILESTONE: issue["milestone"]["title"],
-            gitlab_issue.UPVOTES: 0,
-            gitlab_issue.DOWNVOTES: 0,
-            gitlab_issue.WORK_IN_PROGRESS: 1,
-            gitlab_issue.AUTHOR: "john_smith",
-            gitlab_issue.ASSIGNEE: "jack_smith",
-            gitlab_issue.NAMESPACE: "arbitrary_namespace",
-            gitlab_issue.WEIGHT: 3,
+            "gitlaburl": extra["issue_url"],
+            "gitlabrepo": "project",
+            "gitlabstate": issue["state"],
+            "gitlabtype": extra["type"],
+            "gitlabtitle": issue["title"],
+            "gitlabnumber": str(issue["iid"]),
+            "gitlabupdatedat": UPDATED.replace(microsecond=0),
+            "gitlabcreatedon": CREATED.replace(microsecond=0),
+            "gitlabduedate": DUEDATE,
+            "gitlabdescription": issue["description"],
+            "gitlabmilestone": issue["milestone"]["title"],
+            "gitlabupvotes": 0,
+            "gitlabdownvotes": 0,
+            "gitlabwip": 1,
+            "gitlabauthor": "john_smith",
+            "gitlabassignee": "jack_smith",
+            "gitlabnamespace": "arbitrary_namespace",
+            "gitlabweight": 3,
         }
-        actual_output = gitlab_issue.to_taskwarrior()
+        actual_output = gitlab_issue.to_taskwarrior().to_task_data()
 
         assert actual_output == expected_output
 
@@ -698,26 +697,26 @@ class TestGitlabIssue:
             "tags": [],
             "due": DUEDATE.replace(microsecond=0),
             "entry": CREATED.replace(microsecond=0),
-            gitlab_issue.URL: extra["issue_url"],
-            gitlab_issue.REPO: "project",
-            gitlab_issue.STATE: issue["state"],
-            gitlab_issue.TYPE: extra["type"],
-            gitlab_issue.TITLE: issue["title"],
-            gitlab_issue.NUMBER: str(issue["iid"]),
-            gitlab_issue.UPDATED_AT: UPDATED.replace(microsecond=0),
-            gitlab_issue.CREATED_AT: CREATED.replace(microsecond=0),
-            gitlab_issue.DUEDATE: DUEDATE,
-            gitlab_issue.DESCRIPTION: issue["description"],
-            gitlab_issue.MILESTONE: issue["milestone"]["title"],
-            gitlab_issue.UPVOTES: 0,
-            gitlab_issue.DOWNVOTES: 0,
-            gitlab_issue.WORK_IN_PROGRESS: 1,
-            gitlab_issue.AUTHOR: "john_smith",
-            gitlab_issue.ASSIGNEE: "jack_smith",
-            gitlab_issue.NAMESPACE: "arbitrary_namespace",
-            gitlab_issue.WEIGHT: 3,
+            "gitlaburl": extra["issue_url"],
+            "gitlabrepo": "project",
+            "gitlabstate": issue["state"],
+            "gitlabtype": extra["type"],
+            "gitlabtitle": issue["title"],
+            "gitlabnumber": str(issue["iid"]),
+            "gitlabupdatedat": UPDATED.replace(microsecond=0),
+            "gitlabcreatedon": CREATED.replace(microsecond=0),
+            "gitlabduedate": DUEDATE,
+            "gitlabdescription": issue["description"],
+            "gitlabmilestone": issue["milestone"]["title"],
+            "gitlabupvotes": 0,
+            "gitlabdownvotes": 0,
+            "gitlabwip": 1,
+            "gitlabauthor": "john_smith",
+            "gitlabassignee": "jack_smith",
+            "gitlabnamespace": "arbitrary_namespace",
+            "gitlabweight": 3,
         }
-        actual_output = gitlab_issue.to_taskwarrior()
+        actual_output = gitlab_issue.to_taskwarrior().to_task_data()
 
         assert actual_output == expected_output
 
@@ -733,28 +732,28 @@ class TestGitlabIssue:
             "tags": [],
             "due": None,  # currently not parsed for ToDos
             "entry": CREATED.replace(microsecond=0),
-            issue.URL: todo_extra["issue_url"],
-            issue.REPO: "project",
-            issue.STATE: todo["state"],
-            issue.TYPE: todo_extra["type"],
-            issue.TITLE: "Todo from {} for {}".format(
+            "gitlaburl": todo_extra["issue_url"],
+            "gitlabrepo": "project",
+            "gitlabstate": todo["state"],
+            "gitlabtype": todo_extra["type"],
+            "gitlabtitle": "Todo from {} for {}".format(
                 todo["author"]["name"], todo["project"]["path"]
             ),
-            issue.NUMBER: str(todo["id"]),
-            issue.UPDATED_AT: UPDATED.replace(microsecond=0),
-            issue.CREATED_AT: CREATED.replace(microsecond=0),
-            issue.DUEDATE: None,  # Currently not parsed for ToDos
-            issue.DESCRIPTION: todo["body"],
-            issue.MILESTONE: None,
-            issue.UPVOTES: 0,
-            issue.DOWNVOTES: 0,
-            issue.WORK_IN_PROGRESS: 0,
-            issue.AUTHOR: "john_smith",
-            issue.ASSIGNEE: None,  # Currently not parsed for ToDos
-            issue.NAMESPACE: "arbitrary_namespace",
-            issue.WEIGHT: None,  # Currently not parsed for ToDos
+            "gitlabnumber": str(todo["id"]),
+            "gitlabupdatedat": UPDATED.replace(microsecond=0),
+            "gitlabcreatedon": CREATED.replace(microsecond=0),
+            "gitlabduedate": None,  # Currently not parsed for ToDos
+            "gitlabdescription": todo["body"],
+            "gitlabmilestone": None,
+            "gitlabupvotes": 0,
+            "gitlabdownvotes": 0,
+            "gitlabwip": 0,
+            "gitlabauthor": "john_smith",
+            "gitlabassignee": None,  # Currently not parsed for ToDos
+            "gitlabnamespace": "arbitrary_namespace",
+            "gitlabweight": None,  # Currently not parsed for ToDos
         }
-        actual_output = issue.to_taskwarrior()
+        actual_output = issue.to_taskwarrior().to_task_data()
 
         assert actual_output == expected_output
 
@@ -764,31 +763,32 @@ class TestGitlabIssue:
         gitlab_issue = service.get_issue_for_record(mr, mr_extra)
         expected_output = {
             "project": mr_extra["project"],
-            "priority": overrides["default_mr_priority"],
+            # A blank configured priority means *no* priority.
+            "priority": None,
             "annotations": [],
             "tags": ["feature"],
             "due": DUEDATE.replace(microsecond=0),
             "entry": CREATED.replace(microsecond=0),
-            gitlab_issue.URL: mr_extra["issue_url"],
-            gitlab_issue.REPO: "project",
-            gitlab_issue.STATE: mr["state"],
-            gitlab_issue.TYPE: mr_extra["type"],
-            gitlab_issue.TITLE: mr["title"],
-            gitlab_issue.NUMBER: str(mr["iid"]),
-            gitlab_issue.UPDATED_AT: UPDATED.replace(microsecond=0),
-            gitlab_issue.CREATED_AT: CREATED.replace(microsecond=0),
-            gitlab_issue.DUEDATE: DUEDATE,
-            gitlab_issue.DESCRIPTION: mr["description"],
-            gitlab_issue.MILESTONE: issue["milestone"]["title"],
-            gitlab_issue.UPVOTES: 0,
-            gitlab_issue.DOWNVOTES: 0,
-            gitlab_issue.WORK_IN_PROGRESS: 1,
-            gitlab_issue.AUTHOR: "john_smith",
-            gitlab_issue.ASSIGNEE: "jack_smith",
-            gitlab_issue.NAMESPACE: "arbitrary_namespace",
-            gitlab_issue.WEIGHT: 3,
+            "gitlaburl": mr_extra["issue_url"],
+            "gitlabrepo": "project",
+            "gitlabstate": mr["state"],
+            "gitlabtype": mr_extra["type"],
+            "gitlabtitle": mr["title"],
+            "gitlabnumber": str(mr["iid"]),
+            "gitlabupdatedat": UPDATED.replace(microsecond=0),
+            "gitlabcreatedon": CREATED.replace(microsecond=0),
+            "gitlabduedate": DUEDATE,
+            "gitlabdescription": mr["description"],
+            "gitlabmilestone": issue["milestone"]["title"],
+            "gitlabupvotes": 0,
+            "gitlabdownvotes": 0,
+            "gitlabwip": 1,
+            "gitlabauthor": "john_smith",
+            "gitlabassignee": "jack_smith",
+            "gitlabnamespace": "arbitrary_namespace",
+            "gitlabweight": 3,
         }
-        actual_output = gitlab_issue.to_taskwarrior()
+        actual_output = gitlab_issue.to_taskwarrior().to_task_data()
 
         assert actual_output == expected_output
 
@@ -803,26 +803,26 @@ class TestGitlabIssue:
             "tags": [],
             "due": DUEDATE.replace(microsecond=0),
             "entry": CREATED.replace(microsecond=0),
-            gitlab_issue.URL: extra["issue_url"],
-            gitlab_issue.REPO: "project",
-            gitlab_issue.STATE: issue["state"],
-            gitlab_issue.TYPE: extra["type"],
-            gitlab_issue.TITLE: issue["title"],
-            gitlab_issue.NUMBER: str(issue["iid"]),
-            gitlab_issue.UPDATED_AT: UPDATED.replace(microsecond=0),
-            gitlab_issue.CREATED_AT: CREATED.replace(microsecond=0),
-            gitlab_issue.DUEDATE: DUEDATE,
-            gitlab_issue.DESCRIPTION: issue["description"],
-            gitlab_issue.MILESTONE: issue["milestone"]["title"],
-            gitlab_issue.UPVOTES: 0,
-            gitlab_issue.DOWNVOTES: 0,
-            gitlab_issue.WORK_IN_PROGRESS: 0,
-            gitlab_issue.AUTHOR: "john_smith",
-            gitlab_issue.ASSIGNEE: "jack_smith",
-            gitlab_issue.NAMESPACE: "arbitrary_namespace",
-            gitlab_issue.WEIGHT: 3,
+            "gitlaburl": extra["issue_url"],
+            "gitlabrepo": "project",
+            "gitlabstate": issue["state"],
+            "gitlabtype": extra["type"],
+            "gitlabtitle": issue["title"],
+            "gitlabnumber": str(issue["iid"]),
+            "gitlabupdatedat": UPDATED.replace(microsecond=0),
+            "gitlabcreatedon": CREATED.replace(microsecond=0),
+            "gitlabduedate": DUEDATE,
+            "gitlabdescription": issue["description"],
+            "gitlabmilestone": issue["milestone"]["title"],
+            "gitlabupvotes": 0,
+            "gitlabdownvotes": 0,
+            "gitlabwip": 0,
+            "gitlabauthor": "john_smith",
+            "gitlabassignee": "jack_smith",
+            "gitlabnamespace": "arbitrary_namespace",
+            "gitlabweight": 3,
         }
-        actual_output = gitlab_issue.to_taskwarrior()
+        actual_output = gitlab_issue.to_taskwarrior().to_task_data()
 
         assert actual_output == expected_output
 
@@ -876,7 +876,7 @@ class TestGitlabIssue:
             "project": "arbitrary_username/project",
             "tags": [],
         }
-        assert TaskConstructor(gitlab_issue).get_taskwarrior_record() == expected
+        assert gitlab_issue.to_task_data() == expected
 
     @responses.activate
     def test_mrs_from_query(self, mr, make_service):
@@ -934,7 +934,7 @@ class TestGitlabIssue:
             "project": "arbitrary_username/project",
             "tags": [],
         }
-        assert TaskConstructor(gitlab_mr).get_taskwarrior_record() == expected
+        assert gitlab_mr.to_task_data() == expected
 
     @responses.activate
     def test_todos_from_query(self, todo, make_service):
@@ -998,7 +998,7 @@ class TestGitlabIssue:
             "project": "project",
             "tags": [],
         }
-        assert TaskConstructor(gitlab_todo).get_taskwarrior_record() == expected
+        assert gitlab_todo.to_task_data() == expected
 
         overrides = {
             "include_issues": "false",
@@ -1009,7 +1009,7 @@ class TestGitlabIssue:
         }
         service = make_service(**overrides)
         gitlab_todo = next(service.issues())
-        assert TaskConstructor(gitlab_todo).get_taskwarrior_record() == expected
+        assert gitlab_todo.to_task_data() == expected
 
     @responses.activate
     def test_issues(self, service, issue):
@@ -1066,7 +1066,7 @@ class TestGitlabIssue:
             "tags": [],
         }
 
-        assert TaskConstructor(gitlab_issue).get_taskwarrior_record() == expected
+        assert gitlab_issue.to_task_data() == expected
 
     @responses.activate
     def test_only_if_assigned_user_lookup(self, make_service):

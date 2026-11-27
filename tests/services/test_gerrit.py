@@ -3,7 +3,6 @@ import json
 import pytest
 import responses
 
-from bugwarrior.collect import TaskConstructor
 from bugwarrior.services.gerrit import GerritService
 
 SERVICE_CLASS = GerritService
@@ -68,7 +67,7 @@ class TestGerritIssue:
 
     def test_to_taskwarrior(self, service, record, extra):
         issue = service.get_issue_for_record(record, extra)
-        actual = issue.to_taskwarrior()
+        actual = issue.to_taskwarrior().to_task_data()
         expected = {
             "annotations": [],
             "priority": "M",
@@ -87,7 +86,7 @@ class TestGerritIssue:
 
     def test_work_in_progress(self, service, record, extra):
         record["work_in_progress"] = True
-        issue = service.get_issue_for_record(record, extra)
+        task = service.get_task_for_record(record, extra)
 
         expected = {
             "annotations": [],
@@ -104,7 +103,7 @@ class TestGerritIssue:
             "tags": [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_task_data() == expected
 
     @responses.activate
     def test_issues(self, service, record):
@@ -114,7 +113,7 @@ class TestGerritIssue:
             body=")]}'" + json.dumps([record]),
         )
 
-        issue = next(service.issues())
+        task = next(service.issues())
 
         expected = {
             "annotations": ["@Iam Author - this is a message"],
@@ -131,4 +130,4 @@ class TestGerritIssue:
             "tags": [],
         }
 
-        assert TaskConstructor(issue).get_taskwarrior_record() == expected
+        assert task.to_task_data() == expected

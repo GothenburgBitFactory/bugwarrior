@@ -115,4 +115,4 @@ will default to ignoring the CC and Author fields as reported in phabricator.
 Provided UDA Fields
 -------------------
 
-.. udas:: bugwarrior.services.phab.PhabricatorIssue
+.. udas:: bugwarrior.services.phab.PhabricatorUdas

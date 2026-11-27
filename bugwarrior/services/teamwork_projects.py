@@ -3,10 +3,12 @@ import logging
 import typing
 from typing import Any
 
+from pydantic import Field
 import requests
 
 from bugwarrior import config
 from bugwarrior.services import Client, Issue, Service
+from bugwarrior.task import Numeric, String, Task, Udas
 
 log = logging.getLogger(__name__)
 
@@ -31,24 +33,25 @@ class TeamworkClient(Client):
         return self.json_response(response)
 
 
+class TeamworkUdas(Udas):
+    """Service-specific UDAs contributed by Teamwork Projects."""
+
+    PREFIX = "teamwork_"
+    UNIQUE_KEY = ("url",)
+
+    url: String = Field(title="Teamwork Url")
+    title: String = Field(title="Teamwork Title")
+    description_long: String = Field(title="Teamwork Description Long")
+    project_id: Numeric = Field(title="Teamwork Project ID")
+    status: String = Field(title="Teamwork Status")
+    id: Numeric = Field(title="Teamwork Task ID")
+
+
+class TeamworkTask(Task):
+    udas: TeamworkUdas
+
+
 class TeamworkIssue(Issue):
-    URL = "teamwork_url"
-    TITLE = "teamwork_title"
-    DESCRIPTION_LONG = "teamwork_description_long"
-    PROJECT_ID = "teamwork_project_id"
-    STATUS = "teamwork_status"
-    ID = "teamwork_id"
-
-    UDAS = {
-        URL: {"type": "string", "label": "Teamwork Url"},
-        TITLE: {"type": "string", "label": "Teamwork Title"},
-        DESCRIPTION_LONG: {"type": "string", "label": "Teamwork Description Long"},
-        PROJECT_ID: {"type": "numeric", "label": "Teamwork Project ID"},
-        STATUS: {"type": "string", "label": "Teamwork Status"},
-        ID: {"type": "numeric", "label": "Teamwork Task ID"},
-    }
-
-    UNIQUE_KEY = (URL,)
     PRIORITY_MAP = {"low": "L", "medium": "M", "high": "H"}
 
     def get_task_url(self) -> str:
@@ -61,41 +64,33 @@ class TeamworkIssue(Issue):
             number=self.record["id"],
         )
 
-    def to_taskwarrior(self) -> dict[str, Any]:
-        task_url = self.get_task_url()
-        status = self.record["status"]
+    def to_taskwarrior(self) -> TeamworkTask:
+        modified = self.record.get("last-changed-on")
+        is_open = str(self.record["status"]) in ["reopened", "new"]
 
-        due = self.parse_date(self.record.get("due-date"))
-        created = self.parse_date(self.record.get("created-on"))
-        modified = self.parse_date(self.record.get("last-changed-on"))
-
-        end = ""
-        if str(status) in ["reopened", "new"]:
-            status = "Open"
-        else:
-            end = modified
-            status = "Closed"
-
-        return {
-            "project": self.record["project-name"],
-            "priority": self.get_priority(),
-            "due": due,
-            "entry": created,
-            "end": end,
-            "modified": modified,
-            "annotations": self.extra.get("annotations", []),
-            self.URL: task_url,
-            self.TITLE: self.record.get("content", ""),
-            self.DESCRIPTION_LONG: self.record.get("description", ""),
-            self.PROJECT_ID: int(self.record["project-id"]),
-            self.STATUS: status,
-            self.ID: int(self.record["id"]),
-        }
+        return TeamworkTask(
+            project=self.record["project-name"],
+            priority=self.get_priority(),
+            due=self.record.get("due-date"),
+            entry=self.record.get("created-on"),
+            end=None if is_open else modified,
+            modified=modified,
+            annotations=self.extra.get("annotations", []),
+            udas=TeamworkUdas(
+                url=self.get_task_url(),
+                title=self.record.get("content", ""),
+                description_long=self.record.get("description", ""),
+                project_id=self.record["project-id"],
+                status="Open" if is_open else "Closed",
+                id=self.record["id"],
+            ),
+        )
 
 
-class TeamworkService(Service[TeamworkIssue]):
+class TeamworkService(Service):
     API_VERSION = 2.0
     ISSUE_CLASS = TeamworkIssue
+    TASK_SCHEMA = TeamworkTask
     CONFIG_SCHEMA = TeamworkConfig
 
     def __init__(
@@ -121,7 +116,7 @@ class TeamworkService(Service[TeamworkIssue]):
             return self.build_annotations(comment_list, None)
         return []
 
-    def issues(self) -> Iterator[TeamworkIssue]:
+    def issues(self) -> Iterator[Task]:
         response = self.client.get("tasks.json")
         for issue in response["todo-items"]:
             # Determine if issue is need by if following comments, changes or assigned
@@ -130,10 +125,8 @@ class TeamworkService(Service[TeamworkIssue]):
                 or issue["userFollowingChanges"]
                 or (self.user_id in issue.get("responsible-party-ids", ""))
             ):
-                issue_obj = self.get_issue_for_record(issue)
                 extra = {
                     "host": self.config.host,
                     "annotations": self.get_comments(issue),
                 }
-                issue_obj.extra.update(extra)
-                yield issue_obj
+                yield self.get_task_for_record(issue, extra)
