@@ -13,6 +13,8 @@ jobs:
       matrix:
         taskwarrior-version: &taskwarrior_versions [2.6.2, 3.5.0]
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
       - name: Identify runner image
         id: runner-image
         run: echo "os=${ImageOS}" >> "${GITHUB_OUTPUT}"
@@ -21,33 +23,10 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/taskwarrior-${{ matrix.taskwarrior-version }}.tar.gz
-          key: taskwarrior-${{ steps.runner-image.outputs.os }}-${{ runner.arch }}-${{ matrix.taskwarrior-version }}-cache-v1
+          key: taskwarrior-${{ steps.runner-image.outputs.os }}-${{ runner.arch }}-${{ matrix.taskwarrior-version }}-${{ hashFiles('.github/scripts/build-taskwarrior.sh') }}
       - name: Build Taskwarrior ${{ matrix.taskwarrior-version }}
         if: steps.taskwarrior-cache.outputs.cache-hit != 'true'
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -qq -y \
-            build-essential \
-            cmake \
-            libgnutls28-dev \
-            uuid-dev
-          taskwarrior_source="${RUNNER_TEMP}/taskwarrior"
-          git clone --branch v${{ matrix.taskwarrior-version }} --depth 1 \
-            https://github.com/GothenburgBitFactory/taskwarrior.git \
-            "${taskwarrior_source}"
-          cmake -S "${taskwarrior_source}" -B "${taskwarrior_source}/build" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=/opt/taskwarrior \
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-          if [[ "${{ matrix.taskwarrior-version }}" == "2.6.2" ]]; then
-            sed -i '/#include <Pig.h>/a #include <cstdint>' \
-              "${taskwarrior_source}/src/libshared/src/JSON.h"
-          fi
-          cmake --build "${taskwarrior_source}/build" --parallel "$(nproc)"
-          sudo cmake --install "${taskwarrior_source}/build"
-          /opt/taskwarrior/bin/task --version
-          sudo tar -C /opt/taskwarrior -czf \
-            "${RUNNER_TEMP}/taskwarrior-${{ matrix.taskwarrior-version }}.tar.gz" .
+        run: bash .github/scripts/build-taskwarrior.sh "${{ matrix.taskwarrior-version }}"
       - name: Upload Taskwarrior ${{ matrix.taskwarrior-version }}
         uses: actions/upload-artifact@v7
         with:
